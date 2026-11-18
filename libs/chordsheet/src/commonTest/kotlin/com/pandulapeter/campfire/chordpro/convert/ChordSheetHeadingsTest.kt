@@ -36,6 +36,8 @@ class ChordSheetHeadingsTest {
         assertEquals("bridge", ChordSheetHeadings.sectionType("Bridge \u2014 build"))
         assertEquals("verse", ChordSheetHeadings.sectionType("Riffs and more"))
         assertEquals("solo", ChordSheetHeadings.sectionType("Organ solo"))
+        // The Hebrew word for a passage, which heads a bridge whether it is sung or played.
+        assertEquals("bridge", ChordSheetHeadings.sectionType("\u05de\u05e2\u05d1\u05e8"))
     }
 
     @Test

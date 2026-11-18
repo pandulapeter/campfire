@@ -110,7 +110,7 @@ internal object ChordSheetHeadings {
     )
     private val bridge = listOf(
         "Bridge", "Post-Chorus", "Post Chorus", "Postchorus", "Puente", "Ponte", "Pont", "Brug",
-        "\u00c1tk\u00f6t\u00e9s", "\u00c1tvezet\u00e9s", "\u05d2\u05e9\u05e8",
+        "\u00c1tk\u00f6t\u00e9s", "\u00c1tvezet\u00e9s", "\u05d2\u05e9\u05e8", "\u05de\u05e2\u05d1\u05e8",
     ) + preChorus
     private val untyped = listOf(
         "Intro", "Outro", "Solo", "Interlude", "Instrumental", "Instrumental break", "Tag", "Coda", "Ending", "Break", "Breakdown", "Vamp",
@@ -118,7 +118,7 @@ internal object ChordSheetHeadings {
     )
 
     /** Words that are also sung, which make a heading on their own only with brackets, a colon, or a chord row or blank line after them. */
-    private val sung = setOf("r", "coro", "parte", "tag", "break", "ending", "hook", "verso", "pont", "ponte", "\u05d1\u05d9\u05ea", "\u05d2\u05e9\u05e8")
+    private val sung = setOf("r", "coro", "parte", "tag", "break", "ending", "hook", "verso", "pont", "ponte", "\u05d1\u05d9\u05ea", "\u05d2\u05e9\u05e8", "\u05de\u05e2\u05d1\u05e8")
 
     private val types = buildMap<String, String?> {
         verse.forEach { put(it.lowercase(), "verse") }

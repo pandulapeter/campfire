@@ -1178,6 +1178,39 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `in a text padding its rows to one width a chord row as long as its right-to-left lyric is a left-to-right box`() {
+        // A page that sets its chord rows left to right and pads both rows of a pair to one width (the first lyric ends in
+        // spaces): a row's leading spaces stand at its left, so E falls on the third word and F#m on the first.
+        val result = convert("Aadd9  F#m       Bm7\n\u05d5\u05d0\u05d9\u05df \u05db\u05d0\u05df \u05d0\u05d4\u05d1\u05d4       \n       E      F#m\n\u05de\u05d0\u05d5\u05d7\u05e8 \u05db\u05dc \u05db\u05da \u05e2\u05db\u05e9\u05d9\u05d5")
+        assertTrue("[Bm7]\u05d5\u05d0\u05d9\u05df \u05db\u05d0\u05df \u05d0[F#m]\u05d4\u05d1\u05d4 [Aadd9]" in result, result)
+        assertTrue("[F#m]\u05de\u05d0\u05d5\u05d7\u05e8 \u05db\u05dc [E]\u05db\u05da \u05e2\u05db\u05e9\u05d9\u05d5" in result, result)
+    }
+
+    @Test
+    fun `a starred chord row over a right-to-left lyric stays one left-to-right run`() {
+        val result = convert("Dadd9*  Cadd9  Em*\n\u05e7\u05d5\u05dc   \u05e9\u05d5\u05e4\u05e8   \u05e0\u05de\u05e9\u05da ")
+        assertTrue("[Em]\u05e7\u05d5\u05dc  [Cadd9] \u05e9\u05d5\u05e4\u05e8  [Dadd9] \u05e0\u05de\u05e9\u05da" in result, result)
+    }
+
+    @Test
+    fun `a chord over the spaces between two right-to-left words in character columns stays between them`() {
+        // Bm7 covers only the spaces after the first word: it is sung after that word, not on its last letter.
+        val result = convert("Dmaj7 F#m    Bm7  E   \n\u05d4\u05d0\u05d5\u05e8\u05d5\u05ea    \u05e2\u05de\u05d5\u05de\u05d9\u05dd      ")
+        assertTrue("\u05d4\u05d0\u05d5[E]\u05e8\u05d5\u05ea[Bm7]    \u05e2\u05de\u05d5[F#m]\u05de\u05d9\u05dd [Dmaj7]" in result, result)
+    }
+
+    @Test
+    fun `a capo on a fret in Hebrew is the capo`() {
+        assertTrue(convert("\u05e7\u05d0\u05e4\u05d5 \u05e2\u05dc \u05e9\u05e8\u05d9\u05d2 2\n\nAm     C\nHello world").startsWith("{capo: 2}"))
+    }
+
+    @Test
+    fun `a staff with slides is a tab and the chord row over it a line of it`() {
+        val result = convert("   F#m      E\ne|-------5--4s5--|\nB|-7-7-7-------7-|\n\nAm     C\nHello world")
+        assertTrue("e|-------5--4s5--|\nB|-7-7-7-------7-|\n{end_of_tab}" in result && "[F#m]" !in result, result)
+    }
+
+    @Test
     fun `derives plain title and expands tabs`() {
         assertTrue(convert("Someone - Song\n\nAm C\nHello world").startsWith("{title: Song}\n{artist: Someone}"))
         assertEquals("[Am]Hello   [C]world\n", convert("Am\tC\nHello   world"))

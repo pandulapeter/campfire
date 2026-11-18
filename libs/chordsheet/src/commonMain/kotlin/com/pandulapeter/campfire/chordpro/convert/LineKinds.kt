@@ -261,7 +261,8 @@ internal object LineKinds {
     /**
      * A string's name, then its staff: after a bar line (`e|---`), or straight after the name (`e-----`), as many sites
      * print it. The second needs the dash to touch the name and at least three dashes on the line, since a chord written
-     * with dashes for its beats (`A - - -`, `E - x2`) is otherwise a staff too, two such lines a tab, its chords lost.
+     * with dashes for its beats (`A - - -`, `E - x2`) is otherwise a staff too, two such lines a tab, its chords lost. Its
+     * techniques are written as letters too: hammer-on, pull-off, bend, release, dead note, and slide (`4s5`).
      */
-    private val tab = Regex("^[eEaAbBdDgG](?:[#b])?(?:\\s*\\||-(?=(?:[^-]*-){2}))[-0-9|hpbrx/\\\\~(). :]+$")
+    private val tab = Regex("^[eEaAbBdDgG](?:[#b])?(?:\\s*\\||-(?=(?:[^-]*-){2}))[-0-9|hpbrsx/\\\\~(). :]+$")
 }

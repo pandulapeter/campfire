@@ -23,6 +23,7 @@ import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordWords.tokens
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetConverter.isChordLine
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetText.clean
 import com.pandulapeter.campfire.chordpro.edit.ChordProLiteralText
+import com.pandulapeter.campfire.chordpro.language.isStrongRtl
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.ANNOTATION_MARKER
 import kotlin.math.abs
 import kotlin.math.roundToInt
@@ -163,7 +164,13 @@ internal object ChordSheetChordPlacement {
             positions.getOrNull(after)?.takeIf { it - x <= rounding && isDrawnStart(drawnStarts, it) }?.let { at = after }
             // A row holding right-to-left text runs both ways, so its chords are set where they stand rather than in the
             // order they are read off the chord row, which is left to right.
-            val bidi = lyrics.bidi?.indexOf(chordStart = x, chordEnd = chordEnd(chords, word), length = lyrics.text.length, tolerance = bidiTolerance)
+            val bidi = lyrics.bidi?.indexOf(
+                chordStart = x,
+                chordEnd = chordEnd(chords, word),
+                length = lyrics.text.length,
+                tolerance = bidiTolerance,
+                isCharacterColumns = isCharacterColumns(lyrics),
+            )
             if (bidi != null) {
                 at = bidi.coerceAtMost(lyrics.text.length)
                 if (bidi == lyrics.text.length) isAttachedAtEnd = true
@@ -195,7 +202,12 @@ internal object ChordSheetChordPlacement {
             }
             if (bidi == null) at = at.coerceAtLeast(previous)
             previous = at
-            insertions.getOrPut(at) { mutableListOf() } += if (word in notes) note(word.text) else "[${rowChordName(word.text)}]"
+            val chord = if (word in notes) note(word.text) else "[${rowChordName(word.text)}]"
+            val atSameIndex = insertions.getOrPut(at) { mutableListOf() }
+            // A row read from the right reads the chord further right first: of two chords on one right-to-left letter, or
+            // after the lyric's end, the one met later from the left goes in first.
+            val isReadFromTheRight = lyrics.text.getOrNull(at)?.let { it.isLetterOrDigit() && !isStrongRtl(it.code) } != true
+            if (bidi != null && isReadFromTheRight) atSameIndex.add(0, chord) else atSameIndex += chord
         }
         var escaped = ChordProLiteralText.escape(withoutBidiPadding(lyrics, insertions))
         // A lyric printed a few columns in from the chord over it starts where that chord does, which is all its indent

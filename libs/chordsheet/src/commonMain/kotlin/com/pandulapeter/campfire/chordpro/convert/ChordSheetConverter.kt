@@ -516,7 +516,7 @@ public object ChordSheetConverter {
             "Tempo|Time|words (?:and|&) music by)\\s+(.+)$",
         RegexOption.IGNORE_CASE,
     )
-    private val capoPreposition = Regex("^(?:on|at)\\s+", RegexOption.IGNORE_CASE)
+    private val capoPreposition = Regex("^(?:on|at|\u05e2\u05dc(?:\\s+\u05e9\u05e8\u05d9\u05d2)?|\u05d1\u05e9\u05e8\u05d9\u05d2)\\s+", RegexOption.IGNORE_CASE)
     private val romanNumerals = listOf("I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII")
     private val romanCapo = Regex("^(XII|XI|X|IX|IV|V?I{1,3}|V)(?:\\s+(?:FRET|TRASTE|TASTO|BUND|BUNDSTAB))?$")
     private val noCapo = Regex("^(?:No|Sin|Senza|Nincs) capo$", RegexOption.IGNORE_CASE)

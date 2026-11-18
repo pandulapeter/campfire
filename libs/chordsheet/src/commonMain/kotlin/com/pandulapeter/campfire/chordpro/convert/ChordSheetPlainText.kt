@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.chordpro.convert
 
 import com.pandulapeter.campfire.chordpro.language.BidiOrder
 import com.pandulapeter.campfire.chordpro.language.WritingDirection
+import com.pandulapeter.campfire.chordpro.language.isStrongRtl
 import com.pandulapeter.campfire.chordpro.language.writingDirectionOf
 
 /**
@@ -32,7 +33,39 @@ internal object ChordSheetPlainText {
         if (writingDirectionOf(words) == WritingDirection.LEFT_TO_RIGHT) return lines.map(::leftToRight)
         val units = lines.map(::units)
         val width = units.maxOf { it.size }
-        return units.map { rightToLeft(it, width) }
+        // A row of starred chords (`Em*`) is one too, which the converter reads as it reads any other.
+        val isChordRow = lines.map { line -> ChordSheetChordWords.chordRow(line)?.let { it.annotation == null && it.notes.isEmpty() } == true }
+        fun lyricOf(index: Int) = units.getOrNull(index + 1)?.takeIf { isChordRow[index] && !isChordRow[index + 1] && it.any { unit -> unit != " " } }
+        // A text that pads a chord row or its lyric with spaces to the other's width sets its rows in boxes of one width.
+        val isPadded = units.indices.any { index ->
+            lyricOf(index)?.let { lyric -> lyric.size == units[index].size && (lyric.last() == " " || units[index].last() == " ") } == true
+        }
+        return units.mapIndexed { index, line ->
+            when {
+                isChordRow[index] -> run(line, width, isPadded = isPadded && lyricOf(index)?.size == line.size)
+                lines[index].none { isStrongRtl(it.code) } -> run(line, width, isPadded = false)
+                else -> rightToLeft(line, width)
+            }
+        }
+    }
+
+    /**
+     * A chord row, or a line with no right-to-left letter in it (a tab's string, a Latin line), in a right-to-left display:
+     * one left-to-right run from its first character to its last, whatever symbols it holds (`Em*`, whose star a
+     * right-to-left line would draw apart at its far left, as it would a staff's closing bar line), with the spaces before
+     * it drawn at its right and those after it at its left, as such a display draws a line's leading and trailing spaces.
+     * In a text that pads its rows to one width, a chord row exactly as long as the lyric under it ([isPadded]) was not
+     * typed in such a display: it is a left-to-right box as wide as the lyric (a page that sets its chord rows left to
+     * right and pads both rows of a pair to one width), its spaces where they were typed.
+     */
+    private fun run(units: List<String>, width: Int, isPadded: Boolean): ChordSheet.Line {
+        val first = units.indexOfFirst { it != " " }
+        if (first < 0) return ChordSheet.Line(emptyList())
+        val last = units.indexOfLast { it != " " }
+        val start = width - units.size + if (isPadded) first else units.size - 1 - last
+        return ChordSheet.Line(
+            leftToRight(units.subList(first, last + 1).joinToString("")).spans.map { it.copy(start = it.start + start, end = it.end + start) },
+        )
     }
 
     private fun leftToRight(line: String): ChordSheet.Line {

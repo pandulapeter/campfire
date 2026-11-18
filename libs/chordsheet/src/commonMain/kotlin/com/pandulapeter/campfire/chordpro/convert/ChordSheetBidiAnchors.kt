@@ -30,11 +30,16 @@ internal class ChordSheetBidiAnchors private constructor(
      * (the row's end) for a chord right after its last one, which in a right-to-left row ends where the row's [length]
      * characters start on the left, and `length + 1` for one further left, over the spaces and padding the export draws
      * past the end, which is sung after the line and a space; null where no character is within [tolerance]. A chord's
-     * right edge is allowed a point more ([ROUNDING]) for a PDF of 5.2 or older.
+     * right edge is allowed a point more ([ROUNDING]) for a PDF of 5.2 or older. In text laid out in characters
+     * ([isCharacterColumns]) chords and lyrics share one advance, so a chord stands over what it hangs from to within a
+     * fraction of a character ([COLUMN_SLACK] of an em): a chord over the spaces between two words is between them, not
+     * on the end of the word right of it.
      * A space is taken only where no letter is: a chord hanging leftwards from a word's first letter often ends right
      * where a space after the word starts.
      */
-    fun indexOf(chordStart: Double, chordEnd: Double, length: Int, tolerance: Double): Int? {
+    fun indexOf(chordStart: Double, chordEnd: Double, length: Int, tolerance: Double, isCharacterColumns: Boolean): Int? {
+        val slack = if (isCharacterColumns) tolerance * COLUMN_SLACK else tolerance
+        val rounding = if (isCharacterColumns) 0.0 else ROUNDING
         var best: Int? = null
         var bestDistance = Double.MAX_VALUE
         var bestSpace: Int? = null
@@ -52,12 +57,12 @@ internal class ChordSheetBidiAnchors private constructor(
         }
         for (index in 0 until minOf(length, classes.size)) {
             if (left[index].isNaN() || classes[index] == MARK) continue
-            if (classes[index] != LEFT_TO_RIGHT) abs(right[index] - chordEnd).takeIf { it <= tolerance + ROUNDING }?.let { consider(index, it) }
-            if (classes[index] != RIGHT_TO_LEFT) abs(chordStart - left[index]).takeIf { it <= tolerance }?.let { consider(index, it) }
+            if (classes[index] != LEFT_TO_RIGHT) abs(right[index] - chordEnd).takeIf { it <= slack + rounding }?.let { consider(index, it) }
+            if (classes[index] != RIGHT_TO_LEFT) abs(chordStart - left[index]).takeIf { it <= slack }?.let { consider(index, it) }
         }
         val rowStart = (0 until minOf(length, classes.size)).filterNot { left[it].isNaN() }.minOfOrNull { left[it] }
-        if (rowStart != null && best == null && bestSpace == null && chordEnd <= rowStart + tolerance + ROUNDING) {
-            return if (rowStart - chordEnd <= tolerance + ROUNDING) length else length + 1
+        if (rowStart != null && best == null && bestSpace == null && chordEnd <= rowStart + slack + rounding) {
+            return if (rowStart - chordEnd <= slack + rounding) length else length + 1
         }
         return best ?: bestSpace
     }
@@ -152,6 +157,9 @@ internal class ChordSheetBidiAnchors private constructor(
          * advance it is drawn with and ends it on the edge.
          */
         private const val ROUNDING = 1.0
+
+        /** How far, in ems, a chord's edge may miss its character's in text laid out in characters: rounding, not a column. */
+        private const val COLUMN_SLACK = 0.25
 
         private const val NEUTRAL = 0
         private const val LEFT_TO_RIGHT = 1

@@ -52,7 +52,10 @@ cannot say: the principles, the contracts, and the limits kept on purpose.
 - **A plain text whose letters mostly read from the right is laid out as a right-to-left display shows it**
   (`ChordSheetPlainText`): every line flush right, its chord rows aligned visually, not logically, so read by index
   their chords would land in the opposite order. `chrome-hebrew` in `:data:source:local:implementation`'s document
-  fixtures shows it.
+  fixtures shows it. A chord row (starred chords too) and a line with no right-to-left letter (a tab's string) are one
+  left-to-right run; a chord row exactly as long as the lyric under it was padded to the lyric's width by a page that
+  sets its rows left to right, so its spaces stay where they were typed. In such character columns a chord hangs
+  from its letter's edge to within a quarter of a column, so one over the spaces between two words stays between them.
 - A document is cut into songs by `ChordSheetSongSplit` (by a title type that stands out, else by a contents page,
   `ChordSheetIndexTitles`), so a cover in a type of its own does not stop the split. Song-counting numbers are left out
   of the titles.
