@@ -166,10 +166,11 @@ internal class AppExitController(
         importWork.cancel()
         // A failure or a review that is up has written nothing and has already let the import flag go, so it is dropped
         // here rather than waited for. The work going idle is waited for too, which is the cancelled preparation having
-        // deleted what it staged, and the write having ended.
+        // ended and the write having ended, and then every batch is let go of and what it staged deleted.
         withTimeoutOrNull(EXIT_IMPORT_GRACE) {
             importWork.state.first { it == ImportWorkState.IDLE }
             importWork.isImporting.first { !it }
+            importWork.settleBeforeExit()
         }
         // The stored draft is removed by a collector a few hops after the editor lets its text go, which a process that
         // ends now would not wait for: a Discard answered on the way out would come back as "unsaved changes restored".

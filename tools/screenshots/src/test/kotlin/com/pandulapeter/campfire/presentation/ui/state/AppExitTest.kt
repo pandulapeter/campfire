@@ -23,7 +23,9 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
+import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.preferences.PrintSettings
+import com.pandulapeter.campfire.data.source.local.api.ImportStagingLocalSource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.cancel
 import com.pandulapeter.campfire.presentation.resources.save
@@ -31,6 +33,7 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_discard
 import com.pandulapeter.campfire.presentation.resources.song_editor_unsaved_changes
 import com.pandulapeter.campfire.presentation.resources.songs_actions
 import com.pandulapeter.campfire.presentation.resources.songs_edit_song
+import com.pandulapeter.campfire.presentation.ui.state.importing.ImportReport
 import com.pandulapeter.campfire.screenshots.AppTestScope
 import com.pandulapeter.campfire.screenshots.HOME_ON_THE_RANGE
 import com.pandulapeter.campfire.screenshots.HOUSE_OF_THE_RISING_SUN
@@ -43,7 +46,11 @@ import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import org.koin.core.context.GlobalContext
+import java.io.ByteArrayOutputStream
 import java.io.File
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -149,6 +156,35 @@ internal class AppExitTest {
         assertEquals(1, secondExits)
         assertEquals(0, exits)
     }
+
+    @Test
+    fun `the exit deletes what an import left in the staging folder, a review that is up included`() = runAppTest {
+        val archive = twoSongArchive()
+        val staged = runBlocking {
+            GlobalContext.get().get<ImportStagingLocalSource>().receiveArchive(announcedSize = archive.size.toLong()).run {
+                write(archive, 0, archive.size)
+                finish()
+            }
+        }
+        runOnIdle { viewModel.importController.importFiles(listOf(ImportedFile(name = "songs.zip", bytes = ByteArray(0), staged = staged))) }
+        waitForLibrary { viewModel.importReportState.importReport.value is ImportReport.Review }
+        assertTrue(stagingFolder().list().orEmpty().isNotEmpty(), "The archive was not staged.")
+        runBlocking { viewModel.settleSynchronizationBeforeExit() }
+        assertEquals(emptyList(), stagingFolder().list().orEmpty().toList())
+    }
+
+    /** A zip of two songs, which the import reviews rather than previews. */
+    private fun twoSongArchive() = ByteArrayOutputStream().also { bytes ->
+        ZipOutputStream(bytes).use { zip ->
+            listOf("first", "second").forEach { name ->
+                zip.putNextEntry(ZipEntry("$name.cho"))
+                zip.write("{title: The $name song}\n{artist: Campfire Tests}\n".encodeToByteArray())
+                zip.closeEntry()
+            }
+        }
+    }.toByteArray()
+
+    private fun AppTestScope.stagingFolder() = File(dataDirectory, "imports")
 
     /** Sets a value of each debounced preference through the setter its screen calls, none of them written yet. */
     private fun AppTestScope.setWaitingPreferences() = runOnIdle {

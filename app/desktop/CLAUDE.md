@@ -27,8 +27,10 @@ only.
   it (`StopImportBeforeExit`; staying answers a macOS quit with `cancelQuit`). One being written asks nothing.
 - The macOS quit keeps its response and answers it later: cancelling up front aborts a logout or shutdown.
 - All end in `leave`: the other-instance listener closed, the window hidden, then `settleSynchronizationBeforeExit` — an
-  import still being read is cancelled and its staging deleted, a writing import may finish (up to 30 s), then the
-  pending automatic sync run may finish (up to 15 s), then it is stopped.
+  import still being read is cancelled, a writing import may finish (up to 30 s), every batch is then let go of and
+  what it staged deleted before the process ends (a review or failure on screen included; a deletion only launched
+  would lose the race with a macOS quit's `performQuit`), then the pending automatic sync run may finish (up to 15 s),
+  then it is stopped.
 
 ## Window
 

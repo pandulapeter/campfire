@@ -24,6 +24,7 @@ import com.pandulapeter.campfire.presentation.ApplicationScope
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.channels.Channel
@@ -34,6 +35,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Single
@@ -142,12 +144,29 @@ class ImportWork(
         val arrived = (request.source as? ImportSource.Files)?.files.orEmpty()
         val receptions = arrived.mapNotNull { it.receiving }
         request.stagedFiles += arrived.mapNotNull { it.staged }
-        if (receptions.isNotEmpty()) scope.launch { receptions.forEach { it.discard() } }
+        stagingDeletions.removeAll { it.isCompleted }
+        if (receptions.isNotEmpty()) stagingDeletions += scope.launch { receptions.forEach { it.discard() } }
         if (request.stagedFiles.isNotEmpty()) {
             val staged = request.stagedFiles.toList()
             request.stagedFiles.clear()
-            scope.launch { useCases.deleteImportStaging(staged) }
+            stagingDeletions += scope.launch { useCases.deleteImportStaging(staged) }
         }
+    }
+
+    /** The deletions [settle] started, which [settleBeforeExit] waits for. */
+    private val stagingDeletions = mutableListOf<Job>()
+
+    /**
+     * The import's part of a desktop process ending, once the preparation it cancelled has ended and no write is running:
+     * every batch not yet settled (a review or a failure on screen, one waiting in the queue, the cancelled one, whose
+     * controller settles it only a dispatch later) is settled here, and what each staged is deleted before this returns.
+     * The process ends right after, and a deletion merely launched would leave an archive of up to 16 GB in the staging
+     * folder until a launch that may never come.
+     */
+    internal suspend fun settleBeforeExit() {
+        if (_state.value != ImportWorkState.IDLE) return
+        counted.toList().forEach(::settle)
+        stagingDeletions.toList().joinAll()
     }
 
     /**
