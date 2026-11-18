@@ -45,6 +45,11 @@
     deletion is the one run started with an answer already given.
   - Remote deletions go to `SyncProvider.delete` in one call, so the folder is half deleted (what another device's guard
     sees) as briefly as possible.
+  - **Known limit**: Dropbox carries a batch out at a few files a second, so a device syncing meanwhile sees it in
+    pieces, each judged alone against an index the earlier pieces shrank, and may follow most of a large deletion
+    without being asked: the guard's second question, on the other device, is not promised. Nothing saved is lost (an
+    edit still beats a deletion), and the deleting device was asked or deleted under the threshold.
+    `SyncSimulation` judges each run alone, so it does not check this.
 - **What the service does, as the tests' `FakeSyncProvider` answers it** (measured on Dropbox, 2026-11-18): an upload
   expecting the revision of a file deleted since writes it again (its folder too), and only one written or re-added
   since is a `Conflict`, so an edit uploaded over another device's deletion simply wins; a listing taken right after
