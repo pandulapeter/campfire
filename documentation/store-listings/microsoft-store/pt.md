@@ -43,6 +43,7 @@ Leitura
 • Vire página ou coluna com um clique, as setas do teclado ou um pedal Bluetooth de virar página, e chegue a cada linha só com Cima e Baixo
 • Ou uma única coluna que rola sozinha, na velocidade definida para cada música
 • Melodias ABC desenhadas como partitura, também no PDF
+• Imagens nas páginas da música, como uma foto da partitura, também no PDF
 • Tamanho do texto ajustável, seções que você pode recolher, e capa e links para gravações em cada música
 • Desative os acordes para quem na sala só canta
 • O modo Somente leitura impede que um clique sem querer altere uma música no meio do show
@@ -80,6 +81,7 @@ Organização
 
 Escrita e edição
 • Editor ChordPro com destaque de sintaxe, marcas de erro, prévia ao vivo, e negrito, itálico, sublinhado e cores
+• Anexe um PDF, uma gravação ou um vídeo a uma música e abra-o a partir dela
 
 Importar, exportar, compartilhar e sincronizar
 • Cole uma cifra ou arraste-a para a janela, e ela abre no editor. Os acordes escritos sobre a letra viram acordes de verdade que você pode transpor
@@ -96,7 +98,7 @@ Do seu jeito
 • Inglês, húngaro, romeno, alemão, espanhol, francês, italiano, hebraico, português, polonês e tcheco, alternáveis dentro do app
 
 Suas músicas são suas
-Sua biblioteca é uma pasta de arquivos de texto ChordPro comuns no seu dispositivo. O Campfire funciona offline, não precisa de conta e não coleta dados: sem análises, sem rastreamento e sem anúncios. Ele só se conecta para o que você pede: sincronizar e compartilhar pelo seu próprio Dropbox, sem nenhum servidor no meio, abrir um link compartilhado e buscar capas e detalhes das músicas. Você pode exportar tudo a qualquer momento.
+Sua biblioteca é uma pasta de arquivos de texto ChordPro comuns no seu dispositivo. O Campfire funciona offline, não precisa de conta e não coleta dados: sem análises, sem rastreamento e sem anúncios. Ele só se conecta para o que você pede: sincronizar e compartilhar pelo seu próprio Dropbox, sem nenhum servidor no meio, abrir um link compartilhado e buscar capas, detalhes das músicas e as imagens vinculadas nas músicas. Você pode exportar tudo a qualquer momento.
 
 O Campfire é de código aberto, sob a Mozilla Public License 2.0.
 ```
@@ -137,6 +139,9 @@ Selecione várias músicas de uma vez para adicioná-las a repertórios, marcá-
 Tags e idiomas que viajam dentro dos arquivos das músicas, e uma de 14 cores para cada tag
 ```
 ```
+Imagens nas páginas da música, como uma foto da partitura, e PDFs, gravações ou vídeos anexados a ela
+```
+```
 Editor ChordPro com destaque de sintaxe, marcas de erro, prévia ao vivo, e negrito, itálico, sublinhado e cores
 ```
 ```
@@ -158,10 +163,7 @@ Sincronização opcional pelo seu próprio Dropbox, sem nenhum outro servidor no
 Temas claro e escuro, um fundo sépia e dez esquemas de cores que o ícone da barra de tarefas segue
 ```
 ```
-Funciona offline, sem conta, sem anúncios e sem rastreamento
-```
-```
-De código aberto, sob a Mozilla Public License 2.0
+Funciona offline, sem conta, sem anúncios e sem rastreamento, e é de código aberto, sob a Mozilla Public License 2.0
 ```
 
 ## Search terms (7 max, 30 characters each, 21 words in all)

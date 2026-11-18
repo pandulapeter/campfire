@@ -21,7 +21,7 @@ Information stay as in the English file.
 ## Promotional text (170 characters max)
 
 ```
-Neu in 5.4.0: Akkordraster als Takte gezeichnet, die App auf Portugiesisch, Polnisch und Tschechisch und mehr Akkorde, Raster und Tabs aus von Websites eingefügten Songs.
+Neu in 5.5.0: Bilder auf den Seiten eines Songs, an Songs angehängte PDFs, Aufnahmen und Videos sowie Backups bis 16 GB, die all das zurückbringen.
 ```
 
 ## Description (4,000 characters max)
@@ -37,6 +37,7 @@ Lesen
 • Seite oder Spalte weiter per Klick, Pfeiltasten oder Bluetooth-Pedal, jede Zeile allein mit Hoch und Runter erreichbar
 • Oder eine selbst scrollende Spalte, je Song eigene Geschwindigkeit
 • ABC-Melodien als Noten, auch im PDF
+• Bilder auf den Seiten eines Songs, etwa ein Foto der Noten, auch im PDF
 • Einstellbare Textgröße, einklappbare Abschnitte, Cover und Links zu Aufnahmen
 • „Nur Text“ zum Singen
 • „Nur lesen“ schützt Songs mitten im Set vor versehentlichen Klicks
@@ -71,6 +72,7 @@ Organisieren und Bearbeiten
 • Cover und Songangaben online finden, nur auf Wunsch
 • Rechtsklick auf einen Song oder eine Setlist öffnet das Menü
 • ChordPro-Editor mit Syntaxhervorhebung, Fehlermarkierung, Live-Vorschau sowie fett, kursiv, unterstrichen und farbig
+• Ein PDF, eine Aufnahme oder ein Video an einen Song anhängen und aus dem Song öffnen
 
 Importieren, exportieren, teilen und synchronisieren
 • Akkordblatt einfügen oder ins Fenster ziehen: Akkorde über dem Text werden zu transponierbaren Akkorden

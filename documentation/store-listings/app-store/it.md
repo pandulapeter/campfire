@@ -32,7 +32,7 @@ Testi, accordi e scalette
 ## Promotional text (170 characters max)
 
 ```
-Novità della 5.4.0: griglie di accordi disegnate come battute, l'app in portoghese, polacco e ceco e più accordi, griglie e intavolature dalle canzoni incollate dal web.
+Novità della 5.5.0: immagini sulle pagine delle canzoni, PDF, registrazioni e video allegati alle canzoni, e backup fino a 16 GB che li riportano tutti indietro.
 ```
 
 ## Description (4,000 characters max)
@@ -48,6 +48,7 @@ Lettura
 • Gira pagina o colonna con un tocco, un tasto o un pedale voltapagina Bluetooth, e raggiungi ogni riga solo con Su e Giù
 • Oppure una colonna che scorre da sola al ritmo di ogni canzone
 • Le melodie ABC come spartito, anche nel PDF
+• Immagini sulle pagine di una canzone, come la foto di uno spartito, anche nel PDF
 • Testo ridimensionabile, sezioni richiudibili, copertine e link alle registrazioni
 • Vista Solo testo per chi canta
 • Sola lettura protegge le canzoni da un tocco accidentale sul palco
@@ -81,6 +82,7 @@ Organizzazione e modifica
 • Tag e lingue salvati nei file delle canzoni, tag in 14 colori
 • Copertina e dati di una canzone online, solo quando lo chiedi
 • Editor ChordPro con sintassi evidenziata, errori segnalati, anteprima dal vivo, grassetto, corsivo, sottolineato e colori
+• Allega a una canzone un PDF, una registrazione o un video, e aprilo dalla canzone
 
 Importa, esporta, condividi e sincronizza
 • Incolla, trascina o condividi un foglio di accordi: quelli sopra il testo diventano accordi da trasporre

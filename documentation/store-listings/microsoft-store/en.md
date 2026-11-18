@@ -40,6 +40,7 @@ Reading
 • Turn a page or a column with a click, the arrow keys, or a Bluetooth page-turner pedal, and reach every line with Up and Down alone
 • Or one column that scrolls by itself, at a speed set for each song
 • ABC tunes drawn as sheet music, in the PDF too
+• Pictures on a song's pages, such as a photo of the sheet music, in the PDF too
 • Adjustable text size, sections you can fold, and cover art and links to recordings with every song
 • Switch the chords off for the people in the room who only sing
 • Read only mode keeps a stray click from changing a song mid-set
@@ -77,6 +78,7 @@ Organizing
 
 Writing and editing
 • ChordPro editor with syntax highlighting, error marks, a live preview, and bold, italic, underline, and colors
+• Attach a PDF, a recording, or a video to a song, and open it from the song
 
 Import, export, share, and sync
 • Paste a chord sheet or drag it onto the window, and it opens in the editor. Chords written above the lyrics become real chords you can transpose
@@ -93,7 +95,7 @@ Make it yours
 • English, Hungarian, Romanian, German, Spanish, French, Italian, Hebrew, Portuguese, Polish, and Czech, switchable inside the app
 
 Your songs are yours
-Your library is a folder of ordinary ChordPro text files on your device. Campfire works offline, needs no account, and collects no data: no analytics, no tracking, and no ads. It goes online only for what you ask of it: to sync and share through your own Dropbox, with no server in between, to open a shared link, and to fetch cover images and song details. You can export everything at any time.
+Your library is a folder of ordinary ChordPro text files on your device. Campfire works offline, needs no account, and collects no data: no analytics, no tracking, and no ads. It goes online only for what you ask of it: to sync and share through your own Dropbox, with no server in between, to open a shared link, and to fetch cover images, song details, and the pictures songs link to. You can export everything at any time.
 
 Campfire is open source under the Mozilla Public License 2.0.
 ```
@@ -134,6 +136,9 @@ Select several songs at once to add them to setlists, tag them, set their langua
 Tags and languages that travel inside the song files, and one of 14 colors for every tag
 ```
 ```
+Pictures on a song's pages, such as a photo of the sheet music, and PDFs, recordings, or videos attached to it
+```
+```
 ChordPro editor with syntax highlighting, error marks, a live preview, and bold, italic, underline, and colors
 ```
 ```
@@ -155,10 +160,7 @@ Optional sync through your own Dropbox, with no other server in between
 Light and dark themes, a sepia background, and ten color schemes that the taskbar icon follows
 ```
 ```
-Works offline, with no account, no ads, and no tracking
-```
-```
-Open source under the Mozilla Public License 2.0
+Works offline, with no account, no ads, and no tracking, and is open source under the Mozilla Public License 2.0
 ```
 
 ## Search terms (7 max, 30 characters each, 21 words in all)

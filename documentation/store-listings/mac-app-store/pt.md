@@ -21,7 +21,7 @@ Paste into App Store Connect's pt-BR localization of the macOS version. The name
 ## Promotional text (170 characters max)
 
 ```
-Novo na 5.4.0: grades de acordes desenhadas como compassos, o app em português, polonês e tcheco e mais acordes, grades e tablaturas em músicas coladas de sites.
+Novo na 5.5.0: imagens nas páginas das músicas, PDFs, gravações e vídeos anexados às músicas e backups de até 16 GB que trazem tudo de volta.
 ```
 
 ## Description (4,000 characters max)
@@ -37,6 +37,7 @@ Leitura
 • Vire página ou coluna com um clique, as setas ou um pedal Bluetooth, e chegue a cada linha só com Cima e Baixo
 • Ou uma coluna que rola sozinha na velocidade de cada música
 • Melodias ABC desenhadas como partitura, também no PDF
+• Imagens nas páginas da música, como uma foto da partitura, também no PDF
 • Texto ajustável, seções recolhíveis, capas e links para gravações
 • Uma visualização Só a letra para quem canta
 • Somente leitura evita que um clique sem querer altere a música no show
@@ -71,6 +72,7 @@ Organização e edição
 • Capa e detalhes da música buscados online, só se você pedir
 • Clique com o botão direito numa música ou repertório para abrir o menu
 • Editor ChordPro com destaque de sintaxe, marcas de erro, prévia ao vivo, e negrito, itálico, sublinhado e cores
+• Anexe um PDF, uma gravação ou um vídeo a uma música e abra-o a partir dela
 
 Importar, exportar, compartilhar e sincronizar
 • Cole uma cifra ou arraste-a para a janela, e os acordes sobre a letra viram acordes que você pode transpor

@@ -42,6 +42,7 @@ Citire
 • Întoarce o pagină sau o coloană cu un clic, cu tastele săgeți sau cu o pedală Bluetooth de întors pagini și ajungi la fiecare rând doar cu Sus și Jos
 • Sau o singură coloană care se derulează singură, cu o viteză setată pentru fiecare cântec
 • Melodii ABC desenate ca partitură, și în PDF
+• Imagini în paginile cântecului, de exemplu o fotografie a partiturii, și în PDF
 • Mărimea textului reglabilă, secțiuni pe care le poți plia, iar la fiecare cântec coperta și linkuri spre înregistrări
 • Ascunde acordurile pentru cei din încăpere care doar cântă vocal
 • Modul Doar citire te ferește ca un clic rătăcit să schimbe un cântec în mijlocul concertului
@@ -79,6 +80,7 @@ Organizare
 
 Scriere și editare
 • Editor ChordPro cu evidențierea sintaxei, marcarea erorilor, previzualizare în timp real și aldin, cursiv, subliniat și culori
+• Atașează la un cântec un PDF, o înregistrare sau un videoclip și deschide-l din cântec
 
 Import, export, partajare și sincronizare
 • Lipește o foaie cu acorduri sau trage-o în fereastră, iar ea se deschide în editor. Acordurile scrise deasupra versurilor devin acorduri adevărate, pe care le poți transpune
@@ -95,7 +97,7 @@ Pe gustul tău
 • Engleză, maghiară, română, germană, spaniolă, franceză, italiană, ebraică, portugheză, poloneză și cehă, de ales din aplicație
 
 Cântecele tale sunt ale tale
-Biblioteca ta este un folder cu fișiere text ChordPro obișnuite, pe dispozitivul tău. Campfire funcționează offline, nu cere cont și nu colectează date: fără statistici, fără urmărire și fără reclame. Iese pe internet doar pentru ce îi ceri: ca să sincronizeze și să partajeze prin propriul tău Dropbox, fără niciun server la mijloc, ca să deschidă un link partajat și ca să descarce coperte și detalii despre cântece. Poți exporta totul oricând.
+Biblioteca ta este un folder cu fișiere text ChordPro obișnuite, pe dispozitivul tău. Campfire funcționează offline, nu cere cont și nu colectează date: fără statistici, fără urmărire și fără reclame. Iese pe internet doar pentru ce îi ceri: ca să sincronizeze și să partajeze prin propriul tău Dropbox, fără niciun server la mijloc, ca să deschidă un link partajat și ca să descarce coperte, detalii despre cântece și imaginile spre care trimit cântecele. Poți exporta totul oricând.
 
 Campfire este open source, sub licența Mozilla Public License 2.0.
 ```
@@ -136,6 +138,9 @@ Selectează mai multe cântece deodată ca să le adaugi în liste, să le etich
 Etichete și limbi care călătoresc în fișierele cântecelor și una din 14 culori pentru fiecare etichetă
 ```
 ```
+Imagini în paginile cântecului, de exemplu o fotografie a partiturii, și PDF-uri, înregistrări sau videoclipuri atașate lui
+```
+```
 Editor ChordPro cu evidențierea sintaxei, marcarea erorilor, previzualizare în timp real și aldin, cursiv, subliniat și culori
 ```
 ```
@@ -157,10 +162,7 @@ Sincronizare opțională prin propriul tău Dropbox, fără niciun alt server la
 Temă deschisă sau întunecată, fundal sepia și zece scheme de culori, urmate și de pictograma din bara de activități
 ```
 ```
-Funcționează offline, fără cont, fără reclame și fără urmărire
-```
-```
-Open source, sub licența Mozilla Public License 2.0
+Funcționează offline, fără cont, fără reclame și fără urmărire, și e open source, sub licența Mozilla Public License 2.0
 ```
 
 ## Search terms (7 max, 30 characters each, 21 words in all)

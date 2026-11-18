@@ -40,6 +40,7 @@ Leitura
 • Vire página ou coluna com um toque, uma tecla ou um pedal Bluetooth, e chegue a cada linha só com Cima e Baixo
 • Ou uma coluna que rola sozinha na velocidade de cada música
 • Melodias ABC desenhadas como partitura, também no PDF
+• Imagens nas páginas da música, como uma foto da partitura, também no PDF
 • Texto ajustável, seções recolhíveis, capas e links para gravações
 • Uma visualização Só a letra para quem canta
 • Somente leitura evita que um toque sem querer altere a música no show
@@ -72,6 +73,7 @@ Organização e edição
 • Tags e idiomas guardados no próprio arquivo, com 14 cores
 • Capa e detalhes da música buscados online, só se você pedir
 • Editor ChordPro com destaque de sintaxe, marcas de erro, prévia ao vivo, e negrito, itálico, sublinhado e cores
+• Anexe um PDF, uma gravação ou um vídeo a uma música e abra-o a partir dela
 
 Importar, exportar, compartilhar e sincronizar
 • Cole, solte ou compartilhe uma cifra no Campfire, e os acordes sobre a letra viram acordes que você pode transpor

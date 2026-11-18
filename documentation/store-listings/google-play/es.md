@@ -40,6 +40,7 @@ Lectura
 • Pasa página o columna con un toque, una tecla o un pedal Bluetooth, y llega a cada línea con Arriba y Abajo
 • O una columna que avanza sola a la velocidad de cada canción
 • Melodías ABC como partitura, también en PDF
+• Imágenes en las páginas de una canción, como una foto de la partitura, también en PDF
 • Tamaño de texto ajustable, secciones plegables, portadas y enlaces a grabaciones
 • Vista Solo letra para cantantes
 • El modo Solo lectura evita que un toque por error cambie la canción
@@ -72,6 +73,7 @@ Organización y edición
 • Etiquetas e idiomas guardados en el propio archivo, con 14 colores
 • Portada y datos de la canción buscados en línea, solo si lo pides
 • Editor ChordPro con resaltado, marcas de error, vista previa en vivo, y negrita, cursiva, subrayado y colores
+• Adjunta un PDF, una grabación o un vídeo a una canción, y ábrelo desde la canción
 
 Importar, exportar, compartir y sincronizar
 • Pega, suelta o comparte una hoja de acordes en Campfire, y los acordes sobre la letra se vuelven acordes que puedes transponer

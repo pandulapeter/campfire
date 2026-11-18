@@ -20,7 +20,7 @@ Paste into the App Store Connect locale: ro (the Mac version's own fields; the n
 ## Promotional text (170 characters max)
 
 ```
-Nou în 5.4.0: grile de acorduri desenate ca măsuri, aplicația în portugheză, poloneză și cehă și mai multe acorduri, grile și tabulaturi din cântecele lipite de pe web.
+Nou în 5.5.0: imagini în paginile cântecelor, PDF-uri, înregistrări și videoclipuri atașate cântecelor și backupuri de până la 16 GB care le aduc pe toate înapoi.
 ```
 
 ## Description (4,000 characters max)
@@ -36,6 +36,7 @@ Citire
 • Întorci o pagină sau o coloană cu un clic, cu tastele săgeți sau cu o pedală Bluetooth și ajungi la orice rând cu Sus și Jos
 • Sau o coloană care se derulează singură, în ritmul fiecărui cântec
 • Melodii ABC ca partitură, și în PDF
+• Imagini în paginile cântecului, de exemplu o fotografie a partiturii, și în PDF
 • Mărimea textului reglabilă, secțiuni pliabile, coperte și linkuri spre înregistrări
 • Modul Doar versuri, pentru cei care cântă
 • Modul Doar citire: un clic rătăcit nu schimbă nimic în timpul setului
@@ -70,6 +71,7 @@ Organizare și editare
 • Coperta și detaliile cântecului, căutate online doar la cerere
 • Clic dreapta pe un cântec sau o listă îi deschide meniul
 • Editor ChordPro cu sintaxă colorată, erori marcate, previzualizare live și aldin, cursiv, subliniat și culori
+• Atașezi la un cântec un PDF, o înregistrare sau un videoclip și le deschizi din cântec
 
 Import, export, partajare, sincronizare
 • Lipești o foaie cu acorduri sau o tragi în fereastră, iar acordurile de deasupra versurilor se pot transpune

@@ -20,7 +20,7 @@ Paste into the App Store Connect localization hu (macOS).
 ## Promotional text (170 characters max)
 
 ```
-Újdonságok az 5.4.0-ban: ütemekként rajzolt akkordrácsok, portugál, lengyel és cseh nyelv, és több akkord, rács és tab marad meg a weboldalról beillesztett dalban.
+Újdonságok az 5.5.0-ban: képek a dalok oldalain, a dalokhoz csatolt PDF-ek, felvételek és videók, és akár 16 GB-os mentések, amelyek mindezt visszahozzák.
 ```
 
 ## Description (4,000 characters max)
@@ -36,6 +36,7 @@ Olvasás
 • Lapozz oldalt vagy hasábot kattintással, nyilakkal vagy Bluetooth-pedállal; minden sor elérhető csak a fel és le nyíllal
 • Vagy olvasd egy magától gördülő hasábban, dalonként saját sebességgel
 • ABC-dallamok kottaként, a PDF-ben is
+• Képek a dal oldalain, például a kotta fényképe, a PDF-ben is
 • Állítható szövegméret, összecsukható szakaszok, borítókép, linkek a felvételekhez
 • Csak dalszöveg nézet énekeseknek
 • Csak olvasás módban egy véletlen kattintás sem írja át a dalt fellépés közben
@@ -70,6 +71,7 @@ Rendszerezés és szerkesztés
 • Borítókép és daladatok keresése online, csak ha kéred
 • Jobb kattintással minden dal és lista menüje elérhető
 • ChordPro-szerkesztő szintaxiskiemeléssel, hibajelzéssel, élő előnézettel, félkövér, dőlt, aláhúzott és színes betűkkel
+• Csatolj PDF-et, felvételt vagy videót egy dalhoz, és nyisd meg a dalból
 
 Import, export, megosztás, szinkronizálás
 • Illessz be egy akkordlapot, vagy húzd rá az ablakra, és a dalszöveg fölé írt akkordokból transzponálható akkordok lesznek

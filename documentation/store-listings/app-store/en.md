@@ -30,7 +30,7 @@ Chords, lyrics, and setlists
 ## Promotional text (170 characters max)
 
 ```
-New in 5.4.0: chord grids drawn as bars, the app in Portuguese, Polish, and Czech, and more chords, grids, and tabs kept from songs pasted from websites.
+New in 5.5.0: pictures on a song's pages, PDFs, recordings, and videos attached to songs, and backups of up to 16 GB that bring them all back.
 ```
 
 ## Description (4,000 characters max)
@@ -46,6 +46,7 @@ Reading
 • Turn a page or a column with a tap, a key, or a Bluetooth page-turner pedal, and reach every line with Up and Down alone
 • Or one column that scrolls by itself at each song's own speed
 • ABC tunes drawn as sheet music, in the PDF too
+• Pictures on a song's pages, such as a photo of the sheet music, in the PDF too
 • Adjustable text size, foldable sections, cover art, and links to recordings
 • A lyrics-only view for singers
 • Read only mode keeps a stray tap from changing a song mid-set
@@ -79,6 +80,7 @@ Organizing and editing
 • Tags and languages stored in the song files, with 14 tag colors
 • Find a song's cover art and details online, only when you ask
 • A ChordPro editor with syntax highlighting, error marks, a live preview, and bold, italic, underline, and colors
+• Attach a PDF, a recording, or a video to a song, and open it from the song
 
 Import, export, share, and sync
 • Paste, drop, or share a chord sheet into Campfire, and chords written above the lyrics become chords you can transpose
@@ -130,12 +132,14 @@ Campfire has no account and nothing to sign in to. Two public-domain demo songs 
 
 The microphone is used only by the Tuner tab (and the tuner sheet opened from a song), and is asked for only when the user taps the button on that page. It is listened to only while that page is on screen; nothing it hears is recorded, kept, or sent anywhere.
 
-Network use is limited to features the user starts: optional sync with the user's own Dropbox account (Settings → Sync, not needed to review anything else); sharing a song or setlist as a public link in that same Dropbox; opening a shared link, which downloads it from dl.dropboxusercontent.com with no account; cover art for songs, an image downloaded from the address a song names and a search of MusicBrainz and the iTunes Search API, opened by tapping the cover in the "About the song" sheet; and the song details lookup, which searches the same two services. Everything else works offline.
+Network use is limited to features the user starts: optional sync with the user's own Dropbox account (Settings → Sync, not needed to review anything else); sharing a song or setlist as a public link in that same Dropbox; opening a shared link, which downloads it from dl.dropboxusercontent.com with no account; cover art for songs, an image downloaded from the address a song names and a search of MusicBrainz and the iTunes Search API, opened by tapping the cover in the "About the song" sheet; the song details lookup, which searches the same two services; and pictures named by an https address, downloaded once into the library when the user enters one with From a link in the editor's Image menu, taps Download on a missing picture, or opens the review of an import whose songs name one (Settings → Features → Pictures from links turns that off). Everything else works offline.
 
 The "audio" background mode keeps the metronome clicking while the screen is locked; it plays only after the user starts it, and stops when they leave the screen it was started on.
 
+On iOS 26 and later, an import the user started keeps working for a while after they leave the app, as a continued processing task shown in the system's own progress; it exists only while that import runs and ends with it.
+
 New since the last approved version, and where to find it:
-- Chord grids: the demo song House of the Rising Sun opens with a grid, now drawn as rows of bars with each chord as wide as its beats; the PDF made from Share or export in the song's three-dot menu draws it the same way.
-- Languages: Portuguese, Polish, and Czech, chosen under Settings → General → Language.
-- Pasting from websites: a chord sheet copied from a web page and pasted with Paste from clipboard (the New button's menu on the Songs screen) keeps chords the page draws with styling, takes rows of bars as a grid, and recognizes tabs whose strings are named without a bar line.
+- Pictures in songs: open a song, tap Edit, then Image in the editor's toolbar (Photos, Files, or From a link). After Save, the picture shows on the song's page, opens full screen when tapped, and is printed in the PDF made from Share or export in the song's three-dot menu.
+- Attachments: in the editor, Attach (after Link in the toolbar) adds a document, recording, or video of up to 50 MB. It is listed in the About the song sheet (the song's three-dot menu, or a tap on the title at the song's top), where a tap opens it with the app iOS picks. Settings → Features → Attachments hides them.
+- Large backups: Import files (the New button's menu on the Songs screen) takes archives of up to 16 GB, with their pictures and attachments, and shows how far it has got.
 ```

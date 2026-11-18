@@ -21,7 +21,7 @@ Paste into App Store Connect's cs localization of the macOS version. The name an
 ## Promotional text (170 characters max)
 
 ```
-Novinka ve verzi 5.4.0: mřížky akordů kreslené jako takty, aplikace v portugalštině, polštině a češtině a víc akordů, mřížek a tabulatur z písní vložených z webu.
+Novinka ve verzi 5.5.0: obrázky na stránkách písní, PDF, nahrávky a videa přiložená k písním a zálohy do 16 GB, které je všechny vrátí zpět.
 ```
 
 ## Description (4,000 characters max)
@@ -37,6 +37,7 @@ Campfire nemá vlastní písně: je domovem pro ty tvoje.
 • Otáčej stránku nebo sloupec kliknutím, klávesou nebo pedálem Bluetooth a ke každému řádku se dostaneš jen šipkami nahoru a dolů
 • Nebo jeden sloupec, který se posouvá sám, rychlostí nastavenou pro každou píseň
 • Melodie ABC vykreslené jako noty, i v PDF
+• Obrázky na stránkách písně, například fotka not, i v PDF
 • Nastavitelná velikost písma, sbalitelné sekce, obaly a odkazy na nahrávky
 • Zobrazení „Jen text“ pro zpěváky
 • Režim jen pro čtení: náhodné kliknutí nezmění píseň uprostřed vystoupení
@@ -71,6 +72,7 @@ Organizace a úpravy
 • Obaly a podrobnosti písní z internetu, jen když o ně požádáš
 • Pravým kliknutím na píseň nebo setlist otevřeš jeho nabídku
 • Editor ChordPro se zvýrazněním syntaxe, označením chyb, živým náhledem, tučným písmem, kurzívou, podtržením a barvami
+• Přilož k písni PDF, nahrávku nebo video a otevři je z písně
 
 Import, export, sdílení a synchronizace
 • Vlož text s akordy nebo ho přetáhni do okna a akordy zapsané nad textem se změní na akordy, které můžeš transponovat

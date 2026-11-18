@@ -42,6 +42,7 @@ Campfire nemá vlastní písně. Je domovem pro ty tvoje. Napiš je ve vestavěn
 • Otáčej stránku nebo sloupec kliknutím, šipkami na klávesnici nebo pedálem Bluetooth na otáčení stránek a ke každému řádku se dostaneš jen šipkami nahoru a dolů
 • Nebo jeden sloupec, který se posouvá sám, rychlostí nastavenou pro každou píseň
 • Melodie ABC vykreslené jako noty, i v PDF
+• Obrázky na stránkách písně, například fotka not, i v PDF
 • Nastavitelná velikost písma, sekce, které můžeš sbalit, a u každé písně obal a odkazy na nahrávky
 • Vypni akordy pro ty, kdo jen zpívají
 • Režim jen pro čtení: náhodné kliknutí nezmění píseň uprostřed vystoupení
@@ -79,6 +80,7 @@ Organizace
 
 Psaní a úpravy
 • Editor ChordPro se zvýrazněním syntaxe, označením chyb, živým náhledem, tučným písmem, kurzívou, podtržením a barvami
+• Přilož k písni PDF, nahrávku nebo video a otevři je z písně
 
 Import, export, sdílení a synchronizace
 • Vlož text s akordy nebo ho přetáhni do okna a otevře se v editoru. Akordy zapsané nad textem se změní na skutečné akordy, které můžeš transponovat
@@ -95,7 +97,7 @@ Po tvém
 • Angličtina, maďarština, rumunština, němčina, španělština, francouzština, italština, hebrejština, portugalština, polština a čeština, přepínatelné v aplikaci
 
 Tvoje písně patří tobě
-Tvoje knihovna je složka obyčejných textových souborů ChordPro ve tvém zařízení. Campfire funguje offline, nepotřebuje účet a nesbírá žádná data: žádná analytika, sledování ani reklamy. Na internet se připojí jen kvůli tomu, o co ho požádáš: aby synchronizoval a sdílel přes tvůj vlastní Dropbox, bez jakéhokoli serveru mezi tím, aby otevřel sdílený odkaz a aby stáhl obaly a podrobnosti písní. Všechno můžeš kdykoli exportovat.
+Tvoje knihovna je složka obyčejných textových souborů ChordPro ve tvém zařízení. Campfire funguje offline, nepotřebuje účet a nesbírá žádná data: žádná analytika, sledování ani reklamy. Na internet se připojí jen kvůli tomu, o co ho požádáš: aby synchronizoval a sdílel přes tvůj vlastní Dropbox, bez jakéhokoli serveru mezi tím, aby otevřel sdílený odkaz a aby stáhl obaly, podrobnosti písní a obrázky, na které písně odkazují. Všechno můžeš kdykoli exportovat.
 
 Campfire je open source pod licencí Mozilla Public License 2.0.
 ```
@@ -136,6 +138,9 @@ Vyber několik písní najednou a přidej je do setlistů, označ štítky, nast
 Štítky a jazyky uložené přímo v souborech písní, takže putují s nimi, a jedna ze 14 barev pro každý štítek
 ```
 ```
+Obrázky na stránkách písně, například fotka not, a k ní přiložená PDF, nahrávky nebo videa
+```
+```
 Editor ChordPro se zvýrazněním syntaxe, označením chyb, živým náhledem, tučným písmem, kurzívou, podtržením a barvami
 ```
 ```
@@ -157,10 +162,7 @@ Volitelná synchronizace přes tvůj vlastní Dropbox, bez jakéhokoli dalšího
 Světlý a tmavý motiv, pozadí v sépii a deset barevných schémat, kterým se přizpůsobí ikona na hlavním panelu
 ```
 ```
-Funguje offline, bez účtu, bez reklam a bez sledování
-```
-```
-Open source pod licencí Mozilla Public License 2.0
+Funguje offline, bez účtu, bez reklam a bez sledování a je open source pod licencí Mozilla Public License 2.0
 ```
 
 ## Search terms (7 max, 30 characters each, 21 words in all)

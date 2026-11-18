@@ -40,6 +40,7 @@ Czytanie
 • Przewracaj stronę lub kolumnę dotknięciem, klawiszem albo pedałem Bluetooth i docieraj do każdej linijki samymi strzałkami
 • Albo jedna kolumna przewijana sama w tempie piosenki
 • Melodie ABC rysowane jako nuty, także w PDF
+• Obrazy na stronach piosenki, na przykład zdjęcie nut, także w PDF
 • Regulowany rozmiar tekstu, zwijane sekcje, okładki i linki do nagrań
 • Widok „Tylko tekst” dla wokalistów
 • Tryb tylko do odczytu: przypadkowe dotknięcie nie zmieni piosenki na scenie
@@ -72,6 +73,7 @@ Porządkowanie i edycja
 • Tagi i języki zapisane w plikach piosenek, z 14 kolorami tagów
 • Okładki i szczegóły piosenek z internetu, tylko na życzenie
 • Edytor ChordPro z podświetlaniem składni, znacznikami błędów, podglądem na żywo, pogrubieniem, kursywą, podkreśleniem i kolorami
+• Załącz do piosenki PDF, nagranie lub wideo i otwieraj je z poziomu piosenki
 
 Import, eksport, udostępnianie i synchronizacja
 • Wklej, upuść lub udostępnij tekst z akordami, a akordy nad tekstem staną się akordami do transponowania

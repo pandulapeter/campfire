@@ -40,6 +40,7 @@ Citire
 • Întorci o pagină sau o coloană cu o atingere, o tastă sau o pedală Bluetooth și ajungi la orice rând cu Sus și Jos
 • Sau o coloană care se derulează singură, în ritmul fiecărui cântec
 • Melodii ABC ca partitură, și în PDF
+• Imagini în paginile cântecului, de exemplu o fotografie a partiturii, și în PDF
 • Mărimea textului reglabilă, secțiuni pliabile, coperte și linkuri spre înregistrări
 • Modul Doar versuri, pentru cei care cântă
 • Modul Doar citire: o atingere rătăcită nu schimbă nimic în timpul setului
@@ -72,6 +73,7 @@ Organizare și editare
 • Etichete și limbi păstrate în fișierele cântecelor, cu 14 culori
 • Coperta și detaliile cântecului, căutate online doar la cerere
 • Editor ChordPro cu sintaxă colorată, erori marcate, previzualizare live și aldin, cursiv, subliniat și culori
+• Atașezi la un cântec un PDF, o înregistrare sau un videoclip și le deschizi din cântec
 
 Import, export, partajare, sincronizare
 • Lipești, tragi sau partajezi o foaie cu acorduri în Campfire, iar acordurile de deasupra versurilor se pot transpune

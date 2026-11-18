@@ -40,6 +40,7 @@ Lecture
 • Tourne une page ou une colonne d'un toucher, d'une touche ou d'une pédale Bluetooth, et atteins chaque ligne avec Haut et Bas
 • Ou une colonne qui défile seule, à la vitesse de chaque chanson
 • Airs ABC en partition, PDF compris
+• Images sur les pages d'une chanson, comme une photo de la partition, PDF compris
 • Taille du texte réglable, sections repliables, pochettes et liens d'écoute
 • Affichage Paroles seules pour les chanteurs
 • Le mode Lecture seule protège tes chansons d'un toucher égaré en plein concert
@@ -72,6 +73,7 @@ Organisation et édition
 • Étiquettes et langues stockées dans les fichiers, 14 couleurs d'étiquette
 • Pochette et infos trouvées en ligne, à ta demande seulement
 • Éditeur ChordPro avec coloration syntaxique, erreurs signalées, aperçu en direct, gras, italique, souligné et couleurs
+• Joins un PDF, un enregistrement ou une vidéo à une chanson, et ouvre-le depuis la chanson
 
 Import, export, partage et synchro
 • Colle, dépose ou partage une grille d'accords vers Campfire : les accords écrits sur les paroles deviennent transposables

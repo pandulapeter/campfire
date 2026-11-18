@@ -40,6 +40,7 @@ Campfire nemá vlastní písně: je domovem pro ty tvoje.
 • Otáčej stránku nebo sloupec klepnutím, klávesou nebo pedálem Bluetooth a ke každému řádku se dostaneš jen šipkami nahoru a dolů
 • Nebo jeden sloupec, který se posouvá sám, rychlostí nastavenou pro každou píseň
 • Melodie ABC vykreslené jako noty, i v PDF
+• Obrázky na stránkách písně, například fotka not, i v PDF
 • Nastavitelná velikost písma, sbalitelné sekce, obaly a odkazy na nahrávky
 • Zobrazení „Jen text“ pro zpěváky
 • Režim jen pro čtení: náhodné klepnutí nezmění píseň uprostřed vystoupení
@@ -72,6 +73,7 @@ Organizace a úpravy
 • Štítky a jazyky uložené v souborech písní, se 14 barvami štítků
 • Obaly a podrobnosti písní z internetu, jen když o ně požádáš
 • Editor ChordPro se zvýrazněním syntaxe, označením chyb, živým náhledem, tučným písmem, kurzívou, podtržením a barvami
+• Přilož k písni PDF, nahrávku nebo video a otevři je z písně
 
 Import, export, sdílení a synchronizace
 • Vlož, přetáhni nebo nasdílej text s akordy do Campfire a akordy zapsané nad textem se změní na akordy, které můžeš transponovat

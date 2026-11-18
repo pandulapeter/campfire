@@ -21,7 +21,7 @@ review notes and App Sandbox information stay in `en.md`.
 ## Promotional text (170 characters max)
 
 ```
-Novità della 5.4.0: griglie di accordi disegnate come battute, l'app in portoghese, polacco e ceco e più accordi, griglie e intavolature dalle canzoni incollate dal web.
+Novità della 5.5.0: immagini sulle pagine delle canzoni, PDF, registrazioni e video allegati alle canzoni, e backup fino a 16 GB che li riportano tutti indietro.
 ```
 
 ## Description (4,000 characters max)
@@ -37,6 +37,7 @@ Lettura
 • Gira pagina o colonna con un clic, le frecce o un pedale voltapagina Bluetooth, e raggiungi ogni riga con Su e Giù
 • Oppure una colonna che scorre da sola al ritmo di ogni canzone
 • Melodie ABC come spartito, anche in PDF
+• Immagini sulle pagine di una canzone, come la foto di uno spartito, anche in PDF
 • Testo ridimensionabile, sezioni richiudibili, copertine e link alle registrazioni
 • Vista Solo testo per chi canta
 • Sola lettura protegge le canzoni da un clic accidentale sul palco
@@ -71,6 +72,7 @@ Organizzazione e modifica
 • Copertina e dati di una canzone online, solo quando lo chiedi
 • Clic destro su una canzone o scaletta per aprirne il menu
 • Editor ChordPro con sintassi evidenziata, errori segnalati, anteprima dal vivo, grassetto, corsivo, sottolineato e colori
+• Allega a una canzone un PDF, una registrazione o un video, e aprilo dalla canzone
 
 Importa, esporta, condividi e sincronizza
 • Incolla un foglio di accordi o trascinalo nella finestra: quelli sopra il testo diventano accordi da trasporre

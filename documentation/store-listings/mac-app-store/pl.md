@@ -21,7 +21,7 @@ Paste into App Store Connect's pl localization of the macOS version. The name an
 ## Promotional text (170 characters max)
 
 ```
-Nowość w 5.4.0: siatki akordów rysowane jako takty, aplikacja po portugalsku, polsku i czesku oraz więcej akordów, siatek i tabulatur z piosenek wklejonych ze stron.
+Nowość w 5.5.0: obrazy na stronach piosenek, załączone do piosenek pliki PDF, nagrania i wideo oraz kopie zapasowe do 16 GB, które przywracają je wszystkie.
 ```
 
 ## Description (4,000 characters max)
@@ -37,6 +37,7 @@ Czytanie
 • Przewracaj stronę lub kolumnę kliknięciem, z klawiatury albo pedałem Bluetooth i docieraj do każdej linijki samymi strzałkami
 • Albo jedna kolumna przewijana sama w tempie piosenki
 • Melodie ABC rysowane jako nuty, także w PDF
+• Obrazy na stronach piosenki, na przykład zdjęcie nut, także w PDF
 • Regulowany rozmiar tekstu, zwijane sekcje, okładki i linki do nagrań
 • Widok „Tylko tekst” dla wokalistów
 • Tryb tylko do odczytu: przypadkowe kliknięcie nie zmieni piosenki na scenie
@@ -71,6 +72,7 @@ Porządkowanie i edycja
 • Okładki i szczegóły piosenek z internetu, tylko na życzenie
 • Menu piosenki lub setlisty pod prawym przyciskiem myszy
 • Edytor ChordPro z podświetlaniem składni, znacznikami błędów, podglądem na żywo, pogrubieniem, kursywą, podkreśleniem i kolorami
+• Załącz do piosenki PDF, nagranie lub wideo i otwieraj je z poziomu piosenki
 
 Import, eksport, udostępnianie i synchronizacja
 • Wklej tekst z akordami lub przeciągnij go na okno, a akordy nad tekstem staną się akordami do transponowania

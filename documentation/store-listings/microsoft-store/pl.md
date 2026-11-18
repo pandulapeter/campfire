@@ -42,6 +42,7 @@ Czytanie
 • Przewracaj stronę lub kolumnę kliknięciem, z klawiatury albo pedałem Bluetooth do przewracania stron, a do każdej linijki dotrzesz samymi strzałkami w górę i w dół
 • Albo jedna kolumna, która przewija się sama, z prędkością ustawioną dla każdej piosenki
 • Melodie ABC rysowane jako nuty, także w PDF
+• Obrazy na stronach piosenki, na przykład zdjęcie nut, także w PDF
 • Regulowany rozmiar tekstu, sekcje, które możesz zwinąć, a przy każdej piosence okładka i linki do nagrań
 • Wyłącz akordy dla tych, którzy tylko śpiewają
 • Tryb tylko do odczytu: przypadkowe kliknięcie nie zmieni piosenki w trakcie koncertu
@@ -79,6 +80,7 @@ Porządkowanie
 
 Pisanie i edycja
 • Edytor ChordPro z podświetlaniem składni, oznaczaniem błędów, podglądem na żywo oraz pogrubieniem, kursywą, podkreśleniem i kolorami
+• Załącz do piosenki PDF, nagranie lub wideo i otwieraj je z poziomu piosenki
 
 Import, eksport, udostępnianie i synchronizacja
 • Wklej tekst z akordami lub przeciągnij go na okno, a otworzy się w edytorze. Akordy zapisane nad tekstem staną się prawdziwymi akordami, które możesz transponować
@@ -95,7 +97,7 @@ Po twojemu
 • Angielski, węgierski, rumuński, niemiecki, hiszpański, francuski, włoski, hebrajski, portugalski, polski i czeski, do przełączenia w aplikacji
 
 Twoje piosenki należą do ciebie
-Twoja biblioteka to folder zwykłych plików tekstowych ChordPro na twoim urządzeniu. Campfire działa offline, nie wymaga konta i nie zbiera danych: żadnej analityki, śledzenia ani reklam. Łączy się z internetem tylko wtedy, gdy o to prosisz: by synchronizować i udostępniać przez twojego Dropboxa, bez żadnego serwera pośrodku, by otworzyć udostępniony link oraz by pobrać okładki i szczegóły piosenek. W każdej chwili możesz wszystko wyeksportować.
+Twoja biblioteka to folder zwykłych plików tekstowych ChordPro na twoim urządzeniu. Campfire działa offline, nie wymaga konta i nie zbiera danych: żadnej analityki, śledzenia ani reklam. Łączy się z internetem tylko wtedy, gdy o to prosisz: by synchronizować i udostępniać przez twojego Dropboxa, bez żadnego serwera pośrodku, by otworzyć udostępniony link oraz by pobrać okładki, szczegóły piosenek oraz obrazy, do których linkują piosenki. W każdej chwili możesz wszystko wyeksportować.
 
 Campfire jest open source na licencji Mozilla Public License 2.0.
 ```
@@ -136,6 +138,9 @@ Zaznacz kilka piosenek naraz, by dodać je do setlist, otagować, ustawić ich j
 Tagi i języki zapisane w plikach piosenek, które z nimi wędrują, i jeden z 14 kolorów dla każdego tagu
 ```
 ```
+Obrazy na stronach piosenki, na przykład zdjęcie nut, oraz załączone do niej pliki PDF, nagrania lub wideo
+```
+```
 Edytor ChordPro z podświetlaniem składni, oznaczaniem błędów, podglądem na żywo oraz pogrubieniem, kursywą, podkreśleniem i kolorami
 ```
 ```
@@ -157,10 +162,7 @@ Opcjonalna synchronizacja przez twojego Dropboxa, bez żadnego innego serwera po
 Jasny i ciemny motyw, tło w sepii i dziesięć schematów kolorów, za którymi podąża ikona na pasku zadań
 ```
 ```
-Działa offline, bez konta, bez reklam i bez śledzenia
-```
-```
-Open source na licencji Mozilla Public License 2.0
+Działa offline, bez konta, bez reklam i bez śledzenia, a do tego jest open source na licencji Mozilla Public License 2.0
 ```
 
 ## Search terms (7 max, 30 characters each, 21 words in all)

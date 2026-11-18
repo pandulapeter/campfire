@@ -20,7 +20,7 @@ Paste into App Store Connect's French localizations: fr-FR and fr-CA.
 ## Promotional text (170 characters max)
 
 ```
-Nouveau en 5.4.0 : grilles d'accords dessinées en mesures, l'app en portugais, polonais et tchèque, et plus d'accords, grilles et tablatures gardés depuis le web.
+Nouveau en 5.5.0 : des images sur les pages des chansons, des PDF, enregistrements et vidéos joints aux chansons, et des sauvegardes jusqu'à 16 Go qui ramènent tout.
 ```
 
 ## Description (4,000 characters max)
@@ -36,6 +36,7 @@ Lecture
 • Tourne une page ou une colonne d'un clic, des flèches ou d'une pédale Bluetooth, et atteins chaque ligne avec Haut et Bas
 • Ou une colonne qui défile seule, à la vitesse de chaque chanson
 • Airs ABC en partition, PDF inclus
+• Images sur les pages d'une chanson, comme une photo de la partition, PDF inclus
 • Taille du texte réglable, sections repliables, pochettes et liens d'écoute
 • Affichage Paroles seules pour les chanteurs
 • Le mode Lecture seule protège tes chansons d'un clic égaré en plein concert
@@ -70,6 +71,7 @@ Organisation et édition
 • Pochette et infos trouvées en ligne, à ta demande seulement
 • Clic droit sur une chanson ou une setlist pour son menu
 • Éditeur ChordPro avec coloration syntaxique, erreurs signalées, aperçu en direct, gras, italique, souligné et couleurs
+• Joins un PDF, un enregistrement ou une vidéo à une chanson, et ouvre-le depuis la chanson
 
 Import, export, partage et synchro
 • Colle une grille d'accords ou glisse-la sur la fenêtre : les accords écrits sur les paroles deviennent transposables

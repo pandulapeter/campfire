@@ -42,6 +42,7 @@ Olvasás
 • Lapozz oldalanként vagy hasábonként kattintással, a nyílbillentyűkkel vagy Bluetooth-pedállal; minden sor elérhető csak a fel és le nyíllal
 • Vagy olvasd egyetlen, magától gördülő hasábban, dalonként beállítható sebességgel
 • ABC-dallamok kottaként, a PDF-ben is
+• Képek a dal oldalain, például a kotta fényképe, a PDF-ben is
 • Állítható szövegméret, összecsukható szakaszok, és minden dalhoz borítókép és linkek a felvételekhez
 • Az akkordok kikapcsolhatók azoknak, akik csak énekelnek
 • Csak olvasás módban egy véletlen kattintás sem írja át a dalt fellépés közben
@@ -79,6 +80,7 @@ Rendszerezés
 
 Írás és szerkesztés
 • ChordPro-szerkesztő szintaxiskiemeléssel, hibajelzéssel, élő előnézettel, félkövér, dőlt, aláhúzott és színes betűkkel
+• Csatolj PDF-et, felvételt vagy videót egy dalhoz, és nyisd meg a dalból
 
 Importálás, exportálás, megosztás és szinkronizálás
 • Illessz be egy akkordlapot, vagy húzd rá az ablakra, és megnyílik a szerkesztőben. A dalszöveg fölé írt akkordokból valódi, transzponálható akkordok lesznek
@@ -95,7 +97,7 @@ Szabd magadra
 • Angol, magyar, román, német, spanyol, francia, olasz, héber, portugál, lengyel és cseh nyelv, az appon belül váltható
 
 A dalaid a tieid
-A könyvtárad egy mappa az eszközödön, tele közönséges ChordPro-szövegfájlokkal. A Campfire offline is működik, nem kell hozzá fiók, és nem gyűjt adatokat: nincs analitika, követés és hirdetés. Csak akkor megy online, ha kéred: szinkronizáláshoz és megosztáshoz a saját Dropboxodon át, köztes szerver nélkül, megosztott link megnyitásához, borítóképek és daladatok letöltéséhez. Bármikor mindent exportálhatsz.
+A könyvtárad egy mappa az eszközödön, tele közönséges ChordPro-szövegfájlokkal. A Campfire offline is működik, nem kell hozzá fiók, és nem gyűjt adatokat: nincs analitika, követés és hirdetés. Csak akkor megy online, ha kéred: szinkronizáláshoz és megosztáshoz a saját Dropboxodon át, köztes szerver nélkül, megosztott link megnyitásához, borítóképek, daladatok és a dalokban linkelt képek letöltéséhez. Bármikor mindent exportálhatsz.
 
 A Campfire nyílt forráskódú, a Mozilla Public License 2.0 alatt.
 ```
@@ -136,6 +138,9 @@ Több dal kijelölése egyszerre, hogy listákhoz add, felcímkézd, beállítsd
 A címkék és a nyelvek a dalfájlokkal együtt utaznak, és minden címke 14 szín egyikét kaphatja
 ```
 ```
+Képek a dal oldalain, például a kotta fényképe, és a dalhoz csatolt PDF-ek, felvételek vagy videók
+```
+```
 ChordPro-szerkesztő szintaxiskiemeléssel, hibajelzéssel, élő előnézettel, félkövér, dőlt, aláhúzott és színes betűkkel
 ```
 ```
@@ -157,10 +162,7 @@ Opcionális szinkronizálás a saját Dropboxodon keresztül, köztes szerver n�
 Világos és sötét téma, szépia háttér és tíz színséma, amelyet a tálcaikon is követ
 ```
 ```
-Offline is működik, fiók, hirdetések és követés nélkül
-```
-```
-Nyílt forráskódú, a Mozilla Public License 2.0 alatt
+Offline is működik, fiók, hirdetések és követés nélkül, és nyílt forráskódú, a Mozilla Public License 2.0 alatt
 ```
 
 ## Search terms (7 max, 30 characters each, 21 words in all)

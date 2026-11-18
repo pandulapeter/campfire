@@ -40,6 +40,7 @@ Olvasás
 • Lapozz oldalt vagy hasábot koppintással, billentyűvel vagy Bluetooth-pedállal; minden sor elérhető csak a fel és le gombbal
 • Vagy olvasd egy magától gördülő hasábban, dalonként saját sebességgel
 • ABC-dallamok kottaként, a PDF-ben is
+• Képek a dal oldalain, például a kotta fényképe, a PDF-ben is
 • Állítható szövegméret, összecsukható szakaszok, borítókép, linkek a felvételekhez
 • Csak dalszöveg nézet énekeseknek
 • Csak olvasás módban egy véletlen koppintás sem írja át a dalt fellépés közben
@@ -72,6 +73,7 @@ Rendszerezés és szerkesztés
 • Címkék és nyelvek a dalfájlokban tárolva, 14 címkeszínnel
 • Borítókép és daladatok keresése online, csak ha kéred
 • ChordPro-szerkesztő szintaxiskiemeléssel, hibajelzéssel, élő előnézettel, félkövér, dőlt, aláhúzott és színes betűkkel
+• Csatolj PDF-et, felvételt vagy videót egy dalhoz, és nyisd meg a dalból
 
 Import, export, megosztás, szinkronizálás
 • Illessz be, húzz be vagy ossz meg egy akkordlapot, és a dalszöveg fölé írt akkordokból transzponálható akkordok lesznek

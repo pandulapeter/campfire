@@ -38,6 +38,7 @@ Reading
 • Turn a page or a column with a tap, a key, or a Bluetooth page-turner pedal, and reach every line with Up and Down alone
 • Or one column that scrolls by itself at each song's own speed
 • ABC tunes drawn as sheet music, in the PDF too
+• Pictures on a song's pages, such as a photo of the sheet music, in the PDF too
 • Adjustable text size, foldable sections, cover art, and links to recordings
 • A lyrics-only view for singers
 • Read only mode keeps a stray tap from changing a song mid-set
@@ -70,6 +71,7 @@ Organizing and editing
 • Tags and languages stored in the song files, with 14 tag colors
 • Find a song's cover art and details online, only when you ask
 • A ChordPro editor with syntax highlighting, error marks, a live preview, and bold, italic, underline, and colors
+• Attach a PDF, a recording, or a video to a song, and open it from the song
 
 Import, export, share, and sync
 • Paste, drop, or share a chord sheet into Campfire, and chords written above the lyrics become chords you can transpose

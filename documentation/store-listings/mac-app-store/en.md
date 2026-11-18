@@ -18,7 +18,7 @@ sheet, or the wallpaper's colors.
 ## Promotional text (170 characters max)
 
 ```
-New in 5.4.0: chord grids drawn as bars, the app in Portuguese, Polish, and Czech, and more chords, grids, and tabs kept from songs pasted from websites.
+New in 5.5.0: pictures on a song's pages, PDFs, recordings, and videos attached to songs, and backups of up to 16 GB that bring them all back.
 ```
 
 ## Description (4,000 characters max)
@@ -34,6 +34,7 @@ Reading
 • Turn a page or a column with a click, the arrow keys, or a Bluetooth page-turner pedal, and reach every line with Up and Down alone
 • Or one column that scrolls by itself at each song's own speed
 • ABC tunes drawn as sheet music, in the PDF too
+• Pictures on a song's pages, such as a photo of the sheet music, in the PDF too
 • Adjustable text size, foldable sections, cover art, and links to recordings
 • A lyrics-only view for singers
 • Read only mode keeps a stray click from changing a song mid-set
@@ -68,6 +69,7 @@ Organizing and editing
 • Find a song's cover art and details online, only when you ask
 • Right-click any song or setlist to open its menu
 • A ChordPro editor with syntax highlighting, error marks, a live preview, and bold, italic, underline, and colors
+• Attach a PDF, a recording, or a video to a song, and open it from the song
 
 Import, export, share, and sync
 • Paste a chord sheet or drag it onto the window, and chords written above the lyrics become chords you can transpose
@@ -99,26 +101,26 @@ tuner,metronome,chordpro,guitar,ukulele,mandolin,banjo,bass,piano,capo,transpose
 ```
 Campfire has no account and nothing to sign in to. Two public-domain demo songs and a setlist are loaded on first launch, so every feature can be reviewed without adding content. The first launch also opens a short onboarding, which can be skipped.
 
-Files are only read and written where the user picks them in the system's open and save panels (Import files in the New button's menu on the Songs screen or in Settings → Library; Share or export in a song's or setlist's menu; Save QR code for a shared link), or dropped onto the window; the library itself stays inside the app's sandbox container.
+Files are only read and written where the user picks them in the system's open and save panels (Import files in the New button's menu on the Songs screen or in Settings → Library; Share or export in a song's or setlist's menu; Save QR code for a shared link; Files in the song editor's Image menu and Attach), or dropped onto the window; the library itself stays inside the app's sandbox container.
 
 The microphone is used only by the Tuner tab (and the tuner sheet opened from a song), and is asked for only when the user clicks the button on that page. It is listened to only while that page is on screen; nothing it hears is recorded, kept, or sent anywhere.
 
-Network use is limited to features the user starts: optional sync with the user's own Dropbox account (Settings → Sync, not needed to review anything else); sharing a song or setlist as a public link in that same Dropbox; opening a shared link, which downloads it from dl.dropboxusercontent.com with no account; cover art for songs, an image downloaded from the address a song names and a search of MusicBrainz and the iTunes Search API, opened by clicking the cover in the "About the song" sheet; and the song details lookup, which searches the same two services. Everything else works offline.
+Network use is limited to features the user starts: optional sync with the user's own Dropbox account (Settings → Sync, not needed to review anything else); sharing a song or setlist as a public link in that same Dropbox; opening a shared link, which downloads it from dl.dropboxusercontent.com with no account; cover art for songs, an image downloaded from the address a song names and a search of MusicBrainz and the iTunes Search API, opened by clicking the cover in the "About the song" sheet; the song details lookup, which searches the same two services; and pictures named by an https address, downloaded once into the library when the user enters one with From a link in the editor's Image menu, taps Download on a missing picture, or opens the review of an import whose songs name one (Settings → Features → Pictures from links turns that off). Everything else works offline.
 
 New since the last approved version, and where to find it:
-- Chord grids: the demo song House of the Rising Sun opens with a grid, now drawn as rows of bars with each chord as wide as its beats; the PDF made from Share or export in the song's three-dot menu draws it the same way.
-- Languages: Portuguese, Polish, and Czech, chosen under Settings → General → Language.
-- Pasting from websites: a chord sheet copied from a web page and pasted with Paste from clipboard (the New button's menu on the Songs screen) keeps chords the page draws with styling, takes rows of bars as a grid, and recognizes tabs whose strings are named without a bar line.
+- Pictures in songs: open a song, click Edit, then Image in the editor's toolbar (Files, or From a link). After Save, the picture shows on the song's page, opens full screen when clicked, and is printed in the PDF made from Share or export in the song's three-dot menu.
+- Attachments: in the editor, Attach (after Link in the toolbar) adds a document, recording, or video of up to 50 MB. It is listed in the About the song sheet (the song's three-dot menu, or a click on the title at the song's top), where a click opens it with the app macOS picks. Settings → Features → Attachments hides them.
+- Large backups: Import files (the New button's menu on the Songs screen) takes archives of up to 16 GB, with their pictures and attachments, and shows how far it has got. Quitting during an import asks first.
 ```
 
 ## App Sandbox Information
 
 ```
-[com.apple.security.files.user-selected.read-write] Importing songs (ChordPro, text, PDF, Word, ABC, and zip files, and other songbook apps' backups) and exporting songs, setlists, the whole library, or a shared link's QR code, always through the system's open and save panels or files the user drops onto the window.
+[com.apple.security.files.user-selected.read-write] Importing songs (ChordPro, text, PDF, Word, ABC, and zip files, and other songbook apps' backups), adding pictures and attached files to a song, and exporting songs, setlists, the whole library, or a shared link's QR code, always through the system's open and save panels or files the user drops onto the window.
 ```
 
 ```
-[com.apple.security.network.client] Features the user starts: optional sync and shared links through the user's own Dropbox account (Settings → Sync), off until the user connects one; opening a shared link from dl.dropboxusercontent.com; cover images a song names; and searches of MusicBrainz and the iTunes Search API for cover art and song details. Campfire has no server of its own.
+[com.apple.security.network.client] Features the user starts: optional sync and shared links through the user's own Dropbox account (Settings → Sync), off until the user connects one; opening a shared link from dl.dropboxusercontent.com; cover images a song names; pictures a song names by their https address, downloaded once into the library; and searches of MusicBrainz and the iTunes Search API for cover art and song details. Campfire has no server of its own.
 ```
 
 ```
