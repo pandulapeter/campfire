@@ -202,7 +202,8 @@
             <!--
               Some document providers keep the display name out of the content URI, so none of the suffixes above
               can match even when the file is named .cho. A second View filter accepts the two MIME types such files
-              are commonly opened as, and ABC notation's own. It also offers Campfire for other text or generic files; the import reads the
+              are commonly opened as, ABC notation's own, and the ChordPro types apps declare for .cho (no one type is
+              registered: ChordPro's own desktop definition says application/x-chordpro, others name text ones). It also offers Campfire for other text or generic files; the import reads the
               display name after selection and skips unsupported extensions.
             -->
             <intent-filter android:label="@string/campfire">
@@ -215,6 +216,10 @@
                 <data android:mimeType="text/plain" />
                 <data android:mimeType="text/vnd.abc" />
                 <data android:mimeType="application/octet-stream" />
+                <data android:mimeType="application/x-chordpro" />
+                <data android:mimeType="text/x-chordpro" />
+                <data android:mimeType="text/chordpro" />
+                <data android:mimeType="application/chordpro" />
             </intent-filter>
 
             <!--
@@ -291,8 +296,8 @@
             </intent-filter>
 
             <!--
-              Sharing a song or zip archive to Campfire. ChordPro files may be sent as text/plain or, because .cho
-              has no registered MIME type, application/octet-stream. Archives are usually application/zip; some
+              Sharing a song or zip archive to Campfire. ChordPro files may be sent as text/plain, as one of the ChordPro
+              types of the View filter above, or, because .cho has no registered MIME type, application/octet-stream. Archives are usually application/zip; some
               senders use application/x-zip-compressed. JSON is another app's export of songs, text/vnd.abc a file
               of ABC tunes, and a photo (the types of the Open with filter above) a new song showing it. Shared text arrives as
               EXTRA_TEXT (see importSharedTexts). The importer checks the display name and skips unrelated files with
@@ -308,6 +313,10 @@
                 <data android:mimeType="application/octet-stream" />
                 <data android:mimeType="application/zip" />
                 <data android:mimeType="application/x-zip-compressed" />
+                <data android:mimeType="application/x-chordpro" />
+                <data android:mimeType="text/x-chordpro" />
+                <data android:mimeType="text/chordpro" />
+                <data android:mimeType="application/chordpro" />
                 <data android:mimeType="application/json" />
                 <data android:mimeType="application/pdf" />
                 <data android:mimeType="application/vnd.openxmlformats-officedocument.wordprocessingml.document" />

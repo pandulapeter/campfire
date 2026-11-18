@@ -40,8 +40,10 @@
   - API 31+: `pathSuffix`, lower and upper case.
   - Older: `pathPattern`, whose `.*` never backtracks, so one pattern per number of dots in the path, up to four; lower
     case only. `pathAdvancedPattern` doesn't backtrack either.
-  - A second filter takes `text/plain`, `text/vnd.abc`, and `application/octet-stream` without a path, for URIs with
-    no file name (Downloads' `msf:` ids, attachments); unrelated files offered this way are reported as skipped.
+  - A second filter takes `text/plain`, `text/vnd.abc`, `application/octet-stream`, and the unregistered ChordPro types
+    (`application/x-chordpro`, `text/x-chordpro`, `text/chordpro`, `application/chordpro`) without a path, for URIs with
+    no file name (Downloads' `msf:` ids, attachments); unrelated files offered this way are reported as skipped. Share
+    takes the same ChordPro types: SongbookPro shares a single `.cho` under a type of its own.
 - **Pictures**: PNG, JPEG, GIF, WebP, HEIC, HEIF, and AVIF in their own Open with filter and in Share (a photo alone
   is a new song, shrunk or converted as one added in the editor is);
   Android makes no app a type's default unless the user picks it. A name without a picture's extension gets the one its
