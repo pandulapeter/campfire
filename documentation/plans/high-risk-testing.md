@@ -9,7 +9,7 @@
 -->
 # Plan: testing the features that can lose a library or publish too much
 
-**Status:** steps 1, 2, 3, 5, and 7 done, step 8 partly done, and step 9 done for the backups it gathered (2026-11-18).
+**Status:** steps 1 to 7 done, step 8 partly done, and step 9 done for the backups it gathered (2026-11-18).
 Written against the code on 2026-11-17 (230acf02b). `sync/` is
 `data/sync/implementation/src/commonMain/kotlin/com/pandulapeter/campfire/data/sync/implementation/`, `syncTest/` the
 same path under `src/commonTest`, and `localTest/` is
@@ -73,9 +73,9 @@ asserts behaviour (what a device, the folder, or a link holds), never which call
 - **Listings that are partial or stale** are struck by the simulation since step 3. Two limits stay, written into
   `sync/run/CLAUDE.md`: a wrong listing in a run the app is killed during can lose a version, and a listing older than
   what the device last read or wrote is outside `SyncFolder.list`'s contract. Dropbox's listings were never wrong.
-- **The simulation's library is narrower than the app's.** It names pictures only by `{image: …}`, never attachments
-  (`{meta: attachment …}`), never models the editor's unsaved text holding a picture, never damages a folder copy, and
-  every device uses the system clock.
+- **The simulation's library is as wide as the app's** since step 4: songs show pictures and attach files, an editor's
+  unsaved text holds some, a writer outside Campfire overwrites folder copies, and every device's clock is off its own
+  way. One limit stays in `sync/run/CLAUDE.md`: a damaged folder copy no device holds intact fails every run for good.
 - **Dropbox's answers the fakes assume** were measured in step 1: an `update` upload carrying the revision of a file
   deleted since writes it (only a path re-added since conflicts), and `FakeSyncProvider` now does too; a listing taken
   right after another client's write, rename, or deletion has always shown it; a link made before a shared copy was
@@ -206,6 +206,11 @@ so `SyncFolder.list` now states that it never is. One step in eight falsifies a 
 **Properties added**: no device ever holds a library file whose bytes are not what its name says, and a picture the
 draft names is never lost while the draft names it. Nothing is expected from the clocks (sync reads none); they are
 there so that a future change that consults one meets skew at once. **Done**: the CI seeds pass, and 100,000 by hand.
+
+**Done 2026-11-18.** No defect in sync; the fake's editor was read once a run rather than when deletions look, as the
+app reads it. A damaged folder copy no device holds intact stays a failure of every run, even where no song names it (a
+known limit, left out of the settled library); a picture the outside writer or a lost folder took is left out of the
+loss checks. 100,000 seeds: 335 s.
 
 ### 5. The planner's whole table
 
