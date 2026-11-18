@@ -46,7 +46,7 @@ import kotlinx.coroutines.flow.first
  * how many times each file was fetched and [deleteCalls] what each deletion request asked for; the names in
  * [refusedDeletions] are answered as refused. A deletion whose expected revision is no longer the file's leaves the
  * file and reports nothing, as Dropbox does, and [onDelete] runs before deletions answer, which is where a test edits a
- * file "elsewhere". [connected] says whether credentials are stored, and [onDisconnect] is the revocation a disconnect
+ * file "elsewhere"; [onDeleted] is told of every file a deletion removed, and [deletionPause] stops a batch part way. [connected] says whether credentials are stored, and [onDisconnect] is the revocation a disconnect
  * answers once it has cleared them, which the caller runs in the background; [hasForgottenCredentials] says whether they were dropped without one, which does not run it, and
  * [onForgetStoredCredentials] runs before they are, which is where a test makes that fail. [onCompleteAuthorization] is
  * what finishing an authorization does, which is where a test stores credentials and then gives up or fails. [id] is
@@ -87,6 +87,18 @@ internal class FakeSyncProvider(
     var refusedDeletions = emptySet<String>()
 
     var onDelete: suspend () -> Unit = {}
+
+    var onDeleted: (SyncKey) -> Unit = {}
+
+    /**
+     * Where the next batch deletion stops part way, as Dropbox's is not atomic (measured: a few files a second, every
+     * listing meanwhile a consistent snapshot of any fraction): after as many of its files as [DeletionPause.after]
+     * answers for the batch's size, [DeletionPause.during] runs, another device's run, say, before the rest go. Taken by
+     * the batch it pauses.
+     */
+    var deletionPause: DeletionPause? = null
+
+    class DeletionPause(val after: (size: Int) -> Int, val during: suspend () -> Unit)
 
     val files = files.mapValues { (_, bytes) -> bytes to "r1" }.toMutableMap()
     private var nextRevision = 2
@@ -196,10 +208,16 @@ internal class FakeSyncProvider(
         deleteCalls += deletions
         onDelete()
         val (refused, deleted) = deletions.partition { it.name in refusedDeletions }
-        deleted.forEach { deletion ->
+        val pause = deletionPause.also { deletionPause = null }?.takeIf { deleted.size > 1 }
+        val pausesAfter = pause?.after?.invoke(deleted.size)
+        deleted.forEachIndexed { position, deletion ->
+            if (position == pausesAfter) pause.during()
             val target = stored(SyncKey(kind = deletion.kind, name = deletion.name))
             if (deletion.expectedRevision == null || files[target]?.second == deletion.expectedRevision) {
-                files.remove(target)?.let { (bytes, _) -> deletedFiles[target] = bytes }
+                files.remove(target)?.let { (bytes, _) ->
+                    deletedFiles[target] = bytes
+                    onDeleted(target)
+                }
                 listedSpellings -= target.foldedForResolving()
                 feed.value += target.path
             }

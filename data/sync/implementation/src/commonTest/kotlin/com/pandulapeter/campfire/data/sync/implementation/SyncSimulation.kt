@@ -38,7 +38,8 @@ import kotlin.random.Random
  * - no version a user saved, and nobody replaced or deleted since, is gone from every device and the folder: an edit
  *   beats a deletion, and a conflict keeps both versions;
  * - no device and no folder holds one name in two spellings;
- * - a run nobody answered a question for deleted no more than the deletion guard lets through;
+ * - no run, faulted, raced, or over several passes, deleted more on a side than the deletion guard lets through,
+ *   counting what it deleted itself against the index it started from, unless an answer waived that side;
  * - every device, settled, holds what the folder does, names compared the way the service compares them, and another
  *   round of runs moves nothing;
  * - no picture a saved song names is gone from every device and the folder, while each device deletes the pictures its
@@ -59,9 +60,18 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
     private var versions = 0
     private var fault: Fault? = null
     private var faultCountdown = 0
+
+    /** Whether the running step's next batch deletion stops part way for another device's run, as Dropbox's may. */
+    private var deletesInPieces = false
     private var running: Job? = null
     private var runningDevice: Device? = null
     private val lostLibraries = mutableSetOf<Device>()
+
+    /** The device whose run makes the requests now: the one a step runs, or another whose run a fault started meanwhile. */
+    private var actor: Device? = null
+
+    /** The songs and setlists each device's run under way deleted, here and in the folder, by their folded names. */
+    private val deletedByRun = mutableMapOf<Device, RunDeletions>()
 
     init {
         cloud.onList = { onRequest(key = null) }
@@ -71,7 +81,21 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
             if (random.nextInt(3) == 0) yield()
         }
         cloud.onUpload = { key -> dueFault(canRunElsewhere = false)?.let { strike(it, key) } }
-        cloud.onDelete = { dueFault(canRunElsewhere = false)?.let { strike(it, key = null) } }
+        cloud.onDelete = {
+            dueFault(canRunElsewhere = false)?.let { strike(it, key = null) }
+            // A batch seen in pieces, as Dropbox's is, never inside a run a fault started meanwhile.
+            if (deletesInPieces && actor === runningDevice) {
+                deletesInPieces = false
+                cloud.deletionPause = FakeSyncProvider.DeletionPause(after = { 1 + random.nextInt(it - 1) }) {
+                    log += "  the folder's deletion pauses part way"
+                    runElsewhere()
+                }
+            }
+        }
+        cloud.onDeleted = { key -> if (key.kind.isDocument) actor?.let { deletedByRun[it]?.remote?.add(key.folded()) } }
+        devices.forEach { device ->
+            device.library.onDeleted = { key -> if (key.kind.isDocument) deletedByRun[device]?.local?.add(key.folded()) }
+        }
         // The run's last step, bringing the shared copies and the list up to date, fails and is stopped like the rest.
         cloud.onUploadDocument = { dueFault(canRunElsewhere = false)?.let { strike(it, key = null) } }
         cloud.onUploadSharedFile = { dueFault(canRunElsewhere = false)?.let { strike(it, key = null) } }
@@ -155,6 +179,8 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
         named.forEach { picture -> if (picture.key !in device.library.files) device.library.files[picture.key] = picture.bytes }
         val version = "v${++versions} by ${device.label}" + named.joinToString("") { "\n{image: src=${it.key.name}}" }
         device.library.put(key, version.encodeToByteArray())?.let { saved -= it.decodeToString() }
+        // A save during the device's own run may come before the run lists the library, which then lists something.
+        deletedByRun[device]?.listsAnything = true
         saved += version
         log += "${device.label} saves ${key.name} = $version"
     }
@@ -190,21 +216,10 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
             fault = Fault.entries.random(random)
             faultCountdown = 1 + random.nextInt(5)
         }
-        val described = fault?.let { ", $it at request $faultCountdown" }.orEmpty()
-        val indexSize = device.documentIndexSize
-        val localBefore = device.library.files.keys.filter { it.kind.isDocument }
-        val remoteBefore = cloud.files.keys.filter { it.kind.isDocument }
-        val isPlain = fault == null
+        deletesInPieces = random.nextInt(3) == 0
+        val described = fault?.let { ", $it at request $faultCountdown" }.orEmpty() + if (deletesInPieces) ", deleting in pieces" else ""
         val result = runOn(scope, device, SyncDeletionPolicy.ASK, described)
-        if (isPlain && result is Attempt.Ended && result.result is SyncEngine.Result.Completed) {
-            // Songs and setlists only, as the guard counts them: pictures follow the songs that name them.
-            checkGuard(
-                deletedLocally = localBefore.count { it !in device.library.files },
-                deletedRemotely = remoteBefore.count { it !in cloud.files },
-                indexSize = indexSize,
-                localCount = localBefore.size,
-            )
-        }
+        deletesInPieces = false
         val question = (result as? Attempt.Ended)?.result as? SyncEngine.Result.DeletionsNeedConfirmation ?: return
         if (random.nextBoolean()) {
             val answer = answers(device, question.direction).random(random)
@@ -216,6 +231,7 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
     private suspend fun runOn(scope: TestScope, device: Device, policy: SyncDeletionPolicy, described: String = ""): Attempt {
         log += "${device.label} syncs, $policy$described"
         var attempt: Attempt = Attempt.Stopped
+        startCounting(device, policy)
         val job = scope.launch {
             attempt = try {
                 Attempt.Ended(device.attempt(cloud, policy))
@@ -232,6 +248,7 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
         job.join()
         running = null
         runningDevice = null
+        actor = null
         if (fault == Fault.KILLED && (attempt as? Attempt.Ended)?.result is SyncEngine.Result.Completed && random.nextBoolean()) {
             log += "  ${device.label}'s run completed, killed before writing its index"
             attempt = Attempt.Killed
@@ -242,6 +259,7 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
         device.library.onWrite = {}
         device.library.onDelete = {}
         log += "  ${device.label}'s run ${attempt.described()}"
+        checkGuard(device)
         if ((attempt as? Attempt.Ended)?.result is SyncEngine.Result.Completed) lostLibraries -= device
         return attempt
     }
@@ -250,19 +268,43 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
     private suspend fun onRequest(key: SyncKey?) {
         val due = dueFault(canRunElsewhere = true) ?: return
         if (due != Fault.ANOTHER_DEVICE_SYNCS) return strike(due, key)
+        runElsewhere()
+    }
+
+    /** A user step and a run on another device while a request of the running device's waits. */
+    private suspend fun runElsewhere() {
         // Never the device whose run this is: a device runs one sync at a time.
         val other = devices.filter { it !== runningDevice }.random(random)
         userStep(other)
+        // The names a share takes on the way, since two of these may come within one step: a rename, then a deletion.
+        sharing.observe()
         log += "  meanwhile ${other.label} syncs"
+        val outer = actor
+        startCounting(other, SyncDeletionPolicy.ASK)
         val attempt = try {
             other.attempt(cloud, SyncDeletionPolicy.ASK).let(Attempt::Ended)
         } catch (exception: CancellationException) {
             throw exception
         } catch (exception: Exception) {
             Attempt.Failed(exception.message.orEmpty())
+        } finally {
+            actor = outer
         }
         log += "  meanwhile ${other.label}'s run ${attempt.described()}"
+        checkGuard(other)
         if ((attempt as? Attempt.Ended)?.result is SyncEngine.Result.Completed) lostLibraries -= other
+    }
+
+    /**
+     * Counts what [device]'s run, about to start under [policy], deletes from here on. Songs and setlists only, as the
+     * guard counts them: pictures follow the songs that name them.
+     */
+    private fun startCounting(device: Device, policy: SyncDeletionPolicy) {
+        deletedByRun[device] = RunDeletions(
+            listsAnything = device.library.files.keys.any { it.kind.isDocument },
+            policy = policy,
+        )
+        actor = device
     }
 
     /** The pending [fault] if this request is the one it waits for; a request that cannot suspend never runs another device. */
@@ -322,17 +364,28 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
     }
 
     /**
-     * A run that asked nothing deleted no more on either side than the guard lets through: more than half of what the
-     * index knew (at least [DeletionGuard.MIN_DELETIONS_TO_ASK]) or all of it asks, and so does any remote deletion from
-     * a device whose library lists nothing. The index a plan is made from is never larger than the one the device kept,
-     * so a count that is too many against that one was too many for the plan as well.
+     * [device]'s run, however it ended, deleted no more on a side its answer did not waive than the guard lets through,
+     * all its passes together: more than half of the songs and setlists its index knew at any point (at least
+     * [DeletionGuard.MIN_DELETIONS_TO_ASK]) or all of them asks, and so does any remote deletion from a device whose
+     * library listed nothing. A file a first pass brought down counts as one the run knew, so a second pass deleting it
+     * again counts as well. The index a plan is made from is never larger than the one the device reported, so a count
+     * that is too many against that one was too many for the plans as well.
      */
-    private fun checkGuard(deletedLocally: Int, deletedRemotely: Int, indexSize: Int, localCount: Int) {
+    private fun checkGuard(device: Device) {
+        val run = deletedByRun.remove(device) ?: return
+        val index = device.documentIndexKeysOfLastAttempt.mapTo(mutableSetOf()) { it.folded() }
+        val indexSize = index.size
+        val deletedLocally = run.local.count { it in index }
+        val deletedRemotely = run.remote.count { it in index }
         fun Int.isTooMany() = this > 0 && (this == indexSize || (this >= DeletionGuard.MIN_DELETIONS_TO_ASK && this * 2 > indexSize))
-        check(!deletedLocally.isTooMany()) { "$deletedLocally of $indexSize files deleted locally without asking" }
-        check(!deletedRemotely.isTooMany()) { "$deletedRemotely of $indexSize files deleted remotely without asking" }
-        check(localCount > 0 || indexSize == 0 || deletedRemotely == 0) {
-            "An empty library deleted from the folder without asking"
+        if (!run.policy.waivesLocalGuard) {
+            check(!deletedLocally.isTooMany()) { "${device.label}: $deletedLocally of $indexSize files deleted locally without asking" }
+        }
+        if (!run.policy.waivesRemoteGuard) {
+            check(!deletedRemotely.isTooMany()) { "${device.label}: $deletedRemotely of $indexSize files deleted remotely without asking" }
+            check(run.listsAnything || indexSize == 0 || deletedRemotely == 0) {
+                "${device.label}: an empty library deleted from the folder without asking"
+            }
         }
     }
 
@@ -390,7 +443,12 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
         sharing.checkSettled()
     }
 
+    /**
+     * Every library, the folder, the shares, and every index, since a picture a device prunes and its run brings down
+     * again leaves the files as they were but its index knowing it, which the next round then deletes.
+     */
     private fun worldState() = devices.map { it.library.files.entries.associate { (key, bytes) -> key.path to bytes.decodeToString() } } +
+        devices.map { it.indexState } +
         listOf(cloud.files.entries.associate { (key, file) -> key.path to file.first.decodeToString() + "@" + file.second }) +
         listOf(sharing.state().associateWith { "" })
 
@@ -445,6 +503,12 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
     private class ProcessKilled : Error("Killed")
 
     private class Picture(val key: SyncKey, val bytes: ByteArray)
+
+    /** What one run deleted so far, by folded name, and whether its library listed anything, and its answer. */
+    private class RunDeletions(var listsAnything: Boolean, val policy: SyncDeletionPolicy) {
+        val local = mutableSetOf<String>()
+        val remote = mutableSetOf<String>()
+    }
 
     private companion object {
         const val MAXIMUM_SETTLING_ROUNDS = 6

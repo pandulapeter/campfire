@@ -186,11 +186,14 @@ internal class Device(
         sharedLinksJournal.clear()
     }
 
-    /** How many files the index says the last run saw, which is what the deletion guard measures a run's deletions against. */
-    val indexSize get() = index.toIndex().size
+    /** What the index says the last run saw, by path: what a round of runs changed besides the files. */
+    val indexState get() = index.toIndex().entries.associate { (key, entry) -> key.path to entry.toString() }
 
-    /** The songs and setlists among [indexSize], which is what the deletion guard counts. */
-    val documentIndexSize get() = index.toIndex().keys.count { it.kind.isDocument }
+    /**
+     * The songs and setlists the index knew at any point of the last [attempt]: when it started, and in every index it
+     * reported since. What the deletion guard measures a run's deletions against.
+     */
+    val documentIndexKeysOfLastAttempt get() = writtenIndexes.flatMapTo(mutableSetOf()) { written -> written.toIndex().keys.filter { it.kind.isDocument } }
 
     /** What the app's rename and deletion of a shared item leave for the next run. */
     suspend fun journal(entry: SharedLinksJournal.Entry) = sharedLinksJournal.append(listOf(entry))

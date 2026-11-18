@@ -18,7 +18,7 @@ import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource
 /**
  * The library held in memory, for running [SyncEngine] against. [onRead] runs before a read answers, which is where a
  * test makes a file that is there impossible to read, and [onWrite] before a write is stored, with the name it chose,
- * which is where a test makes the disk full, and [onDelete] before a deletion. The last two may suspend, which is
+ * which is where a test makes the disk full, and [onDelete] before a deletion, [onDeleted] once one removed a file. The last two may suspend, which is
  * where a test lets the app write a file in the middle of the engine's own change to it. [canHoldFileName] is where a
  * test makes a Windows PC, and [naming] how the platform's file system compares names: [files] is the directory as it
  * lists, and every call finds a name the way that file system would. What the real source answers on top of the file
@@ -30,6 +30,7 @@ internal class FakeLibraryFileLocalSource(
     var onRead: (SyncKey) -> Unit = {},
     var onWrite: suspend (SyncKey) -> Unit = {},
     var onDelete: suspend (SyncKey) -> Unit = {},
+    var onDeleted: (SyncKey) -> Unit = {},
     private val canHoldFileName: (String) -> Boolean = { true },
     val naming: FileSystemNaming = FileSystemNaming.EXACT,
 ) : LibraryFileLocalSource {
@@ -112,7 +113,7 @@ internal class FakeLibraryFileLocalSource(
     override suspend fun deleteLibraryFile(kind: LibraryFileKind, name: String) {
         val key = SyncKey(kind = kind, name = name)
         onDelete(key)
-        remove(key)
+        if (remove(key) != null) onDeleted(key)
     }
 
     override fun canHoldFileName(kind: LibraryFileKind, name: String) = canHoldFileName(name)
