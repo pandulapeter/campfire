@@ -13,7 +13,6 @@ What's planned for Campfire, grouped by area.
 
 ## In progress
 
-- Fix some Hebrew import issues (https://www.tab4u.com/, https://negina.co.il/ )
 - **Sync's knowledge of songs behind seams**: the engine's keep, delete, and conflict rules depend on a few narrow
   interfaces instead of songs and setlists, a check keeps it so, and sign-in and transport are separated from Dropbox.
   Safer deletions, and the groundwork Google Drive builds on, so it lands before Drive's provider work.

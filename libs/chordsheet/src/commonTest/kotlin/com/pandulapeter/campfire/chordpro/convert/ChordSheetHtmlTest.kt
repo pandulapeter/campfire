@@ -88,6 +88,55 @@ class ChordSheetHtmlTest {
         assertNull(ChordSheetHtml.chordSheetText("<pre>Am      C\nHello there</pre><div data-id=\"1\" data-lang=\"en\"></div>"))
     }
 
+    @Test
+    fun `boxes of a chord over a syllable flow on one line - joined where no margin parts them`() {
+        val html = "<div>" +
+            cell(chord = "G", lyric = "Hal", margin = "0px 0.3em 0px 0px") +
+            cell(chord = "C", lyric = "lelujah", margin = "0px 0.3em 0px -0.3em") +
+            cell(chord = null, lyric = "we", margin = "0px 0.3em 0px 0px") +
+            cell(chord = "D", lyric = "sing", margin = "0px 0.3em 0px 0px") +
+            "</div>"
+        assertEquals("G  C          D\nHallelujah we sing", ChordSheetHtml.chordSheetText(html))
+    }
+
+    @Test
+    fun `a box of one row is a word whatever it spells and a chord box with an empty lyric is a chord between words`() {
+        val html = "<div>" +
+            cell(chord = null, lyric = "A", margin = "0px 0.3em 0px 0px") +
+            cell(chord = "Em", lyric = "", margin = "0px 0.3em") +
+            cell(chord = "C", lyric = "day", margin = "0px 0.3em 0px 0px") +
+            "</div>"
+        assertEquals("  Em C\nA    day", ChordSheetHtml.chordSheetText(html))
+    }
+
+    @Test
+    fun `a flex row of chord boxes is read in its items' order - its direction arrow and hidden padding left out`() {
+        val html = "<div style=\"display: flex; flex-flow: row-reverse wrap;\">" +
+            "<div style=\"display: inline-block; order: 2;\"><div>D7</div><div></div></div>" +
+            "<div style=\"display: inline-block; order: 1;\"><div>G</div><div></div></div>" +
+            "<span style=\"display: inline-block; order: -9;\">\u2192</span></div>" +
+            "<div>" + cell(chord = "Am", lyric = "<span style=\"opacity: 0;\">**</span>Rain", margin = "0px") + "</div>"
+        assertEquals("G D7\nAm\nRain", ChordSheetHtml.chordSheetText(html))
+    }
+
+    @Test
+    fun `chord boxes of a right-to-left song are laid out as a right-to-left display shows them`() {
+        // "\u05de\u05dc\u05d0" and "\u05db\u05d9\u05dd" are one word: the second box's margin cancels the first one's, which in a line read from
+        // the right stands at its left.
+        val html = "<div>" +
+            cell(chord = null, lyric = "\u05d3\u05de\u05e2\u05d5\u05ea \u05e9\u05dc", margin = "0px 0px 0px 0.3em") +
+            cell(chord = "C", lyric = "\u05de\u05dc\u05d0", margin = "0px 0px 0px 0.3em") +
+            cell(chord = "C#dim7", lyric = "\u05db\u05d9\u05dd", margin = "0px -0.3em 0px 0.3em") +
+            cell(chord = "Fmaj7", lyric = "", margin = "0px 0.3em") +
+            "</div>"
+        val song = ChordSheetConverter.convert(ChordSheet.ofPlainText(ChordSheetHtml.chordSheetText(html)!!)).single()
+        assertTrue("\u05d3\u05de\u05e2\u05d5\u05ea \u05e9\u05dc [C]\u05de\u05dc\u05d0[C#dim7]\u05db\u05d9\u05dd [Fmaj7]" in song, song)
+    }
+
+    /** A box of a [chord] (none for a lyric alone) over its [lyric], as a page that sets each chord over its syllable draws it. */
+    private fun cell(chord: String?, lyric: String, margin: String) = "<div style=\"display: inline-block; margin: $margin;\">" +
+        chord?.let { "<div style=\"display: inline-block;\">$it</div>" }.orEmpty() + "<div>$lyric</div></div>"
+
     private companion object {
         /** A trimmed copy of boiteachansons.net's Hallelujah as Chrome puts it on the clipboard. */
         const val HALLELUJAH = "<meta charset='utf-8'>" +
