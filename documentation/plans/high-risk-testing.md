@@ -9,7 +9,7 @@
 -->
 # Plan: testing the features that can lose a library or publish too much
 
-**Status:** not started. Written against the code on 2026-11-17 (230acf02b). `sync/` is
+**Status:** step 1 done (2026-11-18). Written against the code on 2026-11-17 (230acf02b). `sync/` is
 `data/sync/implementation/src/commonMain/kotlin/com/pandulapeter/campfire/data/sync/implementation/`, `syncTest/` the
 same path under `src/commonTest`, and `localTest/` is
 `data/source/local/implementation/src/desktopTest/kotlin/com/pandulapeter/campfire/data/source/local/implementation/`
@@ -68,8 +68,9 @@ asserts behaviour (what a device, the folder, or a link holds), never which call
   blur. Yet the guard is applied per pass (`SyncEngine` calls `DeletionGuard.check` with the planning index of each
   pass, and a second pass starts from the first pass's updated index), and a second pass happens exactly when another
   device writes during the run. Nothing tests the guard across two passes of one run.
-- **Dropbox's `delete_batch` is not atomic** (measured on the live account, about 7 files a second), so a device
-  syncing during another's large deletion sees it in pieces, each under half, and follows without asking. The guard's
+- **Dropbox's `delete_batch` is not atomic** (measured on the live account, 4 to 7 files a second, every listing
+  meanwhile a consistent snapshot of any fraction), so a device syncing during another's large deletion sees it in
+  pieces, each under half, and follows without asking. The guard's
   design promises a second question on the other device ("two questions about one folder are better than one answer
   that empties both"); `FakeSyncProvider.delete` removes a batch at once, so no test meets the pieces.
 - **Every listing is a true snapshot in the fake.** No test gives the engine a listing that misses files the folder
@@ -78,9 +79,10 @@ asserts behaviour (what a device, the folder, or a link holds), never which call
 - **The simulation's library is narrower than the app's.** It names pictures only by `{image: …}`, never attachments
   (`{meta: attachment …}`), never models the editor's unsaved text holding a picture, never damages a folder copy, and
   every device uses the system clock.
-- **Dropbox's answers the fakes assume are unmeasured** for: an `update` upload carrying the revision of a file deleted
-  since (a `Conflict` in `FakeSyncProvider`; Dropbox may write it), a listing taken right after another client's write
-  or deletion, and whether a link made before a shared copy was deleted opens a copy uploaded again at the same path.
+- **Dropbox's answers the fakes assume** were measured in step 1: an `update` upload carrying the revision of a file
+  deleted since writes it (only a path re-added since conflicts), and `FakeSyncProvider` now does too; a listing taken
+  right after another client's write, rename, or deletion has always shown it; a link made before a shared copy was
+  deleted never opens a copy uploaded again at the same path.
 
 ### Shared links: already proven
 
@@ -107,8 +109,8 @@ asserts behaviour (what a device, the folder, or a link holds), never which call
 
 - **Explicit stops never meet another device.** `SimulatedSharing` shares, renames, and deletes, but never presses Stop
   sharing or Stop sharing everything, so nothing checks that a stopped copy never comes back when another device's run
-  read the list before the stop (it uploads with the revision it listed: a `Conflict` in the fake, unmeasured on
-  Dropbox). Its setlists are opaque text, so a setlist's songs never enter a copy in the simulation.
+  read the list before the stop. Step 1 found that it did (Dropbox writes the upload, an orphan zip no link serves),
+  fixed with focused tests in `SharedLinksRepositoryImplTest`; the simulation still never meets it. Its setlists are opaque text, so a setlist's songs never enter a copy in the simulation.
 - **A partial shared-folder listing** "as new as the registry" would mark a working share `copyMissing` for good;
   `SimulatedSharing.checkSettled` skips such entries, so a share wrongly marked dead passes.
 
@@ -151,6 +153,12 @@ desktop test homes and the API as a third device:
 stated) and `FakeSyncProvider` answers the same way, in one commit, with the simulation still passing. If Dropbox
 writes an `update` over a deleted file, the shared copy upload is a defect before anything else (a stopped share's copy
 could come back) and is fixed first.
+
+**Done 2026-11-18.** Dropbox writes an `update` over a deleted file, its folder too; a dead link stays dead (404) after
+a copy is uploaded again at its path; listings showed every change at once over 15 rounds each; a 300-file
+`delete_batch` took 76 s, every listing meanwhile a consistent snapshot. The fake answers so, and the stop's orphan copy
+is fixed: a stop deletes its copies again once their entries are gone, and a run's step deletes a copy it uploaded
+whose entry its final edit finds gone.
 
 ### 2. The deletion guard on every run
 
