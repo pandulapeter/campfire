@@ -38,12 +38,15 @@ class SyncEngineDamagedCopyTest {
         setlistComparison = NoSetlistComparison,
         plantedContentHash = { null },
         logger = Logger.Standard,
+        imageWritesGate = { it(heldByEditor) },
     )
+    private var heldByEditor = emptySet<String>()
     private var index = SyncIndexDocument()
 
     @Test
     fun `a damaged copy is downloaded once while it does not change and a repaired one on the next run`() = runTest {
-        cloud.files[PHOTO] = "not the photo".encodeToByteArray() to "r1"
+        local.files[SONG] = SONG_BYTES
+        cloud.files[PHOTO] = DAMAGED to "r1"
         repeat(3) { assertEquals(listOf(PHOTO.name), run().summary.failed) }
 
         assertEquals(1, cloud.downloadCounts[PHOTO])
@@ -54,6 +57,25 @@ class SyncEngineDamagedCopyTest {
 
         assertEquals(2, cloud.downloadCounts[PHOTO])
         assertContentEquals(PHOTO_BYTES, local.files[PHOTO])
+    }
+
+    @Test
+    fun `a damaged copy no song here names is left in the folder without a failure`() = runTest {
+        cloud.files[PHOTO] = DAMAGED to "r1"
+        repeat(3) { assertEquals(emptyList(), run().summary.failed) }
+
+        assertEquals(1, cloud.downloadCounts[PHOTO])
+        assertNull(local.files[PHOTO])
+        assertContentEquals(DAMAGED, cloud.files[PHOTO]?.first)
+    }
+
+    @Test
+    fun `a damaged copy the editor's unsaved text names is a failure`() = runTest {
+        heldByEditor = setOf(PHOTO.name)
+        cloud.files[PHOTO] = DAMAGED to "r1"
+
+        assertEquals(listOf(PHOTO.name), run().summary.failed)
+        assertEquals(listOf(PHOTO.name), run().summary.failed)
     }
 
     private suspend fun run(): SyncEngine.Result.Completed {
@@ -75,5 +97,8 @@ class SyncEngineDamagedCopyTest {
     private companion object {
         val PHOTO_BYTES = "photo".encodeToByteArray()
         val PHOTO = SyncKey(kind = LibraryFileKind.FILE, name = localContentHash(PHOTO_BYTES).take(16) + ".png")
+        val DAMAGED = "not the photo".encodeToByteArray()
+        val SONG = SyncKey(kind = LibraryFileKind.SONG, name = "artist-title.cho")
+        val SONG_BYTES = "{image: src=${PHOTO.name}}".encodeToByteArray()
     }
 }

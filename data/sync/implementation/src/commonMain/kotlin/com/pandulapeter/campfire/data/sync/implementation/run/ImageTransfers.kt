@@ -113,11 +113,11 @@ internal class ImageTransfers(
     suspend fun bringDown(pass: SyncPass, key: SyncKey, revision: String): SyncEngine.OperationOutcome {
         val (settled, sizeHere) = settleWithCopyHere(pass, key, revision)
         if (settled != null) return settled
-        if (isKnownDamaged(pass, key)) return failed(key, "the cloud folder's copy is still the damaged one, not downloaded again")
+        if (isKnownDamaged(pass, key)) return damagedFolderCopy(pass, key, "the cloud folder's copy is still the damaged one, not downloaded again")
         val downloaded = pass.downloadWithinLimit(key)
         if (!isIntact(key, downloaded.bytes)) {
             pass.run.provider.contentHashOf(downloaded.bytes)?.let { hash -> damagedInFolderLock.withLock { damagedInFolder[key.name] = hash } }
-            return failed(key, "the cloud folder's copy is not the file its name says")
+            return damagedFolderCopy(pass, key, "the cloud folder's copy is not the file its name says")
         }
         val isWritten = libraryFileLock.withLock {
             // Anything intact under this name is this very picture, written meanwhile by an import or a Save. Only a file
@@ -146,6 +146,20 @@ internal class ImageTransfers(
     private suspend fun isKnownDamaged(pass: SyncPass, key: SyncKey) = damagedInFolderLock.withLock {
         damagedInFolder.entries.removeAll { (name, hash) -> pass.remoteFiles[SyncKey(kind = LibraryFileKind.FILE, name = name)]?.contentHash != hash }
         key.name in damagedInFolder
+    }
+
+    /**
+     * A folder copy that is not what its name says, with no intact copy here to replace it. It is a failure only where a song
+     * here names it, or the editor's unsaved text does, since only then is something missing here; otherwise it is left
+     * out quietly, the index left alone. It is never deleted from the folder either way: whether a song on another device
+     * names it, nothing here can tell, and a picture is never deleted on a guess. Where some song here could not be read,
+     * it counts as named.
+     */
+    private suspend fun damagedFolderCopy(pass: SyncPass, key: SyncKey, reason: String): SyncEngine.OperationOutcome {
+        var isHeld = false
+        imageWritesGate { held -> isHeld = key.name in held }
+        val isNamed = isHeld || pass.imageReferences?.values?.any { key.name in it } != false
+        return if (isNamed) failed(key, reason) else SyncEngine.OperationOutcome()
     }
 
     /**

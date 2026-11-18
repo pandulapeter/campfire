@@ -74,8 +74,8 @@
   - Not read by the listing: the size stands for the hash (`localImageHash`), so a same-size damage goes unnoticed. Every
     transfer checks the bytes against the name (`ImageTransfers`): a damaged copy is never uploaded or written, and is
     replaced from the other side where that side's copy is intact; two intact copies of one name need only the index. A
-    damaged folder copy is not fetched again while listed unchanged. **Known limit**: one no device holds intact stays a
-    failure of every run, even where no song names it (`SyncSimulation` leaves it out of the settled library).
+    damaged folder copy is not fetched again while listed unchanged. One no device holds intact stays (another device's
+    song may name it), a failure only where a song here or the editor's draft names it.
   - **A reference beats a deletion** (`SyncPlanner.withImagesKept`): a picture a song here names is uploaded or
     downloaded again instead of deleted. A pass that brings a song down, deletes one on either side, or follows an
     unreadable song deletes no picture on either side; the next run does (an older version's edit may beat a song's

@@ -165,8 +165,7 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
                 checkAlways()
             }
             log += "-- every device syncs until nothing moves"
-            settle(scope)
-            checkSettled()
+            checkSettled(failed = settle(scope))
             if (random.nextBoolean()) stopEverythingSettled()
         } catch (throwable: Throwable) {
             throw AssertionError("Seed $seed: ${throwable.message}\n${describeWorld()}", throwable)
@@ -596,36 +595,41 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
 
     /**
      * Rounds of a run on every device until one moves nothing. A question about deletions is answered by deleting: every
-     * deletion here is one a user made. A library that settles does so in a few rounds; one that does not is a bug.
+     * deletion here is one a user made. A library that settles does so in a few rounds; one that does not is a bug. What
+     * each device's run of the last round named as failed is returned.
      */
-    private suspend fun settle(scope: TestScope) {
+    private suspend fun settle(scope: TestScope): Map<Device, Set<String>> {
         repeat(MAXIMUM_SETTLING_ROUNDS) {
             val before = worldState()
-            devices.forEach { device ->
+            val failed = devices.associateWith { device ->
                 discardDraft(device)
                 prune(device)
-                val attempt = runOn(scope, device, SyncDeletionPolicy.ASK)
+                var attempt = runOn(scope, device, SyncDeletionPolicy.ASK)
                 val question = (attempt as? Attempt.Ended)?.result as? SyncEngine.Result.DeletionsNeedConfirmation
                 if (question != null) {
-                    runOn(scope, device, answers(device, question.direction).first())
+                    attempt = runOn(scope, device, answers(device, question.direction).first())
                 }
                 checkAlways()
+                ((attempt as? Attempt.Ended)?.result as? SyncEngine.Result.Completed)?.summary?.failed.orEmpty().toSet()
             }
-            if (worldState() == before) return
+            if (worldState() == before) return failed
         }
         error("Still changing after $MAXIMUM_SETTLING_ROUNDS rounds of runs on every device")
     }
 
     /** Every device and the folder hold one library, names compared the way the service compares them, with every saved version in it. */
-    private fun checkSettled() {
-        // A damaged copy that no device holds intact stays in the folder, a failure of every run, which no device can
-        // replace: nothing then tells what it should hold (a known limit, `run/CLAUDE.md`). Any device's intact copy of
-        // it would differ from the folder below.
+    private fun checkSettled(failed: Map<Device, Set<String>>) {
+        // A damaged copy that no device holds intact stays in the folder, which no device can replace, nor deletes, since
+        // a song on another device may name it: a failure of the runs of every device whose songs name it, and of no
+        // other run, nothing else failing once settled. No device holds it, so the library is compared without it.
         val intact = cloud.files.filter { (key, file) -> key.kind != LibraryFileKind.FILE || isIntact(key, file.first) }
+        val damaged = cloud.files.keys.filter { it !in intact }.mapTo(mutableSetOf()) { it.name }
         val folder = intact.entries.associate { (key, file) -> key.folded() to file.first.decodeToString() }
         devices.forEach { device ->
             val library = device.library.files.entries.associate { (key, bytes) -> key.folded() to bytes.decodeToString() }
             check(library == folder) { "${device.label} settled on another library than the folder's" }
+            val reported = damaged.intersect(device.namedPictures())
+            check(failed[device] == reported) { "${device.label} settled reporting ${failed[device]} as failed, not the damaged copies its songs name, $reported" }
         }
         check(folder.values.containsAll(saved)) { "Saved versions lost: ${saved - folder.values.toSet()}" }
         val named = intact.filterKeys { it.kind == LibraryFileKind.SONG }.values.flatMapTo(mutableSetOf()) { namedIn(it.first.decodeToString()) }

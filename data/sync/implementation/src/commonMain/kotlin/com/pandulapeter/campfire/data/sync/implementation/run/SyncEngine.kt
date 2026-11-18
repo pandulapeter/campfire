@@ -184,6 +184,7 @@ internal class SyncEngine(
                     caseCollisions = caseCollisions,
                     syncedPreferences = syncedPreferences,
                     largeFiles = localListing.largeFiles + remote.filter { isLargeFile(it.size) }.map { it.key },
+                    imageReferences = localListing.imageReferences,
                 ),
                 plan = plan,
             )
