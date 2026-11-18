@@ -78,7 +78,8 @@
     is `Refused`.
   - The address `https://www.dropbox.com/scl/fi/<fileId>/<name>?rlkey=<rlkey>&dl=0` is cut into `fileId` and `rlkey`
     (each `[A-Za-z0-9_-]{1,64}`); any other form (an old `/s/` link) is `Refused`, since no download could be built.
-  - Deleted with `files/delete_v2`; `path_lookup/not_found` is success.
+  - Deleted with `files/delete_v2`; `path_lookup/not_found` is success. Whether one is there is `files/get_metadata`'s
+    answer (`path/not_found` is none), never a listing's, since a share marked dead stays dead.
   - Opening a link needs only `fileId`, `rlkey`, and some name, from `dl.dropboxusercontent.com` (measured,
     undocumented): it serves the zip without a redirect, with `Access-Control-Allow-Origin: *`, and answers a dead link
     403/404. `www.dropbox.com` answers every dead link 200 with HTML, and its redirect has no CORS header.

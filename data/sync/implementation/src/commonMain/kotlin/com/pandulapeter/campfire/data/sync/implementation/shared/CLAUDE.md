@@ -92,7 +92,8 @@
 - **Accepted**: a 5.4.0 device and a current one rebuild a copy whose songs name files in turn, since they fingerprint it
   differently (5.4.0's copy carries no files): one upload per run of each until both are current. Left as it is.
 - Never stopped by inference: an item missing from the library makes the entry `orphaned`; back under its name, `ok`. A
-  copy missing from a listing as new as the registry read makes it `orphaned` and `copyMissing` for good (a deleted
+  copy missing from a listing as new as the registry read, and then asked about alone (`SyncFolder.hasSharedFile`, since
+  a listing may leave out what the folder holds), makes it `orphaned` and `copyMissing` for good (a deleted
   file's link never comes back, measured: a copy uploaded again at its path is served by no link; a member, not a
   state, so older versions do not show it as working), whatever the library holds; such an entry is never built again.
 - Run-ending failures end the run; anything else, `SyncScopeMissingException` included, is

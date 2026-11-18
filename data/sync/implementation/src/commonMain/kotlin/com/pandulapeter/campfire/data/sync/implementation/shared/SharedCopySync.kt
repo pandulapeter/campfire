@@ -186,8 +186,11 @@ internal class SharedCopySync(
         private suspend fun settleOrThrow(entry: SharedLinksEntry) {
             val kind = SharedLinkKind.fromId(entry.kind) ?: return
             val remote = sharedFiles[entry.shareId]
-            // A deleted copy's link never comes back, whatever the library holds.
-            if (remote == null && isListingCurrent) return markCopyMissing(entry)
+            // A deleted copy's link never comes back, whatever the library holds. Since that is for good, a copy only
+            // the listing misses is asked about first: a listing may leave out what the folder holds.
+            if (remote == null && isListingCurrent && (entry.copyMissing || !folder.holdsSharedCopy(entry.shareId))) {
+                return markCopyMissing(entry)
+            }
             // Nor does a copy put back by hand: the entry stays `orphaned`, as a version that knows no `copyMissing`
             // shows it, until sharing the item again replaces it.
             if (entry.copyMissing) return

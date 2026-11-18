@@ -26,6 +26,7 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 /** The shared copies: where they are written, how their links are made, and where the listing reports them. */
@@ -148,6 +149,30 @@ class DropboxSharingTest {
             respondJson("""{"error_summary":"path_write/disallowed_name/..","error":{}}""", HttpStatusCode.Conflict)
         }
         assertFailsWith<DropboxApiException> { provider.deleteSharedFile(SHARE_ID) }
+    }
+
+    @Test
+    fun `a copy is asked for by its metadata and one not found is not there`() = runTest {
+        var path: JsonElement? = null
+        val there = dropboxProvider { request ->
+            path = Json.parseToJsonElement((request.body as TextContent).text).field("path")
+            respondJson("""{".tag":"file","name":"$SHARE_ID.zip","path_lower":"/shared/$SHARE_ID.zip","rev":"r1"}""")
+        }
+        val gone = dropboxProvider {
+            respondJson("""{"error_summary":"path/not_found/..","error":{}}""", HttpStatusCode.Conflict)
+        }
+
+        assertTrue(there.hasSharedFile(SHARE_ID))
+        assertEquals(JsonPrimitive("/shared/$SHARE_ID.zip"), path)
+        assertFalse(gone.hasSharedFile(SHARE_ID))
+    }
+
+    @Test
+    fun `a copy that cannot be asked about fails rather than counting as gone`() = runTest {
+        val provider = dropboxProvider {
+            respondJson("""{"error_summary":"path/restricted_content/..","error":{}}""", HttpStatusCode.Conflict)
+        }
+        assertFailsWith<DropboxApiException> { provider.hasSharedFile(SHARE_ID) }
     }
 
     /** Neither the library's pass nor its deletion guard may ever see a shared copy as a song. */

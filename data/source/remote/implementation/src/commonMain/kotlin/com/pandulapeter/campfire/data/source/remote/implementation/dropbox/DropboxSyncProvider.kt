@@ -301,6 +301,8 @@ internal class DropboxSyncProvider(
 
     override suspend fun deleteSharedFile(shareId: String) = sharing.delete(sharedFilePath(shareId))
 
+    override suspend fun hasSharedFile(shareId: String) = sharing.exists(sharedFilePath(shareId))
+
     private suspend fun upload(
         path: String,
         bytes: ByteArray,

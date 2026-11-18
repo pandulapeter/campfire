@@ -321,6 +321,9 @@ internal class FakeSyncProvider(
         sharedFiles -= shareId
     }
 
+    /** The folder as it is, whatever a listing answers. */
+    override suspend fun hasSharedFile(shareId: String) = shareId.also(::requireShareId) in sharedFiles
+
     /** Refuses an id that is not a plain name before anything else, as the contract of the shared copies has it. */
     private fun requireShareId(shareId: String) = require(shareId.isNotEmpty() && shareId.all { it.isLetterOrDigit() || it == '-' || it == '_' }) {
         "Not a share id: $shareId"

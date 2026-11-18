@@ -27,6 +27,16 @@ internal suspend fun SyncFolder.deleteSharedCopy(shareId: String) {
 }
 
 /**
+ * Whether the shared copy [shareId] is in the folder, an id that no copy can have counting as none, as in
+ * [deleteSharedCopy].
+ */
+internal suspend fun SyncFolder.holdsSharedCopy(shareId: String) = try {
+    hasSharedFile(shareId)
+} catch (_: IllegalArgumentException) {
+    false
+}
+
+/**
  * Deletes the copies of [shareIds] once more, shares whose entries the list no longer names, best effort. A device whose
  * run read the list before a stop may upload a copy after the stop deleted it, against the revision it listed, and the
  * service writes such an upload as a new file rather than refusing it (measured on Dropbox). So a stop deletes its

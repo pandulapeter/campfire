@@ -286,6 +286,22 @@ class SharedCopySyncTest {
     }
 
     @Test
+    fun `a copy a listing as new as the registry leaves out by mistake keeps its share working`() = runTest {
+        cloud.share(SETLIST)
+
+        sharedCopySync(library = FakeLibraryFileLocalSource(library()), environment = testEnvironment()).synchronize(
+            folder = cloud,
+            index = emptyMap(),
+            sharedFiles = emptyList(),
+            registryRevision = cloud.documents.getValue(SharedLinksFormat.NAME).second,
+        )
+
+        val entry = cloud.entryOf(SETLIST.shareId)
+        assertFalse(entry.copyMissing)
+        assertEquals(SharedLinksEntry.STATE_OK, entry.state)
+    }
+
+    @Test
     fun `a copy missing from a listing older than the registry is left alone`() = runTest {
         cloud.share(SETLIST)
 

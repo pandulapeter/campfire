@@ -183,4 +183,12 @@ interface SyncFolder {
      * served by the old link. A copy that is already gone counts as deleted.
      */
     suspend fun deleteSharedFile(shareId: String)
+
+    /**
+     * Whether the shared copy [shareId] is in the folder now, asked of the copy alone rather than read from a listing:
+     * a copy missing from a listing marks its share dead for good, which a listing that left it out by mistake must not
+     * do. A service whose listings are always whole may answer from a fresh [list], as this default does. Throws what
+     * the other calls throw.
+     */
+    suspend fun hasSharedFile(shareId: String): Boolean = list().sharedFiles.any { it.shareId == shareId }
 }

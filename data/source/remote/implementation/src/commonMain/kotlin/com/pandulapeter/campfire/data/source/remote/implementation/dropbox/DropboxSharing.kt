@@ -15,8 +15,9 @@ import com.pandulapeter.campfire.data.source.remote.implementation.network.toAsc
 import kotlinx.serialization.json.JsonObject
 
 /**
- * The links to shared copies and their deletion, for [DropboxSyncProvider.createSharedLink] and
- * [DropboxSyncProvider.deleteSharedFile]. The copies themselves are uploaded like any other file.
+ * The links to shared copies, their deletion, and whether one is there, for [DropboxSyncProvider.createSharedLink],
+ * [DropboxSyncProvider.deleteSharedFile], and [DropboxSyncProvider.hasSharedFile]. The copies themselves are uploaded
+ * like any other file.
  */
 internal class DropboxSharing(
     private val requests: DropboxTransport,
@@ -73,10 +74,20 @@ internal class DropboxSharing(
         }
     }
 
+    /** Whether a file is at [path] now, by its metadata: `path/not_found` is no file, and any other refusal is thrown. */
+    suspend fun exists(path: String) = try {
+        requests.rpc(url = GET_METADATA_URL, body = """{"path":${path.toAsciiJsonString()}}""", deserializer = JsonObject.serializer())
+        true
+    } catch (exception: DropboxApiException) {
+        if (exception.statusCode != CONFLICT || !exception.errorSummary.startsWith("path/not_found")) throw exception
+        false
+    }
+
     private companion object {
         const val CREATE_SHARED_LINK_URL = "https://api.dropboxapi.com/2/sharing/create_shared_link_with_settings"
         const val LIST_SHARED_LINKS_URL = "https://api.dropboxapi.com/2/sharing/list_shared_links"
         const val DELETE_URL = "https://api.dropboxapi.com/2/files/delete_v2"
+        const val GET_METADATA_URL = "https://api.dropboxapi.com/2/files/get_metadata"
         const val PUBLIC_VIEWER_SETTINGS = """{"requested_visibility":"public","audience":"public","access":"viewer"}"""
         const val PUBLIC = "public"
         const val CONFLICT = 409
