@@ -17,10 +17,10 @@ import kotlin.test.fail
 
 /**
  * Imports an archive through both paths, each into an empty library of its own ([ImportPathApp]), and holds them to
- * the same plan, result, and library, but for the differences step 11 of the streaming archive import plan allows, each
+ * the same plan, result, and library, but for the differences the streaming path is allowed, each
  * checked rather than skipped: files past the in-memory budgets ([BudgetDifference]), and a ZIP64 archive, which only
  * the streaming path reads and which must then import as the same content without ZIP64 does on both ([Zip64Twin]).
- * One more comes from the plan's decisions rather than step 11's list: an archive whose nested archives together pass
+ * The third: an archive whose nested archives together pass
  * the caps on records and held directories that only the streaming reader has ([StreamingCaps]).
  */
 internal class ArchivePathParity {

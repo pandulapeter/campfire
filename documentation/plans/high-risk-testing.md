@@ -121,7 +121,7 @@ asserts behaviour (what a device, the folder, or a link holds), never which call
 `ArchivePathParityTest` takes every archive-like file under `campfire.importCorpus` (`.zip`, `.sbpbackup`, `.sbp`,
 `.osb`, and zips by their bytes) through both import paths, with fuzz mutants of each. The corpus holds no archive, so
 the parity test packs its folders into 20 archives of its own; no real SongbookPro, OnSong, OpenSong, or OpenSongApp
-backup, nor any app's JSON export, has ever gone through either path. Once the streaming plan's step 18 removes the old
+backup, nor any app's JSON export, has ever gone through either path. Once the streaming plan's last step removes the old
 path, the parity test can no longer compare anything for them.
 
 ## Safety
@@ -257,8 +257,8 @@ and how it was made:
 ### 9. The corpus's backups through the import
 
 - **Now**: `ArchivePathParityTest` already takes them (by extension or by their bytes), fuzz mutants included, and is
-  run with the corpus before the streaming plan's step 15 lands and again before the release.
-- **After the old path goes** (the streaming plan's step 18): `BackupCorpusTest` (`localTest/`, skipped while
+  run with the corpus again before the release.
+- **After the old path goes** (the streaming plan's last step): `BackupCorpusTest` (`localTest/`, skipped while
   `campfire.importCorpus` is blank, never in CI) holds each backup to two properties that need no stored expectation:
   - **nothing is dropped silently**: for SongbookPro and OpenSongApp, whose backups list their songs and sets
     explicitly, every one listed is in the import plan as a song or setlist or named among its problems;

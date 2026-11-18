@@ -24,7 +24,7 @@ import kotlin.test.assertTrue
 import kotlin.test.fail
 
 /**
- * The difference step 11 of the streaming archive import plan allows between the paths for an archive the in-memory
+ * A difference allowed between the paths for an archive the in-memory
  * reader reads: pictures and attachments the in-memory path reported too large for the import's budget
  * ([ImportLimits.MAX_IMPORT_IMAGES_SIZE], [ImportLimits.MAX_IMPORT_ATTACHMENTS_SIZE], the first shared with picture
  * links) may come in on the streaming path, which stages them within the disk instead. [check] fails unless every other

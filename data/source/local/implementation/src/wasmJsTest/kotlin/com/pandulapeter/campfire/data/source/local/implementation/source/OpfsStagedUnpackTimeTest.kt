@@ -27,7 +27,7 @@ import kotlin.time.TimeSource
 import kotlin.uuid.Uuid
 
 /**
- * The web's time for the largest count of entries step 16 of the streaming archive import plan names: a ZIP64 archive
+ * The web's time for the largest count of entries the large-archive tests import: a ZIP64 archive
  * of 70,000 entries staged in the origin private file system and unpacked by the wasm target in headless Chrome
  * (`wasmJsBrowserTest`), where every read of the staged file is a promise, within [BUDGET]: each local header read once
  * and the `File` snapshot reused, so the walks over it do not turn into minutes.

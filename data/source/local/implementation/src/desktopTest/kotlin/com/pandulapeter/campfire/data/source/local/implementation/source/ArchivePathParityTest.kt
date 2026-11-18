@@ -17,7 +17,7 @@ import kotlin.test.assertTrue
 import kotlin.test.fail
 
 /**
- * The gate for switching every archive to the streaming import (step 11 of the streaming archive import plan): each
+ * The gate for switching every archive to the streaming import, kept until the old path is removed: each
  * archive is imported held in memory and received into the staging folder, through the review's plan and Import into
  * an empty library, and the two must agree (see [ArchivePathParity] for the differences allowed, each checked). The
  * committed set runs with every build; the private corpus runs where `campfire.importCorpus` names it, by hand.

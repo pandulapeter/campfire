@@ -22,8 +22,8 @@ import kotlin.random.Random
 internal class ParityArchive(val label: String, val name: String, val bytes: ByteArray, val twin: ByteArray? = null)
 
 /**
- * Every archive `ArchivePathParityTest` runs through both import paths, from where step 11 of the streaming archive
- * import plan says: the archives the unpack tests build, the committed fixtures, and the private corpus.
+ * Every archive `ArchivePathParityTest` runs through both import paths: the archives the
+ * unpack tests build, the committed fixtures, and the private corpus.
  */
 internal object ParityArchives {
 
