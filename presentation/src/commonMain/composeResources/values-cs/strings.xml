@@ -1038,7 +1038,7 @@
     <string name="song_editor_insert_tag">Štítek</string>
     <string name="song_editor_insert_language">Jazyk</string>
     <string name="song_editor_insert_link">Odkaz</string>
-    <string name="song_editor_insert_attachment">Přiložit</string>
+    <string name="song_editor_insert_attachment">Příloha</string>
     <string name="song_editor_insert_chord_shape">Hmat akordu</string>
     <string name="song_editor_insert_chord_color">Barva akordů</string>
     <string name="song_editor_insert_text_color">Barva textu</string>

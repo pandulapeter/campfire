@@ -1004,7 +1004,7 @@
     <string name="song_editor_insert_tag">Étiquette</string>
     <string name="song_editor_insert_language">Langue</string>
     <string name="song_editor_insert_link">Lien</string>
-    <string name="song_editor_insert_attachment">Joindre</string>
+    <string name="song_editor_insert_attachment">Pièce jointe</string>
     <string name="song_editor_insert_chord_shape">Doigté d\'accord</string>
     <string name="song_editor_insert_chord_color">Couleur des accords</string>
     <string name="song_editor_insert_text_color">Couleur du texte</string>

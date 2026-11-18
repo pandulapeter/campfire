@@ -140,6 +140,6 @@ On iOS 26 and later, an import the user started keeps working for a while after 
 
 New since the last approved version, and where to find it:
 - Pictures in songs: open a song, tap Edit, then Image in the editor's toolbar (Photos, Files, or From a link). After Save, the picture shows on the song's page, opens full screen when tapped, and is printed in the PDF made from Share or export in the song's three-dot menu.
-- Attachments: in the editor, Attach (after Link in the toolbar) adds a document, recording, or video of up to 50 MB. It is listed in the About the song sheet (the song's three-dot menu, or a tap on the title at the song's top), where a tap opens it with the app iOS picks. Settings → Features → Attachments hides them.
+- Attachments: in the editor, Attachment (after Link in the toolbar) adds a document, recording, or video of up to 50 MB. It is listed in the About the song sheet (the song's three-dot menu, or a tap on the title at the song's top), where a tap opens it with the app iOS picks. Settings → Features → Attachments hides them.
 - Large backups: Import files (the New button's menu on the Songs screen) takes archives of up to 16 GB, with their pictures and attachments, and shows how far it has got.
 ```

@@ -1033,7 +1033,7 @@
     <string name="song_editor_insert_tag">Tag</string>
     <string name="song_editor_insert_language">Język</string>
     <string name="song_editor_insert_link">Link</string>
-    <string name="song_editor_insert_attachment">Załącz</string>
+    <string name="song_editor_insert_attachment">Załącznik</string>
     <string name="song_editor_insert_chord_shape">Chwyt akordu</string>
     <string name="song_editor_insert_chord_color">Kolor akordów</string>
     <string name="song_editor_insert_text_color">Kolor tekstu</string>

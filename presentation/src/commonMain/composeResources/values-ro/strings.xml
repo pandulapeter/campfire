@@ -1043,7 +1043,7 @@
     <string name="song_editor_insert_tag">Etichetă</string>
     <string name="song_editor_insert_language">Limbă</string>
     <string name="song_editor_insert_link">Link</string>
-    <string name="song_editor_insert_attachment">Atașează</string>
+    <string name="song_editor_insert_attachment">Atașament</string>
     <string name="song_editor_insert_chord_shape">Poziție de acord</string>
     <string name="song_editor_insert_chord_color">Culoarea acordurilor</string>
     <string name="song_editor_insert_text_color">Culoarea textului</string>

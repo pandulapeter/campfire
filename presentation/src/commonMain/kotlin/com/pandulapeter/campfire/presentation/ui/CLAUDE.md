@@ -161,7 +161,7 @@ Features (Settings → Features):
 - **Setlists**: their tab and every way into one; files still travel through import, export, and sync. Off with the
   songs too (`FeatureSwitches.areSetlistsEnabled`).
 - **Attachments** (`isAttachmentsEnabled`, after Setlists, disabled with the songs off): About the song's Attachments
-  group (the editor card's too) and the editor's Attach button; the files songs name still sync, export, and import.
+  group (the editor card's too) and the editor's Attachment button; the files songs name still sync, export, and import.
 - **Online song details** (`isSongDetailsLookupEnabled`): the lookup button. **Cover art** (`isCoverArtEnabled`):
   fetching, drawing, and search. **Pictures from links** (`isPictureLinkDownloadEnabled`): an import's downloads of the
   pictures its songs name by address; From a link and a missing picture's Download stay.

@@ -1001,7 +1001,7 @@
     <string name="song_editor_insert_tag">Tag</string>
     <string name="song_editor_insert_language">Idioma</string>
     <string name="song_editor_insert_link">Link</string>
-    <string name="song_editor_insert_attachment">Anexar</string>
+    <string name="song_editor_insert_attachment">Anexo</string>
     <string name="song_editor_insert_chord_shape">Formato de acorde</string>
     <string name="song_editor_insert_chord_color">Cor dos acordes</string>
     <string name="song_editor_insert_text_color">Cor do texto</string>

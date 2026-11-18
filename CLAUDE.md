@@ -183,7 +183,7 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
   `ui/pictures`, `data/repository/implementation`, `domain/implementation`, `chordpro`.
 - Attachments (`{meta: attachment <file> <name>}`) are library files beside the pictures, any type on an allow-list of
   documents, audio, video, pictures, and music formats (nothing that runs), at most 50 MB, never re-encoded; listed and
-  added in About the song and by the editor's Attach, opened as a copy under the shown name with the app the system
+  added in About the song and by the editor's Attachment, opened as a copy under the shown name with the app the system
   picks; synced, exported, and shared like pictures; hidden by the Features switch: `ui/songInfo`, `ui/platform`,
   `data/repository/implementation`, `chordpro`.
 - Transposition, capo, and tempo are overridden per setlist or per device; only the time signature is written: `ui`.

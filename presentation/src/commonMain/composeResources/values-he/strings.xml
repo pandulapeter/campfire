@@ -1041,7 +1041,7 @@
     <string name="song_editor_insert_tag">תגית</string>
     <string name="song_editor_insert_language">שפה</string>
     <string name="song_editor_insert_link">קישור</string>
-    <string name="song_editor_insert_attachment">צירוף</string>
+    <string name="song_editor_insert_attachment">קובץ מצורף</string>
     <string name="song_editor_insert_chord_shape">צורת אקורד</string>
     <string name="song_editor_insert_chord_color">צבע אקורדים</string>
     <string name="song_editor_insert_text_color">צבע טקסט</string>

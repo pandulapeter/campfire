@@ -101,7 +101,7 @@ tuner,metronome,chordpro,guitar,ukulele,mandolin,banjo,bass,piano,capo,transpose
 ```
 Campfire has no account and nothing to sign in to. Two public-domain demo songs and a setlist are loaded on first launch, so every feature can be reviewed without adding content. The first launch also opens a short onboarding, which can be skipped.
 
-Files are only read and written where the user picks them in the system's open and save panels (Import files in the New button's menu on the Songs screen or in Settings → Library; Share or export in a song's or setlist's menu; Save QR code for a shared link; Files in the song editor's Image menu and Attach), or dropped onto the window; the library itself stays inside the app's sandbox container.
+Files are only read and written where the user picks them in the system's open and save panels (Import files in the New button's menu on the Songs screen or in Settings → Library; Share or export in a song's or setlist's menu; Save QR code for a shared link; Files in the song editor's Image menu and Attachment), or dropped onto the window; the library itself stays inside the app's sandbox container.
 
 The microphone is used only by the Tuner tab (and the tuner sheet opened from a song), and is asked for only when the user clicks the button on that page. It is listened to only while that page is on screen; nothing it hears is recorded, kept, or sent anywhere.
 
@@ -109,7 +109,7 @@ Network use is limited to features the user starts: optional sync with the user'
 
 New since the last approved version, and where to find it:
 - Pictures in songs: open a song, click Edit, then Image in the editor's toolbar (Files, or From a link). After Save, the picture shows on the song's page, opens full screen when clicked, and is printed in the PDF made from Share or export in the song's three-dot menu.
-- Attachments: in the editor, Attach (after Link in the toolbar) adds a document, recording, or video of up to 50 MB. It is listed in the About the song sheet (the song's three-dot menu, or a click on the title at the song's top), where a click opens it with the app macOS picks. Settings → Features → Attachments hides them.
+- Attachments: in the editor, Attachment (after Link in the toolbar) adds a document, recording, or video of up to 50 MB. It is listed in the About the song sheet (the song's three-dot menu, or a click on the title at the song's top), where a click opens it with the app macOS picks. Settings → Features → Attachments hides them.
 - Large backups: Import files (the New button's menu on the Songs screen) takes archives of up to 16 GB, with their pictures and attachments, and shows how far it has got. Quitting during an import asks first.
 ```
 

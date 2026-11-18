@@ -999,7 +999,7 @@
     <string name="song_editor_insert_tag">Tag</string>
     <string name="song_editor_insert_language">Language</string>
     <string name="song_editor_insert_link">Link</string>
-    <string name="song_editor_insert_attachment">Attach</string>
+    <string name="song_editor_insert_attachment">Attachment</string>
     <string name="song_editor_insert_chord_shape">Chord shape</string>
     <string name="song_editor_insert_chord_color">Chord color</string>
     <string name="song_editor_insert_text_color">Text color</string>
