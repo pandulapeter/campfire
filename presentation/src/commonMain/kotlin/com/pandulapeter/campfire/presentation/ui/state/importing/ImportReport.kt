@@ -31,7 +31,8 @@ sealed interface ImportReport {
      * Why nothing could be read, which `ImportController.retryImport` asks again about; the source as [Loading] has it,
      * and [neededBytes] the free space an [ImportFailure.NO_SPACE] import needs, where that is known. Not [canRetry]
      * where nothing is left to read again: an archive that arrived could not be received whole, and the stream or the
-     * grant it was read through is gone, so the user has to bring it again (the screen offers Done instead).
+     * grant it was read through is gone, so the user has to bring it again; nor for an [ImportFailure.WRAPPED_ARCHIVE],
+     * which reading again could only refuse again (the screen offers Done instead).
      */
     data class Failed(
         val reason: ImportFailure,

@@ -19,7 +19,9 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class PreparationFailureTest {
 
@@ -54,6 +56,12 @@ class PreparationFailureTest {
         val wrapped = wrappedArchiveException()
         assertEquals(ImportFailure.WRAPPED_ARCHIVE, preparationFailureOf(wrapped).reason)
         assertEquals(ImportFailure.WRAPPED_ARCHIVE, preparationFailureOf(IllegalStateException("Could not unpack.", wrapped)).reason)
+    }
+
+    @Test
+    fun `a wrapped archive is not offered to be tried again while other failures are`() = runTest {
+        assertFalse(preparationFailureOf(wrappedArchiveException()).canRetry)
+        assertTrue(preparationFailureOf(IllegalStateException("Not a zip archive.")).canRetry)
     }
 
     @Test

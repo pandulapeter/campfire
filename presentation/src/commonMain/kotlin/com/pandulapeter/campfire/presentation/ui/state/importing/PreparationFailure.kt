@@ -19,8 +19,8 @@ import com.pandulapeter.campfire.presentation.ui.messages.Message
  * A device out of room is [ImportFailure.NO_SPACE], with the space needed where staging said how much
  * ([StagingRefusedException.NoSpace]; a write the storage itself refused cannot say); more than one import may stage
  * ([StagingRefusedException.TooLarge]) is [ImportFailure.TOO_LARGE]; an archive past 4 GB its tool wrote without ZIP64
- * ([WrappedArchiveException]) is [ImportFailure.WRAPPED_ARCHIVE], never a damaged one; anything else is a file that
- * could not be read.
+ * ([WrappedArchiveException]) is [ImportFailure.WRAPPED_ARCHIVE], never a damaged one, and not to be tried again, which
+ * could only fail the same way; anything else is a file that could not be read.
  */
 internal fun preparationFailureOf(exception: Exception): Preparation.Failed {
     val causes = generateSequence<Throwable>(exception) { it.cause.takeIf { cause -> cause !== it } }.take(MAX_CAUSE_DEPTH)
@@ -31,7 +31,7 @@ internal fun preparationFailureOf(exception: Exception): Preparation.Failed {
             canRetry = causes.none { it is ArchiveNotReceivedException },
         )
         causes.any { it is StagingRefusedException.TooLarge } -> Preparation.Failed(ImportFailure.TOO_LARGE)
-        causes.any { it is WrappedArchiveException } -> Preparation.Failed(ImportFailure.WRAPPED_ARCHIVE)
+        causes.any { it is WrappedArchiveException } -> Preparation.Failed(ImportFailure.WRAPPED_ARCHIVE, canRetry = false)
         else -> Preparation.Failed(ImportFailure.UNREADABLE)
     }
 }
