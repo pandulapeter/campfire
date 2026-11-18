@@ -15,7 +15,9 @@
   Importable-only types are never claimed system wide; legacy `.doc` is listed only to report it unreadable. `.onsong`
   has no iOS system type, so on iOS it comes only through the in-app picker, never the share extension; the other
   apps' backups (`LIBRARY_BACKUP_EXTENSIONS`) and OpenSong's `.osts` (`FOREIGN_SETLIST_EXTENSIONS`, read with the text
-  limit) are iOS imported types, so the share extension takes them.
+  limit) are iOS imported types, so the share extension takes them. JustChords' `.justchords`
+  (`FOREIGN_JSON_EXTENSIONS`, read with the text limit and as JSON by its name) is one app's format, unlike JSON in
+  general: an iOS imported type and document type, so iOS offers Campfire for it in Open with as well.
 - `isSongFileName` / `isSetlistFileName` (and `LibraryFileKind.matches`) are the one answer to which files are the
   library, for the scan and both sync listings: right extension and not hidden (`._song.cho` is macOS's AppleDouble).
 - `normalizedName` **must stay idempotent**: an exported name is normalized again on its way back in. NFC first (it

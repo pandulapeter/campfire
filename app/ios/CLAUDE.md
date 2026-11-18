@@ -109,7 +109,8 @@ extension (`iosApp/ShareExtension/`, Swift only).
 - Document types: `.cho` `Default`, the rest `Alternate`. No zip, plain text, PDF, or Word, deliberately: the share
   extension is where those are accepted. Keep in step with `LibraryFiles.SONG_EXTENSIONS`. SongbookPro's `.sbpbackup` /
   `.sbp` and OpenSongApp's `.osb` / `.osbs` / `.ossb` (zip archives) and `.osts` (plain text) are imported types with no
-  document type, only so the extension's activation rule can name them. `.abc` is
+  document type, only so the extension's activation rule can name them. JustChords' `.justchords` (conforming to JSON)
+  is an imported type with a `Viewer` document type at `Alternate`, so Open with offers Campfire too. `.abc` is
   a `Viewer` at `Alternate` (Campfire is no editor of it), conforming to plain text, which brings it to the extension.
   PNG, JPEG, GIF, WebP, HEIC, and HEIF are a `Viewer` at `Alternate` too, named by the extension's rule: a photo
   alone is a new song.
