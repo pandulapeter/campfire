@@ -42,3 +42,7 @@ What's planned for Campfire, grouped by area.
 - **Importing sheet music from MusicXML** (`.musicxml` and `.mxl`, which every notation app exports) as a song with
   its notation and, where the score has lyrics, a chord sheet of its verses; PDF sheet music stays out (it needs OMR).
   Plan: [musicxml-import.md](plans/musicxml-import.md)
+- **Low priority: the sync engine as a library**: sync, its providers, and the storage they need extracted into
+  app-agnostic `:libs:sync:*` modules, Campfire their first consumer, with no change in behaviour, so later apps (a
+  diary, a notes app) could share it and a new provider would be one library module. Not alongside the Google Drive
+  work, since both reshape `SyncFolder`. Plan: [sync-library-extraction.md](plans/sync-library-extraction.md)
