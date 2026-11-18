@@ -17,8 +17,8 @@ What's planned for Campfire, grouped by area.
   shared links' publishing do not reach yet, live Dropbox checks first, and real other apps' backups for the import
   corpus. Plan: [high-risk-testing.md](plans/high-risk-testing.md)
 - **Streaming archive import — critical for the next release**: archives of any size imported without holding them
-  in memory, safety and reliability first, checked by hand on every platform before it ships. Steps 0–16 have landed;
-  left are the release check by hand on every platform (17) and removing the old in-memory path (18).
+  in memory, safety and reliability first, checked by hand on every platform before it ships. It is built and on main, unreleased;
+  left are the release check by hand on every platform and removing the old in-memory path.
   Plan: [streaming-archive-import.md](plans/streaming-archive-import.md)
 - Hebrew import issues (https://www.tab4u.com/, https://negina.co.il/ )
 - Add Slovak, Ukrainian and Dutch translations
