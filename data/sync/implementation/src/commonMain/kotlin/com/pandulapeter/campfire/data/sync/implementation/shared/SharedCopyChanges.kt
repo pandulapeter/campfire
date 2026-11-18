@@ -35,6 +35,9 @@ internal class SharedCopyChanges {
         removals += shareId
     }
 
+    /** The shares these changes stop, whose copies are deleted again once the list is written without them. */
+    val removed: Set<String> get() = removals
+
     /**
      * What [entry] of this device's journal changes in the registry, resolved against [document] as the entries taken
      * before it leave it; deleting a stopped share's copy is the caller's.

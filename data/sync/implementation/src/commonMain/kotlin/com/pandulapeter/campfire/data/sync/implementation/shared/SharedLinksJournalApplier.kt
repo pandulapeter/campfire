@@ -69,6 +69,7 @@ internal class SharedLinksJournalApplier(
                 SharedLinksRegistry.Change(document = changes.applyTo(current).takeIf { it != current }, result = Unit)
             }
             if (edit is SharedLinksRegistry.Edit.Done) {
+                folder.deleteStoppedCopies(changes.removed, environment.logger)
                 journal.remove(applied)
                 environment.logger.log("Sharing: ${applied.size} noted renames and stops applied to the list")
             }

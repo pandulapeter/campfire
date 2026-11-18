@@ -337,7 +337,7 @@ internal class SharedLinksRepositoryImpl(
                 )
             }
             when (edit) {
-                is SharedLinksRegistry.Edit.Done -> null
+                is SharedLinksRegistry.Edit.Done -> null.also { folder.deleteStoppedCopies(stopped, environment.logger) }
                 is SharedLinksRegistry.Edit.FromNewerVersion -> SharingFailure.NEWER_VERSION
                 SharedLinksRegistry.Edit.Contended -> SharingFailure.UNKNOWN
             }

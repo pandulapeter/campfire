@@ -784,6 +784,57 @@ class SharedLinksRepositoryImplTest {
     }
 
     @Test
+    fun `a run's step that uploads a copy another device stopped meanwhile deletes it again`() = runTest {
+        val cloud = FakeSyncProvider()
+        val (step, _) = stepAndRepository(cloud)
+        // Another device, with a journal and so an application lock of its own: nothing holds its stop back.
+        val elsewhere = repository(cloud)
+        cloud.onUploadSharedFile = { id ->
+            cloud.onUploadSharedFile = {}
+            assertNull(elsewhere.stopSharing(id))
+        }
+
+        synchronize(step, cloud)
+
+        assertTrue(SONG_ENTRY.shareId !in cloud.sharedFiles)
+        assertTrue(registry(cloud).links.none { it.shareId == SONG_ENTRY.shareId })
+    }
+
+    @Test
+    fun `a stop deletes its copy again once its entry is gone so a run's late upload leaves nothing`() = runTest {
+        val provider = FakeSyncProvider()
+        val repository = repository(provider)
+        val share = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "song.cho", "Song", copy, leftOutAttachmentCount = 0)).share
+        // Another device's run, which read the list before the stop, uploads the copy between its deletion and the edit.
+        provider.onUploadDocument = {
+            provider.onUploadDocument = {}
+            provider.sharedFiles[share.shareId] = copy to "s-late"
+        }
+
+        assertNull(repository.stopSharing(share.shareId))
+
+        assertTrue(provider.sharedFiles.isEmpty())
+        assertEquals(emptyList(), registry(provider).links)
+    }
+
+    @Test
+    fun `a stop a run applies from the journal deletes its copy again once its entry is gone`() = runTest {
+        val cloud = FakeSyncProvider()
+        val localSource = FakeSharedLinksLocalSource()
+        val (step, _) = stepAndRepository(cloud, localSource)
+        SharedLinksJournal(localSource, testEnvironment()).append(listOf(SharedLinksJournal.Entry.Stop(SONG_ENTRY.shareId)))
+        cloud.onUploadDocument = {
+            cloud.onUploadDocument = {}
+            cloud.sharedFiles[SONG_ENTRY.shareId] = copy to "s-late"
+        }
+
+        synchronize(step, cloud)
+
+        assertTrue(cloud.sharedFiles.isEmpty())
+        assertEquals(emptyList(), registry(cloud).links)
+    }
+
+    @Test
     fun `a deletion the list could not be told yet is a pending stop until it is applied`() = runTest {
         val provider = FakeSyncProvider()
         provider.onDownloadDocument = { throw SyncNetworkException("offline") }
@@ -807,9 +858,11 @@ class SharedLinksRepositoryImplTest {
      * A run's shared-copy step and the repository on one journal, and so on one application lock, with [SONG_ENTRY]
      * shared in [cloud] and its song changed in the library since, so that the step uploads its copy again.
      */
-    private fun TestScope.stepAndRepository(cloud: FakeSyncProvider): Pair<SharedCopySync, SharedLinksRepositoryImpl> {
+    private fun TestScope.stepAndRepository(
+        cloud: FakeSyncProvider,
+        localSource: FakeSharedLinksLocalSource = FakeSharedLinksLocalSource(),
+    ): Pair<SharedCopySync, SharedLinksRepositoryImpl> {
         val environment = testEnvironment()
-        val localSource = FakeSharedLinksLocalSource()
         val mirror = SharedLinksMirror(localSource, environment)
         val registry = SharedLinksRegistry(mirror, environment)
         val journal = SharedLinksJournal(localSource, environment)

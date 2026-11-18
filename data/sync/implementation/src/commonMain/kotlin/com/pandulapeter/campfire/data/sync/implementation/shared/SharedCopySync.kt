@@ -73,6 +73,7 @@ internal class SharedCopySync(
         val changes = SharedCopyChanges()
         val applied = mutableListOf<SharedLinksJournal.Entry>()
         var isSettled = true
+        val uploaded = mutableSetOf<String>()
         val failure = try {
             pending.forEach { entry ->
                 changes.takeFromJournal(entry, folder, document)
@@ -86,12 +87,13 @@ internal class SharedCopySync(
                 // have seen: missing from it, such a copy is not missing from the folder.
                 isListingCurrent = revision == registryRevision,
                 changes = changes,
+                uploaded = uploaded,
             )
             val links = changes.applyTo(document).links
             links.forEach { entry ->
                 if (!pass.settle(entry)) isSettled = false
             }
-            logger.log("Sync: shared copies: ${links.size} links, ${applied.size} noted changes applied, ${pass.uploads} copies uploaded")
+            logger.log("Sync: shared copies: ${links.size} links, ${applied.size} noted changes applied, ${uploaded.size} copies uploaded")
             null
         } catch (exception: CancellationException) {
             throw exception
@@ -99,7 +101,7 @@ internal class SharedCopySync(
             exception
         }
         val isWritten = try {
-            write(folder, document, changes, applied)
+            write(folder, document, changes, applied, uploaded)
         } catch (exception: CancellationException) {
             throw exception
         } catch (exception: Exception) {
@@ -125,19 +127,29 @@ internal class SharedCopySync(
         }
     }
 
-    /** Writes [changes] where they change anything, then forgets the journal entries [applied]; false where it gave up. */
+    /**
+     * Writes [changes] where they change anything, then forgets the journal entries [applied]; false where it gave up.
+     * The copies of shares it stops, and those of [uploaded] that another device stopped since the step read the list,
+     * are deleted again ([deleteStoppedCopies]).
+     */
     private suspend fun write(
         folder: SyncFolder,
         document: SharedLinksDocument,
         changes: SharedCopyChanges,
         applied: List<SharedLinksJournal.Entry>,
+        uploaded: Set<String>,
     ): Boolean {
-        if (changes.applyTo(document) != document) {
+        // An upload is followed by a read of the list even where it changes no entry (a copy replaced by hand, built again).
+        if (changes.applyTo(document) != document || uploaded.isNotEmpty()) {
+            // Any read naming a share no more is final, whatever the edit then answers: an entry once gone never comes back.
+            val stoppedElsewhere = mutableSetOf<String>()
             val edit = registry.edit(folder) { current ->
+                stoppedElsewhere += uploaded.filter { shareId -> current.links.none { it.shareId == shareId } }
                 SharedLinksRegistry.Change(document = changes.applyTo(current).takeIf { it != current }, result = Unit)
             }
+            folder.deleteStoppedCopies(stoppedElsewhere, logger)
             when (edit) {
-                is SharedLinksRegistry.Edit.Done -> Unit
+                is SharedLinksRegistry.Edit.Done -> folder.deleteStoppedCopies(changes.removed, logger)
                 is SharedLinksRegistry.Edit.FromNewerVersion -> return false
                 SharedLinksRegistry.Edit.Contended -> return false
             }
@@ -153,11 +165,8 @@ internal class SharedCopySync(
         private val sharedFiles: Map<String, RemoteSharedFile>,
         private val isListingCurrent: Boolean,
         private val changes: SharedCopyChanges,
+        private val uploaded: MutableSet<String>,
     ) {
-
-        /** How many copies this step uploaded, for the log. */
-        var uploads = 0
-            private set
 
         /** False where the entry could not be settled this time, which the next run tries again. */
         suspend fun settle(entry: SharedLinksEntry) = try {
@@ -297,7 +306,7 @@ internal class SharedCopySync(
             val isCurrent = hash != null && hash == remote.contentHash
             if (!isCurrent) {
                 when (folder.uploadSharedFile(shareId = entry.shareId, bytes = copy, expectedRevision = remote.revision)) {
-                    is RemoteWriteResult.Written -> uploads++
+                    is RemoteWriteResult.Written -> uploaded += entry.shareId
                     // Another device uploaded in between, most likely the same bytes; whichever is newer, the next run
                     // compares against it.
                     RemoteWriteResult.Conflict -> return

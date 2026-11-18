@@ -9,7 +9,9 @@
  */
 package com.pandulapeter.campfire.data.sync.implementation.shared
 
+import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncFolder
+import kotlinx.coroutines.CancellationException
 
 /**
  * Deletes the shared copy [shareId], an id that no copy can have counting as one already gone. The folder refuses such
@@ -21,5 +23,22 @@ internal suspend fun SyncFolder.deleteSharedCopy(shareId: String) {
         deleteSharedFile(shareId)
     } catch (_: IllegalArgumentException) {
         // No copy is named by it, so there is none to delete and nothing left that its link could serve.
+    }
+}
+
+/**
+ * Deletes the copies of [shareIds] once more, shares whose entries the list no longer names, best effort. A device whose
+ * run read the list before a stop may upload a copy after the stop deleted it, against the revision it listed, and the
+ * service writes such an upload as a new file rather than refusing it (measured on Dropbox). So a stop deletes its
+ * copies again once their entries are gone, catching every upload made before that, and a run's step deletes a copy it
+ * uploaded whose entry its edit finds gone, catching every upload made after: an entry once gone never comes back.
+ */
+internal suspend fun SyncFolder.deleteStoppedCopies(shareIds: Collection<String>, logger: Logger) = shareIds.forEach { shareId ->
+    try {
+        deleteSharedCopy(shareId)
+    } catch (exception: CancellationException) {
+        throw exception
+    } catch (exception: Exception) {
+        logger.log("Could not delete the stopped shared copy $shareId again: ${exception::class.simpleName}")
     }
 }
