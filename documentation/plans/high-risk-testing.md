@@ -94,8 +94,10 @@ asserts behaviour (what a device, the folder, or a link holds), never which call
 - `CreateShareLinkUseCaseImplTest`, `ExportSetlistUseCaseImplTest`, and `ExportSongsUseCaseImplTest`: the first copy
   (the export) holds the setlist and every song it names, a missing one left out, the pictures they show once, and the
   attachments within the budget.
-- `SimulatedSharing`, inside the simulation: a share stops only where a user deleted the item under a name it had, and
-  settled, every live copy's song is the folder's file and carries exactly the pictures its song names.
+- `SimulatedSharing`, inside the simulation: a share stops only where a user stopped it or deleted the item under a
+  name it had; Stop sharing and Stop sharing everything, pressed on any device, also while another device's run uploads
+  the copy, hold their promises (step 6); settled, every live copy's entries are exactly the item, a setlist's songs the
+  folder holds, and the files they name.
 - `SharedCopyParityTest` (`localTest/`, step 7): over generated libraries on the app's whole graph, the first run after
   a share uploads no copy again (the export and `SharedCopySync.build` make the same bytes), each copy's entry list is
   exactly the item, the setlist's songs the library holds under any spelling, and the files they name within the
@@ -104,10 +106,10 @@ asserts behaviour (what a device, the folder, or a link holds), never which call
 
 ### Shared links: not proven
 
-- **Explicit stops never meet another device.** `SimulatedSharing` shares, renames, and deletes, but never presses Stop
-  sharing or Stop sharing everything, so nothing checks that a stopped copy never comes back when another device's run
-  read the list before the stop. Step 1 found that it did (Dropbox writes the upload, an orphan zip no link serves),
-  fixed with focused tests in `SharedLinksRepositoryImplTest`; the simulation still never meets it. Its setlists are opaque text, so a setlist's songs never enter a copy in the simulation.
+- **Explicit stops meet other devices** in the simulation since step 6, setlists naming songs of the pool. A stop the
+  list could not be told of at once promises nothing until its journal entry is applied, a dead link meanwhile (a
+  disconnect forgetting it is the accepted edge), and a copy a faulted run uploaded after a stop is the accepted
+  leftover, which Stop sharing everything removes (`sync/shared/CLAUDE.md`).
 - **A partial shared-folder listing** marked a working share `copyMissing` for good; step 3 found and fixed it (the copy
   is asked about alone first, `SyncFolder.hasSharedFile`), and `SimulatedSharing` checks the property at every step.
 
@@ -238,6 +240,11 @@ is still journaled, and setlists as real setlist documents naming songs of the p
 - **Expected to find**: a device whose run read the list before another device's stop uploading the copy again, where
   step 1 shows Dropbox writes it.
 - **Done**: the CI seeds pass, and 100,000 by hand.
+
+**Done 2026-11-18.** The simulation found a copy uploaded by a run that read the list before another device found the
+copy gone and marked its entry dead: it stayed under the dead link (fixed: the run's step deletes it as it deletes a
+stopped one's). A run that read the list before a stop still uploads the copy again, as expected, and deletes it at its
+final edit. 100,000 seeds: 331 s.
 
 ### 7. The two copy builders agree, and a copy holds nothing else
 
