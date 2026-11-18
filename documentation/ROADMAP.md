@@ -13,10 +13,6 @@ What's planned for Campfire, grouped by area.
 
 ## In progress
 
-- **Streaming archive import — critical for the next release**: archives of any size imported without holding them
-  in memory, safety and reliability first, checked by hand on every platform before it ships. It is built and on main, unreleased;
-  left are the release check by hand on every platform and removing the old in-memory path.
-  Plan: [streaming-archive-import.md](plans/streaming-archive-import.md)
 - Fix some Hebrew import issues (https://www.tab4u.com/, https://negina.co.il/ )
 - **Sync's knowledge of songs behind seams**: the engine's keep, delete, and conflict rules depend on a few narrow
   interfaces instead of songs and setlists, a check keeps it so, and sign-in and transport are separated from Dropbox.
@@ -37,6 +33,8 @@ What's planned for Campfire, grouped by area.
   Plan: [sync-library-extraction.md](plans/sync-library-extraction.md)
 - **Google Drive sync**, as a second provider beside Dropbox. The groundwork landed for v5.1.0; spikes S1–S5 are next.
   Plan: [google-drive-sync.md](plans/google-drive-sync.md)
+- **Large library exports**: a library past 65,535 files that also holds recordings near 45 MB runs out of a 128 MiB
+  heap on export (per-file bookkeeping beside an attachment read whole); decide whether to support it
 - **A more readable sync folder**: consider organizing it in a more user-readable way (subfolders for artists), as an
   option
 
