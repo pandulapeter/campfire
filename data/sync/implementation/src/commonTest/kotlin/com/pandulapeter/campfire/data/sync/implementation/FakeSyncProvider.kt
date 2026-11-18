@@ -32,7 +32,8 @@ import kotlinx.coroutines.flow.first
 
 /**
  * A remote folder held in memory, for running [SyncEngine] against. Revisions are a counter per write, which is all
- * the engine may assume about them, and the content hash is the local one so that identical bytes compare equal.
+ * the engine may assume about them, and the content hash is the local one so that identical bytes compare equal. A
+ * write expecting the revision of a file deleted since writes it again, as Dropbox's does.
  *
  * [onDownload] and [onUpload] run before a transfer answers, which is where a test makes the service fail part way
  * through a run or changes the local library under an operation that is already under way; [onList] runs before a
@@ -183,7 +184,7 @@ internal class FakeSyncProvider(
         val key = SyncKey(kind = kind, name = name)
         onUpload(key)
         val target = stored(key)
-        if (files[target]?.second != expectedRevision) return RemoteWriteResult.Conflict
+        if (isConflict(files[target]?.second, expectedRevision)) return RemoteWriteResult.Conflict
         val revision = "r${nextRevision++}"
         files[target] = bytes to revision
         if (resolvesListedNames) listedSpellings[target.foldedForResolving()] = target
@@ -260,7 +261,7 @@ internal class FakeSyncProvider(
         expectedRevision: String?,
     ): RemoteWriteResult {
         onUploadDocument(name)
-        if (documents[name]?.second != expectedRevision) return RemoteWriteResult.Conflict
+        if (isConflict(documents[name]?.second, expectedRevision)) return RemoteWriteResult.Conflict
         val revision = "r${nextRevision++}"
         documents[name] = bytes to revision
         oversizedDocuments -= name
@@ -285,7 +286,7 @@ internal class FakeSyncProvider(
     ): RemoteWriteResult {
         requireShareId(shareId)
         onUploadSharedFile(shareId)
-        if (sharedFiles[shareId]?.second != expectedRevision) return RemoteWriteResult.Conflict
+        if (isConflict(sharedFiles[shareId]?.second, expectedRevision)) return RemoteWriteResult.Conflict
         val revision = "r${nextRevision++}"
         sharedFiles[shareId] = bytes to revision
         return RemoteWriteResult.Written(revision)
@@ -355,6 +356,13 @@ internal class FakeSyncProvider(
         documents[name] = bytes to "r${nextRevision++}"
         feed.value += name
     }
+
+    /**
+     * Whether a write expecting [expectedRevision] of a file now at [current] is refused, as Dropbox refuses it
+     * (measured): a new file where one exists, or a file written since. A file deleted since is written again whatever
+     * revision the write expected, its folder too, so an upload never learns that a deletion came first.
+     */
+    private fun isConflict(current: String?, expectedRevision: String?) = current != null && current != expectedRevision
 
     private fun remoteFile(key: SyncKey, bytes: ByteArray, revision: String) = RemoteFile(
         kind = key.kind,

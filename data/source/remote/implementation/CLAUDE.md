@@ -42,8 +42,9 @@
 - Every path is inside `Apps/Campfire Sync`: `/songs/<name>`, `/setlists/<name>`, folder documents at `/<name>`, never
   listed. A document's `path/not_found` is no document.
 - Uploads use `add` for a new file and `update` with the expected revision otherwise, so the service refuses a clobber
-  (`path/conflict` → `Conflict`); `autorename` is off. Deletes carry `parent_rev`; "already gone" is success, and a file
-  changed since is left for the next run to bring back.
+  (`path/conflict` → `Conflict`); `autorename` is off. An `update` over a file deleted since is no conflict: Dropbox
+  writes it again, its folder too (measured); only a file written or re-added since conflicts. Deletes carry
+  `parent_rev`; "already gone" is success, and a file changed since is left for the next run to bring back.
 - A download's revision comes from the `Dropbox-API-Result` header (its absence is a failure), with `size` and
   `content_hash` the bytes must match, or that file fails (not the run). Downloads stream (`DropboxDownloads`) and are
   refused before the body once the declared size, or the body, passes the limit (the caller's for a library file, 8 MiB
@@ -61,8 +62,10 @@
 - `DropboxDeletedFiles`: `files/list_revisions` (mode `path`), then `files/restore` of the newest revision, the next on
   `invalid_revision` (three at most); any refusal, a missing scope too (logged once), is "not restored".
 - A run's deletions go as `files/delete_batch` jobs (≤1000 files) polled with `delete_batch/check`: single deletions in
-  parallel hit the folder write lock (`too_many_write_operations`) and crawled at ~1/s. A job runs at ~7 files/s and is
-  not atomic. Entries refused as busy are retried with the normal back-off.
+  parallel hit the folder write lock (`too_many_write_operations`) and crawled at ~1/s. A job runs at ~4–7 files/s and
+  is not atomic: a listing meanwhile is a consistent snapshot of any fraction of it (measured on 300 files). A listing
+  right after another client's upload, rename, or deletion has always shown it. Entries refused as busy are retried
+  with the normal back-off.
 - Errors (`DropboxErrors`): 409 `too_many_write_operations` is retried too, the body's `retry_after` before
   `Retry-After`; 409 `insufficient_space` → `SyncRemoteStorageFullException`; any other 409 fails that one file. In the
   browser, calls carry a bound of their own (60 s RPC, 120 s listing pages, downloads by their limit, uploads by size). Every call

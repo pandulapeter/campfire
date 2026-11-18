@@ -42,6 +42,11 @@
     deletion is the one run started with an answer already given.
   - Remote deletions go to `SyncProvider.delete` in one call, so the folder is half deleted (what another device's guard
     sees) as briefly as possible.
+- **What the service does, as the tests' `FakeSyncProvider` answers it** (measured on Dropbox, 2026-11-18): an upload
+  expecting the revision of a file deleted since writes it again (its folder too), and only one written or re-added
+  since is a `Conflict`, so an edit uploaded over another device's deletion simply wins; a listing taken right after
+  another client's upload, rename, or deletion shows it; a batch deletion is not atomic (~4 files/s), and a listing
+  taken meanwhile is a consistent snapshot of any fraction of it.
 - **Failures**: only `SyncRunEndingException`s end a run. `CancellationException` is caught *first* and rethrown. A
   failed or still contested file is named beside `lastSyncedAt`, which any run that got to the end moves. A run ending
   in a non-`Exception` throwable rescans the whole library if any operation had finished, since it may have come
