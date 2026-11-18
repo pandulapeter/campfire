@@ -43,15 +43,16 @@ import kotlin.time.TimeSource
  * Its shared links' mirror and journal are [sharedLinks], and every completed run brings the shared copies up to date
  * after the preferences, as [buildNumber] builds them, as `SyncRunner` does; [sharing] is what the app's sharing actions
  * and its notes of renames and deletions go through, over the same mirror and journal. Its file system compares names by
- * [naming].
+ * [naming], and [clock] is its own time, which it dates shares and the files it writes by.
  */
 internal class Device(
     files: Map<SyncKey, ByteArray> = emptyMap(),
     val preferences: FakeUserPreferencesRepository? = null,
     naming: FileSystemNaming = FileSystemNaming.EXACT,
+    clock: Clock = Clock.System,
 ) {
 
-    val library = FakeLibraryFileLocalSource(files, naming = naming)
+    val library = FakeLibraryFileLocalSource(files, naming = naming, clock = clock)
     private val lock = LibraryFileLock()
     private val preferencesSync = preferences?.let { SyncedPreferencesSync(it, library, Logger.Standard) }
     private var index = SyncIndexDocument()
@@ -60,7 +61,10 @@ internal class Device(
     val sharedContents = FakeSharedCopyContents()
     var buildNumber = 1
 
-    /** What the open editor's unsaved text names, which sync keeps as it keeps what the songs name. */
+    /**
+     * What the open editor's unsaved text names, which sync keeps as it keeps what the songs name, read when a run's
+     * deletions look, as `ImageRepository.withImagesKept` hands it over, so a change during a run counts.
+     */
     var heldPictures = emptySet<String>()
 
     /** Whether the last run's shared-copy step settled every copy. */
@@ -74,7 +78,7 @@ internal class Device(
     private val environment = SyncEnvironment(
         context = Dispatchers.Unconfined,
         timeSource = TimeSource.Monotonic,
-        clock = Clock.System,
+        clock = clock,
         computation = Dispatchers.Unconfined,
         logger = Logger.Standard,
     )
@@ -121,7 +125,7 @@ internal class Device(
                 document = index,
                 setlistComparison = DayBlindSetlistComparison,
                 lock = lock,
-                heldPictures = heldPictures,
+                heldPictures = { heldPictures },
                 onIndexChanged = { snapshot ->
                     reported = snapshot
                     writtenIndexes += snapshot()

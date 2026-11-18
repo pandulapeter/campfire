@@ -9,11 +9,12 @@
  */
 package com.pandulapeter.campfire.data.sync.implementation
 
-import com.pandulapeter.campfire.chordpro.edit.ChordProImages
+import com.pandulapeter.campfire.chordpro.edit.libraryFilesNamedBy
 import com.pandulapeter.campfire.data.model.library.LibraryFileKind
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.share.CreateShareResult
 import com.pandulapeter.campfire.data.model.share.SharedLinkKind
+import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash
 import com.pandulapeter.campfire.data.sync.implementation.shared.SharedLinksEntry
 import com.pandulapeter.campfire.data.sync.implementation.shared.registry
 
@@ -79,12 +80,15 @@ internal class SimulatedSharing(private val cloud: FakeSyncProvider) {
             } else {
                 check(entry.state == SharedLinksEntry.STATE_OK) { "Share ${entry.shareId} of ${entry.fileName} is ${entry.state}" }
                 val copy = cloud.sharedFiles.getValue(entry.shareId).first.decodeToString()
-                // The song's own entry first, then one `images/` entry for each picture it names that the folder holds.
+                // The song's own entry first, then one `images/` entry for each file it names that the folder holds.
                 val song = copy.substringAfter('\n').substringBefore(IMAGES_ENTRY)
                 check(song == file) { "Share ${entry.shareId} of ${entry.fileName} holds $copy rather than $file" }
                 val pictures = copy.split(IMAGES_ENTRY).drop(1).mapTo(mutableSetOf()) { it.substringBefore(']') }
-                val named = ChordProImages.referencedSources(file).filterTo(mutableSetOf()) { name -> cloud.files.keys.any { it.kind == LibraryFileKind.FILE && it.name == name } }
-                check(pictures == named) { "Share ${entry.shareId} of ${entry.fileName} holds the pictures $pictures rather than $named" }
+                // A file whose folder copy is damaged past repair (`run/CLAUDE.md`) no device holds, so a copy built since
+                // lacks it, while one built before keeps the intact file.
+                val named = libraryFilesNamedBy(file).filterTo(mutableSetOf()) { name -> cloud.files.keys.any { it.kind == LibraryFileKind.FILE && it.name == name } }
+                val intact = named.filterTo(mutableSetOf()) { name -> LibraryFiles.isLibraryFileNamedFor(name, localContentHash(cloud.files.getValue(SyncKey(kind = LibraryFileKind.FILE, name = name)).first)) }
+                check(pictures.containsAll(intact) && named.containsAll(pictures)) { "Share ${entry.shareId} of ${entry.fileName} holds the pictures $pictures rather than $intact" }
             }
         }
     }

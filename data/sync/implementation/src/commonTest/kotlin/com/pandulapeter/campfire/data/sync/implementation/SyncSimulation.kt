@@ -7,6 +7,8 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
+@file:OptIn(ExperimentalTime::class)
+
 package com.pandulapeter.campfire.data.sync.implementation
 
 import com.pandulapeter.campfire.chordpro.edit.libraryFilesNamedBy
@@ -24,6 +26,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.yield
 import kotlin.random.Random
+import kotlin.time.Clock
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 
 /**
  * Two or three devices sharing one cloud folder, driven by [seed] through [steps] random things users and the network
@@ -35,7 +44,9 @@ import kotlin.random.Random
  * composing and decomposing devices at once. Items are shared too, and the shared links checked ([SimulatedSharing]);
  * a device may disconnect and connect again, meeting the folder with no index. A run's first listing may be partial or
  * stale, as a service's with a paging bug or an eventually consistent one may be, and a batch deletion may be seen in
- * pieces.
+ * pieces. Songs show pictures and attach files, a device's editor may hold unsaved text naming some, a writer outside
+ * Campfire may put other bytes under a picture's name in the folder, and every device's clock is off in its own way
+ * ([SkewedClock]), which nothing in sync may read.
  * What it checks:
  * - no version a user saved, and nobody replaced or deleted since, is gone from every device and the folder: an edit
  *   beats a deletion, and a conflict keeps both versions;
@@ -46,7 +57,9 @@ import kotlin.random.Random
  *   round of runs moves nothing;
  * - no picture a saved song names is gone from every device, the folder, and its history, while each device deletes the
  *   pictures its own songs do not name whenever it likes, as the app's pruning does; settled, every one is back and no
- *   picture is left that no song names.
+ *   picture is left that no song names;
+ * - no device holds a picture or an attachment whose bytes are not what its name says, and none loses one its editor's
+ *   unsaved text names while that text names it.
  *
  * What a user saved is a version no other save has, so that whether it survived is a question of its bytes alone.
  */
@@ -54,7 +67,14 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
 
     private val random = Random(seed)
     private val cloud = FakeSyncProvider(ignoresCase = seed % 2 == 0, resolvesListedNames = seed % 2 != 0)
-    private val devices = List(2 + random.nextInt(2)) { Device(naming = PLATFORMS.random(random)) }
+
+    /** The true time, a minute later at every step; no device's clock tells it. */
+    private var worldTime = TEST_NOW
+    private val clocks = CLOCK_OFFSETS.shuffled(random).map { SkewedClock(world = { worldTime }, offset = it) }
+    private val devices = List(2 + random.nextInt(2)) { Device(naming = PLATFORMS.random(random), clock = clocks[it]) }
+
+    /** The files each device's editor named when its unsaved text last changed and the device held them. */
+    private val drafts = mutableMapOf<Device, Set<SyncKey>>()
     private val log = mutableListOf<String>()
     private val sharing = SimulatedSharing(cloud)
 
@@ -72,6 +92,14 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
     private var running: Job? = null
     private var runningDevice: Device? = null
     private val lostLibraries = mutableSetOf<Device>()
+
+    /**
+     * The files no promise of sync's covers any more, until a save stores one again: those that went with a lost library
+     * folder and were nowhere else, and those a writer outside Campfire overwrote in the folder, whose devices' copies
+     * may go meanwhile (a falsified listing takes a song away, its picture is pruned), with the folder's history of
+     * overwritten versions, which the app never asks back, not modelled.
+     */
+    private val lostOutsideSync = mutableSetOf<String>()
 
     /** The device whose run makes the requests now: the one a step runs, or another whose run a fault started meanwhile. */
     private var actor: Device? = null
@@ -111,11 +139,13 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
     suspend fun run(scope: TestScope) {
         try {
             repeat(steps) {
+                worldTime += 1.minutes
                 val device = devices.random(random)
                 val roll = random.nextInt(100)
                 when {
                     roll == 0 -> loseLibrary(device)
                     roll == 1 -> device.reconnect().also { log += "${device.label} disconnects and connects again" }
+                    roll == 2 -> damageFolderFile()
                     roll < 50 -> userStep(device)
                     else -> syncStep(scope, device)
                 }
@@ -142,6 +172,7 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
                 log += "${device.label} shares ${key.name}: ${sharing.share(device, key)}"
             }
 
+            random.nextInt(12) == 0 -> editDraft(device)
             random.nextInt(6) == 0 -> prune(device)
             existing.isEmpty() || random.nextInt(10) < 5 -> {
                 save(device, existing.takeIf { random.nextBoolean() }?.randomOrNull(random) ?: newName(device))
@@ -161,7 +192,14 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
         // Gone with the folder may be any version the device held: one it had not sent yet, or one it had sent and
         // then moved to a name it had not sent, whose old name another device has deleted since.
         device.library.files.values.forEach { saved -= it.decodeToString() }
+        // And any file the device alone held, which a song held elsewhere may name: one whose upload failed, say.
+        val elsewhere = (devices.filter { it !== device }.map { it.library.files } + cloud.files.mapValues { it.value.first } + cloud.deletedFiles)
+        lostOutsideSync += device.library.files.filter { (key, bytes) ->
+            key.kind == LibraryFileKind.FILE && elsewhere.none { files -> files[key]?.let { isIntact(key, it) } == true }
+        }.keys.map { it.name }
         device.library.files.clear()
+        // The editor's text still names its files, but they went with the folder, which no promise of sync's covers.
+        drafts -= device
         lostLibraries += device
         log += "${device.label} loses its library folder"
     }
@@ -180,10 +218,16 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
     }
 
     private fun save(device: Device, key: SyncKey) {
-        // A song names a picture now and then, which the device then holds, as the app stores one before the song naming it.
-        val named = if (key.kind == LibraryFileKind.SONG && random.nextBoolean()) PICTURES.shuffled(random).take(1 + random.nextInt(2)) else emptyList()
-        named.forEach { picture -> if (picture.key !in device.library.files) device.library.files[picture.key] = picture.bytes }
-        val version = "v${++versions} by ${device.label}" + named.joinToString("") { "\n{image: src=${it.key.name}}" }
+        // A song shows a picture or attaches a file now and then, which the device then holds, as the app stores one
+        // before the song naming it.
+        val shown = if (key.kind == LibraryFileKind.SONG && random.nextBoolean()) PICTURES.shuffled(random).take(1 + random.nextInt(2)) else emptyList()
+        val attached = if (key.kind == LibraryFileKind.SONG && random.nextInt(3) == 0) listOf(ATTACHMENTS.random(random)) else emptyList()
+        (shown + attached).forEach { file ->
+            if (file.key !in device.library.files) device.library.put(file.key, file.bytes)
+            lostOutsideSync -= file.key.name
+        }
+        val version = "v${++versions} by ${device.label}" + shown.joinToString("") { "\n{image: src=${it.key.name}}" } +
+            attached.joinToString("") { "\n{meta: attachment ${it.key.name} Rehearsal take.pdf}" }
         device.library.put(key, version.encodeToByteArray())?.let { saved -= it.decodeToString() }
         // A save during the device's own run may come before the run lists the library, which then lists something.
         deletedByRun[device]?.listsAnything = true
@@ -191,12 +235,57 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
         log += "${device.label} saves ${key.name} = $version"
     }
 
-    /** What the app's pruning does after a finished read: every picture none of this device's songs names is deleted. */
+    /**
+     * What the app's pruning does after a finished read: every picture and attachment none of this device's songs names,
+     * nor its editor's unsaved text, is deleted.
+     */
     private fun prune(device: Device) {
-        val named = device.namedPictures()
+        val named = device.namedPictures() + device.heldPictures
         val unnamed = device.library.files.keys.filter { it.kind == LibraryFileKind.FILE && it.name !in named }
         unnamed.forEach { device.library.files.remove(it) }
         if (unnamed.isNotEmpty()) log += "${device.label} prunes ${unnamed.joinToString { it.name }}"
+    }
+
+    /**
+     * The editor's unsaved text on [device] changes: it names some of the files the device holds, whatever its songs name
+     * (a line kept while the song lost it, or a file added and not saved yet), or the text is saved or discarded.
+     */
+    private fun editDraft(device: Device) {
+        val files = device.library.files.keys.filter { it.kind == LibraryFileKind.FILE }
+        if (files.isEmpty() || random.nextInt(3) == 0) {
+            discardDraft(device)
+        } else {
+            val named = files.filter { random.nextBoolean() }.ifEmpty { listOf(files.random(random)) }.toSet()
+            device.heldPictures = named.mapTo(mutableSetOf()) { it.name }
+            drafts[device] = named
+            log += "${device.label}'s editor names ${named.joinToString { it.name }}"
+        }
+    }
+
+    private fun discardDraft(device: Device) {
+        if (device.heldPictures.isEmpty()) return
+        device.heldPictures = emptySet()
+        drafts -= device
+        log += "${device.label}'s editor names nothing"
+    }
+
+    /**
+     * Something outside Campfire writes other bytes under the name of a file in the folder, sometimes as many as the file
+     * had, so that its size gives nothing away.
+     */
+    private fun damageFolderFile() {
+        // Never the one intact copy that is sure to stay: what only the folder held, a writer outside Campfire destroys
+        // for good, and a device keeps its copy only while one of its songs, or its editor, names it.
+        val kept = devices.map { device -> device.library.files.filterKeys { it.name in device.namedPictures() + device.heldPictures } } + cloud.deletedFiles
+        val key = cloud.files.keys.filter { key ->
+            key.kind == LibraryFileKind.FILE && kept.any { files -> files[key]?.let { isIntact(key, it) } == true }
+        }.randomOrNull(random) ?: return
+        val bytes = cloud.files.getValue(key).first
+        val damaged = if (random.nextBoolean()) bytes.reversedArray() + 0 else bytes.reversedArray()
+        if (damaged.contentEquals(bytes)) return
+        cloud.writeElsewhere(key, damaged)
+        lostOutsideSync += key.name
+        log += "the folder's ${key.name} is overwritten outside Campfire"
     }
 
     private fun Device.namedPictures() = library.files.filterKeys { it.kind == LibraryFileKind.SONG }.values.flatMapTo(mutableSetOf()) { namedIn(it.decodeToString()) }
@@ -278,6 +367,7 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
         device.library.onWrite = {}
         device.library.onDelete = {}
         log += "  ${device.label}'s run ${attempt.described()}"
+        clocks[devices.indexOf(device)].afterRun()
         seenWrites[device] = cloud.writes
         checkGuard(device)
         if ((attempt as? Attempt.Ended)?.result is SyncEngine.Result.Completed) lostLibraries -= device
@@ -417,10 +507,17 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
         check(held.containsAll(saved)) { "Saved versions lost from every device and the folder: ${saved - held}" }
         // The folder's history counts: a picture whose only song is a conflict copy a run left on one device, unsent,
         // may be deleted everywhere else meanwhile, and that device's next completed run asks it back from there.
-        val heldPictures = (devices.flatMap { it.library.files.keys } + cloud.files.keys + cloud.deletedFiles.keys)
-            .filter { it.kind == LibraryFileKind.FILE }.mapTo(mutableSetOf()) { it.name }
-        val namedBySaved = saved.flatMapTo(mutableSetOf()) { namedIn(it) }
+        // Only an intact copy counts: a damaged one in the folder is no picture of anybody's.
+        val heldPictures = (devices.flatMap { it.library.files.entries } + cloud.files.mapValues { it.value.first }.entries + cloud.deletedFiles.entries)
+            .filter { (key, bytes) -> key.kind == LibraryFileKind.FILE && isIntact(key, bytes) }.mapTo(mutableSetOf()) { it.key.name }
+        val namedBySaved = saved.flatMapTo(mutableSetOf()) { namedIn(it) } - lostOutsideSync
         check(heldPictures.containsAll(namedBySaved)) { "Pictures saved songs name lost from every device, the folder, and its history: ${namedBySaved - heldPictures}" }
+        devices.forEach { device ->
+            val damaged = device.library.files.filter { (key, bytes) -> key.kind == LibraryFileKind.FILE && !isIntact(key, bytes) }.keys
+            check(damaged.isEmpty()) { "${device.label} holds files whose bytes are not what their names say: ${damaged.map { it.name }}" }
+            val lost = drafts[device].orEmpty().filter { it !in device.library.files }
+            check(lost.isEmpty()) { "${device.label} lost files its editor's unsaved text names: ${lost.map { it.name }}" }
+        }
         (devices.map { it.label to it.library.files.keys } + ("cloud" to cloud.files.keys)).forEach { (label, keys) ->
             val twice = keys.groupBy { it.folded() }.filterValues { it.size > 1 }
             check(twice.isEmpty()) { "$label holds one name in several spellings: ${twice.values}" }
@@ -436,6 +533,7 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
         repeat(MAXIMUM_SETTLING_ROUNDS) {
             val before = worldState()
             devices.forEach { device ->
+                discardDraft(device)
                 prune(device)
                 val attempt = runOn(scope, device, SyncDeletionPolicy.ASK)
                 val question = (attempt as? Attempt.Ended)?.result as? SyncEngine.Result.DeletionsNeedConfirmation
@@ -451,18 +549,22 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
 
     /** Every device and the folder hold one library, names compared the way the service compares them, with every saved version in it. */
     private fun checkSettled() {
-        val folder = cloud.files.entries.associate { (key, file) -> key.folded() to file.first.decodeToString() }
+        // A damaged copy that no device holds intact stays in the folder, a failure of every run, which no device can
+        // replace: nothing then tells what it should hold (a known limit, `run/CLAUDE.md`). Any device's intact copy of
+        // it would differ from the folder below.
+        val intact = cloud.files.filter { (key, file) -> key.kind != LibraryFileKind.FILE || isIntact(key, file.first) }
+        val folder = intact.entries.associate { (key, file) -> key.folded() to file.first.decodeToString() }
         devices.forEach { device ->
             val library = device.library.files.entries.associate { (key, bytes) -> key.folded() to bytes.decodeToString() }
             check(library == folder) { "${device.label} settled on another library than the folder's" }
         }
         check(folder.values.containsAll(saved)) { "Saved versions lost: ${saved - folder.values.toSet()}" }
-        val named = cloud.files.filterKeys { it.kind == LibraryFileKind.SONG }.values.flatMapTo(mutableSetOf()) { namedIn(it.first.decodeToString()) }
-        val pictures = cloud.files.keys.filter { it.kind == LibraryFileKind.FILE }.mapTo(mutableSetOf()) { it.name }
+        val named = intact.filterKeys { it.kind == LibraryFileKind.SONG }.values.flatMapTo(mutableSetOf()) { namedIn(it.first.decodeToString()) }
+        val pictures = intact.keys.filter { it.kind == LibraryFileKind.FILE }.mapTo(mutableSetOf()) { it.name }
         check(pictures.all { it in named }) { "Settled with pictures no song names: ${pictures - named}" }
         // A song may name a picture that is nowhere, where the only device holding it lost its library folder after the
         // song went up: what sync promises is every picture of a version nobody replaced, deleted, or lost.
-        val namedBySaved = saved.flatMapTo(mutableSetOf()) { namedIn(it) }
+        val namedBySaved = saved.flatMapTo(mutableSetOf()) { namedIn(it) } - lostOutsideSync
         check(pictures.containsAll(namedBySaved)) { "Settled without pictures saved songs name: ${namedBySaved - pictures}" }
         sharing.checkSettled()
     }
@@ -526,7 +628,22 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
      */
     private class ProcessKilled : Error("Killed")
 
-    private class Picture(val key: SyncKey, val bytes: ByteArray)
+    private class NamedFile(val key: SyncKey, val bytes: ByteArray)
+
+    /**
+     * A device's clock, [offset] away from the true time [world]; one whose offset is negative and grows after every run
+     * steps backwards between runs, as a clock set by hand or by a network that disagrees does.
+     */
+    private class SkewedClock(private val world: () -> Instant, private var offset: Duration) : Clock {
+
+        private val stepsBack = offset < Duration.ZERO && offset > -(1.days)
+
+        override fun now() = world() + offset
+
+        fun afterRun() {
+            if (stepsBack) offset -= 1.hours
+        }
+    }
 
     /** What one run deleted so far, by folded name, and whether its library listed anything, and its answer. */
     private class RunDeletions(var listsAnything: Boolean, val policy: SyncDeletionPolicy) {
@@ -558,12 +675,19 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
             FileSystemNaming.MAC.copy(takesWrittenSpelling = true),
             FileSystemNaming.MAC.copy(storesDecomposed = true),
         )
-        val PICTURES = (1..4).map { number ->
-            val bytes = "picture $number".encodeToByteArray()
-            Picture(SyncKey(kind = LibraryFileKind.FILE, name = localContentHash(bytes).take(16) + ".png"), bytes)
+        val PICTURES = (1..4).map { number -> namedFile("picture $number", ".png") }
+        val ATTACHMENTS = (1..2).map { number -> namedFile("attachment $number", ".pdf") }
+
+        /** A day behind, a day ahead, and one stepping back an hour after every run of its device. */
+        val CLOCK_OFFSETS = listOf(-(1.days), 1.days, -(1.hours))
+
+        fun namedFile(text: String, extension: String) = text.encodeToByteArray().let { bytes ->
+            NamedFile(SyncKey(kind = LibraryFileKind.FILE, name = localContentHash(bytes).take(16) + extension), bytes)
         }
 
         fun namedIn(text: String) = libraryFilesNamedBy(text)
+
+        fun isIntact(key: SyncKey, bytes: ByteArray) = LibraryFiles.isLibraryFileNamedFor(key.name, localContentHash(bytes))
 
         val SETLIST_NAMES = listOf("gig.setlist.json", "Gig.setlist.json", "gig (2).setlist.json", "rehearsal.setlist.json")
     }

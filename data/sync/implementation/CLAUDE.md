@@ -50,7 +50,9 @@ A behaviour spanning devices (renames, conflicts, deletions, synced preferences)
 `SyncSimulationTest` drives two or three devices through seeded random edits, runs, and failures (the app killed before
 it writes the index included) and checks the promises above; each device's fake file system compares names as one
 platform's does (`FileSystemNaming`), shared links must follow renames and stop only on deletions
-(`SimulatedSharing`), and songs name pictures each device prunes as the app does, none of a saved song's ever lost. A
+(`SimulatedSharing`), and songs show pictures and attach files each device prunes as the app does, none of a saved
+song's ever lost, while an editor's unsaved text holds some, a writer outside Campfire overwrites folder copies, and
+every device's clock is off in its own way; no device may hold a file whose bytes are not what its name says. A
 failure prints its seed and steps (share ids aside, which are random), and a change to sync is worth a run by hand with
 far more seeds (and a longer `runTest` timeout). The upgrade-5.2.0 test resources, here and in
 `:data:source:local:implementation`, are what the 5.2.0 release's own code wrote; never regenerate them with today's

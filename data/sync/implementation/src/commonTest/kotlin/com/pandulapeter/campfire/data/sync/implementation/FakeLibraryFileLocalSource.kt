@@ -7,6 +7,8 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
+@file:OptIn(ExperimentalTime::class)
+
 package com.pandulapeter.campfire.data.sync.implementation
 
 import com.pandulapeter.campfire.data.sync.implementation.run.SyncEngine
@@ -14,6 +16,8 @@ import com.pandulapeter.campfire.data.model.library.LibraryFile
 import com.pandulapeter.campfire.data.model.library.LibraryFileKind
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
 
 /**
  * The library held in memory, for running [SyncEngine] against. [onRead] runs before a read answers, which is where a
@@ -24,6 +28,8 @@ import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource
  * lists, and every call finds a name the way that file system would. What the real source answers on top of the file
  * system is answered the way `LibraryFileLocalSourceImpl` and `uniqueName` answer it: a free name, and a numbered
  * variant of one, under any case or Unicode form, and an existing spelling as the file system's own check finds it.
+ * A file written through [put] or the source is listed as modified at [clock]'s time then, where a test gives one; every
+ * other file as 0, as the web lists every file.
  */
 internal class FakeLibraryFileLocalSource(
     files: Map<SyncKey, ByteArray> = emptyMap(),
@@ -33,9 +39,12 @@ internal class FakeLibraryFileLocalSource(
     var onDeleted: (SyncKey) -> Unit = {},
     private val canHoldFileName: (String) -> Boolean = { true },
     val naming: FileSystemNaming = FileSystemNaming.EXACT,
+    private val clock: Clock? = null,
 ) : LibraryFileLocalSource {
 
     val files = files.toMutableMap()
+
+    private val modifiedAt = mutableMapOf<SyncKey, Long>()
 
     /** The key [kind] / [name] finds on this file system, or null for a name no file answers to. */
     fun held(kind: LibraryFileKind, name: String) = SyncKey(kind = kind, name = name).takeIf { it in files }
@@ -45,15 +54,21 @@ internal class FakeLibraryFileLocalSource(
     fun put(key: SyncKey, bytes: ByteArray): ByteArray? {
         val held = held(key.kind, key.name)
         val previous = held?.let(files::remove)
-        files[if (held == null || naming.takesWrittenSpelling) key.copy(name = naming.stored(key.name)) else held] = bytes
+        val stored = if (held == null || naming.takesWrittenSpelling) key.copy(name = naming.stored(key.name)) else held
+        files[stored] = bytes
+        held?.let(modifiedAt::remove)
+        clock?.let { modifiedAt[stored] = it.now().toEpochMilliseconds() }
         return previous
     }
 
     /** What a deletion does: removes the file [key] finds. */
-    fun remove(key: SyncKey) = held(key.kind, key.name)?.let(files::remove)
+    fun remove(key: SyncKey) = held(key.kind, key.name)?.let { held ->
+        modifiedAt -= held
+        files.remove(held)
+    }
 
     override suspend fun loadLibraryFiles() = files.filterKeys { it.kind.matches(it.name) }.map { (key, bytes) ->
-        LibraryFile(kind = key.kind, name = key.name, size = bytes.size.toLong(), lastModified = 0)
+        LibraryFile(kind = key.kind, name = key.name, size = bytes.size.toLong(), lastModified = modifiedAt[key] ?: 0)
     }
 
     override suspend fun readLibraryFile(kind: LibraryFileKind, name: String): ByteArray? {
