@@ -28,7 +28,7 @@ Koin cannot inject; the build number). `DemoLibraryRepositoryImpl` lives here be
   one inside; nothing holding it calls anything that takes it. A local write or deletion and its `onLocalFileChanged`
   finish together once started (`NonCancellable`).
 - `ImageRepository.withImagesKept`: taken by the engine around its local picture deletions, outside `LibraryFileLock`, in
-  the order the app's writes of a picture and its song take them.
+  the order the app's writes of a picture and its song take them, and alone to read the draft's names for a damaged copy.
 - `SyncLibraryRefresher.changedFilesMutex`: innermost.
 
 ## Invariants
