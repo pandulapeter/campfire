@@ -142,6 +142,7 @@
     <string name="export_setlist_saved">Repertório salvo</string>
     <string name="export_songs_saved">Músicas salvas</string>
     <string name="export_library_saved">Biblioteca exportada</string>
+    <string name="export_library_too_large">Esta biblioteca é grande demais para ser exportada num único arquivo compactado.</string>
     <string name="export_log_saved">Log salvo</string>
     <string name="export_too_large_to_import">Este arquivo compactado tem mais do que o Campfire consegue importar de uma vez: 24 MB de músicas e 16 GB de imagens e anexos, num arquivo de no máximo 16 GB e 200.000 itens. Ele é uma cópia completa da sua biblioteca; para restaurá-la, descompacte-o e importe alguns milhares de músicas por vez, compactadas junto com as imagens e os anexos que elas citam.</string>
     <plurals name="export_skipped_files">

@@ -16,6 +16,7 @@ import com.pandulapeter.campfire.data.model.importing.StagedFile
 import com.pandulapeter.campfire.data.model.importing.StagingRefusedException
 import com.pandulapeter.campfire.data.model.isOutOfSpace
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StorageDirectory
+import com.pandulapeter.campfire.domain.api.export.ExportLibraryUseCase
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
@@ -26,6 +27,7 @@ import kotlin.random.Random
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.test.fail
@@ -141,9 +143,21 @@ class LargeArchiveImportTest {
     }
 
     @Test
+    fun `a library of as many files as an export writes exports within the heap with the largest attachment last`() = runBlocking {
+        val root = File(folder, "source")
+        ManyEntryArchives.fillLibraryWithDeflatingAttachment(root, fileCount = ExportLibraryUseCase.MAX_FILE_COUNT)
+        LargeImportApp(MeteredFileStorage(root)).use { app ->
+            val export = timed("Exporting ${ExportLibraryUseCase.MAX_FILE_COUNT} files") { app.exportLibrary() }
+
+            assertTrue(export.length() > ImportLimits.MAX_ATTACHMENT_FILE_SIZE / 8, "The attachment is not in the export")
+        }
+    }
+
+    @Test
     fun `a library past what a zip holds without ZIP64 comes back file for file through its export`() = runBlocking {
-        // More files than a zip counts in 16 bits; by hand, at `campfire.largeArchiveTest`'s size, more bytes than it
-        // counts in 32, carried by a few hundred songs' recordings.
+        // More files than a zip counts in 16 bits, which the export refuses before writing anything, so that archive is
+        // written as the export lays one out, straight through ZipWriter; by hand, at `campfire.largeArchiveTest`'s
+        // size, more bytes than it counts in 32, carried by a few hundred songs' recordings, through the export itself.
         val isBySize = largeArchiveSize > ROUND_TRIP_LIBRARY_SIZE
         val source = MeteredFileStorage(File(folder, "source").also { root ->
             if (isBySize) {
@@ -153,7 +167,13 @@ class LargeArchiveImportTest {
                 assertTrue(count > 65_535, "Only $count files in the library")
             }
         })
-        val export = LargeImportApp(source).use { app -> timed("Exporting") { app.exportLibrary() } }
+        val export = if (isBySize) {
+            LargeImportApp(source).use { app -> timed("Exporting") { app.exportLibrary() } }
+        } else {
+            LargeImportApp(source).use { app -> assertFailsWith<ExportLibraryUseCase.TooLargeException> { app.exportLibrary() } }
+            assertEquals(emptyList(), source.listNames(StorageDirectory.EXPORTS))
+            timed("Packing the library as its export would") { packedAsExported(source.root, File(folder, "library.zip")) }
+        }
         assertTrue(isZip64(export), "The export is not ZIP64")
         LargeImportApp(MeteredFileStorage(File(folder, "target"))).use { app ->
             app.watchLedger()
@@ -326,6 +346,15 @@ class LargeArchiveImportTest {
      * Whether [file] ends in ZIP64's records: the locator just before the end record, which `ZipWriter` writes no comment
      * after.
      */
+    /** [root]'s library as its export lays it out: the songs, the setlists, and then the library files under `images/`. */
+    private suspend fun packedAsExported(root: File, file: File): File {
+        fun entriesOf(folder: String, prefix: String) = File(root, "library/$folder").listFiles().orEmpty().sortedBy { it.name }.map { source ->
+            suspend { ZipEntry("$prefix${source.name}", source.readBytes()) }
+        }
+        LargeArchives.write(file, entriesOf("songs", "songs/") + entriesOf("setlists", "setlists/") + entriesOf("files", "images/"))
+        return file
+    }
+
     private fun isZip64(file: File) = RandomAccessFile(file, "r").use { input ->
         input.seek(file.length() - END_RECORD_SIZE - ZIP64_LOCATOR_SIZE)
         Integer.reverseBytes(input.readInt()) == ZIP64_LOCATOR_SIGNATURE

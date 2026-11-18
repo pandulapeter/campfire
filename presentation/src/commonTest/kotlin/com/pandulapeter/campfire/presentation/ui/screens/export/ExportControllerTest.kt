@@ -68,6 +68,7 @@ class ExportControllerTest {
     /** What the export use cases were asked for, by what they hand out. */
     private val requests = mutableListOf<String>()
     private var libraryExport: ExportLibraryUseCase.Result? = null
+    private var libraryExportFailure: Exception? = null
 
     /** Where set, what a setlist's archive waits for before it is finished. */
     private var setlistExportGate: CompletableDeferred<Unit>? = null
@@ -148,6 +149,16 @@ class ExportControllerTest {
         runCurrent()
         assertTrue(picker.saved.isEmpty())
         assertEquals(listOf<Message>(Message.ExportFailed), messageSink.messages())
+    }
+
+    @Test
+    fun `a library too large to export says so rather than that the export failed`() = runTest {
+        libraryExportFailure = ExportLibraryUseCase.TooLargeException(fileCount = ExportLibraryUseCase.MAX_FILE_COUNT + 1)
+        val (controller, _, messageSink) = controller(visibleDialog = null)
+        controller.exportLibrary(picker)
+        runCurrent()
+        assertTrue(picker.saved.isEmpty())
+        assertEquals(listOf<Message>(Message.LibraryTooLargeToExport), messageSink.messages())
     }
 
     @Test
@@ -316,7 +327,7 @@ class ExportControllerTest {
                     }
                 },
                 exportLibrary = object : ExportLibraryUseCase {
-                    override suspend fun invoke() = libraryExport
+                    override suspend fun invoke() = libraryExportFailure?.let { throw it } ?: libraryExport
                 },
                 // A writer that takes the pages and is never finished: an export failing here would end on another
                 // dispatcher, clearing its progress before a test reads it.

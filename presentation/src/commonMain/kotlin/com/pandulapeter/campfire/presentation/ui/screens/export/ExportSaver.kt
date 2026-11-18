@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.export
 
 import com.pandulapeter.campfire.data.model.library.ExportedFile
 import com.pandulapeter.campfire.domain.api.export.DiscardExportedFileUseCase
+import com.pandulapeter.campfire.domain.api.export.ExportLibraryUseCase
 import com.pandulapeter.campfire.presentation.ui.messages.Message
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
@@ -25,7 +26,8 @@ internal class ExportSaver(
 ) {
 
     /**
-     * Nothing to export and a picker that threw are the same thing to the user: the file did not come out.
+     * Nothing to export and a picker that threw are the same thing to the user: the file did not come out. A library
+     * too large to export is told apart, since trying again would not help.
      *
      * An archive over what an import takes is saved all the same, since it is still a complete copy that unzips by
      * hand, but the user is told so the day it is made rather than the day it is needed. [onSaved] runs once the file
@@ -59,7 +61,7 @@ internal class ExportSaver(
         } catch (exception: Exception) {
             made?.let { discardExportedFile(it) }
             println("Could not export: ${exception.message}")
-            messageSink.sendFailure(exception, Message.ExportFailed)
+            messageSink.sendFailure(exception, if (exception is ExportLibraryUseCase.TooLargeException) Message.LibraryTooLargeToExport else Message.ExportFailed)
         }
     }
 

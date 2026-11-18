@@ -142,6 +142,7 @@
     <string name="export_setlist_saved">Lista elmentve</string>
     <string name="export_songs_saved">Dalok elmentve</string>
     <string name="export_library_saved">Könyvtár exportálva</string>
+    <string name="export_library_too_large">Ez a könyvtár túl nagy ahhoz, hogy egyetlen archívumba exportálható legyen.</string>
     <string name="export_log_saved">Napló elmentve</string>
     <string name="export_too_large_to_import">Ez az archívum többet tartalmaz, mint amennyit a Campfire egyszerre importálni tud: 24 MB dalt, valamint 16 GB képet és csatolmányt, legfeljebb 16 GB-os és 200 000 fájlos archívumban. A könyvtárad teljes másolata; a visszatöltéshez csomagold ki, és importálj egyszerre néhány ezer dalt, a képeikkel és csatolmányaikkal együtt tömörítve.</string>
     <plurals name="export_skipped_files">

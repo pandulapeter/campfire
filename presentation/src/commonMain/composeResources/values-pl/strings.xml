@@ -157,6 +157,7 @@
     <string name="export_setlist_saved">Zapisano setlistę</string>
     <string name="export_songs_saved">Zapisano piosenki</string>
     <string name="export_library_saved">Wyeksportowano bibliotekę</string>
+    <string name="export_library_too_large">Ta biblioteka jest zbyt duża, by wyeksportować ją do jednego archiwum.</string>
     <string name="export_log_saved">Zapisano dziennik</string>
     <string name="export_too_large_to_import">To archiwum zawiera więcej, niż Campfire może zaimportować naraz: 24 MB piosenek oraz 16 GB obrazów i załączników, w archiwum mającym najwyżej 16 GB i 200 000 plików. To pełna kopia biblioteki; aby ją przywrócić, rozpakuj archiwum i importuj po kilka tysięcy piosenek naraz, spakowanych razem z obrazami i załącznikami, które wymieniają.</string>
     <plurals name="export_skipped_files">

@@ -142,6 +142,7 @@
     <string name="export_setlist_saved">Scaletta salvata</string>
     <string name="export_songs_saved">Canzoni salvate</string>
     <string name="export_library_saved">Libreria esportata</string>
+    <string name="export_library_too_large">Questa libreria è troppo grande per essere esportata in un unico archivio.</string>
     <string name="export_log_saved">Log salvato</string>
     <string name="export_too_large_to_import">Questo archivio contiene più di quanto Campfire possa importare in una volta: 24 MB di canzoni e 16 GB di immagini e allegati, in un archivio di al massimo 16 GB e 200.000 file. È una copia completa della tua libreria; per ripristinarla, estrai l\'archivio e importa qualche migliaio di canzoni alla volta, compresse insieme alle immagini e agli allegati che nominano.</string>
     <plurals name="export_skipped_files">

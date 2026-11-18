@@ -25,6 +25,7 @@ import com.pandulapeter.campfire.presentation.resources.error_operation_failed
 import com.pandulapeter.campfire.presentation.resources.error_storage_full
 import com.pandulapeter.campfire.presentation.resources.export_failed
 import com.pandulapeter.campfire.presentation.resources.export_library_saved
+import com.pandulapeter.campfire.presentation.resources.export_library_too_large
 import com.pandulapeter.campfire.presentation.resources.export_log_saved
 import com.pandulapeter.campfire.presentation.resources.export_pdf_saved
 import com.pandulapeter.campfire.presentation.resources.export_setlist_saved
@@ -178,6 +179,7 @@ private fun messageText(current: Message?): String? =
         Message.LibraryExported -> stringResource(Res.string.export_library_saved)
         Message.ProcessLogSaved -> stringResource(Res.string.export_log_saved)
         Message.ExportTooLargeToImport -> stringResource(Res.string.export_too_large_to_import)
+        Message.LibraryTooLargeToExport -> stringResource(Res.string.export_library_too_large)
         is Message.ExportSkippedFiles -> pluralTextResource(
             Res.plurals.export_skipped_files,
             current.fileNames.size,

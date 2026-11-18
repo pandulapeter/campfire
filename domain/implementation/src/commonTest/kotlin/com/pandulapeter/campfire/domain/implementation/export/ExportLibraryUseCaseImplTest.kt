@@ -21,12 +21,14 @@ import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.song.SongContent
+import com.pandulapeter.campfire.domain.api.export.ExportLibraryUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -41,6 +43,7 @@ class ExportLibraryUseCaseImplTest {
     private val archive = FakeArchiveRepository()
     private val songContents = FakeSongContentRepository()
     private val images = FakeImageRepository()
+    private val exportFiles = FakeExportFileRepository()
 
     @Test
     fun `exports nothing when the song scan failed`() = runTest {
@@ -187,6 +190,31 @@ class ExportLibraryUseCaseImplTest {
         assertEquals(shown.size.toLong(), assertNotNull(result).file.unpackedImageSize)
     }
 
+    @Test
+    fun `a library of more files than an export writes is refused before anything is read or written`() = runTest {
+        images.store(FakeImageRepository.picture(1))
+
+        val refused = assertFailsWith<ExportLibraryUseCase.TooLargeException> {
+            useCase(songs = listOf(song("a"), song("b")), setlists = listOf(setlist("x")), maxFileCount = 3).invoke()
+        }
+
+        assertEquals(4, refused.fileCount)
+        assertEquals(emptyList(), songContents.reads.value)
+        assertEquals(emptyMap(), exportFiles.files)
+        assertEquals(emptyList(), exportFiles.discarded)
+    }
+
+    @Test
+    fun `a library of as many files as an export writes is exported`() = runTest {
+        val name = images.store(FakeImageRepository.picture(1))
+        songContents.texts = mapOf("a.cho" to "{title: A}\n{image: src=$name}")
+
+        val result = useCase(songs = listOf(song("a"), song("b")), setlists = listOf(setlist("x")), maxFileCount = 4).invoke()
+
+        assertNotNull(result)
+        assertEquals(setOf("songs/a.cho", "songs/b.cho", "setlists/x.setlist.json", "images/$name"), archive.packed.keys)
+    }
+
     private fun useCase(
         songs: List<Song>?,
         setlists: List<Setlist>? = emptyList(),
@@ -194,6 +222,7 @@ class ExportLibraryUseCaseImplTest {
         unreadable: Set<String> = emptySet(),
         setlistFolder: Map<String, Long> = setlists.orEmpty().associate { it.fileName to 2L },
         setlistDocument: String = "{}",
+        maxFileCount: Int = ExportLibraryUseCase.MAX_FILE_COUNT,
     ) = ExportLibraryUseCaseImpl(
         songRepository = object : SongRepositoryStub() {
             override suspend fun loadSongsIfNeeded() = songs
@@ -206,8 +235,9 @@ class ExportLibraryUseCaseImplTest {
             override suspend fun loadSetlistDocument(fileName: String) = if (fileName in unreadable) null else setlistDocument
         },
         archiveRepository = archive,
-        exportFileRepository = FakeExportFileRepository(),
+        exportFileRepository = exportFiles,
         imageRepository = images,
+        maxFileCount = maxFileCount,
     )
 
     /** Read from several threads at once, since the export reads its songs in parallel on `Dispatchers.Default`. */

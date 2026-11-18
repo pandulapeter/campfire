@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.data.source.local.implementation.source
 
 import com.pandulapeter.campfire.chordpro.edit.ChordProPrettifier
 import com.pandulapeter.campfire.data.formats.zip.ZipEntry
+import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -113,6 +114,33 @@ internal object ManyEntryArchives {
         }
         File(setlists, "gig.setlist.json").writeText("""{"title": "Gig", "songs": [{"fileName": "${LargeArchives.songFileName(0)}"}]}""")
         return songs.list().orEmpty().size + files.list().orEmpty().size + 1
+    }
+
+    /**
+     * Fills [root]'s library with [fileCount] files in all: songs showing [PICTURES_PER_SONG] small pictures each, and
+     * the last file of the folder an attachment as large as one can be that deflates, which the export holds twice
+     * (read whole, and deflated into a buffer of its size) when every other entry's bookkeeping is already held.
+     */
+    fun fillLibraryWithDeflatingAttachment(root: File, fileCount: Int) {
+        val songs = File(root, "library/songs").apply { mkdirs() }
+        val files = File(root, "library/files").apply { mkdirs() }
+        File(root, "library/setlists").mkdirs()
+        val attachment = "ffffffffffffffff.pdf"
+        File(files, attachment).writeBytes(LargeArchives.noise(seed = 1, size = ImportLimits.MAX_ATTACHMENT_FILE_SIZE.toInt(), isCompressible = true))
+        var remaining = fileCount - 1
+        var index = 0
+        while (remaining > 0) {
+            val pictures = (0 until minOf(PICTURES_PER_SONG, remaining - 1)).map {
+                val bytes = LargeArchives.picture(seed = index * PICTURES_PER_SONG + it, size = 100 + it, isCompressible = false)
+                // Below the attachment's name, so that it is the last entry written.
+                (LargeArchives.sha256(bytes).take(16).replace('f', 'e') + ".png").also { name -> File(files, name).writeBytes(bytes) }
+            }
+            val attached = if (index == 0) "{meta: attachment $attachment Take}\n" else ""
+            val text = "{title: Song $index}\n{artist: Artist $index}\n" + pictures.joinToString("") { "{image: src=$it}\n" } + attached + "[C]La la [G]la $index\n"
+            File(songs, LargeArchives.songFileName(index)).writeText(ChordProPrettifier.prettify(text))
+            remaining -= 1 + pictures.size
+            index++
+        }
     }
 
     private val APPLE_DOUBLE = byteArrayOf(0, 5, 22, 7, 0, 2, 0, 0)

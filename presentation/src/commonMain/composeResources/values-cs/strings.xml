@@ -158,6 +158,7 @@
     <string name="export_setlist_saved">Setlist uložen</string>
     <string name="export_songs_saved">Písně uloženy</string>
     <string name="export_library_saved">Knihovna exportována</string>
+    <string name="export_library_too_large">Tato knihovna je příliš velká na to, aby se dala exportovat do jednoho archivu.</string>
     <string name="export_log_saved">Protokol uložen</string>
     <string name="export_too_large_to_import">Tento archiv obsahuje víc, než Campfire dokáže najednou importovat: 24 MB písní a 16 GB obrázků a příloh, v archivu nejvýše 16 GB a 200 000 souborů. Je to úplná kopie tvé knihovny; pokud ji chceš obnovit, rozbal ho a importuj písně po několika tisících, zabalené spolu s obrázky a přílohami, které uvádějí.</string>
     <plurals name="export_skipped_files">

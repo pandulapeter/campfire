@@ -42,6 +42,9 @@ sealed interface Message {
     data object LibraryExported : Message
     data object ProcessLogSaved : Message
 
+    /** A library export refused before anything was written, for holding more files than one archive takes. */
+    data object LibraryTooLargeToExport : Message
+
     /** An archive that was saved, but that the import would refuse for its size. */
     data object ExportTooLargeToImport : Message
 

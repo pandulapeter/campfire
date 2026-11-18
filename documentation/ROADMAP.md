@@ -33,8 +33,6 @@ What's planned for Campfire, grouped by area.
   Plan: [sync-library-extraction.md](plans/sync-library-extraction.md)
 - **Google Drive sync**, as a second provider beside Dropbox. The groundwork landed for v5.1.0; spikes S1–S5 are next.
   Plan: [google-drive-sync.md](plans/google-drive-sync.md)
-- **Large library exports**: a library past 65,535 files that also holds recordings near 45 MB runs out of a 128 MiB
-  heap on export (per-file bookkeeping beside an attachment read whole); decide whether to support it
 - **A more readable sync folder**: consider organizing it in a more user-readable way (subfolders for artists), as an
   option
 

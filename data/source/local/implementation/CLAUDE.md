@@ -167,9 +167,10 @@ it; iOS marks the folder) and no sync, and is emptied of other sessions' names o
 - `LargeArchiveImportTest` (desktop, its own task `largeArchiveImportTest` under a 128 MiB heap, out of `desktopTest`
   and so of the pre-commit hook; a step of CI's tests) imports archives generated on the fly through the same graph
   (`importGraph`) over `MeteredFileStorage`, which fails a write into `imports/` past what the ledger reserved: the
-  largest of `campfire.largeArchiveTest`'s size (600m in CI, 5g by hand), 70,000 and `MAX_ARCHIVE_ENTRIES` entries, an
-  export round trip past 65,535 files, cancellations, a filling disk, `NO_SPACE`'s amount, a killed write, a staged file
-  gone. `OpfsStagedUnpackTimeTest` (`wasmJsBrowserTest`) holds a staged 70,000-entry unpack in headless Chrome to five
+  largest of `campfire.largeArchiveTest`'s size (600m in CI, 5g by hand), 70,000 and `MAX_ARCHIVE_ENTRIES` entries, a
+  library export of `ExportLibraryUseCase.MAX_FILE_COUNT` files ending in a 50 MiB attachment that deflates, a round
+  trip past 65,535 files (refused by the export, so packed in its layout through `ZipWriter`), cancellations, a filling
+  disk, `NO_SPACE`'s amount, a killed write, a staged file gone. `OpfsStagedUnpackTimeTest` (`wasmJsBrowserTest`) holds a staged 70,000-entry unpack in headless Chrome to five
   minutes (`karma.config.d` lifts mocha's two seconds).
 
 ## Documents (`model/`, `mapper/`)
