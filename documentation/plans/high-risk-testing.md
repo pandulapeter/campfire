@@ -46,7 +46,8 @@ asserts behaviour (what a device, the folder, or a link holds), never which call
   names.
 - **Unit and scenario tests** cover each rule with a named case: `SyncPlannerTest` (16 cases of the per-file decision,
   edit beats deletion both ways, "a pass never deletes one version on both sides"), `SyncPlannerImageTest` (5: a
-  reference beats a deletion, held picture deletions), `DeletionGuardTest` (11: the thresholds, an empty library folder,
+  reference beats a deletion, held picture deletions), `SyncPlannerTableTest` (every per-file state enumerated, 5,580
+  cases in 0.1 s, held to the deletion promises; step 5), `DeletionGuardTest` (11: the thresholds, an empty library folder,
   an answer waiving its own direction only), `SyncEngineDeletionGuardTest` (14: nothing moves before the question, each
   answer's effect, both directions), `TwoDeviceSyncTest` (25: renames as delete plus create, edit against deletion, case
   and Unicode spellings, shared links following renames and stopping on deletion), `SyncEngineNameFoldingTest` (17),
@@ -77,9 +78,6 @@ asserts behaviour (what a device, the folder, or a link holds), never which call
 - **The simulation's library is narrower than the app's.** It names pictures only by `{image: …}`, never attachments
   (`{meta: attachment …}`), never models the editor's unsaved text holding a picture, never damages a folder copy, and
   every device uses the system clock.
-- **The planner's table is tested by example.** `SyncPlannerTest` names 16 of the per-file states; the full table (each
-  side absent, unchanged, or changed against an index entry present or absent, for songs, setlists, and pictures, with
-  and without a song naming the picture, under one spelling or two) is small enough to enumerate and is not.
 - **Dropbox's answers the fakes assume are unmeasured** for: an `update` upload carrying the revision of a file deleted
   since (a `Conflict` in `FakeSyncProvider`; Dropbox may write it), a listing taken right after another client's write
   or deletion, and whether a link made before a shared copy was deleted opens a copy uploaded again at the same path.
@@ -205,6 +203,9 @@ delete a file on a side where it differs from the index, delete anything the ind
 both sides, delete a picture a local song names, or leave a file absent on a side where the other side changed it.
 About 500 cases, in milliseconds. The 16 cases of `SyncPlannerTest` that the table covers stay as the readable
 examples. **Done**: passing, with any state the table shows to be unplanned fixed in `SyncPlanner` first.
+
+**Done** (2026-11-18): 5,580 cases in 0.1 s, a rename's other name included; the table found no unsafe plan, and
+breaking the planner's rules one at a time fails it.
 
 ### 6. Explicit stops in the simulation
 
