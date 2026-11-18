@@ -158,12 +158,6 @@ jobs:
         uses: actions/checkout@v5
       - name: Set up JDK 21 and Gradle
         uses: ./.github/actions/setup-jdk
-      # Kotlin/Native compiles inside the Gradle daemon, which runs out of the 4 GB gradle.properties gives it, as in
-      # publish-ios.yml.
-      - name: Give the Gradle daemon more memory
-        run: |
-          mkdir -p ~/.gradle
-          echo 'org.gradle.jvmargs=-Xmx6g -Dfile.encoding=UTF-8' >> ~/.gradle/gradle.properties
       # Every library's iosMain and the framework the Xcode project embeds.
       - name: Compile the iOS framework
         run: ./gradlew :app:ios:linkDebugFrameworkIosSimulatorArm64
