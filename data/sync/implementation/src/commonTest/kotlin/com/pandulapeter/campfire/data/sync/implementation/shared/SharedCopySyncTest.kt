@@ -76,6 +76,19 @@ class SharedCopySyncTest {
     }
 
     @Test
+    fun `a copy carries its songs as UTF-8 text without a byte order mark as the share's export writes them`() = runTest {
+        val device = sharedDevice()
+
+        device.library.files[song(1)] = byteArrayOf(0xEF.toByte(), 0xBB.toByte(), 0xBF.toByte()) + "One".encodeToByteArray()
+        // Windows-1252, as an older program saved it.
+        device.library.files[song(2)] = "Caf".encodeToByteArray() + 0xE9.toByte()
+        device.sync(cloud)
+
+        assertTrue("[song_1.cho]\nOne" in cloud.copyOf(SETLIST.shareId))
+        assertTrue("[song_2.cho]\nCafé" in cloud.copyOf(SETLIST.shareId))
+    }
+
+    @Test
     fun `a newer build rebuilds once and uploads nothing for the same bytes`() = runTest {
         val device = sharedDevice()
         val revision = cloud.sharedFiles.getValue(SETLIST.shareId).second

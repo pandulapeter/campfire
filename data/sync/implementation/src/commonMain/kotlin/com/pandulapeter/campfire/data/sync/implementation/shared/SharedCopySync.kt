@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.model.library.LibraryFileKind
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
+import com.pandulapeter.campfire.data.model.library.decodeLibraryText
 import com.pandulapeter.campfire.data.model.library.sharedCopyAttachments
 import com.pandulapeter.campfire.data.model.share.SharedLinkKind
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource
@@ -227,12 +228,14 @@ internal class SharedCopySync(
         ) {
             // The same files, in the same order and under the same names, as the export that made the first copy
             // (ExportSetlistUseCase or ExportSongsUseCase, undated), so that a copy of unchanged files is the same bytes.
-            val files = linkedMapOf(entry.fileName to itemBytes)
+            // The export reads the item and its songs as text and writes them as UTF-8, a byte order mark dropped, so they
+            // go in here the same way rather than as the bytes on disk.
+            val files = linkedMapOf(entry.fileName to itemBytes.asExportedText())
             val songTexts = mutableListOf<ByteArray>()
             val songs = songNames?.map { name ->
                 val bytes = libraryFileLocalSource.readLibraryFile(LibraryFileKind.SONG, index.localNameOf(name))
                 if (bytes != null && name !in files) {
-                    files[name] = bytes
+                    files[name] = bytes.asExportedText()
                     songTexts += bytes
                 }
                 name to bytes?.let(::localContentHash)
@@ -354,6 +357,9 @@ internal class SharedCopySync(
         /** Whether the library held any picture at the end of the run, without which no song shows one. */
         val hasImages by lazy { entries.keys.any { (kind, _) -> kind == LibraryFileKind.FILE } }
     }
+
+    /** A library text file as the export writes it: read as the app reads text, then written as UTF-8. */
+    private fun ByteArray.asExportedText() = decodeLibraryText().encodeToByteArray()
 
     private val SharedLinkKind.libraryKind
         get() = when (this) {

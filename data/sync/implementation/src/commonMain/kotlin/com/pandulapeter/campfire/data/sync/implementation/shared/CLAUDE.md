@@ -66,8 +66,9 @@
   edit at the end, also after a failure; journal entries are forgotten only once written.
 - A copy is skipped unread when its `built` has the inputs fingerprint (`sharedCopyFingerprint`, from the index's
   `localHash`es; a setlist is the one file read), a build no older than `CAMPFIRE_BUILD_NUMBER`, and the listed hash (or
-  none while `tooLarge`). Otherwise it is packed from the library's raw files as the export packs them (undated) and
-  uploaded only when its hash differs; a `Conflict` is dropped.
+  none while `tooLarge`). Otherwise it is packed from the library's files as the export packs them (undated, the item
+  and its songs as UTF-8 text without a byte order mark, as the export reads and writes them) and uploaded only when
+  its hash differs; a `Conflict` is dropped.
 - **Pictures**: a copy carries the library's pictures its songs name under `images/`, sorted, as the export does. The
   fingerprint ends in their names (none for a copy showing none, so older fingerprints stand), since a picture arriving
   under a name a song already gives changes no hash. So the step reads the shared songs (a setlist's too) for the names,
