@@ -40,6 +40,9 @@ internal class StagingSink(
     private val isUnpacked get() = extension != null
     private var isOpen = true
 
+    /** Whether the file is closed whole and the ledger holds it at its size, see [StagingLedger.onFinished]. */
+    private var isClosed = false
+
     /** Whether the file was put in place whole by [take], so that there is no [fileSink] left to close. */
     private var isTaken = false
 
@@ -99,7 +102,8 @@ internal class StagingSink(
         try {
             if (!isTaken) fileSink.close()
             isOpen = false
-            staging.ledger.giveBack(request.id, reserved = reserved - position, written = 0, isUnpacked = isUnpacked)
+            staging.ledger.onFinished(request.id, reserved = reserved, size = position, isUnpacked = isUnpacked)
+            isClosed = true
             reserved = position
             return staging.complete(sink = this, size = position, extension = extension, sha256Hex = digest?.finishToHex())
         } catch (exception: Throwable) {
@@ -138,7 +142,11 @@ internal class StagingSink(
         // A sink already closed has nothing left to abandon but its file, which only the staging can still delete.
         if (wasOpen && !isTaken) runCatching { fileSink.abandon() }
         staging.deleteQuietly(name)
-        staging.ledger.giveBack(request.id, reserved = reserved, written = position, isUnpacked = isUnpacked)
+        if (isClosed) {
+            staging.ledger.release(request.id, size = position, isUnpacked = isUnpacked)
+        } else {
+            staging.ledger.giveBack(request.id, reserved = reserved, written = position, isUnpacked = isUnpacked)
+        }
         reserved = 0
         position = 0
     }

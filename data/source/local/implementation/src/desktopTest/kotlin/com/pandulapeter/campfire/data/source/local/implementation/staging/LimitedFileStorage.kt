@@ -25,7 +25,6 @@ import kotlinx.coroutines.yield
  */
 internal class LimitedFileStorage(
     private val capacity: Long,
-    override val isSpaceAQuota: Boolean = false,
     private val delegate: InMemoryFileStorage = InMemoryFileStorage(),
 ) : FileStorage by delegate {
 

@@ -360,8 +360,8 @@ abstract class FileStorageContractTest {
     }
 
     @Test
-    fun `there is space available in a folder not created yet`() = runTest {
-        assertTrue(fileStorage.availableSpace(StorageDirectory.IMPORTS) > 0)
+    fun `there is space available in a folder not created yet where the storage can tell`() = runTest {
+        assertTrue((fileStorage.availableSpace(StorageDirectory.IMPORTS) ?: Long.MAX_VALUE) > 0)
     }
 
     private companion object {

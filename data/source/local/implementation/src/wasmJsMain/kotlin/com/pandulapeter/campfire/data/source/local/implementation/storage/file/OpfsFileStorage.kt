@@ -254,8 +254,16 @@ internal class OpfsFileStorage(private val rootSegments: List<String>) : FileSto
         writeBytes(to, toName, bytes)
     }
 
+    /**
+     * Null where the estimate is Chrome's: since Chrome 133 it reports every origin without unlimited storage a quota of
+     * its usage plus exactly 10 GiB, whatever the disk holds, while it enforces the real quota (up to 60% of the disk)
+     * unchanged. That figure says nothing either way: a 16 GB archive fits on a large disk, and a full disk reports the
+     * same 10 GiB, so only a write the browser refuses can tell.
+     */
     override suspend fun availableSpace(directory: StorageDirectory) = withContext(Dispatchers.Default) {
-        failingAsStorage(directory.displayName) { storageSpaceLeft().await<JsNumber>().toDouble().toLong() }
+        failingAsStorage(directory.displayName) {
+            storageSpaceLeft().await<JsNumber>().toDouble().toLong().takeUnless { it == CHROME_REPORTED_SPACE_LEFT }
+        }
     }
 
     override val isSpaceAQuota get() = true
@@ -337,6 +345,9 @@ internal class OpfsFileStorage(private val rootSegments: List<String>) : FileSto
         const val DECODED_TEXT = '\u0000'
         const val READ_FAILED = '\u0002'
         const val TOO_LARGE = '\u0003'
+
+        /** What Chrome reports an origin may still store whatever its disk holds, see [availableSpace]. */
+        const val CHROME_REPORTED_SPACE_LEFT = 10L shl 30
 
         // Control characters, because they are the only thing a file name is guaranteed not to contain.
         val ENTRY_SEPARATOR = Char(ENTRY_SEPARATOR_CODE).toString()

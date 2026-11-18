@@ -235,9 +235,9 @@ interface FileStorage {
     /**
      * About how many bytes may still be written into [directory]: the volume's free space for the app, the origin's quota
      * left on the web. Only an early answer, imprecise on purpose in Safari; a write that runs out of space anyway fails
-     * as any other write does.
+     * as any other write does. Null where the storage cannot tell at all (Chrome's estimate, see `OpfsFileStorage`).
      */
-    suspend fun availableSpace(directory: StorageDirectory): Long
+    suspend fun availableSpace(directory: StorageDirectory): Long?
 
     /**
      * Whether [availableSpace] is what is left of a quota the storage was granted (the web's origin quota) rather than

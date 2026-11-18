@@ -99,8 +99,11 @@ it; iOS marks the folder) and no sync, and is emptied of other sessions' names o
 - `StagingLedger` is the one app-wide disk budget: a reservation fits where `availableSpace` less
   `ImportLimits.minFreeSpaceFor` (`FileStorage.isSpaceAQuota` on the web) holds it beside what every request reserved
   and has not written yet (written bytes are already gone from the free space). Reservations are measured one at a
-  time. On the web each staged byte is charged twice (`isSpaceAQuota`): browsers grow a file's capacity by doubling, so
-  a write may be refused with up to half the quota left. `StagingRefusedException.NoSpace` carries
+  time. On the web (`isSpaceAQuota`) a file still being written is charged twice its room, since browsers grow an open
+  file's capacity by doubling and may refuse a write with up to half the quota left; a closed file holds its size
+  (`onFinished`, `release`). Chrome's estimate is always usage + 10 GiB whatever the disk holds (enforced quota
+  unchanged), so `OpfsFileStorage` reports that figure as unknown (`availableSpace` null) and the ledger refuses nothing
+  up front there: only a `QuotaExceededError` fails the import, as a full disk. `StagingRefusedException.NoSpace` carries
   `OutOfSpaceException` as its cause; `TooLarge` is a passed `MAX_STAGED_ARCHIVE_SIZE` or `MAX_IMPORT_STAGED_SIZE`.
 - `StreamingArchiveUnpack` (`source/`) is the in-memory unpack's walk over the staged file: song texts into memory
   within the songs' budget; nested archives above the last level staged (not charged to it), walked, deleted; the

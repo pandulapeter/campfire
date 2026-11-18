@@ -151,7 +151,7 @@ internal class ImportStaging(
         // second unpack of the same archive (Try again) planned with.
         held[name]?.takeIf { fileStorage.info(StorageDirectory.IMPORTS, it.name)?.size == it.size }?.let { existing ->
             fileStorage.delete(StorageDirectory.IMPORTS, sink.name)
-            ledger.giveBack(sink.request.id, reserved = size, written = size, isUnpacked = true)
+            ledger.release(sink.request.id, size = size, isUnpacked = true)
             return@withLock existing
         }
         fileStorage.moveInto(StorageDirectory.IMPORTS, sink.name, StorageDirectory.IMPORTS, name)
@@ -208,7 +208,7 @@ internal class ImportStaging(
         val request = file.name.removePrefix("$session-").substringBefore('-', "").toLongOrNull()
         if (request != null) {
             unpackedFiles[request]?.remove(file.name)
-            ledger.giveBack(request, reserved = file.size, written = file.size, isUnpacked = true)
+            ledger.release(request, size = file.size, isUnpacked = true)
         }
     }
 
@@ -222,7 +222,7 @@ internal class ImportStaging(
             val isUnpacked = file.sha256Hex != null
             if (isUnpacked) unpackedFiles[request.id]?.remove(file.name)
             if (deleteQuietly(file.name)) {
-                ledger.giveBack(request.id, reserved = file.size, written = file.size, isUnpacked = isUnpacked)
+                ledger.release(request.id, size = file.size, isUnpacked = isUnpacked)
             }
         }
     }
