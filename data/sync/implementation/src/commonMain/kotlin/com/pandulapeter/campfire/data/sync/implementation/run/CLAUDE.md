@@ -38,6 +38,9 @@
   the local listing is empty and the index is not (a missing library folder lists as empty everywhere).
   - `KEEP_AND_UPLOAD` drops the index entries of files here and not there (so they read as new) and those songs from the
     last synced `preferences.json`, so their overrides travel back; `KEEP_AND_DOWNLOAD` is the mirror image.
+  - It judges the run, not the pass (`RunDeletions`): a second pass happens exactly when another device writes during
+    the run, perhaps deleting too, so each pass counts what the earlier ones planned to delete out of every song and
+    setlist any pass's index knew. Such a question may come after the first pass deleted its part.
   - An answer waives its own direction only, for one run: the policy is a parameter, never state. Settings' library
     deletion is the one run started with an answer already given.
   - Remote deletions go to `SyncProvider.delete` in one call, so the folder is half deleted (what another device's guard

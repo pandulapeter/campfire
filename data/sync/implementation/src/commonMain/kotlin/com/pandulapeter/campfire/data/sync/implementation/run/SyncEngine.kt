@@ -119,6 +119,7 @@ internal class SyncEngine(
         val startIndex = index
         var lastListed = emptyList<RemoteFile>()
         var lastLocalListing: LocalListing? = null
+        val runDeletions = RunDeletions()
         while (pass < MAXIMUM_PASSES) {
             // Listing both sides is the part of a run with nothing to show for it yet, so the progress reported
             // here has no total and the indicator spins rather than sitting at zero.
@@ -166,9 +167,9 @@ internal class SyncEngine(
                 unresolved = emptySet()
                 break
             }
-            DeletionGuard.check(
+            runDeletions.check(
                 plan = plan,
-                planningIndexSize = planningIndex.keys.count { it.kind.isDocument },
+                planningIndex = planningIndex,
                 isLocalListingEmpty = local.none { it.key.kind.isDocument },
                 policy = deletionPolicy,
             )?.let { question ->

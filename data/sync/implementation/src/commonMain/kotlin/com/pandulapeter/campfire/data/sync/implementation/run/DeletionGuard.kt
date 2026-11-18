@@ -34,31 +34,48 @@ internal object DeletionGuard {
         planningIndexSize: Int,
         isLocalListingEmpty: Boolean,
         policy: SyncDeletionPolicy,
-    ): SyncEngine.Result.DeletionsNeedConfirmation? {
+    ) = check(
         // Pictures follow the songs that name them, so a question about deleting much of a library counts what the user
         // keeps: a song with three photos is one song.
-        val localDeletions = plan.count { it is SyncOperation.DeleteLocal && it.key.kind.isDocument }
-        if (!policy.waivesLocalGuard && planningIndexSize > 0 && localDeletions.isTooManyToDeleteOutOf(planningIndexSize)) {
+        localDeletions = plan.count { it is SyncOperation.DeleteLocal && it.key.kind.isDocument },
+        remoteDeletions = plan.count { it is SyncOperation.DeleteRemote && it.key.kind.isDocument },
+        indexSize = planningIndexSize,
+        isLocalListingEmpty = isLocalListingEmpty,
+        policy = policy,
+    )
+
+    /**
+     * The question to ask before [localDeletions] songs and setlists are deleted here and [remoteDeletions] in the
+     * folder, out of the [indexSize] the index knows, or null where they may go: what [check] of a plan asks, with the
+     * counts given, so that a run's later pass counts what its earlier ones deleted ([RunDeletions]).
+     */
+    fun check(
+        localDeletions: Int,
+        remoteDeletions: Int,
+        indexSize: Int,
+        isLocalListingEmpty: Boolean,
+        policy: SyncDeletionPolicy,
+    ): SyncEngine.Result.DeletionsNeedConfirmation? {
+        if (!policy.waivesLocalGuard && indexSize > 0 && localDeletions.isTooManyToDeleteOutOf(indexSize)) {
             return SyncEngine.Result.DeletionsNeedConfirmation(
                 count = localDeletions,
-                total = planningIndexSize,
+                total = indexSize,
                 direction = SyncDeletionDirection.LOCAL,
             )
         }
-        val remoteDeletions = plan.count { it is SyncOperation.DeleteRemote && it.key.kind.isDocument }
         // A library folder that is gone rather than emptied looks exactly like one emptied on purpose: the JVM
         // storage recreates it and lists nothing, and iOS lists nothing for a directory that is not there. So an
         // empty local listing with an index that is not empty always asks, however small the library - the
         // proportional rule below would let most of a small library go without a word.
-        val hasLostEverythingLocally = isLocalListingEmpty && planningIndexSize > 0
+        val hasLostEverythingLocally = isLocalListingEmpty && indexSize > 0
         if (!policy.waivesRemoteGuard &&
-            planningIndexSize > 0 &&
+            indexSize > 0 &&
             remoteDeletions > 0 &&
-            (hasLostEverythingLocally || remoteDeletions.isTooManyToDeleteOutOf(planningIndexSize))
+            (hasLostEverythingLocally || remoteDeletions.isTooManyToDeleteOutOf(indexSize))
         ) {
             return SyncEngine.Result.DeletionsNeedConfirmation(
                 count = remoteDeletions,
-                total = planningIndexSize,
+                total = indexSize,
                 direction = SyncDeletionDirection.REMOTE,
             )
         }

@@ -210,6 +210,31 @@ class SyncEngineDeletionGuardTest {
     }
 
     @Test
+    fun `a second pass counts what the first one deleted and asks before most of the library goes`() = runTest {
+        val library = librarySongs(12)
+        val local = FakeLibraryFileLocalSource(files = library + (song(12) to "Song 12, edited".encodeToByteArray()))
+        // Four gone from the folder before the run: a third of the library, which deletes without asking.
+        val provider = FakeSyncProvider(files = library.filterKeys { it !in (1..4).map(::song) })
+        // Another device writes the song this one uploads, which takes a second pass, and deletes three more meanwhile:
+        // fewer than the guard asks about out of the eight the second pass starts from.
+        provider.onUpload = { key ->
+            if (key == song(12)) {
+                provider.onUpload = {}
+                provider.writeElsewhere(song(12), "Song 12, edited elsewhere".encodeToByteArray())
+                (5..7).forEach { provider.deleteElsewhere(song(it)) }
+            }
+        }
+
+        val result = synchronize(local, provider, syncedIndexOf(library))
+
+        assertEquals(
+            SyncEngine.Result.DeletionsNeedConfirmation(count = 7, total = 12, direction = SyncDeletionDirection.LOCAL),
+            result,
+        )
+        assertTrue((5..7).all { song(it) in local.files })
+    }
+
+    @Test
     fun `a run with no index never asks`() = runTest {
         val result = synchronize(FakeLibraryFileLocalSource(files = emptyMap()), FakeSyncProvider(), SyncIndexDocument())
 
