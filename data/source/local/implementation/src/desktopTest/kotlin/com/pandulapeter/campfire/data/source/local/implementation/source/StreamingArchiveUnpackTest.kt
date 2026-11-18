@@ -184,6 +184,24 @@ class StreamingArchiveUnpackTest {
     }
 
     @Test
+    fun `an unpack tells the bytes it reads of the archive and of each nested one it stages`() = runBlocking {
+        val storage = LimitedFileStorage(capacity = 1L shl 30)
+        val unpacks = ArchiveUnpacks(storage)
+        val nested = picturesArchive()
+        val staged = unpacks.stage(ZipWriter.write(listOf(ZipEntry("nested/inner.zip", nested))))
+        val reported = mutableListOf<Pair<Long, Long>>()
+
+        unpacks.archiveLocalSource.unpack(archive = staged, maxSize = ImportLimits.MAX_IMPORT_SIZE) { read, total -> reported += read to total }
+
+        assertEquals(staged.size, reported.first().second)
+        assertEquals(staged.size + nested.size, reported.last().second)
+        assertTrue(reported.zipWithNext().all { (before, after) -> after.first >= before.first && after.second >= before.second })
+        assertTrue(reported.all { (read, total) -> read <= total })
+        // Both archives are read through, the nested one's pictures included, but for a few headers the walks skip.
+        assertTrue(reported.last().first > reported.last().second * 9 / 10, "$reported")
+    }
+
+    @Test
     fun `room reserved for a picture the walk leaves unread is given back when the unpack ends`() = runBlocking {
         val storage = LimitedFileStorage(capacity = 1L shl 30)
         val unpacks = ArchiveUnpacks(storage)

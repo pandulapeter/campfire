@@ -26,7 +26,7 @@ interface ArchiveRepository {
     suspend fun unpack(archive: ByteArray, maxSize: Long, maxImageSize: Long, maxAttachmentSize: Long): UnpackedArchive
 
     /** See `ArchiveLocalSource.unpack`, the one reading an archive in the staging folder. */
-    suspend fun unpack(archive: StagedFile, maxSize: Long): UnpackedArchive
+    suspend fun unpack(archive: StagedFile, maxSize: Long, onProgress: (readBytes: Long, totalBytes: Long) -> Unit): UnpackedArchive
 
     /** See `ArchiveLocalSource.songsIn`. */
     suspend fun songsIn(file: ImportedFile): List<ImportedFile>?

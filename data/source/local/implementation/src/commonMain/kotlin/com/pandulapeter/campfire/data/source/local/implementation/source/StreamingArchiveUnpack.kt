@@ -56,6 +56,9 @@ import kotlinx.coroutines.withContext
  * up to at most [ImportLimits.MAX_CENTRAL_DIRECTORY_SIZE]; a nested archive past either is reported unread, as a damaged
  * one is.
  *
+ * Every byte read from a staged archive is told to [onProgress], against the sizes of the staged archives reached so far:
+ * almost all of an unpack's time goes into reading and inflating them, in 64 KiB pieces.
+ *
  * Not safe for concurrent use, and used once.
  */
 internal class StreamingArchiveUnpack(
@@ -64,7 +67,10 @@ internal class StreamingArchiveUnpack(
     private val logger: Logger,
     private val request: StagingRequest,
     private val maxSize: Long,
+    private val onProgress: (readBytes: Long, totalBytes: Long) -> Unit,
 ) {
+    private var readBytes = 0L
+    private var totalBytes = 0L
     private var textCharged = 0L
     private var imageCharged = 0L
     private var attachmentCharged = 0L
@@ -105,9 +111,11 @@ internal class StreamingArchiveUnpack(
     private suspend fun unpackStaged(archive: StagedFile, depth: Int): List<ImportedFile> {
         val source = fileStorage.openSource(StorageDirectory.IMPORTS, archive.name)
             ?: throw LibraryStorageException("The staged archive \"${archive.name}\" is gone.")
+        totalBytes += source.size
+        onProgress(readBytes, totalBytes)
         // Closed before the archives nested in it are unpacked: nothing more is read from it.
         val level = try {
-            read(FileZipSource(source), depth)
+            read(CountedZipSource(FileZipSource(source)), depth)
         } finally {
             withContext(NonCancellable) { source.close() }
         }
@@ -360,6 +368,18 @@ internal class StreamingArchiveUnpack(
             }
         } else {
             ByteArrayEntrySink(declaredSize).also { pending += Pending(name, memory = it) }
+        }
+    }
+
+    /** [source] telling [onProgress] what it reads, as many bytes as it hands out, held to the total. */
+    private inner class CountedZipSource(private val source: ZipSource) : ZipSource {
+
+        override val size get() = source.size
+
+        override suspend fun read(position: Long, buffer: ByteArray, offset: Int, length: Int) {
+            source.read(position, buffer, offset, length)
+            readBytes = minOf(readBytes + length, totalBytes)
+            onProgress(readBytes, totalBytes)
         }
     }
 

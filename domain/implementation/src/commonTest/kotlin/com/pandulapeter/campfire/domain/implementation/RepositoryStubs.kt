@@ -210,8 +210,10 @@ internal class FakeArchiveRepository(
         )
     }
 
-    override suspend fun unpack(archive: StagedFile, maxSize: Long): UnpackedArchive {
+    override suspend fun unpack(archive: StagedFile, maxSize: Long, onProgress: (readBytes: Long, totalBytes: Long) -> Unit): UnpackedArchive {
         val bytes = checkNotNull(staging.bytesOf(archive)) { "The staged archive is gone." }
+        // Read whole, as a real unpack reads it by the time it ends.
+        onProgress(archive.size, archive.size)
         val files = staging.staged(unpack.invoke(bytes, maxSize))
         val (attachments, pictures) = files.flatMap { it.images }.partition { it.isAttachment }
         return UnpackedArchive(

@@ -61,8 +61,17 @@ interface ArchiveLocalSource {
      * [archive] itself is left in place for its owner. Throws when it is not a readable archive, when the staging
      * refuses the room (`StagingRefusedException`), and when the storage fails; whatever ends it so, a cancellation
      * included, first deletes every file the unpack staged.
+     *
+     * [onProgress] hears, as every piece is read, how many bytes of the staged archives the unpack has read
+     * ([archive], then each nested one it staged as that is unpacked) against their sizes so far, which grow by each
+     * nested archive's as it is reached; never more than the total. A walk skips what it does not want, so the last
+     * call may stop short of the total.
      */
-    suspend fun unpack(archive: StagedFile, maxSize: Long): UnpackedArchive
+    suspend fun unpack(
+        archive: StagedFile,
+        maxSize: Long,
+        onProgress: (readBytes: Long, totalBytes: Long) -> Unit = { _, _ -> },
+    ): UnpackedArchive
 
     /**
      * The songs a foreign document holds - another app's export that is not an archive, such as a JSON document of

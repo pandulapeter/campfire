@@ -120,9 +120,10 @@ internal class PrepareImportUseCaseImpl(
             }
         }
 
+        val unpacking = UnpackingProgress(files, onProgress)
         files.forEachIndexed { index, file ->
             yield()
-            onProgress(ImportProgress(ImportProgress.Phase.UNPACKING, index, files.size, file.name))
+            unpacking.start(index)
             val isArchiveByName = LibraryFiles.isArchiveFileName(file.name)
             val staged = file.staged
             when {
@@ -145,7 +146,7 @@ internal class PrepareImportUseCaseImpl(
                         // Its pictures and attachments are staged on disk, within the staging's budget rather than the
                         // in-memory ones, which go on bounding only what is held in memory (the picture links). The
                         // received archive stays the request's, for Try again, until the request settles.
-                        archiveRepository.unpack(archive = staged, maxSize = remaining)
+                        archiveRepository.unpack(archive = staged, maxSize = remaining, onProgress = unpacking::read)
                     } else {
                         // Only the tests hand an archive over in memory: the app stages every one before it is prepared
                         // (`ImportWork`), so this unpack is the reference the streaming one is held to.
@@ -180,9 +181,10 @@ internal class PrepareImportUseCaseImpl(
                     triage.skippedFileNames += file.name
                 }
             }
+            unpacking.finish()
         }
 
-        onProgress(ImportProgress(ImportProgress.Phase.UNPACKING, files.size, files.size))
+        unpacking.end()
         val pictures = imageFiles.filter { file ->
             val intake = imageRepository.libraryNameOf(file.bytes)
             (intake != ImageIntake.Refused(ImageRefusal.NOT_AN_IMAGE)).also { isPicture -> if (!isPicture) triage.skippedFileNames += file.name }

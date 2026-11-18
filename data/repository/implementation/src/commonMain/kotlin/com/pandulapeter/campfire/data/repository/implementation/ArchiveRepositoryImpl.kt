@@ -25,7 +25,8 @@ internal class ArchiveRepositoryImpl(
     override suspend fun unpack(archive: ByteArray, maxSize: Long, maxImageSize: Long, maxAttachmentSize: Long) =
         archiveLocalSource.unpack(archive = archive, maxSize = maxSize, maxImageSize = maxImageSize, maxAttachmentSize = maxAttachmentSize)
 
-    override suspend fun unpack(archive: StagedFile, maxSize: Long) = archiveLocalSource.unpack(archive = archive, maxSize = maxSize)
+    override suspend fun unpack(archive: StagedFile, maxSize: Long, onProgress: (readBytes: Long, totalBytes: Long) -> Unit) =
+        archiveLocalSource.unpack(archive = archive, maxSize = maxSize, onProgress = onProgress)
 
     override suspend fun songsIn(file: ImportedFile) = archiveLocalSource.songsIn(file)
 

@@ -58,13 +58,18 @@ internal class ArchiveLocalSourceImpl(
             )
         }
 
-    override suspend fun unpack(archive: StagedFile, maxSize: Long): UnpackedArchive = withContext(Dispatchers.Default) {
+    override suspend fun unpack(
+        archive: StagedFile,
+        maxSize: Long,
+        onProgress: (readBytes: Long, totalBytes: Long) -> Unit,
+    ): UnpackedArchive = withContext(Dispatchers.Default) {
         StreamingArchiveUnpack(
             fileStorage = fileStorage,
             staging = importStaging,
             logger = logger,
             request = importStaging.requestOf(archive),
             maxSize = maxSize,
+            onProgress = onProgress,
         ).unpack(archive)
     }
 
