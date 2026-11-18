@@ -42,11 +42,22 @@ internal class SongbookProBackupTest {
             {meta: link https://example.com/grace}
             {tag: Hymns}
             {c: Verse 1}
-            Amazing[D] Grace
+            Amazing[C] Grace
 
             """.trimIndent(),
             files.single().bytes.decodeToString(),
         )
+    }
+
+    @Test
+    fun `chords SongbookPro keeps as they sound under a capo are written as the shapes the capo raises`() {
+        val files = read(
+            """{"Id": 1, "name": "One", "key": 15, "Capo": 2, "content": "{sov}\n[Am]La [F]la [C/E]la\n{eov}\n{sot}\ne|--3--|\n{eot}"}""",
+            """{"Id": 2, "name": "Two", "Capo": 2, "content": "{capo: 2}\n[Am]La"}""",
+        )
+
+        assertEquals("{title: One}\n{key: Am}\n{capo: 2}\n{sov}\n[Gm]La [Eb]la [Bb/D]la\n{eov}\n{sot}\ne|--3--|\n{eot}\n", files[0].bytes.decodeToString())
+        assertEquals("{title: Two}\n{capo: 2}\n[Am]La\n", files[1].bytes.decodeToString())
     }
 
     @Test

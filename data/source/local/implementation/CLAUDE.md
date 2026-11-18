@@ -199,6 +199,9 @@ inside; none is registered as an Open with type.
   braces turned into parentheses.
 - Songs are named by title, numbered within the batch, which is what the setlists point at. A set's per-song capo is
   kept where it differs; transpositions are not carried over.
+- SongbookPro's chords and key are what sounds, its capo showing the chords moved down ("Am (Gm)"); a song with a capo
+  has its chords moved down by it into the shapes Campfire's capo raises, unless its text declares a `{capo}` itself.
+  Its keys after the twelve majors are their relative minors (12 is F#m).
 - A backup whose document cannot be read is reported as one unread `dataFile.txt`; the rest of the archive is dropped
   unreported.
 

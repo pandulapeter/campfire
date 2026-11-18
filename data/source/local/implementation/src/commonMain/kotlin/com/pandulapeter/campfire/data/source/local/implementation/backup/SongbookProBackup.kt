@@ -10,7 +10,9 @@
 package com.pandulapeter.campfire.data.source.local.implementation.backup
 
 import com.pandulapeter.campfire.chordpro.ChordProDuration
+import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.ChordProTime
+import com.pandulapeter.campfire.chordpro.chords.ChordProTransposer
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.preferences.MetronomeSettings
@@ -147,7 +149,7 @@ internal object SongbookProBackup {
     private fun parseObject(text: String) = ShallowJson.parse(text) as? JsonObject
 
     private fun songText(song: JsonObject, title: String?, content: String, folderNames: Map<Int, String>) =
-        ForeignSongHeader.songText(content) {
+        ForeignSongHeader.songText(shapesOf(content, capo = song.capo ?: 0)) {
             directive("title", title, "t")
             directive("subtitle", song.text("subTitle"), "st", "su")
             directive("artist", song.text("author"))
@@ -162,6 +164,18 @@ internal object SongbookProBackup {
             val folders = song.textList("_folders").mapNotNull { folder -> folder.toIntOrNull()?.let(folderNames::get) ?: folder.takeIf { it.toIntOrNull() == null } }
             tags(folders + song.textList("_tags"))
         }
+
+    /**
+     * [content] with its chords as the hands play them under [capo]. SongbookPro keeps a song's chords as they sound and
+     * shows them moved down by its capo (a song in Am with a capo on 2 reads "Am (Gm)" and is played in Gm shapes), where
+     * a Campfire file's chords are the shapes its capo raises. A capo the text declares itself is the text's own
+     * statement about its chords, so such a text is left as written. Tab frets are counted from the capo, so they stay.
+     */
+    private fun shapesOf(content: String, capo: Int) = if (capo == 0 || ChordProParser.parse(content).metadata.capo != null) {
+        content
+    } else {
+        ChordProTransposer.transposeText(content, semitones = -capo, capo = -capo)
+    }
 
     private val JsonObject.capo get() = int("Capo")?.takeIf { it in Song.CAPO_RANGE }
 
