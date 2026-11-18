@@ -13,9 +13,6 @@ What's planned for Campfire, grouped by area.
 
 ## In progress
 
-- **Testing sync and shared links as thoroughly as the streaming import**: done but for the owner's part: real
-  backups from SongbookPro on iOS, OnSong, and OpenSong desktop for the import corpus, and three rulings.
-  Plan: [high-risk-testing.md](plans/high-risk-testing.md)
 - **Streaming archive import — critical for the next release**: archives of any size imported without holding them
   in memory, safety and reliability first, checked by hand on every platform before it ships. It is built and on main, unreleased;
   left are the release check by hand on every platform and removing the old in-memory path.
