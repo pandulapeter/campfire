@@ -9,7 +9,8 @@
 -->
 # Plan: testing the features that can lose a library or publish too much
 
-**Status:** steps 1 to 3 done (2026-11-18). Written against the code on 2026-11-17 (230acf02b). `sync/` is
+**Status:** steps 1, 2, 3, 5, and 7 done, step 8 partly done, and step 9 done for the backups it gathered (2026-11-18).
+Written against the code on 2026-11-17 (230acf02b). `sync/` is
 `data/sync/implementation/src/commonMain/kotlin/com/pandulapeter/campfire/data/sync/implementation/`, `syncTest/` the
 same path under `src/commonTest`, and `localTest/` is
 `data/source/local/implementation/src/desktopTest/kotlin/com/pandulapeter/campfire/data/source/local/implementation/`
@@ -271,6 +272,11 @@ and how it was made:
 
 **Done** when the files are in place and the next step's tests read every one of them.
 
+**Partly done (2026-11-18)**: Android SongbookPro (a 315-song library of 4 sets and 3 folders, three `.sbp`s, one
+`.cho`) and OpenSongApp (a 55-song `.osb`, its sets' `.osbs`, a set's `.ossb`, `.osts`, JustChords, and text exports),
+with accented, Cyrillic, Greek, Hebrew, and Japanese titles, case twins, and two songs of one title. Still to make: the
+iOS SongbookPro backup, OnSong, and OpenSong desktop's folders.
+
 ### 9. The corpus's backups through the import
 
 - **Now**: `ArchivePathParityTest` already takes them (by extension or by their bytes), fuzz mutants included, and is
@@ -285,6 +291,13 @@ and how it was made:
   that do not survive the round trip (case-only twins, two songs of one title).
 - **Done**: every backup passes, or its failure is fixed in the importer with a focused test built from a synthetic
   file that reproduces it (never the owner's file).
+
+**Done for the backups step 8 made (2026-11-18)**: `ArchivePathParityTest` passes with the corpus (29 archives and 580
+mutants, every backup archive among them, `.osbs` and `.ossb` by their bytes). `BackupCorpusTest` was written ahead of
+the old path's removal, needing none of it, and all 13 files pass both properties. Fixed in the SongbookPro reader: minor
+keys were dropped, and a song with a capo was written in the chords that sound rather than the shapes Campfire's capo
+raises. Left for the owner: OpenSong sets (`.osbs`, `.osts`, and the set in an `.ossb`) are reported as skipped, never
+imported as setlists. Run it again once step 8's iOS SongbookPro, OnSong, and OpenSong desktop files are in.
 
 ### 10. The end-to-end check on the live account (by hand)
 
