@@ -9,7 +9,7 @@
 -->
 # Plan: testing the features that can lose a library or publish too much
 
-**Status:** steps 1 to 7 done, step 8 partly done, and step 9 done for the backups it gathered (2026-11-18).
+**Status:** steps 1 to 7 and 10 done, step 8 partly done, and step 9 done for the backups it gathered (2026-11-18).
 Written against the code on 2026-11-17 (230acf02b). `sync/` is
 `data/sync/implementation/src/commonMain/kotlin/com/pandulapeter/campfire/data/sync/implementation/`, `syncTest/` the
 same path under `src/commonTest`, and `localTest/` is
@@ -323,6 +323,17 @@ After steps 2 to 7 and their fixes, with two desktop test homes and the Android 
 
 **Done** when every line behaves as the package `CLAUDE.md` files say, any surprise has become a fake's rule and a
 test, and the folder is restored by hash.
+
+**Done 2026-11-18.** Every line behaved as the package `CLAUDE.md` files say, on the owner's folder: an edit of a
+renamed song's old name came back beside the new name; a confirmed deletion of 250 of 330 songs was asked about on the
+deleting device, the followers took its first pieces (12 and 14 songs) unasked, then, their writes refused as busy
+during the batch until they failed and retried a minute later, were asked too; an emptied library folder was asked
+about and downloaded again; two case spellings became one name and a ` (2)` copy, each device keeping its own
+spelling; both links served exactly what was chosen with no account, and the edited song after a run; a stop racing
+another device's copy upload left no copy, a 404, and no entry; Stop sharing everything emptied `shared/` and the
+list; a stop journaled offline was forgotten by Disconnect, as its confirmation says, and its link kept working. No
+surprise needed a fake's rule (the busy refusal only helps the guard, so the fake leaves it out). The folder was
+restored by hash and checked by a fresh home's download, and the owner's three shared songs were shared again.
 
 ## Cost
 
