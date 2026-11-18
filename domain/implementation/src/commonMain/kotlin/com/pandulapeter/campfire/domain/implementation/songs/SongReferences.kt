@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.domain.implementation.songs
 
+import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.preferences.withSongRenamed
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
@@ -46,10 +47,11 @@ internal suspend fun followSongReferences(
         attempt {
             setlistRepository.updateSetlist(setlistFileName) { latest ->
                 latest.copy(
+                    // An entry spelling the song in another case or Unicode form names the same file.
                     entries = if (newFileName == null) {
-                        latest.entries.filterNot { it.songFileName == fileName }
+                        latest.entries.filterNot { LibraryFiles.isSameLibraryName(it.songFileName, fileName) }
                     } else {
-                        latest.entries.map { entry -> if (entry.songFileName == fileName) entry.copy(songFileName = newFileName) else entry }
+                        latest.entries.map { entry -> if (LibraryFiles.isSameLibraryName(entry.songFileName, fileName)) entry.copy(songFileName = newFileName) else entry }
                     },
                 )
             }

@@ -17,6 +17,7 @@ import com.pandulapeter.campfire.domain.implementation.UserPreferencesRepository
 import com.pandulapeter.campfire.domain.implementation.testSetlist
 import com.pandulapeter.campfire.domain.implementation.testSong
 import com.pandulapeter.campfire.data.model.Logger
+import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
@@ -62,6 +63,18 @@ class SongReferencesTest {
         assertEquals(listOf("b.cho"), setlists.entriesOf("first.setlist.json"))
         assertEquals(listOf("b.cho"), setlists.entriesOf("second.setlist.json"))
         assertEquals(mapOf("b.cho" to 1), preferences.transpositions)
+    }
+
+    @Test
+    fun `an entry spelling the song in another case follows a rename and goes with a deletion`() = runTest {
+        setlists.add(testSetlist("spelt.setlist.json", entries = listOf("A.cho", "b.cho")))
+
+        assertTrue(follow(newFileName = "c.cho"))
+        assertEquals(listOf("c.cho", "b.cho"), setlists.entriesOf("spelt.setlist.json"))
+
+        setlists.add(testSetlist("spelt.setlist.json", entries = listOf("C.cho", "b.cho")))
+        assertTrue(follow(newFileName = null, fileName = "c.cho"))
+        assertEquals(listOf("b.cho"), setlists.entriesOf("spelt.setlist.json"))
     }
 
     @Test
@@ -175,9 +188,13 @@ class SongReferencesTest {
 
         fun entriesOf(fileName: String) = files.getValue(fileName).entries.map { it.songFileName }
 
+        fun add(setlist: Setlist) {
+            files[setlist.fileName] = setlist
+        }
+
         override suspend fun loadSetlistFileNamesNaming(songFileName: String): List<String> {
             if (isListingBroken) throw IllegalStateException("The setlists could not be listed.")
-            return files.values.filter { setlist -> setlist.entries.any { it.songFileName == songFileName } }.map { it.fileName }
+            return files.values.filter { setlist -> setlist.entries.any { LibraryFiles.isSameLibraryName(it.songFileName, songFileName) } }.map { it.fileName }
         }
 
         override suspend fun updateSetlist(fileName: String, transform: (Setlist) -> Setlist): Setlist? {

@@ -13,7 +13,7 @@
   per-song preference maps. Rename writes the new file, then follows every reference (the shared link too), then deletes
   the old file, so a kill between any two writes leaves at worst a duplicate, never a reference to a missing file; a
   reference that did not follow keeps the old file. Delete drops them. Every reference is attempted even after one
-  fails; failure is returned, not thrown; not cancellable once the new file is written or the file is gone. Setlists naming the song are found from the files, not the cache; one already naming the new name keeps
+  fails; failure is returned, not thrown; not cancellable once the new file is written or the file is gone. Setlists naming the song (in any case or Unicode form) are found from the files, not the cache; one already naming the new name keeps
   one entry.
 - The new song template carries empty `{key}`, `{capo: 0}`, `{tempo: 120}`, and `{time: 4/4}`: the values a song
   declaring none plays by.

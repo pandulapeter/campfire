@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.repository.implementation
 
 import com.pandulapeter.campfire.data.model.Logger
+import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.data.model.recovering
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
@@ -85,7 +86,7 @@ internal class SetlistRepositoryImpl(
      * this list only decides which files to ask, and [libraryFileLock] is not reentrant.
      */
     override suspend fun loadSetlistFileNamesNaming(songFileName: String): List<String> {
-        fun Setlist.names() = entries.any { it.songFileName == songFileName }
+        fun Setlist.names() = entries.any { LibraryFiles.isSameLibraryName(it.songFileName, songFileName) }
         val onDisk = setlistLocalSource.loadSetlists().map { it.setlist }.filter { it.names() }.map { it.fileName }
         val cached = loadDataIfNeeded().orEmpty().filter { it.names() }.map { it.fileName }
         return (onDisk + cached).distinct()

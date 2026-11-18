@@ -27,7 +27,8 @@ interface SetlistRepository {
      * sync and an import write setlist files behind this repository's back, and the cache only catches up at the next
      * rescan. For the walks that follow a song's file name - a rename, a deletion - where a setlist the cache has not
      * seen yet would go on naming a file that is gone. A setlist the cache holds counts as well, since [updateSetlist]
-     * changes one whose file cannot be decoded as the cache has it. Nothing is cached.
+     * changes one whose file cannot be decoded as the cache has it. An entry spelling the song in another case or Unicode
+     * form names it too (`LibraryFiles.isSameLibraryName`). Nothing is cached.
      *
      * Throws when the setlists cannot be listed: not knowing which setlists name the song is not knowing that none do.
      */

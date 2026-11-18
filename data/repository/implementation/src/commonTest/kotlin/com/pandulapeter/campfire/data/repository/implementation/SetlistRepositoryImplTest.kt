@@ -267,6 +267,7 @@ class SetlistRepositoryImplTest {
 
         assertEquals(setOf(FILE_NAME, SECOND_FILE_NAME), repository.loadSetlistFileNamesNaming("a.cho").toSet())
         assertTrue(repository.loadSetlistFileNamesNaming("c.cho").isEmpty())
+        assertEquals(listOf(SECOND_FILE_NAME), repository.loadSetlistFileNamesNaming("B.cho"))
         assertEquals(listOf(FILE_NAME), repository.setlists.first().data?.map { it.fileName })
     }
 
