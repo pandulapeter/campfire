@@ -25,9 +25,9 @@ import java.io.SequenceInputStream
  * for it, and leaving it out would answer them with nothing at all - while one bad file still does not lose the ones
  * next to it.
  *
- * With a [receiver] (while archives are staged), see [takeImportedFile]. Pictures picked for a song pass none.
+ * With a [receiver], see [takeImportedFile]. Pictures picked for a song pass none.
  */
-fun List<Uri>.toImportedFiles(context: Context, receiver: ArchiveReceiver? = archiveReceiverWhileStaging()): List<ImportedFile> {
+fun List<Uri>.toImportedFiles(context: Context, receiver: ArchiveReceiver? = archiveReceiver()): List<ImportedFile> {
     val budget = ImportBudget()
     return map { uri ->
         // The query that knows the display name can be what fails, so it is asked on its own.

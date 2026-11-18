@@ -238,9 +238,8 @@ class ImportBudget {
     }
 
     /**
-     * [read] for a platform that has peeked at the file's first bytes ([head]) while archives are staged
-     * ([ImportIntake.stagesArchives]): an archive is handed to [stage] instead of being read, costing the selection
-     * nothing, and anything else is read whole as [read] reads it, or left unread where [ImportIntake.decide] says so.
+     * [read] for a platform that has peeked at the file's first bytes ([head]): an archive is handed to [stage] instead
+     * of being read, costing the selection nothing, and anything else is read whole as [read] reads it, or left unread where [ImportIntake.decide] says so.
      *
      * @param readBytes As for [read], the bytes of the whole file, [head] included.
      * @param stage Starts receiving the file into the staging folder and hands it over as such; null for a file that

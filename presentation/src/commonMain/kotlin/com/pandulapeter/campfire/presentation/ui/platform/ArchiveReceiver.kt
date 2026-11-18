@@ -34,11 +34,10 @@ import kotlin.concurrent.atomics.AtomicBoolean
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 
 /**
- * Where the platforms' intake hands an archive that arrived (see [ImportIntake.decide]) while archives are staged
- * ([ImportIntake.stagesArchives]): its copy into the staging folder starts at once, as a job of the app's own rather than
- * of the screen or the batch, so that whatever lets the app read the file is used while it is still valid and a batch
- * waiting in the queue is received meanwhile. The import's preparation awaits it (`ImportWork`), and the batch's
- * settling or Cancel discards it.
+ * Where the platforms' intake hands an archive that arrived (see [ImportIntake.decide]): its copy into the staging
+ * folder starts at once, as a job of the app's own rather than of the screen or the batch, so that whatever lets the
+ * app read the file is used while it is still valid and a batch waiting in the queue is received meanwhile. The
+ * import's preparation awaits it (`ImportWork`), and the batch's settling or Cancel discards it.
  *
  * Public because the platforms' shells outside `:presentation` (Android's and iOS's "open with") hand files over too.
  */
@@ -131,8 +130,5 @@ class ArchiveReceiver(
 
 private const val DISCARDED = "The archive was discarded."
 
-/**
- * The app's [ArchiveReceiver] while archives are staged ([ImportIntake.stagesArchives]), null while they are read whole:
- * what the platforms' intake asks, so that with the switch off nothing of the staging is even looked up.
- */
-fun archiveReceiverWhileStaging(): ArchiveReceiver? = if (ImportIntake.stagesArchives) KoinPlatform.getKoin().get() else null
+/** The app's [ArchiveReceiver], for the platforms' intake outside a composition (the shells, the file pickers). */
+fun archiveReceiver(): ArchiveReceiver = KoinPlatform.getKoin().get()

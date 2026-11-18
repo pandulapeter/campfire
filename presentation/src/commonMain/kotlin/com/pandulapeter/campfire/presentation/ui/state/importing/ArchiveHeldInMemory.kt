@@ -9,22 +9,20 @@
  */
 package com.pandulapeter.campfire.presentation.ui.state.importing
 
-import com.pandulapeter.campfire.data.model.importing.ImportIntake
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.importing.StagedFile
 import com.pandulapeter.campfire.domain.api.importing.ReceiveImportArchiveUseCase
 
 /**
- * Whether this is an archive the preparation would unpack from memory, which [ImportWork] stages first while archives are
- * staged ([ImportIntake.stagesArchives]): the intake stages every archive it is handed, but a file it read whole may
- * still turn out to be one by its bytes (a picture's name over a zip, a head that could not be peeked at), and so may a
- * download's body that is no zip under an archive's name. One past [ImportLimits.MAX_ARCHIVE_SIZE] or with nothing read
- * is left as it is, for the preparation to report without unpacking it.
+ * Whether this is an archive held in memory, which [ImportWork] stages first, since the preparation unpacks only staged
+ * archives: the intake stages every archive it is handed, but a file it read whole may still turn out to be one by its
+ * bytes (a picture's name over a zip, a head that could not be peeked at), and so may a download's body that is no zip
+ * under an archive's name. One past [ImportLimits.MAX_ARCHIVE_SIZE] or with nothing read is left as it is, for the
+ * preparation to report without unpacking it.
  */
 internal val ImportedFile.isArchiveHeldInMemory
-    get() = ImportIntake.stagesArchives && staged == null && receiving == null && !isTooLarge && bytes.isNotEmpty() &&
-        bytes.size <= ImportLimits.MAX_ARCHIVE_SIZE && isArchive
+    get() = staged == null && receiving == null && !isTooLarge && bytes.isNotEmpty() && bytes.size <= ImportLimits.MAX_ARCHIVE_SIZE && isArchive
 
 /**
  * [bytes] written into the staging folder as a received archive of a request of its own, a slice at a time, so that a

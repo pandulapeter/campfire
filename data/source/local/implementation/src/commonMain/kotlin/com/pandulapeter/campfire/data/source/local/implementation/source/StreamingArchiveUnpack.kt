@@ -137,7 +137,7 @@ internal class StreamingArchiveUnpack(
     }
 
     private suspend fun readEntries(directory: ZipDirectory, depth: Int): Level {
-        val walk = FirstWalk(directory, stagesArchives = depth < ArchiveEntryPolicy.MAX_DEPTH)
+        val walk = FirstWalk(directory, stagesNestedArchives = depth < ArchiveEntryPolicy.MAX_DEPTH)
         val unread = walk.walk()
         val entries = walk.entries()
         val read = entries.map { it.toImportedFile() }
@@ -280,12 +280,12 @@ internal class StreamingArchiveUnpack(
         .takeIf { it in LibraryFiles.ATTACHMENT_EXTENSIONS } ?: UNKNOWN_TYPE_EXTENSION
 
     /**
-     * The first walk of a directory: [ArchiveEntryPolicy]'s decisions, with an archive staged where [stagesArchives]
+     * The first walk of a directory: [ArchiveEntryPolicy]'s decisions, with an archive staged where [stagesNestedArchives]
      * rather than read into memory, and everything else held to what is left of the songs' budget, which the archive
      * staged no longer counts against. The walk asks an entry's limit, then peeks at it, then asks for its sink, one
      * entry after the other, so what the first two decide is the third's to act on.
      */
-    private inner class FirstWalk(private val directory: ZipDirectory, private val stagesArchives: Boolean) {
+    private inner class FirstWalk(private val directory: ZipDirectory, private val stagesNestedArchives: Boolean) {
 
         /** Each file entry's declared size, by its index in [directory]. */
         val declaredSizes = LongArray(directory.entryCount)
@@ -345,7 +345,7 @@ internal class StreamingArchiveUnpack(
          * cannot be that size is read as any other entry instead, so its declaration costs the songs' budget, never the
          * disk, before the walk finds it damaged.
          */
-        private fun isStaged(isArchiveEntry: Boolean) = stagesArchives && isArchiveEntry && directory.canProduceDeclaredSize(index - 1)
+        private fun isStaged(isArchiveEntry: Boolean) = stagesNestedArchives && isArchiveEntry && directory.canProduceDeclaredSize(index - 1)
 
         private suspend fun sinkOf(name: String, declaredSize: Long): EntrySink = if (isArchive) {
             val entry = Pending(name, memory = null).also { pending += it }

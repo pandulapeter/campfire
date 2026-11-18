@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.data.source.remote.implementation.importDownlo
 
 import com.pandulapeter.campfire.data.model.importing.ImportDownload
 import com.pandulapeter.campfire.data.source.remote.implementation.network.HttpClientHolder
+import com.pandulapeter.campfire.data.source.remote.implementation.network.configureClient
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.MockRequestHandleScope
@@ -22,6 +23,8 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import io.ktor.utils.io.ByteReadChannel
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
@@ -120,8 +123,26 @@ class ImportDownloadRemoteSourceTest {
         assertEquals("evil.cho", importDownloadFileName("attachment; filename=\"..\\\\evil.cho\"", URL))
     }
 
-    private fun source(handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData) = ImportDownloadRemoteSourceImpl(
-        httpClientHolder = HttpClientHolder { HttpClient(MockEngine(handler)) { expectSuccess = false } },
+    /** [download] into a sink in memory, its file answered with the bytes the sink was given. */
+    private suspend fun ImportDownloadRemoteSourceImpl.download(url: String, maxSizeBytes: Long): ImportDownload {
+        var received = ByteArray(0)
+        val answer = download(
+            url = url,
+            maxSizeBytes = maxSizeBytes,
+            openSink = { { bytes, offset, length -> received += bytes.copyOfRange(offset, offset + length) } },
+            onProgress = { _, _ -> },
+        )
+        return if (answer is ImportDownload.File) ImportDownload.File(name = answer.name, bytes = received) else answer
+    }
+
+    /** On the test's own clock, which the streamed download's stall limit runs on. */
+    private fun TestScope.source(handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData) = ImportDownloadRemoteSourceImpl(
+        httpClientHolder = HttpClientHolder(dispatcher = StandardTestDispatcher(testScheduler)) {
+            HttpClient(MockEngine.create {
+                dispatcher = StandardTestDispatcher(testScheduler)
+                addHandler(handler)
+            }) { configureClient(sendsUserAgent = false, hasSocketTimeout = false) }
+        },
     )
 
     private companion object {

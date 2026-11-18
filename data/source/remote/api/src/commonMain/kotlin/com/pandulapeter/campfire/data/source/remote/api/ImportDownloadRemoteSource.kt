@@ -19,12 +19,9 @@ import com.pandulapeter.campfire.data.model.importing.ImportDownload
  */
 interface ImportDownloadRemoteSource {
 
-    /** The file at [url], or why there is none; only a cancellation is thrown. Never reads past [maxSizeBytes]. */
-    suspend fun download(url: String, maxSizeBytes: Long): ImportDownload
-
     /**
-     * [download] streamed rather than read into memory: the body is handed to a sink chunk by chunk as it arrives, so its
-     * size is bounded by [maxSizeBytes] alone. [openSink] is called at most once, with the length the host declared
+     * The file at [url], or why there is none, never read past [maxSizeBytes] and never held in memory: the body is
+     * handed to a sink chunk by chunk as it arrives. [openSink] is called at most once, with the length the host declared
      * (null where it sent none), just before the first byte is written, and never for an answer that is not the file; a
      * [ImportDownload.File] answer carries no bytes, its name only, since they all went to the sink. Any other answer, or
      * a cancellation, means that what the sink was given is not the file and is the caller's to throw away.
@@ -42,10 +39,10 @@ interface ImportDownloadRemoteSource {
     ): ImportDownload
 
     /**
-     * The picture a song's `{image: src=…}` names by its address, downloaded as [download] would, except that it is asked
-     * only of a public `https` host on every hop (never the local network, since the address comes from a file rather
-     * than from the user's own hand alone) and gives up after a bounded time; any other address is
-     * [ImportDownload.Missing] without a request. Whether the bytes are a picture is the caller's question, by content.
+     * The picture a song's `{image: src=…}` names by its address, downloaded as [download] would but read into memory
+     * ([ImportDownload.File.bytes]), and asked only of a public `https` host on every hop (never the local network, since
+     * the address comes from a file rather than from the user's own hand alone), giving up after a bounded time; any
+     * other address is [ImportDownload.Missing] without a request. Whether the bytes are a picture is the caller's question, by content.
      */
     suspend fun downloadPicture(url: String, maxSizeBytes: Long): ImportDownload
 }

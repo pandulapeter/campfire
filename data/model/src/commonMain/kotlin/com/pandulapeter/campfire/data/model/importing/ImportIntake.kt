@@ -14,20 +14,6 @@ import com.pandulapeter.campfire.data.model.library.LibraryFiles
 /** How an import takes in the files that arrive, before anything in them is read. */
 object ImportIntake {
 
-    /**
-     * Whether an archive that arrives is received into the staging folder (`imports/`) and unpacked from there rather
-     * than read whole into memory. The one switch between the two paths, on: the streaming one is the only one the app
-     * runs, and the in-memory one stays only as the reference the tests hold it to.
-     */
-    const val STAGES_ARCHIVES = true
-
-    /**
-     * What the platforms' intake, the download, and the import's preparation (`ImportWork`) read [STAGES_ARCHIVES]
-     * through: the same value in every build, set otherwise only by tests, which run the in-memory import as the
-     * reference.
-     */
-    var stagesArchives = STAGES_ARCHIVES
-
     /** What becomes of one file that arrives, see [decide]. */
     sealed interface Decision {
 
@@ -43,8 +29,7 @@ object ImportIntake {
 
     /**
      * What becomes of a file called [name], [size] bytes long where the platform says (null where it cannot), whose
-     * first bytes are [head] (at least [ImportLimits.SNIFF_LENGTH] of them where the file is that long), while archives
-     * are staged.
+     * first bytes are [head] (at least [ImportLimits.SNIFF_LENGTH] of them where the file is that long).
      *
      * An archive is what the import unpacks as one: one by its name, or one of any other name whose bytes are a zip's
      * (another app's backup under its own extension, or renamed to a text's on its way over), as the import's own triage

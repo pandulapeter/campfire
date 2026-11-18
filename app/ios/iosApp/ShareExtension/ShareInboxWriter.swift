@@ -344,12 +344,9 @@ private enum ShareLimits {
 
     static let maxTextSize: Int64 = 8 << 20
     static let maxDocumentSize: Int64 = 16 << 20
-    /// `ImportIntake.STAGES_ARCHIVES` in `:data:model`, which the extension cannot read: keep the two in step. On, the
-    /// app moves an archive on into its staging folder, so one is bounded by `MAX_STAGED_ARCHIVE_SIZE` and the device's
-    /// free space, not by the share's bounds or the inbox's; off, the app would read one whole, so the extension would
-    /// hold it to what the app reads.
-    static let stagesArchives = true
-    static let maxArchiveSize: Int64 = stagesArchives ? 16 << 30 : 24 << 20
+    /// `ImportLimits.MAX_STAGED_ARCHIVE_SIZE`: the app moves an archive on into its staging folder, so one is bounded by
+    /// that and the device's free space, not by the share's bounds or the inbox's.
+    static let maxArchiveSize: Int64 = 16 << 30
     /// `ImportLimits.MAX_PICKED_IMAGE_FILE_SIZE`: a photo the app shrinks into a song's picture once it has it.
     static let maxPictureSize: Int64 = 40 << 20
     /// What one share copies, all its files together: as much as its largest file may be, so that one picture fits.
@@ -390,7 +387,7 @@ private enum ShareLimits {
     }
 
     static func isStagedArchive(_ name: String) -> Bool {
-        stagesArchives && archiveExtensions.contains(fileExtension(of: name))
+        archiveExtensions.contains(fileExtension(of: name))
     }
 
     /// `ImportLimits.minFreeSpaceFor` on a device: a quarter of what is needed, at most 512 MiB.

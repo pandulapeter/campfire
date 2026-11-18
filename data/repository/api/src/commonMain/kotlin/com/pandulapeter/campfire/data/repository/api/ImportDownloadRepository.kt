@@ -10,7 +10,6 @@
 package com.pandulapeter.campfire.data.repository.api
 
 import com.pandulapeter.campfire.data.model.importing.ImportDownload
-import com.pandulapeter.campfire.data.model.importing.ImportIntake
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
 
 /**
@@ -21,12 +20,12 @@ import com.pandulapeter.campfire.data.model.importing.ImportLimits
 interface ImportDownloadRepository {
 
     /**
-     * The file at [url], or why there is none. Read into memory within [ImportLimits.MAX_ARCHIVE_SIZE]; or, where
-     * [ImportIntake.stagesArchives] is on, a zip by its first bytes received into the staging folder within
-     * [ImportLimits.MAX_STAGED_ARCHIVE_SIZE] (`ImportDownload.File.staged`, in a request of its own), reporting the
-     * bytes received and the length the host declared to [onProgress] as they arrive, and anything else read into memory
-     * as before. Only a cancellation is thrown, and, staging, `StagingRefusedException` or the storage's failure where the
-     * archive does not fit or cannot be written; whatever does not end in a staged file leaves none.
+     * The file at [url], or why there is none: a zip by its first bytes received into the staging folder within
+     * [ImportLimits.MAX_STAGED_ARCHIVE_SIZE] (`ImportDownload.File.staged`, in a request of its own), anything else read
+     * into memory within [ImportLimits.MAX_ARCHIVE_SIZE], the bytes received and the length the host declared reported
+     * to [onProgress] as they arrive. Only a cancellation is thrown, and, staging, `StagingRefusedException` or the
+     * storage's failure where the archive does not fit or cannot be written; whatever does not end in a staged file
+     * leaves none.
      */
     suspend fun download(url: String, onProgress: (receivedBytes: Long, totalBytes: Long?) -> Unit): ImportDownload
 

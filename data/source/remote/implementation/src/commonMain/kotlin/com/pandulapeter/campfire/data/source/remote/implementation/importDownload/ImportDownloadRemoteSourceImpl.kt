@@ -50,11 +50,6 @@ internal class ImportDownloadRemoteSourceImpl(
     private val httpClientHolder: HttpClientHolder,
 ) : ImportDownloadRemoteSource {
 
-    override suspend fun download(url: String, maxSizeBytes: Long): ImportDownload {
-        val address = parseUrl(url) ?: return ImportDownload.Missing
-        return fetch(address = address, maxSizeBytes = maxSizeBytes) {}
-    }
-
     override suspend fun download(
         url: String,
         maxSizeBytes: Long,

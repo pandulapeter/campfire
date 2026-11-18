@@ -27,11 +27,10 @@ platform difference is `normalizedToNfc` (expect/actual).
 `ImportBudget` is the one class every platform reads incoming files through: a file the import would not look inside is
 never kept (an unknown type is read only to check for a zip signature or text, flagged `isPlainTextByContent`), and an
 oversized one is reported, not loaded (a text name over its limit is read only to be kept as a zip,
-`ImportLimits.isReadAsText`). Archives are staged (`ImportIntake.stagesArchives`, on: `STAGES_ARCHIVES`; only tests
-turn it off, for the in-memory reference): the platforms peek at a file's head and ask `ImportBudget.take`, whose
-`ImportIntake.decide` stages an archive (by name, or a zip by its bytes under any name but a picture's or a document's)
-within `MAX_STAGED_ARCHIVE_SIZE`, costing the selection nothing, and reads everything else as `read` does: the copy is an
-`ImportedFile.receiving` (`ReceivingArchive`) until the preparation awaits it. `ImportedFile.isArchive` is the one rule
+`ImportLimits.isReadAsText`). Archives are staged: the platforms peek at a file's head and ask `ImportBudget.take`,
+whose `ImportIntake.decide` stages an archive (by name, or a zip by its bytes under any name but a picture's or a
+document's) within `MAX_STAGED_ARCHIVE_SIZE`, costing the selection nothing, and reads everything else as `read` does:
+the copy is an `ImportedFile.receiving` (`ReceivingArchive`) until the preparation awaits it. `ImportedFile.isArchive` is the one rule
 for what the preparation unpacks. `ImportLimits`' KDoc holds the reasoning: memory bounds what is held, disk and time
 what is staged. `ImportPlan` is computed before anything is written; in `ImportChoices`, changing the for-all choice
 leaves per-row ones alone. No original file is stored with a song.

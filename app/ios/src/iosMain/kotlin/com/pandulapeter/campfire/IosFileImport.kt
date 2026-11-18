@@ -15,7 +15,7 @@ import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.share.SharedLink
 import com.pandulapeter.campfire.data.model.share.ShareLinks
 import com.pandulapeter.campfire.data.source.remote.implementation.auth.isSyncRedirect
-import com.pandulapeter.campfire.presentation.ui.platform.archiveReceiverWhileStaging
+import com.pandulapeter.campfire.presentation.ui.platform.archiveReceiver
 import com.pandulapeter.campfire.presentation.ui.platform.fileSizeAt
 import com.pandulapeter.campfire.presentation.ui.platform.receiveUrl
 import kotlinx.cinterop.ExperimentalForeignApi
@@ -83,11 +83,11 @@ fun openUrl(url: NSURL) {
     if (!url.fileURL) return
     val name = url.lastPathComponent.orEmpty()
     startProcess()
-    val receiver = archiveReceiverWhileStaging()
+    val receiver = archiveReceiver()
     val inboxPath = url.takeIf { it.isInboxCopy() }?.URLByResolvingSymlinksInPath?.path
     val close: () -> Unit = { inboxPath?.let(receivingInboxCopies::remove) }
     inboxPath?.let(receivingInboxCopies::add)
-    if (receiver != null && LibraryFiles.isArchiveFileName(name)) {
+    if (LibraryFiles.isArchiveFileName(name)) {
         // An archive by its name is queued at once, its copy in its batch's own job, so that the import screen comes up
         // while it is received and nothing opened after it waits behind a file iCloud may still have to download.
         val file = receiver.receiveUrl(url = url, name = name, size = url.attributedSize(), isOwnedCopy = inboxPath != null, close = close)

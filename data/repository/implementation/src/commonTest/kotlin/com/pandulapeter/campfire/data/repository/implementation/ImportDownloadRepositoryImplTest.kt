@@ -49,7 +49,7 @@ class ImportDownloadRepositoryImplTest {
         val progress = mutableListOf<Pair<Long, Long?>>()
 
         val download = repository(ScriptedRemoteSource(chunks, announcedSize = 3L * CHUNK))
-            .downloadIntoStaging(URL) { received, total -> progress += received to total }
+            .download(URL) { received, total -> progress += received to total }
 
         val file = assertIs<ImportDownload.File>(download)
         val staged = assertIs<StagedFile>(file.staged)
@@ -64,7 +64,7 @@ class ImportDownloadRepositoryImplTest {
     fun `a body that is no zip is read into memory as before and nothing is staged`() = runTest {
         val chunks = listOf("{title: Riverlight}\n".encodeToByteArray(), "[G]Words\n".encodeToByteArray())
 
-        val download = assertIs<ImportDownload.File>(repository(ScriptedRemoteSource(chunks)).downloadIntoStaging(URL) { _, _ -> })
+        val download = assertIs<ImportDownload.File>(repository(ScriptedRemoteSource(chunks)).download(URL) { _, _ -> })
 
         assertNull(download.staged)
         assertContentEquals(chunks.reduce(ByteArray::plus), download.bytes)
@@ -74,7 +74,7 @@ class ImportDownloadRepositoryImplTest {
     @Test
     fun `a body too short to be a zip is read into memory`() = runTest {
         val download = assertIs<ImportDownload.File>(
-            repository(ScriptedRemoteSource(listOf(byteArrayOf(0x50, 0x4b)))).downloadIntoStaging(URL) { _, _ -> },
+            repository(ScriptedRemoteSource(listOf(byteArrayOf(0x50, 0x4b)))).download(URL) { _, _ -> },
         )
 
         assertContentEquals(byteArrayOf(0x50, 0x4b), download.bytes)
@@ -86,7 +86,7 @@ class ImportDownloadRepositoryImplTest {
         val megabyte = ByteArray(1 shl 20) { 'a'.code.toByte() }
         val chunks = List((ImportLimits.MAX_ARCHIVE_SIZE / megabyte.size + 1).toInt()) { megabyte }
 
-        val download = repository(ScriptedRemoteSource(chunks)).downloadIntoStaging(URL) { _, _ -> }
+        val download = repository(ScriptedRemoteSource(chunks)).download(URL) { _, _ -> }
 
         assertEquals(ImportDownload.TooLarge, download)
         assertTrue(staging.files.isEmpty())
@@ -96,7 +96,7 @@ class ImportDownloadRepositoryImplTest {
     fun `a zip download that does not come to the file leaves no staged file`() = runTest {
         // Cut short, larger than the ceiling, stalled, or turned away: whatever the remote answers once the bytes went on.
         listOf(ImportDownload.Unreachable, ImportDownload.TooLarge, ImportDownload.Missing).forEach { answer ->
-            val download = repository(ScriptedRemoteSource(zipChunks(2), answer = answer)).downloadIntoStaging(URL) { _, _ -> }
+            val download = repository(ScriptedRemoteSource(zipChunks(2), answer = answer)).download(URL) { _, _ -> }
 
             assertEquals(answer, download)
             assertEquals(1, staging.announcedSizes.size.also { staging.announcedSizes.clear() })
@@ -111,7 +111,7 @@ class ImportDownloadRepositoryImplTest {
             written.complete(Unit)
             awaitCancellation()
         })
-        val download = async { repository(remote).downloadIntoStaging(URL) { _, _ -> } }
+        val download = async { repository(remote).download(URL) { _, _ -> } }
 
         written.await()
         assertEquals(1, staging.files.size)
@@ -126,7 +126,7 @@ class ImportDownloadRepositoryImplTest {
         val staging = FakeImportStagingLocalSource(room = CHUNK.toLong())
 
         assertFailsWith<StagingRefusedException.NoSpace> {
-            ImportDownloadRepositoryImpl(ScriptedRemoteSource(zipChunks(3)), staging).downloadIntoStaging(URL) { _, _ -> }
+            ImportDownloadRepositoryImpl(ScriptedRemoteSource(zipChunks(3)), staging).download(URL) { _, _ -> }
         }
         assertTrue(staging.files.isEmpty())
     }
@@ -149,8 +149,6 @@ class ImportDownloadRepositoryImplTest {
         private val afterChunks: suspend () -> Unit = {},
     ) : ImportDownloadRemoteSource {
 
-        override suspend fun download(url: String, maxSizeBytes: Long) = IN_MEMORY
-
         override suspend fun download(
             url: String,
             maxSizeBytes: Long,
@@ -171,10 +169,6 @@ class ImportDownloadRepositoryImplTest {
 
         override suspend fun downloadPicture(url: String, maxSizeBytes: Long): ImportDownload =
             throw NotImplementedError("Not expected to be called by this test.")
-
-        companion object {
-            val IN_MEMORY = ImportDownload.File(name = "in-memory.zip", bytes = byteArrayOf(0x50, 0x4b, 3, 4))
-        }
     }
 
     /** Staged files in memory, partial ones included, refusing whatever passes [room] as the real staging does. */

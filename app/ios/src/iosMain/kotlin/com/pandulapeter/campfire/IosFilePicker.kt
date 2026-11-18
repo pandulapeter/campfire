@@ -15,7 +15,7 @@ import com.pandulapeter.campfire.data.model.importing.ImportBudget
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.presentation.ui.platform.ArchiveReceiver
 import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
-import com.pandulapeter.campfire.presentation.ui.platform.archiveReceiverWhileStaging
+import com.pandulapeter.campfire.presentation.ui.platform.archiveReceiver
 import com.pandulapeter.campfire.presentation.ui.platform.readHeadAt
 import com.pandulapeter.campfire.presentation.ui.platform.receiveUrl
 import com.pandulapeter.campfire.presentation.ui.platform.pickedAttachment
@@ -142,7 +142,7 @@ internal class IosFilePicker(
         }
         return withContext(Dispatchers.IO) {
             val budget = ImportBudget()
-            val receiver = if (isImport) archiveReceiverWhileStaging() else null
+            val receiver = if (isImport) archiveReceiver() else null
             urls.mapNotNull { url ->
                 val isCopy = url.isTemporaryCopy()
                 url.readImportedFile(budget, receiver = receiver, isOwnedCopy = isCopy).also {
@@ -310,7 +310,7 @@ internal class IosFilePicker(
  * as long as that takes, so not for the main thread - doubly so, since a coordinated read asked for on the main
  * thread can deadlock against a file presenter that answers on it.
  *
- * With a [receiver] (while archives are staged), the file's first bytes are read first, and an archive is handed to it
+ * With a [receiver], the file's first bytes are read first, and an archive is handed to it
  * (`receiveUrl`), its copy or move starting in the receiver's job once this read is done; [isOwnedCopy] says the file is
  * the app's own copy, moved rather than copied, and the caller then leaves it for the receiver to take; [onMoved] runs
  * once it has been moved and [close] once the receiver is done with it.

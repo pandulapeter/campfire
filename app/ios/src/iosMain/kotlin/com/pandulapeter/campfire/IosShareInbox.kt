@@ -12,7 +12,7 @@ package com.pandulapeter.campfire
 import com.pandulapeter.campfire.data.model.importing.ImportBudget
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.presentation.ui.InboxShare
-import com.pandulapeter.campfire.presentation.ui.platform.archiveReceiverWhileStaging
+import com.pandulapeter.campfire.presentation.ui.platform.archiveReceiver
 import com.pandulapeter.campfire.presentation.ui.platform.SharedTextPayload
 import com.pandulapeter.campfire.presentation.ui.platform.decodeShareInboxManifest
 import com.pandulapeter.campfire.presentation.ui.platform.encodeShareInboxManifest
@@ -106,7 +106,7 @@ private suspend fun importShare(folderPath: String) {
     // An archive the extension copied is moved on into the staging folder, the share's own copy, which is the app's,
     // and the share forgets it as it is moved. Its folder still goes only once the share is taken, so a process ended
     // before that offers what is left of it again, never the archive it no longer holds.
-    val receiver = archiveReceiverWhileStaging()
+    val receiver = archiveReceiver()
     val files = manifest.files.mapNotNull { path ->
         val url = urlInShare(folderPath, path) ?: return@mapNotNull null
         url.readImportedFile(budget, receiver = receiver, isOwnedCopy = true, onMoved = { forgetMovedFile(folderPath, path) })

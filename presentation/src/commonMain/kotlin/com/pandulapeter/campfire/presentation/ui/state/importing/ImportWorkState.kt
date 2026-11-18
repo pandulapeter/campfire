@@ -15,7 +15,7 @@ enum class ImportWorkState {
     /** Nothing: no import is under way, or one is waiting for the user (its review, preview, or failure), which is not work. */
     IDLE,
 
-    /** Waiting for archives that arrived to be copied into the staging folder, which only happens while archives are staged. */
+    /** Waiting for archives that arrived to be copied into the staging folder. */
     RECEIVING,
 
     /** Downloading the file an address or a shared link names. */

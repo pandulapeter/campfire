@@ -57,7 +57,7 @@ import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcu
 import com.pandulapeter.campfire.presentation.ui.components.shortcuts.label
 import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.ImpersonatedPlatform
-import com.pandulapeter.campfire.presentation.ui.platform.archiveReceiverWhileStaging
+import com.pandulapeter.campfire.presentation.ui.platform.archiveReceiver
 import com.pandulapeter.campfire.presentation.ui.platform.isAppleKeyboard
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
@@ -381,7 +381,7 @@ private class TestFilePicker(private val files: List<ImportedFile>, private val 
 
     /** Read as a platform's intake reads them: an archive received rather than handed over whole. */
     override suspend fun pickFiles(): List<ImportedFile> {
-        val receiver = archiveReceiverWhileStaging() ?: return files
+        val receiver = archiveReceiver()
         val budget = ImportBudget()
         return files.map { file ->
             val bytes = file.bytes

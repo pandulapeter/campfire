@@ -20,7 +20,7 @@ import androidx.compose.ui.draganddrop.DragAndDropTarget
 import com.pandulapeter.campfire.data.model.importing.ImportBudget
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.presentation.ui.platform.ArchiveReceiver
-import com.pandulapeter.campfire.presentation.ui.platform.archiveReceiverWhileStaging
+import com.pandulapeter.campfire.presentation.ui.platform.archiveReceiver
 import com.pandulapeter.campfire.presentation.ui.platform.readHeadAt
 import com.pandulapeter.campfire.presentation.ui.platform.receiveUrl
 import kotlinx.cinterop.BetaInteropApi
@@ -75,7 +75,7 @@ internal fun Modifier.libraryDropTarget(viewModel: CampfireViewModel): Modifier 
                 // An item provider is only asked while the drop is being answered, so every load starts here; one
                 // budget across them keeps the drop within what a pick may read, whichever finishes first.
                 val budget = LockedImportBudget()
-                val receiver = archiveReceiverWhileStaging()
+                val receiver = archiveReceiver()
                 val files = fileProviders.map { it.loadFile(budget, receiver) }
                 scope.launch { viewModel.importController.importFiles(files.awaitAll()) }
                 return true
@@ -113,12 +113,11 @@ private fun NSItemProvider.loadText(): CompletableDeferred<String?> {
  * The provider's copy of the file exists only until its completion handler returns, so it is read there, on whatever
  * queue the provider answers on. One that cannot be read arrives empty, which the import reports as skipped.
  *
- * With a [receiver] (while archives are staged), an archive is moved out of the provider's hands inside the handler (a
- * rename into the temporary directory, which the app then owns) and received from there, moved again into the staging
- * folder; nothing of it is copied.
+ * An archive is moved out of the provider's hands inside the handler (a rename into the temporary directory, which the
+ * app then owns) and received by [receiver] from there, moved again into the staging folder; nothing of it is copied.
  */
 @OptIn(ExperimentalForeignApi::class)
-private fun NSItemProvider.loadFile(budget: LockedImportBudget, receiver: ArchiveReceiver?): CompletableDeferred<ImportedFile> {
+private fun NSItemProvider.loadFile(budget: LockedImportBudget, receiver: ArchiveReceiver): CompletableDeferred<ImportedFile> {
     val file = CompletableDeferred<ImportedFile>()
     val typeIdentifier = registeredTypeIdentifiers.filterIsInstance<String>().firstOrNull()
     val name = fileNameOf(suggestedName, typeIdentifier)
@@ -137,7 +136,6 @@ private fun NSItemProvider.loadFile(budget: LockedImportBudget, receiver: Archiv
         }
         val read = when {
             path == null -> null
-            receiver == null -> budget.read(name = name, size = size?.longLongValue, readBytes = readBytes)
             else -> budget.take(name = name, size = size?.longLongValue, head = readHeadAt(path) ?: ByteArray(0), readBytes = readBytes) {
                 movedOutOfProvider(path)?.let { kept ->
                     receiver.receiveUrl(url = NSURL.fileURLWithPath(kept), name = name, size = size?.longLongValue, isOwnedCopy = true)

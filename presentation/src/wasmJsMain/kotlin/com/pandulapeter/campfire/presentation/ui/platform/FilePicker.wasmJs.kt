@@ -50,7 +50,7 @@ import kotlin.js.Promise
 internal object WebFilePicker : FilePicker {
 
     override suspend fun pickFiles(): List<ImportedFile> =
-        openFileInput(accept = "").await<JsArray<JsAny>?>()?.toImportedFiles(receiver = archiveReceiverWhileStaging()).orEmpty()
+        openFileInput(accept = "").await<JsArray<JsAny>?>()?.toImportedFiles(receiver = archiveReceiver()).orEmpty()
 
     /** HEIC and HEIF only where the browser decodes them for the re-encoder to convert (Safari), never to be refused. */
     override suspend fun pickImages(): List<ImportedFile> {
@@ -266,7 +266,7 @@ internal fun droppedFiles(): Flow<List<ImportedFile>> = flow {
         maxEntries = ImportLimits.MAX_FOLDER_ENTRIES,
     )
     while (true) {
-        emit(nextDrop().await<JsArray<JsAny>?>()?.toImportedFiles(isDrop = true, receiver = archiveReceiverWhileStaging()).orEmpty())
+        emit(nextDrop().await<JsArray<JsAny>?>()?.toImportedFiles(isDrop = true, receiver = archiveReceiver()).orEmpty())
     }
 }.catch { exception ->
     // The collector is a LaunchedEffect at the root of the app, and what leaves one of those takes the
@@ -277,7 +277,7 @@ internal fun droppedFiles(): Flow<List<ImportedFile>> = flow {
 /**
  * Read within one [ImportBudget], which is what keeps a file the import would not look inside out of memory. A drop's
  * items are the files paired with whether they came out of a folder (see [listenForDrops]); a pick's are the files.
- * With a [receiver] (while archives are staged), an archive is not read but received into the staging folder, the
+ * With a [receiver], an archive is not read but received into the staging folder, the
  * `File` copied there in JavaScript a range at a time (`ReceivedArchive.take`), its bytes never crossing into Wasm.
  */
 private suspend fun JsArray<JsAny>.toImportedFiles(isDrop: Boolean = false, receiver: ArchiveReceiver? = null): List<ImportedFile> {

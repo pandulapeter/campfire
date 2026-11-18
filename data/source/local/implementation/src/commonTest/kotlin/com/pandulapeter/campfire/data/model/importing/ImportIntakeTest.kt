@@ -22,7 +22,7 @@ import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 /**
- * [ImportIntake.decide] and [ImportBudget.take], the intake while archives are staged, through every case of
+ * [ImportIntake.decide] and [ImportBudget.take], the intake, through every case of
  * [ImportLimitsTest]: what that reads whole as an archive is staged here, and everything else ends as it does there.
  * Here rather than in `:data:model` for the zip writer, as [ImportLimitsTest] is.
  */

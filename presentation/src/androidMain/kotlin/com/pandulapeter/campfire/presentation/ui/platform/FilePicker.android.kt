@@ -205,7 +205,7 @@ internal class AndroidFilePicker(@Provided private val context: Context) : FileP
 
     private suspend fun pick(isImport: Boolean = false, launch: (Launchers) -> Unit): List<ImportedFile> {
         val uris = pickUris(launch)
-        return withContext(Dispatchers.IO) { uris.toImportedFiles(context, receiver = if (isImport) archiveReceiverWhileStaging() else null) }
+        return withContext(Dispatchers.IO) { uris.toImportedFiles(context, receiver = if (isImport) archiveReceiver() else null) }
     }
 
     private suspend fun pickUris(launch: (Launchers) -> Unit): List<Uri> {
