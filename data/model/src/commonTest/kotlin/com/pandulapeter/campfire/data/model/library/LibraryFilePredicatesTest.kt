@@ -39,7 +39,7 @@ class LibraryFilePredicatesTest {
 
     @Test
     fun `an importable file is known by its extension in any case`() {
-        listOf("song.CHO", "song.chordpro", "notes.txt", "Sheet.PDF", "sheet.docx", "old.doc", "backup.json", "Library.sbpbackup", "songs.zip", "Song.onsong", "Tunes.ABC", "World Night.osts")
+        listOf("song.CHO", "song.chordpro", "notes.txt", "Sheet.PDF", "sheet.docx", "old.doc", "backup.json", "Library.sbpbackup", "songs.zip", "Song.onsong", "Tunes.ABC", "World Night.osts", "World Night.JustChords")
             .forEach { assertTrue(LibraryFiles.isImportableFileName(it), it) }
         listOf("cover.jpg", "song.cho.bak", "README").forEach { assertFalse(LibraryFiles.isImportableFileName(it), it) }
     }

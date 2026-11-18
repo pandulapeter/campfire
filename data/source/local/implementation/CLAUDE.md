@@ -213,7 +213,8 @@ holding one is looked inside; none is an Open with type but on iOS, for the shar
 the SongbookPro check and loose through `songsIn`; input shapes are in their KDoc. JSON is bounded to the text limit, 64
 levels and a token budget before parsing (`ShallowJson` through `JsonBounds`: deeper overflows the parser's stack, more
 builds a tree past the heap), and 32 levels and 200,000 nodes when walked. All write headers and batch names through
-`ForeignSongHeader`; only OpenSong's sets become setlists. Beyond the KDoc:
+`ForeignSongHeader`; only OpenSong's sets become setlists. JustChords' `.justchords` (`FOREIGN_JSON_EXTENSIONS`) is read
+as JSON by its name, loose or in an archive, never sniffed; its playlists are not read. Beyond the KDoc:
 
 - OpenSong: named as it came; section tags become environments or comments; `.` chord rows are set over their lyric rows
   as marked (`ChordSheetConverter.setChordRows`, nothing re-guessed); a block with no chord row is

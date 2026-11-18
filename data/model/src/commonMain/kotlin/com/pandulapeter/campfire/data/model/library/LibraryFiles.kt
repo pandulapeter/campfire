@@ -53,6 +53,14 @@ object LibraryFiles {
     val FOREIGN_SETLIST_EXTENSIONS = listOf(".osts")
 
     /**
+     * The exports of other apps that are JSON under a name of their own: JustChords' `.justchords`, which OpenSongApp
+     * exports its sets as too. Read with the text limit and as JSON by their name, never sniffed: the songs they hold
+     * become songs, their playlists nothing. JSON in general belongs to everyone, but these are one app's own format,
+     * so on iOS they are an imported type the share extension takes.
+     */
+    val FOREIGN_JSON_EXTENSIONS = listOf(".justchords")
+
+    /**
      * The library backups of other apps that are zip archives under a name of their own: SongbookPro's whole-library
      * `.sbpbackup` and the `.sbp` it shares a set or a song as, and OpenSongApp's `.osb` of its song folders, `.osbs` of
      * its sets, and `.ossb` of one set with its songs. Named so that an archive is looked inside when it holds one; a file
@@ -72,7 +80,7 @@ object LibraryFiles {
      * put Campfire in the way of every archive and note on the device.
      */
     val IMPORTABLE_EXTENSIONS = SONG_EXTENSIONS + DOCUMENT_EXTENSIONS + LIBRARY_BACKUP_EXTENSIONS + FOREIGN_SONG_EXTENSIONS +
-        FOREIGN_SETLIST_EXTENSIONS + listOf(TEXT_EXTENSION, ARCHIVE_EXTENSION, ".json", LEGACY_DOCUMENT_EXTENSION)
+        FOREIGN_SETLIST_EXTENSIONS + FOREIGN_JSON_EXTENSIONS + listOf(TEXT_EXTENSION, ARCHIVE_EXTENSION, ".json", LEGACY_DOCUMENT_EXTENSION)
 
     /** Whether a file called [name] is unpacked for what it holds by its name alone: a zip, or another app's backup. */
     fun isArchiveFileName(name: String) = (LIBRARY_BACKUP_EXTENSIONS + ARCHIVE_EXTENSION).any { name.endsWith(it, ignoreCase = true) }
