@@ -9,7 +9,7 @@
 -->
 # Plan: testing the features that can lose a library or publish too much
 
-**Status:** step 1 done (2026-11-18). Written against the code on 2026-11-17 (230acf02b). `sync/` is
+**Status:** steps 1 to 3 done (2026-11-18). Written against the code on 2026-11-17 (230acf02b). `sync/` is
 `data/sync/implementation/src/commonMain/kotlin/com/pandulapeter/campfire/data/sync/implementation/`, `syncTest/` the
 same path under `src/commonTest`, and `localTest/` is
 `data/source/local/implementation/src/desktopTest/kotlin/com/pandulapeter/campfire/data/source/local/implementation/`
@@ -63,19 +63,15 @@ asserts behaviour (what a device, the folder, or a link holds), never which call
 
 ### Sync: not proven
 
-- **The deletion guard is checked only on fault-free runs.** `SyncSimulation.checkGuard` runs only when no fault was
-  set (`isPlain`), because it counts deletions as before-and-after differences, which another actor's changes would
-  blur. Yet the guard is applied per pass (`SyncEngine` calls `DeletionGuard.check` with the planning index of each
-  pass, and a second pass starts from the first pass's updated index), and a second pass happens exactly when another
-  device writes during the run. Nothing tests the guard across two passes of one run.
+- **The deletion guard across passes and faults** is proven since step 2: `SyncSimulation.checkGuard` counts what each
+  run deleted itself, faulted and raced runs included, and the guard judges the run, not the pass (`RunDeletions`).
 - **Dropbox's `delete_batch` is not atomic** (measured on the live account, 4 to 7 files a second, every listing
   meanwhile a consistent snapshot of any fraction), so a device syncing during another's large deletion sees it in
-  pieces, each under half, and follows without asking. The guard's
-  design promises a second question on the other device ("two questions about one folder are better than one answer
-  that empties both"); `FakeSyncProvider.delete` removes a batch at once, so no test meets the pieces.
-- **Every listing is a true snapshot in the fake.** No test gives the engine a listing that misses files the folder
-  holds (a pagination bug, an eventually consistent service such as the planned Google Drive provider) or one older
-  than the device's own last write. Such a listing reads as remote deletions under the guard's threshold.
+  pieces, each under half, and follows without asking. The fake now deletes in pieces too (step 2); a follower that is
+  never asked is a known limit in `sync/run/CLAUDE.md`, not checked by the simulation, which judges each run alone.
+- **Listings that are partial or stale** are struck by the simulation since step 3. Two limits stay, written into
+  `sync/run/CLAUDE.md`: a wrong listing in a run the app is killed during can lose a version, and a listing older than
+  what the device last read or wrote is outside `SyncFolder.list`'s contract. Dropbox's listings were never wrong.
 - **The simulation's library is narrower than the app's.** It names pictures only by `{image: …}`, never attachments
   (`{meta: attachment …}`), never models the editor's unsaved text holding a picture, never damages a folder copy, and
   every device uses the system clock.
@@ -111,8 +107,8 @@ asserts behaviour (what a device, the folder, or a link holds), never which call
   sharing or Stop sharing everything, so nothing checks that a stopped copy never comes back when another device's run
   read the list before the stop. Step 1 found that it did (Dropbox writes the upload, an orphan zip no link serves),
   fixed with focused tests in `SharedLinksRepositoryImplTest`; the simulation still never meets it. Its setlists are opaque text, so a setlist's songs never enter a copy in the simulation.
-- **A partial shared-folder listing** "as new as the registry" would mark a working share `copyMissing` for good;
-  `SimulatedSharing.checkSettled` skips such entries, so a share wrongly marked dead passes.
+- **A partial shared-folder listing** marked a working share `copyMissing` for good; step 3 found and fixed it (the copy
+  is asked about alone first, `SyncFolder.hasSharedFile`), and `SimulatedSharing` checks the property at every step.
 
 ### The import corpus
 
@@ -175,6 +171,10 @@ removes the rest, as Dropbox was measured to.
   deletions the index saw over recent runs, which is a design change and gets its own plan if so.
 - **Done**: the check holds over the CI seeds and 100,000 seeds by hand.
 
+**Done 2026-11-18.** The simulation found the multi-pass hole (fixed: the guard counts a run's earlier passes against
+everything any pass's index knew) and, beside the guard, a picture lost where a conflict uploaded its song first (fixed:
+pictures go up before anything else). The follower is a known limit in `sync/run/CLAUDE.md`. 100,000 seeds: 282 s.
+
 ### 3. Listings that are stale or partial
 
 Two more faults in `FakeSyncProvider`, struck by the simulation like the others: a listing that leaves out a random
@@ -188,6 +188,11 @@ ago. A shared-folder listing gets the same faults.
   shared-folder listing marks a working share dead for good (a defect: a share then stops by inference).
 - **Done**: both faults pass the CI seeds and 100,000 by hand. Their rate is kept low enough that most seeds still
   settle into ordinary runs.
+
+**Done 2026-11-18.** A partial shared-folder listing marked a working share dead (fixed). A partial library listing
+deletes files here that the next run brings back, except in a run the app is killed during, which can lose the version
+(a known limit, never struck together in the simulation); a listing older than the device's last run can lose one too,
+so `SyncFolder.list` now states that it never is. One step in eight falsifies a listing; 100,000 seeds: 278 s.
 
 ### 4. The simulation's library as wide as the app's
 
