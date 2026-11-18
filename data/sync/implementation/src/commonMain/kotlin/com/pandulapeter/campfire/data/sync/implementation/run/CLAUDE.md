@@ -55,6 +55,13 @@
   since is a `Conflict`, so an edit uploaded over another device's deletion simply wins; a listing taken right after
   another client's upload, rename, or deletion shows it; a batch deletion is not atomic (~4 files/s), and a listing
   taken meanwhile is a consistent snapshot of any fraction of it.
+- **A listing that is wrong** (partial, or older than the folder), which Dropbox's never was (measured): a file it
+  leaves out reads as a deletion in the folder and is deleted here, within the guard, and the next run brings it back
+  from the folder, nothing lost. **Known limit**: where the app is killed in that run and the index the throttled
+  writer last saved predates the deletion, the next run reads it as this device's own and deletes the folder's copy,
+  the version with it. A provider whose listings may be wrong (the planned Google Drive one) needs that closed first,
+  by saving the index without those entries before deleting, or by asking the folder about each file before deleting
+  it here. `SyncSimulation` never kills a run whose listing it falsified.
 - **Failures**: only `SyncRunEndingException`s end a run. `CancellationException` is caught *first* and rethrown. A
   failed or still contested file is named beside `lastSyncedAt`, which any run that got to the end moves. A run ending
   in a non-`Exception` throwable rescans the whole library if any operation had finished, since it may have come

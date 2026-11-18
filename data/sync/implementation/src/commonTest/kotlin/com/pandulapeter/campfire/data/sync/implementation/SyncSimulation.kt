@@ -33,7 +33,9 @@ import kotlin.random.Random
  * they all hold one library. Odd seeds stand a service with exact names in for Dropbox. Each device's file system
  * compares names as one of the platforms' does ([PLATFORMS]), so one library meets case-sensitive and case-insensitive,
  * composing and decomposing devices at once. Items are shared too, and the shared links checked ([SimulatedSharing]);
- * a device may disconnect and connect again, meeting the folder with no index.
+ * a device may disconnect and connect again, meeting the folder with no index. A run's first listing may be partial or
+ * stale, as a service's with a paging bug or an eventually consistent one may be, and a batch deletion may be seen in
+ * pieces.
  * What it checks:
  * - no version a user saved, and nobody replaced or deleted since, is gone from every device and the folder: an edit
  *   beats a deletion, and a conflict keeps both versions;
@@ -217,9 +219,20 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
             faultCountdown = 1 + random.nextInt(5)
         }
         deletesInPieces = random.nextInt(3) == 0
-        val described = fault?.let { ", $it at request $faultCountdown" }.orEmpty() + if (deletesInPieces) ", deleting in pieces" else ""
+        // Never with the app killed in the same run: a listing that leaves out a file the folder holds deletes it here,
+        // and an index written before that deletion (the throttled writer's) makes the next run delete it from the
+        // folder as this device's own deletion, the version with it. A known limit, `run/CLAUDE.md`.
+        val listingFault = if (fault == Fault.KILLED) null else when (random.nextInt(LISTING_FAULT_ODDS)) {
+            0 -> FakeSyncProvider.ListingFault.Partial { random.nextInt(3) == 0 } to ", the first listing partial"
+            1 -> (1 + random.nextInt(4)).let { FakeSyncProvider.ListingFault.Stale(it) to ", the first listing $it writes behind" }
+            else -> null
+        }
+        cloud.listingFault = listingFault?.first
+        val described = fault?.let { ", $it at request $faultCountdown" }.orEmpty() +
+            (if (deletesInPieces) ", deleting in pieces" else "") + listingFault?.second.orEmpty()
         val result = runOn(scope, device, SyncDeletionPolicy.ASK, described)
         deletesInPieces = false
+        cloud.listingFault = null
         val question = (result as? Attempt.Ended)?.result as? SyncEngine.Result.DeletionsNeedConfirmation ?: return
         if (random.nextBoolean()) {
             val answer = answers(device, question.direction).random(random)
@@ -512,6 +525,9 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
 
     private companion object {
         const val MAXIMUM_SETTLING_ROUNDS = 6
+
+        /** One step in this many lists partially, and one more stale: rare enough that most runs stay ordinary. */
+        const val LISTING_FAULT_ODDS = 16
 
         // Escaped, so that no editor or formatter folds the composed and the decomposed spelling into one.
         val SONG_NAMES = listOf(

@@ -28,6 +28,8 @@ import com.pandulapeter.campfire.data.sync.implementation.shared.SharedLinksRegi
 import com.pandulapeter.campfire.data.sync.implementation.shared.SharedLinksRepositoryImpl
 import com.pandulapeter.campfire.data.model.sync.SyncState
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncProviders
+import com.pandulapeter.campfire.data.source.remote.api.sync.SyncRunEndingException
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlin.random.Random
 import kotlin.test.assertIs
@@ -151,32 +153,53 @@ internal class Device(
         index = writtenIndexes.random(random).markedAsFinished()
     }
 
+    /**
+     * The preferences and the shared copies after a completed run, failing as `SyncRunner`'s steps fail: what ends a run
+     * ends it with the engine's index kept, and anything else is that step's problem alone.
+     */
     private suspend fun settle(cloud: FakeSyncProvider, completed: SyncEngine.Result.Completed) {
-        val settled = preferencesSync?.synchronize(
-            provider = cloud,
-            base = completed.index.syncedPreferences,
-            unchanged = index.unchangedPreferences(ACCOUNT_ID, completed.documentRevisions),
-            keptFileNames = completed.summary.failed,
-            onLocalSettled = {},
-        )
-        areSharedCopiesSettled = SharedCopySync(
-            libraryFileLocalSource = library,
-            contents = sharedContents,
-            registry = registry,
-            mirror = mirror,
-            journal = sharedLinksJournal,
-            logger = Logger.Standard,
-            buildNumber = buildNumber,
-        ).synchronize(
-            folder = cloud,
-            index = completed.index.toIndex(),
-            sharedFiles = completed.sharedFiles,
-            registryRevision = completed.documentRevisions[SharedLinksFormat.NAME],
-        )
+        val unchanged = index.unchangedPreferences(ACCOUNT_ID, completed.documentRevisions)
+        index = completed.index
+        val settled = afterRun {
+            preferencesSync?.synchronize(
+                provider = cloud,
+                base = completed.index.syncedPreferences,
+                unchanged = unchanged,
+                keptFileNames = completed.summary.failed,
+                onLocalSettled = {},
+            )
+        }
+        areSharedCopiesSettled = afterRun {
+            SharedCopySync(
+                libraryFileLocalSource = library,
+                contents = sharedContents,
+                registry = registry,
+                mirror = mirror,
+                journal = sharedLinksJournal,
+                logger = Logger.Standard,
+                buildNumber = buildNumber,
+            ).synchronize(
+                folder = cloud,
+                index = completed.index.toIndex(),
+                sharedFiles = completed.sharedFiles,
+                registryRevision = completed.documentRevisions[SharedLinksFormat.NAME],
+            )
+        } ?: false
         index = completed.index.copy(
             syncedPreferences = settled?.document ?: completed.index.syncedPreferences,
             syncedPreferencesRevision = settled?.revision,
         )
+    }
+
+    /** What a step after a completed run answers, or null where it failed short of ending the run. */
+    private suspend fun <T> afterRun(step: suspend () -> T): T? = try {
+        step()
+    } catch (exception: CancellationException) {
+        throw exception
+    } catch (exception: SyncRunEndingException) {
+        throw exception
+    } catch (_: Exception) {
+        null
     }
 
     /** Disconnecting and connecting the same account again, which forgets the index, the mirror, and the journal. */

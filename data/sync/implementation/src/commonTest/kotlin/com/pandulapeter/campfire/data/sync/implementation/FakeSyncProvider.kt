@@ -51,6 +51,7 @@ import kotlinx.coroutines.flow.first
  * [onForgetStoredCredentials] runs before they are, which is where a test makes that fail. [onCompleteAuthorization] is
  * what finishing an authorization does, which is where a test stores credentials and then gives up or fails. [id] is
  * Dropbox's unless a test stands a second provider beside it.
+ * [listingFault] makes the next listing partial or stale, as a service's may be.
  * Every write and deletion goes into a feed of changes, read with [awaitChanges] and [changesSince] from the position a
  * listing's cursor names, and [writeElsewhere] and [deleteElsewhere] are another device's changes reaching the folder.
  */
@@ -144,19 +145,68 @@ internal class FakeSyncProvider(
 
     override suspend fun list(): RemoteListing {
         onList()
-        return listing()
+        val fault = listingFault.also { listingFault = null }
+        val folder = when (fault) {
+            is ListingFault.Stale -> history.getOrNull(history.size - fault.writesAgo) ?: history.firstOrNull() ?: snapshot()
+            else -> snapshot()
+        }
+        val isLeftOut = (fault as? ListingFault.Partial)?.isLeftOut ?: { false }
+        return listing(
+            folder.copy(
+                files = folder.files.filterKeys { !isLeftOut(it.path) },
+                sharedFiles = folder.sharedFiles.filterKeys { !isLeftOut("$SHARED_FOLDER/$it") },
+            ),
+        )
     }
 
-    private fun listing() = RemoteListing(
-        cursor = feed.value.size.toString(),
-        documentRevisions = documents.mapValues { it.value.second },
-        sharedFiles = sharedFiles.map { (shareId, file) ->
+    private fun listing(folder: Snapshot) = RemoteListing(
+        cursor = folder.feedSize.toString(),
+        documentRevisions = folder.documentRevisions,
+        sharedFiles = folder.sharedFiles.map { (shareId, file) ->
             RemoteSharedFile(shareId = shareId, revision = file.second, contentHash = contentHashOf(file.first), size = file.first.size.toLong())
         },
-        files = files.also { listCount++ }.also(::rememberListedSpellings).map { (key, file) ->
+        // The provider's own map of names comes from the folder as it is even where the listing does not: a fault here is
+        // what the engine is told, while resolving a name is the provider's business, which a provider must get right.
+        files = folder.files.also { listCount++ }.also { rememberListedSpellings(files) }.map { (key, file) ->
             remoteFile(key, file.first, file.second)
         },
     )
+
+    /**
+     * What the next [list] answers in place of the folder as it is, taken by that listing: [ListingFault.Partial] leaves
+     * out the files and shared copies whose paths it picks while claiming to be whole, as a paging bug would, and
+     * [ListingFault.Stale] answers the folder as it was some writes ago, as an eventually consistent service may.
+     */
+    var listingFault: ListingFault? = null
+
+    sealed interface ListingFault {
+        class Partial(val isLeftOut: (path: String) -> Boolean) : ListingFault
+        class Stale(val writesAgo: Int) : ListingFault
+    }
+
+    /** The folder as a listing would see it. */
+    private data class Snapshot(
+        val files: Map<SyncKey, Pair<ByteArray, String>>,
+        val documentRevisions: Map<String, String>,
+        val sharedFiles: Map<String, Pair<ByteArray, String>>,
+        val feedSize: Int,
+    )
+
+    private fun snapshot() = Snapshot(
+        files = files.toMap(),
+        documentRevisions = documents.mapValues { it.value.second },
+        sharedFiles = sharedFiles.toMap(),
+        feedSize = feed.value.size,
+    )
+
+    /** The folder before each of the last writes, newest last, for [ListingFault.Stale]. */
+    private val history = ArrayDeque<Snapshot>()
+
+    /** Called before every write and deletion, so that a stale listing can answer what was there before it. */
+    private fun recordHistory() {
+        history.addLast(snapshot())
+        if (history.size > HISTORY_SIZE) history.removeFirst()
+    }
 
     override suspend fun download(kind: LibraryFileKind, name: String, maxSize: Long): RemoteDocument {
         val key = SyncKey(kind = kind, name = name)
@@ -197,6 +247,7 @@ internal class FakeSyncProvider(
         onUpload(key)
         val target = stored(key)
         if (isConflict(files[target]?.second, expectedRevision)) return RemoteWriteResult.Conflict
+        recordHistory()
         val revision = "r${nextRevision++}"
         files[target] = bytes to revision
         if (resolvesListedNames) listedSpellings[target.foldedForResolving()] = target
@@ -214,6 +265,7 @@ internal class FakeSyncProvider(
             if (position == pausesAfter) pause.during()
             val target = stored(SyncKey(kind = deletion.kind, name = deletion.name))
             if (deletion.expectedRevision == null || files[target]?.second == deletion.expectedRevision) {
+                if (target in files) recordHistory()
                 files.remove(target)?.let { (bytes, _) ->
                     deletedFiles[target] = bytes
                     onDeleted(target)
@@ -239,6 +291,7 @@ internal class FakeSyncProvider(
         restoreRequests += key
         if (stored(key) in files) return true
         val bytes = deletedFiles[key] ?: return false
+        recordHistory()
         files[key] = bytes to "r${nextRevision++}"
         feed.value += key.path
         return true
@@ -280,6 +333,7 @@ internal class FakeSyncProvider(
     ): RemoteWriteResult {
         onUploadDocument(name)
         if (isConflict(documents[name]?.second, expectedRevision)) return RemoteWriteResult.Conflict
+        recordHistory()
         val revision = "r${nextRevision++}"
         documents[name] = bytes to revision
         oversizedDocuments -= name
@@ -305,6 +359,7 @@ internal class FakeSyncProvider(
         requireShareId(shareId)
         onUploadSharedFile(shareId)
         if (isConflict(sharedFiles[shareId]?.second, expectedRevision)) return RemoteWriteResult.Conflict
+        recordHistory()
         val revision = "r${nextRevision++}"
         sharedFiles[shareId] = bytes to revision
         return RemoteWriteResult.Written(revision)
@@ -318,10 +373,11 @@ internal class FakeSyncProvider(
     override suspend fun deleteSharedFile(shareId: String) {
         requireShareId(shareId)
         onDeleteSharedFile(shareId)
+        if (shareId in sharedFiles) recordHistory()
         sharedFiles -= shareId
     }
 
-    /** The folder as it is, whatever a listing answers. */
+    /** The folder as it is, whatever a listing answers: a fault strikes listings only. */
     override suspend fun hasSharedFile(shareId: String) = shareId.also(::requireShareId) in sharedFiles
 
     /** Refuses an id that is not a plain name before anything else, as the contract of the shared copies has it. */
@@ -362,18 +418,21 @@ internal class FakeSyncProvider(
 
     /** Another device writing [key]. */
     fun writeElsewhere(key: SyncKey, bytes: ByteArray) {
+        recordHistory()
         files[key] = bytes to "r${nextRevision++}"
         feed.value += key.path
     }
 
     /** Another device deleting [key]. */
     fun deleteElsewhere(key: SyncKey) {
+        recordHistory()
         files -= key
         feed.value += key.path
     }
 
     /** Another device writing the document [name]. */
     fun writeDocumentElsewhere(name: String, bytes: ByteArray) {
+        recordHistory()
         documents[name] = bytes to "r${nextRevision++}"
         feed.value += name
     }
@@ -384,6 +443,13 @@ internal class FakeSyncProvider(
      * revision the write expected, its folder too, so an upload never learns that a deletion came first.
      */
     private fun isConflict(current: String?, expectedRevision: String?) = current != null && current != expectedRevision
+
+    private companion object {
+        /** How many writes back a stale listing may reach. */
+        const val HISTORY_SIZE = 8
+
+        const val SHARED_FOLDER = "shared"
+    }
 
     private fun remoteFile(key: SyncKey, bytes: ByteArray, revision: String) = RemoteFile(
         kind = key.kind,

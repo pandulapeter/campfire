@@ -21,6 +21,7 @@ import com.pandulapeter.campfire.data.sync.implementation.shared.registry
  * The shared links of [SyncSimulation]'s library: items shared from any device, and every rename and deletion a user
  * makes noted the way the app's use cases note them ([Device.sharing]). What it checks:
  * - a share stops (its copy or its entry gone) only where a user deleted the item under a name the share had;
+ * - a share is marked `copyMissing` only where its copy is truly gone from the folder;
  * - settled, every share whose copy is there names a file of the folder and holds that file's bytes, or is orphaned
  *   where the folder has no such file.
  */
@@ -62,6 +63,9 @@ internal class SimulatedSharing(private val cloud: FakeSyncProvider) {
             check((isListed && isCopied) || names.any { it in deletedNames }) {
                 "Share $shareId of ${names.joinToString()} stopped (listed: $isListed, copy: $isCopied) though nobody deleted it"
             }
+        }
+        links.filter { it.copyMissing }.forEach { entry ->
+            check(entry.shareId !in cloud.sharedFiles) { "Share ${entry.shareId} of ${entry.fileName} is marked dead while its copy is there" }
         }
     }
 
