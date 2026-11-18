@@ -14,7 +14,9 @@ import com.pandulapeter.campfire.domain.implementation.FakeExportFileRepository
 import com.pandulapeter.campfire.domain.implementation.FakeImageRepository
 import com.pandulapeter.campfire.domain.implementation.SetlistRepositoryStub
 import com.pandulapeter.campfire.domain.implementation.SongContentRepositoryStub
+import com.pandulapeter.campfire.domain.implementation.SongRepositoryStub
 import com.pandulapeter.campfire.domain.implementation.testSetlist
+import com.pandulapeter.campfire.domain.implementation.testSong
 import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.data.model.song.SongContent
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
@@ -51,6 +53,18 @@ class ExportSetlistUseCaseImplTest {
         useCase(FakeSetlistRepository(setlist), readable = setOf("a.cho", "c.cho")).invoke("gig.setlist.json", isSharedCopy = false)
 
         assertEquals(setOf("gig.setlist.json", "a.cho", "c.cho"), archive.packed.keys)
+    }
+
+    @Test
+    fun `a song the setlist spells differently is read by the library's spelling and kept under the setlist's`() = runTest {
+        val setlist = testSetlist(fileName = "gig.setlist.json", title = "Gig", entries = listOf("A.cho"))
+
+        val useCase = useCase(FakeSetlistRepository(setlist), readable = setOf("a.cho"), texts = mapOf("a.cho" to "{title: A}"))
+
+        useCase("gig.setlist.json", isSharedCopy = true)
+
+        assertEquals("{title: A}", archive.packed.getValue("A.cho").decodeToString())
+        assertEquals(setOf("gig.setlist.json", "A.cho"), archive.packed.keys)
     }
 
     @Test
@@ -101,6 +115,10 @@ class ExportSetlistUseCaseImplTest {
         texts: Map<String, String> = emptyMap(),
     ) = ExportSetlistUseCaseImpl(
         setlistRepository = setlistRepository,
+        // The library's songs: the readable ones, a name only found exactly, as on Android and Linux.
+        songRepository = object : SongRepositoryStub() {
+            override suspend fun loadSongsIfNeeded() = readable.map { testSong(fileName = it) }
+        },
         songContentRepository = object : SongContentRepositoryStub() {
             override suspend fun loadSongContent(fileName: String, useCache: Boolean) =
                 if (fileName in readable) SongContent(fileName, texts[fileName] ?: "{title: $fileName}") else null

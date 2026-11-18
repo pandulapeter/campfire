@@ -17,6 +17,7 @@ import com.pandulapeter.campfire.data.repository.api.ExportFileRepository
 import com.pandulapeter.campfire.data.repository.api.ImageRepository
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongContentRepository
+import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.domain.api.export.ExportSetlistUseCase
 import com.pandulapeter.campfire.domain.implementation.export.exportFileName
 import org.koin.core.annotation.Factory
@@ -24,6 +25,7 @@ import org.koin.core.annotation.Factory
 @Factory
 internal class ExportSetlistUseCaseImpl(
     private val setlistRepository: SetlistRepository,
+    private val songRepository: SongRepository,
     private val songContentRepository: SongContentRepository,
     private val archiveRepository: ArchiveRepository,
     private val exportFileRepository: ExportFileRepository,
@@ -42,18 +44,25 @@ internal class ExportSetlistUseCaseImpl(
         // name, and an import follows those names to wherever the songs land.
         // A song the setlist names twice goes in once, as an archive cannot hold two entries of one name.
         val written = mutableSetOf(setlistFileName)
+        // A setlist may spell a song as another case or Unicode form of its file's name, which only some file systems
+        // find: the song is read by the library's spelling on every platform, as sync's rebuild of a shared copy reads it,
+        // and goes in under the setlist's, which is what an import follows.
+        val libraryNames = songRepository.loadSongsIfNeeded().orEmpty().associate { LibraryFiles.identityKey(it.fileName) to it.fileName }
+        val libraryNameOf = { name: String -> libraryNames[LibraryFiles.identityKey(name)] ?: name }
         val images = ExportedImages.of(imageRepository, isSharedCopy)
         // A shared copy's songs are read once before they are written, for the attachments it carries (ExportedImages).
         if (isSharedCopy) {
             images.decideSharedAttachments(
-                setlist.entries.map { it.songFileName }.distinct().mapNotNull { songContentRepository.loadSongContent(it, useCache = false)?.text },
+                setlist.entries.map { it.songFileName }.distinct().mapNotNull { name ->
+                    songContentRepository.loadSongContent(libraryNameOf(name), useCache = false)?.text
+                },
             )
         }
         val songs = setlist.entries.map { entry ->
             suspend {
-                songContentRepository.loadSongContent(entry.songFileName, useCache = false)
-                    ?.takeIf { written.add(it.fileName) }
-                    ?.let { ArchiveEntry(name = it.fileName, bytes = images.named(it.text).encodeToByteArray()) }
+                songContentRepository.loadSongContent(libraryNameOf(entry.songFileName), useCache = false)
+                    ?.takeIf { written.add(entry.songFileName) }
+                    ?.let { ArchiveEntry(name = entry.songFileName, bytes = images.named(it.text).encodeToByteArray()) }
             }
         }
         return exportedArchive(
