@@ -36,7 +36,7 @@ internal object ParityArchives {
         val archives = linkedMapOf<String, ByteArray>()
         archiveRecorder = { archive -> archives.putIfAbsent(Sha256.hashToHex(archive), archive.copyOf()) }
         try {
-            listOf(ArchiveLocalSourceTest::class.java, ArchiveImagesTest::class.java, StreamingArchiveUnpackTest::class.java).forEach(::runEveryTest)
+            listOf(ArchiveLocalSourceTest::class.java, ArchiveImagesTest::class.java, StreamingArchiveUnpackTest::class.java, OpenSongSetImportTest::class.java).forEach(::runEveryTest)
         } finally {
             archiveRecorder = null
         }

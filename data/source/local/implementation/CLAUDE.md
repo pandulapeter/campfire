@@ -161,8 +161,9 @@ it; iOS marks the folder) and no sync, and is emptied of other sessions' names o
   budgets (`BudgetDifference`), ZIP64 read as its twin without it (`Zip64Twin`), and the streaming-only caps across
   nested archives (`StreamingCaps`). Keep the CI part within a minute.
 - `BackupCorpusTest` (desktop, only with `campfire.importCorpus`) imports every file of the corpus's `backups/` as a
-  pick would: each song and set `BackupListing` reads from it (SongbookPro, OpenSong, JustChords) is planned or reported,
-  and an export of the library imports into an identical one; its report goes to the corpus's `.runs/backups.txt`.
+  pick would: each song and set `BackupListing` reads from it (SongbookPro, OpenSong, JustChords) is planned or reported
+  (a SongbookPro or OpenSong set only planned, with as many entries as distinct songs it names), and an export of the
+  library imports into an identical one; its report goes to the corpus's `.runs/backups.txt`.
 - `LargeArchiveImportTest` (desktop, its own task `largeArchiveImportTest` under a 128 MiB heap, out of `desktopTest`
   and so of the pre-commit hook; a step of CI's tests) imports archives generated on the fly through the same graph
   (`importGraph`) over `MeteredFileStorage`, which fails a write into `imports/` past what the ledger reserved: the
@@ -191,8 +192,8 @@ No document type leaves this module.
 
 ## Other apps' libraries
 
-`.sbpbackup`, `.sbp`, and `.osb` are in `LibraryFiles.LIBRARY_BACKUP_EXTENSIONS` so an archive holding one is looked
-inside; none is registered as an Open with type.
+`.sbpbackup`, `.sbp`, `.osb`, `.osbs`, and `.ossb` are in `LibraryFiles.LIBRARY_BACKUP_EXTENSIONS` so an archive
+holding one is looked inside; none is an Open with type but on iOS, for the share extension.
 
 `backup/SongbookProBackup` translates `dataFile.txt` (a version line plus one JSON document, read up to
 `ImportLimits.MAX_IMPORT_SIZE`) into songs and setlists, then the ordinary import:
@@ -211,12 +212,19 @@ inside; none is registered as an Open with type.
 `backup/JsonSongs`, `OpenSongSong`, and `OnSongFile` turn another app's document into `.cho` songs, in an archive after
 the SongbookPro check and loose through `songsIn`; input shapes are in their KDoc. JSON is bounded to the text limit, 64
 levels and a token budget before parsing (`ShallowJson` through `JsonBounds`: deeper overflows the parser's stack, more
-builds a tree past the heap), and 32 levels and 200,000 nodes when walked. None writes setlists; all write headers and
-batch names through `ForeignSongHeader`. Beyond the KDoc:
+builds a tree past the heap), and 32 levels and 200,000 nodes when walked. All write headers and batch names through
+`ForeignSongHeader`; only OpenSong's sets become setlists. Beyond the KDoc:
 
 - OpenSong: named as it came; section tags become environments or comments; `.` chord rows are set over their lyric rows
   as marked (`ChordSheetConverter.setChordRows`, nothing re-guessed); a block with no chord row is
   `ChordSheetLyrics.escaped`.
+- OpenSong sets (`OpenSongSet`, told by the root element of a file's head): in an archive holding one
+  (`OpenSongArchive`, after the SongbookPro check, the same in both unpacks), every OpenSong song gets a batch name of
+  its own (two "River Song"s in two folders) and each set item points at one by folder and name, then name, then title,
+  an `.ossb`'s `Evening__River Song.ost` matching `Hymns/Evening/` from the innermost folder. An item the archive lacks
+  (and every item of a set picked alone) points at its name within the set, numbered apart, with its title in
+  `ImportedFile.setlistSongTitles` for the domain to find. Items that are no songs are one skipped line per set
+  (`<set>: <items>`), after the archive's files and before its unread entries.
 - OnSong (text-like bytes only): named by its base name; a first chord row means no header unless it is the file's own
   name; a third bare line ends the header; the body is cut at its directive lines, each run converted, kept as inline
   ChordPro, or escaped.

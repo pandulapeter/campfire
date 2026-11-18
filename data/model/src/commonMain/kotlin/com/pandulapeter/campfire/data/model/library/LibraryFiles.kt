@@ -47,11 +47,18 @@ object LibraryFiles {
     val FOREIGN_SONG_EXTENSIONS = listOf(".onsong", ABC_EXTENSION)
 
     /**
-     * The library backups of other apps that are zip archives under a name of their own: SongbookPro's whole-library
-     * `.sbpbackup` and the `.sbp` it shares a set or a song as, and OpenSongApp's `.osb` of its song folders. Named so
-     * that an archive is looked inside when it holds one; a file under any other unknown name is still unpacked when its bytes are a zip archive (see [isZipArchive]).
+     * The setlists of other apps that are text of a format of their own: OpenSongApp's `.osts`, one set's XML, which
+     * OpenSong itself keeps without an extension. Read with the text limit and translated into a setlist by the import.
      */
-    val LIBRARY_BACKUP_EXTENSIONS = listOf(".sbpbackup", ".sbp", ".osb")
+    val FOREIGN_SETLIST_EXTENSIONS = listOf(".osts")
+
+    /**
+     * The library backups of other apps that are zip archives under a name of their own: SongbookPro's whole-library
+     * `.sbpbackup` and the `.sbp` it shares a set or a song as, and OpenSongApp's `.osb` of its song folders, `.osbs` of
+     * its sets, and `.ossb` of one set with its songs. Named so that an archive is looked inside when it holds one; a file
+     * under any other unknown name is still unpacked when its bytes are a zip archive (see [isZipArchive]).
+     */
+    val LIBRARY_BACKUP_EXTENSIONS = listOf(".sbpbackup", ".sbp", ".osb", ".osbs", ".ossb")
 
     /** Document inputs converted locally to ChordPro, never registered as system Open with file types. */
     val DOCUMENT_EXTENSIONS = listOf(".pdf", ".docx")
@@ -65,7 +72,7 @@ object LibraryFiles {
      * put Campfire in the way of every archive and note on the device.
      */
     val IMPORTABLE_EXTENSIONS = SONG_EXTENSIONS + DOCUMENT_EXTENSIONS + LIBRARY_BACKUP_EXTENSIONS + FOREIGN_SONG_EXTENSIONS +
-        listOf(TEXT_EXTENSION, ARCHIVE_EXTENSION, ".json", LEGACY_DOCUMENT_EXTENSION)
+        FOREIGN_SETLIST_EXTENSIONS + listOf(TEXT_EXTENSION, ARCHIVE_EXTENSION, ".json", LEGACY_DOCUMENT_EXTENSION)
 
     /** Whether a file called [name] is unpacked for what it holds by its name alone: a zip, or another app's backup. */
     fun isArchiveFileName(name: String) = (LIBRARY_BACKUP_EXTENSIONS + ARCHIVE_EXTENSION).any { name.endsWith(it, ignoreCase = true) }

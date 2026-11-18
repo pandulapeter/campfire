@@ -27,6 +27,7 @@ import com.pandulapeter.campfire.data.model.importing.UnpackedArchive
 import com.pandulapeter.campfire.data.model.isOutOfSpace
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
+import com.pandulapeter.campfire.data.source.local.implementation.backup.OpenSongArchive
 import com.pandulapeter.campfire.data.source.local.implementation.source.ArchiveEntryPolicy.fileName
 import com.pandulapeter.campfire.data.source.local.implementation.source.ArchiveEntryPolicy.isHidden
 import com.pandulapeter.campfire.data.source.local.implementation.staging.ImportStaging
@@ -137,17 +138,19 @@ internal class StreamingArchiveUnpack(
         val walk = FirstWalk(directory, stagesArchives = depth < ArchiveEntryPolicy.MAX_DEPTH)
         val unread = walk.walk()
         val entries = walk.entries()
-        val files = entries.map { it.toImportedFile() }
-        ArchiveEntryPolicy.backupOf(files, unread)?.let { backup ->
+        val read = entries.map { it.toImportedFile() }
+        ArchiveEntryPolicy.backupOf(read, unread)?.let { backup ->
             entries.mapNotNull { it.staged }.forEach { deleteArchive(it) }
             return Level(files = backup, unread = emptyList(), directorySize = directory.centralDirectorySize)
         }
+        val openSong = OpenSongArchive.read(entries.map { it.name }, read)
+        val files = openSong?.files ?: read
         val images = songImages(directory, entries, unread, walk.declaredSizes)
         // A song naming an archive as its picture or attachment took it, read again as one of those: it is not unpacked.
         entries.filter { it.staged != null && it.name in images.takenEntryNames }.forEach { deleteArchive(it.staged!!) }
         return Level(
             files = ArchiveEntryPolicy.withSongImages(files, entries.map { it.name }, images),
-            unread = ArchiveEntryPolicy.unreadFilesOf(unread, images.takenEntryNames),
+            unread = openSong?.leftOut.orEmpty() + ArchiveEntryPolicy.unreadFilesOf(unread, images.takenEntryNames),
             directorySize = directory.centralDirectorySize,
         )
     }

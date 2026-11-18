@@ -22,7 +22,7 @@ import kotlin.test.fail
  * expectation:
  * - **nothing is dropped silently**: every song and set the backup lists ([BackupListing], read without the importer) is
  *   in the import's plan as a song or a setlist (a set with as many songs as it names), or named among its problems, by
- *   its own entry or by the file it came in;
+ *   its own entry or by the file it came in, which a set of a format the import translates may not be;
  * - **a round trip keeps everything**: the library exported whole and imported into a second empty library gives the
  *   same files by hash.
  *
@@ -79,14 +79,15 @@ class BackupCorpusTest {
     /** What [listing] names that [plan] neither plans nor names among its problems. */
     private fun missing(fileName: String, listing: BackupListing, plan: ImportPlan): List<String> {
         val reported = (plan.skippedFileNames + plan.oversizedFileNames + plan.unreadableDocumentFileNames).toSet()
-        if (fileName in reported) return emptyList()
+        val isReportedWhole = fileName in reported
         val songTitles = plan.songs.map { it.title.folded() }.toMutableList()
         val setlists = plan.setlists.toMutableList()
-        val missingSongs = listing.songs.filterNot { song -> songTitles.remove(song.title.folded()) || song.entryName in reported }.map { it.title }
+        val missingSongs = listing.songs.filterNot { song -> isReportedWhole || songTitles.remove(song.title.folded()) || song.entryName in reported }.map { it.title }
         val missingSets = listing.sets.filterNot { set ->
             val planned = setlists.firstOrNull { set.title == null || it.setlist.title.folded() == set.title.folded() }
             if (planned != null) setlists.remove(planned)
-            (planned != null && (set.songCount == null || planned.setlist.entries.size == set.songCount)) || set.entryName in reported
+            (planned != null && (set.songCount == null || planned.setlist.entries.size == set.songCount)) ||
+                (set.mayBeReported && (isReportedWhole || set.entryName in reported))
         }.map { set -> "${set.title ?: set.entryName} (${set.songCount ?: "?"} songs)" }
         return listOfNotNull(
             missingSongs.takeIf { it.isNotEmpty() }?.let { "${it.size} songs listed but neither planned nor reported: $it" },

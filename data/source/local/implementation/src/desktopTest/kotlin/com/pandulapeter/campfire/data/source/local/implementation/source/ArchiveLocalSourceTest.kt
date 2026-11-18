@@ -171,7 +171,7 @@ class ArchiveLocalSourceTest {
     }
 
     @Test
-    fun `an OpenSongApp backup yields its songs, without its sets and its database`() = runBlocking {
+    fun `an OpenSongApp backup yields its songs and sets without its database`() = runBlocking {
         val song = "<song><title>Riverlight</title><lyrics>[V1]\n.G           D\n Down by the river</lyrics></song>"
         val set = "<set name=\"Sunday\"><slide_groups><slide_group name=\"Riverlight\" type=\"song\"/></slide_groups></set>"
         val backup = ZipWriter.write(
@@ -185,7 +185,7 @@ class ArchiveLocalSourceTest {
 
         val files = archiveLocalSource.unpack(archive = archive, maxSize = ImportLimits.MAX_IMPORT_SIZE)
 
-        assertEquals(listOf("Riverlight.cho", "Sunday", "Songs.db"), files.map { it.name })
+        assertEquals(listOf("Riverlight.cho", "Sunday.setlist.json", "Songs.db"), files.map { it.name })
         assertTrue("[G]Down by the [D]river" in files.first().bytes.decodeToString())
         assertTrue(files.last().bytes.isEmpty())
     }

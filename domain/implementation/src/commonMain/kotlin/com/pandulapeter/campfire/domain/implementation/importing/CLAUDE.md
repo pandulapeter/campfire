@@ -12,7 +12,7 @@
 ### Preparing
 
 - A loose file goes through `ArchiveRepository.songsIn` first: another app's document of songs (JSON, OpenSong,
-  `.onsong`) or an ABC file (`.abc`, or text that reads as ABC) is those songs, before a setlist is tried or an unknown
+  `.onsong`) or an ABC file (`.abc`, or text that reads as ABC) is those songs (an OpenSong set its setlist), before a setlist is tried or an unknown
   name skipped.
 - A file under an unknown name whose bytes read as text (`isPlainTextByContent`) is a song only with
   `ChordSheetStructure.hasSongStructure`, else reported skipped. In a bytes-only archive such an entry, and a `.txt`,
@@ -30,6 +30,10 @@
   date or countdown (parsing gives it today; a replacement keeps the library's), so re-importing the demo setlist finds
   it unchanged. Setlist entries compare as they will be written, resolved first among songs of the same picked file
   (`SongEntry.origin`), since names are unique only within an archive.
+- A setlist from another app's set (OpenSong) names some songs only by title (`ImportedFile.setlistSongTitles`): before
+  planning, `SetlistSongTitles` points each such entry the batch does not resolve at a batch song of that title (its
+  own picked file's first), else a library song's (identity-folded, one not taken by the setlist first), else leaves it
+  missing. The library is read only for such a setlist.
 - An archive (`ImportedFile.isArchive`) reaches the preparation staged (`ImportedFile.staged`): the intake receives it,
   and `ImportWork` stages one a caller read whole. It goes to the streaming unpack, its song texts within the songs'
   budget shared by the batch, its pictures and attachments staged within the disk budget; the in-memory budgets bound

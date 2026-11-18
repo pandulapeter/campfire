@@ -20,6 +20,7 @@ import com.pandulapeter.campfire.data.source.local.implementation.backup.AbcFile
 import com.pandulapeter.campfire.data.source.local.implementation.backup.JsonSongs
 import com.pandulapeter.campfire.data.source.local.implementation.backup.OnSongFile
 import com.pandulapeter.campfire.data.source.local.implementation.backup.OpenSongSong
+import com.pandulapeter.campfire.data.source.local.implementation.backup.OpenSongSet
 import com.pandulapeter.campfire.data.source.local.implementation.backup.SongbookProBackup
 
 /**
@@ -137,8 +138,9 @@ internal object ArchiveEntryPolicy {
      * that it is imported as the file it is: a `.json` that is no setlist, or a text kept for its bytes that starts the
      * way JSON does, and an OpenSong song, a text kept for its bytes (OpenSong names its songs without an extension) or
      * an `.xml` that starts the way XML does, an OnSong `.onsong`, and an ABC `.abc` or a text kept for its bytes that
-     * reads as ABC, one song per tune. Tried after SongbookPro's backup, whose document is read by a reader of its own. A
-     * song is handed over as a `.cho` of the name it came under (an ABC tune's or a JSON song's own title), which is what
+     * reads as ABC, one song per tune. An OpenSong set (an `.osts`, or a text kept for its bytes or an `.xml` whose root
+     * is a set) is the setlist it translates into, its songs found by title (`OpenSongSet.filesOf`). Tried after
+     * SongbookPro's backup, whose document is read by a reader of its own. A song is handed over as a `.cho` of the name it came under (an ABC tune's or a JSON song's own title), which is what
      * it is titled by where it names no title itself, and which the import counts as a song where it decides whether an
      * archive known only by its bytes held anything to import.
      */
@@ -152,6 +154,9 @@ internal object ArchiveEntryPolicy {
             val song = OnSongFile.read(text, fallbackTitle = file.baseName)
             return listOf(ImportedFile(name = file.baseName + LibraryFiles.SONG_EXTENSION, bytes = song.encodeToByteArray()))
         }
+        if (LibraryFiles.FOREIGN_SETLIST_EXTENSIONS.any { file.name.endsWith(it, ignoreCase = true) }) {
+            return OpenSongSet.filesOf(file, file.bytes.decodeLibraryText())
+        }
         val isJsonByName = file.name.endsWith(JSON_EXTENSION, ignoreCase = true) && !file.name.endsWith(LibraryFiles.SETLIST_EXTENSION, ignoreCase = true)
         val isXmlByName = file.name.endsWith(XML_EXTENSION, ignoreCase = true)
         if (!isJsonByName && !isXmlByName && !file.isPlainTextByContent) return null
@@ -160,8 +165,12 @@ internal object ArchiveEntryPolicy {
         if (file.isPlainTextByContent && AbcText.isAbc(text)) return AbcFile.read(text, fallbackTitle = file.baseName).ifEmpty { null }
         return when (text.trimStart().firstOrNull()) {
             '{', '[' -> if (isXmlByName) null else JsonSongs.read(text).ifEmpty { null }
-            '<' -> if (isJsonByName) null else OpenSongSong.read(text, fallbackTitle = file.baseName)?.let { song ->
-                listOf(ImportedFile(name = file.baseName + LibraryFiles.SONG_EXTENSION, bytes = song.encodeToByteArray()))
+            '<' -> when {
+                isJsonByName -> null
+                OpenSongSet.isSet(text) -> OpenSongSet.filesOf(file, text)
+                else -> OpenSongSong.read(text, fallbackTitle = file.baseName)?.let { song ->
+                    listOf(ImportedFile(name = file.baseName + LibraryFiles.SONG_EXTENSION, bytes = song.encodeToByteArray()))
+                }
             }
             else -> if (isJsonByName) JsonSongs.read(text).ifEmpty { null } else null
         }

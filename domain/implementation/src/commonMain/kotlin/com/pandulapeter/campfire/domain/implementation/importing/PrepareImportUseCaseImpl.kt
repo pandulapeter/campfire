@@ -33,6 +33,7 @@ import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.isOutOfSpace
 import com.pandulapeter.campfire.data.model.library.decodeLibraryText
 import com.pandulapeter.campfire.data.model.library.normalizedToNfc
+import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.repository.api.ArchiveRepository
 import com.pandulapeter.campfire.data.repository.api.DocumentRepository
 import com.pandulapeter.campfire.data.repository.api.ImageRepository
@@ -190,7 +191,7 @@ internal class PrepareImportUseCaseImpl(
         val songs = planSongs(songFiles, documentFiles, triage, linkedImages, onProgress)
         return ImportPlan(
             songs = songs,
-            setlists = planSetlists(setlistFiles, triage, ImportPlanner.plannedSongFileNames(songs)),
+            setlists = planSetlists(setlistFiles, triage, songs),
             skippedFileNames = triage.skippedFileNames,
             oversizedFileNames = triage.oversizedFileNames,
             unreadableDocumentFileNames = triage.unreadableDocumentFileNames,
@@ -294,12 +295,18 @@ internal class PrepareImportUseCaseImpl(
         )
     }
 
-    /** Every setlist of the batch held against the library by [ImportPlanner]. */
+    /**
+     * Every setlist of the batch held against the library by [ImportPlanner], one translated from another app's set with
+     * its songs found by title first ([SetlistSongTitles]).
+     */
     private suspend fun planSetlists(
         files: List<IncomingFile>,
         triage: ImportTriage,
-        songFileNames: ImportPlanner.SongFileNames,
+        songs: List<ImportPlan.SongEntry>,
     ): List<ImportPlan.SetlistEntry> {
+        val songFileNames = ImportPlanner.plannedSongFileNames(songs)
+        // Read only for a setlist that has songs to find by title, which no setlist of Campfire's own has.
+        var librarySongs: List<Song>? = null
         val incoming = files.mapNotNull { (file, origin) ->
             yield()
             val parsed = setlistRepository.parseSetlist(file.bytes.decodeLibraryText())
@@ -307,7 +314,17 @@ internal class PrepareImportUseCaseImpl(
                 triage.skippedFileNames += file.name
                 return@mapNotNull null
             }
-            ImportPlanner.IncomingSetlist(setlist = parsed.setlist, sourceFileName = file.name, origin = origin, isDated = parsed.isDated)
+            val titles = file.setlistSongTitles
+            if (titles.isNotEmpty() && librarySongs == null) librarySongs = songRepository.loadSongsIfNeeded().orEmpty()
+            val setlist = SetlistSongTitles.resolved(
+                setlist = parsed.setlist,
+                titles = titles,
+                origin = origin,
+                batchFileNames = songFileNames.forOrigin(origin),
+                songs = songs,
+                librarySongs = librarySongs.orEmpty(),
+            )
+            ImportPlanner.IncomingSetlist(setlist = setlist, sourceFileName = file.name, origin = origin, isDated = parsed.isDated)
         }
         return ImportPlanner.planSetlists(
             incoming = incoming,

@@ -31,6 +31,11 @@ import com.pandulapeter.campfire.data.model.library.LibraryFiles
  *
  * [receiving] is an archive that arrived and is still being copied into the staging folder, its [bytes] empty too: the
  * import's preparation awaits it first, and it becomes a [staged] one then.
+ *
+ * [setlistSongTitles] belong to a setlist translated from another app's set, which names its songs by title rather than
+ * by file: the title each entry's song had there, by the file name the entry points at, for an entry whose song the
+ * archive it came in did not hold. The import looks for it among the batch's other songs and then in the library by
+ * that title, and leaves the entry as a missing song where neither holds one.
  */
 data class ImportedFile(
     val name: String,
@@ -40,6 +45,7 @@ data class ImportedFile(
     val images: List<ImportedImage> = emptyList(),
     val staged: StagedFile? = null,
     val receiving: ReceivingArchive? = null,
+    val setlistSongTitles: Map<String, String> = emptyMap(),
 ) {
 
     /**
@@ -67,12 +73,12 @@ data class ImportedFile(
     override fun equals(other: Any?) = this === other || (
         other is ImportedFile && name == other.name && isTooLarge == other.isTooLarge &&
             isPlainTextByContent == other.isPlainTextByContent && bytes.contentEquals(other.bytes) && images == other.images &&
-            staged == other.staged && receiving == other.receiving
+            staged == other.staged && receiving == other.receiving && setlistSongTitles == other.setlistSongTitles
         )
 
     override fun hashCode() =
         31 * (31 * (31 * (31 * (31 * name.hashCode() + isTooLarge.hashCode()) + isPlainTextByContent.hashCode()) + bytes.contentHashCode()) + images.hashCode()) +
-            31 * staged.hashCode() + receiving.hashCode()
+            31 * (31 * staged.hashCode() + receiving.hashCode()) + setlistSongTitles.hashCode()
 
     companion object {
 

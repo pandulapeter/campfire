@@ -18,6 +18,7 @@ import com.pandulapeter.campfire.data.model.library.ExportSink
 import com.pandulapeter.campfire.data.model.library.PackedArchive
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.source.local.api.ArchiveLocalSource
+import com.pandulapeter.campfire.data.source.local.implementation.backup.OpenSongArchive
 import com.pandulapeter.campfire.data.source.local.implementation.source.ArchiveEntryPolicy.isHidden
 import com.pandulapeter.campfire.data.source.local.implementation.staging.ImportStaging
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.FileStorage
@@ -105,8 +106,10 @@ internal class ArchiveLocalSourceImpl(
             sniffedLimitOf = ArchiveEntryPolicy::sniffedLimitOf,
         )
         inflated.count += content.chargedSize
-        val entries = content.entries.map { entry -> ArchiveEntryPolicy.importedFileOf(entry.name, entry.bytes) }
-        ArchiveEntryPolicy.backupOf(entries, content.unread)?.let { return it }
+        val files = content.entries.map { entry -> ArchiveEntryPolicy.importedFileOf(entry.name, entry.bytes) }
+        ArchiveEntryPolicy.backupOf(files, content.unread)?.let { return it }
+        val openSong = OpenSongArchive.read(content.entries.map { it.name }, files)
+        val entries = openSong?.files ?: files
         val images = ArchiveSongImages.read(
             archive = archive,
             content = content,
@@ -130,7 +133,7 @@ internal class ArchiveLocalSourceImpl(
                 ArchiveEntryPolicy.foreignSongs(file) ?: listOf(file)
             }
         }
-        return read + ArchiveEntryPolicy.unreadFilesOf(content.unread, images.takenEntryNames)
+        return read + openSong?.leftOut.orEmpty() + ArchiveEntryPolicy.unreadFilesOf(content.unread, images.takenEntryNames)
     }
 
     /**

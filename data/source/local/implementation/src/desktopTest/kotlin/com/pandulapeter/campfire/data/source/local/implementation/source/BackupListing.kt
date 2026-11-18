@@ -28,8 +28,11 @@ internal class BackupListing(val songs: List<ListedSong>, val sets: List<ListedS
     /** A song by its title, and the name of the entry or file it is in where it has one of its own. */
     class ListedSong(val title: String, val entryName: String?)
 
-    /** A set by its title where it has one, and how many different songs of the backup it names where that is known. */
-    class ListedSet(val title: String?, val entryName: String?, val songCount: Int?)
+    /**
+     * A set by its title where it has one, and how many different songs it names where that is known. One the import
+     * translates must be planned ([mayBeReported] false); one of a format it does not take may be reported instead.
+     */
+    class ListedSet(val title: String?, val entryName: String?, val songCount: Int?, val mayBeReported: Boolean = true)
 
     companion object {
 
@@ -69,7 +72,7 @@ internal class BackupListing(val songs: List<ListedSong>, val sets: List<ListedS
                 val items = (set["contents"] as? JsonArray).orEmpty().map { it as JsonObject }
                     .filter { !it.isDeleted && (it.text("ItemType") ?: "1") == "1" }
                     .mapNotNull { it.text("SongId")?.takeIf(songIds::contains) }
-                ListedSet(title = details.text("name"), entryName = null, songCount = items.distinct().size)
+                ListedSet(title = details.text("name"), entryName = null, songCount = items.distinct().size, mayBeReported = false)
             }
             return BackupListing(songs = songs.map { ListedSong(title = it.text("name") ?: "untitled", entryName = null) }, sets = sets)
         }
@@ -84,7 +87,18 @@ internal class BackupListing(val songs: List<ListedSong>, val sets: List<ListedS
                 )
                 body.startsWith("<set") -> BackupListing(
                     songs = emptyList(),
-                    sets = listOf(ListedSet(title = SET_NAME.find(body)?.groupValues?.get(1)?.unescaped(), entryName = entryName, songCount = null)),
+                    sets = listOf(
+                        ListedSet(
+                            title = SET_NAME.find(body)?.groupValues?.get(1)?.unescaped(),
+                            entryName = entryName,
+                            // A song is its folder and name: two of one name in two folders are two songs.
+                            songCount = SLIDE_GROUP.findAll(body).map { it.groupValues[1] }
+                                .filter { attribute("type", it) == "song" }
+                                .map { attribute("path", it).orEmpty() to attribute("name", it) }
+                                .distinct().count(),
+                            mayBeReported = false,
+                        ),
+                    ),
                 )
                 else -> null
             }
@@ -106,5 +120,8 @@ internal class BackupListing(val songs: List<ListedSong>, val sets: List<ListedS
         private val XML_DECLARATION = Regex("""^<\?xml[^>]*\?>""")
         private val SONG_TITLE = Regex("""<title>([^<]*)</title>""")
         private val SET_NAME = Regex("""<set[^>]*\sname="([^"]*)"""")
+        private val SLIDE_GROUP = Regex("""<slide_group\b([^>]*)>""")
+
+        private fun attribute(name: String, attributes: String) = Regex("""\s$name="([^"]*)"""").find(attributes)?.groupValues?.get(1)?.unescaped()
     }
 }

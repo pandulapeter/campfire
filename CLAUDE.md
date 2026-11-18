@@ -232,7 +232,8 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
 - Printing and export: `ui/screens/export`, `ui/print`.
 - Documents are converted locally to ChordPro, never uploaded or kept: `data/formats`, `chordsheet`.
 - Other apps' songs and backups are translated locally (SongbookPro, OpenSong and OpenSongApp, OnSong, JSON exports),
-  and ABC tunes into one song each with a chord grid and the tune kept; backups are read as archives:
+  their sets into setlists (an OpenSong set's songs found in its archive, else by title), and ABC tunes into one song
+  each with a chord grid and the tune kept; backups are read as archives:
   `domain/implementation`, `data/source/local/implementation`, `chordpro/abc`.
 - Lyrics and comments may carry `<b>`, `<i>`, and `<u>` markup (or a `<span>` saying the same), drawn on screen and in
   the PDF, toggled by the editor's buttons and Ctrl / Cmd + B, I, and U; other markup tags are hidden, kept in the

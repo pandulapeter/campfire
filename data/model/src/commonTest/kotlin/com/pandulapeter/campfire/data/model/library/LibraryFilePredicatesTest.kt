@@ -30,6 +30,8 @@ class LibraryFilePredicatesTest {
     fun `an archive is known by its extension in any case`() {
         assertTrue(LibraryFiles.isArchiveFileName("Library.SBPBACKUP"))
         assertTrue(LibraryFiles.isArchiveFileName("set.sbp"))
+        assertTrue(LibraryFiles.isArchiveFileName("Sets.OSBS"))
+        assertTrue(LibraryFiles.isArchiveFileName("World Night.ossb"))
         assertTrue(LibraryFiles.isArchiveFileName("Songs.ZIP"))
         assertFalse(LibraryFiles.isArchiveFileName("song.docx"))
         assertFalse(LibraryFiles.isArchiveFileName("zip"))
@@ -37,7 +39,7 @@ class LibraryFilePredicatesTest {
 
     @Test
     fun `an importable file is known by its extension in any case`() {
-        listOf("song.CHO", "song.chordpro", "notes.txt", "Sheet.PDF", "sheet.docx", "old.doc", "backup.json", "Library.sbpbackup", "songs.zip", "Song.onsong", "Tunes.ABC")
+        listOf("song.CHO", "song.chordpro", "notes.txt", "Sheet.PDF", "sheet.docx", "old.doc", "backup.json", "Library.sbpbackup", "songs.zip", "Song.onsong", "Tunes.ABC", "World Night.osts")
             .forEach { assertTrue(LibraryFiles.isImportableFileName(it), it) }
         listOf("cover.jpg", "song.cho.bak", "README").forEach { assertFalse(LibraryFiles.isImportableFileName(it), it) }
     }
