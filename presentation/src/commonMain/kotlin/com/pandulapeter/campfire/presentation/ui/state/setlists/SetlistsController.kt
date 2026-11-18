@@ -19,6 +19,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.pandulapeter.campfire.data.model.DataState
+import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
@@ -226,7 +227,7 @@ internal class SetlistsController(
 
     fun addSongToSetlist(songFileName: String, setlistFileName: String) = messageSink.launchLibraryChange("add a song to a setlist") {
         updateEditableSetlist(setlistFileName) { setlist ->
-            if (setlist.entries.none { it.songFileName == songFileName }) {
+            if (setlist.entries.none { LibraryFiles.isSameLibraryName(it.songFileName, songFileName) }) {
                 setlist.copy(entries = setlist.entries + newSetlistEntry(songFileName, userPreferences.value))
             } else {
                 setlist
@@ -311,7 +312,9 @@ internal class SetlistsController(
 
     /** The transposition of the song travels in the entry, so removing it takes the transposition with it. */
     fun removeSongFromSetlist(songFileName: String, setlistFileName: String) = messageSink.launchLibraryChange("remove a song from a setlist") {
-        updateEditableSetlist(setlistFileName) { setlist -> setlist.copy(entries = setlist.entries.filterNot { it.songFileName == songFileName }) }
+        updateEditableSetlist(setlistFileName) { setlist ->
+            setlist.copy(entries = setlist.entries.filterNot { LibraryFiles.isSameLibraryName(it.songFileName, songFileName) })
+        }
     }
 
     /**

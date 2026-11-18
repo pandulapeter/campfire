@@ -78,6 +78,15 @@ internal class SetlistEntryEditsTest {
         setlist.withSongsTakenOut(setOf("a", "c", "x")).entries,
     )
 
+    @Test
+    fun `a song spelt differently from the setlist's entry is found by identity and the entry keeps its spelling`() {
+        val spelt = setlist.copy(entries = listOf(Setlist.Entry(songFileName = "A.cho", transposition = 3)))
+        assertSame(spelt, spelt.withSongTicked(songFileName = "a.cho", isTicked = true, preferences = null))
+        assertSame(spelt, spelt.withSongsAdded(listOf("a.cho"), preferences = null))
+        assertEquals(emptyList(), spelt.withSongTicked(songFileName = "a.cho", isTicked = false, preferences = null).entries)
+        assertEquals(emptyList(), spelt.withSongsTakenOut(setOf("a.cho")).entries)
+    }
+
     private val library = testPreferences().copy(
         transpositions = mapOf("d" to -2, "b" to 5),
         tempos = mapOf("d" to 96),

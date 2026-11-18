@@ -9,15 +9,17 @@
  */
 package com.pandulapeter.campfire.presentation.ui.playing
 
+import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.setlist.Setlist
 
 /**
  * The setlist with [change] applied to the entry of [songFileName], or null where it has none: a song a sync run took
- * out of the setlist while its screen stayed open. Each caller decides what that means for it.
+ * out of the setlist while its screen stayed open. Each caller decides what that means for it. The entry is found by
+ * identity, as the screen names the song the way the library spells it, and keeps the spelling of the file.
  */
 internal fun Setlist.withEntry(songFileName: String, change: (Setlist.Entry) -> Setlist.Entry): Setlist? =
-    if (entries.none { it.songFileName == songFileName }) {
+    if (entries.none { LibraryFiles.isSameLibraryName(it.songFileName, songFileName) }) {
         null
     } else {
-        copy(entries = entries.map { entry -> if (entry.songFileName == songFileName) change(entry) else entry })
+        copy(entries = entries.map { entry -> if (LibraryFiles.isSameLibraryName(entry.songFileName, songFileName)) change(entry) else entry })
     }

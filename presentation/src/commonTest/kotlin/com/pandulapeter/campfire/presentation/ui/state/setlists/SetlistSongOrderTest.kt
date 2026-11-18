@@ -41,6 +41,12 @@ class SetlistSongOrderTest {
         assertEquals(listOf(c, a, b), setlist(a, b, c).withSongOrder(listOf("c.cho", "unknown.cho", "a.cho", "b.cho")).entries)
     }
 
+    @Test
+    fun `an entry spelt differently from the library is moved and keeps its spelling`() {
+        val spelt = Setlist.Entry(songFileName = "B.cho", tempo = 90)
+        assertEquals(listOf(c, a, spelt), setlist(a, spelt, c).withSongOrder(listOf("c.cho", "a.cho", "b.cho")).entries)
+    }
+
     private fun names(vararg entries: Setlist.Entry) = entries.map { it.songFileName }
 
     private fun setlist(vararg entries: Setlist.Entry) = Setlist(

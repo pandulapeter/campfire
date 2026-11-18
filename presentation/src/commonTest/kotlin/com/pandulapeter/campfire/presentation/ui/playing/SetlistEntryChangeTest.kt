@@ -34,5 +34,11 @@ class SetlistEntryChangeTest {
     )
 
     @Test
+    fun `the entry of a song spelt as the library spells it is changed and keeps the file's spelling`() = assertEquals(
+        listOf(Setlist.Entry(songFileName = "a.cho"), Setlist.Entry(songFileName = "b.cho", capo = 2, tempo = 90)),
+        setlist.withEntry("B.cho") { it.copy(tempo = 90) }?.entries,
+    )
+
+    @Test
     fun `a song the setlist does not hold is no change`() = assertNull(setlist.withEntry("c.cho") { it.copy(tempo = 90) })
 }

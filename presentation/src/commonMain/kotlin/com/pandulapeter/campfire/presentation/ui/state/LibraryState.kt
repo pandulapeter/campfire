@@ -76,7 +76,10 @@ internal class LibraryState(
         .map { it.isLoading }
         .asState(scope, true)
 
-    val setlists = screenData.map { it.data?.setlists.orEmpty() }.asState(scope, emptyList())
+    /** Every setlist, its entries naming their songs as the library does ([setlistsSpeltAsLibrary]). */
+    val setlists = screenData
+        .map { setlistsSpeltAsLibrary(setlists = it.data?.setlists.orEmpty(), songs = it.data?.unfilteredSongs.orEmpty()) }
+        .asState(scope, emptyList())
 
     /**
      * The file names of every song that is in at least one setlist, which is what decides whether the "add to

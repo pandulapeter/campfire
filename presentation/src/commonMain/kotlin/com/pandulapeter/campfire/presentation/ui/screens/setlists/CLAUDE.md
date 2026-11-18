@@ -65,3 +65,6 @@
   archived; its pressed pill is drawn in an outset, so the label stands where it would without it. The running time
   sums the songs' `{duration}`s (`+` where some have none).
 - Sorting by date puts the latest day first, same-day setlists by title.
+- An entry finds its song by identity (case and Unicode form folded): the app reads every setlist with its entries
+  respelt as the library's files (`state/SetlistSpellings.kt`), and every write finds the entry by identity in the
+  file, whose spelling stays.
