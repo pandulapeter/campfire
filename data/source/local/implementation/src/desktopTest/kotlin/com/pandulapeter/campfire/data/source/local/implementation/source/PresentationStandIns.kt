@@ -13,7 +13,7 @@ import com.pandulapeter.campfire.data.model.sync.SystemBrowser
 import org.koin.core.annotation.Module
 import org.koin.core.annotation.Single
 
-/** What `:presentation` provides the data modules, for [ImportPathApp]'s graph; no import reaches it. */
+/** What `:presentation` provides the data modules, for [ImportApp]'s graph; no import reaches it. */
 @Module
 object PresentationStandIns {
 

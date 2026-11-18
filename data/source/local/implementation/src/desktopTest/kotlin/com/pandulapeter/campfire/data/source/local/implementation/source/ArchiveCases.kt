@@ -19,20 +19,20 @@ import java.lang.reflect.InvocationTargetException
 import kotlin.random.Random
 
 /** An archive to import, under the [name] it is picked as, and the same content without ZIP64 where it has one. */
-internal class ParityArchive(val label: String, val name: String, val bytes: ByteArray, val twin: ByteArray? = null)
+internal class ArchiveCase(val label: String, val name: String, val bytes: ByteArray, val twin: ByteArray? = null)
 
 /**
- * Every archive `ArchivePathParityTest` imports: the archives the unpack tests build, the committed fixtures, and the
+ * Every archive `ArchiveImportTest` imports: the archives the unpack tests build, the committed fixtures, and the
  * private corpus.
  */
-internal object ParityArchives {
+internal object ArchiveCases {
 
     /**
      * Every archive the unpack tests hand an [ArchiveUnpacks], recorded while each of their tests runs, so that a case
      * added there is imported whole here without a second list to keep in step. Run by reflection, each in
      * a new instance with its `@BeforeTest` and `@AfterTest`, as the test runner runs them.
      */
-    fun recorded(): List<ParityArchive> {
+    fun recorded(): List<ArchiveCase> {
         val archives = linkedMapOf<String, ByteArray>()
         archiveRecorder = { archive -> archives.putIfAbsent(Sha256.hashToHex(archive), archive.copyOf()) }
         try {
@@ -40,7 +40,7 @@ internal object ParityArchives {
         } finally {
             archiveRecorder = null
         }
-        return archives.values.mapIndexed { index, bytes -> ParityArchive(label = "recorded #$index", name = "archive.zip", bytes = bytes) }
+        return archives.values.mapIndexed { index, bytes -> ArchiveCase(label = "recorded #$index", name = "archive.zip", bytes = bytes) }
     }
 
     private fun runEveryTest(testClass: Class<*>) {
@@ -65,7 +65,7 @@ internal object ParityArchives {
      * attachments, setlists, and picture links; other apps' backups beside them; and archives of many megabytes of
      * pictures and attachments, built here since no unpack test may hold that much.
      */
-    suspend fun built(): List<ParityArchive> {
+    suspend fun built(): List<ArchiveCase> {
         val pictures = (0 until 4).map { TestPictures.png(seed = it, size = 3_000 + it * 500) }
         val text = { index: Int, extra: String -> "{title: Song $index}\n{artist: Band}\n{image: src=images/p$index.png}\n$extra[C]La la [G]la\n" }
         val library = ZipWriter.write(
@@ -97,13 +97,13 @@ internal object ParityArchives {
             ),
         )
         return listOf(
-            ParityArchive("a library export", "library.zip", library),
-            ParityArchive("a SongbookPro backup", "Library.sbpbackup", songbookPro),
-            ParityArchive("a library beside a backup in an archive", "everything.zip", nested),
-            ParityArchive("pictures past 64 MiB", "photos.zip", pastPictureBudget()),
-            ParityArchive("attachments past 50 MiB", "recordings.zip", pastAttachmentBudget()),
-            ParityArchive("a nested archive lying about its size", "lie.zip", nestedArchiveLyingAboutItsSize()),
-            ParityArchive("pictures lying about their size", "lies.zip", picturesLyingAboutTheirSize()),
+            ArchiveCase("a library export", "library.zip", library),
+            ArchiveCase("a SongbookPro backup", "Library.sbpbackup", songbookPro),
+            ArchiveCase("a library beside a backup in an archive", "everything.zip", nested),
+            ArchiveCase("pictures past 64 MiB", "photos.zip", pastPictureBudget()),
+            ArchiveCase("attachments past 50 MiB", "recordings.zip", pastAttachmentBudget()),
+            ArchiveCase("a nested archive lying about its size", "lie.zip", nestedArchiveLyingAboutItsSize()),
+            ArchiveCase("pictures lying about their size", "lies.zip", picturesLyingAboutTheirSize()),
         ) + upgradeFixtures()
     }
 
@@ -129,7 +129,7 @@ internal object ParityArchives {
 
     /**
      * A few hundred bytes: a song, and a nested archive whose central directory declares nearly 4 GB, which its 118
-     * bytes cannot hold, and which is more than the phone-like free space [ImportPathApp] reports.
+     * bytes cannot hold, and which is more than the phone-like free space [ImportApp] reports.
      */
     private suspend fun nestedArchiveLyingAboutItsSize(): ByteArray {
         val inner = ZipWriter.write(listOf(ZipEntry("b.cho", "{title: B}".encodeToByteArray())))
@@ -149,14 +149,14 @@ internal object ParityArchives {
     private suspend fun upgradeFixtures() = listOf("upgrade-5.2.0", "upgrade-5.4.0").mapNotNull { fixture ->
         val library = File(File(checkNotNull(javaClass.classLoader.getResource(fixture)).toURI()), "library").takeIf { it.isDirectory } ?: return@mapNotNull null
         val entries = library.walkTopDown().filter { it.isFile }.sortedBy { it.path }.map { ZipEntry(it.relativeTo(library).invariantSeparatorsPath, it.readBytes()) }.toList()
-        ParityArchive("the $fixture library", "$fixture.zip", ZipWriter.write(entries))
+        ArchiveCase("the $fixture library", "$fixture.zip", ZipWriter.write(entries))
     }
 
     /**
      * The small ZIP64 archives real tools wrote (`RealWriterArchives` in `:data:formats`' tests, whose source the build
      * names), each beside its twin without ZIP64; the archives past 4 GiB there are sparse descriptions, not archives.
      */
-    fun realWriters(): List<ParityArchive> {
+    fun realWriters(): List<ArchiveCase> {
         val source = File(checkNotNull(System.getProperty("realWriterArchives")) { "The build names RealWriterArchives.kt" }).readText()
         fun hex(name: String): ByteArray {
             val body = Regex("const val $name =\\s*((?:\"[0-9a-f]*\"\\s*\\+?\\s*)+)").find(source)?.groupValues?.get(1) ?: error("No $name in RealWriterArchives.kt")
@@ -166,8 +166,8 @@ internal object ParityArchives {
         val pairs = listOf("INFO_ZIP" to "INFO_ZIP_ZIP64", "INFO_ZIP_STREAMED" to "INFO_ZIP_ZIP64_STREAMED", "PYTHON" to "PYTHON_ZIP64")
         return pairs.flatMap { (twin, zip64) ->
             listOf(
-                ParityArchive(label = twin, name = "${twin.lowercase()}.zip", bytes = hex(twin)),
-                ParityArchive(label = zip64, name = "${twin.lowercase()}.zip", bytes = hex(zip64), twin = hex(twin)),
+                ArchiveCase(label = twin, name = "${twin.lowercase()}.zip", bytes = hex(twin)),
+                ArchiveCase(label = zip64, name = "${twin.lowercase()}.zip", bytes = hex(zip64), twin = hex(twin)),
             )
         }
     }
@@ -178,19 +178,19 @@ internal object ParityArchives {
      * each of its folders packed into an archive and every folder's archive packed into one more, so that real documents
      * and their songs are imported inside archives and nested ones too.
      */
-    suspend fun corpus(corpus: File): List<ParityArchive> {
+    suspend fun corpus(corpus: File): List<ArchiveCase> {
         fun visible(file: File) = !file.name.startsWith(".")
         val files = corpus.walkTopDown().onEnter(::visible).filter { it.isFile && visible(it) }.sortedBy { it.path }.toList()
         val archiveLike = files.filter { file ->
             LibraryFiles.isArchiveFileName(file.name) || (!LibraryFiles.isDocumentFileName(file.name) && LibraryFiles.isZipArchive(file.readBytes()))
-        }.map { ParityArchive(label = "corpus ${it.relativeTo(corpus).invariantSeparatorsPath}", name = it.name, bytes = it.readBytes()) }
+        }.map { ArchiveCase(label = "corpus ${it.relativeTo(corpus).invariantSeparatorsPath}", name = it.name, bytes = it.readBytes()) }
         val folders = corpus.listFiles().orEmpty().filter { it.isDirectory && visible(it) }.sortedBy { it.name }.map { folder ->
             val entries = files.filter { it.startsWith(folder) }.map { ZipEntry(it.relativeTo(corpus).invariantSeparatorsPath, it.readBytes()) }
-            ParityArchive(label = "corpus folder ${folder.name} packed", name = "${folder.name}.zip", bytes = ZipWriter.write(entries))
+            ArchiveCase(label = "corpus folder ${folder.name} packed", name = "${folder.name}.zip", bytes = ZipWriter.write(entries))
         }
         val whole = ZipWriter.write(folders.map { ZipEntry("corpus/${it.name}", it.bytes) })
         return archiveLike + folders + listOfNotNull(
-            ParityArchive(label = "corpus folders packed into one", name = "corpus.zip", bytes = whole).takeIf { whole.size <= ImportLimits.MAX_ARCHIVE_SIZE },
+            ArchiveCase(label = "corpus folders packed into one", name = "corpus.zip", bytes = whole).takeIf { whole.size <= ImportLimits.MAX_ARCHIVE_SIZE },
         )
     }
 

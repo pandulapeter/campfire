@@ -24,7 +24,7 @@ class JustChordsImportTest {
 
     @Test
     fun `a picked JustChords export imports the songs it holds`() = runBlocking {
-        ImportPathApp().use { app ->
+        ImportApp().use { app ->
             val outcome = app.importPicked(name = "World Night.justchords", bytes = EXPORT.encodeToByteArray())
 
             assertEquals(null, outcome.failure)

@@ -16,12 +16,12 @@ import kotlin.test.fail
 
 /**
  * Imports an archive as the app imports one: received into the staging folder, through the review's plan and Import into
- * an empty library of its own ([ImportPathApp]), twice, on two devices, which must come to the same plan, result, and
+ * an empty library of its own ([ImportApp]), twice, on two devices, which must come to the same plan, result, and
  * library, since content decides what an import makes of an archive and never the session staging it. The preparation
  * never fails for an archive within a phone's free space, and the staging folder is empty once the import settles. A ZIP64
  * archive must import as the same content without ZIP64 does ([Zip64Twin]), unless it is skipped whole as damaged.
  */
-internal class ArchivePathParity {
+internal class ArchiveImportCheck {
 
     enum class Verdict { IMPORTED, ZIP64_READ_AS_TWIN }
 
@@ -34,10 +34,10 @@ internal class ArchivePathParity {
     var songsPlanned = 0
         private set
 
-    suspend fun check(archive: ParityArchive): Verdict = judge(archive).also { verdicts[it] = (verdicts[it] ?: 0) + 1 }
+    suspend fun check(archive: ArchiveCase): Verdict = judge(archive).also { verdicts[it] = (verdicts[it] ?: 0) + 1 }
 
     /** Every one of [archives] checked, failing once all have been, with each failure found, so one run shows them all. */
-    suspend fun checkAll(archives: List<ParityArchive>) {
+    suspend fun checkAll(archives: List<ArchiveCase>) {
         val failures = archives.mapNotNull { archive ->
             try {
                 check(archive)
@@ -51,7 +51,7 @@ internal class ArchivePathParity {
         }
     }
 
-    private suspend fun judge(archive: ParityArchive): Verdict {
+    private suspend fun judge(archive: ArchiveCase): Verdict {
         val label = archive.label
         val outcome = imported(label, archive.name, archive.bytes).also { outcomes[label] = it }
         songsPlanned += outcome.plan?.songs?.size ?: 0
@@ -64,7 +64,7 @@ internal class ArchivePathParity {
             return Verdict.IMPORTED
         }
         assertTrue(!hasZip64EndRecord(twin), "$label: its twin has no ZIP64")
-        val twinArchive = ParityArchive(label = "$label, its twin without ZIP64", name = archive.name, bytes = twin)
+        val twinArchive = ArchiveCase(label = "$label, its twin without ZIP64", name = archive.name, bytes = twin)
         judge(twinArchive)
         val twinOutcome = imported(twinArchive.label, archive.name, twin)
         if (isSkippedWhole && twinOutcome != outcome) return Verdict.IMPORTED
@@ -79,9 +79,9 @@ internal class ArchivePathParity {
 
     /** [bytes] imported on two devices, which must agree, and that the preparation did not fail. */
     private suspend fun imported(label: String, name: String, bytes: ByteArray): ImportOutcome {
-        val outcome = ImportPathApp().use { it.import(name = name, archive = bytes, isStaged = true) }
+        val outcome = ImportApp().use { it.import(name = name, archive = bytes) }
         assertNull(outcome.failure, "$label: the preparation failed")
-        val again = ImportPathApp().use { it.import(name = name, archive = bytes, isStaged = true) }
+        val again = ImportApp().use { it.import(name = name, archive = bytes) }
         assertEquals(outcome, again, "$label: two imports of the same archive differ")
         return outcome
     }

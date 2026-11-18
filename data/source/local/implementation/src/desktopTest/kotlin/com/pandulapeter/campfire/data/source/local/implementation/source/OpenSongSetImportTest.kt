@@ -111,7 +111,7 @@ class OpenSongSetImportTest {
 
     @Test
     fun `a set picked on its own points at the library's songs of its titles`() = runBlocking {
-        ImportPathApp().use { app ->
+        ImportApp().use { app ->
             app.importPicked(name = "river.cho", bytes = "{title: River Song}\n{artist: Anna Bell}\n[A]Water".encodeToByteArray())
 
             val outcome = app.importPicked(name = "World Night.osts", bytes = set(name = "World Night", *WORLD_NIGHT).encodeToByteArray())

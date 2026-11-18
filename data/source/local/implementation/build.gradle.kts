@@ -36,7 +36,7 @@ kotlin {
             implementation(libs.kotlin.serialization.json)
         }
         // The import's planner and its writes over this module's real sources, wired as the app wires them, for
-        // ArchivePathParityTest, which holds the streaming archive import to the in-memory one.
+        // ArchiveImportTest and the other tests importing through the whole graph.
         named("desktopTest").dependencies {
             implementation(project(":data:repository:api"))
             implementation(project(":data:repository:implementation"))

@@ -56,7 +56,7 @@ class BackupCorpusTest {
     private suspend fun check(file: File): Result {
         val bytes = file.readBytes()
         val listing = BackupListing.of(file.name, bytes)
-        return ImportPathApp().use { first ->
+        return ImportApp().use { first ->
             val outcome = first.importPicked(name = file.name, bytes = bytes)
             val plan = outcome.plan ?: return Result(failures = listOf("the import failed: ${outcome.failure}"), summary = "")
             val summary = (listing?.let { "${it.songs.size} songs and ${it.sets.size} sets listed, " }.orEmpty()) + "${plan.songs.size} songs and " +
@@ -64,7 +64,7 @@ class BackupCorpusTest {
             val failures = listing?.let { missing(file.name, it, plan) }.orEmpty().toMutableList()
             if (outcome.library.isNotEmpty()) {
                 val export = first.exportLibrary()
-                val again = ImportPathApp().use { second -> second.importPicked(name = "export.zip", bytes = export) }
+                val again = ImportApp().use { second -> second.importPicked(name = "export.zip", bytes = export) }
                 if (again.library != outcome.library) {
                     val lost = outcome.library.keys - again.library.keys
                     val gained = again.library.keys - outcome.library.keys

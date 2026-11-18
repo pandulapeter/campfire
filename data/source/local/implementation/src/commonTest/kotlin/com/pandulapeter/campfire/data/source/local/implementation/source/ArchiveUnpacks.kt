@@ -66,7 +66,7 @@ internal class ArchiveUnpacks(val storage: FileStorage = InMemoryFileStorage()) 
 }
 
 /**
- * Handed every archive an [ArchiveUnpacks] stages while it is set, so that `ArchivePathParityTest` can run every archive
+ * Handed every archive an [ArchiveUnpacks] stages while it is set, so that `ArchiveImportTest` can run every archive
  * the unpack tests build through the whole import without a second list of them to keep in step.
  */
 internal var archiveRecorder: ((ByteArray) -> Unit)? = null

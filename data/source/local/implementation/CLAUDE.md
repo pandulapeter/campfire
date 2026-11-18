@@ -154,8 +154,8 @@ it; iOS marks the folder) and no sync, and is emptied of other sessions' names o
   library never looks empty.
 - Documents: 16 MiB limit. `ImportCorpusTest` (desktop) scores the import against the private corpus that
   `campfire.importCorpus` names, writing its report into the corpus's `.runs/`; blank skips it.
-- `ArchivePathParityTest` (desktop) imports archives as the app does, each staged into an empty library of its own
-  over the app's whole data and domain graph (`ImportPathApp`), twice, which must give the same plan, result, and
+- `ArchiveImportTest` (desktop) imports archives as the app does, each staged into an empty library of its own
+  over the app's whole data and domain graph (`ImportApp`), twice, which must give the same plan, result, and
   library files, with no failure and nothing left in `imports/`; a ZIP64 archive must import as its twin without it
   (`Zip64Twin`). Its archives: every one the unpack tests hand `ArchiveUnpacks` (recorded by running those tests),
   libraries and backups built there, the real writers' ZIP64 archives, seeded mutants, and under

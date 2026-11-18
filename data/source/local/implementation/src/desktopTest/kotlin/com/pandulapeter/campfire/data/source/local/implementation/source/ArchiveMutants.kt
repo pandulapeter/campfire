@@ -18,7 +18,7 @@ import kotlin.random.Random
  */
 internal object ArchiveMutants {
 
-    fun of(archive: ParityArchive, count: Int, seed: Int): List<ParityArchive> {
+    fun of(archive: ArchiveCase, count: Int, seed: Int): List<ArchiveCase> {
         val random = Random(seed)
         return (0 until count).map { index ->
             val bytes = archive.bytes.copyOf()
@@ -31,7 +31,7 @@ internal object ArchiveMutants {
                 3 -> bytes.fill(tail + random.nextInt(bytes.size - tail), 0, length = 2 + 2 * random.nextInt(2))
             }
             val mutated = if (kind == 4) bytes.copyOf(random.nextInt(bytes.size)) else bytes
-            ParityArchive(label = "${archive.label}, mutant $index", name = archive.name, bytes = mutated)
+            ArchiveCase(label = "${archive.label}, mutant $index", name = archive.name, bytes = mutated)
         }
     }
 

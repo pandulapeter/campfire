@@ -36,17 +36,17 @@ import kotlin.test.fail
 /**
  * One device with an empty library in a folder of its own, wired as the app wires it (every data module and the domain's
  * use cases over a [JvmFileStorage]), but for the network: a picture an imported song names by its address is answered
- * by [LinkedPictures] rather than downloaded. [import] takes an archive the way a picked file reaches the import, held in
- * memory or received into the staging folder, through the review's preparation and Import with every entry chosen, and
- * then settles it as the app does.
+ * by [LinkedPictures] rather than downloaded. [import] takes an archive the way a picked file reaches the import,
+ * received into the staging folder, through the review's preparation and Import with every entry chosen, and then
+ * settles it as the app does.
  */
-internal class ImportPathApp : AutoCloseable {
+internal class ImportApp : AutoCloseable {
 
-    private val root: File = Files.createTempDirectory("campfire-import-path").toFile()
+    private val root: File = Files.createTempDirectory("campfire-import").toFile()
 
     /**
-     * As much free space as a phone often has, whatever this machine has, so that what the streaming path sets aside
-     * for an archive is judged against a phone's room, as the import would judge it there.
+     * As much free space as a phone often has, whatever this machine has, so that what the import sets aside for an
+     * archive is judged against a phone's room, as it would be judged there.
      */
     private val storage = object : FileStorage by JvmFileStorage(root) {
         override suspend fun availableSpace(directory: StorageDirectory) = PHONE_FREE_SPACE
@@ -54,17 +54,13 @@ internal class ImportPathApp : AutoCloseable {
     private val koinApplication = importGraph(storage = storage, downloads = LinkedPictures)
     private val koin = koinApplication.koin
 
-    suspend fun import(name: String, archive: ByteArray, isStaged: Boolean): ImportOutcome {
-        val staged = if (isStaged) {
-            koin.get<ImportStagingLocalSource>().receiveArchive(announcedSize = archive.size.toLong()).run {
-                write(archive, 0, archive.size)
-                finish()
-            }
-        } else {
-            null
+    /** [archive] received into the staging folder, as the intake receives one, and imported. */
+    suspend fun import(name: String, archive: ByteArray): ImportOutcome {
+        val staged = koin.get<ImportStagingLocalSource>().receiveArchive(announcedSize = archive.size.toLong()).run {
+            write(archive, 0, archive.size)
+            finish()
         }
-        val file = if (staged == null) ImportedFile(name = name, bytes = archive) else ImportedFile(name = name, bytes = ByteArray(0), staged = staged)
-        return importFile(file)
+        return importFile(ImportedFile(name = name, bytes = ByteArray(0), staged = staged))
     }
 
     /**
@@ -74,7 +70,7 @@ internal class ImportPathApp : AutoCloseable {
     suspend fun importPicked(name: String, bytes: ByteArray): ImportOutcome {
         val head = bytes.copyOf(minOf(bytes.size, ImportLimits.SNIFF_LENGTH))
         return when (val decision = ImportIntake.decide(name = name, size = bytes.size.toLong(), head = head)) {
-            ImportIntake.Decision.Stage -> import(name = name, archive = bytes, isStaged = true)
+            ImportIntake.Decision.Stage -> import(name = name, archive = bytes)
             is ImportIntake.Decision.LeaveUnread -> importFile(ImportedFile.unread(name, isTooLarge = decision.isTooLarge))
             is ImportIntake.Decision.ReadWhole -> importFile(ImportBudget().read(name = name, size = bytes.size.toLong()) { bytes } ?: fail("$name was not read"))
         }
@@ -125,7 +121,7 @@ internal class ImportPathApp : AutoCloseable {
     }
 
     /**
-     * Each address answered with a small picture of its own, the same for both paths, so that the pictures songs name by
+     * Each address answered with a small picture of its own, the same on every device, so that the pictures songs name by
      * address are planned and written as the app would plan them, and charged against the same budgets.
      */
     private object LinkedPictures : ImportDownloadRepository {
