@@ -97,15 +97,14 @@ asserts behaviour (what a device, the folder, or a link holds), never which call
   attachments within the budget.
 - `SimulatedSharing`, inside the simulation: a share stops only where a user deleted the item under a name it had, and
   settled, every live copy's song is the folder's file and carries exactly the pictures its song names.
+- `SharedCopyParityTest` (`localTest/`, step 7): over generated libraries on the app's whole graph, the first run after
+  a share uploads no copy again (the export and `SharedCopySync.build` make the same bytes), each copy's entry list is
+  exactly the item, the setlist's songs the library holds under any spelling, and the files they name within the
+  budgets, each song the library's text in UTF-8 but for the lines of attachments left out, and editing a song nothing
+  shared names changes no copy.
 
 ### Shared links: not proven
 
-- **No test asserts that a copy holds nothing else.** The tests check that what belongs is present (`"[images/…]" in
-  copy`) and ordered; none compares a copy's whole entry list with what the user chose, so an extra song, picture, or
-  file would pass.
-- **The two builders are never compared.** The first copy comes from the export use cases (`:domain:implementation`),
-  every later one from `SharedCopySync.build`; they are meant to give the same bytes for the same files, and each is
-  tested only against its own examples.
 - **Explicit stops never meet another device.** `SimulatedSharing` shares, renames, and deletes, but never presses Stop
   sharing or Stop sharing everything, so nothing checks that a stopped copy never comes back when another device's run
   read the list before the stop (it uploads with the revision it listed: a `Conflict` in the fake, unmeasured on
@@ -237,6 +236,10 @@ synced.
 - **Expected to find**: little in the entries; a byte difference between the builders (an upload on the first run
   after every share) is the likelier find, a cost rather than a leak, fixed all the same.
 - **Done**: 200 seeds in CI, 10,000 by hand.
+
+**Landed.** It found the builders apart on a song stored with a byte order mark or in Windows-1252 (the export writes
+text as UTF-8, sync wrote the file's bytes) and on a setlist spelling a song differently where names are exact (the
+export left it out); both now agree, each fix with a test of its own. Copies hold the library's text in UTF-8.
 
 ### 8. The corpus gathers real backups (the owner)
 

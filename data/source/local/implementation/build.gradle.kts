@@ -54,6 +54,9 @@ kotlin {
 tasks.named<Test>("desktopTest") {
     val corpus = project.property("campfire.importCorpus").toString()
     systemProperty("campfire.importCorpus", corpus)
+    val sharedCopyParitySeeds = project.property("campfire.sharedCopyParitySeeds").toString()
+    systemProperty("campfire.sharedCopyParitySeeds", sharedCopyParitySeeds)
+    inputs.property("sharedCopyParitySeeds", sharedCopyParitySeeds)
     // The ZIP64 archives real tools wrote, kept as hex in :data:formats' tests, which no other module's tests can see.
     val realWriterArchives = rootProject.file("data/formats/src/commonTest/kotlin/com/pandulapeter/campfire/data/formats/zip/RealWriterArchives.kt")
     systemProperty("realWriterArchives", realWriterArchives.absolutePath)

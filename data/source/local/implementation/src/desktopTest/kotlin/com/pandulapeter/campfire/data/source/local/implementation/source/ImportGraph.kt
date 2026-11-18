@@ -17,15 +17,17 @@ import com.pandulapeter.campfire.data.source.local.implementation.storage.file.F
 import com.pandulapeter.campfire.data.source.remote.implementation.DataRemoteSourceModule
 import com.pandulapeter.campfire.data.sync.implementation.DataSyncModule
 import com.pandulapeter.campfire.domain.implementation.DomainModule
+import org.koin.core.module.Module
 import org.koin.dsl.koinApplication
 import org.koin.dsl.module
 import org.koin.plugin.module.dsl.modules
 
 /**
  * The app's data modules and the domain's use cases over [storage], as the app wires them, but for the network, whose
- * downloads [downloads] answers: one process of the app, its own staging session included.
+ * downloads [downloads] answers: one process of the app, its own staging session included. [overrides] defines more in
+ * place of the app's modules, such as the cloud folder sync talks to.
  */
-internal fun importGraph(storage: FileStorage, downloads: ImportDownloadRepository) = koinApplication {
+internal fun importGraph(storage: FileStorage, downloads: ImportDownloadRepository, overrides: Module.() -> Unit = {}) = koinApplication {
     modules(
         DataLocalSourceModule::class,
         DataRemoteSourceModule::class,
@@ -40,6 +42,7 @@ internal fun importGraph(storage: FileStorage, downloads: ImportDownloadReposito
             single<ImportDownloadRepository> { downloads }
             // Every unpack prints what it leaves out; a few thousand imports would bury the test's own report.
             single<Logger> { Logger { } }
+            overrides()
         },
     )
 }
