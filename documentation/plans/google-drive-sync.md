@@ -337,5 +337,9 @@ download address is Dropbox's alone.
 - **S2 fails:** iOS takes on the GoogleSignIn SDK, a dependency in the Xcode project.
 - **Android without Play services** has no Drive.
 - **Lost updates** if detect-and-recover has a bug: test it more heavily than any other part.
+- **A wrong listing** (one missing files, or one older than what the device last saw): `SyncFolder.list` promises
+  neither happens, and Dropbox kept that promise when measured. Drive's `files.list` makes no such promise, and a
+  partial listing followed by a killed run can lose a version (`sync/run/CLAUDE.md`'s known limit). Close that limit
+  before D4 ships, and give the simulation's partial and stale listing faults Drive's rates.
 - **API key quota and egress abuse** through shared-link downloads.
 - **Google policy changes:** custom schemes went in 2026; installed-app secrets or API-key downloads could follow.
