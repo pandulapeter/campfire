@@ -59,9 +59,10 @@
 - **Another device's run is no lock away**: one that read the list before a stop may upload the copy after it was
   deleted, and Dropbox writes such an `update` as a new file (measured), an orphan no link serves. So every stop (Stop
   sharing, Stop sharing everything, the journal's) deletes its copies again once the edit removing their entries is
-  done, and a run's step deletes a copy it uploaded whose entry any read of its final edit finds gone
-  (`deleteStoppedCopies`): uploads before the removal meet the first, later ones the second, and an entry never comes
-  back. An upload whose run fails before that edit reads the list stays, a leftover Stop sharing everything removes.
+  done, and a run's step deletes a copy it uploaded whose entry any read of its final edit finds gone or marked
+  `copyMissing` (`deleteStoppedCopies`): uploads before the removal meet the first, later ones the second, and an
+  entry never comes back. An upload whose run fails before that edit reads the list stays, a leftover Stop sharing
+  everything removes.
 
 ## Keeping copies current (`SharedCopySync`, the run's last step)
 

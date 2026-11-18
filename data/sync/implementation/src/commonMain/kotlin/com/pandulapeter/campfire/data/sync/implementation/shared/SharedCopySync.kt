@@ -129,8 +129,8 @@ internal class SharedCopySync(
 
     /**
      * Writes [changes] where they change anything, then forgets the journal entries [applied]; false where it gave up.
-     * The copies of shares it stops, and those of [uploaded] that another device stopped since the step read the list,
-     * are deleted again ([deleteStoppedCopies]).
+     * The copies of shares it stops, and those of [uploaded] that another device stopped or found gone since the step read
+     * the list, are deleted again ([deleteStoppedCopies]).
      */
     private suspend fun write(
         folder: SyncFolder,
@@ -141,10 +141,11 @@ internal class SharedCopySync(
     ): Boolean {
         // An upload is followed by a read of the list even where it changes no entry (a copy replaced by hand, built again).
         if (changes.applyTo(document) != document || uploaded.isNotEmpty()) {
-            // Any read naming a share no more is final, whatever the edit then answers: an entry once gone never comes back.
+            // Any read naming a share no more, or naming its copy gone, is final, whatever the edit then answers: an entry
+            // once gone never comes back, and a link whose copy was deleted never serves one uploaded again (measured).
             val stoppedElsewhere = mutableSetOf<String>()
             val edit = registry.edit(folder) { current ->
-                stoppedElsewhere += uploaded.filter { shareId -> current.links.none { it.shareId == shareId } }
+                stoppedElsewhere += uploaded.filter { shareId -> current.links.none { it.shareId == shareId && !it.copyMissing } }
                 SharedLinksRegistry.Change(document = changes.applyTo(current).takeIf { it != current }, result = Unit)
             }
             folder.deleteStoppedCopies(stoppedElsewhere, logger)

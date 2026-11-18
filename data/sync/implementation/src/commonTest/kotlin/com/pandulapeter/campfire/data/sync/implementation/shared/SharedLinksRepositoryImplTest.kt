@@ -801,6 +801,24 @@ class SharedLinksRepositoryImplTest {
     }
 
     @Test
+    fun `a run's step that uploads a copy another device found gone meanwhile deletes it again`() = runTest {
+        val cloud = FakeSyncProvider()
+        val (step, _) = stepAndRepository(cloud)
+        // Another device's run deleted the copy (a stop whose list edit a disconnect forgot) and marked the entry dead.
+        cloud.onUploadSharedFile = { id ->
+            cloud.onUploadSharedFile = {}
+            cloud.sharedFiles -= id
+            val dead = registry(cloud).links.map { if (it.shareId == id) it.copy(state = SharedLinksEntry.STATE_ORPHANED, copyMissing = true) else it }
+            cloud.writeDocumentElsewhere(SharedLinksFormat.NAME, encode(*dead.toTypedArray()))
+        }
+
+        synchronize(step, cloud)
+
+        assertTrue(SONG_ENTRY.shareId !in cloud.sharedFiles)
+        assertEquals(true, registry(cloud).links.single { it.shareId == SONG_ENTRY.shareId }.copyMissing)
+    }
+
+    @Test
     fun `a stop deletes its copy again once its entry is gone so a run's late upload leaves nothing`() = runTest {
         val provider = FakeSyncProvider()
         val repository = repository(provider)
