@@ -12,9 +12,10 @@
 - **A song's or setlist's identity is its file name**, extension included, never a generated id.
 - The extension lists (`SONG_EXTENSIONS`, `IMPORTABLE_EXTENSIONS`, `LIBRARY_BACKUP_EXTENSIONS`) **must agree with the
   import rules, the storage layer, and the three OS registrations** (Android manifest, iOS plist, desktop Gradle file).
-  Importable-only types are never claimed system wide; legacy `.doc` is listed only to report it unreadable. `.osb` and
-  `FOREIGN_SONG_EXTENSIONS` (`.onsong`, read with the text limit) have no iOS system type, so on iOS they come only
-  through the in-app picker, never the share extension.
+  Importable-only types are never claimed system wide; legacy `.doc` is listed only to report it unreadable. `.onsong`
+  has no iOS system type, so on iOS it comes only through the in-app picker, never the share extension; the other
+  apps' backups (`LIBRARY_BACKUP_EXTENSIONS`) and OpenSong's `.osts` (`FOREIGN_SETLIST_EXTENSIONS`, read with the text
+  limit) are iOS imported types, so the share extension takes them.
 - `isSongFileName` / `isSetlistFileName` (and `LibraryFileKind.matches`) are the one answer to which files are the
   library, for the scan and both sync listings: right extension and not hidden (`._song.cho` is macOS's AppleDouble).
 - `normalizedName` **must stay idempotent**: an exported name is normalized again on its way back in. NFC first (it

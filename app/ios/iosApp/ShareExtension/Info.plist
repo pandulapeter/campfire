@@ -62,7 +62,8 @@
 			     JSON conforms to public.text but not to public.plain-text, so it is named for the songs another
 			     app's export holds. Keep in step with LibraryFiles.IMPORTABLE_EXTENSIONS, as the app's document
 			     types are with SONG_EXTENSIONS: the legacy .doc (which the import only reports as unreadable) is
-			     left out on purpose, and OnSong's .onsong and OpenSongApp's .osb have no system type to name. A photo
+			     left out on purpose, and OnSong's .onsong has no system type to name (the app declares OpenSong's
+			     backups as zip archives and its .osts sets as plain text, as it does SongbookPro's backups). A photo
 			     is a new song showing it: a PNG, JPEG, GIF, or WebP, shrunk where it is too large for a song, or a
 			     HEIC or HEIF one (what Photos shares of a camera's photo), converted.
 			-->

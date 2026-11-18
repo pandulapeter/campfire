@@ -70,8 +70,8 @@ extension (`iosApp/ShareExtension/`, Swift only).
 ## Share extension
 
 - Share → Campfire for selected text and the files the import reads (`NSExtensionActivationRule`; `ShareLimits` lists
-  the same types; OnSong's `.onsong` and OpenSongApp's `.osb` have no system type to name, so they arrive only through
-  the app's file picker or a drop). It links no Kotlin: it copies what it was given into `ShareInbox/` in the App
+  the same types; OnSong's `.onsong` has no system type to name, so it arrives only through the app's file picker or a
+  drop). It links no Kotlin: it copies what it was given into `ShareInbox/` in the App
   Group container (`APP_GROUP_ID` in `Config.xcconfig`, both targets' entitlements, `CampfireAppGroup` in both
   `Info.plist`s), says so, and is done.
 - **It never opens the app**: only a Today widget may, and the responder-chain way round is not API and is refused by
@@ -108,7 +108,8 @@ extension (`iosApp/ShareExtension/`, Swift only).
   under "On My iPhone → Campfire"; opening in place commits to coordinated reads.
 - Document types: `.cho` `Default`, the rest `Alternate`. No zip, plain text, PDF, or Word, deliberately: the share
   extension is where those are accepted. Keep in step with `LibraryFiles.SONG_EXTENSIONS`. SongbookPro's `.sbpbackup` /
-  `.sbp` are an imported type with no document type, only so the extension's activation rule can name them. `.abc` is
+  `.sbp` and OpenSongApp's `.osb` / `.osbs` / `.ossb` (zip archives) and `.osts` (plain text) are imported types with no
+  document type, only so the extension's activation rule can name them. `.abc` is
   a `Viewer` at `Alternate` (Campfire is no editor of it), conforming to plain text, which brings it to the extension.
   PNG, JPEG, GIF, WebP, HEIC, and HEIF are a `Viewer` at `Alternate` too, named by the extension's rule: a photo
   alone is a new song.

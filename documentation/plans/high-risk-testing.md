@@ -59,8 +59,8 @@ owner's. When the streaming plan removes the old path, `ArchivePathParityTest` g
 - **A folder picture or attachment damaged from outside, with no intact copy anywhere, fails every run on every
   device**, even when no song names it (`sync/run/CLAUDE.md`, Pictures). The likely fix leaves one that nothing names,
   holds, or indexed out of the plan quietly, or deletes it from the folder.
-- **OpenSong and OpenSongApp sets** (`.osbs`, `.osts`, the set inside an `.ossb`) are reported as skipped, never
-  imported as setlists; `.osbs`, `.ossb`, `.osts`, and `.justchords` are not offered for "Open with".
+- **OpenSongApp's `.justchords`** is not offered for "Open with" (picked, its songs import); its sets import as
+  setlists, and its `.osb`, `.osbs`, `.ossb`, and `.osts` are types of the iOS share extension.
 
 ## Not in this plan
 

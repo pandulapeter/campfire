@@ -376,11 +376,11 @@ private enum ShareLimits {
     ]
 
     /// `LibraryFiles.IMPORTABLE_EXTENSIONS`, without the legacy Word format the extension is not offered for, and without
-    /// `.onsong` and `.osb`, which have no system type the activation rule could name; JSON and ABC are read with the
-    /// text limit, as a song is.
-    private static let songExtensions = ["cho", "chopro", "chordpro", "crd", "chord", "pro", "abc", "txt", "json"]
+    /// `.onsong`, which has no system type the activation rule could name; JSON, ABC, and OpenSong's `.osts` sets are
+    /// read with the text limit, as a song is.
+    private static let songExtensions = ["cho", "chopro", "chordpro", "crd", "chord", "pro", "abc", "osts", "txt", "json"]
     private static let documentExtensions = ["pdf", "docx"]
-    private static let archiveExtensions = ["zip", "sbpbackup", "sbp"]
+    private static let archiveExtensions = ["zip", "sbpbackup", "sbp", "osb", "osbs", "ossb"]
     /// The pictures the activation rule names, which the app opens a new song on, shrinking one too large for a song and
     /// converting a HEIC or HEIF photo.
     private static let pictureExtensions = ["png", "jpg", "jpeg", "gif", "webp", "heic", "heif"]
