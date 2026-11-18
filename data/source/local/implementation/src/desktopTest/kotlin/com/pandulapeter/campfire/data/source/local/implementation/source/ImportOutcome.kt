@@ -28,7 +28,7 @@ internal class ImportOutcome(
     /**
      * The SHA-256 of the content each song's pictures and attachments bring, in the plan's order, read from the bytes
      * in memory or from the name the staging gave the file it hashed. [ImportPlan.SongImage] leaves its content out of
-     * its equality, so this is what holds the two paths to the same bytes before anything is written.
+     * its equality, so this is what holds two imports to the same bytes before anything is written.
      */
     val contents: List<List<String?>> = plan?.songs.orEmpty().map { song -> song.images.map { it.content?.sha256Hex() } }
 

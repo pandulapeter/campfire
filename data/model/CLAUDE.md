@@ -37,9 +37,8 @@ what is staged. `ImportPlan` is computed before anything is written; in `ImportC
 leaves per-row ones alone. No original file is stored with a song.
 
 Limits: songs unpack to 24 MiB (`MAX_IMPORT_SIZE`, held in memory); an archive's pictures and attachments are staged
-within `MAX_IMPORT_STAGED_SIZE`. `MAX_IMPORT_IMAGES_SIZE` (64 MiB) bounds only the pictures downloaded by address and
-`MAX_IMPORT_ATTACHMENTS_SIZE` only the in-memory reference unpack; `MAX_ARCHIVE_SIZE` (88 MiB) is what a selection reads
-whole, an archive costing it nothing. An export is flagged as not importable back (`ExportedFile.isTooLargeToImport`)
+within `MAX_IMPORT_STAGED_SIZE`. `MAX_IMPORT_IMAGES_SIZE` (64 MiB) bounds only the pictures downloaded by address;
+`MAX_ARCHIVE_SIZE` (88 MiB) is what a selection reads whole, an archive costing it nothing. An export is flagged as not importable back (`ExportedFile.isTooLargeToImport`)
 past 16 GiB, `MAX_ARCHIVE_ENTRIES`, or `MAX_IMPORT_SIZE` of song text, the strings naming 16 GB. A shared link's copy
 stays at 24 MiB (`MAX_SHARED_COPY_SIZE`) of songs and pictures: versions before pictures download no more, and the copy is packed in
 memory. Its attachments have 50 MiB beside that (`MAX_SHARED_ATTACHMENTS_SIZE`), one that does not fit left out

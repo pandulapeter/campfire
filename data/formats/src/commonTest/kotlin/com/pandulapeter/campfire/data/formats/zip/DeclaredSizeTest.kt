@@ -16,8 +16,8 @@ import kotlin.test.assertEquals
 import kotlin.test.fail
 
 /**
- * An entry whose data cannot be the size its central directory declares: left out as unreadable by both readers alike,
- * charged as declared, and the walk asks no sink for it, so nothing is set aside on the strength of the lie.
+ * An entry whose data cannot be the size its central directory declares: left out as unreadable by [ZipReader.read] and
+ * by a walk alike, charged as declared, and the walk asks no sink for it, so nothing is set aside on the strength of the lie.
  */
 internal class DeclaredSizeTest {
 
@@ -31,7 +31,7 @@ internal class DeclaredSizeTest {
         archive.declareUncompressedSize("deflated.cho", deflatedSize * ZipDirectory.MAX_DEFLATE_RATIO + 1)
         archive.declareUncompressedSize("stored.bin", noise.size + 1L)
 
-        val inMemory = readAlike(archive)
+        val inMemory = readArchive(archive)
         val charged = mutableListOf<String>()
         val walk = ZipReader.open(ByteArrayZipSource(archive)).walk(onCharged = { name, _ -> charged += name }) { name, declaredSize ->
             if (name != "honest.cho") fail("A sink was asked for $name, which cannot be its $declaredSize bytes")

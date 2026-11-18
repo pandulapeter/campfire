@@ -16,13 +16,12 @@ import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import kotlinx.coroutines.yield
 
 /**
- * One [ZipDirectory.walk]: [ZipReader.read]'s walk of an archive in memory, decision for decision, over a [ZipSource]
- * and into [EntrySink]s. Every sum of declared numbers goes through [checkedSum].
+ * One [ZipDirectory.walk] of an archive over a [ZipSource] and into [EntrySink]s. Every sum of declared numbers goes
+ * through [checkedSum].
  *
  * An entry declaring more than [maxEntrySize] (compressed or not) is left out as one that cannot be read, or not wanted
- * where it was to be sniffed: the in-memory reader cannot hold an entry of 2 GiB or more, and [ZipReader.read] of a
- * source, which holds every entry in memory too, passes that so that both read every archive alike. A walk into sinks
- * passes no limit, so that an entry of any 64-bit size streams through.
+ * where it was to be sniffed: [ZipReader.read], which holds every entry in memory, passes 2 GiB, as no array holds one
+ * that large. A walk into sinks passes no limit, so that an entry of any 64-bit size streams through.
  */
 internal class ZipWalk(
     private val directory: ZipDirectory,
@@ -74,7 +73,10 @@ internal class ZipWalk(
                 isUnsupported(index) -> UnreadZipEntry.Reason.NOT_WANTED
                 isPastArchive(compressedSize) -> UnreadZipEntry.Reason.UNREADABLE
                 else -> {
-                    // Charged once, for the peek and for a read after it alike, as the in-memory reader charges it.
+                    // Charged once, for the peek and for a read after it alike: every peek takes at most its own compressed
+                    // bytes of input and all of them together at most the archive's, whatever the central directory
+                    // claims, while charging again for the read would refuse a nested backup that is more than half of
+                    // its archive.
                     compressedBytesRead = checkedSum(compressedBytesRead, compressedSize)
                     sniff(index, name)
                 }

@@ -38,7 +38,7 @@ class ZipDirectory internal constructor(
     /** How many file entries the archive holds. */
     val entryCount get() = flags.size
 
-    /** The name of the entry at [index], decoded as [ZipReader.read] decodes it. */
+    /** The name of the entry at [index], decoded as `ZipReader.entryName` says. */
     fun nameOf(index: Int): String = with(ZipReader) {
         names.entryName(nameStarts[index], nameStarts[index + 1] - nameStarts[index], flags[index])
     }
@@ -48,7 +48,7 @@ class ZipDirectory internal constructor(
      * no deflate stream inflates to more than [MAX_DEFLATE_RATIO] times its own length; an entry of another method is
      * never read. One that could not is damaged whatever else it holds, so nothing is set aside for it on the strength of
      * its declaration (a disk reservation, a staged copy): the walk leaves it out as unreadable before asking for its
-     * sink, where the in-memory reader reads it and finds it short.
+     * sink, as reading it would find it short.
      */
     fun canProduceDeclaredSize(index: Int): Boolean {
         val compressedSize = compressedSizes[index]
@@ -60,9 +60,8 @@ class ZipDirectory internal constructor(
     }
 
     /**
-     * Reads the entries in the order the central directory lists them, as [ZipReader.read] reads an archive in memory:
-     * the same [EntryPolicy] asked of the same entries, the same peeks, the same charges, the same entries left out for
-     * the same reasons. Each entry to be read is written into the sink [sinkOf] gives for it once its size has been
+     * Reads the entries in the order the central directory lists them, asking [limitOf] about each, peeking at one it
+     * answers [EntryPolicy.Sniff] for, and charging each one read before reading it. Each entry to be read is written into the sink [sinkOf] gives for it once its size has been
      * charged, which ends closed (it was read whole and checked) or abandoned (it was not, and is among the unread ones
      * as [UnreadZipEntry.Reason.UNREADABLE]). A stored entry is copied and a deflated one inflated, through a buffer
      * of their own whatever their size: an entry of any 64-bit size is read, as long as [limitOf] allows it. An entry

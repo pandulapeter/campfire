@@ -86,18 +86,9 @@ object ImportLimits {
      * The pictures one import downloads into memory for the songs naming them by address (`IncomingPictureLinks`), apart
      * from [MAX_IMPORT_SIZE]: about twenty phone photos, each within [MAX_IMAGE_FILE_SIZE]. A picture past it is left out
      * and reported with its song, which still imports and keeps its directive. An archive's pictures are staged on disk
-     * instead and never count against it; it bounds them only in the in-memory unpack the tests keep as the streaming
-     * one's reference.
+     * instead and never count against it.
      */
     const val MAX_IMPORT_IMAGES_SIZE = 64L shl 20
-
-    /**
-     * The files attached to songs that the in-memory unpack, kept only as the streaming one's reference in the tests,
-     * reads for the songs naming them: one attachment of [MAX_ATTACHMENT_FILE_SIZE], or several smaller ones. The app
-     * stages an archive's attachments on disk within [MAX_IMPORT_STAGED_SIZE] instead. Also what a shared link's copy
-     * carries ([MAX_SHARED_ATTACHMENTS_SIZE]).
-     */
-    const val MAX_IMPORT_ATTACHMENTS_SIZE = MAX_ATTACHMENT_FILE_SIZE
 
     /**
      * What one selection reads whole into memory: the files that are no archive (songs, documents, a picture chosen on its
@@ -122,11 +113,11 @@ object ImportLimits {
 
     /**
      * The attachments one shared link's copy carries beside [MAX_SHARED_COPY_SIZE], filled in the order its songs name
-     * them; one that does not fit is left out of the copy, never refusing the share. What one import reads
-     * ([MAX_IMPORT_ATTACHMENTS_SIZE]), so that whoever opens the link gets every attachment in it, and the copy stays
-     * within [MAX_ARCHIVE_SIZE]. Not larger: the copy and its files are held in memory together while a run packs it.
+     * them; one that does not fit is left out of the copy, never refusing the share. One attachment of
+     * [MAX_ATTACHMENT_FILE_SIZE], or several smaller ones, so that the copy stays within [MAX_ARCHIVE_SIZE]. Not larger:
+     * the copy and its files are held in memory together while a run packs it.
      */
-    const val MAX_SHARED_ATTACHMENTS_SIZE = MAX_IMPORT_ATTACHMENTS_SIZE
+    const val MAX_SHARED_ATTACHMENTS_SIZE = MAX_ATTACHMENT_FILE_SIZE
 
     /**
      * The most of an archive's central directory the streaming zip reader holds, as it declares it and as its records

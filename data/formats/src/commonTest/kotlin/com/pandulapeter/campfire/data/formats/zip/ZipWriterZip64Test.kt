@@ -31,7 +31,7 @@ internal class ZipWriterZip64Test {
 
         assertFalse(hasZip64Records(ByteArrayZipSource(within)))
         assertEquals(0xFFFE, within.endRecordEntryCount())
-        assertEquals(0xFFFE, ZipReader.read(within, maxTotalSize = Long.MAX_VALUE).entries.size)
+        assertEquals(0xFFFE, readArchive(within, maxTotalSize = Long.MAX_VALUE).entries.size)
         assertTrue(hasZip64Records(ByteArrayZipSource(past)))
         assertEquals(0xFFFF, past.endRecordEntryCount())
         val read = ZipReader.read(ByteArrayZipSource(past), maxTotalSize = Long.MAX_VALUE).entries

@@ -24,9 +24,8 @@ import com.pandulapeter.campfire.data.source.local.implementation.backup.OpenSon
 import com.pandulapeter.campfire.data.source.local.implementation.backup.SongbookProBackup
 
 /**
- * What an import makes of an archive's entries, decided the same way however the archive is read (in memory, or
- * streamed from the staging folder), so that the two readings cannot drift apart: which entries are read, under which
- * limits, what each one becomes, and what is reported of those that were not read.
+ * What an import makes of an archive's entries: which entries are read, under which limits, what each one becomes, and
+ * what is reported of those that were not read.
  */
 internal object ArchiveEntryPolicy {
 
@@ -49,7 +48,7 @@ internal object ArchiveEntryPolicy {
      * backup in a zipped cloud folder is a zip under a name of its own as often as not, and its chord sheets are
      * texts under that app's extension. What is never text by its name is not even peeked at. A file named by its
      * content as the library names an attachment is one a song of Campfire's export carries, which is read for
-     * that song only (ArchiveSongImages), within the attachments' budget: a PDF or a text among them would
+     * that song only (ArchiveSongImages), within an attachment's own limit: a PDF or a text among them would
      * otherwise be read here as a document of its own, at the cost of the songs' budget.
      */
     fun limitOf(name: String, declaredSize: Long): EntryPolicy {

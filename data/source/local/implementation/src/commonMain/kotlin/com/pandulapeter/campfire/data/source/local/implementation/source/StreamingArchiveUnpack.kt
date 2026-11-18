@@ -23,7 +23,6 @@ import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.importing.IncomingContent
 import com.pandulapeter.campfire.data.model.importing.StagedFile
 import com.pandulapeter.campfire.data.model.importing.StagingRefusedException
-import com.pandulapeter.campfire.data.model.importing.UnpackedArchive
 import com.pandulapeter.campfire.data.model.isOutOfSpace
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
@@ -41,15 +40,13 @@ import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.withContext
 
 /**
- * One unpack of an archive in the staging folder, the in-memory unpack's decisions ([ArchiveEntryPolicy],
- * [ArchiveSongImages]) over the streaming reader: the song texts are read into memory within [maxSize] as there, while
- * the pictures and attachments songs name are inflated into staging files of [request], and so is every archive nested
- * above [ArchiveEntryPolicy.MAX_DEPTH], walked from there and deleted once walked. An archive at the last level is read
- * into memory within the songs' budget, as the in-memory unpack reads it, and so is one under a text's name that turned
- * out to be one, which that budget already holds.
+ * One unpack of an archive in the staging folder, [ArchiveEntryPolicy]'s and [ArchiveSongImages]' decisions over the
+ * streaming reader: the song texts are read into memory within [maxSize], while the pictures and attachments songs name
+ * are inflated into staging files of [request], and so is every archive nested above [ArchiveEntryPolicy.MAX_DEPTH],
+ * walked from there and deleted once walked. An archive at the last level is read into memory within the songs' budget,
+ * and so is one under a text's name that turned out to be one, which that budget already holds.
  *
- * What differs is only what bounds the files on disk: a nested archive counts against the disk budget instead of the
- * songs', and pictures and attachments against the disk budget instead of their in-memory budgets (each file still
+ * A nested archive counts against the disk budget instead of the songs', and so do pictures and attachments (each file
  * within its own limit), reserved from the sizes the archive declares before a picture or attachment walk starts. Across
  * every archive of the unpack, nested ones included, at most [ImportLimits.MAX_ARCHIVE_ENTRIES] central directory records
  * are read, and the directories held at once (an archive's, and those of the archives nested in it it is unpacking) add
@@ -72,8 +69,6 @@ internal class StreamingArchiveUnpack(
     private var readBytes = 0L
     private var totalBytes = 0L
     private var textCharged = 0L
-    private var imageCharged = 0L
-    private var attachmentCharged = 0L
     private var recordsRead = 0L
     private var directoriesHeld = 0L
     private val stagedArchives = mutableSetOf<StagedFile>()
@@ -87,15 +82,14 @@ internal class StreamingArchiveUnpack(
      * archive, the storage, the disk budget, a cancellation) first deletes every file it staged, so that nothing of it
      * is left behind but what the request held before.
      */
-    suspend fun unpack(archive: StagedFile): UnpackedArchive {
+    suspend fun unpack(archive: StagedFile): List<ImportedFile> {
         heldBefore = staging.unpackedNamesOf(request)
-        val files = try {
+        return try {
             unpackStaged(archive, depth = 1)
         } catch (throwable: Throwable) {
             deleteStagedSince(files = emptySet(), archives = emptySet())
             throw throwable
         }
-        return UnpackedArchive(files = files, imageSize = imageCharged, attachmentSize = attachmentCharged)
     }
 
     /** One archive's entries as read, before the archives among them are unpacked; see [expand]. */
@@ -187,8 +181,8 @@ internal class StreamingArchiveUnpack(
     }
 
     /**
-     * A nested archive that cannot be read is reported rather than failing the whole import, as the in-memory unpack
-     * reports it, and what it staged before it failed is deleted. Only what is not the archive's fault ends the unpack:
+     * A nested archive that cannot be read is reported rather than failing the whole import (the files next to it are
+     * still perfectly good), and what it staged before it failed is deleted. Only what is not the archive's fault ends the unpack:
      * the storage, the disk, the request, a cancellation.
      */
     private suspend fun nested(name: String, unpack: suspend () -> List<ImportedFile>): List<ImportedFile> {
@@ -234,7 +228,7 @@ internal class StreamingArchiveUnpack(
         declaredSizes: LongArray,
     ): ArchiveSongImages.Found {
         val wanted = ArchiveSongImages.wanted(entries.map { it.name to it.bytes }, unread.map { it.name }) { it.isHidden }
-            ?: return ArchiveSongImages.Found(entries.map { emptyList() }, emptySet(), 0, 0)
+            ?: return ArchiveSongImages.Found(entries.map { emptyList() }, emptySet())
         var reserved = 0L
         for (index in 0 until directory.entryCount) {
             val limit = when (directory.nameOf(index)) {
@@ -247,37 +241,31 @@ internal class StreamingArchiveUnpack(
         }
         val staged = mutableMapOf<String, StagedFile>()
         val unreadByName = mutableMapOf<String, UnreadZipEntry.Reason>()
-        var pictureSize = 0L
-        var attachmentSize = 0L
         try {
             if (reserved > 0) staging.reserve(request, reserved)
-            pictureSize = stageWalk(directory, wanted.pictures, isAttachment = false, staged, unreadByName)
-            attachmentSize = stageWalk(directory, wanted.attachments, isAttachment = true, staged, unreadByName)
+            stageWalk(directory, wanted.pictures, isAttachment = false, staged, unreadByName)
+            stageWalk(directory, wanted.attachments, isAttachment = true, staged, unreadByName)
         } finally {
             // What an entry left unread or never reached was reserved for would otherwise stay reserved until the
             // request settles, keeping a share arriving meanwhile from the room.
             staging.releaseUnused(request)
         }
-        imageCharged += pictureSize
-        attachmentCharged += attachmentSize
         return ArchiveSongImages.found(
             wanted = wanted,
             contentByName = wanted.readFirst.mapValues { IncomingContent.Bytes(it.value) } + staged.mapValues { IncomingContent.Staged(it.value) },
             unreadByName = unreadByName,
-            chargedSize = pictureSize,
-            chargedAttachmentSize = attachmentSize,
         )
     }
 
-    /** One walk of [directory] staging the entries among [wanted]; answers what they cost as declared. */
+    /** One walk of [directory] staging the entries among [wanted]. */
     private suspend fun stageWalk(
         directory: ZipDirectory,
         wanted: Set<String>,
         isAttachment: Boolean,
         staged: MutableMap<String, StagedFile>,
         unreadByName: MutableMap<String, UnreadZipEntry.Reason>,
-    ): Long {
-        if (wanted.isEmpty()) return 0
+    ) {
+        if (wanted.isEmpty()) return
         val walk = directory.walk(maxTotalSize = Long.MAX_VALUE, limitOf = ArchiveSongImages.policyOf(wanted, isAttachment)) { name, declaredSize ->
             StagingEntrySink(staging, staging.openUnpacked(request, stagedExtensionOf(name), declaredSize)) { file ->
                 stagedFiles += file
@@ -285,7 +273,6 @@ internal class StreamingArchiveUnpack(
             }
         }
         walk.unread.filter { it.name in wanted }.forEach { unreadByName[it.name] = it.reason }
-        return walk.chargedSize
     }
 
     /** The extension a staged file keeps of its entry's name: the one it has where the library keeps it, else none. */
@@ -345,9 +332,8 @@ internal class StreamingArchiveUnpack(
                     isArchive = true
                     ImportLimits.MAX_STAGED_ARCHIVE_SIZE
                 }
-                // Held in memory, as the in-memory unpack holds every entry, whose reader cannot even peek at one declaring
-                // 2 GiB or more and leaves it out as not wanted: reported as too large here, the same entry would be
-                // listed under another heading of the import's report on each path.
+                // Held in memory, where no entry of 2 GiB or more fits: left out as not wanted, since nothing asked for it
+                // by its name, rather than reported as too large.
                 declaredSizes[index - 1] > Int.MAX_VALUE -> null
                 else -> minOf(limit, maxSize - textCharged)
             }
@@ -356,7 +342,8 @@ internal class StreamingArchiveUnpack(
         /**
          * Whether the current entry, an archive by [isArchiveEntry], is staged rather than read into memory. Only where
          * its data could be the size it declares: room is set aside for an archive as it declares itself, and one that
-         * cannot be that size is held to the in-memory unpack's rule instead, which leaves it out as that one does.
+         * cannot be that size is read as any other entry instead, so its declaration costs the songs' budget, never the
+         * disk, before the walk finds it damaged.
          */
         private fun isStaged(isArchiveEntry: Boolean) = stagesArchives && isArchiveEntry && directory.canProduceDeclaredSize(index - 1)
 

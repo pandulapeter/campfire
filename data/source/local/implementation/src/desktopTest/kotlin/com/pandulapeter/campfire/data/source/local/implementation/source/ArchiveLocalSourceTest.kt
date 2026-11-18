@@ -367,15 +367,12 @@ class ArchiveLocalSourceTest {
         damaged[30 + "x.cho".length] = 'y'.code.toByte()
         val good = ZipWriter.write(listOf(ZipEntry("song.cho", ByteArray(20) { 's'.code.toByte() })))
         val archive = ZipWriter.write(listOf(ZipEntry("a.zip", damaged), ZipEntry("b.zip", good)))
-        val maxSize = damaged.size + good.size + damagedSize + 10L
 
-        // In memory the nested archives count against the songs' budget too; staged, only the disk holds them.
-        val inMemory = unpacks.inMemory(archive = archive, maxSize = maxSize).files
-        val streamed = unpacks.streamed(archive = archive, maxSize = damagedSize + 10L).files
+        // The nested archives are staged, so only the disk holds them; the damaged entry still costs the songs' budget.
+        val files = unpacks.unpack(archive = archive, maxSize = damagedSize + 10L)
 
-        assertTrue(inMemory.single { it.name == "song.cho" }.isTooLarge)
-        assertTrue(streamed.single { it.name == "song.cho" }.isTooLarge)
-        assertFalse(unpacks.streamed(archive = archive, maxSize = damagedSize + 20L).files.single { it.name == "song.cho" }.isTooLarge)
+        assertTrue(files.single { it.name == "song.cho" }.isTooLarge)
+        assertFalse(unpacks.unpack(archive = archive, maxSize = damagedSize + 20L).single { it.name == "song.cho" }.isTooLarge)
     }
 
     @Test
@@ -414,5 +411,5 @@ class ArchiveLocalSourceTest {
     }
 
     /** The files alone, with the whole picture and attachment budgets: these tests are about the songs. */
-    private suspend fun ArchiveLocalSourceImpl.unpack(archive: ByteArray, maxSize: Long) = unpacks.both(archive = archive, maxSize = maxSize).files
+    private suspend fun ArchiveLocalSourceImpl.unpack(archive: ByteArray, maxSize: Long) = unpacks.unpack(archive = archive, maxSize = maxSize)
 }

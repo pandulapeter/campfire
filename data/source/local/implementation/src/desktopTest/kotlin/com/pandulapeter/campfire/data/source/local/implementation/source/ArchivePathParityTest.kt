@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.local.implementation.source
 
+import com.pandulapeter.campfire.data.model.importing.ImportedImage
 import kotlinx.coroutines.runBlocking
 import java.io.File
 import kotlin.test.Test
@@ -17,17 +18,16 @@ import kotlin.test.assertTrue
 import kotlin.test.fail
 
 /**
- * The gate for switching every archive to the streaming import, kept until the old path is removed: each
- * archive is imported held in memory and received into the staging folder, through the review's plan and Import into
- * an empty library, and the two must agree (see [ArchivePathParity] for the differences allowed, each checked). The
- * committed set runs with every build; the private corpus runs where `campfire.importCorpus` names it, by hand.
+ * Archives imported as the app imports them, received into the staging folder, through the review's plan and Import
+ * into an empty library (see [ArchivePathParity] for what each is held to). The committed set runs with every build;
+ * the private corpus runs where `campfire.importCorpus` names it, by hand.
  */
 class ArchivePathParityTest {
 
     private val parity = ArchivePathParity()
 
     @Test
-    fun `every archive the unpack tests build imports alike on both paths`() {
+    fun `every archive the unpack tests build imports`() {
         val archives = ParityArchives.recorded()
         assertTrue(archives.size > 50, "Only ${archives.size} archives recorded from the unpack tests")
         runBlocking { parity.checkAll(archives) }
@@ -35,26 +35,30 @@ class ArchivePathParityTest {
     }
 
     @Test
-    fun `libraries and backups and archives past the in-memory budgets import alike on both paths but for those budgets`() = runBlocking {
+    fun `libraries and backups and archives of many megabytes of pictures and attachments import`() = runBlocking {
         val archives = ParityArchives.built()
-        val verdicts = archives.associate { it.label to parity.check(it) }
-        assertEquals(ArchivePathParity.Verdict.PAST_IN_MEMORY_BUDGET, verdicts["pictures past the in-memory budget"])
-        assertEquals(ArchivePathParity.Verdict.PAST_IN_MEMORY_BUDGET, verdicts["attachments past the in-memory budget"])
-        assertEquals(ArchivePathParity.Verdict.IDENTICAL, verdicts["a nested archive lying about its size"])
-        assertEquals(ArchivePathParity.Verdict.PAST_IN_MEMORY_BUDGET, verdicts["pictures lying about their size"])
+        parity.checkAll(archives)
+        val outcomes = parity.outcomes
+        fun problems(label: String) = outcomes.getValue(label).plan?.songs.orEmpty().flatMap { song -> song.images.filter { !it.source.startsWith("https:") }.map { it.problem } }
+        assertEquals(List(9) { null }, problems("pictures past 64 MiB"))
+        assertEquals(List(3) { null }, problems("attachments past 50 MiB"))
+        val lie = outcomes.getValue("a nested archive lying about its size").plan
+        assertEquals(listOf("a.cho"), lie?.songs?.map { it.sourceFileName })
+        assertTrue("inner.zip" in lie?.oversizedFileNames.orEmpty() + lie?.skippedFileNames.orEmpty(), "inner.zip is reported: $lie")
+        assertEquals(List(150) { ImportedImage.Problem.UNREADABLE }, problems("pictures lying about their size"))
         report("Built archives", archives.size)
     }
 
     @Test
-    fun `ZIP64 archives real tools wrote import on the streaming path as their twins without ZIP64`() = runBlocking {
+    fun `ZIP64 archives real tools wrote import as their twins without ZIP64`() = runBlocking {
         val archives = ParityArchives.realWriters()
         val verdicts = archives.map { parity.check(it) }
-        assertTrue(ArchivePathParity.Verdict.ZIP64_READ_AS_TWIN in verdicts, "No ZIP64 archive was read only by the streaming path")
+        assertTrue(ArchivePathParity.Verdict.ZIP64_READ_AS_TWIN in verdicts, "No ZIP64 archive was held to its twin")
         report("Real writers' archives", archives.size)
     }
 
     @Test
-    fun `seeded mutants of every small archive import alike on both paths`() {
+    fun `seeded mutants of every small archive import or are skipped`() {
         val archives = (ParityArchives.recorded() + runBlocking { ParityArchives.built() } + ParityArchives.realWriters()).filter { it.bytes.size <= MAX_MUTATED_SIZE }
         val mutants = archives.flatMapIndexed { index, archive -> ArchiveMutants.of(archive, count = MUTANTS_PER_ARCHIVE, seed = index) }
         runBlocking { parity.checkAll(mutants) }
@@ -62,7 +66,7 @@ class ArchivePathParityTest {
     }
 
     @Test
-    fun `the archives of the private import corpus import alike on both paths`() {
+    fun `the archives of the private import corpus import`() {
         val path = System.getProperty("campfire.importCorpus").orEmpty()
         if (path.isBlank()) {
             println("Import corpus not configured (campfire.importCorpus)")
@@ -76,7 +80,7 @@ class ArchivePathParityTest {
         report("Corpus archives (${archives.size}) and their mutants", archives.size + mutants.size)
     }
 
-    private fun report(what: String, count: Int) = println("$what through both paths: $count, ${parity.verdicts}, ${parity.songsPlanned} songs planned")
+    private fun report(what: String, count: Int) = println("$what imported: $count, ${parity.verdicts}, ${parity.songsPlanned} songs planned")
 
     private companion object {
         const val MAX_MUTATED_SIZE = 256 * 1024

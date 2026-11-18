@@ -11,8 +11,8 @@ package com.pandulapeter.campfire.data.formats.zip
 
 /**
  * Where the central directory lies and how many records it declares, as the end records give them, and where every
- * entry's local header and data must end: the end of the file for an archive without ZIP64, as the in-memory reader
- * holds it, and the start of the central directory for one with.
+ * entry's local header and data must end: the end of the file for an archive without ZIP64, and the start of the
+ * central directory for one with.
  */
 internal class CentralDirectoryBounds(val entryCount: Long, val size: Long, val offset: Long, val entryDataEnd: Long)
 
@@ -24,10 +24,10 @@ internal class CentralDirectoryBounds(val entryCount: Long, val size: Long, val 
  * ZIP64 record's values win over the end record's, whether or not those are at their markers, since real writers leave
  * stale ones there (Info-ZIP and `ditto` set only the fields that overflowed). An end record that needs a ZIP64 record
  * and has none is damaged (Info-ZIP's `zip -fz` writing to a pipe makes one), as is a ZIP64 record that cannot be read.
- * One that needs none and has a locator whose record cannot be read is read as it always was, so no archive the
- * in-memory reader reads is refused here. The disk fields of the locator and the ZIP64 record are never checked, since
- * Windows Explorer and OneDrive write wrong ones in ordinary archives of one file; what refuses a split archive is the
- * end record's own disk numbers, checked for a ZIP64 archive (the in-memory reader, which refuses ZIP64, checks none).
+ * One that needs none and has a locator whose record cannot be read is read without ZIP64, so no archive that reads
+ * without it is refused for a broken ZIP64 record. The disk fields of the locator and the ZIP64 record are never
+ * checked, since Windows Explorer and OneDrive write wrong ones in ordinary archives of one file; what refuses a split
+ * archive is the end record's own disk numbers, checked for a ZIP64 archive only.
  *
  * @throws WrappedArchiveException for a file longer than `0xFFFFFFFF` bytes with no locator.
  */

@@ -11,7 +11,6 @@ package com.pandulapeter.campfire.data.source.local.api
 
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.importing.StagedFile
-import com.pandulapeter.campfire.data.model.importing.UnpackedArchive
 import com.pandulapeter.campfire.data.model.library.ArchiveEntry
 import com.pandulapeter.campfire.data.model.library.ExportSink
 import com.pandulapeter.campfire.data.model.library.PackedArchive
@@ -19,9 +18,9 @@ import com.pandulapeter.campfire.data.model.library.PackedArchive
 interface ArchiveLocalSource {
 
     /**
-     * Every file in a zip archive, with the paths of the entries stripped and archives inside it unpacked too (up to
-     * a few levels deep, so that a zip of zips of zips cannot be used to make the app work forever). Throws when the
-     * bytes are not a readable archive.
+     * Every file in [archive], a zip archive in the staging folder, read from there and never held whole, with the paths
+     * of the entries stripped and archives inside it unpacked too (up to a few levels deep, so that a zip of zips of zips
+     * cannot be used to make the app work forever). Throws when it is not a readable archive.
      *
      * An archive that is another app's library backup (SongbookPro's) comes back as the songs and setlists it holds,
      * written as the ChordPro and `*.setlist.json` files an archive of Campfire's own would carry, with the setlists
@@ -31,30 +30,20 @@ interface ArchiveLocalSource {
      * bookkeeping rather than anything the user put in, so the caller never learns of them and never has to account
      * for them.
      *
-     * [maxSize] is how much the files may add up to, nested archives included; the caller owns it because one import
+     * Song texts are read into memory within [maxSize], nested archives included; the caller owns it because one import
      * may unpack several archives. An entry that was not read - not something an import looks inside, too large, or
      * unreadable - is still returned, as `ImportedFile.unread`, so that it is reported.
      *
      * A ChordPro song comes back with the pictures its image directives name (`ImportedFile.images`), each found in the
-     * same archive (or the same nested one) beside the song, in an `images/` folder, or by its file name, read within
-     * [maxImageSize] all together, which the answer says how much of was taken. A picture no song names is never read,
-     * and is reported as skipped like any other entry; one a song names is reported with the song, never as skipped.
-     * The files its attachment lines name come back the same way (`ImportedImage.isAttachment`), found where its pictures
-     * would be, each within `ImportLimits.MAX_ATTACHMENT_FILE_SIZE` and all together within [maxAttachmentSize]; a file a
-     * song both shows and attaches is read once, as a picture.
-     */
-    suspend fun unpack(archive: ByteArray, maxSize: Long, maxImageSize: Long, maxAttachmentSize: Long): UnpackedArchive
-
-    /**
-     * [unpack] of an archive in the staging folder, read from there and never held whole: the same files, setlists,
-     * reports, and pictures and attachments, decided by the same rules, but a picture's or attachment's content is
-     * staged (`IncomingContent.Staged`) in the request that staged [archive], and so is each nested archive (above the
-     * last level unpacked), deleted once it is unpacked. Song texts are read into memory within [maxSize], as there.
-     *
-     * Pictures and attachments are held to their own limits each, and all of them, with the nested archives, to the
-     * disk the staging may use rather than to the in-memory budgets, reserved from the sizes the archive declares before
-     * any is read, so an archive that passed those budgets brings more of its files. Across [archive] and the archives
-     * nested in it, at most `ImportLimits.MAX_ARCHIVE_ENTRIES` central directory records are read and at most
+     * same archive (or the same nested one) beside the song, in an `images/` folder, or by its file name. A picture no
+     * song names is never read, and is reported as skipped like any other entry; one a song names is reported with the
+     * song, never as skipped. The files its attachment lines name come back the same way (`ImportedImage.isAttachment`),
+     * found where its pictures would be; a file a song both shows and attaches is read once, as a picture. Their content
+     * is staged (`IncomingContent.Staged`) in the request that staged [archive], each within its own limit
+     * (`ImportLimits.MAX_IMAGE_FILE_SIZE`, `ImportLimits.MAX_ATTACHMENT_FILE_SIZE`), and all of them, with the nested
+     * archives (staged above the last level unpacked, deleted once unpacked), within the disk the staging may use,
+     * reserved from the sizes the archive declares before any is read. Across [archive] and the archives nested in it,
+     * at most `ImportLimits.MAX_ARCHIVE_ENTRIES` central directory records are read and at most
      * `ImportLimits.MAX_CENTRAL_DIRECTORY_SIZE` of directories held at once; a nested archive past either is reported as
      * one that cannot be read.
      *
@@ -71,7 +60,7 @@ interface ArchiveLocalSource {
         archive: StagedFile,
         maxSize: Long,
         onProgress: (readBytes: Long, totalBytes: Long) -> Unit = { _, _ -> },
-    ): UnpackedArchive
+    ): List<ImportedFile>
 
     /**
      * The songs a foreign document holds - another app's export that is not an archive, such as a JSON document of

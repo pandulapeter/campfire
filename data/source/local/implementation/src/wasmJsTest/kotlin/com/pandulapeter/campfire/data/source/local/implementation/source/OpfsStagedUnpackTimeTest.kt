@@ -64,8 +64,8 @@ class OpfsStagedUnpackTimeTest {
 
         val elapsed = start.elapsedNow()
         println("Unpacked $ENTRY_COUNT staged entries in headless Chrome in $elapsed")
-        assertEquals(songCount, unpacked.files.size)
-        assertTrue(unpacked.files.all { file -> file.images.singleOrNull()?.content is IncomingContent.Staged })
+        assertEquals(songCount, unpacked.size)
+        assertTrue(unpacked.all { file -> file.images.singleOrNull()?.content is IncomingContent.Staged })
         assertTrue(elapsed < BUDGET, "Unpacking $ENTRY_COUNT staged entries took $elapsed, past $BUDGET")
     }
 

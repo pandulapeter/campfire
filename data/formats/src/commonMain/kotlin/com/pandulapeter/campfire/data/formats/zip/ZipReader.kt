@@ -12,21 +12,19 @@ package com.pandulapeter.campfire.data.formats.zip
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
 
 /**
- * Reads zip archives with STORED and DEFLATE entries, following the PKWARE APPNOTE; an encrypted or otherwise
- * compressed entry is left out and reported.
+ * Reads zip archives with STORED and DEFLATE entries, ZIP64 included (archives past 4 GiB or 65,535 entries, and entries
+ * past 4 GiB), following the PKWARE APPNOTE; an encrypted or otherwise compressed entry is left out and reported.
  *
- * Two readers that read every archive without ZIP64 alike: [read] of an archive in memory, and [open] and
- * [ZipDirectory.walk] of a [ZipSource], which never hold an archive or an entry whole unless an [EntrySink] does. Only
- * the second reads ZIP64 (archives past 4 GiB or 65,535 entries, and entries past 4 GiB); the first refuses a ZIP64
- * archive with a [ZipException] and leaves a ZIP64 entry out, as the reference the second is held to.
+ * [open] and [ZipDirectory.walk] of a [ZipSource] never hold an archive or an entry whole unless an [EntrySink] does;
+ * [read] holds every entry it reads in memory.
  */
 object ZipReader {
 
     /**
-     * Reads the central directory of [source], ZIP64 included, refusing with a [ZipException] what [read] refuses (ZIP64
-     * aside), a damaged or split ZIP64 archive, a directory declared larger than [maxCentralDirectorySize] or whose
-     * records add up to more, and more than [maxEntries] declared entries; the last two are checked before anything is
-     * allocated for them, against the 64-bit values where the archive has them.
+     * Reads the central directory of [source], ZIP64 included, refusing with a [ZipException] an archive that is no zip
+     * or whose central directory is damaged, a damaged or split ZIP64 archive, a directory declared larger than
+     * [maxCentralDirectorySize] or whose records add up to more, and more than [maxEntries] declared entries; the last
+     * two are checked before anything is allocated for them, against the 64-bit values where the archive has them.
      *
      * @throws WrappedArchiveException (a [ZipException]) for an archive past 4 GiB written without ZIP64, which a caller
      * tells apart from a damaged one.
@@ -38,9 +36,24 @@ object ZipReader {
     ): ZipDirectory = readZipDirectory(source, maxCentralDirectorySize, maxEntries)
 
     /**
-     * [read] of an archive read through [source]: [open], then [ZipDirectory.walk] with every entry read into memory,
-     * which the budget bounds, and none larger than [Inflater.MAX_DECLARED_ENTRY_SIZE] ([ByteArrayEntrySink]). An entry
-     * of 2 GiB or more is left out however it is to be read, as [read] of an array leaves it out.
+     * The file entries of the archive [source] reads, directories skipped, each read into memory: [open], then
+     * [ZipDirectory.walk] with every entry held whole, which [maxTotalSize] bounds, and none larger than
+     * [Inflater.MAX_DECLARED_ENTRY_SIZE] ([ByteArrayEntrySink]). An entry of 2 GiB or more is left out however it is to be
+     * read. Names are returned as stored, sub-directories included, decoded as UTF-8 or, where they are not UTF-8 and do
+     * not claim to be, as code page 437 (see [entryName]).
+     *
+     * Only an archive that cannot be walked at all throws. An entry that cannot be read - or that the caller does not
+     * want, or that is too large - costs nothing but its name: the songs next to a recording, a PDF or a damaged
+     * `.DS_Store` are still perfectly good.
+     *
+     * @param maxTotalSize how many bytes the entries read may add up to once inflated. Sizes are checked as the
+     * central directory declares them and charged before an entry is read, so a damaged entry costs what it declared;
+     * the inflater holds an entry to what it declared.
+     * @param limitOf what to do with the entry of that name and declared size: read it within a limit, skip it, or
+     * [EntryPolicy.Sniff] it, which hands its first [ImportLimits.SNIFF_LENGTH] bytes to [sniffedLimitOf].
+     * @param sniffedLimitOf how large a sniffed entry starting with that prefix may be, null for one that is not to be
+     * read after all. A sniffed entry that is encrypted, ZIP64 or cannot be peeked at is not wanted rather than
+     * damaged, since nobody asked for it, and one that is not wanted costs nothing of [maxTotalSize].
      */
     suspend fun read(
         source: ZipSource,
@@ -59,222 +72,6 @@ object ZipReader {
         ).walk()
         val entries = sinks.filter { (_, sink) -> sink.isClosed }.map { (name, sink) -> ZipEntry(name, sink.bytes()) }
         return ZipContent(entries = entries, unread = walk.unread, chargedSize = walk.chargedSize)
-    }
-
-    /**
-     * The file entries of [archive], directories skipped. Names are returned as stored, sub-directories included,
-     * decoded as UTF-8 or, where they are not UTF-8 and do not claim to be, as code page 437 (see [entryName]).
-     *
-     * Only an archive that cannot be walked at all throws. An entry that cannot be read - or that the caller does not
-     * want, or that is too large - costs nothing but its name: the songs next to a recording, a PDF or a damaged
-     * `.DS_Store` are still perfectly good.
-     *
-     * @param maxTotalSize how many bytes the entries read may add up to once inflated. Sizes are checked as the
-     * central directory declares them and charged before an entry is read, so a damaged entry costs what it declared;
-     * the inflater holds an entry to what it declared.
-     * @param limitOf what to do with the entry of that name and declared size: read it within a limit, skip it, or
-     * [EntryPolicy.Sniff] it, which hands its first [ImportLimits.SNIFF_LENGTH] bytes to [sniffedLimitOf].
-     * @param sniffedLimitOf how large a sniffed entry starting with that prefix may be, null for one that is not to be
-     * read after all. A sniffed entry that is encrypted, ZIP64 or cannot be peeked at is not wanted rather than
-     * damaged, since nobody asked for it, and one that is not wanted costs nothing of [maxTotalSize].
-     */
-    fun read(
-        archive: ByteArray,
-        maxTotalSize: Long = ImportLimits.MAX_IMPORT_SIZE,
-        limitOf: (name: String, declaredSize: Long) -> EntryPolicy = { _, _ -> EntryPolicy.Read(Long.MAX_VALUE) },
-        sniffedLimitOf: (name: String, prefix: ByteArray) -> Long? = { _, _ -> null },
-    ): ZipContent {
-        val endOfCentralDirectory = findEndOfCentralDirectory(archive)
-        val totalEntries = archive.u16(endOfCentralDirectory + 10)
-        val centralDirectorySize = archive.u32(endOfCentralDirectory + 12)
-        val centralDirectoryOffset = archive.u32(endOfCentralDirectory + 16)
-        if (totalEntries == 0xFFFF || centralDirectorySize == 0xFFFFFFFFL || centralDirectoryOffset == 0xFFFFFFFFL) {
-            throw ZipException("ZIP64 archives are not supported.")
-        }
-        if (centralDirectoryOffset + centralDirectorySize > archive.size) {
-            throw ZipException("The central directory reaches past the end of the ${archive.size} byte archive.")
-        }
-        val walk = Walk(archive = archive, maxTotalSize = maxTotalSize, sniffedLimitOf = sniffedLimitOf)
-        var position = centralDirectoryOffset.toInt()
-        repeat(totalEntries) {
-            if (archive.u32(position) != CENTRAL_DIRECTORY_SIGNATURE) {
-                throw ZipException("Missing central directory header at offset $position.")
-            }
-            val flags = archive.u16(position + 8)
-            val nameLength = archive.u16(position + 28)
-            val extraLength = archive.u16(position + 30)
-            val commentLength = archive.u16(position + 32)
-            val name = archive.entryName(position + 46, nameLength, flags)
-            // A backslash is a separator too: Windows PowerShell 5.1 writes the platform's own, against the format.
-            if (!name.endsWith("/") && !name.endsWith("\\")) {
-                val record = Record(
-                    name = name,
-                    flags = flags,
-                    method = archive.u16(position + 10),
-                    crc = archive.u32(position + 16),
-                    compressedSize = archive.u32(position + 20),
-                    uncompressedSize = archive.u32(position + 24),
-                    localHeaderOffset = archive.u32(position + 42),
-                )
-                walk.take(record, limitOf(name, record.uncompressedSize))
-            }
-            position += 46 + nameLength + extraLength + commentLength
-        }
-        return ZipContent(entries = walk.entries, unread = walk.unread, chargedSize = walk.chargedSize)
-    }
-
-    /** One file entry as the central directory describes it. */
-    private class Record(
-        val name: String,
-        val flags: Int,
-        val method: Int,
-        val crc: Long,
-        val compressedSize: Long,
-        val uncompressedSize: Long,
-        val localHeaderOffset: Long,
-    ) {
-        val isUnsupported
-            get() = flags and 0x0001 != 0 ||
-                compressedSize == 0xFFFFFFFFL || uncompressedSize == 0xFFFFFFFFL || localHeaderOffset == 0xFFFFFFFFL
-    }
-
-    /** The entries one [read] has taken so far, the ones it has not, and what they have cost. */
-    private class Walk(
-        private val archive: ByteArray,
-        private val maxTotalSize: Long,
-        private val sniffedLimitOf: (name: String, prefix: ByteArray) -> Long?,
-    ) {
-        val entries = mutableListOf<ZipEntry>()
-        val unread = mutableListOf<UnreadZipEntry>()
-        var chargedSize = 0L
-            private set
-        private var compressedBytesRead = 0L
-
-        fun take(record: Record, policy: EntryPolicy) {
-            val reason = when (policy) {
-                EntryPolicy.Skip -> UnreadZipEntry.Reason.NOT_WANTED
-                is EntryPolicy.Read -> when {
-                    record.isUnsupported -> UnreadZipEntry.Reason.UNREADABLE
-                    isTooLarge(record, policy.limit) -> UnreadZipEntry.Reason.TOO_LARGE
-                    isPastArchive(record) -> UnreadZipEntry.Reason.UNREADABLE
-                    else -> {
-                        compressedBytesRead += record.compressedSize
-                        readWhole(record)
-                    }
-                }
-
-                EntryPolicy.Sniff -> when {
-                    record.isUnsupported -> UnreadZipEntry.Reason.NOT_WANTED
-                    isPastArchive(record) -> UnreadZipEntry.Reason.UNREADABLE
-                    else -> {
-                        // Charged once, for the peek and for a read after it alike: every peek takes at most its own
-                        // compressed bytes of input and all of them together at most the archive's, whatever the central
-                        // directory claims, while charging again for the read would refuse a nested backup that is more
-                        // than half of its archive.
-                        compressedBytesRead += record.compressedSize
-                        sniff(record)
-                    }
-                }
-            }
-            if (reason != null) {
-                unread += UnreadZipEntry(record.name, reason)
-            }
-        }
-
-        private fun isTooLarge(record: Record, limit: Long) =
-            record.uncompressedSize > limit || chargedSize + record.uncompressedSize > maxTotalSize
-
-        /**
-         * The entries of an archive never share their data, so together they cannot take up more of it than there is.
-         * A central directory whose entries do is pointing several of them at the same bytes, which only a zip bomb does.
-         */
-        private fun isPastArchive(record: Record) = compressedBytesRead + record.compressedSize > archive.size
-
-        private fun sniff(record: Record): UnreadZipEntry.Reason? {
-            val prefix = try {
-                peekData(archive, record)
-            } catch (_: ZipException) {
-                return UnreadZipEntry.Reason.NOT_WANTED
-            }
-            val limit = sniffedLimitOf(record.name, prefix) ?: return UnreadZipEntry.Reason.NOT_WANTED
-            return if (isTooLarge(record, limit)) UnreadZipEntry.Reason.TOO_LARGE else readWhole(record)
-        }
-
-        /** Null once the entry is among [entries]. */
-        private fun readWhole(record: Record): UnreadZipEntry.Reason? = try {
-            // Charged before it is read: a damaged entry has cost what it declared all the same, and without this one
-            // damaged entry could be read as many times as the central directory names it.
-            chargedSize += record.uncompressedSize
-            entries += ZipEntry(name = record.name, bytes = readData(archive, record))
-            null
-        } catch (exception: ZipException) {
-            println("Could not read \"${record.name}\": ${exception.message}")
-            UnreadZipEntry.Reason.UNREADABLE
-        }
-    }
-
-    /** The first [ImportLimits.SNIFF_LENGTH] bytes of an entry, or all of it where it is shorter; nothing is checked. */
-    private fun peekData(archive: ByteArray, record: Record): ByteArray {
-        val dataOffset = dataOffsetOf(archive, record)
-        val compressedSize = record.compressedSize.toInt()
-        return when (record.method) {
-            METHOD_STORED -> archive.copyOfRange(dataOffset, dataOffset + minOf(ImportLimits.SNIFF_LENGTH, compressedSize))
-            METHOD_DEFLATE -> Inflater.inflate(archive, dataOffset, compressedSize, maxOutput = ImportLimits.SNIFF_LENGTH)
-            else -> throw ZipException("Unsupported compression method ${record.method} for \"${record.name}\".")
-        }
-    }
-
-    private fun readData(archive: ByteArray, record: Record): ByteArray {
-        val name = record.name
-        val compressedSize = record.compressedSize.toInt()
-        val uncompressedSize = record.uncompressedSize.toInt()
-        val dataOffset = dataOffsetOf(archive, record)
-        val bytes = when (record.method) {
-            METHOD_STORED -> {
-                if (compressedSize != uncompressedSize) {
-                    throw ZipException("Stored entry \"$name\" declares different compressed and uncompressed sizes.")
-                }
-                archive.copyOfRange(dataOffset, dataOffset + compressedSize)
-            }
-
-            METHOD_DEFLATE -> Inflater.inflate(archive, dataOffset, compressedSize, uncompressedSize)
-
-            else -> throw ZipException("Unsupported compression method ${record.method} for \"$name\".")
-        }
-        if (Crc32.of(bytes) != record.crc) {
-            throw ZipException("Checksum mismatch for \"$name\".")
-        }
-        return bytes
-    }
-
-    private fun dataOffsetOf(archive: ByteArray, record: Record): Int {
-        val name = record.name
-        val localHeaderOffset = record.localHeaderOffset.toInt()
-        val compressedSize = record.compressedSize.toInt()
-        val uncompressedSize = record.uncompressedSize.toInt()
-        if (archive.u32(localHeaderOffset) != LOCAL_HEADER_SIGNATURE) {
-            throw ZipException("Missing local header for \"$name\" at offset $localHeaderOffset.")
-        }
-        // The local header's name and extra fields may differ in length from the central directory ones, but the sizes
-        // there are zero whenever a data descriptor follows the data, so the central directory stays the source of truth.
-        val dataOffset = localHeaderOffset + 30 + archive.u16(localHeaderOffset + 26) + archive.u16(localHeaderOffset + 28)
-        if (dataOffset < 0 || compressedSize < 0 || uncompressedSize < 0 || dataOffset.toLong() + compressedSize > archive.size) {
-            throw ZipException("The data of \"$name\" reaches past the end of the ${archive.size} byte archive.")
-        }
-        return dataOffset
-    }
-
-    private fun findEndOfCentralDirectory(archive: ByteArray): Int {
-        if (archive.size < 22) {
-            throw ZipException("An archive of ${archive.size} bytes is too short to be a zip file.")
-        }
-        val lowestPossible = maxOf(0, archive.size - 22 - MAX_COMMENT_LENGTH)
-        for (offset in archive.size - 22 downTo lowestPossible) {
-            if (archive.u32(offset) == END_OF_CENTRAL_DIRECTORY_SIGNATURE) {
-                return offset
-            }
-        }
-        throw ZipException("Not a zip file: no end of central directory record found.")
     }
 
     /**

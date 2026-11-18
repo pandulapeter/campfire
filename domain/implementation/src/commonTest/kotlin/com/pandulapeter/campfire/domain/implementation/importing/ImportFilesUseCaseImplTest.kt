@@ -9,7 +9,6 @@
  */
 package com.pandulapeter.campfire.domain.implementation.importing
 
-import com.pandulapeter.campfire.domain.implementation.ArchiveKind
 import com.pandulapeter.campfire.domain.implementation.FakeArchiveRepository
 import com.pandulapeter.campfire.domain.implementation.FakeStaging
 import com.pandulapeter.campfire.domain.implementation.FakeExportFileRepository
@@ -38,13 +37,13 @@ import com.pandulapeter.campfire.data.model.importing.ImportedImage
 import com.pandulapeter.campfire.data.model.importing.IncomingContent
 import com.pandulapeter.campfire.data.model.importing.StagedFile
 import com.pandulapeter.campfire.data.model.importing.StagedFileMissingException
-import com.pandulapeter.campfire.data.model.importing.UnpackedArchive
 import com.pandulapeter.campfire.data.model.image.ImageIntake
 import com.pandulapeter.campfire.chordpro.edit.ChordProAttachments
 import com.pandulapeter.campfire.chordpro.edit.ChordProImages
 import com.pandulapeter.campfire.chordpro.edit.ChordProPrettifier
 import com.pandulapeter.campfire.chordpro.convert.ChordSheet
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
+import com.pandulapeter.campfire.data.model.importing.ImportIntake
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.data.repository.api.ArchiveRepository
@@ -70,10 +69,12 @@ class ImportFilesUseCaseImplTest {
     fun `ChordPro text and archives are prettified before they are written`() = runTest {
         val raw = "{tag: Folk}\r\n{artist: Singer}\r\n{title: Song}\r\n{soc}\r\n[G]Sing\r\n{eoc}\r\n{sov}\r\n[C]Words\r\n{eov}"
         val expected = "{title: Song}\n{artist: Singer}\n{tag: Folk}\n\n{soc}\n[G]Sing\n{eoc}\n\n{sov}\n[C]Words\n{eov}\n"
-        val archive = FakeArchiveRepository { _, _ -> listOf(ImportedFile("source.cho", raw.encodeToByteArray())) }
+        val staging = FakeStaging()
+        val archive = FakeArchiveRepository(staging = staging) { _, _ -> listOf(ImportedFile("source.cho", raw.encodeToByteArray())) }
         for (source in listOf("source.cho", "source.txt", "source.zip")) {
             val songs = FakeSongRepository(mutableMapOf())
-            val plan = prepare(songs, archive = archive)(listOf(ImportedFile(source, raw.encodeToByteArray())))
+            val file = ImportedFile(source, raw.encodeToByteArray())
+            val plan = prepare(songs, archive = archive)(listOf(if (source.endsWith(".zip")) staging.received(file) else file))
             assertEquals(expected, plan.songs.single().text)
             assertFalse(plan.songs.single().isConverted)
             ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard, FakeImageRepository(), importStagingRepository = FakeStaging()).invoke(plan, ImportChoices())
@@ -153,11 +154,12 @@ class ImportFilesUseCaseImplTest {
     @Test
     fun `archive documents and text take the same conversion path and left-out conflicts are not counted as converted`() = runTest {
         val songs = FakeSongRepository(mutableMapOf("sheet.cho" to "old text\n"))
-        val archive = FakeArchiveRepository { _, maxSize ->
+        val staging = FakeStaging()
+        val archive = FakeArchiveRepository(staging = staging) { _, maxSize ->
             assertEquals(ImportLimits.MAX_IMPORT_SIZE, maxSize)
             listOf(ImportedFile("sheet.txt", "Am C\nNew words".encodeToByteArray()), ImportedFile.unread("scan.docx"))
         }
-        val plan = prepare(songs, archive = archive)(listOf(ImportedFile("archive.zip", byteArrayOf(1))))
+        val plan = prepare(songs, archive = archive)(listOf(staging.received(ImportedFile("archive.zip", byteArrayOf(1)))))
         assertTrue(plan.hasConflicts)
         assertEquals(listOf("scan.docx"), plan.unreadableDocumentFileNames)
         val result = ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard, FakeImageRepository(), importStagingRepository = FakeStaging()).invoke(plan, plan.leavingOutConflicts())
@@ -167,34 +169,39 @@ class ImportFilesUseCaseImplTest {
     @Test
     fun `a file of an unknown type is unpacked by its content and a document is never`() = runTest {
         val unpacked = mutableListOf<Int>()
-        val archive = FakeArchiveRepository { bytes, _ ->
+        val staging = FakeStaging()
+        val archive = FakeArchiveRepository(staging = staging) { bytes, _ ->
             unpacked += bytes.size
             listOf(ImportedFile("a.cho", "{title: A}".encodeToByteArray()))
         }
         val zip = byteArrayOf(0x50, 0x4B, 3, 4, 0)
+        // Staged as the intake stages an archive: by its name, or by its bytes under any name but a picture's or a document's.
+        fun arrived(file: ImportedFile) = if (ImportIntake.decide(file.name, file.bytes.size.toLong(), file.bytes) == ImportIntake.Decision.Stage) staging.received(file) else file
         val plan = prepare(FakeSongRepository(mutableMapOf()), archive = archive)(
-            listOf(ImportedFile("library.backup", zip), ImportedFile("set.sbp", byteArrayOf(1, 2)), ImportedFile("notes.bin", byteArrayOf(1))),
+            listOf(ImportedFile("library.backup", zip), ImportedFile("set.sbp", byteArrayOf(1, 2)), ImportedFile("notes.bin", byteArrayOf(1))).map(::arrived),
         )
         assertEquals(listOf(5, 2), unpacked)
         assertEquals(listOf("notes.bin"), plan.skippedFileNames)
         assertEquals(listOf("a.cho", "a.cho"), plan.songs.map { it.sourceFileName })
         // A backup renamed to a text file's extension on its way over is still the archive its bytes say it is.
         val renamed = prepare(FakeSongRepository(mutableMapOf()), archive = archive)(
-            listOf(ImportedFile("library.txt", zip), ImportedFile("songs.cho", zip), ImportedFile("backup.json", zip)),
+            listOf(ImportedFile("library.txt", zip), ImportedFile("songs.cho", zip), ImportedFile("backup.json", zip)).map(::arrived),
         )
         assertEquals(listOf(5, 2, 5, 5, 5), unpacked)
         assertEquals(listOf("a.cho", "a.cho", "a.cho"), renamed.songs.map { it.sourceFileName })
         // A Word document is a zip archive too, and is read as the document it says it is.
-        prepare(FakeSongRepository(mutableMapOf()), archive = archive)(listOf(ImportedFile("sheet.docx", zip)))
+        prepare(FakeSongRepository(mutableMapOf()), archive = archive)(listOf(arrived(ImportedFile("sheet.docx", zip))))
         assertEquals(listOf(5, 2, 5, 5, 5), unpacked)
     }
 
     @Test
     fun `a file of an unknown type that holds nothing an import reads is reported under its own name`() = runTest {
         var entries = emptyList<ImportedFile>()
-        val archive = FakeArchiveRepository { _, _ -> entries }
+        val staging = FakeStaging()
+        val archive = FakeArchiveRepository(staging = staging) { _, _ -> entries }
         val zip = byteArrayOf(0x50, 0x4B, 3, 4, 0)
-        val prepare = prepare(FakeSongRepository(mutableMapOf()), archive = archive)
+        val prepareStaged = prepare(FakeSongRepository(mutableMapOf()), archive = archive)
+        val prepare: suspend (List<ImportedFile>) -> ImportPlan = { files -> prepareStaged(files.map(staging::received)) }
         val document = listOf(ImportedFile.unread("mimetype"), ImportedFile("content.xml", "<office/>".encodeToByteArray()), ImportedFile.unread("thumbnail.png"))
 
         entries = document
@@ -736,10 +743,11 @@ class ImportFilesUseCaseImplTest {
     fun `preparation reports expanded archive files and compares before writing`() = runTest {
         val songs = FakeSongRepository(mutableMapOf())
         val events = mutableListOf<ImportProgress>()
-        val archive = FakeArchiveRepository { _, _ ->
+        val staging = FakeStaging()
+        val archive = FakeArchiveRepository(staging = staging) { _, _ ->
             listOf(ImportedFile("one.cho", A.encodeToByteArray()), ImportedFile("two.cho", B.encodeToByteArray()))
         }
-        val plan = prepare(songs, archive = archive).invoke(listOf(ImportedFile("bulk.zip", byteArrayOf(1))), events::add)
+        val plan = prepare(songs, archive = archive).invoke(listOf(staging.received(ImportedFile("bulk.zip", byteArrayOf(1)))), events::add)
         assertEquals(2, plan.songs.size)
         assertEquals("bulk.zip", events.first().fileName)
         assertEquals(1, events.first().total)
@@ -882,10 +890,6 @@ class ImportFilesUseCaseImplTest {
 
     @Test
     fun `a song names the pictures it brings by their library names which is the one change to its text`() = runTest {
-        ArchiveKind.entries.forEach { kind -> songNamesThePicturesItBrings(kind) }
-    }
-
-    private suspend fun songNamesThePicturesItBrings(kind: ArchiveKind) {
         val songs = FakeSongRepository(mutableMapOf())
         val images = FakeImageRepository()
         val chart = FakeImageRepository.picture(1)
@@ -904,7 +908,7 @@ class ImportFilesUseCaseImplTest {
             )
         }
 
-        val plan = prepare(songs, archive = archive, images = images)(listOf(images.staging.arrived(ImportedFile("songs.zip", byteArrayOf(1)), kind)))
+        val plan = prepare(songs, archive = archive, images = images)(listOf(images.staging.received(ImportedFile("songs.zip", byteArrayOf(1)))))
         val name = (images.libraryNameOf(chart) as ImageIntake.Accepted).name
         val entry = plan.songs.single()
 
@@ -972,10 +976,6 @@ class ImportFilesUseCaseImplTest {
 
     @Test
     fun `a song identical but for what the archive called its pictures is already there and brings back a picture the library lost`() = runTest {
-        ArchiveKind.entries.forEach { kind -> identicalSongBringsBackItsPicture(kind) }
-    }
-
-    private suspend fun identicalSongBringsBackItsPicture(kind: ArchiveKind) {
         val chart = FakeImageRepository.picture(1)
         val images = FakeImageRepository()
         val name = (images.libraryNameOf(chart) as ImageIntake.Accepted).name
@@ -986,7 +986,7 @@ class ImportFilesUseCaseImplTest {
 
         listOf(asExported, renamed).forEach { file ->
             val archive = FakeArchiveRepository(staging = images.staging) { _, _ -> listOf(file) }
-            val plan = prepare(songs, archive = archive, images = images)(listOf(images.staging.arrived(ImportedFile("songs.zip", byteArrayOf(1)), kind)))
+            val plan = prepare(songs, archive = archive, images = images)(listOf(images.staging.received(ImportedFile("songs.zip", byteArrayOf(1)))))
             assertEquals(ImportPlan.Status.IDENTICAL, plan.songs.single().status)
 
             val result = ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard, images, importStagingRepository = images.staging).invoke(plan, ImportChoices())
@@ -1000,16 +1000,12 @@ class ImportFilesUseCaseImplTest {
 
     @Test
     fun `a picture whose planned name another picture took meanwhile is named by the name it was stored under`() = runTest {
-        ArchiveKind.entries.forEach { kind -> pictureNamedByTheNameItWasStoredUnder(kind) }
-    }
-
-    private suspend fun pictureNamedByTheNameItWasStoredUnder(kind: ArchiveKind) {
         val songs = FakeSongRepository(mutableMapOf())
         val images = FakeImageRepository()
         val chart = FakeImageRepository.picture(1)
         val file = ImportedFile("a.cho", "{title: A}\n{image: src=chart.png}\n".encodeToByteArray(), images = listOf(ImportedImage("chart.png", IncomingContent.Bytes(chart), null)))
         val archive = FakeArchiveRepository(staging = images.staging) { _, _ -> listOf(file) }
-        val plan = prepare(songs, archive = archive, images = images)(listOf(images.staging.arrived(ImportedFile("songs.zip", byteArrayOf(1)), kind)))
+        val plan = prepare(songs, archive = archive, images = images)(listOf(images.staging.received(ImportedFile("songs.zip", byteArrayOf(1)))))
         val planned = plan.songs.single().images.single().name!!
         images.library[planned] = FakeImageRepository.picture(2)
 
@@ -1022,10 +1018,6 @@ class ImportFilesUseCaseImplTest {
 
     @Test
     fun `a song exported with its pictures imports into another library with its pictures under the same names and its text unchanged`() = runTest {
-        ArchiveKind.entries.forEach { kind -> exportedSongImportsWithItsPictures(kind) }
-    }
-
-    private suspend fun exportedSongImportsWithItsPictures(kind: ArchiveKind) {
         val source = FakeImageRepository()
         val name = source.store(FakeImageRepository.picture(1))
         val text = ChordProPrettifier.prettify("{title: A}\n{image: src=$name}\n")
@@ -1051,7 +1043,7 @@ class ImportFilesUseCaseImplTest {
         val target = FakeImageRepository()
 
         val unpacking = FakeArchiveRepository(staging = target.staging) { _, _ -> listOf(exported) }
-        val plan = prepare(songs, archive = unpacking, images = target)(listOf(target.staging.arrived(ImportedFile("a.zip", byteArrayOf(1)), kind)))
+        val plan = prepare(songs, archive = unpacking, images = target)(listOf(target.staging.received(ImportedFile("a.zip", byteArrayOf(1)))))
         ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard, target, importStagingRepository = target.staging).invoke(plan, ImportChoices())
 
         assertEquals(text, songs.files.getValue("a.cho"))
@@ -1061,10 +1053,6 @@ class ImportFilesUseCaseImplTest {
 
     @Test
     fun `a song brings the files attached to it under their library names and names those it cannot bring as they arrived`() = runTest {
-        ArchiveKind.entries.forEach { kind -> songBringsItsAttachments(kind) }
-    }
-
-    private suspend fun songBringsItsAttachments(kind: ArchiveKind) {
         val songs = FakeSongRepository(mutableMapOf())
         val images = FakeImageRepository()
         val sheet = "%PDF sheet".encodeToByteArray()
@@ -1083,7 +1071,7 @@ class ImportFilesUseCaseImplTest {
             )
         }
 
-        val plan = prepare(songs, archive = archive, images = images)(listOf(images.staging.arrived(ImportedFile("songs.zip", byteArrayOf(1)), kind)))
+        val plan = prepare(songs, archive = archive, images = images)(listOf(images.staging.received(ImportedFile("songs.zip", byteArrayOf(1)))))
         val name = (images.libraryNameOfAttachment(sheet, "pdf") as ImageIntake.Accepted).name
         val entry = plan.songs.single()
 
@@ -1102,32 +1090,12 @@ class ImportFilesUseCaseImplTest {
     }
 
     @Test
-    fun `the archives of one import share one attachment budget - apart from the pictures' budget`() = runTest {
-        val budgets = mutableListOf<Pair<Long, Long>>()
-        val archive = object : ArchiveRepository by FakeArchiveRepository() {
-            override suspend fun unpack(archive: ByteArray, maxSize: Long, maxImageSize: Long, maxAttachmentSize: Long): UnpackedArchive {
-                budgets += maxImageSize to maxAttachmentSize
-                return UnpackedArchive(files = emptyList(), imageSize = 0, attachmentSize = 2_000)
-            }
-        }
-
-        prepare(FakeSongRepository(mutableMapOf()), archive = archive)(listOf(ImportedFile("one.zip", byteArrayOf(1)), ImportedFile("two.zip", byteArrayOf(1))))
-
-        assertEquals(ImportLimits.MAX_IMPORT_ATTACHMENTS_SIZE to ImportLimits.MAX_IMPORT_ATTACHMENTS_SIZE - 2_000, budgets[0].second to budgets[1].second)
-        assertEquals(ImportLimits.MAX_IMPORT_IMAGES_SIZE, budgets[1].first)
-    }
-
-    @Test
     fun `a song left out of the import leaves its pictures out too`() = runTest {
-        ArchiveKind.entries.forEach { kind -> songLeftOutLeavesItsPicturesOut(kind) }
-    }
-
-    private suspend fun songLeftOutLeavesItsPicturesOut(kind: ArchiveKind) {
         val songs = FakeSongRepository(mutableMapOf())
         val images = FakeImageRepository()
         val file = ImportedFile("a.cho", "{title: A}\n{image: src=chart.png}\n".encodeToByteArray(), images = listOf(ImportedImage("chart.png", IncomingContent.Bytes(FakeImageRepository.picture(1)), null)))
         val archive = FakeArchiveRepository(staging = images.staging) { _, _ -> listOf(file) }
-        val plan = prepare(songs, archive = archive, images = images)(listOf(images.staging.arrived(ImportedFile("songs.zip", byteArrayOf(1)), kind)))
+        val plan = prepare(songs, archive = archive, images = images)(listOf(images.staging.received(ImportedFile("songs.zip", byteArrayOf(1)))))
 
         ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard, images, importStagingRepository = images.staging).invoke(plan, ImportChoices(leftOut = setOf(ImportEntryKey(ImportEntryKey.Kind.SONG, 0))))
 
@@ -1136,24 +1104,21 @@ class ImportFilesUseCaseImplTest {
     }
 
     @Test
-    fun `an archive comes to the same plan and the same library whether its files arrive in memory or staged`() = runTest {
-        val outcomes = ArchiveKind.entries.map { kind ->
-            val songs = FakeSongRepository(mutableMapOf("b.cho" to "{title: B}\n"))
-            val images = FakeImageRepository()
-            val plan = prepare(songs, archive = picturesArchive(images), images = images)(listOf(images.staging.arrived(ImportedFile("songs.zip", byteArrayOf(1)), kind)))
-            val result = ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard, images, importStagingRepository = images.staging).invoke(plan, plan.leavingOutConflicts())
-            assertTrue(images.staging.files.keys.none { it.endsWith(".png") || it.endsWith(".pdf") }, "Left in the staging: ${images.staging.files.keys}")
-            listOf(plan, result, songs.files, images.library.mapValues { it.value.toList() }, images.added)
-        }
+    fun `an archive's pictures and attachments leave the staging once imported`() = runTest {
+        val songs = FakeSongRepository(mutableMapOf("b.cho" to "{title: B}\n"))
+        val images = FakeImageRepository()
+        val plan = prepare(songs, archive = picturesArchive(images), images = images)(listOf(images.staging.received(ImportedFile("songs.zip", byteArrayOf(1)))))
 
-        assertEquals(outcomes.first(), outcomes.last())
+        ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard, images, importStagingRepository = images.staging).invoke(plan, plan.leavingOutConflicts())
+
+        assertTrue(images.staging.files.keys.none { it.endsWith(".png") || it.endsWith(".pdf") }, "Left in the staging: ${images.staging.files.keys}")
     }
 
     @Test
     fun `a move failing midway leaves its song unwritten and what it moved before to the prune`() = runTest {
         val songs = FakeSongRepository(mutableMapOf())
         val images = FakeImageRepository()
-        val plan = prepare(songs, archive = picturesArchive(images), images = images)(listOf(images.staging.arrived(ImportedFile("songs.zip", byteArrayOf(1)), ArchiveKind.STAGED)))
+        val plan = prepare(songs, archive = picturesArchive(images), images = images)(listOf(images.staging.received(ImportedFile("songs.zip", byteArrayOf(1)))))
         val moved = mutableListOf<String>()
         images.staging.beforeMove = { file -> if (moved.size == 1) throw IllegalStateException("The disk went away.") else moved += file.name }
 
@@ -1171,7 +1136,7 @@ class ImportFilesUseCaseImplTest {
     fun `a staged file gone between the plan and the write fails the import before anything is written`() = runTest {
         val songs = FakeSongRepository(mutableMapOf())
         val images = FakeImageRepository()
-        val plan = prepare(songs, archive = picturesArchive(images), images = images)(listOf(images.staging.arrived(ImportedFile("songs.zip", byteArrayOf(1)), ArchiveKind.STAGED)))
+        val plan = prepare(songs, archive = picturesArchive(images), images = images)(listOf(images.staging.received(ImportedFile("songs.zip", byteArrayOf(1)))))
         images.staging.files.keys.removeAll { it.endsWith(".pdf") }
 
         assertFailsWith<StagedFileMissingException> {
@@ -1263,26 +1228,7 @@ class ImportFilesUseCaseImplTest {
     }
 
     @Test
-    fun `the archives of one import share one picture budget - apart from the songs' budget`() = runTest {
-        val budgets = mutableListOf<Pair<Long, Long>>()
-        val picture = FakeImageRepository.picture(1)
-        val archive = object : ArchiveRepository by FakeArchiveRepository() {
-            override suspend fun unpack(archive: ByteArray, maxSize: Long, maxImageSize: Long, maxAttachmentSize: Long): UnpackedArchive {
-                budgets += maxSize to maxImageSize
-                val song = ImportedFile("${budgets.size}.cho", "{title: ${budgets.size}}\n{image: src=x.png}\n".encodeToByteArray(), images = listOf(ImportedImage("x.png", IncomingContent.Bytes(picture), null)))
-                return UnpackedArchive(files = listOf(song), imageSize = 1_000)
-            }
-        }
-
-        prepare(FakeSongRepository(mutableMapOf()), archive = archive)(listOf(ImportedFile("one.zip", byteArrayOf(1)), ImportedFile("two.zip", byteArrayOf(1))))
-
-        assertEquals(ImportLimits.MAX_IMPORT_IMAGES_SIZE, budgets[0].second)
-        assertEquals(ImportLimits.MAX_IMPORT_IMAGES_SIZE - 1_000, budgets[1].second)
-        assertEquals(budgets[0].first - budgets[1].first, "{title: 1}\n{image: src=x.png}\n".encodeToByteArray().size.toLong())
-    }
-
-    @Test
-    fun `an archive may be as large as the songs' budget and the pictures' together`() = runTest {
+    fun `an archive that was not staged is never unpacked and is oversized past what a selection reads whole`() = runTest {
         var unpacked = 0
         val archive = FakeArchiveRepository { _, _ -> emptyList<ImportedFile>().also { unpacked++ } }
 
@@ -1290,8 +1236,9 @@ class ImportFilesUseCaseImplTest {
             listOf(ImportedFile("big.zip", ByteArray(ImportLimits.MAX_ARCHIVE_SIZE.toInt())), ImportedFile("bigger.zip", ByteArray(ImportLimits.MAX_ARCHIVE_SIZE.toInt() + 1))),
         )
 
-        assertEquals(1, unpacked)
+        assertEquals(0, unpacked)
         assertEquals(listOf("bigger.zip"), plan.oversizedFileNames)
+        assertEquals(listOf("big.zip"), plan.skippedFileNames)
     }
 
     /** Numbers a taken name the way the storage layer does, `x_2`, `x_3`…, unless told to replace it. */

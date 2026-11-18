@@ -15,15 +15,14 @@ import com.pandulapeter.campfire.data.formats.zip.ZipReader.MAX_COMMENT_LENGTH
 import kotlinx.coroutines.yield
 
 /**
- * Reads the central directory of [source] into a [ZipDirectory], refusing what [ZipReader.read] refuses of an archive
- * in memory, at the same records, ZIP64 aside: it walks as many records as the end records declare, from where they say
- * the directory starts, each one only having to lie within the file (not within the directory's declared size, which
- * the in-memory reader does not hold records to either). On top of that, the directory is refused past
+ * Reads the central directory of [source] into a [ZipDirectory]: it walks as many records as the end records declare,
+ * from where they say the directory starts, each one only having to lie within the file (not within the directory's
+ * declared size, which archives that read everywhere else do not always keep to). The directory is refused past
  * [maxCentralDirectorySize] (as declared, and as its records are walked) and past [maxEntries] declared entries, both
  * before anything is allocated for them.
  *
  * ZIP64 is read as [centralDirectoryBounds] and [zip64Values] say. A record whose marked value cannot be had is kept
- * with [FLAG_UNRESOLVED_ZIP64], so the walk leaves it out as the in-memory reader leaves out every marked entry.
+ * with [FLAG_UNRESOLVED_ZIP64], so the walk leaves it out as one it cannot read.
  */
 internal suspend fun readZipDirectory(source: ZipSource, maxCentralDirectorySize: Long, maxEntries: Int): ZipDirectory {
     val size = source.size
@@ -74,7 +73,7 @@ internal suspend fun readZipDirectory(source: ZipSource, maxCentralDirectorySize
         val isZip64 = compressedSize == ZIP64_MARKER || uncompressedSize == ZIP64_MARKER || localHeaderOffset == ZIP64_MARKER
         val namePosition = position + RECORD_HEADER_SIZE
         // The extra field is read, with the name in the same slice, only where a value lives in it and it lies within the
-        // file: the in-memory reader never reads it, and an archive whose last extra field is cut short reads as it did.
+        // file: nothing else in it is read, and an archive whose last extra field is cut short still reads.
         val readsExtra = isZip64 && checkedSum(namePosition, nameLength.toLong() + extraLength) <= size
         val name = records.bytesAt(namePosition, if (readsExtra) nameLength + extraLength else nameLength, "a $nameLength byte name")
         val nameAt = records.offsetOf(namePosition)

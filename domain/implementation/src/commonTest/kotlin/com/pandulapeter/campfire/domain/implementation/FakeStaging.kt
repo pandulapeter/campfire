@@ -61,9 +61,6 @@ internal open class FakeStaging : ImportStagingRepository {
     /** [file] with its archive's bytes put into the staging folder, as the intake hands a received archive over. */
     fun received(file: ImportedFile) = ImportedFile(name = file.name, bytes = ByteArray(0), staged = receive(file.bytes))
 
-    /** [file] as an archive of [kind] reaches the preparation: as it is, or [received]. */
-    fun arrived(file: ImportedFile, kind: ArchiveKind) = if (kind == ArchiveKind.STAGED) received(file) else file
-
     /** [files] with every picture and attachment in memory staged instead, as the streaming unpack hands them over. */
     fun staged(files: List<ImportedFile>) = files.map { file ->
         file.copy(
@@ -113,10 +110,4 @@ internal suspend fun wrappedArchiveException(): WrappedArchiveException {
         }
     }
     return assertFailsWith<WrappedArchiveException> { ZipReader.open(source) }
-}
-
-/** How an archive's files reach the import: read into memory, or staged on disk by the streaming unpack. */
-internal enum class ArchiveKind {
-    IN_MEMORY,
-    STAGED,
 }

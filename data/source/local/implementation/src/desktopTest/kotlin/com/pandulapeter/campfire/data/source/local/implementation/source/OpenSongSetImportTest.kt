@@ -44,7 +44,7 @@ class OpenSongSetImportTest {
             ),
         )
 
-        val files = unpacks.both(bundle).files
+        val files = unpacks.unpack(bundle)
 
         val setlist = files.single { it.name == "World Night.setlist.json" }
         val artists = entriesOf(setlist).map { entry -> files.firstOrNull { it.name == entry }?.bytes?.decodeToString()?.let(ARTIST::find)?.groupValues?.get(1) }
@@ -63,7 +63,7 @@ class OpenSongSetImportTest {
             ),
         )
 
-        val files = unpacks.both(backup).files
+        val files = unpacks.unpack(backup)
 
         val worldNight = files.single { it.name == "World Night.setlist.json" }
         assertEquals(listOf("River Song.cho", "River Song 2.cho", "Morning Light.cho", "morning light 2.cho", "Nowhere.cho"), entriesOf(worldNight))
@@ -90,7 +90,7 @@ class OpenSongSetImportTest {
             ),
         )
 
-        val files = unpacks.both(folders).files
+        val files = unpacks.unpack(folders)
 
         assertEquals(listOf("River Song.cho", "River Song 2.cho", "Gig.setlist.json"), files.map { it.name })
         assertEquals(listOf("River Song.cho", "River Song 2.cho"), entriesOf(files.last()))

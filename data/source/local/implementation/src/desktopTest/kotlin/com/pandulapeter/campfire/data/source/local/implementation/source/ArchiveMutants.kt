@@ -12,9 +12,9 @@ package com.pandulapeter.campfire.data.source.local.implementation.source
 import kotlin.random.Random
 
 /**
- * Damaged copies of an archive from a fixed seed, aimed where the two readers decide differently if they ever do: a
- * byte flipped anywhere, bytes flipped in the headers near the end (the central directory and the end records, where
- * most of an archive's numbers are), a header field set to the ZIP64 marker, a field zeroed, and the archive cut short.
+ * Damaged copies of an archive from a fixed seed, aimed where the reader has the most to decide: a byte flipped
+ * anywhere, bytes flipped in the headers near the end (the central directory and the end records, where most of an
+ * archive's numbers are), a header field set to the ZIP64 marker, a field zeroed, and the archive cut short.
  */
 internal object ArchiveMutants {
 

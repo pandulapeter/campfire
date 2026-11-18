@@ -121,7 +121,7 @@ class LargeFileMemoryTest {
         val unpacked = ArchiveLocalSourceImpl(logger = Logger.Standard, fileStorage = storage, importStaging = staging)
             .unpack(archive = archive, maxSize = ImportLimits.MAX_IMPORT_SIZE)
 
-        val attachments = unpacked.files.single().images.map { (it.content as IncomingContent.Staged).file }
+        val attachments = unpacked.single().images.map { (it.content as IncomingContent.Staged).file }
         assertEquals(List(3) { NESTED_ATTACHMENT_SIZE.toLong() }, attachments.map { it.size })
         assertEquals((attachments.map { it.name } + archive.name).sorted(), storage.listNames(StorageDirectory.IMPORTS).sorted())
     }

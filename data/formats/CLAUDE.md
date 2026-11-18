@@ -73,9 +73,8 @@ Documents are read locally, never rendered, uploaded, or kept.
 
 ## `zip/`
 
-Exists because no multiplatform zip library covers wasmJs. Reads STORED and DEFLATE (`Inflater` follows `puff.c`);
-encrypted or otherwise compressed entries are left out. Only the streaming reader reads ZIP64; the in-memory one refuses
-it, as the reference the other is held to.
+Exists because no multiplatform zip library covers wasmJs. Reads STORED and DEFLATE (`Inflater` follows `puff.c`),
+ZIP64 included; encrypted or otherwise compressed entries are left out.
 
 - **`ZipWriter` deflates each entry where that makes it smaller, else stores it** (decided by trying, never by name),
   with `Deflater`'s fixed Huffman codes. Every Campfire version reads both. The output depends on the entries alone,
@@ -104,36 +103,32 @@ it, as the reference the other is held to.
 - **A declared size the data cannot be is a damaged entry** (`ZipDirectory.canProduceDeclaredSize`): a stored entry is
   its compressed bytes, and no deflate stream inflates past `MAX_DEFLATE_RATIO` (1032, two bits per 258-byte match;
   zlib's best over zeros stays under it, `DeflateRatioJvmTest`). The walk charges such an entry (`onCharged`) and leaves
-  it out unreadable without asking for a sink, where the in-memory reader reads it and finds it short, so nothing is set
-  aside for a lie.
-- **Two readers that read every archive alike**: `ZipReader.read(ByteArray)` in memory, and `ZipReader.open(ZipSource)`
-  with `ZipDirectory.walk`, which never holds an archive or an entry whole unless its `EntrySink` does. The walk is the
-  in-memory one decision for decision (same policies asked in the same order, same peeks, charges, and reasons), which
-  `readAlike` and the fuzz test hold it to; keep them alike until the in-memory one is removed. The import reads every
-  archive through the walk; `read(ByteArray)` is left only to the Word reader and the tests' reference. Its own additions:
-  `MAX_CENTRAL_DIRECTORY_SIZE` and `MAX_ARCHIVE_ENTRIES` refused before anything is allocated, the directory kept as
-  primitive arrays and name bytes, each local header read once, and every sum of declared numbers through `checkedSum`.
+  it out unreadable without asking for a sink, so nothing is set aside for a lie.
+- **One reader**: `ZipReader.open(ZipSource)` with `ZipDirectory.walk`, which never holds an archive or an entry whole
+  unless its `EntrySink` does; `ZipReader.read(ZipSource)` is the walk into memory (the Word reader's, over a
+  `ByteArrayZipSource`). `MAX_CENTRAL_DIRECTORY_SIZE` and `MAX_ARCHIVE_ENTRIES` are refused before anything is
+  allocated, the directory kept as primitive arrays and name bytes, each local header read once, and every sum of
+  declared numbers through `checkedSum`.
   A `ZipDirectory` says what it cost of both caps (`centralDirectorySize`, `recordCount`), so a caller can carry what
   is left of them across nested archives.
   `ByteArrayEntrySink` refuses an entry over 50 MiB for memory's sake, stored ones too.
 - **ZIP64 follows what real writers write** (`RealWriterArchives`' KDoc says what each wrote). The ZIP64 record's
   values win over stale 32-bit ones; only the end record's own disk fields are checked (Explorer and OneDrive write wrong
-  ones in the others). An end record needing ZIP64 without a record is damaged; one needing none reads as it always did
-  however broken its ZIP64 record, so no archive the in-memory reader reads reads differently. A central header's marker
-  without its `0x0001` value leaves the entry out, as every marked entry was; local headers' ZIP64 fields and data
-  descriptors are never read. A ZIP64 entry's data ends before the central directory. A 64-bit value with its top bit
-  set is refused, and per-entry caps and the budget apply to 64-bit sizes unchanged.
+  ones in the others). An end record needing ZIP64 without a record is damaged; one needing none reads without ZIP64
+  however broken its ZIP64 record. A central header's marker without its `0x0001` value leaves the entry out; local
+  headers' ZIP64 fields and data descriptors are never read. A ZIP64 entry's data ends before the central directory. A
+  64-bit value with its top bit set is refused, and per-entry caps and the budget apply to 64-bit sizes unchanged.
 - **A file past 4 GiB with no ZIP64 locator is `WrappedArchiveException`**, a public `ZipException` a caller tells apart
   from a damaged archive: its tool wrapped every size and offset around, so it is refused, never recovered.
 - `ZipDirectory.walk` reads an entry of any 64-bit size into its sink; `ZipReader.read(source)`, which holds entries in
-  memory, leaves out one of 2 GiB or more, as the in-memory reader does.
+  memory, leaves out one of 2 GiB or more.
 - **The streaming inflater** (`StreamingInflater.kt`) is `puff.c`'s structure again over a `ZipSource` range, with a
   64 KiB input buffer and a 64 KiB output window that slides to keep 32 KiB of history; only its block loops suspend,
   topping up between symbols. `Inflater.inflate(ByteArray)` stays as it is (the PDF reader's, and the reference the
   fuzz test holds the streaming one to: the same bytes or a `ZipException` from both). Output goes to an `EntrySink`
   through `EntrySink.receive`, which holds it to the declared size, takes its CRC-32 and SHA-256, yields every 256 KiB,
   and ends the sink exactly once: `close` with the SHA-256, or `abandon` on any failure or cancellation.
-- An unreadable entry is left out and reported by name (the module's one print, in each reader); only an unwalkable
+- An unreadable entry is left out and reported by name (the module's one print); only an unwalkable
   archive is a `ZipException`.
 - Entry names are UTF-8 where flagged or valid (macOS does not flag), else code page 437. A backslash is a separator too
   (Windows PowerShell 5.1).

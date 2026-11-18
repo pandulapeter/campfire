@@ -80,8 +80,6 @@ internal class PrepareImportUseCaseImpl(
         // The checks here are not redundant with the platform readers: they are what holds for a caller that did not
         // read its files through an ImportBudget.
         var remaining = ImportLimits.MAX_IMPORT_SIZE
-        var remainingImages = ImportLimits.MAX_IMPORT_IMAGES_SIZE
-        var remainingAttachments = ImportLimits.MAX_IMPORT_ATTACHMENTS_SIZE
 
         // Loose files share the null origin, and everything unpacked from the picked file at index i has origin i.
         fun sort(file: ImportedFile, origin: Int?) {
@@ -135,32 +133,17 @@ internal class PrepareImportUseCaseImpl(
                     if (songs == null) sort(file = file, origin = null) else songs.forEach { sort(file = it, origin = index) }
                 }
                 file.isTooLarge || (staged == null && file.bytes.size > ImportLimits.MAX_ARCHIVE_SIZE) -> triage.oversizedFileNames += file.name
-                // One that could not be read, under an archive's name, holds nothing to unpack: skipped as an unpack of
-                // nothing would have it, without reading nothing as an archive in memory.
-                staged == null && file.bytes.isEmpty() -> {
-                    logger.log("Could not unpack \"${file.name}\": nothing was read.")
+                // One that was not staged holds nothing to unpack: the intake and `ImportWork` stage every archive they
+                // have bytes of, so it is one that could not be read under an archive's name, skipped as an unpack of
+                // nothing would have it.
+                staged == null -> {
+                    logger.log("Could not unpack \"${file.name}\": nothing was staged.")
                     triage.skippedFileNames += file.name
                 }
                 else -> try {
-                    val unpacked = if (staged != null) {
-                        // Its pictures and attachments are staged on disk, within the staging's budget rather than the
-                        // in-memory ones, which go on bounding only what is held in memory (the picture links). The
-                        // received archive stays the request's, for Try again, until the request settles.
-                        archiveRepository.unpack(archive = staged, maxSize = remaining, onProgress = unpacking::read)
-                    } else {
-                        // Only the tests hand an archive over in memory: the app stages every one before it is prepared
-                        // (`ImportWork`), so this unpack is the reference the streaming one is held to.
-                        archiveRepository.unpack(
-                            archive = file.bytes,
-                            maxSize = remaining,
-                            maxImageSize = remainingImages,
-                            maxAttachmentSize = remainingAttachments,
-                        ).also {
-                            remainingImages -= it.imageSize
-                            remainingAttachments -= it.attachmentSize
-                        }
-                    }
-                    val entries = unpacked.files
+                    // Its pictures and attachments are staged on disk, within the staging's budget. The received archive
+                    // stays the request's, for Try again, until the request settles.
+                    val entries = archiveRepository.unpack(archive = staged, maxSize = remaining, onProgress = unpacking::read)
                     // Everyday document formats are zip archives too (an OpenDocument, a spreadsheet, an e-book), and
                     // their parts are not what anybody picked: one recognised by its bytes alone that holds nothing an
                     // import reads is reported as the one file it was, rather than as the names of its insides.
@@ -189,7 +172,7 @@ internal class PrepareImportUseCaseImpl(
             val intake = imageRepository.libraryNameOf(file.bytes)
             (intake != ImageIntake.Refused(ImageRefusal.NOT_AN_IMAGE)).also { isPicture -> if (!isPicture) triage.skippedFileNames += file.name }
         }
-        val linkedImages = pictureLinks.planned(files = songFiles.map { it.file }, remainingImageSize = remainingImages, onProgress = onProgress)
+        val linkedImages = pictureLinks.planned(files = songFiles.map { it.file }, remainingImageSize = ImportLimits.MAX_IMPORT_IMAGES_SIZE, onProgress = onProgress)
         val songs = planSongs(songFiles, documentFiles, triage, linkedImages, onProgress)
         return ImportPlan(
             songs = songs,

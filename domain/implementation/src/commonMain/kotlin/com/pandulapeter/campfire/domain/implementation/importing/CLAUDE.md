@@ -36,12 +36,12 @@
   missing. The library is read only for such a setlist.
 - An archive (`ImportedFile.isArchive`) reaches the preparation staged (`ImportedFile.staged`): the intake receives it,
   and `ImportWork` stages one a caller read whole. It goes to the streaming unpack, its song texts within the songs'
-  budget shared by the batch, its pictures and attachments staged within the disk budget; the in-memory budgets bound
-  only the picture links; the phase counts the bytes the unpacks read of the staged archives (`UnpackingProgress`), a
-  nested archive's size joining the total as it is reached. The received archive stays with its request for Try again.
-  The in-memory unpack (`unpack(ByteArray)`) is reached only by the tests, as the streaming one's reference; an unstaged
-  archive with nothing read is skipped without it. An archive that cannot be unpacked is skipped, unless for lack of space (`isOutOfSpace`)
-  or past 4 GB without ZIP64 (`WrappedArchiveException`), which end the preparation.
+  budget shared by the batch, its pictures and attachments staged within the disk budget; `MAX_IMPORT_IMAGES_SIZE`
+  bounds only the picture links; the phase counts the bytes the unpacks read of the staged archives
+  (`UnpackingProgress`), a nested archive's size joining the total as it is reached. The received archive stays with its
+  request for Try again. An unstaged archive (nothing read under an archive's name) is skipped. An archive that cannot be
+  unpacked is skipped, unless for lack of space (`isOutOfSpace`) or past 4 GB without ZIP64 (`WrappedArchiveException`),
+  which end the preparation.
 - **Pictures** (`IncomingImages`): a song's `src` values are rewritten to the library names of the pictures it brings
   when it is planned, so the review, the duplicate check, and the write all see the text the song will have; that is
   the one change an import makes to a song's text. A picture missing, too large, or refused leaves its directive as it

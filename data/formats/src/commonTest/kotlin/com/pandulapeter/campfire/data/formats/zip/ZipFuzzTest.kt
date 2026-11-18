@@ -29,7 +29,7 @@ internal class ZipFuzzTest {
             val random = Random(seed)
             val isMany = seed % 10 == 0
             val entries = List(if (isMany) random.nextInt(500, 2_000) else random.nextInt(0, 40)) { entry(random, it, maxSize = if (isMany) 2_000 else 100_000) }
-            val read = ZipReader.read(ZipWriter.write(entries), maxTotalSize = Long.MAX_VALUE)
+            val read = readArchive(ZipWriter.write(entries), maxTotalSize = Long.MAX_VALUE)
             assertEquals(emptyList(), read.unread, "Seed $seed")
             assertEquals(entries.map { it.name }, read.entries.map { it.name }, "Seed $seed")
             entries.forEachIndexed { index, entry -> assertContentEquals(entry.bytes, read.entries[index].bytes, "Seed $seed, entry ${entry.name}") }
@@ -59,7 +59,7 @@ internal class ZipFuzzTest {
             val budget = mutator.random.nextLong(0, 20_000)
             val limits = mutableMapOf<String, Long>()
             val content = try {
-                ZipReader.read(
+                readArchive(
                     archive = archive,
                     maxTotalSize = budget,
                     limitOf = { name, _ ->
@@ -84,44 +84,6 @@ internal class ZipFuzzTest {
                 content.entries.forEach { assertTrue(it.bytes.size <= (limits[it.name] ?: -1), "Seed $seed read ${it.name} past its limit") }
             }
         }
-    }
-
-    @Test
-    fun `generated and damaged archives read alike in memory and streaming`() = runTest {
-        val archives = List(8) { seed ->
-            val random = Random(seed)
-            val entries = List(random.nextInt(1, 8)) { entry(random, it, maxSize = 4_000) }
-            ZipWriter.write(if (seed % 4 == 3) entries + ZipEntry("nested.zip", ZipWriter.write(entries)) else entries)
-        }
-        repeat(MUTATIONS) { seed ->
-            val mutator = Mutator(seed)
-            val original = archives[seed % archives.size]
-            val archive = when (seed % 5) {
-                0 -> original
-                1, 2 -> damageHeaders(mutator, original)
-                else -> mutator.mutate(original)
-            }
-            val budget = mutator.random.nextLong(0, 20_000)
-            // Each reader gets callbacks of its own drawing the same answers, since both ask the same questions in order.
-            val inMemory = runCatching { Policies(seed).let { ZipReader.read(archive, budget, it::limitOf, it::sniffedLimitOf) } }
-            val streamed = runCatching {
-                Policies(seed).let { ZipReader.read(ByteArrayZipSource(archive), budget, it::limitOf, it::sniffedLimitOf) }
-            }
-            assertAlike(inMemory, streamed, "Seed $seed")
-        }
-    }
-
-    /** The answers a fuzzed read gets about its entries, drawn from [seed]. */
-    private class Policies(seed: Int) {
-        private val random = Random(seed)
-
-        fun limitOf(name: String, declaredSize: Long) = when (random.nextInt(4)) {
-            0 -> EntryPolicy.Skip
-            1 -> EntryPolicy.Sniff
-            else -> EntryPolicy.Read(random.nextLong(0, 10_000))
-        }
-
-        fun sniffedLimitOf(name: String, prefix: ByteArray) = if (random.nextBoolean()) null else random.nextLong(0, 10_000)
     }
 
     @Test

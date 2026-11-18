@@ -18,18 +18,18 @@ import java.io.File
 import java.lang.reflect.InvocationTargetException
 import kotlin.random.Random
 
-/** An archive to import both ways, under the [name] it is picked as, and the same content without ZIP64 where it has one. */
+/** An archive to import, under the [name] it is picked as, and the same content without ZIP64 where it has one. */
 internal class ParityArchive(val label: String, val name: String, val bytes: ByteArray, val twin: ByteArray? = null)
 
 /**
- * Every archive `ArchivePathParityTest` runs through both import paths: the archives the
- * unpack tests build, the committed fixtures, and the private corpus.
+ * Every archive `ArchivePathParityTest` imports: the archives the unpack tests build, the committed fixtures, and the
+ * private corpus.
  */
 internal object ParityArchives {
 
     /**
      * Every archive the unpack tests hand an [ArchiveUnpacks], recorded while each of their tests runs, so that a case
-     * added there is held to both import paths here without a second list to keep in step. Run by reflection, each in
+     * added there is imported whole here without a second list to keep in step. Run by reflection, each in
      * a new instance with its `@BeforeTest` and `@AfterTest`, as the test runner runs them.
      */
     fun recorded(): List<ParityArchive> {
@@ -62,8 +62,8 @@ internal object ParityArchives {
 
     /**
      * Archives as people bring them, which the unpack tests build only in pieces: libraries exported with pictures,
-     * attachments, setlists, and picture links; other apps' backups beside them; and archives whose pictures and
-     * attachments pass the in-memory budgets, built here since no unpack test may hold that much.
+     * attachments, setlists, and picture links; other apps' backups beside them; and archives of many megabytes of
+     * pictures and attachments, built here since no unpack test may hold that much.
      */
     suspend fun built(): List<ParityArchive> {
         val pictures = (0 until 4).map { TestPictures.png(seed = it, size = 3_000 + it * 500) }
@@ -100,16 +100,16 @@ internal object ParityArchives {
             ParityArchive("a library export", "library.zip", library),
             ParityArchive("a SongbookPro backup", "Library.sbpbackup", songbookPro),
             ParityArchive("a library beside a backup in an archive", "everything.zip", nested),
-            ParityArchive("pictures past the in-memory budget", "photos.zip", pastPictureBudget()),
-            ParityArchive("attachments past the in-memory budget", "recordings.zip", pastAttachmentBudget()),
+            ParityArchive("pictures past 64 MiB", "photos.zip", pastPictureBudget()),
+            ParityArchive("attachments past 50 MiB", "recordings.zip", pastAttachmentBudget()),
             ParityArchive("a nested archive lying about its size", "lie.zip", nestedArchiveLyingAboutItsSize()),
             ParityArchive("pictures lying about their size", "lies.zip", picturesLyingAboutTheirSize()),
         ) + upgradeFixtures()
     }
 
     /**
-     * Nine pictures of 7.5 MB, each within its own limit and together past the 64 MiB the in-memory path holds, and a
-     * picture by address after them, which that path then has no budget left for either.
+     * Nine pictures of 7.5 MB, each within its own limit and together past the 64 MiB the pictures downloaded by address
+     * may take ([ImportLimits.MAX_IMPORT_IMAGES_SIZE]), which they never count against, and a picture by address after them.
      */
     private suspend fun pastPictureBudget(): ByteArray {
         val count = 9
@@ -117,7 +117,7 @@ internal object ParityArchives {
         return ZipWriter.write(listOf(ZipEntry("photos.cho", song.encodeToByteArray())) + (0 until count).map { ZipEntry("photo$it.png", TestPictures.png(seed = 100 + it, size = 7_500_000)) })
     }
 
-    /** Two recordings of 27 MB, each within the attachment limit and together past the 50 MiB the in-memory path holds. */
+    /** Two recordings of 27 MB, each within the attachment limit and together past it. */
     private suspend fun pastAttachmentBudget(): ByteArray {
         val names = listOf("0123456789abcdef.mp3", "fedcba9876543210.mp3")
         val song = (listOf("{title: Takes}", "{image: src=cover.png}") + names.map { "{meta: attachment $it Take}" }).joinToString("\n")
@@ -176,7 +176,7 @@ internal object ParityArchives {
      * Every archive-like file under the private corpus (`.zip` and the other apps' backups by name, any other file but a
      * document's by its zip signature, as the import tells archives), and, since the corpus is mostly loose documents,
      * each of its folders packed into an archive and every folder's archive packed into one more, so that real documents
-     * and their songs pass through both paths inside archives and nested ones too.
+     * and their songs are imported inside archives and nested ones too.
      */
     suspend fun corpus(corpus: File): List<ParityArchive> {
         fun visible(file: File) = !file.name.startsWith(".")

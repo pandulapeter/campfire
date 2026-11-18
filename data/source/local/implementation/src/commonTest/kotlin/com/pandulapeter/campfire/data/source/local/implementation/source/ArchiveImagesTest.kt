@@ -15,7 +15,6 @@ import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.importing.ImportedImage
 import com.pandulapeter.campfire.data.model.importing.IncomingContent
-import com.pandulapeter.campfire.data.model.importing.UnpackedArchive
 import com.pandulapeter.campfire.data.model.library.ArchiveEntry
 import com.pandulapeter.campfire.data.model.library.ExportSink
 import kotlinx.coroutines.test.runTest
@@ -26,8 +25,8 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /**
- * The pictures an archive's songs bring with them, found in the same archive by the names their directives give: read
- * into memory, and staged from an archive in the staging folder, which must agree (see [ArchiveUnpacks]).
+ * The pictures an archive's songs bring with them, found in the same archive by the names their directives give and
+ * staged from the archive in the staging folder (see [ArchiveUnpacks]).
  */
 internal class ArchiveImagesTest {
 
@@ -39,10 +38,9 @@ internal class ArchiveImagesTest {
     fun `a picture beside the song comes with it and is not reported as skipped`() = runTest {
         val unpacked = unpack("songs/a.cho" to song("chart.png"), "songs/chart.png" to photo)
 
-        assertEquals(listOf("a.cho"), unpacked.files.map { it.name })
+        assertEquals(listOf("a.cho"), unpacked.map { it.name })
         assertFound(photo, unpacked.song("a.cho").images.single())
         assertEquals("chart.png", unpacked.song("a.cho").images.single().source)
-        assertEquals(photo.size.toLong(), unpacked.imageSize)
     }
 
     @Test
@@ -77,7 +75,6 @@ internal class ArchiveImagesTest {
         val unpacked = unpack("a.cho" to song("chart.png"), "one/chart.png" to photo, "two/chart.png" to otherPhoto)
 
         assertProblem(ImportedImage.Problem.MISSING, unpacked.song("a.cho").images.single())
-        assertEquals(0, unpacked.imageSize)
     }
 
     @Test
@@ -113,9 +110,8 @@ internal class ArchiveImagesTest {
     fun `a picture no song names is never read and is reported as skipped`() = runTest {
         val unpacked = unpack("a.cho" to song("chart.png"), "chart.png" to photo, "holiday.jpg" to otherPhoto)
 
-        assertEquals(listOf("a.cho", "holiday.jpg"), unpacked.files.map { it.name })
-        assertTrue(unpacked.files.single { it.name == "holiday.jpg" }.bytes.isEmpty())
-        assertEquals(photo.size.toLong(), unpacked.imageSize)
+        assertEquals(listOf("a.cho", "holiday.jpg"), unpacked.map { it.name })
+        assertTrue(unpacked.single { it.name == "holiday.jpg" }.bytes.isEmpty())
     }
 
     @Test
@@ -123,16 +119,14 @@ internal class ArchiveImagesTest {
         val unpacked = unpack("a.cho" to "{title: A}".encodeToByteArray(), "chart.png" to photo)
 
         assertTrue(unpacked.song("a.cho").images.isEmpty())
-        assertEquals(listOf("a.cho", "chart.png"), unpacked.files.map { it.name })
-        assertEquals(0, unpacked.imageSize)
+        assertEquals(listOf("a.cho", "chart.png"), unpacked.map { it.name })
     }
 
     @Test
     fun `only a ChordPro song brings pictures and never a text another reader converts`() = runTest {
         val unpacked = unpack("a.txt" to song("chart.png"), "chart.png" to photo)
 
-        assertTrue(unpacked.files.single { it.name == "a.txt" }.images.isEmpty())
-        assertEquals(0, unpacked.imageSize)
+        assertTrue(unpacked.single { it.name == "a.txt" }.images.isEmpty())
     }
 
     @Test
@@ -140,7 +134,7 @@ internal class ArchiveImagesTest {
         val unpacked = unpack("a.cho" to song("chart.png"), "__MACOSX/._chart.png" to otherPhoto, ".cache/chart.png" to otherPhoto)
 
         assertProblem(ImportedImage.Problem.MISSING, unpacked.song("a.cho").images.single())
-        assertEquals(listOf("a.cho"), unpacked.files.map { it.name })
+        assertEquals(listOf("a.cho"), unpacked.map { it.name })
     }
 
     @Test
@@ -149,7 +143,6 @@ internal class ArchiveImagesTest {
 
         assertFound(photo, unpacked.song("a.cho").images.single())
         assertFound(photo, unpacked.song("b.cho").images.single())
-        assertEquals(photo.size.toLong(), unpacked.imageSize)
     }
 
     @Test
@@ -161,36 +154,16 @@ internal class ArchiveImagesTest {
         val images = unpacked.song("a.cho").images.associateBy { it.source }
         assertProblem(ImportedImage.Problem.TOO_LARGE, images.getValue("huge.png"))
         assertFound(photo, images.getValue("chart.png"))
-        assertEquals(photo.size.toLong(), unpacked.imageSize)
     }
 
     @Test
-    fun `pictures past the import's picture budget are reported too large in memory and staged within the disk instead`() = runTest {
-        val archive = archiveOf("a.cho" to song("one.png", "two.png"), "one.png" to photo, "two.png" to otherPhoto)
-
-        val unpacked = unpacks.inMemory(archive = archive, maxImageSize = photo.size + 10L)
-        val streamed = unpacks.streamed(archive)
-
-        val problems = unpacked.song("a.cho").images.map { it.problem }
-        assertEquals(listOf(null, ImportedImage.Problem.TOO_LARGE), problems)
-        assertEquals(photo.size.toLong(), unpacked.imageSize)
-        assertFound(photo, streamed.song("a.cho").images[0])
-        assertFound(otherPhoto, streamed.song("a.cho").images[1])
-        assertEquals(photo.size + otherPhoto.size.toLong(), streamed.imageSize)
-    }
-
-    @Test
-    fun `a nested archive's songs find pictures in their own archive within the same picture budget`() = runTest {
+    fun `a nested archive's songs find pictures in their own archive`() = runTest {
         val inner = archiveOf("b.cho" to song("chart.png"), "chart.png" to otherPhoto)
-        val archive = archiveOf("a.cho" to song("chart.png"), "chart.png" to photo, "inner.zip" to inner)
 
-        val unpacked = unpacks.inMemory(archive = archive, maxImageSize = photo.size + 10L)
-        val streamed = unpacks.streamed(archive)
+        val unpacked = unpack("a.cho" to song("chart.png"), "chart.png" to photo, "inner.zip" to inner)
 
         assertFound(photo, unpacked.song("a.cho").images.single())
-        assertProblem(ImportedImage.Problem.TOO_LARGE, unpacked.song("b.cho").images.single())
-        assertFound(photo, streamed.song("a.cho").images.single())
-        assertFound(otherPhoto, streamed.song("b.cho").images.single())
+        assertFound(otherPhoto, unpacked.song("b.cho").images.single())
     }
 
     @Test
@@ -207,9 +180,9 @@ internal class ArchiveImagesTest {
             sink = sink,
         )
 
-        val unpacked = unpacks.both(sink.bytes())
+        val unpacked = unpacks.unpack(sink.bytes())
 
-        assertEquals(listOf("a.cho"), unpacked.files.map { it.name })
+        assertEquals(listOf("a.cho"), unpacked.map { it.name })
         assertEquals(text, unpacked.song("a.cho").bytes.decodeToString())
         val images = unpacked.song("a.cho").images.associateBy { it.source }
         assertFound(photo, images.getValue("3f9a0c1d2e3f4a5b.png"))
@@ -222,13 +195,11 @@ internal class ArchiveImagesTest {
 
         val unpacked = unpack("a.cho" to text.encodeToByteArray(), "images/3f9a0c1d2e3f4a5b.png" to photo, "images/0123456789abcdef.pdf" to otherPhoto)
 
-        assertEquals(listOf("a.cho"), unpacked.files.map { it.name })
+        assertEquals(listOf("a.cho"), unpacked.map { it.name })
         val (pictures, attachments) = unpacked.song("a.cho").images.partition { !it.isAttachment }
         assertFound(photo, pictures.single())
         assertEquals("0123456789abcdef.pdf", attachments.single().source)
         assertFound(otherPhoto, attachments.single())
-        assertEquals(photo.size.toLong(), unpacked.imageSize)
-        assertEquals(otherPhoto.size.toLong(), unpacked.attachmentSize)
     }
 
     @Test
@@ -241,41 +212,14 @@ internal class ArchiveImagesTest {
     }
 
     @Test
-    fun `attachments past the import's attachment budget are reported too large in memory and leave the picture budget untouched`() = runTest {
-        val archive = archiveOf(
-            "a.cho" to attachmentSong("0123456789abcdef.mp3", "fedcba9876543210.mp3"),
-            "0123456789abcdef.mp3" to photo,
-            "fedcba9876543210.mp3" to otherPhoto,
-        )
-
-        val unpacked = unpacks.inMemory(archive = archive, maxImageSize = 0, maxAttachmentSize = photo.size + 10L)
-        val streamed = unpacks.streamed(archive)
-
-        assertEquals(listOf(null, ImportedImage.Problem.TOO_LARGE), unpacked.song("a.cho").images.map { it.problem })
-        assertEquals(photo.size.toLong(), unpacked.attachmentSize)
-        assertEquals(0, unpacked.imageSize)
-        assertEquals(listOf(null, null), streamed.song("a.cho").images.map { it.problem })
-        assertEquals(photo.size + otherPhoto.size.toLong(), streamed.attachmentSize)
-        assertEquals(0, streamed.imageSize)
-    }
-
-    @Test
     fun `an archive a song attaches is its attachment and is not unpacked under any name`() = runTest {
         val inner = archiveOf("b.cho" to song("chart.png"), "chart.png" to photo)
 
         for (name in listOf("songs.zip", "notes.txt")) {
-            val archive = archiveOf("a.cho" to attachmentSong(name), name to inner)
+            val unpacked = unpack("a.cho" to attachmentSong(name), name to inner)
 
-            val unpacked = unpacks.inMemory(archive)
-            val streamed = unpacks.streamed(archive)
-
-            assertEquals(listOf("a.cho"), unpacked.files.map { it.name })
+            assertEquals(listOf("a.cho"), unpacked.map { it.name })
             assertFound(inner, unpacked.song("a.cho").images.single())
-            // Read into memory with the songs, it cost the songs' budget; an archive by its name is staged instead, and
-            // read again as the attachment. One under a text's name is read as a text in both.
-            assertEquals(unpacked.files, streamed.files)
-            assertEquals(0, unpacked.attachmentSize)
-            assertEquals(if (name == "songs.zip") inner.size.toLong() else 0, streamed.attachmentSize)
         }
     }
 
@@ -286,10 +230,10 @@ internal class ArchiveImagesTest {
 
         val unpacked = unpack("a.cho" to song("chart.png"), "middle.zip" to middle, "backup.txt" to middle)
 
-        assertEquals(listOf("a.cho", "b.cho", "c.cho", "b.cho", "c.cho"), unpacked.files.map { it.name })
+        assertEquals(listOf("a.cho", "b.cho", "c.cho", "b.cho", "c.cho"), unpacked.map { it.name })
         assertProblem(ImportedImage.Problem.MISSING, unpacked.song("a.cho").images.single())
-        unpacked.files.filter { it.name == "b.cho" }.forEach { assertFound(photo, it.images.single()) }
-        unpacked.files.filter { it.name == "c.cho" }.forEach { assertFound(otherPhoto, it.images.single()) }
+        unpacked.filter { it.name == "b.cho" }.forEach { assertFound(photo, it.images.single()) }
+        unpacked.filter { it.name == "c.cho" }.forEach { assertFound(otherPhoto, it.images.single()) }
     }
 
     @Test
@@ -301,7 +245,7 @@ internal class ArchiveImagesTest {
         assertProblem(ImportedImage.Problem.MISSING, attachment)
     }
 
-    private suspend fun unpack(vararg entries: Pair<String, ByteArray>) = unpacks.both(archiveOf(*entries))
+    private suspend fun unpack(vararg entries: Pair<String, ByteArray>) = unpacks.unpack(archiveOf(*entries))
 
     private fun attachmentSong(vararg sources: String) =
         (listOf("{title: A}") + sources.map { "{meta: attachment $it Take}" }).joinToString("\n").encodeToByteArray()
@@ -310,7 +254,7 @@ internal class ArchiveImagesTest {
 
     private fun song(vararg sources: String) = (listOf("{title: A}") + sources.map { "{image: src=\"$it\"}" }).joinToString("\n").encodeToByteArray()
 
-    private fun UnpackedArchive.song(name: String): ImportedFile = files.single { it.name == name }
+    private fun List<ImportedFile>.song(name: String): ImportedFile = single { it.name == name }
 
     private fun assertFound(expected: ByteArray, image: ImportedImage) {
         assertNull(image.problem)

@@ -11,8 +11,7 @@ package com.pandulapeter.campfire.data.formats.zip
 
 /**
  * Thrown when an archive is malformed, truncated, encrypted, split, or uses a feature this minimal implementation does
- * not support (compression methods other than STORED and DEFLATE, ZIP64 in the in-memory [ZipReader.read]), or when
- * the writer gets entries that need ZIP64. Only this module throws one; it is public so that a caller in another module
+ * not support (compression methods other than STORED and DEFLATE), or when the writer gets entries it cannot write. Only this module throws one; it is public so that a caller in another module
  * can tell a damaged archive from whatever else failed around it, and a [WrappedArchiveException] from the rest.
  */
 open class ZipException internal constructor(message: String) : Exception(message)

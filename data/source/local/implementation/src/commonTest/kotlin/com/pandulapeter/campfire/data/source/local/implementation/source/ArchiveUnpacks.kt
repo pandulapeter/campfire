@@ -15,7 +15,7 @@ import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.model.importing.ImportedImage
 import com.pandulapeter.campfire.data.model.importing.IncomingContent
 import com.pandulapeter.campfire.data.model.importing.StagedFile
-import com.pandulapeter.campfire.data.model.importing.UnpackedArchive
+import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.source.local.implementation.InMemoryFileStorage
 import com.pandulapeter.campfire.data.source.local.implementation.staging.ImportStaging
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.FileStorage
@@ -25,42 +25,24 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 /**
- * Both unpacks of an archive, the in-memory one and the streaming one from the staging folder over [storage], and the
- * check that they agree: the streaming one's staged files hold exactly the bytes the in-memory one read (each named by
- * its SHA-256, of its size), and everything else is equal, while the staging folder holds nothing of the unpack but
- * the archive and the files its result names.
+ * The unpack of an archive staged into a request of its own over [storage], with its staged pictures and attachments
+ * read back as bytes, checked to hold exactly what their names say (each named by its SHA-256, of its size), and the
+ * staging folder checked to hold nothing of the unpack but the archive and the files its result names.
  */
 internal class ArchiveUnpacks(val storage: FileStorage = InMemoryFileStorage()) {
 
     val staging = ImportStaging(storage, Logger.Standard)
     val archiveLocalSource = ArchiveLocalSourceImpl(logger = Logger.Standard, fileStorage = storage, importStaging = staging)
 
-    /** [archive] unpacked both ways with the whole picture and attachment budgets, which must agree; the in-memory one. */
-    suspend fun both(archive: ByteArray, maxSize: Long = ImportLimits.MAX_IMPORT_SIZE): UnpackedArchive {
-        val inMemory = inMemory(archive, maxSize)
-        assertEquals(inMemory, streamed(archive, maxSize))
-        return inMemory
-    }
-
-    suspend fun inMemory(
-        archive: ByteArray,
-        maxSize: Long = ImportLimits.MAX_IMPORT_SIZE,
-        maxImageSize: Long = ImportLimits.MAX_IMPORT_IMAGES_SIZE,
-        maxAttachmentSize: Long = ImportLimits.MAX_IMPORT_ATTACHMENTS_SIZE,
-    ): UnpackedArchive {
-        archiveRecorder?.invoke(archive)
-        return archiveLocalSource.unpack(archive = archive, maxSize = maxSize, maxImageSize = maxImageSize, maxAttachmentSize = maxAttachmentSize)
-    }
-
     /** [archive] received into a request of its own and unpacked from there, its staged files read back as bytes. */
-    suspend fun streamed(archive: ByteArray, maxSize: Long = ImportLimits.MAX_IMPORT_SIZE): UnpackedArchive {
+    suspend fun unpack(archive: ByteArray, maxSize: Long = ImportLimits.MAX_IMPORT_SIZE): List<ImportedFile> {
         val staged = stage(archive)
         val request = staging.requestOf(staged)
         val unpacked = archiveLocalSource.unpack(archive = staged, maxSize = maxSize)
-        val named = unpacked.files.flatMap { it.images }.mapNotNull { (it.content as? IncomingContent.Staged)?.file?.name }
+        val named = unpacked.flatMap { it.images }.mapNotNull { (it.content as? IncomingContent.Staged)?.file?.name }
         assertEquals((named + staged.name).toSet(), stagedNames().toSet())
-        assertTrue(unpacked.files.none { it.staged != null })
-        return unpacked.copy(files = unpacked.files.map { file -> file.copy(images = file.images.map { it.withStagedRead() }) })
+        assertTrue(unpacked.none { it.staged != null })
+        return unpacked.map { file -> file.copy(images = file.images.map { it.withStagedRead() }) }
             .also { staging.deleteRequest(request) }
     }
 
@@ -84,7 +66,7 @@ internal class ArchiveUnpacks(val storage: FileStorage = InMemoryFileStorage()) 
 }
 
 /**
- * Handed every archive an [ArchiveUnpacks] unpacks either way while it is set, so that `ArchivePathParityTest` can run
- * every archive the unpack tests build through both import paths without a second list of them to keep in step.
+ * Handed every archive an [ArchiveUnpacks] stages while it is set, so that `ArchivePathParityTest` can run every archive
+ * the unpack tests build through the whole import without a second list of them to keep in step.
  */
 internal var archiveRecorder: ((ByteArray) -> Unit)? = null

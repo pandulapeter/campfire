@@ -20,7 +20,6 @@ import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.importing.IncomingContent
 import com.pandulapeter.campfire.data.model.importing.StagedFile
 import com.pandulapeter.campfire.data.model.importing.StagedFileMissingException
-import com.pandulapeter.campfire.data.model.importing.UnpackedArchive
 import com.pandulapeter.campfire.data.model.library.ArchiveEntry
 import com.pandulapeter.campfire.data.model.library.ExportFileWriter
 import com.pandulapeter.campfire.data.model.library.ExportSink
@@ -185,9 +184,9 @@ internal class RecordingSharedLinksRepository(
 }
 
 /**
- * Keeps the files of the last archive it packed, and unpacks every archive into what [unpack] answers - nothing,
- * unless a test says otherwise. An archive in [staging] is unpacked from its bytes there into the same files, with
- * their pictures and attachments staged rather than in memory, as the streaming unpack hands them over.
+ * Keeps the files of the last archive it packed, and unpacks every archive in [staging] into what [unpack] answers for
+ * its bytes there - nothing, unless a test says otherwise - with their pictures and attachments staged rather than in
+ * memory, as the streaming unpack hands them over.
  */
 internal class FakeArchiveRepository(
     private val songsIn: suspend (file: ImportedFile) -> List<ImportedFile>? = { null },
@@ -197,30 +196,11 @@ internal class FakeArchiveRepository(
 
     var packed: Map<String, ByteArray> = emptyMap()
 
-    /**
-     * Charges the picture and attachment budgets with every distinct file the files bring, as the real one charges each
-     * entry once.
-     */
-    override suspend fun unpack(archive: ByteArray, maxSize: Long, maxImageSize: Long, maxAttachmentSize: Long) = unpack.invoke(archive, maxSize).let { files ->
-        val (attachments, pictures) = files.flatMap { it.images }.partition { it.isAttachment }
-        UnpackedArchive(
-            files = files,
-            imageSize = pictures.mapNotNull { (it.content as? IncomingContent.Bytes)?.bytes }.toSet().sumOf { it.size.toLong() },
-            attachmentSize = attachments.mapNotNull { (it.content as? IncomingContent.Bytes)?.bytes }.toSet().sumOf { it.size.toLong() },
-        )
-    }
-
-    override suspend fun unpack(archive: StagedFile, maxSize: Long, onProgress: (readBytes: Long, totalBytes: Long) -> Unit): UnpackedArchive {
+    override suspend fun unpack(archive: StagedFile, maxSize: Long, onProgress: (readBytes: Long, totalBytes: Long) -> Unit): List<ImportedFile> {
         val bytes = checkNotNull(staging.bytesOf(archive)) { "The staged archive is gone." }
         // Read whole, as a real unpack reads it by the time it ends.
         onProgress(archive.size, archive.size)
-        val files = staging.staged(unpack.invoke(bytes, maxSize))
-        val (attachments, pictures) = files.flatMap { it.images }.partition { it.isAttachment }
-        return UnpackedArchive(
-            files = files,
-            imageSize = pictures.mapNotNull { it.content?.size }.sum(),
-            attachmentSize = attachments.mapNotNull { it.content?.size }.sum(),
-        )
+        return staging.staged(unpack.invoke(bytes, maxSize))
     }
 
     override suspend fun songsIn(file: ImportedFile) = songsIn.invoke(file)

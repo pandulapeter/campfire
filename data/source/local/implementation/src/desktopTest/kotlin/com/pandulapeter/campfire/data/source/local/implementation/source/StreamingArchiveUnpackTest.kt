@@ -65,8 +65,8 @@ class StreamingArchiveUnpackTest {
         )
         val fitting = ImportLimits.MAX_ARCHIVE_ENTRIES - (outerFolders + 4) - 2 * (fullFolders + 1) - 1
 
-        assertEquals(listOf("a.cho", "b1.cho", "b2.cho", "b3.cho"), unpacks.streamed(archive(fitting)).files.map { it.name })
-        val past = unpacks.streamed(archive(fitting + 1)).files
+        assertEquals(listOf("a.cho", "b1.cho", "b2.cho", "b3.cho"), unpacks.unpack(archive(fitting)).map { it.name })
+        val past = unpacks.unpack(archive(fitting + 1))
         assertEquals(listOf("a.cho", "b1.cho", "b2.cho", "three.zip"), past.map { it.name })
         assertEquals(ImportedFile.unread("three.zip"), past.last())
         assertEquals(emptyList(), unpacks.stagedNames())
@@ -85,8 +85,8 @@ class StreamingArchiveUnpackTest {
         // Each directory alone is far within the cap, which both together pass with the larger nested one.
         assertTrue(500L * nameLength < ImportLimits.MAX_CENTRAL_DIRECTORY_SIZE && 570L * nameLength > ImportLimits.MAX_CENTRAL_DIRECTORY_SIZE)
 
-        assertEquals(listOf("a.cho", "b.cho"), unpacks.streamed(archive(200)).files.map { it.name })
-        assertEquals(listOf("a.cho", "inner.zip"), unpacks.streamed(archive(270)).files.map { it.name })
+        assertEquals(listOf("a.cho", "b.cho"), unpacks.unpack(archive(200)).map { it.name })
+        assertEquals(listOf("a.cho", "inner.zip"), unpacks.unpack(archive(270)).map { it.name })
         assertEquals(emptyList(), unpacks.stagedNames())
     }
 
@@ -141,16 +141,16 @@ class StreamingArchiveUnpackTest {
     }
 
     @Test
-    fun `a nested archive declaring more than its data can hold sets no room aside and is left out as in memory`() = runBlocking {
+    fun `a nested archive declaring more than its data can hold sets no room aside and is left out as too large`() = runBlocking {
         val inner = ZipWriter.write(listOf(ZipEntry("b.cho", "{title: B}".encodeToByteArray())))
         val archive = ZipWriter.write(listOf(ZipEntry("a.cho", "{title: A}".encodeToByteArray()), ZipEntry("inner.zip", inner)))
         archive.declareUncompressedSize("inner.zip", 0xF0000000L)
         val unpacks = ArchiveUnpacks(LimitedFileStorage(capacity = 64L shl 20))
 
-        val unpacked = unpacks.both(archive)
+        val unpacked = unpacks.unpack(archive)
 
-        assertEquals(listOf("a.cho", "inner.zip"), unpacked.files.map { it.name })
-        assertEquals(ImportedFile.unread("inner.zip", isTooLarge = true), unpacked.files.last())
+        assertEquals(listOf("a.cho", "inner.zip"), unpacked.map { it.name })
+        assertEquals(ImportedFile.unread("inner.zip", isTooLarge = true), unpacked.last())
     }
 
     @Test
@@ -162,9 +162,9 @@ class StreamingArchiveUnpackTest {
         val storage = LimitedFileStorage(capacity = 256L shl 20)
         val unpacks = ArchiveUnpacks(storage)
 
-        val unpacked = unpacks.streamed(archive)
+        val unpacked = unpacks.unpack(archive)
 
-        assertEquals(List(count) { ImportedImage.Problem.UNREADABLE }, unpacked.files.single().images.map { it.problem })
+        assertEquals(List(count) { ImportedImage.Problem.UNREADABLE }, unpacked.single().images.map { it.problem })
         assertEquals(emptyList(), storage.stagedNames())
     }
 
@@ -179,7 +179,7 @@ class StreamingArchiveUnpackTest {
         val unpacked = unpacks.archiveLocalSource.unpack(archive = staged, maxSize = ImportLimits.MAX_IMPORT_SIZE)
 
         assertTrue(names.any { it.endsWith(".zip") && it != staged.name }, "The nested archive was never staged: $names")
-        val pictures = unpacked.files.single().images.map { (it.content as IncomingContent.Staged).file.name }
+        val pictures = unpacked.single().images.map { (it.content as IncomingContent.Staged).file.name }
         assertEquals((pictures + staged.name).sorted(), storage.stagedNames())
     }
 
@@ -210,7 +210,7 @@ class StreamingArchiveUnpackTest {
 
         val unpacked = unpacks.archiveLocalSource.unpack(archive = staged, maxSize = ImportLimits.MAX_IMPORT_SIZE)
 
-        val picture = unpacked.files.single().images.mapNotNull { (it.content as? IncomingContent.Staged)?.file }.single()
+        val picture = unpacked.single().images.mapNotNull { (it.content as? IncomingContent.Staged)?.file }.single()
         assertEquals(staged.size + picture.size, unpacks.staging.ledger.reservedBy(request.id))
         assertEquals(0, unpacks.staging.ledger.outstanding())
     }

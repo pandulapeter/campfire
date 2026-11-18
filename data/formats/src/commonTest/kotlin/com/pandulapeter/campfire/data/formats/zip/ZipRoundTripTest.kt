@@ -29,7 +29,7 @@ internal class ZipRoundTripTest {
         )
 
         val archive = ZipWriter.write(entries)
-        val read = ZipReader.read(archive).entries
+        val read = readArchive(archive).entries
 
         assertEquals("0187036773f239de017f1d5acb9a21439b74db25602c047f89dda5a1d17285eb", Sha256.hashToHex(archive))
         assertEquals(entries.map { it.name }, read.map { it.name })
@@ -44,13 +44,13 @@ internal class ZipRoundTripTest {
 
         assertEquals(22, archive.size)
         assertEquals("8739c76e681f900923b900c9df0ef75cf421d39cabb54650c4b9ad19b6a76d85", Sha256.hashToHex(archive))
-        assertTrue(ZipReader.read(archive).entries.isEmpty())
+        assertTrue(readArchive(archive).entries.isEmpty())
     }
 
     @Test
     fun `writes and reads back a single empty entry`() = runTest {
         val archive = ZipWriter.write(listOf(ZipEntry("nothing.cho", ByteArray(0))))
-        val read = ZipReader.read(archive).entries
+        val read = readArchive(archive).entries
 
         assertEquals("cf96c15e587dd733af62b92d8c23374c02ec77da80139bb1294b8c18dde47dfc", Sha256.hashToHex(archive))
         assertEquals(1, read.size)
@@ -69,7 +69,7 @@ internal class ZipRoundTripTest {
 
         assertEquals("812e1ab726537af5813bb10564bb20bb21b4498af140188133aae59398bfb43b", Sha256.hashToHex(archive))
         assertTrue(archive.size < song.size / 3, "${archive.size} bytes for a ${song.size} byte song.")
-        assertContentEquals(song, ZipReader.read(archive).entries.single().bytes)
+        assertContentEquals(song, readArchive(archive).entries.single().bytes)
     }
 
     @Test
@@ -80,7 +80,7 @@ internal class ZipRoundTripTest {
 
         assertEquals("e3a90a47a0974b059cefd94d85ca19f0694d31c0c4445c347cb4459c30db8076", Sha256.hashToHex(archive))
         assertTrue(archive.size <= noise.size + 22 + 2 * (46 + "cover.jpg".length), "${archive.size} bytes for ${noise.size}.")
-        assertContentEquals(noise, ZipReader.read(archive).entries.single().bytes)
+        assertContentEquals(noise, readArchive(archive).entries.single().bytes)
     }
 
     @Test

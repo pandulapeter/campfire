@@ -79,7 +79,7 @@ internal class ZipWriterStreamingTest {
 
         val archive = written.build()
         assertContentEquals(ZipWriter.write(many), archive)
-        assertEquals(many.map { it.name }, ZipReader.read(archive).entries.map { it.name })
+        assertEquals(many.map { it.name }, readArchive(archive).entries.map { it.name })
         assertTrue(largestWrite < MANY_ENTRIES * 100, "A write of $largestWrite bytes, of a directory of about ${MANY_ENTRIES * 250}")
     }
 
@@ -111,7 +111,7 @@ internal class ZipWriterStreamingTest {
 
         ZipWriter.write(entries = entries.map { entry -> { entry } }, sink = sink)
 
-        val read = ZipReader.read(sink.bytes()).entries
+        val read = readArchive(sink.bytes()).entries
         assertEquals(entries.map { it.name }, read.map { it.name })
         entries.forEachIndexed { index, entry -> assertContentEquals(entry.bytes, read[index].bytes) }
     }

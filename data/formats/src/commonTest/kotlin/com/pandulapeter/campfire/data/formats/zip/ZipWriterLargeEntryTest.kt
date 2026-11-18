@@ -72,7 +72,7 @@ internal class ZipWriterLargeEntryTest {
         assertContentEquals(bytes, readBack(archive))
     }
 
-    private fun readBack(archive: ByteArray) = ZipReader.read(archive, maxTotalSize = Long.MAX_VALUE).entries.single().bytes
+    private suspend fun readBack(archive: ByteArray) = readArchive(archive, maxTotalSize = Long.MAX_VALUE).entries.single().bytes
 
     private fun firstMethodOf(archive: ByteArray) = (archive[8].toInt() and 0xFF) or (archive[9].toInt() and 0xFF shl 8)
 

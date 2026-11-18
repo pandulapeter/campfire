@@ -12,10 +12,10 @@ package com.pandulapeter.campfire.data.source.local.implementation.source
 /**
  * The same archive without ZIP64, byte for byte but for its central directory and end records: every value a central
  * header's `0x0001` field holds moved into the 32-bit field at its marker, the field removed, and the ZIP64 end record
- * and locator dropped, their values (which win over the end record's, as the streaming reader reads them) written into
- * the end record. Entry data, local headers, and any damage in them are left exactly as they are, so a damaged ZIP64
- * archive has a twin damaged alike, which the in-memory reader can be asked about. A marker whose value is missing stays
- * a marker, as both readers leave such an entry out. Null where the archive cannot be read that far, or a value does
+ * and locator dropped, their values (which win over the end record's, as the reader reads them) written into the end
+ * record. Entry data, local headers, and any damage in them are left exactly as they are, so a damaged ZIP64 archive
+ * has a twin damaged alike. A marker whose value is missing stays a marker, as the reader leaves such an entry out
+ * either way. Null where the archive cannot be read that far, or a value does
  * not fit 32 bits.
  */
 internal object Zip64Twin {

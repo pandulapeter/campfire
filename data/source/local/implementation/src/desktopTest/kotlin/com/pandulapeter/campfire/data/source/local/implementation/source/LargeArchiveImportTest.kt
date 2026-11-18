@@ -235,7 +235,7 @@ class LargeArchiveImportTest {
     }
 
     @Test
-    fun `an archive the in-memory path imports needs twice its size and the margin and names what it needs with less`() = runBlocking {
+    fun `an archive within what a selection reads whole needs twice its size and the margin and names what it needs with less`() = runBlocking {
         val archive = File(folder, "eighty.zip")
         val pictures = (0 until 8).map { LargeArchives.picture(seed = it, size = 7_500_000, isCompressible = false) }
         val recording = LargeArchives.noise(seed = 9, size = 18_000_000, isCompressible = false)

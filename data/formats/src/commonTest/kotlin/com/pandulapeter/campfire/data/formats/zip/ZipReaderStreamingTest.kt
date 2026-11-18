@@ -19,11 +19,11 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
-/** The reader over a [ZipSource]: alike with the one in memory, and what only it does (its caps, its sinks). */
+/** The reader over a [ZipSource]: names, end records, damage, its caps, and its sinks. */
 internal class ZipReaderStreamingTest {
 
     @Test
-    fun `reads UTF-8 and code page 437 names and backslash separators alike`() = runTest {
+    fun `reads UTF-8 and code page 437 names and backslash separators`() = runTest {
         val archive = rawArchive(
             listOf(
                 RawEntry("dalok/Árvíztűrő.cho".encodeToByteArray(), flags = 0x0800),
@@ -35,7 +35,7 @@ internal class ZipReaderStreamingTest {
             ),
         )
 
-        val read = readAlike(archive)
+        val read = readArchive(archive)
 
         assertEquals(
             listOf("dalok/Árvíztűrő.cho", "macOS/Tükörfúrógép.cho", "café", "songs\\windows.cho"),
@@ -44,18 +44,18 @@ internal class ZipReaderStreamingTest {
     }
 
     @Test
-    fun `refuses an end record at its ZIP64 markers without a ZIP64 record alike`() = runTest {
+    fun `refuses an end record at its ZIP64 markers without a ZIP64 record`() = runTest {
         val archive = ZipWriter.write(listOf(ZipEntry("a.cho", "a".encodeToByteArray())))
         val endRecord = archive.size - 22
         for ((field, width) in listOf(10 to 2, 12 to 4, 16 to 4)) {
             val zip64 = archive.copyOf().also { for (index in 0 until width) it[endRecord + field + index] = 0xFF.toByte() }
 
-            assertFailsWith<ZipException> { readAlike(zip64) }
+            assertFailsWith<ZipException> { readArchive(zip64) }
         }
     }
 
     @Test
-    fun `reads or refuses an archive cut at every byte alike`() = runTest {
+    fun `reads or refuses an archive cut at every byte`() = runTest {
         val archive = ZipWriter.write(
             listOf(
                 ZipEntry("a.cho", "{title: A}\n".repeat(20).encodeToByteArray()),
@@ -63,8 +63,8 @@ internal class ZipReaderStreamingTest {
             ),
         )
         for (cut in 0..archive.size) {
-            assertReadsAlike(archive.copyOf(cut), "Cut to $cut bytes")
-            assertReadsAlike(archive.copyOfRange(cut, archive.size), "Cut from $cut bytes")
+            assertReadsOrRefuses(archive.copyOf(cut), "Cut to $cut bytes")
+            assertReadsOrRefuses(archive.copyOfRange(cut, archive.size), "Cut from $cut bytes")
         }
     }
 
@@ -75,8 +75,8 @@ internal class ZipReaderStreamingTest {
             archive.copyOf().also { it[archive.size - 2] = 0xFF.toByte(); it[archive.size - 1] = 0xFF.toByte() } + ByteArray(length) { 'c'.code.toByte() }
         }
 
-        assertEquals(listOf("a.cho"), readAlike(withComment(65_535)).entries.map { it.name })
-        assertFailsWith<ZipException> { readAlike(withComment(65_536)) }
+        assertEquals(listOf("a.cho"), readArchive(withComment(65_535)).entries.map { it.name })
+        assertFailsWith<ZipException> { readArchive(withComment(65_536)) }
     }
 
     @Test
@@ -156,7 +156,7 @@ internal class ZipReaderStreamingTest {
         assertEquals(listOf("recording.mp3", "nested.zip"), walk.read)
         assertContentEquals(stored, sinks.getValue("recording.mp3").bytes)
         assertEquals(Sha256.hashToHex(deflated), sinks.getValue("nested.zip").sha256Hex)
-        // Past what an entry may be in memory, which only the in-memory reader is held to.
+        // Past what an entry may be in memory, which a read into memory is held to.
         assertEquals(
             UnreadZipEntry("nested.zip", UnreadZipEntry.Reason.UNREADABLE),
             ZipReader.read(ByteArrayZipSource(archive), maxTotalSize = Long.MAX_VALUE).unread.single(),

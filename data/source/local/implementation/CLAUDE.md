@@ -105,13 +105,12 @@ it; iOS marks the folder) and no sync, and is emptied of other sessions' names o
   unchanged), so `OpfsFileStorage` reports that figure as unknown (`availableSpace` null) and the ledger refuses nothing
   up front there: only a `QuotaExceededError` fails the import, as a full disk. `StagingRefusedException.NoSpace` carries
   `OutOfSpaceException` as its cause; `TooLarge` is a passed `MAX_STAGED_ARCHIVE_SIZE` or `MAX_IMPORT_STAGED_SIZE`.
-- `StreamingArchiveUnpack` (`source/`) is the in-memory unpack's walk over the staged file: song texts into memory
-  within the songs' budget; nested archives above the last level staged (not charged to it), walked, deleted; the
-  pictures and attachments songs name reserved from declared sizes, then staged, what no file took given back once the
-  walks end (`releaseUnused`), however they end. A text-named entry that turns out a
-  zip is unpacked from memory, as there, and one held in memory declaring 2 GiB or more is not wanted, as the in-memory
-  reader cannot peek at it. Only declarations the data could be (`canProduceDeclaredSize`) reserve room or stage an
-  archive; one that cannot is held to the in-memory rule, so a lie never refuses an import for space. A song naming an
+- `StreamingArchiveUnpack` (`source/`) walks the staged file: song texts into memory within the songs' budget; nested
+  archives above the last level staged (not charged to it), walked, deleted; the pictures and attachments songs name
+  reserved from declared sizes, then staged, what no file took given back once the walks end (`releaseUnused`), however
+  they end. A text-named entry that turns out a zip is unpacked from memory, and one held in memory declaring 2 GiB or
+  more is not wanted. Only declarations the data could be (`canProduceDeclaredSize`) reserve room or stage an archive;
+  one that cannot is read as any other entry, so a lie never refuses an import for space. A song naming an
   archive gets it re-read as its file. Records read and
   directories held count across nested archives (`ZipDirectory.recordCount`, `centralDirectorySize`); one past either
   is reported unread. Any other failure deletes what the unpack staged, never what the request held before.
@@ -155,14 +154,12 @@ it; iOS marks the folder) and no sync, and is emptied of other sessions' names o
   library never looks empty.
 - Documents: 16 MiB limit. `ImportCorpusTest` (desktop) scores the import against the private corpus that
   `campfire.importCorpus` names, writing its report into the corpus's `.runs/`; blank skips it.
-- `ArchivePathParityTest` (desktop) holds the streaming archive import, the only one the app runs, to the in-memory
-  unpack kept as its reference (`unpack(ByteArray)`, which nothing in the app calls): every archive imported in memory and
-  staged, each into an empty library of its own over the app's whole data and domain graph (`ImportPathApp`), must give
-  the same plan, result, and library files. Its archives: every one the unpack tests hand `ArchiveUnpacks` (recorded by
-  running those tests), libraries and backups built there, the real writers' ZIP64 archives, seeded mutants, and under
-  `campfire.importCorpus` the corpus's archives and its folders packed. Allowed, each checked: files past the in-memory
-  budgets (`BudgetDifference`), ZIP64 read as its twin without it (`Zip64Twin`), and the streaming-only caps across
-  nested archives (`StreamingCaps`). Keep the CI part within a minute.
+- `ArchivePathParityTest` (desktop) imports archives as the app does, each staged into an empty library of its own
+  over the app's whole data and domain graph (`ImportPathApp`), twice, which must give the same plan, result, and
+  library files, with no failure and nothing left in `imports/`; a ZIP64 archive must import as its twin without it
+  (`Zip64Twin`). Its archives: every one the unpack tests hand `ArchiveUnpacks` (recorded by running those tests),
+  libraries and backups built there, the real writers' ZIP64 archives, seeded mutants, and under
+  `campfire.importCorpus` the corpus's archives and its folders packed. Keep the CI part within a minute.
 - `BackupCorpusTest` (desktop, only with `campfire.importCorpus`) imports every file of the corpus's `backups/` as a
   pick would: each song and set `BackupListing` reads from it (SongbookPro, OpenSong, JustChords) is planned or reported
   (a SongbookPro or OpenSong set only planned, with as many entries as distinct songs it names), and an export of the

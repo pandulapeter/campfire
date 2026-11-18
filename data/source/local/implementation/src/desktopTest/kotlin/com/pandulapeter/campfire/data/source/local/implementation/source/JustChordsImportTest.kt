@@ -37,7 +37,7 @@ class JustChordsImportTest {
     fun `a JustChords export inside an archive is read for its songs`() = runBlocking {
         val archive = ZipWriter.write(listOf(ZipEntry("Exports/World Night.JUSTCHORDS", EXPORT.encodeToByteArray())))
 
-        val files = ArchiveUnpacks().both(archive).files
+        val files = ArchiveUnpacks().unpack(archive)
 
         assertEquals(listOf("River Song.cho", "Morning Light.cho"), files.map { it.name })
     }

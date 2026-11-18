@@ -12,19 +12,15 @@ package com.pandulapeter.campfire.data.source.local.implementation.source
 
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.importing.StagedFile
-import com.pandulapeter.campfire.data.model.importing.UnpackedArchive
 import com.pandulapeter.campfire.data.model.library.ArchiveEntry
 import com.pandulapeter.campfire.data.model.library.ExportSink
 import com.pandulapeter.campfire.data.model.library.PackedArchive
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.source.local.api.ArchiveLocalSource
-import com.pandulapeter.campfire.data.source.local.implementation.backup.OpenSongArchive
-import com.pandulapeter.campfire.data.source.local.implementation.source.ArchiveEntryPolicy.isHidden
 import com.pandulapeter.campfire.data.source.local.implementation.staging.ImportStaging
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.FileStorage
 import com.pandulapeter.campfire.data.formats.zip.ZipEntry
 import com.pandulapeter.campfire.data.formats.zip.DosTimestamp
-import com.pandulapeter.campfire.data.formats.zip.ZipReader
 import com.pandulapeter.campfire.data.formats.zip.ZipSink
 import com.pandulapeter.campfire.data.formats.zip.ZipWriter
 import kotlinx.coroutines.Dispatchers
@@ -48,21 +44,11 @@ internal class ArchiveLocalSourceImpl(
     private val importStaging: ImportStaging,
 ) : ArchiveLocalSource {
 
-    override suspend fun unpack(archive: ByteArray, maxSize: Long, maxImageSize: Long, maxAttachmentSize: Long): UnpackedArchive =
-        withContext(Dispatchers.Default) {
-            val inflated = InflatedBytes(limit = maxSize, imageLimit = maxImageSize, attachmentLimit = maxAttachmentSize)
-            UnpackedArchive(
-                files = unpack(archive = archive, depth = 1, inflated = inflated),
-                imageSize = inflated.imageCount,
-                attachmentSize = inflated.attachmentCount,
-            )
-        }
-
     override suspend fun unpack(
         archive: StagedFile,
         maxSize: Long,
         onProgress: (readBytes: Long, totalBytes: Long) -> Unit,
-    ): UnpackedArchive = withContext(Dispatchers.Default) {
+    ): List<ImportedFile> = withContext(Dispatchers.Default) {
         StreamingArchiveUnpack(
             fileStorage = fileStorage,
             staging = importStaging,
@@ -97,57 +83,5 @@ internal class ArchiveLocalSourceImpl(
         }
     } else {
         DosTimestamp.EARLIEST
-    }
-
-    /**
-     * The size limit is shared by the whole import through [inflated] rather than applied per archive: a nested archive
-     * is inflated on top of the bytes its parent already holds in memory, and every level is kept until the end.
-     */
-    private fun unpack(archive: ByteArray, depth: Int, inflated: InflatedBytes): List<ImportedFile> {
-        val content = ZipReader.read(
-            archive = archive,
-            maxTotalSize = inflated.limit - inflated.count,
-            limitOf = ArchiveEntryPolicy::limitOf,
-            sniffedLimitOf = ArchiveEntryPolicy::sniffedLimitOf,
-        )
-        inflated.count += content.chargedSize
-        val files = content.entries.map { entry -> ArchiveEntryPolicy.importedFileOf(entry.name, entry.bytes) }
-        ArchiveEntryPolicy.backupOf(files, content.unread)?.let { return it }
-        val openSong = OpenSongArchive.read(content.entries.map { it.name }, files)
-        val entries = openSong?.files ?: files
-        val images = ArchiveSongImages.read(
-            archive = archive,
-            content = content,
-            maxSize = inflated.imageLimit - inflated.imageCount,
-            maxAttachmentSize = inflated.attachmentLimit - inflated.attachmentCount,
-            isHidden = { it.isHidden },
-        )
-        inflated.imageCount += images.chargedSize
-        inflated.attachmentCount += images.chargedAttachmentSize
-        val read = ArchiveEntryPolicy.withSongImages(entries, content.entries.map { it.name }, images).flatMap { file ->
-            if (depth < ArchiveEntryPolicy.MAX_DEPTH && ArchiveEntryPolicy.isArchive(file)) {
-                // A nested archive that cannot be read is reported rather than failing the whole import: the files
-                // next to it are still perfectly good.
-                try {
-                    unpack(archive = file.bytes, depth = depth + 1, inflated = inflated)
-                } catch (exception: Exception) {
-                    logger.log("Could not unpack \"${file.name}\": ${exception.message}")
-                    listOf(ImportedFile.unread(file.name))
-                }
-            } else {
-                ArchiveEntryPolicy.foreignSongs(file) ?: listOf(file)
-            }
-        }
-        return read + openSong?.leftOut.orEmpty() + ArchiveEntryPolicy.unreadFilesOf(content.unread, images.takenEntryNames)
-    }
-
-    /**
-     * How many bytes the archives of one import have inflated to so far, carried down the recursion, and the most they
-     * may: the songs, the pictures, and the attachments each within a budget of their own.
-     */
-    private class InflatedBytes(val limit: Long, val imageLimit: Long, val attachmentLimit: Long) {
-        var count = 0L
-        var imageCount = 0L
-        var attachmentCount = 0L
     }
 }

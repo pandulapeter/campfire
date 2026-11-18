@@ -30,10 +30,10 @@ package com.pandulapeter.campfire.data.formats.zip
  *   and the end record has its directory offset at the marker, but **no ZIP64 record or locator is written at all**:
  *   the archive names a value only a ZIP64 record holds and has none. `unzip` lists it by guessing the offset from
  *   where the end record sits; Python's `zipfile` lists it the same way and then fails to read an entry. It is
- *   refused as damaged, as the in-memory reader refuses it.
+ *   refused as damaged.
  * - [PYTHON] and [PYTHON_ZIP64]: `ZipFile.open(info, "w", force_zip64=True)`, the `.cho` deflated and the rest stored.
  *   Python forces ZIP64 into the local headers only (both sizes at their markers, both in the field); the central
- *   directory and the end record are as without it, so both readers read it as they always have. `zipfile` writes no
+ *   directory and the end record are as without it, so it reads as an archive without ZIP64. `zipfile` writes no
  *   ZIP64 end records unless an archive needs them, whatever it is asked.
  * - `ZipOutputStream` writes no ZIP64 into an archive of small entries, deflated ones streamed (bit 3, 16-byte data
  *   descriptors with their signature), so it has no small fixture.

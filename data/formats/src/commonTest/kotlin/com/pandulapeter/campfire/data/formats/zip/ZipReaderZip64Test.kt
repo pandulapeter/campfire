@@ -37,7 +37,7 @@ internal class ZipReaderZip64Test {
             RealWriterArchives.INFO_ZIP_ZIP64 to RealWriterArchives.INFO_ZIP,
             RealWriterArchives.PYTHON_ZIP64 to RealWriterArchives.PYTHON,
         )) {
-            val expected = readAlike(twin.hexToByteArray())
+            val expected = readArchive(twin.hexToByteArray())
 
             assertEquals(RealWriterArchives.SMALL_NAMES, expected.entries.map { it.name })
             assertAlike(Result.success(expected), runCatching { ZipReader.read(ByteArrayZipSource(zip64.hexToByteArray())) })
@@ -45,16 +45,9 @@ internal class ZipReaderZip64Test {
     }
 
     @Test
-    fun `the in-memory reader still refuses ZIP64 archives and reads Python's local-only ZIP64 as before`() = runTest {
-        assertFailsWith<ZipException> { ZipReader.read(RealWriterArchives.INFO_ZIP_ZIP64.hexToByteArray()) }
-        assertEquals(RealWriterArchives.SMALL_NAMES, readAlike(RealWriterArchives.PYTHON_ZIP64.hexToByteArray()).entries.map { it.name })
-    }
-
-    @Test
     fun `an end record needing a ZIP64 record that is not there is refused like Info-ZIP's streamed one`() = runTest {
-        assertEquals(RealWriterArchives.SMALL_NAMES, readAlike(RealWriterArchives.INFO_ZIP_STREAMED.hexToByteArray()).entries.map { it.name })
+        assertEquals(RealWriterArchives.SMALL_NAMES, readArchive(RealWriterArchives.INFO_ZIP_STREAMED.hexToByteArray()).entries.map { it.name })
 
-        assertReadsAlike(RealWriterArchives.INFO_ZIP_ZIP64_STREAMED.hexToByteArray())
         assertFailsWith<ZipException> { ZipReader.open(ByteArrayZipSource(RealWriterArchives.INFO_ZIP_ZIP64_STREAMED.hexToByteArray())) }
     }
 

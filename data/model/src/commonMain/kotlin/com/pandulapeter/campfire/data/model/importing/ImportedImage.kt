@@ -37,8 +37,8 @@ class ImportedImage(
         MISSING,
 
         /**
-         * Larger than `ImportLimits.MAX_IMAGE_FILE_SIZE`, or past what is left of `ImportLimits.MAX_IMPORT_IMAGES_SIZE`; for
-         * an attachment, `ImportLimits.MAX_ATTACHMENT_FILE_SIZE` and `ImportLimits.MAX_IMPORT_ATTACHMENTS_SIZE`.
+         * Larger than `ImportLimits.MAX_IMAGE_FILE_SIZE`, or, for a picture downloaded by its address, past what is left of
+         * `ImportLimits.MAX_IMPORT_IMAGES_SIZE`; for an attachment, larger than `ImportLimits.MAX_ATTACHMENT_FILE_SIZE`.
          */
         TOO_LARGE,
 

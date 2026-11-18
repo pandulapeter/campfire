@@ -13,8 +13,6 @@ import com.pandulapeter.campfire.chordpro.edit.ChordProAttachments
 import com.pandulapeter.campfire.chordpro.edit.ChordProImages
 import com.pandulapeter.campfire.data.formats.zip.EntryPolicy
 import com.pandulapeter.campfire.data.formats.zip.UnreadZipEntry
-import com.pandulapeter.campfire.data.formats.zip.ZipContent
-import com.pandulapeter.campfire.data.formats.zip.ZipReader
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.model.importing.ImportedImage
 import com.pandulapeter.campfire.data.model.importing.IncomingContent
@@ -27,46 +25,22 @@ import com.pandulapeter.campfire.data.model.library.decodeLibraryText
  * folder somebody zipped up cost nothing, and stay reported as skipped. Another app's song (OpenSong, OnSong, a JSON
  * export, ABC) brings none: those apps keep their pictures in ways of their own.
  *
- * Every picture is held to [ImportLimits.MAX_IMAGE_FILE_SIZE] and all of them together to what is left of the import's
- * picture budget, every attachment to [ImportLimits.MAX_ATTACHMENT_FILE_SIZE] and all of them to the attachment budget,
- * each charged as the entries declare themselves before they are read, so a file past either is reported with its song
- * rather than read. A file named by several songs is read once, and one a song shows as a picture is read as a picture
- * however many attach it, so that the one read serves both. [read] is the in-memory unpack's; [StreamingArchiveUnpack]
- * stages the same files through [wanted], [policyOf], and [found], within the disk rather than the two budgets.
+ * Every picture is held to [ImportLimits.MAX_IMAGE_FILE_SIZE] and every attachment to
+ * [ImportLimits.MAX_ATTACHMENT_FILE_SIZE], so a file past its limit is reported with its song rather than read. A file
+ * named by several songs is read once, and one a song shows as a picture is read as a picture however many attach it,
+ * so that the one read serves both. [StreamingArchiveUnpack] stages them through [wanted], [policyOf], and [found].
  */
 internal object ArchiveSongImages {
 
     /**
-     * What [read] found: the pictures and attachments of each entry of the first walk, in its order (empty for one that
-     * is no song or names none), which entries of the archive were taken for them (and so are not reported as skipped),
-     * and what they cost the picture and attachment budgets.
+     * What [found] found: the pictures and attachments of each entry of the first walk, in its order (empty for one that
+     * is no song or names none), and which entries of the archive were taken for them (and so are not reported as
+     * skipped).
      */
     class Found(
         val imagesByEntry: List<List<ImportedImage>>,
         val takenEntryNames: Set<String>,
-        val chargedSize: Long,
-        val chargedAttachmentSize: Long,
     )
-
-    /**
-     * The pictures and attachments the songs among [content]'s entries name, out of [archive], within [maxSize] and
-     * [maxAttachmentSize] bytes. [isHidden] tells the entries no song can mean, which the first walk left out unreported.
-     */
-    fun read(archive: ByteArray, content: ZipContent, maxSize: Long, maxAttachmentSize: Long, isHidden: (String) -> Boolean): Found {
-        val wanted = wanted(content.entries.map { it.name to it.bytes }, content.unread.map { it.name }, isHidden)
-            ?: return Found(content.entries.map { emptyList() }, emptySet(), 0, 0)
-        val walks = listOfNotNull(
-            walk(archive, wanted.pictures, maxSize, isAttachment = false),
-            walk(archive, wanted.attachments, maxAttachmentSize, isAttachment = true),
-        )
-        return found(
-            wanted = wanted,
-            contentByName = (wanted.readFirst + walks.flatMap { it.content.entries }.associate { it.name to it.bytes }).mapValues { IncomingContent.Bytes(it.value) },
-            unreadByName = walks.flatMap { walk -> walk.content.unread.filter { it.name in walk.wanted } }.associate { it.name to it.reason },
-            chargedSize = walks.firstOrNull { !it.isAttachment }?.content?.chargedSize ?: 0,
-            chargedAttachmentSize = walks.firstOrNull { it.isAttachment }?.content?.chargedSize ?: 0,
-        )
-    }
 
     /**
      * What the songs of an archive's first walk name, and where in the archive each of those files is: by entry of
@@ -106,14 +80,12 @@ internal object ArchiveSongImages {
 
     /**
      * Each entry's pictures and attachments, out of the files [wanted] names that were read ([contentByName], the first
-     * walk's among them) or why not ([unreadByName]), with what reading them cost.
+     * walk's among them) or why not ([unreadByName]).
      */
     fun found(
         wanted: Wanted,
         contentByName: Map<String, IncomingContent>,
         unreadByName: Map<String, UnreadZipEntry.Reason>,
-        chargedSize: Long,
-        chargedAttachmentSize: Long,
     ): Found {
         val images = wanted.resolvedPictures.indices.map { index ->
             wanted.resolvedPictures[index].map { (source, name) -> found(source, name, contentByName, unreadByName, isAttachment = false) } +
@@ -122,8 +94,6 @@ internal object ArchiveSongImages {
         return Found(
             imagesByEntry = images,
             takenEntryNames = (wanted.resolvedPictures + wanted.resolvedAttachments).flatMap { it.values }.filterNotNull().toSet(),
-            chargedSize = chargedSize,
-            chargedAttachmentSize = chargedAttachmentSize,
         )
     }
 
@@ -144,23 +114,6 @@ internal object ArchiveSongImages {
                 unreadByName[name] == UnreadZipEntry.Reason.TOO_LARGE -> ImportedImage.Problem.TOO_LARGE
                 else -> ImportedImage.Problem.UNREADABLE
             },
-            isAttachment = isAttachment,
-        )
-    }
-
-    /** One walk of an archive for the entries it [wanted], and whether those were attachments. */
-    private class Walk(val content: ZipContent, val wanted: Set<String>, val isAttachment: Boolean)
-
-    /**
-     * The entries of [archive] among [wanted], each within the limit of a picture or of an attachment and all within
-     * [maxSize]; null where none is wanted.
-     */
-    private fun walk(archive: ByteArray, wanted: Set<String>, maxSize: Long, isAttachment: Boolean) = if (wanted.isEmpty()) {
-        null
-    } else {
-        Walk(
-            content = ZipReader.read(archive = archive, maxTotalSize = maxSize, limitOf = policyOf(wanted, isAttachment)),
-            wanted = wanted,
             isAttachment = isAttachment,
         )
     }
