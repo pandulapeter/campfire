@@ -9,7 +9,7 @@
 -->
 # Plan: sync's knowledge of songs behind seams
 
-**Status:** draft, checked against the code on 2026-11-18 (`main` at 85e23a2db). Nothing is implemented. Split out of
+**Status:** in progress: C1 done; C2 is next. Checked against the code on 2026-11-18 (`main` at 85e23a2db). Split out of
 [sync-library-extraction.md](sync-library-extraction.md), which moves the result into `:libs:sync:*` modules later.
 
 **Goal:** the sync engine's rules (what to upload, download, delete, keep, and call a conflict) depend on a few narrow
@@ -79,9 +79,9 @@ and shared primitives (`Logger`, `Sha256`, NFC) stay where they are; moving them
 Each lands as one compiling commit with `desktopTest`, `spotlessCheck`, and the pre-commit checks green; a step that
 touches platform source sets also compiles iOS (`linkDebugFrameworkIosSimulatorArm64`) and the web.
 
-- **C1. Fixtures.** `upgrade-5.4.0` fixtures, written by a worktree at tag 5.4.0, for what has none: the desktop/web
-  `sync-credentials.json` (connected, and with a pending authorization) and the folder's `preferences.json`, each with
-  a test reading it. Done: the tests pass on today's code.
+- **C1. Fixtures.** Done: `upgrade-5.5.0` fixtures, written by a worktree at tag 5.5.0, of the desktop/web
+  `sync-credentials.json` (connected, and with a pending authorization; `SyncCredentialsUpgradeFrom550Test`) and the
+  folder's `preferences.json` (`SyncedPreferencesUpgradeFrom550Test`).
 - **C2. Collections.** Seams 1 and 4: `SyncCollection` and `SyncCollections` in remote api replace `LibraryFileKind` in
   `SyncFolder`, `LibraryFileLocalSource`, `SyncKey`, the engine, and the Dropbox provider; Campfire declares the three.
   Done: `SyncPlannerUpgradeFrom520Test`, `TwoDeviceSyncTest`, `SyncSimulationTest`, and `DropboxFilesTest` green with
@@ -129,6 +129,6 @@ the provider-core packages, constructed with its own `OAuthRedirectConfiguration
 Behaviour is unchanged when, after every step, these pass without edits other than imports and constructor wiring:
 `TwoDeviceSyncTest`, `SyncSimulationTest` (and by hand with far more seeds after C4), the engine, planner, scheduling,
 connection, and shared-links tests, `SyncPlannerUpgradeFrom520Test`, `SharedLinksUpgradeFrom520Test`,
-`SharedLinksUpgradeFrom540Test`, C1's fixtures, and the Dropbox and transport tests. Once, after C5: a live sync of an
+`SharedLinksUpgradeFrom540Test`, C1's `*UpgradeFrom550Test`s, and the Dropbox and transport tests. Once, after C5: a live sync of an
 existing install against a real Dropbox (the owner's live sync test recipe) shows no download of unchanged files and no
 conflict copy.

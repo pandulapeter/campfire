@@ -1,0 +1,45 @@
+{
+    "chords": {
+        "guitar": {
+            "F:0.4.7": "x x 3 2 1 1"
+        },
+        "ukulele": {
+            "D:0.4.7": "2 2 2 0"
+        }
+    },
+    "songs": {
+        "john_newton-amazing_grace.cho": {
+            "capo": 1
+        },
+        "leonard_cohen-hallelujah.cho": {
+            "autoScrollSpeed": 40,
+            "beatLevels": {
+                "12/8": [
+                    "accent",
+                    "normal",
+                    "normal",
+                    "muted",
+                    "normal",
+                    "normal",
+                    "accent",
+                    "normal",
+                    "normal",
+                    "muted",
+                    "normal",
+                    "normal"
+                ]
+            },
+            "transposition": -3
+        },
+        "oasis-wonderwall.cho": {
+            "capo": 2,
+            "tempo": 87,
+            "transposition": 2
+        }
+    },
+    "tags": {
+        "christmas": "red",
+        "worship": "blue"
+    },
+    "version": 1
+}
