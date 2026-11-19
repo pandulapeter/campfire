@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.Dp
 import com.pandulapeter.campfire.presentation.ui.components.appBar.AppBarOverlap
 import com.pandulapeter.campfire.presentation.ui.components.list.SectionHeader
 import com.pandulapeter.campfire.presentation.ui.components.list.SectionHeaderState
+import com.pandulapeter.campfire.presentation.ui.components.list.fadingUpUnderStatusBar
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.list.pushedSectionHeader
 import com.pandulapeter.campfire.presentation.ui.components.list.pushedSectionHeaderPlacement
@@ -45,11 +46,11 @@ internal fun PushedSongSectionHeader(
     val key by remember(pushed) { derivedStateOf { pushed.value?.key } }
     val header = key?.let(sectionIndex::headerForKey) ?: return
     SectionHeader(
-        modifier = Modifier.pushedSectionHeaderPlacement(pushed, contentPadding).clearAndSetSemantics {},
+        modifier = Modifier.pushedSectionHeaderPlacement(pushed, contentPadding).fadingUpUnderStatusBar(pushed).clearAndSetSemantics {},
         text = header.displayText(selectionCount = selectionCount),
         // Pinned for as long as it is being pushed away: it keeps the width it had in the bar's place rather than
         // widening again as it leaves.
-        state = { SectionHeaderState(visibleFraction = pushed.value?.visibleFraction ?: 0f, pinnedFraction = 1f) },
+        state = { SectionHeaderState(visibleFraction = 1f, pinnedFraction = 1f) },
         endPadding = endPadding,
         onClick = null,
         action = if (header == SongGroupHeader.RandomPicks) {
@@ -59,8 +60,7 @@ internal fun PushedSongSectionHeader(
         } else {
             null
         },
-        contentOpacity = { (pushed.value?.visibleFraction ?: 0f) * appBarOverlap().coverage },
-        pushedDistancePx = { pushed.value?.pushedDistance ?: 0 },
+        contentOpacity = { appBarOverlap().coverage },
         appBarOverlap = appBarOverlap,
     )
 }

@@ -41,7 +41,8 @@
 - No background or divider; only the content takes touches, and **neither the header nor its menu button is
   focusable**: a lazy grid keeps a focused item placed after scrolling away, which stops it drawing later pinned
   headers.
-- The pushed-away pinned header is a visual copy outside the grid, so the grid's clip can't cut it. The row extends
+- The pushed-away pinned header is a visual copy outside the grid, so the grid's clip can't cut it; it moves with its
+  row up under the status bar, fading out by the window's top (`leavingSectionHeaderOpacity`). The row extends
   behind the fast scroller so pill and app bar reach measure from one edge.
 - Clicking a header scrolls to its section start, keeping `SECTION_START_ROOM` above it, where nothing of the section
   before shows: the pushed header's fraction is measured to the content's start, and `ListTopFade` thins its fade near

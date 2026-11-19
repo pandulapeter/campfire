@@ -28,6 +28,7 @@ import com.pandulapeter.campfire.presentation.ui.components.actions.SetlistActio
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.list.pushedSectionHeader
 import com.pandulapeter.campfire.presentation.ui.components.list.pushedSectionHeaderPlacement
+import com.pandulapeter.campfire.presentation.ui.components.list.fadingUpUnderStatusBar
 import com.pandulapeter.campfire.presentation.ui.state.setlists.SetlistWithSongs
 import org.jetbrains.compose.resources.painterResource
 
@@ -52,11 +53,11 @@ internal fun PushedSetlistHeader(
     val setlistWithSongs = key?.let { setlistsByKey[it] } ?: return
     val setlist = setlistWithSongs.setlist
     SectionHeader(
-        modifier = Modifier.pushedSectionHeaderPlacement(pushed, contentPadding).clearAndSetSemantics {},
+        modifier = Modifier.pushedSectionHeaderPlacement(pushed, contentPadding).fadingUpUnderStatusBar(pushed).clearAndSetSemantics {},
         text = setlist.title,
         // Pinned for as long as it is being pushed away: it keeps the width it had in the bar's place rather than
         // widening again as it leaves.
-        state = { SectionHeaderState(visibleFraction = pushed.value?.visibleFraction ?: 0f, pinnedFraction = 1f) },
+        state = { SectionHeaderState(visibleFraction = 1f, pinnedFraction = 1f) },
         endPadding = endPadding,
         icon = if (setlist.isArchived) painterResource(Res.drawable.ic_archive) else null,
         onClick = null,
@@ -72,8 +73,6 @@ internal fun PushedSetlistHeader(
                 )
             }
         },
-        contentOpacity = { pushed.value?.visibleFraction ?: 0f },
-        pushedDistancePx = { pushed.value?.pushedDistance ?: 0 },
         appBarOverlap = appBarOverlap,
     )
 }

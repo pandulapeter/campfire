@@ -89,11 +89,11 @@ import kotlin.math.roundToInt
  * as a closing one brings the list back up.
  *
  * The row extends through the grid's end padding, beneath the fast scroller, so that the reach and the pill's end are
- * measured from the same edge. A decorative copy can be drawn outside the grid while the row is pushed up
- * ([pushedDistancePx]); its content lags behind the row there and fades with [contentOpacity].
+ * measured from the same edge. A decorative copy can be drawn outside the grid while the row is pushed up, travelling
+ * on with it under the status bar and fading out there ([fadingUpUnderStatusBar]).
  *
  * Everything that follows the scroll position is handed over as a function and read only while the row is laid out
- * ([state]) or drawn ([opacity], [contentOpacity], [pushedDistancePx]), so that a scroll moving it recomposes nothing.
+ * ([state]) or drawn ([opacity], [contentOpacity]), so that a scroll moving it recomposes nothing.
  *
  * @param backgroundColor Optional backing for transitions in which cards' placement and fades can settle separately.
  * @param action The buttons at the end of the pill, a setlist's [SetlistActions]: handed the modifier that decides how
@@ -116,7 +116,6 @@ internal fun SectionHeader(
     action: (@Composable (modifier: Modifier, buttonModifier: Modifier) -> Unit)? = null,
     opacity: () -> Float = { 1f },
     contentOpacity: () -> Float = { 1f },
-    pushedDistancePx: () -> Int = { 0 },
     appBarOverlap: () -> AppBarOverlap,
     backgroundColor: Color = Color.Transparent,
 ) = Box(
@@ -146,12 +145,10 @@ internal fun SectionHeader(
         }
         .graphicsLayer {
             alpha = contentOpacity()
-            // The outgoing pill lags the row slightly, then disappears before reaching the bar's controls. Coming into
-            // the pinned place it also settles onto the buttons' center line, which is below a row stuck at the top and
-            // above one resting at the start of its section.
+            // Coming into the pinned place the pill settles onto the buttons' center line, which is below a row stuck at
+            // the top and above one resting at the start of its section.
             val state = state()
-            translationY = pushedDistancePx() * SECTION_HEADER_CONTENT_PARALLAX_FRACTION +
-                state.pinnedFraction * ((LIST_APP_BAR_HEIGHT - SECTION_HEADER_ROW_HEIGHT) / 2).toPx() - state.belowPinnedPlacePx
+            translationY = state.pinnedFraction * ((LIST_APP_BAR_HEIGHT - SECTION_HEADER_ROW_HEIGHT) / 2).toPx() - state.belowPinnedPlacePx
         }
     val pillContent: @Composable () -> Unit = {
         Row(
@@ -332,5 +329,3 @@ internal val SECTION_HEADER_ROW_HEIGHT = SECTION_HEADER_PILL_HEIGHT
  * where [trailingKeylineAdjustment] moves it from [LIST_ITEM_KEYLINE], so the two menus stand on one keyline.
  */
 private fun sectionHeaderPillActionEndPadding(trailingKeylineAdjustment: Dp) = LIST_ITEM_KEYLINE - trailingKeylineAdjustment
-
-private const val SECTION_HEADER_CONTENT_PARALLAX_FRACTION = 0.5f

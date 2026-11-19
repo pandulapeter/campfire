@@ -46,8 +46,8 @@ internal data class PushedSectionHeader(
     val index: Int,
     val offset: IntOffset,
     val width: Int,
+    val height: Int,
     val pushedDistance: Int,
-    val visibleFraction: Float,
 )
 
 /**
@@ -71,8 +71,8 @@ internal fun pushedSectionHeader(listState: LazyGridState, contentType: String):
                     // In the viewport's coordinates, where the copy is drawn, rather than the content's.
                     offset = item.offset.copy(y = item.offset.y - top),
                     width = item.size.width,
+                    height = item.size.height,
                     pushedDistance = top - item.offset.y,
-                    visibleFraction = pushedHeaderVisibleFraction(item.offset.y, item.size.height, layoutInfo.beforeContentPadding),
                 )
             }
         }
@@ -95,7 +95,7 @@ internal fun Modifier.pushedSectionHeaderPlacement(
 }
 
 /**
- * The scroll fractions that fade the outgoing header as the next one pushes it away, and narrow a pinned one. A state
+ * The scroll fractions that hide the outgoing header as the next one pushes it away, and narrow a pinned one. A state
  * rather than its value for the reason [pushedSectionHeader] is: [SectionHeader] reads it while it is laid out and
  * drawn, and the header item is not recomposed on every frame of a push.
  */
