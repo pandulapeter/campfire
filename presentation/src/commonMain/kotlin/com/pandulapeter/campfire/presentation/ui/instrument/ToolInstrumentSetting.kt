@@ -54,8 +54,9 @@ import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
  * `toolLineTrailingX`). A [trailing] that emits nothing (the capo hidden) keeps the line's height. A page with nothing
  * at the end, or with [trailing] after the pill, keeps the room above the pill all the same, so that the pill stands at
  * one spot whichever tool is picked, but not the room under it, which only parted it from what comes next by more than
- * the page's other groups are parted. An [endAction] (the Chords and the Scales tabs' way into the Preferences) stands at
- * the line's very end, centred on the pill's line, and the pill and [trailing] share what is left beside it.
+ * the page's other groups are parted. An [endAction] (the room the Chords and the Scales tabs keep under their floating
+ * Preferences pill) stands at the line's very end, centred on the pill's line, and the pill and [trailing] share what is
+ * left beside it.
  */
 @Composable
 internal fun ToolInstrumentSetting(

@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.chords
 
+import com.pandulapeter.campfire.presentation.ui.screens.ChordToolPage
 import com.pandulapeter.campfire.presentation.ui.chords.CHORD_LIBRARY_QUALITIES
 import com.pandulapeter.campfire.presentation.ui.chords.ChordLibraryInputs
 import com.pandulapeter.campfire.presentation.ui.chords.ChordLibraryResults
@@ -24,7 +25,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridItemScope
@@ -39,7 +39,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -148,13 +147,9 @@ internal fun ChordsScreen(
     )
     val searchFocus = rememberPinnedSearchFocus(gridState)
     val searchPlaceholder = stringResource(Res.string.chords_search)
-    Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.TopStart,
-    ) {
+    ChordToolPage(modifier = modifier, layout = layout, contentPadding = contentPadding, showDialog = viewModel.dialogHost::showDialog) {
         LazyVerticalGrid(
             modifier = Modifier
-                .widthIn(max = layout.animatedPageMaxWidth(sections = 2))
                 .fillMaxSize()
                 .pinnedSearchPageTopEdge(gridState, backgroundColor = MaterialTheme.colorScheme.background)
                 .bounceScrollableContent(gridState),

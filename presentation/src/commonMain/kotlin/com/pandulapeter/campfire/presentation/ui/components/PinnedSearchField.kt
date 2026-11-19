@@ -25,7 +25,15 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.unit.constrainWidth
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.offset
+import com.pandulapeter.campfire.presentation.ui.components.appBar.LIST_APP_BAR_HEIGHT
+import com.pandulapeter.campfire.presentation.ui.components.appBar.NEW_ITEM_BUTTON_END_INSET
+import com.pandulapeter.campfire.presentation.ui.components.appBar.NEW_ITEM_BUTTON_GAP
+import com.pandulapeter.campfire.presentation.ui.components.menu.NEW_ITEM_BUTTON_SIZE
+import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -77,7 +85,8 @@ internal fun LazyGridScope.pinnedSearchField(
                 }
             }
             .background(backgroundColor)
-            .padding(bottom = 8.dp),
+            .padding(bottom = 8.dp)
+            .clearingFloatingPill(gridState),
         verticalAlignment = Alignment.Bottom,
     ) {
         // The line is narrowed rather than the row, whose background is what the cells pass under across the page.
@@ -99,6 +108,30 @@ internal fun LazyGridScope.pinnedSearchField(
         }
     }
 }
+
+/**
+ * Narrows the field's line by the room the page's floating Preferences pill takes at its end, as far as the field has
+ * come into its pinned place, where the pill stands on its line: none at rest, all of it once pinned, so that the field
+ * gives way along the way the way a list's pinned header gives way to the app bar's buttons. Read while measuring, so
+ * that a scroll recomposes nothing.
+ */
+private fun Modifier.clearingFloatingPill(gridState: LazyGridState) = layout { measurable, constraints ->
+    val field = gridState.layoutInfo.visibleItemsInfo.firstOrNull { it.index == PINNED_SEARCH_INDEX }
+    val pinnedFraction = when {
+        gridState.firstVisibleItemIndex >= PINNED_SEARCH_INDEX -> 1f
+        field == null -> 0f
+        else -> (1f - field.offset.y / LIST_APP_BAR_HEIGHT.toPx()).coerceIn(0f, 1f)
+    }
+    val room = (FLOATING_PILL_ROOM.toPx() * pinnedFraction).roundToInt()
+    val placeable = measurable.measure(constraints.offset(horizontal = -room))
+    layout(constraints.constrainWidth(placeable.width + room), placeable.height) { placeable.placeRelative(0, 0) }
+}
+
+/**
+ * What the field's line gives up at its end once pinned: the floating pill, one button wide on the New button's spot,
+ * and the gap the list screens keep before that button, less the side padding the field keeps itself.
+ */
+private val FLOATING_PILL_ROOM = NEW_ITEM_BUTTON_END_INSET + NEW_ITEM_BUTTON_SIZE + NEW_ITEM_BUTTON_GAP - 16.dp
 
 /** The search field's place in the page's grid, right after the controls. */
 internal const val PINNED_SEARCH_INDEX = 1

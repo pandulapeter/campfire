@@ -22,7 +22,6 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridScope
@@ -33,7 +32,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.style.TextAlign
@@ -54,6 +52,7 @@ import com.pandulapeter.campfire.presentation.resources.scales_search
 import com.pandulapeter.campfire.presentation.resources.scales_search_heading
 import com.pandulapeter.campfire.presentation.resources.scales_search_no_scale
 import com.pandulapeter.campfire.presentation.localization.textResource
+import com.pandulapeter.campfire.presentation.ui.screens.ChordToolPage
 import com.pandulapeter.campfire.presentation.ui.chords.LibraryKeyStepper
 import com.pandulapeter.campfire.presentation.ui.chords.shownChordName
 import com.pandulapeter.campfire.presentation.ui.components.QueryBackHandler
@@ -130,13 +129,9 @@ internal fun ScalesScreen(
     )
     val searchFocus = rememberPinnedSearchFocus(gridState)
     val searchPlaceholder = stringResource(Res.string.scales_search)
-    Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.TopStart,
-    ) {
+    ChordToolPage(modifier = modifier, layout = layout, contentPadding = contentPadding, showDialog = viewModel.dialogHost::showDialog) {
         LazyVerticalGrid(
             modifier = Modifier
-                .widthIn(max = layout.animatedPageMaxWidth(sections = 2))
                 .fillMaxSize()
                 .pinnedSearchPageTopEdge(gridState, backgroundColor = MaterialTheme.colorScheme.background)
                 .bounceScrollableContent(gridState),

@@ -40,7 +40,9 @@ same setting**: a page is one component wherever it appears (the Metronome page 
   every page, the Chords and Scales tabs General and Chords. A page whose feature is off goes (Song
   with the songs, Metronome with the metronome); General and Chords always stay.
 - The sheet opens on the page its caller names (`DialogType.Preferences.page`): Song from song details' menu, General
-  from the read only mark, Chords from the Chords and Scales tabs.
+  from the read only mark, Chords from the Chords and Scales tabs, whose way in is a one-button pill floating on the New
+  button's spot (`PreferencesPill`, the list screens' `FloatingPill`), staying put while the page scrolls under it; their
+  instrument line keeps its room, and the pinned search narrows by it as it arrives.
 - Choices the rows open (notation, instrument, tuning) stack over the sheet (`DialogStack`), so a pick comes back.
 
 ## Rows
