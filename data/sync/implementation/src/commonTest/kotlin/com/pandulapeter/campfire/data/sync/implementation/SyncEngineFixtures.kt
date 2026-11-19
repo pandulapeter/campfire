@@ -32,6 +32,9 @@ internal val THERE = "Edited there".encodeToByteArray()
 internal val GIG = SyncKey(kind = LibraryCollections.SETLISTS, name = "gig.setlist.json")
 internal val GIG_COPY = SyncKey(kind = LibraryCollections.SETLISTS, name = "gig (2).setlist.json")
 
+/** The collections whose documents Campfire's engine asks for references, for the planner tests to plan with. */
+internal val CAMPFIRE_REFERENCING = LibrarySyncRules.references.keys
+
 internal fun song(number: Int) = song(name = "song_$number")
 
 internal fun song(name: String) = SyncKey(kind = LibraryCollections.SONGS, name = "$name.cho")
@@ -93,7 +96,8 @@ internal suspend fun synchronize(
 ) = SyncEngine(
     libraryFileLocalSource = local,
     libraryFileLock = lock,
-    setlistComparison = setlistComparison,
+    references = LibrarySyncRules.references,
+    conflictPolicies = LibrarySyncRules.conflictPolicies(setlistComparison),
     plantedContentHash = plantedContentHash,
     logger = logger,
     collections = LibraryCollections.all,

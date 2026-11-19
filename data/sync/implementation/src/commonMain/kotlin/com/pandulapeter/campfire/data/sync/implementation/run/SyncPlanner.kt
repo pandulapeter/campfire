@@ -9,7 +9,6 @@
  */
 package com.pandulapeter.campfire.data.sync.implementation.run
 
-import com.pandulapeter.campfire.data.model.library.LibraryCollections
 import com.pandulapeter.campfire.data.model.library.SyncCollection
 import com.pandulapeter.campfire.data.sync.implementation.LocalFileState
 import com.pandulapeter.campfire.data.sync.implementation.RemoteFileState
@@ -36,8 +35,9 @@ import com.pandulapeter.campfire.data.sync.implementation.SyncOperation
  * while the rename's other half deletes the old name from the folder. So a pass never deletes one version on both
  * sides: a local deletion of bytes the same plan deletes remotely under another name puts the file back instead.
  *
- * Pictures (a [SyncCollection.Role.CONTENT_FILE] collection) follow the songs that name them, by one more rule, the twin of the edit beating the
- * deletion: **a reference beats a deletion** ([withImagesKept]).
+ * Content files (a [SyncCollection.Role.CONTENT_FILE] collection: in Campfire, pictures and attachments) follow the
+ * documents that name them ([SyncReferences]), by one more rule, the twin of the edit beating the deletion: **a
+ * reference beats a deletion** ([withImagesKept]).
  */
 internal object SyncPlanner {
 
@@ -47,22 +47,26 @@ internal object SyncPlanner {
         remote: List<RemoteFileState>,
         index: Map<SyncKey, SyncIndexEntry>,
         imageReferences: Map<SyncKey, Set<String>>? = emptyMap(),
-    ): List<SyncOperation> = planned(local, remote, index, imageReferences).operations
+        referencing: Set<SyncCollection>,
+    ): List<SyncOperation> = planned(local, remote, index, imageReferences, referencing).operations
 
     /**
-     * @param imageReferences The pictures each song of this device names, null where some song could not be read.
+     * @param imageReferences The content files each referencing document of this device names, null where some such
+     *   document could not be read.
+     * @param referencing The collections whose documents name content files, whether or not this device holds any.
      */
     fun planned(
         local: List<LocalFileState>,
         remote: List<RemoteFileState>,
         index: Map<SyncKey, SyncIndexEntry>,
         imageReferences: Map<SyncKey, Set<String>>?,
+        referencing: Set<SyncCollection>,
     ): SyncPlan {
         val localByKey = local.associateBy { it.key }
         val remoteByKey = remote.associateBy { it.key }
         val kept = (localByKey.keys + remoteByKey.keys + index.keys).mapNotNull { key ->
             operationFor(key = key, local = localByKey[key], remote = remoteByKey[key], indexEntry = index[key])
-        }.withImagesKept(imageReferences)
+        }.withImagesKept(imageReferences, referencing)
         val operations = kept.operations
         // Renames only: a picture has none, and its index hash is its size, which two pictures may share.
         val deletedRemotely = operations.filterIsInstance<SyncOperation.DeleteRemote>()
@@ -97,14 +101,14 @@ internal object SyncPlanner {
      * only for the songs to settle says so ([SyncPlan.holdsDeletionsBack]); one waiting for an unreadable song does not,
      * since the next run would wait as well.
      */
-    private fun List<SyncOperation>.withImagesKept(imageReferences: Map<SyncKey, Set<String>>?): SyncPlan {
-        val songOperations = filter { it.key.kind == LibraryCollections.SONGS }
+    private fun List<SyncOperation>.withImagesKept(imageReferences: Map<SyncKey, Set<String>>?, referencing: Set<SyncCollection>): SyncPlan {
+        val referencingOperations = filter { it.key.kind in referencing }
         // A song deleted from the folder counts too: another device's edit may beat that deletion, and bring the song back
         // naming a picture deleted beside it (a device of a version without pictures, which never puts one back).
-        val isSongSetChanging = songOperations.any { it !is SyncOperation.Upload && it !is SyncOperation.Forget }
-        val leaving = songOperations.filterIsInstance<SyncOperation.DeleteLocal>().mapTo(mutableSetOf()) { it.key }
+        val isReferencingSetChanging = referencingOperations.any { it !is SyncOperation.Upload && it !is SyncOperation.Forget }
+        val leaving = referencingOperations.filterIsInstance<SyncOperation.DeleteLocal>().mapTo(mutableSetOf()) { it.key }
         val kept = imageReferences?.filterKeys { it !in leaving }?.values?.flatten()?.toSet()
-        val mayDelete = kept != null && !isSongSetChanging
+        val mayDelete = kept != null && !isReferencingSetChanging
         var holdsDeletionsBack = false
         val operations = mapNotNull { operation ->
             val key = operation.key

@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.data.sync.implementation.run
 
 import com.pandulapeter.campfire.data.model.library.LibraryCollections
 import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash
+import com.pandulapeter.campfire.data.sync.implementation.CAMPFIRE_REFERENCING
 import com.pandulapeter.campfire.data.sync.implementation.FakeSyncIndexLocalSource
 import com.pandulapeter.campfire.data.sync.implementation.LocalFileState
 import com.pandulapeter.campfire.data.sync.implementation.RemoteFileState
@@ -49,7 +50,7 @@ class SyncPlannerUpgradeFrom520Test {
         val index = SyncIndexStore(FakeSyncIndexLocalSource(index = indexText()), testEnvironment()).load().toIndex(LibraryCollections.all)
         val remote = index.map { (key, entry) -> RemoteFileState(key = key, revision = entry.remoteRevision, contentHash = null, size = 1) }
 
-        val plan = SyncPlanner.plan(local = localFiles(), remote = remote, index = index)
+        val plan = SyncPlanner.plan(local = localFiles(), remote = remote, index = index, referencing = CAMPFIRE_REFERENCING)
 
         assertTrue(index.isNotEmpty())
         assertEquals(emptyList(), plan)

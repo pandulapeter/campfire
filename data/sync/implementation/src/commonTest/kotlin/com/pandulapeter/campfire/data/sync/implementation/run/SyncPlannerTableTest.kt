@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.data.sync.implementation.run
 import com.pandulapeter.campfire.data.model.library.LibraryCollections
 import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteFile
+import com.pandulapeter.campfire.data.sync.implementation.CAMPFIRE_REFERENCING
 import com.pandulapeter.campfire.data.sync.implementation.LocalFileState
 import com.pandulapeter.campfire.data.sync.implementation.SyncIndexEntry
 import com.pandulapeter.campfire.data.sync.implementation.SyncKey
@@ -165,6 +166,7 @@ class SyncPlannerTableTest {
             remote = pass.remote,
             index = pass.planningIndex,
             imageReferences = case.imageReferences,
+            referencing = CAMPFIRE_REFERENCING,
         ).operations
         // Judged on what the planner was given, the names already folded: the requests use these spellings, which the
         // provider resolves to the listed file.

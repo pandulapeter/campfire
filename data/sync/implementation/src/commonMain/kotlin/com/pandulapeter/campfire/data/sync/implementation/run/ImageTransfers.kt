@@ -9,12 +9,10 @@
  */
 package com.pandulapeter.campfire.data.sync.implementation.run
 
-import com.pandulapeter.campfire.chordpro.edit.libraryFilesNamedBy
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.hashing.Sha256
-import com.pandulapeter.campfire.data.model.library.LibraryCollections
-import com.pandulapeter.campfire.data.model.library.decodeLibraryText
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
+import com.pandulapeter.campfire.data.model.library.SyncCollection
 import com.pandulapeter.campfire.data.model.sync.SyncSummary
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLock
@@ -41,6 +39,7 @@ import kotlinx.coroutines.withContext
 internal class ImageTransfers(
     private val libraryFileLocalSource: LibraryFileLocalSource,
     private val libraryFileLock: LibraryFileLock,
+    private val references: Map<SyncCollection, SyncReferences>,
     private val logger: Logger,
     private val imageWritesGate: suspend (suspend (held: Set<String>) -> Unit) -> Unit,
 ) {
@@ -89,13 +88,13 @@ internal class ImageTransfers(
         return SyncEngine.OperationOutcome(removals = setOf(key), summary = SyncSummary(deletedLocally = 1))
     }
 
-    /** Every library file a song here names as the files are now (`libraryFilesNamedBy`), or null where one cannot be read. */
+    /** Every content file a document here names as the files are now ([references]), or null where one cannot be read. */
     private suspend fun namedNow(): Set<String>? = try {
         libraryFileLocalSource.loadLibraryFiles()
-            .filter { it.kind == LibraryCollections.SONGS }
             .flatMapTo(mutableSetOf()) { file ->
+                val namedBy = references[file.kind] ?: return@flatMapTo emptySet()
                 if (file.size > file.kind.maxSize) return null
-                libraryFileLocalSource.readLibraryFile(file.kind, file.name)?.let { libraryFilesNamedBy(it.decodeLibraryText()) }.orEmpty()
+                libraryFileLocalSource.readLibraryFile(file.kind, file.name)?.let(namedBy::of).orEmpty()
             }
     } catch (exception: CancellationException) {
         throw exception

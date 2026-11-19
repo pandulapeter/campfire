@@ -11,13 +11,12 @@ package com.pandulapeter.campfire.data.sync.implementation.run
 
 import com.pandulapeter.campfire.data.sync.implementation.SyncIndexEntry
 import com.pandulapeter.campfire.data.sync.implementation.SyncKey
-import com.pandulapeter.campfire.data.model.library.LibraryCollections
+import com.pandulapeter.campfire.data.model.library.SyncCollection
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.sync.SyncSummary
 import com.pandulapeter.campfire.data.model.recovering
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLock
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource
-import com.pandulapeter.campfire.data.source.local.api.SetlistComparison
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncNetworkException
 import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteWriteResult
@@ -29,12 +28,13 @@ import kotlinx.coroutines.withContext
  * Settles a file that changed on both sides: both versions kept under two names, except where nothing anybody wrote is
  * lost by taking the cloud folder's. Built by [SyncEngine], never by Koin, with the engine's own collaborators.
  *
+ * @param conflictPolicies The collections whose documents may differ in parts nobody chose, see [ConflictPolicy].
  * @param plantedContentHash What the app planted under a name, as a content hash, or null for a file it did not plant.
  */
 internal class ConflictResolver(
     private val libraryFileLocalSource: LibraryFileLocalSource,
     private val libraryFileLock: LibraryFileLock,
-    private val setlistComparison: SetlistComparison,
+    private val conflictPolicies: Map<SyncCollection, ConflictPolicy>,
     private val plantedContentHash: suspend (SyncKey) -> String?,
     private val logger: Logger,
 ) {
@@ -43,12 +43,12 @@ internal class ConflictResolver(
      * `DocumentTransfers.resolve` from the point where both versions are in hand, also for a download that found a save
      * under its write.
      *
-     * Every device gives an undated setlist the day it first reads it on, so after an update every setlist two devices
-     * shared changed on both sides, in nothing but that day. Kept as a conflict, that would be a copy of every setlist
-     * the library had on every device. So a setlist whose two versions differ only in the day, or whose only change
-     * here is the day this device's read gave the undated version the last run saw ([indexEntry]), takes the remote
-     * version: it needs no upload and is what every other device has or will download. What it costs is a day set on
-     * purpose on two devices offline, or here while another device edited the setlist, losing to the cloud folder's.
+     * A document of a collection with a [ConflictPolicy] whose two versions differ only in their volatile parts, or
+     * whose only change here is those parts filled into the version the last run saw ([indexEntry]), takes the remote
+     * version: it needs no upload and is what every other device has or will download. Kept as a conflict, a part every
+     * device fills in on its own would be a copy of every such document on every device. What it costs is such a part
+     * set on purpose on two devices offline, or here while another device edited the document, losing to the cloud
+     * folder's.
      *
      * A demo file this device planted that still holds exactly what was planted ([plantedContentHash]) takes the remote
      * version too, but only where the index has no entry for it, the first time this device meets the name in this
@@ -82,12 +82,13 @@ internal class ConflictResolver(
         if (plantedHash != null && plantedHash == localContentHash(localBytes)) {
             return takeRemote(key = key, revision = revision, localBytes = localBytes, remote = remote, onLocalFileChanged = onLocalFileChanged)
         }
-        if (key.kind == LibraryCollections.SETLISTS) {
+        val conflictPolicy = conflictPolicies[key.kind]
+        if (conflictPolicy != null) {
             // Byte for byte as this version encodes the document, which holds for every file the app wrote; one written
             // by hand never matches and keeps its conflict copy, which is the safe direction.
-            val isOnlyTheDayHere = indexEntry != null &&
-                setlistComparison.withoutDate(localBytes)?.let(::localContentHash) == indexEntry.localHash
-            if (isOnlyTheDayHere || setlistComparison.isSameApartFromDate(localBytes, remote)) {
+            val isOnlyVolatileHere = indexEntry != null &&
+                conflictPolicy.withoutVolatileParts(localBytes)?.let(::localContentHash) == indexEntry.localHash
+            if (isOnlyVolatileHere || conflictPolicy.isSameApartFromVolatileParts(localBytes, remote)) {
                 return takeRemote(key = key, revision = revision, localBytes = localBytes, remote = remote, onLocalFileChanged = onLocalFileChanged)
             }
         }

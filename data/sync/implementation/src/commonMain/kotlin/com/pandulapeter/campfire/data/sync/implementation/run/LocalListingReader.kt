@@ -9,11 +9,8 @@
  */
 package com.pandulapeter.campfire.data.sync.implementation.run
 
-import com.pandulapeter.campfire.chordpro.edit.libraryFilesNamedBy
 import com.pandulapeter.campfire.data.model.Logger
-import com.pandulapeter.campfire.data.model.library.LibraryCollections
 import com.pandulapeter.campfire.data.model.library.SyncCollection
-import com.pandulapeter.campfire.data.model.library.decodeLibraryText
 import com.pandulapeter.campfire.data.model.recovering
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource
 import com.pandulapeter.campfire.data.sync.implementation.LocalFileState
@@ -27,8 +24,9 @@ import kotlinx.coroutines.coroutineScope
  *
  * @param largeFiles The library files within their limit that a run still moves alone (over `SyncEngine`'s
  *   `largeFileThreshold`).
- * @param imageReferences The library files each song of this device names (pictures and attachments), or null where a song could not be read (or was too
- *   large to be), which may name any of them: the planner then deletes no picture on either side.
+ * @param imageReferences The content files each referencing document of this device names ([SyncReferences]), or null
+ *   where such a document could not be read (or was too large to be), which may name any of them: the planner then
+ *   deletes no content file on either side.
  */
 internal class LocalListing(
     val states: List<LocalFileState>,
@@ -55,6 +53,7 @@ internal class LocalListing(
 internal suspend fun readLocalListing(
     libraryFileLocalSource: LibraryFileLocalSource,
     logger: Logger,
+    references: Map<SyncCollection, SyncReferences>,
     batchSize: Int,
     largeFileThreshold: Long,
 ): LocalListing = coroutineScope {
@@ -65,30 +64,38 @@ internal suspend fun readLocalListing(
     // open handles and all of its bytes in memory at once.
     val reads = documents
         .chunked(batchSize)
-        .flatMap { batch -> batch.map { file -> async { readLocalState(libraryFileLocalSource, logger, SyncKey(kind = file.kind, name = file.name)) } }.awaitAll() }
+        .flatMap { batch -> batch.map { file -> async { readLocalState(libraryFileLocalSource, logger, references, SyncKey(kind = file.kind, name = file.name)) } }.awaitAll() }
     val failures = reads.filterIsInstance<LocalRead.Failed>()
     val read = reads.filterIsInstance<LocalRead.Read>()
     val imageStates = images.map { LocalFileState(key = SyncKey(kind = it.kind, name = it.name), hash = localImageHash(it.size)) }
     if (read.isEmpty() && failures.isNotEmpty() && imageStates.isEmpty()) throw failures.first().exception
-    val isEverySongRead = (tooLarge.map { it.kind } + failures.map { it.key.kind }).none { it == LibraryCollections.SONGS }
+    val isEveryReferencingDocumentRead = (tooLarge.map { it.kind } + failures.map { it.key.kind }).none { it in references }
     LocalListing(
         states = read.map { it.state } + imageStates,
         tooLarge = tooLarge.mapTo(mutableSetOf()) { SyncKey(kind = it.kind, name = it.name) },
         unreadable = failures.mapTo(mutableSetOf()) { it.key },
         largeFiles = images.filter { it.size > largeFileThreshold }.mapTo(mutableSetOf()) { SyncKey(kind = it.kind, name = it.name) },
-        imageReferences = if (isEverySongRead) read.filter { it.state.key.kind == LibraryCollections.SONGS }.associate { it.state.key to it.imageReferences } else null,
+        imageReferences = if (isEveryReferencingDocumentRead) {
+            read.filter { it.state.key.kind in references }.associate { it.state.key to it.imageReferences }
+        } else {
+            null
+        },
     )
 }
 
-private suspend fun readLocalState(libraryFileLocalSource: LibraryFileLocalSource, logger: Logger, key: SyncKey): LocalRead = logger.recovering(
+private suspend fun readLocalState(
+    libraryFileLocalSource: LibraryFileLocalSource,
+    logger: Logger,
+    references: Map<SyncCollection, SyncReferences>,
+    key: SyncKey,
+): LocalRead = logger.recovering(
     describe = { "Could not read \"${key.path}\": ${it.message}" },
     fallback = { LocalRead.Failed(key, it) },
 ) {
     libraryFileLocalSource.readLibraryFile(key.kind, key.name)?.let { bytes ->
         LocalRead.Read(
             state = LocalFileState(key = key, hash = localHashOf(key, bytes)),
-            // The same generous reading the library's pruning uses, so that sync never deletes a picture the library keeps.
-            imageReferences = if (key.kind == LibraryCollections.SONGS) libraryFilesNamedBy(bytes.decodeLibraryText()) else emptySet(),
+            imageReferences = references[key.kind]?.of(bytes).orEmpty(),
         )
     } ?: LocalRead.Absent
 }

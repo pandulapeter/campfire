@@ -24,8 +24,9 @@
   holding the incoming bytes is reused, never taken back, so retries after network failures leave one copy; a numbered
   file another device knows is never the copy, since that device may change or delete it. Two exceptions take the folder's version with no copy, written
   only over the bytes compared:
-  - a setlist whose versions differ only in the day, or whose only local change is the day a read gave an undated file
-    (`SetlistComparison`, so the engine never sees the setlist format);
+  - a document of a collection with a `ConflictPolicy` whose versions differ only in its volatile parts, or whose only
+    local change is those parts filled in: Campfire's setlists, whose day a read gives an undated file
+    (`LibrarySyncRules` over `SetlistComparison`, so the engine never sees the setlist format);
   - a demo file this device planted that still hashes to `UserPreferences.demoLibraryContentHashes` and has no index
     entry. With an index entry it was changed back on purpose and keeps its copy.
 - **A download is decided twice**: before the request and just before the write, so a save made meanwhile becomes a
@@ -69,8 +70,9 @@
   failed or still contested file is named beside `lastSyncedAt`, which any run that got to the end moves. A run ending
   in a non-`Exception` throwable rescans the whole library if any operation had finished, since it may have come
   mid-write.
-- **Pictures** (`LibraryCollections.FILES`, named by content, attachments included: every "a song names" below is
-  `libraryFilesNamedBy`): never a conflict and never renamed.
+- **Pictures** (a `CONTENT_FILE` collection, named by content, attachments included: every "a song names" below is
+  what a referencing collection's `SyncReferences` answers, Campfire's songs through `libraryFilesNamedBy` in
+  `LibrarySyncRules`; `run/` reads no document format): never a conflict and never renamed.
   - Not read by the listing: the size stands for the hash (`localImageHash`), so a same-size damage goes unnoticed. Every
     transfer checks the bytes against the name (`ImageTransfers`): a damaged copy is never uploaded or written, and is
     replaced from the other side where that side's copy is intact; two intact copies of one name need only the index. A

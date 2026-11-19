@@ -22,7 +22,6 @@ import com.pandulapeter.campfire.data.model.sync.SyncProgress
 import com.pandulapeter.campfire.data.model.sync.SyncSummary
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLock
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource
-import com.pandulapeter.campfire.data.source.local.api.SetlistComparison
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncFolder
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncRunEndingException
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteDeletion
@@ -59,15 +58,19 @@ import kotlinx.coroutines.sync.withPermit
  * must not be able to read it ahead of the change. That is what lets the repositories re-read the files a run touched
  * rather than the whole library.
  *
- * [setlistComparison] is the one look this class takes inside a file: a setlist whose two versions differ only in the
- * day they name is one setlist rather than a conflict, see [ConflictResolver.resolveWith]. [plantedContentHash] is the
- * other exception to keeping both: a demo file this device planted and nobody touched since yields to the cloud
- * folder's version. Both only reach the [ConflictResolver] the engine builds with them.
+ * The engine never reads a document's format itself. [references] says which content files a document names, which are
+ * kept while one names them ([SyncPlanner]); [conflictPolicies] lets a document whose two versions differ only in parts
+ * nobody chose be one document rather than a conflict, see [ConflictResolver.resolveWith]. [plantedContentHash] is the
+ * other exception to keeping both: a file the app planted and nobody touched since yields to the cloud folder's
+ * version. Both only reach the [ConflictResolver] the engine builds with them.
  */
 internal class SyncEngine(
     private val libraryFileLocalSource: LibraryFileLocalSource,
     private val libraryFileLock: LibraryFileLock,
-    setlistComparison: SetlistComparison,
+    /** What the documents of each referencing collection name; a collection missing from it names nothing. */
+    private val references: Map<SyncCollection, SyncReferences>,
+    /** The collections whose conflicts a [ConflictPolicy] may settle; any other keeps both versions of every one. */
+    conflictPolicies: Map<SyncCollection, ConflictPolicy>,
     /**
      * What the app planted under a name, as a content hash, or null for a file it did not plant; see
      * [ConflictResolver.resolveWith].
@@ -87,9 +90,9 @@ internal class SyncEngine(
     imageWritesGate: suspend (suspend (held: Set<String>) -> Unit) -> Unit = { it(emptySet()) },
 ) {
 
-    private val conflictResolver = ConflictResolver(libraryFileLocalSource, libraryFileLock, setlistComparison, plantedContentHash, logger)
-    private val imageTransfers = ImageTransfers(libraryFileLocalSource, libraryFileLock, logger, imageWritesGate)
-    private val lostFileRestorer = LostFileRestorer(libraryFileLocalSource, logger)
+    private val conflictResolver = ConflictResolver(libraryFileLocalSource, libraryFileLock, conflictPolicies, plantedContentHash, logger)
+    private val imageTransfers = ImageTransfers(libraryFileLocalSource, libraryFileLock, references, logger, imageWritesGate)
+    private val lostFileRestorer = LostFileRestorer(libraryFileLocalSource, collections, references, logger)
     private val documentTransfers = DocumentTransfers(libraryFileLocalSource, libraryFileLock, conflictResolver, logger)
 
     suspend fun synchronize(
@@ -142,6 +145,7 @@ internal class SyncEngine(
             val localListing = readLocalListing(
                 libraryFileLocalSource = libraryFileLocalSource,
                 logger = logger,
+                references = references,
                 batchSize = READ_BATCH_SIZE,
                 largeFileThreshold = largeFileThreshold,
             )
@@ -172,7 +176,13 @@ internal class SyncEngine(
             // which no number of runs will change. Split off before the names are folded, so that such a name is never
             // matched onto a local one either.
             if (pass == 0) summary = summary.plus(SyncSummary(failed = prepared.unstorable))
-            val planned = SyncPlanner.planned(local = local, remote = remote, index = planningIndex, imageReferences = localListing.imageReferences)
+            val planned = SyncPlanner.planned(
+                local = local,
+                remote = remote,
+                index = planningIndex,
+                imageReferences = localListing.imageReferences,
+                referencing = references.keys,
+            )
             val plan = planned.operations
             if (planned.holdsDeletionsBack) asksForFollowUp = true
             logger.log("Sync: pass ${pass + 1}, ${remote.size} files in the folder and ${local.size} here: ${plan.describedForLog()}")

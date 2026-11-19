@@ -52,8 +52,9 @@ object DataSyncModule {
     /**
      * Built here rather than declared on the class, so that its tests keep the constructor with the default lookup:
      * the Koin compiler plugin would hand an annotated class that default rather than this lookup, and a demo file
-     * this device planted would then never yield to the cloud folder's version. The collections and the limit for a
-     * large file are Campfire's, which the engine knows nothing of.
+     * this device planted would then never yield to the cloud folder's version. The collections, what their documents
+     * reference and when they conflict ([LibrarySyncRules]), and the limit for a large file are Campfire's, which the
+     * engine knows nothing of.
      */
     @Single
     internal fun syncEngine(
@@ -66,7 +67,8 @@ object DataSyncModule {
     ): SyncEngine = SyncEngine(
         libraryFileLocalSource = libraryFileLocalSource,
         libraryFileLock = libraryFileLock,
-        setlistComparison = setlistComparison,
+        references = LibrarySyncRules.references,
+        conflictPolicies = LibrarySyncRules.conflictPolicies(setlistComparison),
         plantedContentHash = { key -> userPreferencesRepository.loadUserPreferencesIfNeeded()?.demoLibraryContentHashes?.get(key.path) },
         logger = logger,
         collections = LibraryCollections.all,

@@ -17,6 +17,7 @@ import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash
 import com.pandulapeter.campfire.data.sync.implementation.ACCOUNT_ID
 import com.pandulapeter.campfire.data.sync.implementation.FakeLibraryFileLocalSource
 import com.pandulapeter.campfire.data.sync.implementation.FakeSyncProvider
+import com.pandulapeter.campfire.data.sync.implementation.LibrarySyncRules
 import com.pandulapeter.campfire.data.sync.implementation.NoSetlistComparison
 import com.pandulapeter.campfire.data.sync.implementation.SyncKey
 import com.pandulapeter.campfire.data.sync.implementation.renamedIndexOf
@@ -40,7 +41,8 @@ class SyncEngineRestoreTest {
     private val engine = SyncEngine(
         libraryFileLocalSource = local,
         libraryFileLock = LibraryFileLock(),
-        setlistComparison = NoSetlistComparison,
+        references = LibrarySyncRules.references,
+        conflictPolicies = LibrarySyncRules.conflictPolicies(NoSetlistComparison),
         plantedContentHash = { null },
         logger = Logger.Standard,
         collections = LibraryCollections.all,

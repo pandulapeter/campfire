@@ -9,7 +9,7 @@
 -->
 # Plan: sync's knowledge of songs behind seams
 
-**Status:** in progress: C1 and C2 done; C3 is next. Checked against the code on 2026-11-18 (`main` at 85e23a2db). Split out of
+**Status:** in progress: C1, C2, and C3 done; C4 is next. Checked against the code on 2026-11-18 (`main` at 85e23a2db). Split out of
 [sync-library-extraction.md](sync-library-extraction.md), which moves the result into `:libs:sync:*` modules later.
 
 **Goal:** the sync engine's rules (what to upload, download, delete, keep, and call a conflict) depend on a few narrow
@@ -89,9 +89,23 @@ touches platform source sets also compiles iOS (`linkDebugFrameworkIosSimulatorA
   the three in `LibraryCollections`, with the large file threshold and the folder documents' cap, and
   `DataSyncModule` and `DataRemoteSourceModule` pass them to the engine and the Dropbox provider. The engine still names
   `LibraryCollections.SONGS`, `SETLISTS`, and `FILES` where C3's references and conflict policy will take over.
-- **C3. References and conflict policy.** Seams 2 and 3. Done: no chordpro import under `run/`;
-  `SyncPlannerImageTest`, `SyncEngineSetlistDateTest`, and `SyncEnginePlantedDemoTest` unchanged; one new planner test
-  over a test collection whose references come from a fake, not ChordPro.
+- **C3. References and conflict policy.** Done: `run/SyncReferences` (a `fun interface`, `of(document): Set<String>`)
+  and `run/ConflictPolicy` (`isSameApartFromVolatileParts`, `withoutVolatileParts`), handed to `SyncEngine` as maps by
+  collection rather than the one `of(collection, bytes): Set<String>?` sketched above: the engine also has to know
+  whether a collection references anything without bytes in hand (a referencing document too large or unreadable stops
+  every content file deletion; the planner holds deletions back while such a document comes down), which a map's keys
+  answer and a null from `of` cannot. `SyncPlanner.planned` takes those keys as `referencing`. A reference names no
+  collection, so `LostFileRestorer` asks each content collection in turn (one in Campfire, the same single request as
+  before). Campfire's side is `LibrarySyncRules` (songs through `libraryFilesNamedBy`, setlists' policy over
+  `SetlistComparison`), wired by `DataSyncModule.syncEngine`. No chordpro import under `run/`; the engine tests'
+  `setlistComparison` fixture parameter stays, the planner tests gained a `referencing` argument;
+  `SyncPlannerReferencesTest`, `SyncEngineReferencesTest`, and `SyncEngineConflictPolicyTest` drive a notes app's
+  collections (`OtherAppLibrary`), `LibrarySyncRulesTest` Campfire's side. `SyncSimulationTest` passed 20,000 seeds by
+  hand. Left for C4: `PassListing`'s `KEEP_AND_UPLOAD` still picks `LibraryCollections.SONGS` to drop forgotten songs from
+  the synced `preferences.json` base, which is seam 6's codec (which documents the folder document keys entries by),
+  not a reference or a conflict. Left for the extraction: `ImageTransfers` checks a content file against its name with
+  `LibraryFiles.isLibraryFileNamedFor`, Campfire's content-name rule (`SyncCollection` could carry it, as its plan's
+  "Names" says), and `run/`'s KDoc and log lines still speak of songs and pictures (C7).
 - **C4. Observer, run steps, and synced preferences split.** Seams 5, 6, and 7. Done: `run/`, `index/`, `scheduling/`,
   `connection/`, and the merge import nothing from `data.repository`, `data.model.song|setlist|preferences|share`, or
   `shared/`; `SyncedPreferencesTest` and `SyncRunnerPreferencesRevisionTest` unchanged; `SyncSimulationTest` run by

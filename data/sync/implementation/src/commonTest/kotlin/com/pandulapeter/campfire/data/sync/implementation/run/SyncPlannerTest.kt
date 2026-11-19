@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.sync.implementation.run
 
+import com.pandulapeter.campfire.data.sync.implementation.CAMPFIRE_REFERENCING
 import com.pandulapeter.campfire.data.sync.implementation.LocalFileState
 import com.pandulapeter.campfire.data.sync.implementation.RemoteFileState
 import com.pandulapeter.campfire.data.sync.implementation.SyncIndexEntry
@@ -29,13 +30,13 @@ class SyncPlannerTest {
     @Test
     fun `a file that is new locally goes up`() = assertEquals(
         expected = listOf(SyncOperation.Upload(SONG, expectedRevision = null)),
-        actual = SyncPlanner.plan(local = listOf(local(SONG, "a")), remote = emptyList(), index = emptyMap()),
+        actual = SyncPlanner.plan(local = listOf(local(SONG, "a")), remote = emptyList(), index = emptyMap(), referencing = CAMPFIRE_REFERENCING),
     )
 
     @Test
     fun `a file that is new remotely comes down`() = assertEquals(
         expected = listOf(SyncOperation.Download(SONG, revision = "r1")),
-        actual = SyncPlanner.plan(local = emptyList(), remote = listOf(remote(SONG, "r1")), index = emptyMap()),
+        actual = SyncPlanner.plan(local = emptyList(), remote = listOf(remote(SONG, "r1")), index = emptyMap(), referencing = CAMPFIRE_REFERENCING),
     )
 
     @Test
@@ -45,6 +46,7 @@ class SyncPlannerTest {
             local = listOf(local(SONG, "a")),
             remote = listOf(remote(SONG, "r1")),
             index = mapOf(SONG to entry(hash = "a", revision = "r1")),
+            referencing = CAMPFIRE_REFERENCING,
         ),
     )
 
@@ -55,6 +57,7 @@ class SyncPlannerTest {
             local = listOf(local(SONG, "b")),
             remote = listOf(remote(SONG, "r1")),
             index = mapOf(SONG to entry(hash = "a", revision = "r1")),
+            referencing = CAMPFIRE_REFERENCING,
         ),
     )
 
@@ -65,6 +68,7 @@ class SyncPlannerTest {
             local = listOf(local(SONG, "a")),
             remote = listOf(remote(SONG, "r2")),
             index = mapOf(SONG to entry(hash = "a", revision = "r1")),
+            referencing = CAMPFIRE_REFERENCING,
         ),
     )
 
@@ -75,6 +79,7 @@ class SyncPlannerTest {
             local = listOf(local(SONG, "b")),
             remote = listOf(remote(SONG, "r2")),
             index = mapOf(SONG to entry(hash = "a", revision = "r1")),
+            referencing = CAMPFIRE_REFERENCING,
         ),
     )
 
@@ -86,6 +91,7 @@ class SyncPlannerTest {
             local = listOf(local(SONG, "a")),
             remote = listOf(remote(SONG, "r1")),
             index = emptyMap(),
+            referencing = CAMPFIRE_REFERENCING,
         ),
     )
 
@@ -96,6 +102,7 @@ class SyncPlannerTest {
             local = listOf(local(SONG, "a")),
             remote = emptyList(),
             index = mapOf(SONG to entry(hash = "a", revision = "r1")),
+            referencing = CAMPFIRE_REFERENCING,
         ),
     )
 
@@ -106,6 +113,7 @@ class SyncPlannerTest {
             local = emptyList(),
             remote = listOf(remote(SONG, "r1")),
             index = mapOf(SONG to entry(hash = "a", revision = "r1")),
+            referencing = CAMPFIRE_REFERENCING,
         ),
     )
 
@@ -119,6 +127,7 @@ class SyncPlannerTest {
                 local = emptyList(),
                 remote = keys.map { remote(it, "r1") },
                 index = keys.associateWith { entry(hash = "a", revision = "r1") },
+                referencing = CAMPFIRE_REFERENCING,
             ),
         )
     }
@@ -134,6 +143,7 @@ class SyncPlannerTest {
             local = listOf(local(SONG, "b")),
             remote = emptyList(),
             index = mapOf(SONG to entry(hash = "a", revision = "r1")),
+            referencing = CAMPFIRE_REFERENCING,
         ),
     )
 
@@ -144,6 +154,7 @@ class SyncPlannerTest {
             local = emptyList(),
             remote = listOf(remote(SONG, "r2")),
             index = mapOf(SONG to entry(hash = "a", revision = "r1")),
+            referencing = CAMPFIRE_REFERENCING,
         ),
     )
 
@@ -154,6 +165,7 @@ class SyncPlannerTest {
             local = emptyList(),
             remote = emptyList(),
             index = mapOf(SONG to entry(hash = "a", revision = "r1")),
+            referencing = CAMPFIRE_REFERENCING,
         ),
     )
 
@@ -173,6 +185,7 @@ class SyncPlannerTest {
                 local = listOf(local(SONG, "a")),
                 remote = listOf(remote(renamed, "r2")),
                 index = mapOf(SONG to entry(hash = "a", revision = "r1"), renamed to entry(hash = "a", revision = "r2")),
+                referencing = CAMPFIRE_REFERENCING,
             ),
         )
     }
@@ -186,6 +199,7 @@ class SyncPlannerTest {
             local = listOf(LocalFileState(songKey, "a")),
             remote = listOf(RemoteFileState(setlistKey, "r1", contentHash = null)),
             index = emptyMap(),
+            referencing = CAMPFIRE_REFERENCING,
         )
         assertEquals(expected = 2, actual = operations.size)
         assertTrue(operations.contains(SyncOperation.Upload(songKey, expectedRevision = null)))
@@ -195,7 +209,7 @@ class SyncPlannerTest {
     @Test
     fun `an empty library on both sides has nothing to do`() = assertEquals(
         expected = emptyList(),
-        actual = SyncPlanner.plan(local = emptyList(), remote = emptyList(), index = emptyMap()),
+        actual = SyncPlanner.plan(local = emptyList(), remote = emptyList(), index = emptyMap(), referencing = CAMPFIRE_REFERENCING),
     )
 
     private companion object {

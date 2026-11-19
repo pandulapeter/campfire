@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.sync.implementation.run
 
 import com.pandulapeter.campfire.data.model.library.LibraryCollections
+import com.pandulapeter.campfire.data.sync.implementation.CAMPFIRE_REFERENCING
 import com.pandulapeter.campfire.data.sync.implementation.LocalFileState
 import com.pandulapeter.campfire.data.sync.implementation.RemoteFileState
 import com.pandulapeter.campfire.data.sync.implementation.SyncIndexEntry
@@ -29,6 +30,7 @@ class SyncPlannerImageTest {
             remote = listOf(RemoteFileState(FIRST, "r1", contentHash = null)),
             index = mapOf(FIRST to SyncIndexEntry(localImageHash(10), "r1"), SECOND to SyncIndexEntry(localImageHash(10), "r1")),
             imageReferences = emptyMap(),
+            referencing = CAMPFIRE_REFERENCING,
         ).toSet(),
     )
 
@@ -40,6 +42,7 @@ class SyncPlannerImageTest {
             remote = listOf(RemoteFileState(FIRST, "r1", contentHash = null)),
             index = mapOf(FIRST to SyncIndexEntry(localImageHash(10), "r1"), SECOND to SyncIndexEntry(localImageHash(10), "r1")),
             imageReferences = null,
+            referencing = CAMPFIRE_REFERENCING,
         ),
     )
 
@@ -51,6 +54,7 @@ class SyncPlannerImageTest {
             remote = emptyList(),
             index = mapOf(song(1) to SyncIndexEntry("a", "r1"), FIRST to SyncIndexEntry(localImageHash(10), "r1")),
             imageReferences = mapOf(song(1) to setOf(FIRST.name)),
+            referencing = CAMPFIRE_REFERENCING,
         ),
     )
 
@@ -62,6 +66,7 @@ class SyncPlannerImageTest {
             remote = listOf(RemoteFileState(song(1), "r1", contentHash = null), RemoteFileState(FIRST, "r1", contentHash = null)),
             index = mapOf(song(1) to SyncIndexEntry("a", "r1"), FIRST to SyncIndexEntry(localImageHash(10), "r1")),
             imageReferences = emptyMap(),
+            referencing = CAMPFIRE_REFERENCING,
         ),
     )
 
@@ -73,6 +78,7 @@ class SyncPlannerImageTest {
             remote = listOf(RemoteFileState(song(1), "r1", contentHash = null)),
             index = mapOf(song(1) to SyncIndexEntry("a", "r1"), FIRST to SyncIndexEntry(localImageHash(10), "r1")),
             imageReferences = mapOf(song(1) to setOf(FIRST.name)),
+            referencing = CAMPFIRE_REFERENCING,
         ),
     )
 

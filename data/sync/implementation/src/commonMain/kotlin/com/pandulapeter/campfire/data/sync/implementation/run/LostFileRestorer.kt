@@ -9,12 +9,10 @@
  */
 package com.pandulapeter.campfire.data.sync.implementation.run
 
-import com.pandulapeter.campfire.chordpro.edit.libraryFilesNamedBy
 import com.pandulapeter.campfire.data.model.Logger
-import com.pandulapeter.campfire.data.model.library.LibraryCollections
 import com.pandulapeter.campfire.data.model.library.SyncCollection
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
-import com.pandulapeter.campfire.data.model.library.decodeLibraryText
+import com.pandulapeter.campfire.data.model.library.SyncCollections
 import com.pandulapeter.campfire.data.model.recovering
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncFolder
@@ -32,13 +30,19 @@ import com.pandulapeter.campfire.data.sync.implementation.SyncKey
  * Each name is asked for once per process ([asked]): most of them are pictures a song named before it ever reached the
  * library (a placeholder offering to add one), which have no history to restore, and a restored copy found damaged is
  * not asked for again either. A name whose request failed is asked again by the next run.
+ *
+ * A reference names no collection ([SyncReferences]), so a name is asked of each content collection in turn until one
+ * brings it back.
  */
 internal class LostFileRestorer(
     private val libraryFileLocalSource: LibraryFileLocalSource,
+    collections: SyncCollections,
+    private val references: Map<SyncCollection, SyncReferences>,
     private val logger: Logger,
 ) {
 
     private val asked = mutableSetOf<String>()
+    private val contentCollections = collections.all.filter { it.role == SyncCollection.Role.CONTENT_FILE }
 
     /**
      * Restores what the songs here name, as the run's last pass listed them ([local]) and as this run wrote them since
@@ -57,14 +61,14 @@ internal class LostFileRestorer(
             .mapTo(mutableSetOf()) { LibraryFiles.identityKey(it.name) }
         // A song this run deleted here names nothing any more; one it wrote is read again for what it names now.
         val listedSongs = local.imageReferences?.filterKeys { it in after || it !in before }?.values?.flatten().orEmpty()
-        val written = after.filter { (key, entry) -> key.kind == LibraryCollections.SONGS && before[key]?.localHash != entry.localHash }.keys
+        val written = after.filter { (key, entry) -> key.kind in references && before[key]?.localHash != entry.localHash }.keys
         val named = listedSongs + written.flatMap { namedBy(it) }
         val missing = named.distinct().filter { LibraryFiles.identityKey(it) !in held && it !in asked }.take(MAXIMUM_RESTORES)
         var isAnyRestored = false
         for (name in missing) {
             asked += name
             val isRestored = logger.recovering(describe = { "Could not restore \"$name\": ${it.message}" }, fallback = { null }) {
-                provider.restoreDeleted(LibraryCollections.FILES, name)
+                contentCollections.any { collection -> provider.restoreDeleted(collection, name) }
             }
             if (isRestored == null) {
                 asked -= name
@@ -76,8 +80,12 @@ internal class LostFileRestorer(
         return isAnyRestored
     }
 
-    private suspend fun namedBy(song: SyncKey) = logger.recovering(describe = { "Could not read \"${song.path}\": ${it.message}" }, fallback = { emptySet() }) {
-        libraryFileLocalSource.readLibraryFile(song.kind, song.name)?.let { libraryFilesNamedBy(it.decodeLibraryText()) }.orEmpty()
+    private suspend fun namedBy(document: SyncKey) = logger.recovering(
+        describe = { "Could not read \"${document.path}\": ${it.message}" },
+        fallback = { emptySet() },
+    ) {
+        val namedBy = references.getValue(document.kind)
+        libraryFileLocalSource.readLibraryFile(document.kind, document.name)?.let(namedBy::of).orEmpty()
     }
 
     private companion object {

@@ -10,8 +10,9 @@
 # :data:sync:implementation
 
 `SyncEngine` and `SharedCopySync` are built by `DataSyncModule` functions (a lambda over `UserPreferencesRepository`
-Koin cannot inject; the build number). `DemoLibraryRepositoryImpl` lives here because it records demo files under
-`SyncKey.path`, the key the engine looks them up by.
+Koin cannot inject, and `LibrarySyncRules`, what the engine asks of songs and setlists; the build number).
+`DemoLibraryRepositoryImpl` lives here because it records demo files under `SyncKey.path`, the key the engine looks them
+up by.
 
 ## Locks
 
