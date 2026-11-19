@@ -17,6 +17,7 @@ import com.pandulapeter.campfire.data.source.remote.implementation.CAMPFIRE_OAUT
 import java.io.PrintWriter
 import java.net.Socket
 import java.net.SocketException
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
@@ -62,7 +63,7 @@ class LoopbackRedirectListenerTest {
     fun `cancelling the authorization releases the port`() = runBlocking {
         val authenticator = listener(systemBrowser = { true })
         val port = authenticator.prepareRedirectUri().port()
-        val authorization = async { authenticator.authorize("https://example.com/authorize", COMPLETION_PAGE) }
+        val authorization = async(start = CoroutineStart.UNDISPATCHED) { authenticator.authorize("https://example.com/authorize", COMPLETION_PAGE) }
         // `accept` has to actually be blocking, which is the state the cancellation has to reach.
         awaitAccept(isBlocking = true)
         assertTrue(isPortOpen(port), "The socket should still be listening while the authorization waits.")
@@ -81,7 +82,7 @@ class LoopbackRedirectListenerTest {
     fun `a redirect delivered to the socket is returned`() = runBlocking {
         val authenticator = listener(systemBrowser = { true })
         val port = authenticator.prepareRedirectUri().port()
-        val authorization = async { authenticator.authorize("https://example.com/authorize", COMPLETION_PAGE) }
+        val authorization = async(start = CoroutineStart.UNDISPATCHED) { authenticator.authorize("https://example.com/authorize", COMPLETION_PAGE) }
         awaitAccept(isBlocking = true)
         Socket("127.0.0.1", port).use { socket ->
             PrintWriter(socket.getOutputStream(), true).apply {
@@ -109,7 +110,7 @@ class LoopbackRedirectListenerTest {
     fun `a connection that sends nothing does not keep the redirect from being read`() = runBlocking {
         val authenticator = listener(systemBrowser = { true })
         val port = authenticator.prepareRedirectUri().port()
-        val authorization = async { authenticator.authorize("https://example.com/authorize", COMPLETION_PAGE) }
+        val authorization = async(start = CoroutineStart.UNDISPATCHED) { authenticator.authorize("https://example.com/authorize", COMPLETION_PAGE) }
         awaitAccept(isBlocking = true)
         val idle = Socket("127.0.0.1", port)
         // Taken off the backlog before the redirect connects, the way the browser's speculative connection comes first.
@@ -139,7 +140,7 @@ class LoopbackRedirectListenerTest {
     fun `a connection that is reset does not end the authorization`() = runBlocking {
         val authenticator = listener(systemBrowser = { true })
         val port = authenticator.prepareRedirectUri().port()
-        val authorization = async { authenticator.authorize("https://example.com/authorize", COMPLETION_PAGE) }
+        val authorization = async(start = CoroutineStart.UNDISPATCHED) { authenticator.authorize("https://example.com/authorize", COMPLETION_PAGE) }
         awaitAccept(isBlocking = true)
         Socket("127.0.0.1", port).use { it.setSoLinger(true, 0) }
         Socket("127.0.0.1", port).use { socket ->
@@ -166,7 +167,7 @@ class LoopbackRedirectListenerTest {
         val authenticator = listener(systemBrowser = { true })
         val port = authenticator.prepareRedirectUri().port()
         val largePage = COMPLETION_PAGE.copy(message = "Bezárhatod ezt a lapot. ".repeat(200_000))
-        val authorization = async { authenticator.authorize("https://example.com/authorize", largePage) }
+        val authorization = async(start = CoroutineStart.UNDISPATCHED) { authenticator.authorize("https://example.com/authorize", largePage) }
         awaitAccept(isBlocking = true)
         Socket("127.0.0.1", port).use { socket ->
             PrintWriter(socket.getOutputStream(), true).apply {
@@ -197,6 +198,8 @@ class LoopbackRedirectListenerTest {
     /**
      * Waits until the listener is, or is no longer, blocked in `accept`, found from the threads' stacks: a probe of the
      * port itself would be a connection the listener has to accept and answer, which is exactly what is being waited for.
+     * Any thread counts, so the previous test's, still unwinding from its closed socket, can answer for this one's: each
+     * authorization is therefore started undispatched, so that it has begun before anything here can cancel it.
      */
     private suspend fun awaitAccept(isBlocking: Boolean) = withTimeout(5_000) {
         while (isAcceptBlocking() != isBlocking) delay(10)
@@ -228,7 +231,7 @@ class LoopbackRedirectListenerTest {
     /** Only needed by the test that never starts an authorization, since [LoopbackRedirectListener.authorize] closes its own socket. */
     private suspend fun LoopbackRedirectListener.close(port: Int) {
         val authorization = kotlinx.coroutines.CoroutineScope(kotlin.coroutines.EmptyCoroutineContext)
-            .async { authorize("https://example.com/authorize", COMPLETION_PAGE) }
+            .async(start = CoroutineStart.UNDISPATCHED) { authorize("https://example.com/authorize", COMPLETION_PAGE) }
         awaitAccept(isBlocking = true)
         authorization.cancel()
         withTimeout(5_000) {

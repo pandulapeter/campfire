@@ -97,8 +97,11 @@ internal class LoopbackRedirectListener(
         } catch (exception: Exception) {
             SyncAuthenticator.AuthorizationOutcome.Cancelled(exception.toString())
         } finally {
-            // The ordinary path closes the socket through the same `finally` as the cancelled one.
+            // The ordinary path closes the socket through the same `finally` as the cancelled one. It is also closed here
+            // directly: an authorization that ends before the closer was dispatched (cancelled at once, or no browser to
+            // open) cancels a coroutine that never ran, and whose `finally` therefore never runs either.
             socketCloser.cancel()
+            closeSocket()
         }
     }
 
