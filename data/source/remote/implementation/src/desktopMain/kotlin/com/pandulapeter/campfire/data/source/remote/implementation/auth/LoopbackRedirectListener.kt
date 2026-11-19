@@ -34,7 +34,7 @@ import kotlinx.coroutines.withContext
  *
  * Loopback only, and only while the browser is open: nothing outside the machine can reach it.
  *
- * The app listens on [DesktopSyncAuthenticator.PORT]; tests pass 0 and are given a free one, so they never compete
+ * The app listens on [OAuthRedirectConfiguration.desktopPort]; tests pass 0 and are given a free one, so they never compete
  * for the registered port with each other or with a running app.
  */
 internal class LoopbackRedirectListener(

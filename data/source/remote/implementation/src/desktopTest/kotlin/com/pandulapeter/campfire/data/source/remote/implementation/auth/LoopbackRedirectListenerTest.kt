@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncAuthenticator
 import com.pandulapeter.campfire.data.model.sync.AuthorizationCompletionPage
 import com.pandulapeter.campfire.data.model.sync.SystemBrowser
+import com.pandulapeter.campfire.data.source.remote.implementation.CAMPFIRE_OAUTH_REDIRECT
 import java.io.PrintWriter
 import java.net.Socket
 import java.net.SocketException
@@ -41,7 +42,7 @@ class LoopbackRedirectListenerTest {
 
     @Test
     fun `the app listens on the address registered with the service`() {
-        assertEquals(expected = "http://127.0.0.1:53682", actual = loopbackRedirectUri(DesktopSyncAuthenticator.PORT))
+        assertEquals(expected = "http://127.0.0.1:53682", actual = loopbackRedirectUri(CAMPFIRE_OAUTH_REDIRECT.desktopPort))
     }
 
     @Test

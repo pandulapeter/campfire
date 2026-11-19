@@ -14,5 +14,7 @@ import io.ktor.client.HttpClient
 /**
  * Every target picks the engine that is native to it: OkHttp on Android, CIO on the desktop, `NSURLSession` on iOS
  * and `fetch` in the browser. Nothing above this knows which, and the shared code stays free of JVM types.
+ *
+ * @param userAgent How every request names the app, where the platform lets a client say so (see [configureClient]).
  */
-internal expect fun createHttpClient(): HttpClient
+internal expect fun createHttpClient(userAgent: String): HttpClient

@@ -7,13 +7,13 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.data.source.remote.implementation.crypto
+package com.pandulapeter.campfire.data.source.remote.implementation.dropbox
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 /** The expected values were computed with Python's `hashlib`, following Dropbox's published content hash description. */
-class ContentHashTest {
+class DropboxContentHashTest {
 
     @Test
     fun `computes the Dropbox content hash of a small file`() = assertEquals(

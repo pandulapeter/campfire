@@ -9,7 +9,7 @@
 -->
 # Plan: sync's knowledge of songs behind seams
 
-**Status:** in progress: C1, C2, C3, and C4 done; C5 is next. Checked against the code on 2026-11-18 (`main` at 85e23a2db). Split out of
+**Status:** in progress: C1–C5 done; C6 is next. Checked against the code on 2026-11-18 (`main` at 85e23a2db). Split out of
 [sync-library-extraction.md](sync-library-extraction.md), which moves the result into `:libs:sync:*` modules later.
 
 **Goal:** the sync engine's rules (what to upload, download, delete, keep, and call a conflict) depend on a few narrow
@@ -134,9 +134,22 @@ touches platform source sets also compiles iOS (`linkDebugFrameworkIosSimulatorA
     `RestoredConnection`, which `SyncRepositoryImpl` maps.
   - For C5–C7: the index's keys still say `syncedPreferences*` (stored names); C6's guard counts `merge/` among the engine's
     packages and forbids them `preferences/` (Campfire's codec) too; C7's docs describe the observer, steps, and codec.
-- **C5. Provider core apart from Dropbox.** Seam 8. Done: `DropboxAuthorizationTest` checks the same authorization URL;
-  Android and iOS sign-in, the desktop loopback, and the web redirect compile; `auth/`, `network/`, and `crypto/`
-  import nothing from `dropbox/`.
+- **C5. Provider core apart from Dropbox.** Seam 8. Done: `DropboxAuthorizationTest` checks the same authorization URL
+  (now byte for byte, for both registered redirects); Android and iOS sign-in, the desktop loopback, and the web
+  redirect compile; `auth/`, `network/`, and `crypto/` import nothing from `dropbox/` and name no app.
+  - `auth/OAuthRedirectConfiguration(scheme, host, desktopPort)` with `uri` and `isRedirect`; Campfire's is
+    `CAMPFIRE_OAUTH_REDIRECT` at the module root, a value rather than only a Koin definition
+    (`DataRemoteSourceModule.oAuthRedirectConfiguration`) because the shells' `isSyncRedirect` (moved to the root
+    package, Android's and iOS's) asks before an iOS cold start has a graph. The authenticators take it; the web's
+    redirect stays the page. `onSyncRedirectReceived` stays in `auth/`, naming no app.
+  - `dropbox/DropboxConfiguration(appKey, collections, maxDocumentSize)`, built in `syncProviders`, which keeps its "no
+    key, no provider" rule; `DROPBOX_APP_KEY` and `CAMPFIRE_VERSION` stay generated.
+  - `USER_AGENT` moved from `network/` to the module root and is passed to `createHttpClient(userAgent)`;
+    `configureClient` takes it nullable (null in the browser) instead of `sendsUserAgent`.
+  - `crypto/ContentHash.kt`'s `dropboxContentHash` moved to `dropbox/DropboxContentHash.kt`; `crypto/` is `Pkce` alone.
+  - Tests: `OAuthRedirectConfigurationTest` (another app's scheme and host), `DesktopSyncAuthenticatorTest` (a
+    configured port). For C6: `LoopbackRedirectListenerTest` (a test, under `auth/`) reads `CAMPFIRE_OAUTH_REDIRECT`;
+    the guard checks main sources only. For C7: KDoc in `network/` still uses Dropbox as its example in places.
 - **C6. The guard.** A check in `.github/scripts` beside `check_layers.py` (or a second table in it), with its
   `unittest`: main source files under the sync engine's packages (`run/`, `index/`, `scheduling/`, `connection/`, the
   merge) import nothing of chordpro, `data.repository`, `data.model.song|setlist|preferences|share`, or `shared/`, and

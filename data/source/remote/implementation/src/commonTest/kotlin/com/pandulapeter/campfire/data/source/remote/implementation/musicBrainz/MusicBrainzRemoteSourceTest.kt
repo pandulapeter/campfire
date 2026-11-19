@@ -16,9 +16,9 @@ import com.pandulapeter.campfire.data.model.catalogue.SongDetailsCandidate
 import com.pandulapeter.campfire.data.model.catalogue.SongDetailsQuery
 import com.pandulapeter.campfire.data.source.remote.api.catalogue.CatalogueSearchException
 import com.pandulapeter.campfire.data.source.remote.implementation.network.HttpClientHolder
-import com.pandulapeter.campfire.data.source.remote.implementation.network.USER_AGENT
+import com.pandulapeter.campfire.data.source.remote.implementation.USER_AGENT
 import com.pandulapeter.campfire.data.source.remote.implementation.network.configureClient
-import com.pandulapeter.campfire.data.source.remote.implementation.network.userAgent
+import com.pandulapeter.campfire.data.source.remote.implementation.userAgent
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.MockRequestHandleScope
@@ -219,7 +219,7 @@ class MusicBrainzRemoteSourceTest {
                 // reach it only after runTest has already advanced to the next request's turn.
                 dispatcher = StandardTestDispatcher(testScheduler)
                 addHandler(handler)
-            }) { configureClient(sendsUserAgent = true, hasSocketTimeout = true) }
+            }) { configureClient(userAgent = USER_AGENT, hasSocketTimeout = true) }
         },
         rateLimiter = MusicBrainzRateLimiter(timeSource = testScheduler.timeSource, interval = 1_100.milliseconds),
     )

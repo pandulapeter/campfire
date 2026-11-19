@@ -19,14 +19,5 @@ import org.koin.core.annotation.Single
 internal class DesktopSyncAuthenticator(
     systemBrowser: SystemBrowser,
     logger: Logger,
-) : SyncAuthenticator by LoopbackRedirectListener(systemBrowser = systemBrowser, logger = logger, port = PORT) {
-
-    internal companion object {
-        /**
-         * Registered with the service as `http://127.0.0.1:53682`, character for character. The port is fixed rather
-         * than chosen by the operating system because a service only redirects to a URI that was registered with it
-         * beforehand, and one that changed every run could not be registered.
-         */
-        const val PORT = 53682
-    }
-}
+    redirect: OAuthRedirectConfiguration,
+) : SyncAuthenticator by LoopbackRedirectListener(systemBrowser = systemBrowser, logger = logger, port = redirect.desktopPort)

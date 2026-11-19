@@ -17,8 +17,8 @@ import io.ktor.client.engine.js.Js
  * Dropbox answers the calls used here with the headers that allows; a provider that does not would need a proxy,
  * which is exactly the sort of thing Campfire refuses to run. MusicBrainz and the Cover Art Archive send them too.
  *
- * No `User-Agent` of Campfire's own is sent from here, see [configureClient]. MusicBrainz documents no other way for
+ * No `User-Agent` of the app's own is sent from here, [userAgent] is ignored, see [configureClient]. MusicBrainz documents no other way for
  * a page to name itself, so what it sees is the browser's own user agent and the page's `Origin`, which is the address
  * the web build is published at and says as much about who is asking.
  */
-internal actual fun createHttpClient() = HttpClient(Js) { configureClient(sendsUserAgent = false, hasSocketTimeout = false) }
+internal actual fun createHttpClient(userAgent: String) = HttpClient(Js) { configureClient(userAgent = null, hasSocketTimeout = false) }

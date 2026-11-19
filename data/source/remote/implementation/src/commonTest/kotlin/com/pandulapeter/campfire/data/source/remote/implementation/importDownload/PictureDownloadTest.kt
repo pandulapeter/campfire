@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.source.remote.implementation.importDownload
 
 import com.pandulapeter.campfire.data.model.importing.ImportDownload
+import com.pandulapeter.campfire.data.source.remote.implementation.USER_AGENT
 import com.pandulapeter.campfire.data.source.remote.implementation.network.HttpClientHolder
 import com.pandulapeter.campfire.data.source.remote.implementation.network.configureClient
 import io.ktor.client.HttpClient
@@ -108,7 +109,7 @@ class PictureDownloadTest {
             HttpClient(MockEngine.create {
                 dispatcher = StandardTestDispatcher(testScheduler)
                 addHandler(handler)
-            }) { configureClient(sendsUserAgent = true, hasSocketTimeout = true) }
+            }) { configureClient(userAgent = USER_AGENT, hasSocketTimeout = true) }
         },
     )
 

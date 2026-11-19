@@ -28,7 +28,12 @@
 
 - **A provider without credentials in the build is left out of `SyncProviders` entirely**, so Settings says sync is not
   configured instead of offering a dead button. The key is `campfire.dropbox.appKey` → `DROPBOX_APP_KEY` in the
-  generated `RemoteConfiguration.kt`.
+  generated `RemoteConfiguration.kt`, handed to the provider as `DropboxConfiguration` (key, collections, folder
+  document cap) by `DataRemoteSourceModule.syncProviders`.
+- **`auth/`, `network/`, and `crypto/` are provider core**: nothing from `dropbox/`, no app named. Campfire's values
+  sit at the module root: `CAMPFIRE_OAUTH_REDIRECT` (scheme, host, desktop port; Koin hands it to the authenticators,
+  the shells' `isSyncRedirect` read it directly, since an iOS cold start asks before the graph exists; the manifest
+  and `Info.plist` repeat it) and `USER_AGENT`, passed to `createHttpClient`.
 - Dropbox app setup: *scoped access*, **App folder**; scopes files.content.read, files.content.write, account_info.read,
   sharing.read, and sharing.write. The authorization URL names no scopes, so a token granted before a scope was ticked
   lacks it (`missing_scope`, below). Redirect URIs `campfire://oauth` (Android, iOS), `http://127.0.0.1:53682`

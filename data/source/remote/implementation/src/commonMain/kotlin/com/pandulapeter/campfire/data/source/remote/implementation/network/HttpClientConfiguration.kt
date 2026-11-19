@@ -26,7 +26,7 @@ import io.ktor.util.AttributeKey
  * on a 2G or congested link while data is arriving the whole time. So what is bounded is the time to connect and the
  * silence between two packets, and not the exchange as a whole.
  *
- * @param sendsUserAgent Whether every request names Campfire in its `User-Agent`, see [USER_AGENT]. False only in the
+ * @param userAgent The `User-Agent` every request names the app with, which the app passes in. Null only in the
  *   browser, where the header is one a script is not allowed to set: `fetch` either drops it or, where it does send
  *   it, makes every request to a host that does not expect it a CORS preflight that host may well refuse.
  * @param hasSocketTimeout False in the browser, where `fetch` offers no timeout between packets and a dead connection
@@ -34,10 +34,10 @@ import io.ktor.util.AttributeKey
  *   [BROWSER_REQUEST_TIMEOUT_MILLIS] by default. A request carrying [BrowserCallTimeout] takes that bound instead, since
  *   a call that knows how much it carries can tell a stall much sooner; the native engines ignore the attribute.
  */
-internal fun HttpClientConfig<*>.configureClient(sendsUserAgent: Boolean, hasSocketTimeout: Boolean) {
+internal fun HttpClientConfig<*>.configureClient(userAgent: String?, hasSocketTimeout: Boolean) {
     expectSuccess = false
-    if (sendsUserAgent) {
-        install(UserAgent) { agent = USER_AGENT }
+    if (userAgent != null) {
+        install(UserAgent) { agent = userAgent }
     }
     install(HttpTimeout) {
         requestTimeoutMillis = if (hasSocketTimeout) HttpTimeoutConfig.INFINITE_TIMEOUT_MS else BROWSER_REQUEST_TIMEOUT_MILLIS

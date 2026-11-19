@@ -46,9 +46,10 @@ internal class AndroidSyncAuthenticator(
     // shared module can see.
     @Provided private val context: Context,
     private val logger: Logger,
+    private val redirect: OAuthRedirectConfiguration,
 ) : SyncAuthenticator {
 
-    override suspend fun prepareRedirectUri() = "$REDIRECT_SCHEME://$REDIRECT_HOST"
+    override suspend fun prepareRedirectUri() = redirect.uri
 
     /** The page is ignored: the browser closes itself, so nothing of Campfire's is ever rendered in it. */
     override suspend fun authorize(authorizationUrl: String, completionPage: AuthorizationCompletionPage): SyncAuthenticator.AuthorizationOutcome = coroutineScope {

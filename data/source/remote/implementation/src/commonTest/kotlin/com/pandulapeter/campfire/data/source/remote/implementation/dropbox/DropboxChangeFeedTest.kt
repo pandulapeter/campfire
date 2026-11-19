@@ -118,7 +118,7 @@ class DropboxChangeFeedTest {
     fun `a stalled wait fails within the call's own bound`() = runTest {
         var requests = 0
         val provider = dropboxProvider(
-            configure = { configureClient(sendsUserAgent = false, hasSocketTimeout = false) },
+            configure = { configureClient(userAgent = null, hasSocketTimeout = false) },
             engineDispatcher = StandardTestDispatcher(testScheduler),
         ) {
             requests++

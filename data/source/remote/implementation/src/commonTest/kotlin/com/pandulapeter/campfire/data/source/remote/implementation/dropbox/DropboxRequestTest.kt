@@ -409,7 +409,7 @@ class DropboxRequestTest {
     @Test
     fun `a stalled call on the browser fails within its own bound`() = runTest {
         val provider = dropboxProvider(
-            configure = { configureClient(sendsUserAgent = false, hasSocketTimeout = false) },
+            configure = { configureClient(userAgent = null, hasSocketTimeout = false) },
             storage = StoredSyncCredentials(connectedCredentials(extraFields = STORED_NAME)),
             engineDispatcher = StandardTestDispatcher(testScheduler),
         ) { awaitCancellation() }
@@ -427,7 +427,7 @@ class DropboxRequestTest {
     @Test
     fun `a slow call on a native engine is not cut short`() = runTest {
         val provider = dropboxProvider(
-            configure = { configureClient(sendsUserAgent = false, hasSocketTimeout = true) },
+            configure = { configureClient(userAgent = null, hasSocketTimeout = true) },
             engineDispatcher = StandardTestDispatcher(testScheduler),
         ) {
             delay(5.minutes)
@@ -439,7 +439,7 @@ class DropboxRequestTest {
     /** The request bound each kind of call carried, by the last segment of its address. */
     private suspend fun recordedBounds(hasSocketTimeout: Boolean, uploadSize: Int): Map<String, Long?> {
         val bounds = mutableMapOf<String, Long?>()
-        val provider = dropboxProvider(configure = { configureClient(sendsUserAgent = false, hasSocketTimeout = hasSocketTimeout) }) { request ->
+        val provider = dropboxProvider(configure = { configureClient(userAgent = null, hasSocketTimeout = hasSocketTimeout) }) { request ->
             val name = request.url.encodedPath.substringAfterLast('/')
             bounds[name] = request.getCapabilityOrNull(HttpTimeoutCapability)?.requestTimeoutMillis
             when (name) {

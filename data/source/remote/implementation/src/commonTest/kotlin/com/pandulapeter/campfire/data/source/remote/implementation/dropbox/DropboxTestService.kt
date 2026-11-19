@@ -50,9 +50,11 @@ internal fun dropboxProvider(
         HttpClient(MockEngine(engine), configure)
     },
     credentialsStore = SyncCredentialsStore(storage, Logger.Standard),
-    appKey = "test-app-key",
-    collections = LibraryCollections.all,
-    maxDocumentSize = MAXIMUM_DOCUMENT_SIZE,
+    configuration = DropboxConfiguration(
+        appKey = "test-app-key",
+        collections = LibraryCollections.all,
+        maxDocumentSize = MAXIMUM_DOCUMENT_SIZE,
+    ),
     logger = Logger.Standard,
 )
 

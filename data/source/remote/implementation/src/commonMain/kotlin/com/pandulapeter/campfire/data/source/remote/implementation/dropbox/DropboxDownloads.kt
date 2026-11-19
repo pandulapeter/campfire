@@ -11,7 +11,6 @@ package com.pandulapeter.campfire.data.source.remote.implementation.dropbox
 
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncDocumentTooLargeException
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteDocument
-import com.pandulapeter.campfire.data.source.remote.implementation.crypto.dropboxContentHash
 import com.pandulapeter.campfire.data.source.remote.implementation.network.BrowserCallTimeout
 import com.pandulapeter.campfire.data.source.remote.implementation.network.HttpClientHolder
 import com.pandulapeter.campfire.data.source.remote.implementation.network.toAsciiJsonString

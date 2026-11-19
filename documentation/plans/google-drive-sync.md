@@ -30,10 +30,11 @@ provider. Nothing of the Drive work below is implemented.
   `contentHashOf` KDoc still says "Drive with MD5"; D4 corrects it.
 - `SharedLinkResult.Created(provider, parts)`. `storedParts()` in `SharedLinksRepositoryImpl.kt` still accepts only
   Dropbox's two parts; P3 widens it.
-- The redirect is Dropbox's in three places: `auth/SyncRedirect.kt` (`campfire` / `oauth`, built into `campfire://oauth`
-  by the Android and iOS authenticators; iOS passes `REDIRECT_SCHEME` as the session's `callbackURLScheme`),
-  `DesktopSyncAuthenticator.PORT` (53682, because Dropbox matches redirects exactly), and the web's `currentPageUrl()`.
-  `SyncAuthenticator.prepareRedirectUri()` takes no provider.
+- The redirect is passed in (sync-seams C5): `auth/OAuthRedirectConfiguration` (scheme, host, desktop port), one
+  instance, Campfire's `CAMPFIRE_OAUTH_REDIRECT` (`campfire` / `oauth`, 53682 because Dropbox matches redirects
+  exactly), which Koin hands to the Android, iOS, and desktop authenticators and the shells' `isSyncRedirect` reads;
+  the web's is `currentPageUrl()`. `SyncAuthenticator.prepareRedirectUri()` still takes no provider, and one
+  configuration serves every provider.
 - The UI connects `SyncController.offeredSyncProvider` (the first of `SyncRepository.availableProviders`) or a
   connected account's own provider; P2's picker replaces the former. `canConnectSync` replaced `canConnectDropbox`.
   Every Connect label is `settings_sync_connect_dropbox`.
@@ -102,7 +103,7 @@ Dropped since the first draft: an `If-Match` spike (v3 has no conditional write 
 ### D2. Sign-in per platform
 
 - **Redirects per provider first.** Change `SyncAuthenticator.prepareRedirectUri()` to `prepareRedirectUri(provider)`,
-  with each provider's `RedirectSpec` naming:
+  with each provider's redirect (an `OAuthRedirectConfiguration` grown to say what follows) naming:
   - the custom scheme for iOS (the session's `callbackURLScheme`; Android's Drive path has no redirect at all);
   - whether the desktop loopback may take any free port (Google allows it; Dropbox needs 53682);
   - the web redirect.

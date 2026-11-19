@@ -14,7 +14,6 @@ import com.pandulapeter.campfire.data.source.remote.api.sync.SyncDocumentTooLarg
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncNetworkException
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteFile
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteWriteResult
-import com.pandulapeter.campfire.data.source.remote.implementation.crypto.dropboxContentHash
 import io.ktor.client.engine.mock.MockRequestHandleScope
 import io.ktor.client.engine.mock.respond
 import io.ktor.client.request.HttpResponseData

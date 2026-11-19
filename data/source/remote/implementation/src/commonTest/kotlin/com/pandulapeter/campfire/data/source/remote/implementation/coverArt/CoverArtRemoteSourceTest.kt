@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.source.remote.implementation.coverArt
 
 import com.pandulapeter.campfire.data.source.remote.api.CoverArtDownload
+import com.pandulapeter.campfire.data.source.remote.implementation.USER_AGENT
 import com.pandulapeter.campfire.data.source.remote.implementation.network.HttpClientHolder
 import com.pandulapeter.campfire.data.source.remote.implementation.network.configureClient
 import io.ktor.client.HttpClient
@@ -136,7 +137,7 @@ class CoverArtRemoteSourceTest {
             HttpClient(MockEngine.create {
                 dispatcher = StandardTestDispatcher(testScheduler)
                 addHandler(handler)
-            }) { configureClient(sendsUserAgent = true, hasSocketTimeout = true) }
+            }) { configureClient(userAgent = USER_AGENT, hasSocketTimeout = true) }
         },
     )
 

@@ -10,7 +10,6 @@
 package com.pandulapeter.campfire.data.source.remote.implementation.dropbox
 
 import com.pandulapeter.campfire.data.model.library.SyncCollection
-import com.pandulapeter.campfire.data.model.library.SyncCollections
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.sync.SyncAccount
 import com.pandulapeter.campfire.data.model.sync.SyncProviderId
@@ -28,7 +27,6 @@ import com.pandulapeter.campfire.data.source.remote.implementation.auth.OAuthTok
 import com.pandulapeter.campfire.data.source.remote.implementation.auth.SyncCredentialsDocument
 import com.pandulapeter.campfire.data.source.remote.implementation.auth.SyncCredentialsStore
 import com.pandulapeter.campfire.data.source.remote.implementation.crypto.Pkce
-import com.pandulapeter.campfire.data.source.remote.implementation.crypto.dropboxContentHash
 import com.pandulapeter.campfire.data.source.remote.implementation.network.BrowserCallTimeout
 import com.pandulapeter.campfire.data.source.remote.implementation.network.HttpClientHolder
 import com.pandulapeter.campfire.data.source.remote.implementation.network.SyncHttpTransport
@@ -64,13 +62,13 @@ import kotlinx.serialization.json.JsonPrimitive
 internal class DropboxSyncProvider(
     private val httpClientHolder: HttpClientHolder,
     private val credentialsStore: SyncCredentialsStore,
-    private val appKey: String,
-    /** The library's collections, a folder of the app folder each, named by its id. */
-    private val collections: SyncCollections,
-    /** The largest folder document ([downloadDocument]) downloaded, refused above it with its revision. */
-    maxDocumentSize: Long,
+    configuration: DropboxConfiguration,
     private val logger: Logger,
 ) : SyncProvider {
+
+    private val appKey = configuration.appKey
+
+    private val collections = configuration.collections
 
     override val id = SyncProviderId.DROPBOX
 
@@ -93,7 +91,7 @@ internal class DropboxSyncProvider(
 
     private val sharing = DropboxSharing(requests = requests, logger = logger)
 
-    private val downloads = DropboxDownloads(httpClientHolder = httpClientHolder, requests = requests, maxDocumentSize = maxDocumentSize)
+    private val downloads = DropboxDownloads(httpClientHolder = httpClientHolder, requests = requests, maxDocumentSize = configuration.maxDocumentSize)
 
     private val deletedFiles = DropboxDeletedFiles(requests = requests, logger = logger)
 

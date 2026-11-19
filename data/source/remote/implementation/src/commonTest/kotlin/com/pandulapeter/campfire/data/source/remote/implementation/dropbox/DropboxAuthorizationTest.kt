@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.data.source.remote.implementation.dropbox
 
 import com.pandulapeter.campfire.data.model.hashing.Sha256
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.redirectParameters
+import com.pandulapeter.campfire.data.source.remote.implementation.CAMPFIRE_OAUTH_REDIRECT
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.test.Test
@@ -36,6 +37,27 @@ class DropboxAuthorizationTest {
         // Without this Dropbox issues a token that expires in hours and cannot be renewed without asking again.
         assertEquals(expected = "offline", actual = parameters["token_access_type"])
         assertEquals(expected = REDIRECT_URI, actual = parameters["redirect_uri"])
+    }
+
+    /**
+     * The whole address, byte for byte, as built from Campfire's configuration: the key, the parameters in their order,
+     * and each redirect registered with Dropbox, which matches it character for character.
+     */
+    @Test
+    fun `builds the same authorization url from its configuration for every registered redirect`() {
+        listOf(
+            CAMPFIRE_OAUTH_REDIRECT.uri to "campfire%3A%2F%2Foauth",
+            "http://127.0.0.1:${CAMPFIRE_OAUTH_REDIRECT.desktopPort}" to "http%3A%2F%2F127.0.0.1%3A53682",
+        ).forEach { (redirectUri, encodedRedirectUri) ->
+            val request = provider().buildAuthorizationRequest(redirectUri)
+            val challenge = Base64.UrlSafe.encode(Sha256.hash(request.verifier.encodeToByteArray())).trimEnd('=')
+            assertEquals(
+                expected = "https://www.dropbox.com/oauth2/authorize?client_id=$APP_KEY&response_type=code" +
+                    "&code_challenge=$challenge&code_challenge_method=S256&token_access_type=offline" +
+                    "&state=${request.state}&redirect_uri=$encodedRedirectUri",
+                actual = request.authorizationUrl,
+            )
+        }
     }
 
     /** The whole point of PKCE: what travels is the hash, and the verifier never leaves the device. */

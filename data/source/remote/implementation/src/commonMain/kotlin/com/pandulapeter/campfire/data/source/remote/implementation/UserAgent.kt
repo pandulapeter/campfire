@@ -7,14 +7,12 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.data.source.remote.implementation.network
-
-import com.pandulapeter.campfire.data.source.remote.implementation.CAMPFIRE_VERSION
+package com.pandulapeter.campfire.data.source.remote.implementation
 
 /**
  * How every request names the app, in the form MusicBrainz asks of its clients — the application, its version and a
  * way to reach the people behind it — which it throttles hardest when a client does not. It names the app and
- * nothing about the user.
+ * nothing about the user. Handed to the client as it is built (`DataRemoteSourceModule.httpClientHolder`).
  */
 internal val USER_AGENT = userAgent(CAMPFIRE_VERSION)
 

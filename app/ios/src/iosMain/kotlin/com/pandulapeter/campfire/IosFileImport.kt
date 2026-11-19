@@ -14,7 +14,7 @@ import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.share.SharedLink
 import com.pandulapeter.campfire.data.model.share.ShareLinks
-import com.pandulapeter.campfire.data.source.remote.implementation.auth.isSyncRedirect
+import com.pandulapeter.campfire.data.source.remote.implementation.isSyncRedirect
 import com.pandulapeter.campfire.presentation.ui.platform.archiveReceiver
 import com.pandulapeter.campfire.presentation.ui.platform.fileSizeAt
 import com.pandulapeter.campfire.presentation.ui.platform.receiveUrl

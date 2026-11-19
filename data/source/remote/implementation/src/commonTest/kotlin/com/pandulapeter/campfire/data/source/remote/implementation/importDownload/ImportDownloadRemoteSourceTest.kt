@@ -141,7 +141,7 @@ class ImportDownloadRemoteSourceTest {
             HttpClient(MockEngine.create {
                 dispatcher = StandardTestDispatcher(testScheduler)
                 addHandler(handler)
-            }) { configureClient(sendsUserAgent = false, hasSocketTimeout = false) }
+            }) { configureClient(userAgent = null, hasSocketTimeout = false) }
         },
     )
 

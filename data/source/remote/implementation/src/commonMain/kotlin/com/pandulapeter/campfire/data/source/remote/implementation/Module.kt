@@ -14,13 +14,16 @@ import com.pandulapeter.campfire.data.model.library.LibraryCollections
 import com.pandulapeter.campfire.data.source.remote.api.catalogue.CoverArtSearchRemoteSources
 import com.pandulapeter.campfire.data.source.remote.api.catalogue.SongDetailsSearchRemoteSources
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncProviders
+import com.pandulapeter.campfire.data.source.remote.implementation.auth.OAuthRedirectConfiguration
 import com.pandulapeter.campfire.data.source.remote.implementation.auth.SyncCredentialsStore
+import com.pandulapeter.campfire.data.source.remote.implementation.dropbox.DropboxConfiguration
 import com.pandulapeter.campfire.data.source.remote.implementation.dropbox.DropboxSyncProvider
 import com.pandulapeter.campfire.data.source.remote.implementation.iTunes.ITunesRemoteSource
 import com.pandulapeter.campfire.data.source.remote.implementation.musicBrainz.MusicBrainzRemoteSource
 import com.pandulapeter.campfire.data.source.remote.implementation.musicBrainz.MusicBrainzRateLimiter
 import com.pandulapeter.campfire.data.source.remote.implementation.network.HttpClientHolder
 import com.pandulapeter.campfire.data.source.remote.implementation.network.createHttpClient
+import kotlinx.coroutines.Dispatchers
 import org.koin.core.annotation.ComponentScan
 import org.koin.core.annotation.Module
 import org.koin.core.annotation.Single
@@ -32,7 +35,14 @@ import kotlin.time.TimeSource
 object DataRemoteSourceModule {
 
     @Single
-    internal fun httpClientHolder(): HttpClientHolder = HttpClientHolder(create = ::createHttpClient)
+    internal fun httpClientHolder(): HttpClientHolder = HttpClientHolder(
+        dispatcher = Dispatchers.Default,
+        create = { createHttpClient(userAgent = USER_AGENT) },
+    )
+
+    /** Campfire's redirect, which the platforms' authenticators are built with (see [CAMPFIRE_OAUTH_REDIRECT]). */
+    @Single
+    internal fun oAuthRedirectConfiguration(): OAuthRedirectConfiguration = CAMPFIRE_OAUTH_REDIRECT
 
     /**
      * A list rather than a single binding: adding a provider is adding one line here, and nothing above this module
@@ -54,9 +64,11 @@ object DataRemoteSourceModule {
                     DropboxSyncProvider(
                         httpClientHolder = httpClientHolder,
                         credentialsStore = credentialsStore,
-                        appKey = DROPBOX_APP_KEY,
-                        collections = LibraryCollections.all,
-                        maxDocumentSize = LibraryCollections.MAX_FOLDER_DOCUMENT_SIZE,
+                        configuration = DropboxConfiguration(
+                            appKey = DROPBOX_APP_KEY,
+                            collections = LibraryCollections.all,
+                            maxDocumentSize = LibraryCollections.MAX_FOLDER_DOCUMENT_SIZE,
+                        ),
                         logger = logger,
                     ),
                 )

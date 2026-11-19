@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.data.source.remote.implementation.auth
+package com.pandulapeter.campfire.data.source.remote.implementation
 
 /**
  * Whether [uri] is a sync redirect rather than a file someone opened with Campfire.
@@ -16,4 +16,4 @@ package com.pandulapeter.campfire.data.source.remote.implementation.auth
  * `onOpenURL`. It is still worth recognising one, so that a URL on this scheme is quietly ignored instead of being
  * read as a song and reported to the user as a file that could not be imported.
  */
-fun isSyncRedirect(uri: String) = uri.startsWith("$REDIRECT_SCHEME://$REDIRECT_HOST")
+fun isSyncRedirect(uri: String) = CAMPFIRE_OAUTH_REDIRECT.isRedirect(uri)

@@ -39,14 +39,16 @@ import kotlin.coroutines.resume
  * which is what turns that dead end into a [SyncAuthenticator.AuthorizationOutcome.Cancelled].
  *
  * It is also the better thing for the user: the sheet stays inside the app, and it shares Safari's cookies, so
- * somebody already signed in to Dropbox is not asked to sign in again.
+ * somebody already signed in to the service is not asked to sign in again.
  */
 @Single
-internal class IosSyncAuthenticator : SyncAuthenticator {
+internal class IosSyncAuthenticator(
+    private val redirect: OAuthRedirectConfiguration,
+) : SyncAuthenticator {
 
     private val presentationContextProvider = PresentationAnchorProvider()
 
-    override suspend fun prepareRedirectUri() = "$REDIRECT_SCHEME://$REDIRECT_HOST"
+    override suspend fun prepareRedirectUri() = redirect.uri
 
     /**
      * The session has to be created and started on the main thread, and the completion handler comes back on it.
@@ -65,7 +67,7 @@ internal class IosSyncAuthenticator : SyncAuthenticator {
                 var hasFinished = false
                 val session = ASWebAuthenticationSession(
                     uRL = url,
-                    callbackURLScheme = REDIRECT_SCHEME,
+                    callbackURLScheme = redirect.scheme,
                 ) { callbackUrl, error ->
                     if (!hasFinished) {
                         hasFinished = true
