@@ -16,23 +16,23 @@ class PinnedSearchTopEdgeTest {
 
     @Test
     fun `a page at rest draws nothing over the room under the status bar`() =
-        assertEquals(PinnedSearchTopEdge(fade = 0f, cover = 0f), edge(firstVisibleItemIndex = 0, scrollOffset = 0, fieldTop = 300))
+        assertEquals(PinnedSearchTopEdge(fade = 0f, fadeBelowInset = 0f, cover = 0f), edge(firstVisibleItemIndex = 0, scrollOffset = 0, fieldTop = 300))
 
     @Test
     fun `the fade grows through the room as the controls are scrolled up into it`() {
-        assertEquals(PinnedSearchTopEdge(fade = 0.5f, cover = 0f), edge(firstVisibleItemIndex = 0, scrollOffset = 24, fieldTop = 200))
-        assertEquals(PinnedSearchTopEdge(fade = 1f, cover = 0f), edge(firstVisibleItemIndex = 0, scrollOffset = 96, fieldTop = 100))
+        assertEquals(PinnedSearchTopEdge(fade = 0.5f, fadeBelowInset = 0.5f, cover = 0f), edge(firstVisibleItemIndex = 0, scrollOffset = 24, fieldTop = 200))
+        assertEquals(PinnedSearchTopEdge(fade = 1f, fadeBelowInset = 1f, cover = 0f), edge(firstVisibleItemIndex = 0, scrollOffset = 96, fieldTop = 100))
     }
 
     @Test
-    fun `the cover takes the fade's place as the field arrives`() {
-        assertEquals(PinnedSearchTopEdge(fade = 0.75f, cover = 0.25f), edge(firstVisibleItemIndex = 0, scrollOffset = 200, fieldTop = 18))
-        assertEquals(PinnedSearchTopEdge(fade = 0f, cover = 1f), edge(firstVisibleItemIndex = 0, scrollOffset = 200, fieldTop = 0))
+    fun `controls still in the room stay faded as the field arrives under them`() {
+        assertEquals(PinnedSearchTopEdge(fade = 1f, fadeBelowInset = 0.75f, cover = 0.25f), edge(firstVisibleItemIndex = 0, scrollOffset = 200, fieldTop = 18))
+        assertEquals(PinnedSearchTopEdge(fade = 1f, fadeBelowInset = 0f, cover = 1f), edge(firstVisibleItemIndex = 0, scrollOffset = 200, fieldTop = 0))
     }
 
     @Test
-    fun `a pinned field has the room filled in and no fade`() =
-        assertEquals(PinnedSearchTopEdge(fade = 0f, cover = 1f), edge(firstVisibleItemIndex = 5, scrollOffset = 10, fieldTop = -48))
+    fun `a pinned field has the room filled in and no fade over it`() =
+        assertEquals(PinnedSearchTopEdge(fade = 1f, fadeBelowInset = 0f, cover = 1f), edge(firstVisibleItemIndex = 5, scrollOffset = 10, fieldTop = -48))
 
     private fun edge(firstVisibleItemIndex: Int, scrollOffset: Int, fieldTop: Int?) = pinnedSearchTopEdge(
         firstVisibleItemIndex = firstVisibleItemIndex,

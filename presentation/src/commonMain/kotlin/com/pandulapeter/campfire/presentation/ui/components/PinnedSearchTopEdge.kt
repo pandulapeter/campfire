@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -23,7 +24,9 @@ import androidx.compose.ui.unit.IntOffset
  * tabs), drawn over the page's grid in place of its [fadingTopEdge]. What is scrolled up into the room under the status
  * bar fades out there ([topEdgeFadeHeight]) as on every page; once the field is pinned below that room, the room is the
  * field's background instead, so that what passes under the field does not show again above it. The one hands over to
- * the other as the field arrives, over the last [EDGE_FADE_SIZE] before it pins, rather than at once.
+ * the other as the field arrives, over the last [EDGE_FADE_SIZE] before it pins, rather than at once. Only the part of
+ * the fade below the room gives way as the field comes (on the desktop, whose room is shallower than the fade): above
+ * the field's pinned place the controls go on fading out whatever the field does.
  */
 internal fun Modifier.pinnedSearchPageTopEdge(gridState: LazyGridState, backgroundColor: Color) = drawWithCache {
     val arrivalHeight = EDGE_FADE_SIZE.toPx()
@@ -51,8 +54,12 @@ internal fun Modifier.pinnedSearchPageTopEdge(gridState: LazyGridState, backgrou
             fadeHeight = fadeHeight,
             arrivalHeight = arrivalHeight,
         )
-        if (edge.fade > 0f) {
-            drawRect(brush = fadeGradient, size = Size(size.width, fadeHeight), alpha = edge.fade)
+        // The one gradient in two strips, each drawn as strongly as its part of the fade is.
+        if (edge.fade > 0f && inset > 0f) {
+            drawRect(brush = fadeGradient, size = Size(size.width, inset), alpha = edge.fade)
+        }
+        if (edge.fadeBelowInset > 0f && fadeHeight > inset) {
+            drawRect(brush = fadeGradient, topLeft = Offset(0f, inset), size = Size(size.width, fadeHeight - inset), alpha = edge.fadeBelowInset)
         }
         if (edge.cover > 0f && inset > 0f) {
             drawRect(color = backgroundColor, size = Size(size.width, inset), alpha = edge.cover)
@@ -61,17 +68,18 @@ internal fun Modifier.pinnedSearchPageTopEdge(gridState: LazyGridState, backgrou
 }
 
 /**
- * How strongly [pinnedSearchPageTopEdge] fades the page out through the room under the status bar ([fade]), and how
- * much of the field's background it already lays over that room ([cover]).
+ * How strongly [pinnedSearchPageTopEdge] fades the page out through the room under the status bar ([fade]) and below it
+ * where the fade reaches further ([fadeBelowInset]), and how much of the field's background it already lays over that
+ * room ([cover]).
  */
-internal data class PinnedSearchTopEdge(val fade: Float, val cover: Float)
+internal data class PinnedSearchTopEdge(val fade: Float, val fadeBelowInset: Float, val cover: Float)
 
 /**
  * [PinnedSearchTopEdge] for a page whose first visible item is [firstVisibleItemIndex], scrolled [scrollOffset] into it,
  * with the search field laid out [fieldTop] below the start of its content while it is on screen and not yet pinned.
- * The fade is as strong as the page has been scrolled into [fadeHeight], as every top fade is, and gives way to the
- * cover as the field comes within [arrivalHeight] of its pinned place: a field arriving at the top meets a room already
- * filled in, and the fade never reaches over the field where the room is shallower than the fade (the desktop's).
+ * The fade is as strong as the page has been scrolled into [fadeHeight], as every top fade is; the cover comes in as
+ * the field comes within [arrivalHeight] of its pinned place, so that a field arriving at the top meets a room already
+ * filled in, and the fade below the room gives way to it at the same pace, so that it never reaches over the field.
  */
 internal fun pinnedSearchTopEdge(
     firstVisibleItemIndex: Int,
@@ -80,10 +88,11 @@ internal fun pinnedSearchTopEdge(
     fadeHeight: Float,
     arrivalHeight: Float,
 ): PinnedSearchTopEdge {
-    if (firstVisibleItemIndex >= PINNED_SEARCH_INDEX) return PinnedSearchTopEdge(fade = 0f, cover = 1f)
+    if (firstVisibleItemIndex >= PINNED_SEARCH_INDEX) return PinnedSearchTopEdge(fade = 1f, fadeBelowInset = 0f, cover = 1f)
     val arrival = fieldTop?.let { (1f - it / arrivalHeight).coerceIn(0f, 1f) } ?: 0f
     val scrolled = if (firstVisibleItemIndex > 0) Float.MAX_VALUE else scrollOffset.toFloat()
-    return PinnedSearchTopEdge(fade = (scrolled / fadeHeight).coerceIn(0f, 1f) * (1f - arrival), cover = arrival)
+    val fade = (scrolled / fadeHeight).coerceIn(0f, 1f)
+    return PinnedSearchTopEdge(fade = fade, fadeBelowInset = fade * (1f - arrival), cover = arrival)
 }
 
 /**
