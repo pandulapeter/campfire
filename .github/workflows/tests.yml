@@ -152,7 +152,11 @@ jobs:
 
   compile-ios:
     name: Compile the iOS app
-    runs-on: macos-latest
+    # The runner and the Xcode publish-ios.yml builds the release with, so a retired label or an Xcode that is gone
+    # fails here, on every push, rather than in a release.
+    runs-on: xcode-27
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_27.2.app/Contents/Developer
     steps:
       - name: Check out repository
         uses: actions/checkout@v5
