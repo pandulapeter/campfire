@@ -102,8 +102,12 @@ env:
 jobs:
   build:
     name: Build and Upload
-    # Named rather than "latest", so that the Xcode the project was last saved with is the one that opens it.
-    runs-on: macos-26
+    # Named rather than "latest", so that the Xcode the project was last saved with is the one that opens it. App Store
+    # Connect refuses builds made with an SDK older than iOS 27 from April 2027. While GitHub calls this image a
+    # preview, its label may become macos-27 once it is generally available.
+    runs-on: xcode-27
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_27.2.app/Contents/Developer
     steps:
       - name: Check out repository
         uses: actions/checkout@v5
