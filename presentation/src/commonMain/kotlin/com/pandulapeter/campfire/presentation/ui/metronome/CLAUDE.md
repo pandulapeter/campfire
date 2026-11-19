@@ -50,8 +50,8 @@ on Android with Vibrate on and a beat not muted (iOS has no background haptics).
 
 - **On song details it is inside the app bar**, so it moves with the screen and covers none of the song. Only the beat
   row and play / stop, at the end because the phone is held there; the tempo is in the song's first section, sound,
-  subdivision, and volume are the tab's. A lit beat also swells, since in the light theme an accent at rest is already
-  half the lit color.
+  subdivision, and volume are the Playback section's (the tab's and the Preferences' Metronome page). A lit beat
+  also swells, since in the light theme an accent at rest is already half the lit color.
 - **Whether it is up is a preference**, written by the song's button and by a click started there, left alone when the
   screen is left, so the next song and launch keep it. Opening it starts nothing; closing it stops a playing click;
   stopping the click leaves it up. Performance mode keeps the play button.

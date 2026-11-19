@@ -27,8 +27,6 @@ import com.pandulapeter.campfire.presentation.resources.metronome_accent_hint
 import com.pandulapeter.campfire.presentation.resources.metronome_audio_unavailable
 import com.pandulapeter.campfire.presentation.resources.metronome_audio_waiting
 import com.pandulapeter.campfire.presentation.resources.metronome_group_rhythm
-import com.pandulapeter.campfire.presentation.resources.metronome_subdivision
-import com.pandulapeter.campfire.presentation.resources.metronome_subdivision_description
 import com.pandulapeter.campfire.presentation.resources.metronome_time_signature
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ScrollPosition
@@ -40,7 +38,6 @@ import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedScro
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomePanel
 import com.pandulapeter.campfire.presentation.ui.metronome.TimeSignaturePicker
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomePlaybackSection
-import com.pandulapeter.campfire.presentation.ui.metronome.subdivision
 import com.pandulapeter.campfire.presentation.ui.metronome.timeSignatureOrDefault
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.metronome.rememberMetronomePanelState
@@ -120,9 +117,9 @@ internal fun MetronomeScreen(
 }
 
 /**
- * What the tab plays, in the order it is reached for: why nothing is heard where that is so, the tempo, how the bar is
- * counted and what each beat is divided into. The tempo and the time signature are the tab's own, a song bringing its
- * own of both.
+ * What the tab plays, in the order it is reached for: why nothing is heard where that is so, the tempo, and how the bar
+ * is counted. Both are the tab's own, a song bringing its own of both; what each beat is divided into is every click's,
+ * so it is in [MetronomePlaybackSection].
  */
 @Composable
 private fun MetronomeBarOptions(
@@ -153,15 +150,6 @@ private fun MetronomeBarOptions(
         TimeSignaturePicker(
             timeSignature = settings.timeSignatureOrDefault,
             onChange = { value -> viewModel.metronomeController.updateMetronomeSettings { copy(timeSignature = value.toString()) } },
-        )
-    }
-    SettingsSubsection(
-        title = stringResource(Res.string.metronome_subdivision),
-        description = stringResource(Res.string.metronome_subdivision_description),
-    ) {
-        SubdivisionChoice(
-            selected = settings.subdivision,
-            onSelected = { viewModel.metronomeController.updateMetronomeSettings { copy(subdivisionId = it.id) } },
         )
     }
 }

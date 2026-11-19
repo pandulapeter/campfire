@@ -19,6 +19,8 @@ import com.pandulapeter.campfire.presentation.resources.metronome_change_timing
 import com.pandulapeter.campfire.presentation.resources.metronome_change_timing_description
 import com.pandulapeter.campfire.presentation.resources.metronome_group_playback
 import com.pandulapeter.campfire.presentation.resources.metronome_sound
+import com.pandulapeter.campfire.presentation.resources.metronome_subdivision
+import com.pandulapeter.campfire.presentation.resources.metronome_subdivision_description
 import com.pandulapeter.campfire.presentation.resources.metronome_vibrate
 import com.pandulapeter.campfire.presentation.resources.metronome_volume
 import com.pandulapeter.campfire.presentation.ui.components.SwitchListItem
@@ -27,8 +29,8 @@ import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSection
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSubsection
 
 /**
- * How a click reaches the player: what it sounds like, how loud, where a song's click takes up a new tempo, and whether
- * it is seen and felt. None of this is the Metronome tab's own: it is how every click is played, a song's included (the
+ * How a click reaches the player: what it sounds like, how loud, how many clicks each beat is cut into, where a song's
+ * click takes up a new tempo, and whether it is seen and felt. None of this is the Metronome tab's own: it is how every click is played, a song's included (the
  * tempo change only there, since the tab plays one tempo), which is why it is both the tab's second section and the
  * Preferences' Metronome page, drawn the same in both.
  */
@@ -50,6 +52,15 @@ internal fun MetronomePlaybackSection(
         VolumeSlider(
             volume = settings.volume,
             onVolumeChanged = { value -> metronomeController.updateMetronomeSettings { copy(volume = value) } },
+        )
+    }
+    SettingsSubsection(
+        title = stringResource(Res.string.metronome_subdivision),
+        description = stringResource(Res.string.metronome_subdivision_description),
+    ) {
+        SubdivisionChoice(
+            selected = settings.subdivision,
+            onSelected = { value -> metronomeController.updateMetronomeSettings { copy(subdivisionId = value.id) } },
         )
     }
     SettingsSubsection(
