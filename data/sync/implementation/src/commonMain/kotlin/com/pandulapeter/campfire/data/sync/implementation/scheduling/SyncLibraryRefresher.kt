@@ -11,18 +11,11 @@ package com.pandulapeter.campfire.data.sync.implementation.scheduling
 
 import com.pandulapeter.campfire.data.sync.implementation.SyncEnvironment
 import com.pandulapeter.campfire.data.sync.implementation.SyncKey
-import com.pandulapeter.campfire.data.model.DataState
-import com.pandulapeter.campfire.data.model.library.LibraryCollections
-import com.pandulapeter.campfire.data.model.library.SyncCollection
-import com.pandulapeter.campfire.data.repository.api.ImageRepository
-import com.pandulapeter.campfire.data.repository.api.SetlistRepository
-import com.pandulapeter.campfire.data.repository.api.SongRepository
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -34,17 +27,15 @@ import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeMark
 
 /**
- * Sync writes song and setlist files behind these two repositories' backs, so it is the one thing that has to tell
- * them to read the library again. It used to be the use case's job, back when a run finished before the caller did;
- * now that a run outlives whoever started it, this is the only place that reliably still exists when it ends.
+ * Sync writes library files behind the app's back, so it is the one thing that has to tell the app ([observer]) to read
+ * them again. It used to be the use case's job, back when a run finished before the caller did; now that a run outlives
+ * whoever started it, this is the only place that reliably still exists when it ends.
  *
  * Its throttle is not per run: the pause a live refresh earned carries over into the next run, as it always has.
  */
 @Single
 internal class SyncLibraryRefresher(
-    private val songRepository: SongRepository,
-    private val setlistRepository: SetlistRepository,
-    private val imageRepository: ImageRepository,
+    private val observer: SyncLibraryObserver,
     private val environment: SyncEnvironment,
 ) {
 
@@ -64,15 +55,8 @@ internal class SyncLibraryRefresher(
     @Volatile
     private var liveRescanPause = LIVE_RESCAN_INTERVAL
 
-    /**
-     * A launch starts a run beside the first scan of the library, and both read every file, so the screen's read goes
-     * first. Waited for rather than started again: a repository that is not Loading has been read, or has failed,
-     * which a second read here would only repeat.
-     */
-    suspend fun awaitFirstRead() {
-        if (songRepository.songs.first() is DataState.Loading) songRepository.loadSongsIfNeeded()
-        if (setlistRepository.setlists.first() is DataState.Loading) setlistRepository.loadSetlistsIfNeeded()
-    }
+    /** A launch starts a run beside the first scan of the library, and both read every file, so the screen's read goes first. */
+    suspend fun awaitFirstRead() = observer.awaitFirstRead()
 
     /** Notes a library file the running run has changed, for the next refresh to read. */
     suspend fun onFileChanged(key: SyncKey) {
@@ -82,8 +66,8 @@ internal class SyncLibraryRefresher(
     /**
      * Keeps the library counts moving while a run is going.
      *
-     * Sync writes files behind the two repositories' backs, so nothing reads them again until something says to: this
-     * hands them the files the run has changed so far, which they read again one by one. Throttled by what the last one
+     * Sync writes files behind the app's back, so nothing reads them again until something says to: this
+     * hands it the files the run has changed so far, which it reads again one by one. Throttled by what the last one
      * cost, see [liveRescanPauseAfter], since a first sync changes files several times a second and every refresh
      * rebuilds the lists downstream. A refresh asked for inside the pause waits for its end rather than being dropped: a
      * run that downloads one song, the change another device made to the song open on screen, would otherwise show it
@@ -103,14 +87,10 @@ internal class SyncLibraryRefresher(
         }
     }
 
-    suspend fun rescanLibrary() {
-        songRepository.rescan()
-        setlistRepository.rescan()
-        imageRepository.onLibraryImagesChanged()
-    }
+    suspend fun rescanLibrary() = observer.rescan()
 
     /**
-     * Hands the files changed since the last refresh to the two repositories. They are taken out of [changedFiles]
+     * Hands the files changed since the last refresh to the [observer]. They are taken out of [changedFiles]
      * before they are read, so a file the run changes again meanwhile waits for the next refresh, and put back when
      * this one is stopped before it got to them. Answers whether there was anything to read.
      */
@@ -118,17 +98,13 @@ internal class SyncLibraryRefresher(
         val keys = changedFilesMutex.withLock { changedFiles.toSet().also { changedFiles.clear() } }
         if (keys.isEmpty()) return false
         try {
-            songRepository.refresh(keys.namesOf(LibraryCollections.SONGS))
-            setlistRepository.refresh(keys.namesOf(LibraryCollections.SETLISTS))
-            if (keys.any { it.kind == LibraryCollections.FILES }) imageRepository.onLibraryImagesChanged()
+            observer.refresh(keys)
         } catch (exception: CancellationException) {
             withContext(NonCancellable) { changedFilesMutex.withLock { changedFiles += keys } }
             throw exception
         }
         return true
     }
-
-    private fun Set<SyncKey>.namesOf(kind: SyncCollection) = filter { it.kind == kind }.mapTo(mutableSetOf()) { it.name }
 
     /**
      * The refresh a run ends with. A live one still reading is stopped first, which puts back what it had not got to,

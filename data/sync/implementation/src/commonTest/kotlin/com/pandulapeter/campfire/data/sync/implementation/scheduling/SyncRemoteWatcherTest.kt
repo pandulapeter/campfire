@@ -21,6 +21,7 @@ import com.pandulapeter.campfire.data.sync.implementation.DataSyncModule
 import com.pandulapeter.campfire.data.sync.implementation.FakeConnectivityMonitor
 import com.pandulapeter.campfire.data.sync.implementation.FakeLibraryFileLocalSource
 import com.pandulapeter.campfire.data.sync.implementation.FakeSyncIndexLocalSource
+import com.pandulapeter.campfire.data.sync.implementation.LibrarySyncObserver
 import com.pandulapeter.campfire.data.sync.implementation.FakeSyncProvider
 import com.pandulapeter.campfire.data.sync.implementation.FakeUserPreferencesRepository
 import com.pandulapeter.campfire.data.sync.implementation.NoSetlistComparison
@@ -477,7 +478,7 @@ class SyncRemoteWatcherTest {
             syncedPreferencesSync = syncedPreferencesSync,
             sharedCopySync = sharedCopySync(library = libraryFileLocalSource, environment = environment, localSource = sharedLinks),
             indexStore = SyncIndexStore(FakeSyncIndexLocalSource(onSaveIndex = runs::onSaveIndex), environment),
-            libraryRefresher = SyncLibraryRefresher(RecordingSongRepository(), RecordingSetlistRepository(), RecordingImageRepository(), environment),
+            libraryRefresher = SyncLibraryRefresher(LibrarySyncObserver(RecordingSongRepository(), RecordingSetlistRepository(), RecordingImageRepository()), environment),
             stateHolder = stateHolder,
             environment = environment,
         )

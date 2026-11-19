@@ -95,7 +95,7 @@ internal fun TestScope.syncRepository(
             buildNumber = 1,
         ),
         indexStore = indexStore,
-        libraryRefresher = SyncLibraryRefresher(songRepository, setlistRepository, RecordingImageRepository(), environment),
+        libraryRefresher = SyncLibraryRefresher(LibrarySyncObserver(songRepository, setlistRepository, RecordingImageRepository()), environment),
         stateHolder = stateHolder,
         environment = environment,
     )

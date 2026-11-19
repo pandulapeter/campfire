@@ -38,5 +38,6 @@
   online (`awaitReconnection`), listened to only during such a wait.
 - `SyncLibraryRefresher` re-reads only the files a run changed, never a rescan, after any ending and while it goes: a
   live refresh asked for inside its pause waits for the pause rather than being dropped, so another device's change to
-  the song on screen shows once downloaded.
+  the song on screen shows once downloaded. It decides when; `SyncLibraryObserver` what reading means (Campfire's
+  `LibrarySyncObserver` hands the song, setlist, and image repositories their files), so nothing here reads a repository.
 - Tests advance `SyncEnvironment`'s scope with `runCurrent` / `advanceTimeBy`, never `advanceUntilIdle`.

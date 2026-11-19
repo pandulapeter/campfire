@@ -216,10 +216,14 @@ internal class RecordingSongRepository(
         throw UnsupportedOperationException()
 }
 
-/** Stands in for the setlist list that sync tells to read the library again, and counts how often it was told. */
+/**
+ * Stands in for the setlist list that sync tells to read the library again, and records what it was told: how many whole
+ * rescans, and which files it was asked to refresh.
+ */
 internal class RecordingSetlistRepository : SetlistRepository {
 
     var rescanCount = 0
+    val refreshed = mutableListOf<String>()
 
     override val setlists: Flow<DataState<List<Setlist>>> = MutableStateFlow(DataState.Idle(emptyList()))
 
@@ -231,7 +235,9 @@ internal class RecordingSetlistRepository : SetlistRepository {
         rescanCount++
     }
 
-    override suspend fun refresh(fileNames: Set<String>) = Unit
+    override suspend fun refresh(fileNames: Set<String>) {
+        refreshed += fileNames
+    }
 
     override suspend fun adoptImported(setlists: Collection<Setlist>) = throw UnsupportedOperationException()
 
