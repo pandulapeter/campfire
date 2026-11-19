@@ -16,7 +16,6 @@ import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLock
 import com.pandulapeter.campfire.data.sync.implementation.index.SyncIndexDocument
-import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPreferencesSync
 import com.pandulapeter.campfire.data.sync.implementation.run.SyncEngine
 import com.pandulapeter.campfire.data.sync.implementation.shared.FakeSharedCopyContents
 import com.pandulapeter.campfire.data.sync.implementation.shared.FakeSharedLinksLocalSource
@@ -55,7 +54,7 @@ internal class Device(
 
     val library = FakeLibraryFileLocalSource(files, naming = naming, clock = clock)
     private val lock = LibraryFileLock()
-    private val preferencesSync = preferences?.let { SyncedPreferencesSync(it, library, Logger.Standard) }
+    private val preferencesSync = preferences?.let { preferencesDocument(library, it) }
     private var index = SyncIndexDocument()
 
     val sharedLinks = FakeSharedLinksLocalSource()
@@ -167,7 +166,7 @@ internal class Device(
      * ends it with the engine's index kept, and anything else is that step's problem alone.
      */
     private suspend fun settle(cloud: FakeSyncProvider, completed: SyncEngine.Result.Completed) {
-        val unchanged = index.unchangedPreferences(ACCOUNT_ID, completed.documentRevisions)
+        val unchanged = preferencesSync?.unchangedIn(index, ACCOUNT_ID, completed.documentRevisions)
         index = completed.index
         val settled = afterRun {
             preferencesSync?.synchronize(

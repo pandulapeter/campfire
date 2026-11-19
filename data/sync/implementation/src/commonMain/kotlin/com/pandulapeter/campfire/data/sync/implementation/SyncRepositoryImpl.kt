@@ -40,7 +40,9 @@ internal class SyncRepositoryImpl(
     override val availableProviders = syncProviders.all.map { it.id }
 
     override suspend fun restore(onReturnedFromAuthorization: () -> Unit) =
-        connectionManager.restore(onReturnedFromAuthorization = onReturnedFromAuthorization)
+        connectionManager.restore(onReturnedFromAuthorization = onReturnedFromAuthorization).let {
+            SyncRepository.RestoreResult(isConnected = it.isConnected, wasInterrupted = it.wasInterrupted)
+        }
 
     override suspend fun connect(providerId: SyncProviderId, completionPage: AuthorizationCompletionPage) =
         connectionManager.connect(providerId, completionPage)

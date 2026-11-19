@@ -12,13 +12,11 @@
 package com.pandulapeter.campfire.data.sync.implementation.scheduling
 
 import com.pandulapeter.campfire.data.model.isOutOfSpace
-import com.pandulapeter.campfire.data.model.library.LibrarySyncSteps
 import com.pandulapeter.campfire.data.sync.implementation.SyncEnvironment
 import com.pandulapeter.campfire.data.sync.implementation.index.SyncIndexDocument
 import com.pandulapeter.campfire.data.sync.implementation.index.SyncIndexStore
 import com.pandulapeter.campfire.data.sync.implementation.SyncStateHolder
-import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPreferencesDocument
-import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPreferencesSync
+import com.pandulapeter.campfire.data.sync.implementation.merge.MergedFolderDocument
 import com.pandulapeter.campfire.data.sync.implementation.index.indexKey
 import com.pandulapeter.campfire.data.sync.implementation.run.SyncEngine
 import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
@@ -48,7 +46,7 @@ import kotlin.time.ExperimentalTime
 import kotlin.time.TimeMark
 
 /**
- * Carries out one run at a time: the engine over the connected provider's folder, then `preferences.json` and the app's
+ * Carries out one run at a time: the engine over the connected provider's folder, then the app's [folderDocument] and
  * [steps], with the index written before anything moves, close behind the run and at its end, and the state told how it
  * went.
  */
@@ -56,7 +54,7 @@ import kotlin.time.TimeMark
 internal class SyncRunner(
     private val syncProviders: SyncProviders,
     private val engine: SyncEngine,
-    private val syncedPreferencesSync: SyncedPreferencesSync,
+    private val folderDocument: MergedFolderDocument<*>,
     private val steps: SyncRunSteps,
     private val indexStore: SyncIndexStore,
     private val libraryRefresher: SyncLibraryRefresher,
@@ -173,18 +171,18 @@ internal class SyncRunner(
 
                     is SyncEngine.Result.Completed -> {
                         // From here on a Stop must never write an index older than the one the engine returned, nor,
-                        // once the preferences are written here, one whose preferences base predates them.
+                        // once the folder document's values are written here, one whose base predates them.
                         latestIndex = { result.index }
                         // The index loaded at the start, not the engine's: only it pairs the base with the revision
                         // the folder had for it, which the engine's rebuilt index leaves null.
-                        val unchanged = document.unchangedPreferences(connected.account.indexKey(), result.documentRevisions)
-                        val settled = synchronizePreferences(provider, result, unchanged) { base ->
+                        val unchanged = folderDocument.unchangedIn(document, connected.account.indexKey(), result.documentRevisions)
+                        val settled = synchronizeFolderDocument(provider, result, unchanged) { base ->
                             latestIndex = { result.index.copy(syncedPreferences = base) }
                         }
                         // Before the index is saved and the watch point set, so that a run a step ends hands the feed no point.
                         val failedSteps = runSteps(provider, result)
                         val summary = result.summary.copy(
-                            failedSteps = setOfNotNull(LibrarySyncSteps.PREFERENCES.takeIf { settled == null }) + failedSteps,
+                            failedSteps = setOfNotNull(folderDocument.id.takeIf { settled == null }) + failedSteps,
                         )
                         // Any run that got to the end, whatever files it could not move: those are listed beside the time,
                         // and one damaged file in the folder would otherwise leave a device with no time to show, ever.
@@ -258,19 +256,19 @@ internal class SyncRunner(
     }
 
     /**
-     * Settles `preferences.json` once the library files have been, and answers the document to remember with the folder's
+     * Settles the app's folder document once the library files have been, and answers the document to remember with the folder's
      * revision of it, or null where it could not be settled; [unchanged] stands in for the first download, see
-     * [SyncedPreferencesSync.synchronize]. A failure that ends a run (refused, the network, a full folder) ends this one with its
+     * [MergedFolderDocument.synchronize]. A failure that ends a run (refused, the network, a full folder) ends this one with its
      * reason: anything else is the one document's problem, reported in [com.pandulapeter.campfire.data.model.sync.SyncSummary.failedSteps], and the
      * next run tries again.
      */
-    private suspend fun synchronizePreferences(
+    private suspend fun synchronizeFolderDocument(
         provider: SyncProvider,
         result: SyncEngine.Result.Completed,
         unchanged: RemoteDocument?,
         onLocalSettled: (JsonObject?) -> Unit,
     ) = try {
-        syncedPreferencesSync.synchronize(
+        folderDocument.synchronize(
             provider = provider,
             base = result.index.syncedPreferences,
             unchanged = unchanged,
@@ -282,7 +280,7 @@ internal class SyncRunner(
     } catch (exception: SyncRunEndingException) {
         throw exception
     } catch (exception: Exception) {
-        environment.logger.log("Could not sync ${SyncedPreferencesDocument.FILE_NAME}: ${exception.message}")
+        environment.logger.log("Could not sync ${folderDocument.fileName}: ${exception.message}")
         null
     }
 

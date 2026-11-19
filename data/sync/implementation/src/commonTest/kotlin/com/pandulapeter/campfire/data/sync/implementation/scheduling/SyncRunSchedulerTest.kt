@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.data.sync.implementation.FakeConnectivityMonito
 import com.pandulapeter.campfire.data.sync.implementation.FakeLibraryFileLocalSource
 import com.pandulapeter.campfire.data.sync.implementation.FakeSyncIndexLocalSource
 import com.pandulapeter.campfire.data.sync.implementation.LibrarySyncObserver
+import com.pandulapeter.campfire.data.sync.implementation.preferencesDocument
 import com.pandulapeter.campfire.data.sync.implementation.FakeSyncProvider
 import com.pandulapeter.campfire.data.sync.implementation.FakeUserPreferencesRepository
 import com.pandulapeter.campfire.data.sync.implementation.NoSetlistComparison
@@ -29,7 +30,6 @@ import com.pandulapeter.campfire.data.sync.implementation.SyncIndexEntry
 import com.pandulapeter.campfire.data.sync.implementation.encoded
 import com.pandulapeter.campfire.data.sync.implementation.SyncKey
 import com.pandulapeter.campfire.data.sync.implementation.SyncStateHolder
-import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPreferencesSync
 import com.pandulapeter.campfire.data.sync.implementation.scheduling.SyncRunScheduler.Companion.AUTOMATIC_RUN_DELAY
 import com.pandulapeter.campfire.data.sync.implementation.shared.sharedCopySteps
 import com.pandulapeter.campfire.data.sync.implementation.scheduling.SyncRunScheduler.Companion.NETWORK_RETRY_DELAYS
@@ -50,6 +50,7 @@ import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncNetworkException
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncProviders
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncRemoteStorageFullException
+import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPreferencesDocument
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.awaitCancellation
@@ -294,6 +295,7 @@ class SyncRunSchedulerTest {
                 accountId = TEST_ACCOUNT.indexKey(),
                 lastSyncedAt = 1,
                 syncedPreferences = null,
+                syncedPreferencesFields = SyncedPreferencesDocument.OWNED_FIELDS,
                 index = library.mapValues { (_, bytes) -> SyncIndexEntry(localHash = localContentHash(bytes), remoteRevision = "r1") },
             ).encoded(),
         )
@@ -363,6 +365,7 @@ class SyncRunSchedulerTest {
         accountId = TEST_ACCOUNT.indexKey(),
         lastSyncedAt = 1,
         syncedPreferences = null,
+        syncedPreferencesFields = SyncedPreferencesDocument.OWNED_FIELDS,
         index = mapValues { (key, bytes) ->
             SyncIndexEntry(localHash = if (key.kind == LibraryCollections.FILES) localImageHash(bytes.size.toLong()) else localContentHash(bytes), remoteRevision = "r1")
         },
@@ -412,7 +415,7 @@ class SyncRunSchedulerTest {
         }
         val userPreferencesRepository = FakeUserPreferencesRepository()
         val libraryFileLocalSource = FakeLibraryFileLocalSource(files = localFiles)
-        val syncedPreferencesSync = SyncedPreferencesSync(userPreferencesRepository, libraryFileLocalSource, Logger.Standard)
+        val folderDocument = preferencesDocument(libraryFileLocalSource, userPreferencesRepository)
         val steps = sharedCopySteps(library = libraryFileLocalSource, environment = environment)
         val runner = SyncRunner(
             syncProviders = syncProviders,
@@ -422,9 +425,10 @@ class SyncRunSchedulerTest {
                 setlistComparison = NoSetlistComparison,
                 userPreferencesRepository = userPreferencesRepository,
                 imageRepository = RecordingImageRepository(),
+                folderDocument = folderDocument,
                 logger = Logger.Standard,
             ),
-            syncedPreferencesSync = syncedPreferencesSync,
+            folderDocument = folderDocument,
             steps = steps,
             indexStore = SyncIndexStore(FakeSyncIndexLocalSource(index = index, onSaveIndex = runs::onSaveIndex), environment),
             libraryRefresher = SyncLibraryRefresher(LibrarySyncObserver(RecordingSongRepository(), RecordingSetlistRepository(), RecordingImageRepository()), environment),
@@ -435,7 +439,7 @@ class SyncRunSchedulerTest {
             runner = runner,
             stateHolder = stateHolder,
             libraryChanges = LibraryChanges(),
-            syncedPreferencesSync = syncedPreferencesSync,
+            folderDocument = folderDocument,
             connectivityMonitor = connectivityMonitor,
             environment = environment,
         )

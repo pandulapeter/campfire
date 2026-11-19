@@ -19,6 +19,7 @@ import com.pandulapeter.campfire.data.sync.implementation.FakeUserPreferencesRep
 import com.pandulapeter.campfire.data.sync.implementation.TEST_ACCOUNT
 import com.pandulapeter.campfire.data.sync.implementation.awaitOutcome
 import com.pandulapeter.campfire.data.sync.implementation.defaultUserPreferences
+import com.pandulapeter.campfire.data.sync.implementation.merge.FolderDocumentJson
 import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPreferencesDocument
 import com.pandulapeter.campfire.data.sync.implementation.song
 import com.pandulapeter.campfire.data.sync.implementation.syncRepository
@@ -43,7 +44,7 @@ class SyncRunnerPreferencesRevisionTest {
     @Test
     fun `a run downloads the preferences only when the folder's revision moved`() = runTest {
         val provider = FakeSyncProvider(files = mapOf(song(1) to ONE), account = TEST_ACCOUNT)
-        provider.documents[SyncedPreferencesDocument.FILE_NAME] = SyncedPreferencesDocument.encode(document("""{"song_1.cho":{"capo":3}}""")) to "r1"
+        provider.documents[SyncedPreferencesDocument.FILE_NAME] = FolderDocumentJson.encode(document("""{"song_1.cho":{"capo":3}}""")) to "r1"
         val stateLocalSource = FakeSyncIndexLocalSource()
         val preferences = FakeUserPreferencesRepository(defaultUserPreferences(capos = mapOf("song_1.cho" to 3)))
         val repository = syncRepository(
@@ -69,7 +70,7 @@ class SyncRunnerPreferencesRevisionTest {
 
         provider.writeDocumentElsewhere(
             name = SyncedPreferencesDocument.FILE_NAME,
-            bytes = SyncedPreferencesDocument.encode(document("""{"song_1.cho":{"capo":5}}""")),
+            bytes = FolderDocumentJson.encode(document("""{"song_1.cho":{"capo":5}}""")),
         )
         repository.synchronize(SyncDeletionPolicy.ASK)
         assertIs<SyncOutcome.Success>(repository.awaitOutcome().lastOutcome)
@@ -95,7 +96,7 @@ class SyncRunnerPreferencesRevisionTest {
         assertFalse(assertIs<SyncOutcome.Success>(repository.awaitOutcome().lastOutcome).summary.havePreferencesFailed)
         val (bytes, revision) = provider.documents.getValue(SyncedPreferencesDocument.FILE_NAME)
         assertNotEquals("r1", revision)
-        val songs = assertNotNull(SyncedPreferencesDocument.decode(bytes))["songs"]?.jsonObject
+        val songs = assertNotNull(FolderDocumentJson.decode(bytes))["songs"]?.jsonObject
         assertEquals(JsonPrimitive(2), songs?.get("song_1.cho")?.jsonObject?.get("transposition"))
         val downloads = provider.documentDownloadCount
 

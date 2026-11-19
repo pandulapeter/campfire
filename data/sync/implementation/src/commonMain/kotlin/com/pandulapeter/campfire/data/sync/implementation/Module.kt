@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.data.sync.implementation
 
+import com.pandulapeter.campfire.data.sync.implementation.merge.MergedFolderDocument
+import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPreferencesCodec
 import com.pandulapeter.campfire.data.sync.implementation.run.SyncEngine
 import com.pandulapeter.campfire.data.sync.implementation.scheduling.SyncRunSteps
 import com.pandulapeter.campfire.data.sync.implementation.shared.SharedCopyStep
@@ -65,6 +67,7 @@ object DataSyncModule {
         setlistComparison: SetlistComparison,
         userPreferencesRepository: UserPreferencesRepository,
         imageRepository: ImageRepository,
+        folderDocument: MergedFolderDocument<*>,
         logger: Logger,
     ): SyncEngine = SyncEngine(
         libraryFileLocalSource = libraryFileLocalSource,
@@ -75,7 +78,24 @@ object DataSyncModule {
         logger = logger,
         collections = LibraryCollections.all,
         largeFileThreshold = LibraryCollections.LARGE_FILE_THRESHOLD,
+        folderDocument = folderDocument,
         imageWritesGate = { block -> imageRepository.withImagesKept { writer -> block(writer.heldNames) } },
+    )
+
+    /**
+     * Campfire's folder document, `preferences.json` ([SyncedPreferencesCodec]), built here since the codec over
+     * [UserPreferencesRepository] is Campfire's and the merge knows nothing of it. One instance for the whole app, which
+     * its own writes are recognized by.
+     */
+    @Single
+    internal fun folderDocument(
+        userPreferencesRepository: UserPreferencesRepository,
+        libraryFileLocalSource: LibraryFileLocalSource,
+        logger: Logger,
+    ): MergedFolderDocument<*> = MergedFolderDocument(
+        codec = SyncedPreferencesCodec(userPreferencesRepository),
+        libraryFileLocalSource = libraryFileLocalSource,
+        logger = logger,
     )
 
     /**

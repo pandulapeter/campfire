@@ -160,6 +160,7 @@ class SyncPlannerTableTest {
             canHoldFileName = { _, _ -> true },
             deletionPolicy = SyncDeletionPolicy.ASK,
             syncedPreferences = null,
+            withoutEntriesOf = { base, _ -> base },
         )
         val operations = SyncPlanner.planned(
             local = pass.local,

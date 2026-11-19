@@ -21,6 +21,7 @@ import com.pandulapeter.campfire.data.source.local.api.LibraryFileLock
 import com.pandulapeter.campfire.data.source.local.api.SetlistComparison
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncFolder
 import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash
+import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPreferencesDocument
 
 /** The account the engine tests' indexes belong to, as [SyncIndexDocument.accountId] files it. */
 internal const val ACCOUNT_ID = "dropbox:someone@example.com"
@@ -52,6 +53,7 @@ internal fun indexOf(vararg files: Pair<SyncKey, ByteArray>) = SyncIndexDocument
     accountId = ACCOUNT_ID,
     lastSyncedAt = 1,
     syncedPreferences = null,
+    syncedPreferencesFields = SyncedPreferencesDocument.OWNED_FIELDS,
     index = files.associate { (key, bytes) ->
         key to SyncIndexEntry(localHash = localContentHash(bytes), remoteRevision = "r0")
     },
@@ -63,6 +65,7 @@ internal fun renamedIndexOf(file: Pair<SyncKey, ByteArray>, revision: String) = 
     accountId = ACCOUNT_ID,
     lastSyncedAt = 1,
     syncedPreferences = null,
+    syncedPreferencesFields = SyncedPreferencesDocument.OWNED_FIELDS,
     index = mapOf(file.first to SyncIndexEntry(localHash = localContentHash(file.second), remoteRevision = revision)),
 )
 
@@ -72,6 +75,7 @@ internal fun syncedIndexOf(files: Map<SyncKey, ByteArray>) = SyncIndexDocument.o
     accountId = ACCOUNT_ID,
     lastSyncedAt = 1,
     syncedPreferences = null,
+    syncedPreferencesFields = SyncedPreferencesDocument.OWNED_FIELDS,
     index = files.mapValues { (_, bytes) -> SyncIndexEntry(localHash = localContentHash(bytes), remoteRevision = "r1") },
 )
 
@@ -102,6 +106,7 @@ internal suspend fun synchronize(
     logger = logger,
     collections = LibraryCollections.all,
     largeFileThreshold = LibraryCollections.LARGE_FILE_THRESHOLD,
+    folderDocument = preferencesDocument(local),
     imageWritesGate = { block -> block(heldPictures()) },
 ).synchronize(
     provider = provider,

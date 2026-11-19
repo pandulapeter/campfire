@@ -12,9 +12,7 @@ package com.pandulapeter.campfire.data.sync.implementation.index
 import com.pandulapeter.campfire.data.model.library.SyncCollections
 import com.pandulapeter.campfire.data.sync.implementation.SyncIndexEntry
 import com.pandulapeter.campfire.data.sync.implementation.SyncKey
-import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPreferencesDocument
 import com.pandulapeter.campfire.data.model.sync.SyncAccount
-import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteDocument
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 
@@ -48,17 +46,18 @@ internal data class SyncIndexDocument(
     /** Keyed by `songs/Artist - Title.cho`, see [SyncKey.path]. */
     val entries: Map<String, Entry> = emptyMap(),
     /**
-     * `preferences.json` as the last run that settled it left it on both sides, the base its next three-way merge
-     * tells a change from a removal by (see [SyncedPreferencesDocument]), or null where no run has settled it yet.
+     * The app's folder document (Campfire's `preferences.json`) as the last run that settled it left it on both sides,
+     * the base its next three-way merge tells a change from a removal by (see `MergedFolderDocument`), or null where no
+     * run has settled it yet. The name is Campfire's, kept since it is the stored key.
      */
     val syncedPreferences: JsonObject? = null,
     /**
-     * The [SyncedPreferencesDocument] fields the version that wrote [syncedPreferences] owned, or null for an index
-     * written by 4.7.0, which did not write it. See [syncedPreferencesBase].
+     * The fields the version that wrote [syncedPreferences] owned, or null for an index written by Campfire 4.7.0, which
+     * did not write it. See `MergedFolderDocument.baseIn`.
      */
     val syncedPreferencesFields: Set<String>? = null,
     /**
-     * The folder's revision of `preferences.json` whose content is exactly [syncedPreferences], or null where that is not
+     * The folder's revision of the folder document whose content is exactly [syncedPreferences], or null where that is not
      * known. Written only by a run whose settle left that document in the folder (see `SyncRunner`); [of], which every
      * other write of a run starts from, leaves it null, so a run that ends any other way downloads the document next time.
      */
@@ -74,23 +73,6 @@ internal data class SyncIndexDocument(
     fun toIndex(collections: SyncCollections): Map<SyncKey, SyncIndexEntry> = entries.mapNotNull { (path, entry) ->
         SyncKey.fromPath(path, collections)?.let { it to SyncIndexEntry(localHash = entry.localHash, remoteRevision = entry.remoteRevision) }
     }.toMap()
-
-    /** [syncedPreferences] as a base this version can merge against: what its writer did not own taken out. */
-    fun syncedPreferencesBase() = syncedPreferences?.let {
-        SyncedPreferencesDocument.withoutFieldsNotOwnedBy(it, syncedPreferencesFields ?: SyncedPreferencesDocument.OWNED_FIELDS_OF_4_7_0)
-    }
-
-    /**
-     * `preferences.json` as the folder still holds it, when [listedRevisions] (a listing's documentRevisions) show the
-     * revision this index pairs with [syncedPreferences] for [accountId]: what downloading it would give, without the
-     * download. Null otherwise. The raw document, not [syncedPreferencesBase], since it stands for the folder's bytes.
-     */
-    fun unchangedPreferences(accountId: String, listedRevisions: Map<String, String>): RemoteDocument? {
-        val revision = syncedPreferencesRevision?.takeIf { it.isNotEmpty() } ?: return null
-        val document = syncedPreferences ?: return null
-        if (this.accountId != accountId || listedRevisions[SyncedPreferencesDocument.FILE_NAME] != revision) return null
-        return RemoteDocument(bytes = SyncedPreferencesDocument.encode(document), revision = revision)
-    }
 
     /** This document with the marker saying a run is going, and whether it is an automatic one. */
     fun markedAsRunning(isAutomatic: Boolean) = copy(isRunInProgress = true, isAutomaticRunInProgress = isAutomatic)
@@ -122,12 +104,13 @@ internal data class SyncIndexDocument(
             lastSyncedAt: Long,
             index: Map<SyncKey, SyncIndexEntry>,
             syncedPreferences: JsonObject?,
+            syncedPreferencesFields: Set<String>,
         ) = SyncIndexDocument(
             providerId = providerId,
             accountId = accountId,
             lastSyncedAt = lastSyncedAt,
             syncedPreferences = syncedPreferences,
-            syncedPreferencesFields = SyncedPreferencesDocument.OWNED_FIELDS,
+            syncedPreferencesFields = syncedPreferencesFields,
             isRunInProgress = false,
             isAutomaticRunInProgress = false,
             entries = index.entries.associate { (key, entry) ->

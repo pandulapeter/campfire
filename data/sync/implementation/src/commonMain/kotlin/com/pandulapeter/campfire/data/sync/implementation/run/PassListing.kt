@@ -13,10 +13,7 @@ import com.pandulapeter.campfire.data.sync.implementation.LocalFileState
 import com.pandulapeter.campfire.data.sync.implementation.RemoteFileState
 import com.pandulapeter.campfire.data.sync.implementation.SyncIndexEntry
 import com.pandulapeter.campfire.data.sync.implementation.SyncKey
-import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPreferencesDocument
-import com.pandulapeter.campfire.data.model.library.LibraryCollections
 import com.pandulapeter.campfire.data.model.library.SyncCollection
-import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteFile
 import kotlinx.serialization.json.JsonObject
@@ -31,7 +28,8 @@ import kotlinx.serialization.json.JsonObject
  * @param planningIndex [index] without the files this device could not read, which is what the plan is made from.
  * @param caseCollisions Local names a service that ignores case takes for one file.
  * @param unstorable The cloud folder's library files whose names this device cannot hold.
- * @param syncedPreferences The last synced `preferences.json`, without the songs a `KEEP_AND_UPLOAD` makes new here.
+ * @param syncedPreferences The last synced folder document, without the entries of the files a `KEEP_AND_UPLOAD` makes
+ *   new here.
  */
 internal data class PreparedPass(
     val local: List<LocalFileState>,
@@ -46,6 +44,7 @@ internal data class PreparedPass(
 /**
  * @param tooLarge The local files too large to read, left out on both sides with their index entries.
  * @param unreadable The local files whose read failed, whose index entries are kept for the run that can read them.
+ * @param withoutEntriesOf The folder document's base without the entries of the files given (`MergedFolderDocument`).
  */
 internal fun preparePass(
     index: Map<SyncKey, SyncIndexEntry>,
@@ -56,6 +55,7 @@ internal fun preparePass(
     canHoldFileName: (SyncCollection, String) -> Boolean,
     deletionPolicy: SyncDeletionPolicy,
     syncedPreferences: JsonObject?,
+    withoutEntriesOf: (base: JsonObject, forgotten: Set<SyncKey>) -> JsonObject,
 ): PreparedPass {
     var index = index
     var syncedPreferences = syncedPreferences
@@ -101,16 +101,12 @@ internal fun preparePass(
         // here, is not there and has no index entry is planned as an upload.
         val localKeys = local.mapTo(mutableSetOf()) { it.key }
         val remoteKeys = remote.mapTo(mutableSetOf()) { it.key }
-        val forgottenSongs = index.keys
-            .filter { it.kind == LibraryCollections.SONGS && it in localKeys && it !in remoteKeys }
-            .mapTo(mutableSetOf()) { LibraryFiles.identityKey(it.name) }
+        val forgotten = index.keys.filterTo(mutableSetOf()) { it in localKeys && it !in remoteKeys }
         index = index.filterKeys { it !in localKeys || it in remoteKeys }
-        // The same for what is set for those songs in preferences.json: with the base still naming them, the
-        // preferences step would read the folder's document, which another device emptied with its library,
-        // as removing their overrides, while this device was asked to keep the songs and so keeps those too.
-        syncedPreferences = syncedPreferences?.let { base ->
-            SyncedPreferencesDocument.withSongsWhere(base) { LibraryFiles.identityKey(it) !in forgottenSongs }
-        }
+        // The same for what the folder document sets for those files: with the base still naming them, its merge
+        // would read the folder's document, which another device emptied with its library, as removing their entries,
+        // while this device was asked to keep the files and so keeps those too.
+        syncedPreferences = syncedPreferences?.let { base -> withoutEntriesOf(base, forgotten) }
     }
     if (deletionPolicy == SyncDeletionPolicy.KEEP_AND_DOWNLOAD) {
         // The same the other way round: a file that is there, is not here and has no index entry is a

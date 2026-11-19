@@ -13,7 +13,7 @@ import com.pandulapeter.campfire.data.source.remote.api.ConnectivityMonitor
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncNetworkException
 import com.pandulapeter.campfire.data.sync.implementation.SyncEnvironment
 import com.pandulapeter.campfire.data.sync.implementation.downloadFolderDocument
-import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPreferencesDocument
+import com.pandulapeter.campfire.data.sync.implementation.merge.MergedFolderDocument
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.collectLatest
 import org.koin.core.annotation.Single
@@ -33,6 +33,7 @@ internal class SyncRemoteWatcher(
     private val runner: SyncRunner,
     private val scheduler: SyncRunScheduler,
     private val connectivityMonitor: ConnectivityMonitor,
+    private val folderDocument: MergedFolderDocument<*>,
     private val steps: SyncRunSteps,
     private val environment: SyncEnvironment,
 ) {
@@ -71,16 +72,16 @@ internal class SyncRemoteWatcher(
                     "Sync feed: changes after ${askedAt.elapsedNow().inWholeSeconds}s (${changes.files.size} files, " +
                         "${changes.deletedFiles.size} deletions, documents: ${changes.documents.sorted().joinToString().ifEmpty { "none" }})",
                 )
-                val isOtherDevices = point.hasOtherChangesThanPreferences(changes, stepDocuments = steps.documentNames) ||
-                    SyncedPreferencesDocument.FILE_NAME in changes.documents &&
-                    point.isOtherPreferences(point.folder.downloadFolderDocument(SyncedPreferencesDocument.FILE_NAME)?.bytes)
+                val isOtherDevices = point.hasOtherChanges(changes, ownDocuments = steps.documentNames + folderDocument.fileName) ||
+                    folderDocument.fileName in changes.documents &&
+                    folderDocument.isOtherThan(point.folder.downloadFolderDocument(folderDocument.fileName)?.bytes, point.syncedPreferences)
                 // The run another device's change brings runs the steps itself.
                 if (!isOtherDevices) {
                     steps.all
                         .filter { step -> step.documentNames.any { it in changes.documents } }
                         .forEach { it.onDocumentChanged(point.folder) }
                 }
-                // Moved on, and the waits started over, only once the changes are judged: a preferences download or a step's
+                // Moved on, and the waits started over, only once the changes are judged: a folder document's download or a step's
                 // read that failed asks again about the same changes, after waits that keep growing while it fails.
                 cursor = changes.cursor
                 failures = 0

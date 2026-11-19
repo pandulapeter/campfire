@@ -25,6 +25,7 @@ import com.pandulapeter.campfire.data.sync.implementation.shared.setlistDocument
 import com.pandulapeter.campfire.data.sync.implementation.shared.share
 import com.pandulapeter.campfire.data.sync.implementation.shared.sharedEntry
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncNetworkException
+import com.pandulapeter.campfire.data.sync.implementation.merge.FolderDocumentJson
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -539,7 +540,7 @@ class TwoDeviceSyncTest {
     private fun assertPreferencesEverywhere(expected: SyncedPreferences, a: Device, b: Device) {
         assertEquals(expected, SyncedPreferences.of(a.preferences!!.current), "Device A")
         assertEquals(expected, SyncedPreferences.of(b.preferences!!.current), "Device B")
-        val document = SyncedPreferencesDocument.decode(cloud.documents.getValue(SyncedPreferencesDocument.FILE_NAME).first)!!
+        val document = FolderDocumentJson.decode(cloud.documents.getValue(SyncedPreferencesDocument.FILE_NAME).first)!!
         assertEquals(expected, SyncedPreferencesDocument.preferencesOf(document), "The cloud folder")
     }
 

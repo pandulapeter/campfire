@@ -9,8 +9,11 @@
 -->
 # :data:sync:implementation
 
-`SyncEngine` and `SharedCopySync` are built by `DataSyncModule` functions (a lambda over `UserPreferencesRepository`
-Koin cannot inject, and `LibrarySyncRules`, what the engine asks of songs and setlists; the build number).
+`SyncEngine`, `SharedCopySync`, the folder document, and the run steps are built by `DataSyncModule` functions (a lambda
+over `UserPreferencesRepository` Koin cannot inject, and `LibrarySyncRules`, what the engine asks of songs and setlists;
+the build number; `SyncedPreferencesCodec`; `SharedCopyStep` wrapped in `SyncRunSteps`). The engine's packages (`run/`,
+`index/`, `scheduling/`, `connection/`, `merge/`) know nothing of songs, setlists, or the repositories: Campfire's side
+is `LibrarySyncRules`, `LibrarySyncObserver`, `preferences/`, and `shared/`.
 `DemoLibraryRepositoryImpl` lives here because it records demo files under `SyncKey.path`, the key the engine looks them
 up by.
 

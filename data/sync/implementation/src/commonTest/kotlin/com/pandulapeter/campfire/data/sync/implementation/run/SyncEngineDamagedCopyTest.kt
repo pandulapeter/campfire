@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.sync.implementation.run
 
+import com.pandulapeter.campfire.data.sync.implementation.preferencesDocument
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.library.LibraryCollections
 import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
@@ -42,6 +43,7 @@ class SyncEngineDamagedCopyTest {
         logger = Logger.Standard,
         collections = LibraryCollections.all,
         largeFileThreshold = LibraryCollections.LARGE_FILE_THRESHOLD,
+        folderDocument = preferencesDocument(local),
         imageWritesGate = { it(heldByEditor) },
     )
     private var heldByEditor = emptySet<String>()

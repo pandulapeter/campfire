@@ -14,7 +14,7 @@ package com.pandulapeter.campfire.data.sync.implementation.scheduling
 import com.pandulapeter.campfire.data.sync.implementation.SyncEnvironment
 import com.pandulapeter.campfire.data.sync.implementation.index.SyncIndexDocument
 import com.pandulapeter.campfire.data.sync.implementation.SyncStateHolder
-import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPreferencesSync
+import com.pandulapeter.campfire.data.sync.implementation.merge.MergedFolderDocument
 import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.sync.SyncFailureReason
 import com.pandulapeter.campfire.data.model.sync.SyncOutcome
@@ -51,7 +51,7 @@ internal class SyncRunScheduler(
     private val runner: SyncRunner,
     private val stateHolder: SyncStateHolder,
     libraryChanges: LibraryChanges,
-    syncedPreferencesSync: SyncedPreferencesSync,
+    folderDocument: MergedFolderDocument<*>,
     private val connectivityMonitor: ConnectivityMonitor,
     private val environment: SyncEnvironment,
 ) {
@@ -84,7 +84,7 @@ internal class SyncRunScheduler(
 
     init {
         scope.launch { libraryChanges.changes.collect { schedule(reason = RunReason.LIBRARY_CHANGE) } }
-        scope.launch { syncedPreferencesSync.localChanges.collect { schedule(reason = RunReason.SETTINGS_CHANGE) } }
+        scope.launch { folderDocument.localChanges.collect { schedule(reason = RunReason.SETTINGS_CHANGE) } }
         // collectLatest is the debounce: a request that arrives while the previous one is still waiting, or still waiting
         // for a run to end, moves the start instead of adding a second run.
         scope.launch {

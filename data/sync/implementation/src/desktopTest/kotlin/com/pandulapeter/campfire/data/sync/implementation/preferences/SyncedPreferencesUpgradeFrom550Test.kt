@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.sync.implementation.preferences
 
+import com.pandulapeter.campfire.data.sync.implementation.merge.FolderDocumentJson
 import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
@@ -39,7 +40,7 @@ class SyncedPreferencesUpgradeFrom550Test {
 
     @Test
     fun `the folder preferences 5_5_0 wrote read back as every value it held`() {
-        val document = requireNotNull(SyncedPreferencesDocument.decode(bytes))
+        val document = requireNotNull(FolderDocumentJson.decode(bytes))
 
         assertEquals(true, SyncedPreferencesDocument.isReadable(document))
         assertFalse(SyncedPreferencesDocument.isNewerFormat(document))
@@ -48,8 +49,8 @@ class SyncedPreferencesUpgradeFrom550Test {
 
     @Test
     fun `the folder preferences 5_5_0 wrote are the same bytes again when nothing changed, so no run uploads them`() {
-        val document = requireNotNull(SyncedPreferencesDocument.decode(bytes))
+        val document = requireNotNull(FolderDocumentJson.decode(bytes))
 
-        assertContentEquals(bytes, SyncedPreferencesDocument.encode(SyncedPreferencesDocument.localDocument(document, preferences)))
+        assertContentEquals(bytes, FolderDocumentJson.encode(SyncedPreferencesDocument.localDocument(document, preferences)))
     }
 }

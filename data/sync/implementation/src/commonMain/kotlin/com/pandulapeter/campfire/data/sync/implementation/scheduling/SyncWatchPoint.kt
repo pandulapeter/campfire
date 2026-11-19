@@ -13,7 +13,6 @@ import com.pandulapeter.campfire.data.source.remote.api.sync.SyncFolder
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteChanges
 import com.pandulapeter.campfire.data.sync.implementation.SyncIndexEntry
 import com.pandulapeter.campfire.data.sync.implementation.SyncKey
-import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPreferencesDocument
 import com.pandulapeter.campfire.data.sync.implementation.run.folded
 import kotlinx.serialization.json.JsonObject
 
@@ -26,7 +25,7 @@ internal data class SyncWatchPoint(
     val folder: SyncFolder,
     val cursor: String,
     val index: Map<SyncKey, SyncIndexEntry>,
-    /** `preferences.json` as the run left it in the folder. */
+    /** The app's folder document as the run left it in the folder. */
     val syncedPreferences: JsonObject?,
 ) {
 
@@ -38,8 +37,8 @@ internal data class SyncWatchPoint(
 }
 
 /**
- * Whether [changes] hold a library file that is not as the run left it, or a document other than the preferences and
- * [stepDocuments], which nothing here can judge. Nothing a run settles depends on a step's documents, and a change of one
+ * Whether [changes] hold a library file that is not as the run left it, or a document other than [ownDocuments] (the
+ * folder document, which the caller judges, and the run steps'), which nothing here can judge. Nothing a run settles depends on a step's documents, and a change of one
  * anywhere (a share created or stopped, a run's own edits of the list included) would otherwise start a run on every
  * device in front. A
  * revision the index does not hold is another device's write, and a deletion of a file the index still holds is another
@@ -47,16 +46,12 @@ internal data class SyncWatchPoint(
  * Names are matched as the run files them, ignoring case and Unicode form where the index has no entry under the exact
  * one, so a service that holds two spellings apart keeps its exact matches.
  */
-internal fun SyncWatchPoint.hasOtherChangesThanPreferences(changes: RemoteChanges, stepDocuments: Set<String>) =
+internal fun SyncWatchPoint.hasOtherChanges(changes: RemoteChanges, ownDocuments: Set<String>) =
     changes.files.any { !isOwnRevision(SyncKey(kind = it.kind, name = it.name), it.revision) } ||
         changes.deletedFiles.any { isIndexed(SyncKey(kind = it.kind, name = it.name)) } ||
-        changes.documents.any { it != SyncedPreferencesDocument.FILE_NAME && it !in stepDocuments }
+        changes.documents.any { it !in ownDocuments }
 
 private fun SyncWatchPoint.isOwnRevision(key: SyncKey, revision: String) = index[key]?.let { it.remoteRevision == revision }
     ?: indexByFolded[key.folded()].orEmpty().any { it.remoteRevision == revision }
 
 private fun SyncWatchPoint.isIndexed(key: SyncKey) = key in index || key.folded() in indexByFolded
-
-/** Whether the folder's `preferences.json`, [bytes] or null where there is none, is not the one the run left there. */
-internal fun SyncWatchPoint.isOtherPreferences(bytes: ByteArray?) =
-    bytes?.let(SyncedPreferencesDocument::decode) != syncedPreferences

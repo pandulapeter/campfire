@@ -7,15 +7,15 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.data.sync.implementation.preferences
+package com.pandulapeter.campfire.data.sync.implementation.merge
 
 import kotlinx.serialization.json.JsonObject
 
 /**
- * The document a settle of [SyncedPreferencesSync] left as the last synced one, and the folder's revision of it, null
+ * The document a settle of [MergedFolderDocument.synchronize] left as the last synced one, and the folder's revision of it, null
  * where the folder does not hold that document.
  */
-internal data class SettledPreferences(
+internal data class SettledFolderDocument(
     val document: JsonObject,
     val revision: String?,
 )

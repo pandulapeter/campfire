@@ -9,7 +9,8 @@
  */
 package com.pandulapeter.campfire.data.sync.implementation
 
-import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPreferencesSync
+import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPreferencesCodec
+import com.pandulapeter.campfire.data.sync.implementation.merge.MergedFolderDocument
 import com.pandulapeter.campfire.data.sync.implementation.index.SyncIndexStore
 import com.pandulapeter.campfire.data.sync.implementation.connection.SyncConnectionManager
 import com.pandulapeter.campfire.data.sync.implementation.scheduling.SyncLibraryRefresher
@@ -75,7 +76,7 @@ internal fun TestScope.syncRepository(
     val syncProviders = SyncProviders(listOfNotNull(provider, otherProvider), storedProviderId)
     val stateHolder = SyncStateHolder(logger)
     val indexStore = SyncIndexStore(stateLocalSource, environment)
-    val syncedPreferencesSync = SyncedPreferencesSync(userPreferencesRepository, libraryFileLocalSource, logger)
+    val folderDocument = MergedFolderDocument(SyncedPreferencesCodec(userPreferencesRepository), libraryFileLocalSource, logger)
     val sharedLinksMirror = SharedLinksMirror(sharedLinksLocalSource, environment)
     val sharedLinksJournal = SharedLinksJournal(sharedLinksLocalSource, environment)
     val sharedLinksRegistry = SharedLinksRegistry(sharedLinksMirror, environment)
@@ -102,9 +103,10 @@ internal fun TestScope.syncRepository(
             setlistComparison = NoSetlistComparison,
             userPreferencesRepository = userPreferencesRepository,
             imageRepository = RecordingImageRepository(),
+            folderDocument = folderDocument,
             logger = logger,
         ),
-        syncedPreferencesSync = syncedPreferencesSync,
+        folderDocument = folderDocument,
         steps = steps,
         indexStore = indexStore,
         libraryRefresher = SyncLibraryRefresher(LibrarySyncObserver(songRepository, setlistRepository, RecordingImageRepository()), environment),
@@ -115,7 +117,7 @@ internal fun TestScope.syncRepository(
         runner = runner,
         stateHolder = stateHolder,
         libraryChanges = LibraryChanges(),
-        syncedPreferencesSync = syncedPreferencesSync,
+        folderDocument = folderDocument,
         connectivityMonitor = connectivityMonitor,
         environment = environment,
     )
@@ -139,6 +141,7 @@ internal fun TestScope.syncRepository(
             runner = runner,
             scheduler = scheduler,
             connectivityMonitor = connectivityMonitor,
+            folderDocument = folderDocument,
             steps = steps,
             environment = environment,
         ),

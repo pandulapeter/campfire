@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.sync.implementation.run
 
 import com.pandulapeter.campfire.data.sync.implementation.index.SyncIndexDocument
+import com.pandulapeter.campfire.data.sync.implementation.merge.MergedFolderDocument
 import com.pandulapeter.campfire.data.sync.implementation.SyncIndexEntry
 import com.pandulapeter.campfire.data.sync.implementation.SyncKey
 import com.pandulapeter.campfire.data.sync.implementation.SyncOperation
@@ -86,6 +87,11 @@ internal class SyncEngine(
      * spared a run.
      */
     private val largeFileThreshold: Long,
+    /**
+     * The app's folder document, whose base the index keeps: carried through the run, without the entries of the files
+     * a `KEEP_AND_UPLOAD` makes new here, and written into every index with the fields this version owns.
+     */
+    private val folderDocument: MergedFolderDocument<*>,
     /** Runs the deletion of pictures here exclusively of the app's writes of a picture and its song. */
     imageWritesGate: suspend (suspend (held: Set<String>) -> Unit) -> Unit = { it(emptySet()) },
 ) {
@@ -107,7 +113,7 @@ internal class SyncEngine(
         // An index written for a different account describes a different remote folder, and acting on it would read
         // that folder's absent files as deletions of this one's songs.
         var index = document.takeIf { it.accountId == accountId }?.toIndex(collections).orEmpty()
-        var syncedPreferences = document.syncedPreferencesBase().takeIf { document.accountId == accountId }
+        var syncedPreferences = folderDocument.baseIn(document).takeIf { document.accountId == accountId }
         var summary = SyncSummary()
         val run = SyncRun(
             provider = provider,
@@ -165,6 +171,7 @@ internal class SyncEngine(
                 canHoldFileName = libraryFileLocalSource::canHoldFileName,
                 deletionPolicy = deletionPolicy,
                 syncedPreferences = syncedPreferences,
+                withoutEntriesOf = folderDocument::withoutEntriesOf,
             )
             index = prepared.index
             syncedPreferences = prepared.syncedPreferences
@@ -239,6 +246,7 @@ internal class SyncEngine(
                 lastSyncedAt = document.lastSyncedAt,
                 index = index,
                 syncedPreferences = syncedPreferences,
+                syncedPreferencesFields = folderDocument.ownedFields,
             ),
         )
     }
@@ -290,6 +298,7 @@ internal class SyncEngine(
                     lastSyncedAt = run.lastSyncedAt,
                     index = updated,
                     syncedPreferences = pass.syncedPreferences,
+                    syncedPreferencesFields = folderDocument.ownedFields,
                 ).copy(isRunInProgress = true)
             }
         }

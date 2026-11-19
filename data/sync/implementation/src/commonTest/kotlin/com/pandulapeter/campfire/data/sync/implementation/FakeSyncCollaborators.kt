@@ -9,6 +9,10 @@
  */
 package com.pandulapeter.campfire.data.sync.implementation
 
+import com.pandulapeter.campfire.data.model.Logger
+import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource
+import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPreferencesCodec
+import com.pandulapeter.campfire.data.sync.implementation.merge.MergedFolderDocument
 import com.pandulapeter.campfire.data.sync.implementation.index.SyncIndexDocument
 import com.pandulapeter.campfire.data.sync.implementation.index.SyncIndexStore
 import com.pandulapeter.campfire.data.model.song.EditedSongs
@@ -215,6 +219,12 @@ internal class RecordingSongRepository(
     override suspend fun editSongs(fileNames: Collection<String>, edit: (text: String) -> String): EditedSongs =
         throw UnsupportedOperationException()
 }
+
+/** Campfire's folder document over [preferences] and [library], as `DataSyncModule.folderDocument` builds it. */
+internal fun preferencesDocument(
+    library: LibraryFileLocalSource,
+    preferences: UserPreferencesRepository = FakeUserPreferencesRepository(),
+) = MergedFolderDocument(codec = SyncedPreferencesCodec(preferences), libraryFileLocalSource = library, logger = Logger.Standard)
 
 /**
  * Stands in for the setlist list that sync tells to read the library again, and records what it was told: how many whole

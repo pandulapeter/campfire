@@ -9,7 +9,7 @@
 -->
 # Plan: sync's knowledge of songs behind seams
 
-**Status:** in progress: C1, C2, and C3 done; C4 is next. Checked against the code on 2026-11-18 (`main` at 85e23a2db). Split out of
+**Status:** in progress: C1, C2, C3, and C4 done; C5 is next. Checked against the code on 2026-11-18 (`main` at 85e23a2db). Split out of
 [sync-library-extraction.md](sync-library-extraction.md), which moves the result into `:libs:sync:*` modules later.
 
 **Goal:** the sync engine's rules (what to upload, download, delete, keep, and call a conflict) depend on a few narrow
@@ -107,9 +107,33 @@ touches platform source sets also compiles iOS (`linkDebugFrameworkIosSimulatorA
   `LibraryFiles.isLibraryFileNamedFor`, Campfire's content-name rule (`SyncCollection` could carry it, as its plan's
   "Names" says), and `run/`'s KDoc and log lines still speak of songs and pictures (C7).
 - **C4. Observer, run steps, and synced preferences split.** Seams 5, 6, and 7. Done: `run/`, `index/`, `scheduling/`,
-  `connection/`, and the merge import nothing from `data.repository`, `data.model.song|setlist|preferences|share`, or
-  `shared/`; `SyncedPreferencesTest` and `SyncRunnerPreferencesRevisionTest` unchanged; `SyncSimulationTest` run by
-  hand with far more seeds.
+  `connection/`, and `merge/` import nothing from `data.repository`, `data.model.song|setlist|preferences|share`,
+  `shared/`, `preferences/`, chordpro, or `LibraryCollections`; `SyncedPreferencesTest` and
+  `SyncRunnerPreferencesRevisionTest` changed only at call sites (the JSON's bytes now come from `FolderDocumentJson`);
+  `SyncSimulationTest` passed 50,000 seeds by hand.
+  - **Seam 5.** `scheduling/SyncLibraryObserver` is `awaitFirstRead`, `refresh(keys)`, and `rescan`, what the code
+    needed: `onFileChanged`, `scheduleLiveRefresh`, and `refreshAfterRun` are the throttle's and stay
+    `SyncLibraryRefresher`'s. Campfire's is `LibrarySyncObserver` (the song, setlist, and image repositories).
+  - **Seam 7.** `scheduling/SyncRunStep` is an interface rather than the sketched class: besides `id`, `run`, and
+    `forget` it names its `documentNames` and reads one another device changed (`onDocumentChanged`), which is how
+    `SyncRemoteWatcher` stopped naming the shared links. `run` takes the folder, the index, the listing's document
+    revisions, and its shared files. `SyncRunSteps` wraps the list (`DataSyncModule.syncRunSteps`); Campfire's one step
+    is `shared/SharedCopyStep`. `SyncSummary.failedSteps` holds ids; Campfire's are `LibrarySyncSteps` in
+    `:data:model`, with `havePreferencesFailed` an extension there, so Settings reads the same.
+  - **Seam 6.** The folder document is not a step: the index keeps its base and revision, the run pairs it with the
+    listing, a stopped run saves its base, and the watch point compares it, so `SyncRunner` settles it before the steps
+    and reports its failure under the codec's `id`. `merge/MergedFolderDocument` (one instance, Koin's
+    `DataSyncModule.folderDocument`, taken as `MergedFolderDocument<*>`) holds the generic settle, `localChanges`, and
+    what the engine, runner, and watcher ask of the base (`baseIn`, `unchangedIn`, `withoutEntriesOf`, `isOtherThan`);
+    `merge/FolderDocumentJson` the bytes and the three-way JSON merge; `merge/MergedFolderDocumentCodec` the codec:
+    shape (owned fields, readable, newer format, keys, respelling, the merge's tidying) and the device's values
+    (`values`, `load`, `apply`). Campfire's is `preferences/SyncedPreferencesCodec` over `SyncedPreferencesDocument`;
+    the codec's `keyedBy` collection replaces `PassListing`'s `LibraryCollections.SONGS`. `SyncIndexDocument.of` takes
+    the owned fields. The tests' notes app has a codec too (`merge/NotesSettingsCodec`).
+  - Also: `connection/` answered `SyncRepository.RestoreResult`, a `data.repository` type; it answers
+    `RestoredConnection`, which `SyncRepositoryImpl` maps.
+  - For C5–C7: the index's keys still say `syncedPreferences*` (stored names); C6's guard counts `merge/` among the engine's
+    packages and forbids them `preferences/` (Campfire's codec) too; C7's docs describe the observer, steps, and codec.
 - **C5. Provider core apart from Dropbox.** Seam 8. Done: `DropboxAuthorizationTest` checks the same authorization URL;
   Android and iOS sign-in, the desktop loopback, and the web redirect compile; `auth/`, `network/`, and `crypto/`
   import nothing from `dropbox/`.
@@ -143,7 +167,8 @@ the provider-core packages, constructed with its own `OAuthRedirectConfiguration
 
 ## Verification
 
-Behaviour is unchanged when, after every step, these pass without edits other than imports and constructor wiring:
+Behaviour is unchanged when, after every step, these pass without edits other than imports and constructor wiring
+(and, from C4, the folder document's bytes read through `FolderDocumentJson`):
 `TwoDeviceSyncTest`, `SyncSimulationTest` (and by hand with far more seeds after C4), the engine, planner, scheduling,
 connection, and shared-links tests, `SyncPlannerUpgradeFrom520Test`, `SharedLinksUpgradeFrom520Test`,
 `SharedLinksUpgradeFrom540Test`, C1's `*UpgradeFrom550Test`s, and the Dropbox and transport tests. Once, after C5: a live sync of an

@@ -9,11 +9,10 @@
  */
 package com.pandulapeter.campfire.data.sync.implementation.preferences
 
-import com.pandulapeter.campfire.data.model.JsonBounds
 import com.pandulapeter.campfire.data.model.preferences.MetronomeSettings
 import com.pandulapeter.campfire.data.model.preferences.SongLayout
 import com.pandulapeter.campfire.data.model.song.Song
-import kotlinx.serialization.json.Json
+import com.pandulapeter.campfire.data.sync.implementation.merge.FolderDocumentJson
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
@@ -21,8 +20,8 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.intOrNull
 
 /**
- * `preferences.json`, the document at the top of the cloud folder that carries [SyncedPreferences], and the three-way
- * merge every run settles it with.
+ * `preferences.json`, the document at the top of the cloud folder that carries [SyncedPreferences], as
+ * [SyncedPreferencesCodec] hands it to the merge every run settles it with (`MergedFolderDocument`).
  *
  * The document is kept as a JSON tree rather than decoded into a class, so that it can grow without an older version
  * losing what a newer one wrote: a song's entry may gain a field, and settings that have nothing to do with the songs
@@ -51,7 +50,9 @@ import kotlinx.serialization.json.intOrNull
  * need to know either: a color a later version added travels on untouched.
  *
  * Songs are keyed by file name, as the library keys them, and an entry left with no fields is dropped, so the
- * document only ever names songs that something is set for.
+ * document only ever names songs that something is set for. A song with transposition, tempo, capo, and one 16-beat
+ * signature's levels is about 30 tokens, so the bounds a folder document is read within hold about 20,000 configured songs;
+ * the 4 levels the document nests are far within the depth.
  */
 internal object SyncedPreferencesDocument {
 
@@ -77,28 +78,6 @@ internal object SyncedPreferencesDocument {
     /** The furthest a transposition can sensibly be from the key the song is written in: an octave either way. */
     private val TRANSPOSITION_RANGE = -11..11
 
-    private val json = Json { prettyPrint = true }
-
-    /**
-     * Null for a document that is not a JSON object, or is past [JsonBounds], which the run then replaces, keeping this
-     * device's values, as if the folder had not changed it. Any other object is returned whatever its shape, so that
-     * [isNewerFormat] sees it.
-     */
-    fun decode(bytes: ByteArray): JsonObject? {
-        val text = bytes.decodeToString()
-        // The document comes from a folder anyone can edit by hand, and the parser would overflow the stack or the heap
-        // with an `Error` past these bounds. The budget is the shared one, not lower: a refused document is replaced
-        // with this device's values, so a real one refused for its size would overwrite every other device's settings.
-        // A song with transposition, tempo, capo, and one 16-beat signature's levels is about 30 tokens, so the budget
-        // holds about 20,000 configured songs; the 4 levels the document nests are far within the depth.
-        if (!JsonBounds.isWithin(text, maxTokens = JsonBounds.MAX_TOKENS)) return null
-        return try {
-            json.parseToJsonElement(text) as? JsonObject
-        } catch (exception: IllegalArgumentException) {
-            null
-        }
-    }
-
     /**
      * Whether [document] holds what every document this version writes does, a [SONGS] object. One that does not is
      * replaced like one that does not decode.
@@ -112,12 +91,6 @@ internal object SyncedPreferencesDocument {
      */
     fun isNewerFormat(document: JsonObject) =
         ((document[VERSION] as? JsonPrimitive)?.takeUnless { it.isString }?.intOrNull ?: FORMAT_VERSION) > FORMAT_VERSION
-
-    /** With every object's keys sorted, so that the same preferences are always the same bytes, wherever written. */
-    fun encode(document: JsonObject) = json.encodeToString(JsonElement.serializer(), document.sorted()).encodeToByteArray()
-
-    private fun JsonElement.sorted(): JsonElement =
-        if (this is JsonObject) JsonObject(entries.sortedBy { it.key }.associate { (key, value) -> key to value.sorted() }) else this
 
     /**
      * What this device holds, as a document: [base] - the document the last run left behind, or null where there was
@@ -258,16 +231,9 @@ internal object SyncedPreferencesDocument {
         return JsonObject(document + (SONGS to JsonObject(songs.filterKeys(isKept))))
     }
 
-    /**
-     * Settles [local] and [remote] against [base], what both sides held after the last run - null where no run has
-     * synced the document yet, which only ever adds. It goes down the tree and decides every value on its own, so two
-     * devices that changed different songs, or different fields of one song, both keep their change. Where both sides
-     * changed the same value, a change beats a removal, as an edit beats a deletion for a file; two different changes
-     * keep this device's, since it is the one in front of the user. Nothing here can keep both, unlike a file: the
-     * values are small enough that losing one costs a tap, and a run that wants a clock to decide has none it can trust.
-     */
+    /** [FolderDocumentJson.merge], without the entries it leaves empty that [localDocument] would never write. */
     fun merge(base: JsonObject?, local: JsonObject, remote: JsonObject?): JsonObject {
-        val merged = (mergeValue(base, local, remote) as? JsonObject) ?: JsonObject(emptyMap())
+        val merged = FolderDocumentJson.merge(base, local, remote)
         // Each side can take a different field off one song, which leaves an entry neither of them holds any more.
         val withoutEmptySongs = withSongsWhere(merged) { (merged[SONGS] as? JsonObject)?.get(it) != JsonObject(emptyMap()) }
         val chords = withoutEmptySongs[CHORDS] as? JsonObject ?: return withoutEmptySongs
@@ -276,28 +242,4 @@ internal object SyncedPreferencesDocument {
         // since that one [localDocument] does write once a base had it.
         return JsonObject(withoutEmptySongs + (CHORDS to JsonObject(chords.filterValues { it != JsonObject(emptyMap()) })))
     }
-
-    private fun mergeValue(base: JsonElement?, local: JsonElement?, remote: JsonElement?): JsonElement? = when {
-        local == remote -> local
-        local == base -> remote
-        remote == base -> local
-        local.isObjectOrRemovedFrom(base) && remote.isObjectOrRemovedFrom(base) -> {
-            val baseObject = base as? JsonObject
-            val localObject = local as? JsonObject ?: JsonObject(emptyMap())
-            val remoteObject = remote as? JsonObject ?: JsonObject(emptyMap())
-            JsonObject(
-                (localObject.keys + remoteObject.keys).mapNotNull { key ->
-                    mergeValue(baseObject?.get(key), localObject[key], remoteObject[key])?.let { key to it }
-                }.toMap(),
-            )
-        }
-        else -> local ?: remote
-    }
-
-    /**
-     * An object, or one the base held and this side removed whole, which is merged as an empty object: a song reset on
-     * one side and changed on the other keeps only the other side's change, rather than everything the other side
-     * holds for it. Without a base object a removal cannot be told from never having had it, so the merge only adds.
-     */
-    private fun JsonElement?.isObjectOrRemovedFrom(base: JsonElement?) = this is JsonObject || (this == null && base is JsonObject)
 }

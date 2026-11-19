@@ -27,6 +27,7 @@ import com.pandulapeter.campfire.data.sync.implementation.defaultUserPreferences
 import com.pandulapeter.campfire.data.sync.implementation.encoded
 import com.pandulapeter.campfire.data.sync.implementation.index.SyncIndexDocument
 import com.pandulapeter.campfire.data.sync.implementation.index.indexKey
+import com.pandulapeter.campfire.data.sync.implementation.merge.FolderDocumentJson
 import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPreferencesDocument
 import com.pandulapeter.campfire.data.sync.implementation.song
 import com.pandulapeter.campfire.data.sync.implementation.syncRepository
@@ -56,7 +57,7 @@ class SyncRunnerStoppedLateTest {
         // at its end is the one that reads it.
         val provider = FakeSyncProvider(files = mapOf(song(1) to ONE, song(2) to ONE), account = TEST_ACCOUNT)
         provider.onDownload = { key -> if (key == song(2)) delay(100) }
-        provider.documents[SyncedPreferencesDocument.FILE_NAME] = SyncedPreferencesDocument.encode(folderDocument) to "r1"
+        provider.documents[SyncedPreferencesDocument.FILE_NAME] = FolderDocumentJson.encode(folderDocument) to "r1"
         val stateLocalSource = FakeSyncIndexLocalSource()
         val refreshStarted = CompletableDeferred<Unit>()
         val songRepository = RecordingSongRepository(
@@ -91,13 +92,14 @@ class SyncRunnerStoppedLateTest {
         val base = document("""{"song_1.cho":{"capo":1}}""")
         val folderDocument = document("""{"song_1.cho":{"capo":2}}""")
         val provider = FakeSyncProvider(files = mapOf(song(1) to ONE), account = TEST_ACCOUNT)
-        provider.documents[SyncedPreferencesDocument.FILE_NAME] = SyncedPreferencesDocument.encode(folderDocument) to "r1"
+        provider.documents[SyncedPreferencesDocument.FILE_NAME] = FolderDocumentJson.encode(folderDocument) to "r1"
         val stateLocalSource = FakeSyncIndexLocalSource(
             index = SyncIndexDocument.of(
                 providerId = SyncProviderId.DROPBOX.id,
                 accountId = TEST_ACCOUNT.indexKey(),
                 lastSyncedAt = 1,
                 syncedPreferences = base,
+                syncedPreferencesFields = SyncedPreferencesDocument.OWNED_FIELDS,
                 index = mapOf(song(1) to SyncIndexEntry(localHash = localContentHash(ONE), remoteRevision = "r1")),
             ).encoded(),
         )
@@ -132,7 +134,7 @@ class SyncRunnerStoppedLateTest {
         repository.syncState.first { (it as? SyncState.Connected)?.lastOutcome is SyncOutcome.Success }
 
         val uploaded = SyncedPreferencesDocument.preferencesOf(
-            assertNotNull(SyncedPreferencesDocument.decode(provider.documents.getValue(SyncedPreferencesDocument.FILE_NAME).first)),
+            assertNotNull(FolderDocumentJson.decode(provider.documents.getValue(SyncedPreferencesDocument.FILE_NAME).first)),
         )
         assertEquals(mapOf("song_1.cho" to 2), uploaded.transpositions)
         assertEquals(mapOf("song_1.cho" to 2), uploaded.capos)

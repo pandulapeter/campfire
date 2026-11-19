@@ -28,6 +28,7 @@ import com.pandulapeter.campfire.data.source.remote.api.sync.SyncAuthorizationEx
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncNetworkException
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncRemoteStorageFullException
 import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash
+import com.pandulapeter.campfire.data.sync.implementation.merge.FolderDocumentJson
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
@@ -264,6 +265,7 @@ class SyncRepositoryImplTest {
                 accountId = TEST_ACCOUNT.indexKey(),
                 lastSyncedAt = 1,
                 syncedPreferences = null,
+                syncedPreferencesFields = SyncedPreferencesDocument.OWNED_FIELDS,
                 index = (1..10).associate {
                     song(it) to SyncIndexEntry(localHash = localContentHash("Song $it".encodeToByteArray()), remoteRevision = "r1")
                 },
@@ -307,6 +309,7 @@ class SyncRepositoryImplTest {
                 accountId = TEST_ACCOUNT.indexKey(),
                 lastSyncedAt = 1,
                 syncedPreferences = null,
+                syncedPreferencesFields = SyncedPreferencesDocument.OWNED_FIELDS,
                 index = library.mapValues { (_, bytes) -> SyncIndexEntry(localHash = localContentHash(bytes), remoteRevision = "r1") },
             ).encoded(),
         )
@@ -511,6 +514,7 @@ class SyncRepositoryImplTest {
             accountId = TEST_ACCOUNT.indexKey(),
             lastSyncedAt = 1,
             syncedPreferences = null,
+            syncedPreferencesFields = SyncedPreferencesDocument.OWNED_FIELDS,
             index = mapOf(
                 song(1) to SyncIndexEntry(localHash = localContentHash("One".encodeToByteArray()), remoteRevision = "r1"),
             ),
@@ -613,10 +617,11 @@ class SyncRepositoryImplTest {
             accountId = TEST_ACCOUNT.indexKey(),
             lastSyncedAt = 1,
             syncedPreferences = base,
+            syncedPreferencesFields = SyncedPreferencesDocument.OWNED_FIELDS,
             index = mapOf(song(1) to SyncIndexEntry(localHash = localContentHash(SONG_BYTES), remoteRevision = "r1")),
         ).copy(syncedPreferencesFields = syncedPreferencesFields)
         val provider = FakeSyncProvider(files = mapOf(song(1) to SONG_BYTES), account = TEST_ACCOUNT)
-        provider.documents[SyncedPreferencesDocument.FILE_NAME] = SyncedPreferencesDocument.encode(base) to "d1"
+        provider.documents[SyncedPreferencesDocument.FILE_NAME] = FolderDocumentJson.encode(base) to "d1"
         return Triple(
             provider,
             FakeSyncIndexLocalSource(index = index.encoded()),
@@ -643,7 +648,7 @@ class SyncRepositoryImplTest {
         val outcome = world.repository.syncState.first { (it as? SyncState.Connected)?.lastOutcome is SyncOutcome.Success }
         assertFalse(assertIs<SyncOutcome.Success>((outcome as SyncState.Connected).lastOutcome).summary.havePreferencesFailed)
         val uploaded = SyncedPreferencesDocument.preferencesOf(
-            assertNotNull(SyncedPreferencesDocument.decode(world.provider.documents.getValue(SyncedPreferencesDocument.FILE_NAME).first)),
+            assertNotNull(FolderDocumentJson.decode(world.provider.documents.getValue(SyncedPreferencesDocument.FILE_NAME).first)),
         )
         assertEquals(mapOf("song_1.cho" to 2), uploaded.transpositions)
     }
@@ -684,13 +689,14 @@ class SyncRepositoryImplTest {
     private fun TestScope.preferencesOnTheirWayUp(failure: Exception): PreferencesWorld {
         val folderDocument = Json.parseToJsonElement("""{"version":1,"songs":{"song_1.cho":{"capo":2}}}""").jsonObject
         val provider = FakeSyncProvider(files = mapOf(song(1) to SONG_BYTES), account = TEST_ACCOUNT)
-        provider.documents[SyncedPreferencesDocument.FILE_NAME] = SyncedPreferencesDocument.encode(folderDocument) to "r1"
+        provider.documents[SyncedPreferencesDocument.FILE_NAME] = FolderDocumentJson.encode(folderDocument) to "r1"
         provider.onUploadDocument = { throw failure }
         val index = SyncIndexDocument.of(
             providerId = SyncProviderId.DROPBOX.id,
             accountId = TEST_ACCOUNT.indexKey(),
             lastSyncedAt = 1,
             syncedPreferences = Json.parseToJsonElement("""{"version":1,"songs":{"song_1.cho":{"capo":1}}}""").jsonObject,
+            syncedPreferencesFields = SyncedPreferencesDocument.OWNED_FIELDS,
             index = mapOf(song(1) to SyncIndexEntry(localHash = localContentHash(SONG_BYTES), remoteRevision = "r1")),
         )
         val stateLocalSource = FakeSyncIndexLocalSource(index = index.encoded())

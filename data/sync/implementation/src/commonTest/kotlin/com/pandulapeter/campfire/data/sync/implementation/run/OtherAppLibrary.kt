@@ -23,12 +23,15 @@ import com.pandulapeter.campfire.data.sync.implementation.ACCOUNT_ID
 import com.pandulapeter.campfire.data.sync.implementation.SyncIndexEntry
 import com.pandulapeter.campfire.data.sync.implementation.SyncKey
 import com.pandulapeter.campfire.data.sync.implementation.index.SyncIndexDocument
+import com.pandulapeter.campfire.data.sync.implementation.merge.MergedFolderDocument
+import com.pandulapeter.campfire.data.sync.implementation.merge.NotesSettingsCodec
 import kotlin.test.assertIs
 
 /**
  * The library of an app that is not Campfire, a notes app's, which the engine has to serve by its seams alone: notes
  * name the files they show by a `see:<name>;` token ([references]), and a checklist's `ticked:…;` token is filled in by
- * every device on its own ([conflictPolicies]). Nothing here is read the way Campfire reads its songs or setlists.
+ * every device on its own ([conflictPolicies]); its settings are `NotesSettingsCodec`'s. Nothing here is read the way
+ * Campfire reads its songs or setlists.
  */
 internal object OtherAppLibrary {
 
@@ -76,6 +79,7 @@ internal object OtherAppLibrary {
         accountId = ACCOUNT_ID,
         lastSyncedAt = 1,
         syncedPreferences = null,
+        syncedPreferencesFields = NotesSettingsCodec.OWNED_FIELDS,
         index = files.associate { (key, bytes) -> key to SyncIndexEntry(localHash = localHashOf(key, bytes), remoteRevision = "r1") },
     )
 
@@ -91,6 +95,7 @@ internal object OtherAppLibrary {
                 logger = Logger.Standard,
                 collections = collections,
                 largeFileThreshold = MAX_SIZE,
+                folderDocument = MergedFolderDocument(NotesSettingsCodec(), local, Logger.Standard),
                 imageWritesGate = { block -> block(emptySet()) },
             ).synchronize(
                 provider = provider,

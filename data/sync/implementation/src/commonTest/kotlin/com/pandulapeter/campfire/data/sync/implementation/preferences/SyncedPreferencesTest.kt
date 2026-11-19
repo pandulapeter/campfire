@@ -14,13 +14,14 @@ import com.pandulapeter.campfire.data.sync.implementation.FakeSyncProvider
 import com.pandulapeter.campfire.data.sync.implementation.FakeUserPreferencesRepository
 import com.pandulapeter.campfire.data.sync.implementation.SyncKey
 import com.pandulapeter.campfire.data.sync.implementation.defaultUserPreferences
+import com.pandulapeter.campfire.data.sync.implementation.preferencesDocument
 import com.pandulapeter.campfire.data.sync.implementation.encoded
 import com.pandulapeter.campfire.data.sync.implementation.song
 import com.pandulapeter.campfire.data.sync.implementation.synchronize
 import com.pandulapeter.campfire.data.model.library.LibraryCollections
-import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteDocument
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteWriteResult
+import com.pandulapeter.campfire.data.sync.implementation.merge.FolderDocumentJson
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
@@ -205,27 +206,27 @@ class SyncedPreferencesTest {
 
     @Test
     fun `the same preferences are always the same bytes`() = assertEquals(
-        SyncedPreferencesDocument.encode(Json.parseToJsonElement("""{"songs":{"b.cho":{"tempo":1},"a.cho":{"capo":1}},"version":1}""").jsonObject)
+        FolderDocumentJson.encode(Json.parseToJsonElement("""{"songs":{"b.cho":{"tempo":1},"a.cho":{"capo":1}},"version":1}""").jsonObject)
             .decodeToString(),
-        SyncedPreferencesDocument.encode(Json.parseToJsonElement("""{"version":1,"songs":{"a.cho":{"capo":1},"b.cho":{"tempo":1}}}""").jsonObject)
+        FolderDocumentJson.encode(Json.parseToJsonElement("""{"version":1,"songs":{"a.cho":{"capo":1},"b.cho":{"tempo":1}}}""").jsonObject)
             .decodeToString(),
     )
 
     @Test
-    fun `a document that is not one is read as none`() = assertNull(SyncedPreferencesDocument.decode("[1, 2".encodeToByteArray()))
+    fun `a document that is not one is read as none`() = assertNull(FolderDocumentJson.decode("[1, 2".encodeToByteArray()))
 
     @Test
     fun `a folder document nested past the bound reads as unreadable`() {
         val text = "{\"songs\":{},\"x\":" + "[".repeat(100_000) + "]".repeat(100_000) + "}"
 
-        assertNull(SyncedPreferencesDocument.decode(text.encodeToByteArray()))
+        assertNull(FolderDocumentJson.decode(text.encodeToByteArray()))
     }
 
     @Test
     fun `a folder document past the token budget reads as unreadable`() {
         val text = "{\"songs\":{},\"x\":[" + List(600_001) { "0" }.joinToString(",") + "]}"
 
-        assertNull(SyncedPreferencesDocument.decode(text.encodeToByteArray()))
+        assertNull(FolderDocumentJson.decode(text.encodeToByteArray()))
     }
 
     @Test
@@ -723,16 +724,16 @@ class SyncedPreferencesTest {
     }
 
     private fun sync(preferences: FakeUserPreferencesRepository, library: FakeLibraryFileLocalSource) =
-        SyncedPreferencesSync(userPreferencesRepository = preferences, libraryFileLocalSource = library, logger = Logger.Standard)
+        preferencesDocument(library, preferences)
 
     private fun library(vararg songs: String) = FakeLibraryFileLocalSource(
         files = songs.associate { SyncKey(kind = LibraryCollections.SONGS, name = it) to it.encodeToByteArray() },
     )
 
     private fun remoteDocumentOf(provider: FakeSyncProvider) =
-        SyncedPreferencesDocument.decode(provider.documents.getValue(SyncedPreferencesDocument.FILE_NAME).first)!!
+        FolderDocumentJson.decode(provider.documents.getValue(SyncedPreferencesDocument.FILE_NAME).first)!!
 
-    private fun encoded(songs: String) = SyncedPreferencesDocument.encode(document(songs))
+    private fun encoded(songs: String) = FolderDocumentJson.encode(document(songs))
 
     /** A document holding [songs] and nothing else, as this version writes one. */
     private fun document(songs: String) = JsonObject(mapOf("version" to JsonPrimitive(1), "songs" to Json.parseToJsonElement(songs)))

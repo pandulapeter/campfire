@@ -23,7 +23,6 @@ import com.pandulapeter.campfire.data.model.sync.SyncOutcome
 import com.pandulapeter.campfire.data.model.sync.SyncProviderId
 import com.pandulapeter.campfire.data.model.sync.SyncState
 import com.pandulapeter.campfire.data.model.recovering
-import com.pandulapeter.campfire.data.repository.api.SyncRepository
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import com.pandulapeter.campfire.data.source.local.api.SyncIndexLocalSource
 import com.pandulapeter.campfire.data.source.remote.api.sync.PendingAuthorizationStore
@@ -106,7 +105,7 @@ internal class SyncConnectionManager(
         restoreConnection(onReturnedFromAuthorization)
     }
 
-    private suspend fun restoreConnection(onReturnedFromAuthorization: () -> Unit): SyncRepository.RestoreResult {
+    private suspend fun restoreConnection(onReturnedFromAuthorization: () -> Unit): RestoredConnection {
         // A consent page the app was sent away to, answered while it was not running - the web's ordinary case, and
         // Android's once the process was reclaimed behind the browser. Checked first because it decides what the
         // stored credentials are about to become. A redirect that no authorization is waiting for answers nothing -
@@ -123,7 +122,7 @@ internal class SyncConnectionManager(
             }
         }
         if (redirectUri != null && pending != null) {
-            return SyncRepository.RestoreResult(
+            return RestoredConnection(
                 isConnected = finishAuthorizationAtStartUp(redirectUri, pending.providerId, onReturnedFromAuthorization),
                 wasInterrupted = false,
             )
@@ -142,7 +141,7 @@ internal class SyncConnectionManager(
         // all live in the state, and reading them again from the disk would replace them with what the index said when
         // that run started - "a run is going", which read at start up means "a run was interrupted".
         (stateHolder.value as? SyncState.Connected)?.let { connected ->
-            return SyncRepository.RestoreResult(
+            return RestoredConnection(
                 isConnected = true,
                 wasInterrupted = !connected.isSyncing && connected.lastOutcome == SyncOutcome.Interrupted,
             )
@@ -202,7 +201,7 @@ internal class SyncConnectionManager(
         if (storedAccount != null) {
             accountRefresh.start(connected)
         }
-        return SyncRepository.RestoreResult(
+        return RestoredConnection(
             isConnected = true,
             wasInterrupted = wasInterrupted,
         )
@@ -476,7 +475,7 @@ internal class SyncConnectionManager(
     }
 
     private companion object {
-        val disconnectedResult = SyncRepository.RestoreResult(
+        val disconnectedResult = RestoredConnection(
             isConnected = false,
             wasInterrupted = false,
         )

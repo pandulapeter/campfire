@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.data.sync.implementation.run
 
+import com.pandulapeter.campfire.data.sync.implementation.FakeLibraryFileLocalSource
+import com.pandulapeter.campfire.data.sync.implementation.preferencesDocument
 import com.pandulapeter.campfire.data.sync.implementation.LocalFileState
 import com.pandulapeter.campfire.data.sync.implementation.SyncIndexEntry
 import com.pandulapeter.campfire.data.sync.implementation.SyncKey
@@ -130,6 +132,7 @@ class PassListingTest {
         canHoldFileName = canHoldFileName,
         deletionPolicy = deletionPolicy,
         syncedPreferences = syncedPreferences,
+        withoutEntriesOf = preferencesDocument(FakeLibraryFileLocalSource())::withoutEntriesOf,
     )
 
     private fun song(name: String) = SyncKey(kind = LibraryCollections.SONGS, name = "$name.cho")

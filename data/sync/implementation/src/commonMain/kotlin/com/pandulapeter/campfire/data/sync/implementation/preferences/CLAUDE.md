@@ -13,8 +13,11 @@
 (transposition, tempo, capo, `autoScrollSpeed`, `beatLevels`), chord shapes (`chords`), and tag colors (`tags`);
 `chords` and `tags` are written only once non-empty, so older documents keep their bytes.
 
-- Settled by `SyncedPreferencesSync` only after a run the engine completed: a three-way merge, value by value, of this
-  device's, the folder's, and the base the index keeps. A change beats a removal; two changes keep this device's.
+- Campfire's codec (`SyncedPreferencesCodec`, over `SyncedPreferencesDocument` and `UserPreferencesRepository`) of the
+  generic `merge/MergedFolderDocument`, which settles it only after a run the engine completed: a three-way merge, value
+  by value, of this device's, the folder's, and the base the index keeps. A change beats a removal; two changes keep
+  this device's. Everything below holds for any codec's document; the merge knows songs only as entries keyed by the
+  codec's collection.
 - Merged as a JSON tree, so unknown fields and unreadable values pass through untouched. The index names the fields the
   base's writer owned; others are removed from the base so a newly owned field merges as add-only. A new field joins
   `SyncedPreferencesDocument.OWNED_FIELDS`.

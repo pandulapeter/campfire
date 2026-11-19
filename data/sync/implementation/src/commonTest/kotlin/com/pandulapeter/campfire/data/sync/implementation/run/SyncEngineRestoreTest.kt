@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.sync.implementation.run
 
+import com.pandulapeter.campfire.data.sync.implementation.preferencesDocument
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.library.LibraryCollections
 import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
@@ -47,6 +48,7 @@ class SyncEngineRestoreTest {
         logger = Logger.Standard,
         collections = LibraryCollections.all,
         largeFileThreshold = LibraryCollections.LARGE_FILE_THRESHOLD,
+        folderDocument = preferencesDocument(local),
     )
     private var index = renamedIndexOf(song(1) to SONG, revision = "r1")
 

@@ -22,6 +22,7 @@ import com.pandulapeter.campfire.data.sync.implementation.FakeConnectivityMonito
 import com.pandulapeter.campfire.data.sync.implementation.FakeLibraryFileLocalSource
 import com.pandulapeter.campfire.data.sync.implementation.FakeSyncIndexLocalSource
 import com.pandulapeter.campfire.data.sync.implementation.LibrarySyncObserver
+import com.pandulapeter.campfire.data.sync.implementation.preferencesDocument
 import com.pandulapeter.campfire.data.sync.implementation.FakeSyncProvider
 import com.pandulapeter.campfire.data.sync.implementation.FakeUserPreferencesRepository
 import com.pandulapeter.campfire.data.sync.implementation.NoSetlistComparison
@@ -33,8 +34,8 @@ import com.pandulapeter.campfire.data.sync.implementation.SyncKey
 import com.pandulapeter.campfire.data.sync.implementation.SyncStateHolder
 import com.pandulapeter.campfire.data.sync.implementation.TEST_ACCOUNT
 import com.pandulapeter.campfire.data.sync.implementation.index.SyncIndexStore
+import com.pandulapeter.campfire.data.sync.implementation.merge.FolderDocumentJson
 import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPreferencesDocument
-import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPreferencesSync
 import com.pandulapeter.campfire.data.sync.implementation.scheduling.SyncRunScheduler.Companion.AUTOMATIC_RUN_DELAY
 import com.pandulapeter.campfire.data.sync.implementation.shared.FakeSharedLinksLocalSource
 import com.pandulapeter.campfire.data.sync.implementation.shared.SharedLinksDocument
@@ -142,7 +143,7 @@ class SyncRemoteWatcherTest {
 
         world.provider.writeDocumentElsewhere(
             name = SyncedPreferencesDocument.FILE_NAME,
-            bytes = SyncedPreferencesDocument.encode(JsonObject(mapOf("tagColors" to JsonObject(mapOf("Rock" to JsonPrimitive(3)))))),
+            bytes = FolderDocumentJson.encode(JsonObject(mapOf("tagColors" to JsonObject(mapOf("Rock" to JsonPrimitive(3)))))),
         )
         advanceTimeBy(AUTOMATIC_RUN_DELAY + MARGIN)
 
@@ -160,7 +161,7 @@ class SyncRemoteWatcherTest {
 
         world.provider.writeDocumentElsewhere(
             name = SyncedPreferencesDocument.FILE_NAME,
-            bytes = SyncedPreferencesDocument.encode(JsonObject(mapOf("tagColors" to JsonObject(mapOf("Rock" to JsonPrimitive(3)))))),
+            bytes = FolderDocumentJson.encode(JsonObject(mapOf("tagColors" to JsonObject(mapOf("Rock" to JsonPrimitive(3)))))),
         )
         advanceTimeBy(1.minutes)
 
@@ -193,7 +194,7 @@ class SyncRemoteWatcherTest {
 
         world.provider.writeDocumentElsewhere(
             name = SyncedPreferencesDocument.FILE_NAME,
-            bytes = SyncedPreferencesDocument.encode(JsonObject(mapOf("tagColors" to JsonObject(mapOf("Rock" to JsonPrimitive(3)))))),
+            bytes = FolderDocumentJson.encode(JsonObject(mapOf("tagColors" to JsonObject(mapOf("Rock" to JsonPrimitive(3)))))),
         )
         advanceTimeBy(30.minutes)
 
@@ -462,7 +463,7 @@ class SyncRemoteWatcherTest {
         }
         val userPreferencesRepository = FakeUserPreferencesRepository()
         val libraryFileLocalSource = FakeLibraryFileLocalSource(files = localFiles)
-        val syncedPreferencesSync = SyncedPreferencesSync(userPreferencesRepository, libraryFileLocalSource, Logger.Standard)
+        val folderDocument = preferencesDocument(libraryFileLocalSource, userPreferencesRepository)
         val steps = sharedCopySteps(library = libraryFileLocalSource, environment = environment, localSource = sharedLinks)
         val runner = SyncRunner(
             syncProviders = syncProviders,
@@ -472,9 +473,10 @@ class SyncRemoteWatcherTest {
                 setlistComparison = NoSetlistComparison,
                 userPreferencesRepository = userPreferencesRepository,
                 imageRepository = RecordingImageRepository(),
+                folderDocument = folderDocument,
                 logger = Logger.Standard,
             ),
-            syncedPreferencesSync = syncedPreferencesSync,
+            folderDocument = folderDocument,
             steps = steps,
             indexStore = SyncIndexStore(FakeSyncIndexLocalSource(onSaveIndex = runs::onSaveIndex), environment),
             libraryRefresher = SyncLibraryRefresher(LibrarySyncObserver(RecordingSongRepository(), RecordingSetlistRepository(), RecordingImageRepository()), environment),
@@ -485,7 +487,7 @@ class SyncRemoteWatcherTest {
             runner = runner,
             stateHolder = stateHolder,
             libraryChanges = LibraryChanges(),
-            syncedPreferencesSync = syncedPreferencesSync,
+            folderDocument = folderDocument,
             connectivityMonitor = connectivityMonitor,
             environment = environment,
         )
@@ -497,6 +499,7 @@ class SyncRemoteWatcherTest {
                 runner = runner,
                 scheduler = scheduler,
                 connectivityMonitor = connectivityMonitor,
+                folderDocument = folderDocument,
                 steps = steps,
                 environment = environment,
             ),
