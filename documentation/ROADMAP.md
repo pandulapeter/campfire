@@ -13,10 +13,6 @@ What's planned for Campfire, grouped by area.
 
 ## In progress
 
-- **Sync's knowledge of songs behind seams**: the engine's keep, delete, and conflict rules depend on a few narrow
-  interfaces instead of songs and setlists, a check keeps it so, and sign-in and transport are separated from Dropbox.
-  Safer deletions, and the groundwork Google Drive builds on, so it lands before Drive's provider work.
-  Plan: [sync-seams.md](plans/sync-seams.md)
 - Add Slovak, Ukrainian and Dutch translations
 - Add an option to pin chord diagrams / scales. In once-column mode, with enough horizontal space, chord diagrams could be displayed on the side.
 
@@ -28,7 +24,7 @@ What's planned for Campfire, grouped by area.
   with the app as the controller. Plan: [audience-screen.md](plans/audience-screen.md)
 - **The sync engine as a library**: sync, its providers, and the storage they need moved into
   app-agnostic `:libs:sync:*` modules, so later apps (a diary, a notes app) could share it and a new provider would be
-  one library module. Parked until a second app is being built; needs the sync seams first.
+  one library module. Parked until a second app is being built.
   Plan: [sync-library-extraction.md](plans/sync-library-extraction.md)
 - **Google Drive sync**, as a second provider beside Dropbox. The groundwork landed for v5.1.0; spikes S1–S5 are next.
   Plan: [google-drive-sync.md](plans/google-drive-sync.md)

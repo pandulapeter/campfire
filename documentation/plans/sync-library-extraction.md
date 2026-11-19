@@ -11,9 +11,9 @@
 
 **Status:** draft, checked against the code on 2026-11-18 (`main` at 85e23a2db). Nothing is implemented. Parked until
 a second app is actually being built: before that, the moves below are churn in the riskiest code with no consumer to
-shape the API. It starts once [sync-seams.md](sync-seams.md) has landed, whose eight seams (collections, references,
-conflict policy, limits, library observer, synced preferences split, run steps, and provider configuration) are this
-plan's groundwork.
+shape the API. Its groundwork landed for 5.5.1: the eight sync seams (collections, references, conflict
+policy, limits, library observer, synced preferences split, run steps, and provider configuration), described in
+`data/sync/implementation/CLAUDE.md` and kept by `.github/scripts/check_sync_seams.py`.
 
 **Goal:** the sync engine, the provider API, the Dropbox provider, and what they need of local storage live in
 app-agnostic `:libs:sync:*` modules, with Campfire their first consumer and the second app shaping the API. A later
@@ -87,8 +87,8 @@ blame follows.
   `@Single` functions returning library types from modules without Koin; whether `engine` takes `explicitApi()` too
   (the default answer: `api` only, as with the other libs). Done: three answers written into this plan.
 - **X1. Guard.** Extend `LibraryPlugin`: a `:libs:sync:*` module may depend only on `:libs:sync:*`, so
-  `:libs:chordpro` cannot slip in (the existing rule would allow it), with a `build-logic` test. The seams plan's
-  import check then retires for the moved packages.
+  `:libs:chordpro` cannot slip in (the existing rule would allow it), with a `build-logic` test. `check_sync_seams.py`
+  then retires for the moved packages.
 - **X2. `libs:sync:api`.** Create the module; move the provider API (`data/source/remote/api/.../sync/`, `hashing/`,
   `ConnectivityMonitor`), the sync state models, identity and NFC, `Sha256`, the storage ports, and `LibraryFileLock`,
   with their tests (`RedirectUriTest`, `SyncRunEndingExceptionTest`, `LocalContentHashTest`, the identity tests). The
@@ -138,6 +138,6 @@ blame follows.
 After every step, these pass without edits other than imports and constructor wiring: `TwoDeviceSyncTest`,
 `SyncSimulationTest` (and by hand with far more seeds after X3), the engine, planner, scheduling, connection, and
 shared-links tests, `SyncPlannerUpgradeFrom520Test`, `SharedLinksUpgradeFrom520Test`, `SharedLinksUpgradeFrom540Test`,
-the seams plan's fixtures, the Dropbox and transport tests, and the storage contract tests on the iOS simulator and in
+the `*UpgradeFrom550Test`s, the Dropbox and transport tests, and the storage contract tests on the iOS simulator and in
 headless Chrome. Once, after X6: a live sync of an existing install against a real Dropbox shows no download of
 unchanged files and no conflict copy.

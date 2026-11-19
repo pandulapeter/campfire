@@ -30,16 +30,16 @@ provider. Nothing of the Drive work below is implemented.
   `contentHashOf` KDoc still says "Drive with MD5"; D4 corrects it.
 - `SharedLinkResult.Created(provider, parts)`. `storedParts()` in `SharedLinksRepositoryImpl.kt` still accepts only
   Dropbox's two parts; P3 widens it.
-- The redirect is passed in (sync-seams C5): `auth/OAuthRedirectConfiguration` (scheme, host, desktop port), one
+- The redirect is passed in (the sync seams): `auth/OAuthRedirectConfiguration` (scheme, host, desktop port), one
   instance, Campfire's `CAMPFIRE_OAUTH_REDIRECT` (`campfire` / `oauth`, 53682 because Dropbox matches redirects
   exactly), which Koin hands to the Android, iOS, and desktop authenticators and the shells' `isSyncRedirect` reads;
   the web's is `currentPageUrl()`. `SyncAuthenticator.prepareRedirectUri()` still takes no provider, and one
   configuration serves every provider.
-- Files are addressed by collection (sync-seams C2): `SyncFolder` takes a `SyncCollection` and a name, and a provider
+- Files are addressed by collection (the sync seams): `SyncFolder` takes a `SyncCollection` and a name, and a provider
   is handed the app's `SyncCollections` and the folder document cap when it is built (Dropbox's in
   `DropboxConfiguration`, from `syncProviders`), mapping a collection to its folder by `id` (`DropboxEntries`). D4's
   ids are mapped over the same collections; a `CONTENT_FILE` collection's names are content hashes.
-- The provider core is apart from Dropbox (sync-seams C5, kept so by C6's `.github/scripts/check_sync_seams.py`):
+- The provider core is apart from Dropbox (the sync seams, kept so by `.github/scripts/check_sync_seams.py`):
   `auth/`, `network/`, and `crypto/` import nothing of `dropbox/` or of the module root, where Campfire's values sit
   (`CAMPFIRE_OAUTH_REDIRECT`, `USER_AGENT`, the generated `DROPBOX_APP_KEY`). Drive is a package beside `dropbox/` with
   its own configuration built in `syncProviders`; the user agent is passed to `createHttpClient`, and a provider's
@@ -333,11 +333,10 @@ download address is Dropbox's alone.
 ## Order
 
 1. Spikes S1–S5. Stop if S1 fails (see Risks).
-2. [sync-seams.md](sync-seams.md) (C1–C7), which rewrites `SyncFolder` over collections and passes the redirect in;
-   D2 and D4 build on it.
-3. D1–D5 with the provider hidden behind an empty key in release builds.
-4. P1, P2, and D6 + P3 together with the website.
-5. P4 and P5 in the release that turns it on.
+2. D1–D5 with the provider hidden behind an empty key in release builds, over the sync seams (landed for 5.5.1:
+   `SyncFolder` over collections, the redirect passed in), which D2 and D4 build on.
+3. P1, P2, and D6 + P3 together with the website.
+4. P4 and P5 in the release that turns it on.
 
 ## Risks
 
