@@ -9,13 +9,13 @@
  */
 package com.pandulapeter.campfire.data.source.remote.implementation.dropbox
 
-import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.SyncCollections
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteFile
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteSharedFile
 
-internal fun List<DropboxEntry>.toRemoteFiles() = mapNotNull { entry ->
+internal fun List<DropboxEntry>.toRemoteFiles(collections: SyncCollections) = mapNotNull { entry ->
     if (entry.tag != "file") return@mapNotNull null
-    val kind = entry.libraryKind() ?: return@mapNotNull null
+    val kind = entry.collectionIn(collections) ?: return@mapNotNull null
     RemoteFile(
         kind = kind,
         name = entry.name,
@@ -32,8 +32,8 @@ internal fun List<DropboxEntry>.toRemoteFiles() = mapNotNull { entry ->
 internal fun List<DropboxEntry>.toDocumentRevisions() = filter { it.tag == "file" && it.depth == 1 && it.rev.isNotEmpty() }
     .associate { it.name to it.rev }
 
-/** Only the two library folders, one level deep: anything the user put deeper into the app folder is theirs. */
-internal fun DropboxEntry.libraryKind() = LibraryFileKind.entries
+/** Only the collections' folders, one level deep: anything the user put deeper into the app folder is theirs. */
+internal fun DropboxEntry.collectionIn(collections: SyncCollections) = collections
     .firstOrNull { pathLower.startsWith("/${it.id}/") }
     ?.takeIf { depth == 2 }
 

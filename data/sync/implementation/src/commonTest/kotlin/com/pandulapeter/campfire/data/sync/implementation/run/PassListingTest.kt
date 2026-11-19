@@ -15,7 +15,8 @@ import com.pandulapeter.campfire.data.sync.implementation.SyncKey
 import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPreferencesDocument
 import com.pandulapeter.campfire.data.sync.implementation.song
 import com.pandulapeter.campfire.data.sync.implementation.tooLarge
-import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.LibraryCollections
+import com.pandulapeter.campfire.data.model.library.SyncCollection
 import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteFile
 import kotlinx.serialization.json.Json
@@ -105,7 +106,7 @@ class PassListingTest {
 
     @Test
     fun `a remote file that is not a library file is left out`() {
-        val pass = prepare(listed = listOf(RemoteFile(kind = LibraryFileKind.SONG, name = "notes.txt", revision = "r", contentHash = null, size = 0)))
+        val pass = prepare(listed = listOf(RemoteFile(kind = LibraryCollections.SONGS, name = "notes.txt", revision = "r", contentHash = null, size = 0)))
 
         assertTrue(pass.remote.isEmpty())
         assertTrue(pass.unstorable.isEmpty())
@@ -117,7 +118,7 @@ class PassListingTest {
         local: List<LocalFileState> = emptyList(),
         tooLarge: Set<SyncKey> = emptySet(),
         unreadable: Set<SyncKey> = emptySet(),
-        canHoldFileName: (LibraryFileKind, String) -> Boolean = { _, _ -> true },
+        canHoldFileName: (SyncCollection, String) -> Boolean = { _, _ -> true },
         deletionPolicy: SyncDeletionPolicy = SyncDeletionPolicy.ASK,
         syncedPreferences: JsonObject? = null,
     ) = preparePass(
@@ -131,11 +132,11 @@ class PassListingTest {
         syncedPreferences = syncedPreferences,
     )
 
-    private fun song(name: String) = SyncKey(kind = LibraryFileKind.SONG, name = "$name.cho")
+    private fun song(name: String) = SyncKey(kind = LibraryCollections.SONGS, name = "$name.cho")
 
     private fun local(name: String) = LocalFileState(key = song(name), hash = "h")
 
-    private fun remote(name: String) = RemoteFile(kind = LibraryFileKind.SONG, name = "$name.cho", revision = "r", contentHash = null, size = 0)
+    private fun remote(name: String) = RemoteFile(kind = LibraryCollections.SONGS, name = "$name.cho", revision = "r", contentHash = null, size = 0)
 
     private fun preferences(vararg songs: String) = Json.parseToJsonElement(
         """{"version": 1, "songs": {${songs.joinToString { "\"$it\": {\"tempo\": 90}" }}}}""",

@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.sync.implementation
 
-import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.LibraryCollections
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLock
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
@@ -26,8 +26,8 @@ class DemoLibraryRepositoryImplTest {
         val b = "Setlist b".encodeToByteArray()
         val libraryFileLocalSource = FakeLibraryFileLocalSource(
             files = mapOf(
-                SyncKey(kind = LibraryFileKind.SONG, name = "a.cho") to a,
-                SyncKey(kind = LibraryFileKind.SETLIST, name = "b.setlist.json") to b,
+                SyncKey(kind = LibraryCollections.SONGS, name = "a.cho") to a,
+                SyncKey(kind = LibraryCollections.SETLISTS, name = "b.setlist.json") to b,
             ),
         )
         val userPreferencesRepository = FakeUserPreferencesRepository(
@@ -60,7 +60,7 @@ class DemoLibraryRepositoryImplTest {
     @Test
     fun `a failing read records nothing and does not throw`() = runTest {
         val libraryFileLocalSource = FakeLibraryFileLocalSource(
-            files = mapOf(SyncKey(kind = LibraryFileKind.SONG, name = "a.cho") to "Song a".encodeToByteArray()),
+            files = mapOf(SyncKey(kind = LibraryCollections.SONGS, name = "a.cho") to "Song a".encodeToByteArray()),
             onRead = { throw LibraryStorageException("Unreadable") },
         )
         val userPreferencesRepository = FakeUserPreferencesRepository()

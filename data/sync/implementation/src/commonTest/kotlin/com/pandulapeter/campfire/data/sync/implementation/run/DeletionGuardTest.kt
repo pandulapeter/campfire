@@ -11,7 +11,7 @@ package com.pandulapeter.campfire.data.sync.implementation.run
 
 import com.pandulapeter.campfire.data.sync.implementation.SyncKey
 import com.pandulapeter.campfire.data.sync.implementation.SyncOperation
-import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.LibraryCollections
 import com.pandulapeter.campfire.data.model.sync.SyncDeletionDirection
 import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
 import kotlin.test.Test
@@ -110,5 +110,5 @@ class DeletionGuardTest {
     private fun question(count: Int, total: Int, direction: SyncDeletionDirection) =
         SyncEngine.Result.DeletionsNeedConfirmation(count = count, total = total, direction = direction)
 
-    private fun key(number: Int) = SyncKey(kind = LibraryFileKind.SONG, name = "song_$number.cho")
+    private fun key(number: Int) = SyncKey(kind = LibraryCollections.SONGS, name = "song_$number.cho")
 }

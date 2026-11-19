@@ -188,7 +188,7 @@ object LibraryFiles {
      */
     fun isLibraryAttachmentName(name: String) = isContentName(name, ATTACHMENT_EXTENSIONS)
 
-    /** Whether [name] is a file of `library/files`: a picture or an attachment, see [LibraryFileKind.FILE]. */
+    /** Whether [name] is a file of `library/files`: a picture or an attachment, see [LibraryCollections.FILES]. */
     fun isLibraryFileName(name: String) = isLibraryImageName(name) || isLibraryAttachmentName(name)
 
     /**

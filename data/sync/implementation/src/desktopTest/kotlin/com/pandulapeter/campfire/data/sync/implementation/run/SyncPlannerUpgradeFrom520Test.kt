@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.sync.implementation.run
 
-import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.LibraryCollections
 import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash
 import com.pandulapeter.campfire.data.sync.implementation.FakeSyncIndexLocalSource
 import com.pandulapeter.campfire.data.sync.implementation.LocalFileState
@@ -41,12 +41,12 @@ class SyncPlannerUpgradeFrom520Test {
         assertEquals("dropbox:dbid:AAH4f99T0taONIb-OurWxbNQ6ywGRopQngc", document.accountId)
         assertEquals(1_761_000_000_000, document.lastSyncedAt)
         assertFalse(document.isRunInProgress)
-        assertEquals(localFiles().map { it.key }.toSet(), document.toIndex().keys)
+        assertEquals(localFiles().map { it.key }.toSet(), document.toIndex(LibraryCollections.all).keys)
     }
 
     @Test
     fun `a run planned from the 5_2_0 index over an unchanged library and remote changes nothing on either side`() = runTest {
-        val index = SyncIndexStore(FakeSyncIndexLocalSource(index = indexText()), testEnvironment()).load().toIndex()
+        val index = SyncIndexStore(FakeSyncIndexLocalSource(index = indexText()), testEnvironment()).load().toIndex(LibraryCollections.all)
         val remote = index.map { (key, entry) -> RemoteFileState(key = key, revision = entry.remoteRevision, contentHash = null, size = 1) }
 
         val plan = SyncPlanner.plan(local = localFiles(), remote = remote, index = index)
@@ -58,7 +58,7 @@ class SyncPlannerUpgradeFrom520Test {
     private fun indexText() = File(fixture, "preferences/sync-index.json").readText()
 
     /** 5.2.0 had no pictures, so its library has no folder for them. */
-    private fun localFiles() = LibraryFileKind.entries.flatMap { kind ->
+    private fun localFiles() = LibraryCollections.all.flatMap { kind ->
         File(fixture, "library/${kind.id}").listFiles().orEmpty().map { file ->
             LocalFileState(key = SyncKey(kind = kind, name = file.name), hash = localContentHash(file.readBytes()))
         }

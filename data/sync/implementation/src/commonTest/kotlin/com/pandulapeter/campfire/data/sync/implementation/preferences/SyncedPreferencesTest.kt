@@ -17,7 +17,7 @@ import com.pandulapeter.campfire.data.sync.implementation.defaultUserPreferences
 import com.pandulapeter.campfire.data.sync.implementation.encoded
 import com.pandulapeter.campfire.data.sync.implementation.song
 import com.pandulapeter.campfire.data.sync.implementation.synchronize
-import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.LibraryCollections
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteDocument
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteWriteResult
@@ -726,7 +726,7 @@ class SyncedPreferencesTest {
         SyncedPreferencesSync(userPreferencesRepository = preferences, libraryFileLocalSource = library, logger = Logger.Standard)
 
     private fun library(vararg songs: String) = FakeLibraryFileLocalSource(
-        files = songs.associate { SyncKey(kind = LibraryFileKind.SONG, name = it) to it.encodeToByteArray() },
+        files = songs.associate { SyncKey(kind = LibraryCollections.SONGS, name = it) to it.encodeToByteArray() },
     )
 
     private fun remoteDocumentOf(provider: FakeSyncProvider) =

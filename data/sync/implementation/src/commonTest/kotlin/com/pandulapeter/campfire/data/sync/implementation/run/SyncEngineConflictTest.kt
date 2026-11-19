@@ -21,7 +21,7 @@ import com.pandulapeter.campfire.data.sync.implementation.saveUnderTheLock
 import com.pandulapeter.campfire.data.sync.implementation.song
 import com.pandulapeter.campfire.data.sync.implementation.syncedIndexOf
 import com.pandulapeter.campfire.data.sync.implementation.synchronize
-import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.LibraryCollections
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLock
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncNetworkException
@@ -56,13 +56,13 @@ class SyncEngineConflictTest {
         synchronize(local, provider, indexOf(song(1) to original, song(2) to original))
 
         assertContentEquals(edited, local.files[song(2)])
-        assertContentEquals(incoming, local.files[SyncKey(kind = LibraryFileKind.SONG, name = "song_2 (2).cho")])
+        assertContentEquals(incoming, local.files[SyncKey(kind = LibraryCollections.SONGS, name = "song_2 (2).cho")])
         assertContentEquals(edited, provider.files.getValue(song(2)).first)
     }
 
     @Test
     fun `a conflict copy is not written over by a download waiting under its name`() = runTest {
-        val copy = SyncKey(kind = LibraryFileKind.SONG, name = "song_1 (2).cho")
+        val copy = SyncKey(kind = LibraryCollections.SONGS, name = "song_1 (2).cho")
         val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to "A's second edit".encodeToByteArray()))
         val provider = FakeSyncProvider(
             files = mapOf(song(1) to "B's edit".encodeToByteArray(), copy to "A's first edit".encodeToByteArray()),
@@ -75,7 +75,7 @@ class SyncEngineConflictTest {
         assertEquals(expected, local.files.values.map { it.decodeToString() }.toSet())
         assertEquals(expected, provider.files.values.map { it.first.decodeToString() }.toSet())
         // The copy takes the first name free on both sides, so the file waiting under "(2)" comes down as it is.
-        val nextCopy = SyncKey(kind = LibraryFileKind.SONG, name = "song_1 (3).cho")
+        val nextCopy = SyncKey(kind = LibraryCollections.SONGS, name = "song_1 (3).cho")
         assertEquals("A's first edit", local.files.getValue(copy).decodeToString())
         assertEquals("A's first edit", provider.files.getValue(copy).first.decodeToString())
         assertEquals("B's edit", local.files.getValue(nextCopy).decodeToString())
@@ -85,7 +85,7 @@ class SyncEngineConflictTest {
 
     @Test
     fun `a conflict copy whose name is taken in the cloud during the run is kept and settled by the next run`() = runTest {
-        val copy = SyncKey(kind = LibraryFileKind.SONG, name = "song_1 (2).cho")
+        val copy = SyncKey(kind = LibraryCollections.SONGS, name = "song_1 (2).cho")
         val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to "A's edit".encodeToByteArray()))
         val provider = FakeSyncProvider(files = mapOf(song(1) to "B's edit".encodeToByteArray()))
         provider.onUpload = { key -> if (key == copy) provider.files[copy] = "C's song".encodeToByteArray() to "r-c" }
@@ -112,7 +112,7 @@ class SyncEngineConflictTest {
         synchronize(local, provider, SyncIndexDocument())
 
         assertContentEquals(mine, local.files[song(2)])
-        assertContentEquals(theirs, local.files[SyncKey(kind = LibraryFileKind.SONG, name = "song_2 (2).cho")])
+        assertContentEquals(theirs, local.files[SyncKey(kind = LibraryCollections.SONGS, name = "song_2 (2).cho")])
     }
 
     @Test
@@ -127,7 +127,7 @@ class SyncEngineConflictTest {
         synchronize(local, provider, indexOf(song(1) to original))
 
         assertContentEquals(edited, local.files[song(1)])
-        assertContentEquals(incoming, local.files[SyncKey(kind = LibraryFileKind.SONG, name = "song_1 (2).cho")])
+        assertContentEquals(incoming, local.files[SyncKey(kind = LibraryCollections.SONGS, name = "song_1 (2).cho")])
         assertContentEquals(edited, provider.files.getValue(song(1)).first)
     }
 
@@ -155,7 +155,7 @@ class SyncEngineConflictTest {
         synchronize(local, provider, SyncIndexDocument())
 
         assertContentEquals(mine, local.files[song(2)])
-        assertContentEquals(theirs, local.files[SyncKey(kind = LibraryFileKind.SONG, name = "song_2 (2).cho")])
+        assertContentEquals(theirs, local.files[SyncKey(kind = LibraryCollections.SONGS, name = "song_2 (2).cho")])
     }
 
     @Test
@@ -254,7 +254,7 @@ class SyncEngineConflictTest {
 
     @Test
     fun `an upload that landed before it was reported as contested keeps the copy`() = runTest {
-        val copy = SyncKey(kind = LibraryFileKind.SONG, name = "song_1 (2).cho")
+        val copy = SyncKey(kind = LibraryCollections.SONGS, name = "song_1 (2).cho")
         val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to HERE))
         val provider = FakeSyncProvider(files = mapOf(song(1) to THERE))
         // The write lands and its answer is lost, so the retry carries a revision that is no longer current.
@@ -298,7 +298,7 @@ class SyncEngineConflictTest {
             synchronize(local, provider, indexOf(song(1) to ORIGINAL))
         }
 
-        assertContentEquals(THERE, local.files[SyncKey(kind = LibraryFileKind.SONG, name = "song_1 (2).cho")])
+        assertContentEquals(THERE, local.files[SyncKey(kind = LibraryCollections.SONGS, name = "song_1 (2).cho")])
     }
 
     @Test
@@ -316,7 +316,7 @@ class SyncEngineConflictTest {
         provider.onUpload = {}
         assertIs<SyncEngine.Result.Completed>(synchronize(local, provider, index, onIndexChanged = keepIndex))
 
-        val copy = SyncKey(kind = LibraryFileKind.SONG, name = "song_1 (2).cho")
+        val copy = SyncKey(kind = LibraryCollections.SONGS, name = "song_1 (2).cho")
         assertEquals(setOf(song(1), copy), local.files.keys)
         assertEquals(setOf(song(1), copy), provider.files.keys)
         assertContentEquals(THERE, local.files[copy])
@@ -345,7 +345,7 @@ class SyncEngineConflictTest {
 
     @Test
     fun `a reused copy is not taken back when the service refuses the upload`() = runTest {
-        val copy = SyncKey(kind = LibraryFileKind.SONG, name = "song_1 (2).cho")
+        val copy = SyncKey(kind = LibraryCollections.SONGS, name = "song_1 (2).cho")
         // Left by an earlier attempt that the network cut off.
         val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to HERE, copy to THERE))
         val provider = FakeSyncProvider(files = mapOf(song(1) to THERE))
@@ -358,7 +358,7 @@ class SyncEngineConflictTest {
 
     @Test
     fun `a copy deleted on another device is not reused`() = runTest {
-        val copy = SyncKey(kind = LibraryFileKind.SONG, name = "song_1 (2).cho")
+        val copy = SyncKey(kind = LibraryCollections.SONGS, name = "song_1 (2).cho")
         val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to HERE, copy to THERE))
         val provider = FakeSyncProvider(files = mapOf(song(1) to THERE))
 
@@ -386,7 +386,7 @@ class SyncEngineConflictTest {
 
     @Test
     fun `a file met for the first time keeps the cloud folder's version under its name`() = runTest {
-        val copy = SyncKey(kind = LibraryFileKind.SONG, name = "song_1 (2).cho")
+        val copy = SyncKey(kind = LibraryCollections.SONGS, name = "song_1 (2).cho")
         val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to HERE))
         val provider = FakeSyncProvider(files = mapOf(song(1) to THERE))
 
@@ -401,7 +401,7 @@ class SyncEngineConflictTest {
 
     @Test
     fun `a file met for the first time with a copy of it here already makes no new one`() = runTest {
-        val copy = SyncKey(kind = LibraryFileKind.SONG, name = "song_1 (2).cho")
+        val copy = SyncKey(kind = LibraryCollections.SONGS, name = "song_1 (2).cho")
         val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to HERE, copy to HERE))
         val provider = FakeSyncProvider(files = mapOf(song(1) to THERE))
 

@@ -13,7 +13,7 @@ import com.pandulapeter.campfire.data.sync.implementation.downloadFolderDocument
 import com.pandulapeter.campfire.data.sync.implementation.run.foldRemoteNamesOntoLocal
 import com.pandulapeter.campfire.data.sync.implementation.run.folded
 import com.pandulapeter.campfire.data.sync.implementation.run.plus
-import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.LibraryCollections
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.repository.api.UserPreferencesRepository
@@ -106,7 +106,7 @@ internal class SyncedPreferencesSync(
         // one song only exist on a file system that tells case apart, and the service refuses one of them anyway; the
         // first in sort order is taken, which the descending order leaves last for associateBy to keep.
         val localNames = libraryFileLocalSource.loadLibraryFiles()
-            .filter { it.kind == LibraryFileKind.SONG }
+            .filter { it.kind == LibraryCollections.SONGS }
             .map { it.name }
             .plus(keptFileNames)
             .sortedDescending()

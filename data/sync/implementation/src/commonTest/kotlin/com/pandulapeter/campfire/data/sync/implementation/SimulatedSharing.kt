@@ -10,7 +10,8 @@
 package com.pandulapeter.campfire.data.sync.implementation
 
 import com.pandulapeter.campfire.chordpro.edit.libraryFilesNamedBy
-import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.LibraryCollections
+import com.pandulapeter.campfire.data.model.library.SyncCollection
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.share.CreateShareResult
 import com.pandulapeter.campfire.data.model.share.SharedLinkKind
@@ -178,7 +179,7 @@ internal class SimulatedSharing(private val cloud: FakeSyncProvider, private val
      * within the budgets, so the files the songs name all belong in the copy.
      */
     fun checkSettled() {
-        val folder = cloud.files.filter { (key, file) -> key.kind != LibraryFileKind.FILE || isIntact(key, file.first) }
+        val folder = cloud.files.filter { (key, file) -> key.kind != LibraryCollections.FILES || isIntact(key, file.first) }
             .entries.associate { (key, file) -> key.folded() to (key to file.first.decodeToString()) }
         cloud.registry().links.filterNot { it.copyMissing }.forEach { entry ->
             val item = folder[entry.folded()]?.second
@@ -195,14 +196,14 @@ internal class SimulatedSharing(private val cloud: FakeSyncProvider, private val
             }
             val texts = if (entry.kind == SharedLinkKind.SETLIST.id) songs.map { it.second } else listOf(item)
             val named = texts.flatMapTo(sortedSetOf()) { libraryFilesNamedBy(it) }
-            val files = named.mapNotNull { name -> folder["${LibraryFileKind.FILE.name}/$name"]?.let { IMAGES_FOLDER + name to it.second } }
+            val files = named.mapNotNull { name -> folder["${LibraryCollections.FILES.id}/$name"]?.let { IMAGES_FOLDER + name to it.second } }
             val expected = (listOf(entry.fileName to item) + songs + files).toMap()
             // A file whose folder copy is damaged past repair (`run/CLAUDE.md`) no device holds, so a copy built since
             // lacks it, while one built before keeps the intact file.
             val copy = entriesOf(cloud.sharedFiles.getValue(entry.shareId).first.decodeToString()).filterNot { (name, text) ->
                 val file = name.removePrefix(IMAGES_FOLDER)
                 name.startsWith(IMAGES_FOLDER) && IMAGES_FOLDER + file !in expected && file in named &&
-                    isIntact(SyncKey(kind = LibraryFileKind.FILE, name = file), text.encodeToByteArray())
+                    isIntact(SyncKey(kind = LibraryCollections.FILES, name = file), text.encodeToByteArray())
             }
             verify(copy == expected) { "Share ${entry.shareId} of ${entry.fileName} holds ${copy.keys} rather than ${expected.keys}, or other bytes" }
         }
@@ -240,15 +241,15 @@ internal class SimulatedSharing(private val cloud: FakeSyncProvider, private val
         return entries.mapValues { it.value.joinToString("\n") }
     }
 
-    private fun songKey(name: String) = SyncKey(kind = LibraryFileKind.SONG, name = name)
+    private fun songKey(name: String) = SyncKey(kind = LibraryCollections.SONGS, name = name)
 
     private fun isIntact(key: SyncKey, bytes: ByteArray) = LibraryFiles.isLibraryFileNamedFor(key.name, localContentHash(bytes))
 
-    private val LibraryFileKind.shareKind get() = if (this == LibraryFileKind.SONG) SharedLinkKind.SONG else SharedLinkKind.SETLIST
+    private val SyncCollection.shareKind get() = if (this == LibraryCollections.SONGS) SharedLinkKind.SONG else SharedLinkKind.SETLIST
 
-    private fun SyncKey.folded() = "${kind.name}/${LibraryFiles.identityKey(name)}"
+    private fun SyncKey.folded() = "${kind.id}/${LibraryFiles.identityKey(name)}"
 
-    private fun SharedLinksEntry.folded() = "${if (kind == SharedLinkKind.SONG.id) LibraryFileKind.SONG.name else LibraryFileKind.SETLIST.name}/${LibraryFiles.identityKey(fileName)}"
+    private fun SharedLinksEntry.folded() = "${if (kind == SharedLinkKind.SONG.id) LibraryCollections.SONGS.id else LibraryCollections.SETLISTS.id}/${LibraryFiles.identityKey(fileName)}"
 
     private companion object {
         const val IMAGES_FOLDER = "images/"

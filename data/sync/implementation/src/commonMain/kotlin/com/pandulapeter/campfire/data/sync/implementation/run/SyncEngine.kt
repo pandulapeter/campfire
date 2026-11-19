@@ -13,7 +13,8 @@ import com.pandulapeter.campfire.data.sync.implementation.index.SyncIndexDocumen
 import com.pandulapeter.campfire.data.sync.implementation.SyncIndexEntry
 import com.pandulapeter.campfire.data.sync.implementation.SyncKey
 import com.pandulapeter.campfire.data.sync.implementation.SyncOperation
-import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.SyncCollection
+import com.pandulapeter.campfire.data.model.library.SyncCollections
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.sync.SyncDeletionDirection
 import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
@@ -74,6 +75,14 @@ internal class SyncEngine(
     plantedContentHash: suspend (SyncKey) -> String?,
     /** Where the failures of single files are written. */
     private val logger: Logger,
+    /** What the library is made of, which is how the keys of the index are read back. */
+    val collections: SyncCollections,
+    /**
+     * Above this many bytes, a library file is moved alone rather than beside others: every file is held in memory whole
+     * while it moves, several at once ([CONCURRENT_TRANSFERS]). Below it, that many at once are what a phone has always
+     * spared a run.
+     */
+    private val largeFileThreshold: Long,
     /** Runs the deletion of pictures here exclusively of the app's writes of a picture and its song. */
     imageWritesGate: suspend (suspend (held: Set<String>) -> Unit) -> Unit = { it(emptySet()) },
 ) {
@@ -94,7 +103,7 @@ internal class SyncEngine(
     ): Result {
         // An index written for a different account describes a different remote folder, and acting on it would read
         // that folder's absent files as deletions of this one's songs.
-        var index = document.takeIf { it.accountId == accountId }?.toIndex().orEmpty()
+        var index = document.takeIf { it.accountId == accountId }?.toIndex(collections).orEmpty()
         var syncedPreferences = document.syncedPreferencesBase().takeIf { document.accountId == accountId }
         var summary = SyncSummary()
         val run = SyncRun(
@@ -130,7 +139,12 @@ internal class SyncEngine(
             documentRevisions = listing.documentRevisions
             sharedFiles = listing.sharedFiles
             index = withoutForeignEntries(index = index, listed = listed, libraryFileLocalSource = libraryFileLocalSource, libraryFileLock = libraryFileLock, logger = logger)
-            val localListing = readLocalListing(libraryFileLocalSource, logger, batchSize = READ_BATCH_SIZE)
+            val localListing = readLocalListing(
+                libraryFileLocalSource = libraryFileLocalSource,
+                logger = logger,
+                batchSize = READ_BATCH_SIZE,
+                largeFileThreshold = largeFileThreshold,
+            )
             lastListed = listed
             lastLocalListing = localListing
             val tooLarge = localListing.tooLarge
@@ -183,7 +197,7 @@ internal class SyncEngine(
                     remoteFiles = remote.associateBy { it.key },
                     caseCollisions = caseCollisions,
                     syncedPreferences = syncedPreferences,
-                    largeFiles = localListing.largeFiles + remote.filter { isLargeFile(it.size) }.map { it.key },
+                    largeFiles = localListing.largeFiles + remote.filter { it.size > largeFileThreshold }.map { it.key },
                     imageReferences = localListing.imageReferences,
                 ),
                 plan = plan,
@@ -231,7 +245,7 @@ internal class SyncEngine(
      * to be on disk before anything that reads the library acts on it, and a deletion that ran before a download would
      * undo it. Remote deletions go to the provider together ([deleteRemotely]), and a
      * picture's here as one batch ([ImageTransfers.deleteLocally]), neither spread over the permits. A large file moves
-     * alone besides ([isLargeFile]): a few attachments at 50 MB each, held whole, are more than a phone's heap.
+     * alone besides ([largeFileThreshold]): a few attachments at 50 MB each, held whole, are more than a phone's heap.
      *
      * [SyncRun.onIndexChanged] is called under the same lock the results are merged under, so the snapshots arrive in
      * the order they were taken and the last one handed out is always the most complete. What is handed out is a way to
@@ -345,7 +359,7 @@ internal class SyncEngine(
     private val Exception.endsTheRun
         get() = this is CancellationException || this is SyncRunEndingException
 
-    private val SyncOperation.isImage get() = key.kind == LibraryFileKind.FILE
+    private val SyncOperation.isImage get() = key.kind.role == SyncCollection.Role.CONTENT_FILE
     private val SyncOperation.order
         get() = when (this) {
             is SyncOperation.Upload -> if (isImage) 0 else 3

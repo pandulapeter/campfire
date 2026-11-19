@@ -16,6 +16,7 @@ import com.pandulapeter.campfire.data.sync.implementation.shared.SharedLinksJour
 import com.pandulapeter.campfire.data.sync.implementation.shared.SharedLinksMirror
 import com.pandulapeter.campfire.data.sync.implementation.shared.SharedLinksRegistry
 import com.pandulapeter.campfire.data.model.Logger
+import com.pandulapeter.campfire.data.model.library.LibraryCollections
 import com.pandulapeter.campfire.data.repository.api.ImageRepository
 import com.pandulapeter.campfire.data.repository.api.UserPreferencesRepository
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource
@@ -51,7 +52,8 @@ object DataSyncModule {
     /**
      * Built here rather than declared on the class, so that its tests keep the constructor with the default lookup:
      * the Koin compiler plugin would hand an annotated class that default rather than this lookup, and a demo file
-     * this device planted would then never yield to the cloud folder's version.
+     * this device planted would then never yield to the cloud folder's version. The collections and the limit for a
+     * large file are Campfire's, which the engine knows nothing of.
      */
     @Single
     internal fun syncEngine(
@@ -67,6 +69,8 @@ object DataSyncModule {
         setlistComparison = setlistComparison,
         plantedContentHash = { key -> userPreferencesRepository.loadUserPreferencesIfNeeded()?.demoLibraryContentHashes?.get(key.path) },
         logger = logger,
+        collections = LibraryCollections.all,
+        largeFileThreshold = LibraryCollections.LARGE_FILE_THRESHOLD,
         imageWritesGate = { block -> imageRepository.withImagesKept { writer -> block(writer.heldNames) } },
     )
 

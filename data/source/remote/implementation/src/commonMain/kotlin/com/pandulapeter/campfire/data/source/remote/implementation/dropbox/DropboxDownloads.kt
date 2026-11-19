@@ -9,7 +9,6 @@
  */
 package com.pandulapeter.campfire.data.source.remote.implementation.dropbox
 
-import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncDocumentTooLargeException
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteDocument
 import com.pandulapeter.campfire.data.source.remote.implementation.crypto.dropboxContentHash
@@ -34,13 +33,14 @@ import kotlinx.serialization.SerializationException
  * [DropboxSyncProvider.downloadDocument].
  *
  * The body is streamed inside the one call [DropboxTransport.request] retries, so a transfer that breaks mid-body is
- * retried like any other, and one over its limit (the caller's for a library file, [MAXIMUM_DOCUMENT_SIZE] for a document)
+ * retried like any other, and one over its limit (the caller's for a library file, [maxDocumentSize] for a document)
  * is never held in memory: leaving `execute` drops the rest of it. Nothing is thrown inside that call for a body over the limit, because the retry loop would send the call again
  * and its last attempt would become the run's network failure; it is refused once the call returns, sent once.
  */
 internal class DropboxDownloads(
     private val httpClientHolder: HttpClientHolder,
     private val requests: DropboxTransport,
+    private val maxDocumentSize: Long,
 ) {
 
     /** A library file over the limit fails as that one file, like any other answer that is not the whole file. */
@@ -55,7 +55,7 @@ internal class DropboxDownloads(
 
     /** A document over the limit is refused with its revision, read from the header before the body. */
     suspend fun downloadDocument(path: String): RemoteDocument? {
-        val download = streamed(path, MAXIMUM_DOCUMENT_SIZE)
+        val download = streamed(path, maxDocumentSize)
         val response = download.response
         if (response.status == HttpStatusCode.Conflict && response.errorSummary().startsWith("path/not_found")) return null
         response.ensureSuccessful()
@@ -146,14 +146,4 @@ internal class DropboxDownloads(
         val metadata: DropboxFileMetadata?,
         val bytes: ByteArray?,
     )
-
-    companion object {
-
-        /**
-         * The limit of a folder document: the library's own limit for a text file. A `preferences.json` of thousands of
-         * songs with chords and tags, and a shared links list of thousands of shares, stay far under it, so it never
-         * refuses a document of a real library.
-         */
-        const val MAXIMUM_DOCUMENT_SIZE = ImportLimits.MAX_TEXT_FILE_SIZE
-    }
 }

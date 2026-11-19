@@ -12,7 +12,8 @@ package com.pandulapeter.campfire.data.sync.implementation.scheduling
 import com.pandulapeter.campfire.data.sync.implementation.SyncEnvironment
 import com.pandulapeter.campfire.data.sync.implementation.SyncKey
 import com.pandulapeter.campfire.data.model.DataState
-import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.LibraryCollections
+import com.pandulapeter.campfire.data.model.library.SyncCollection
 import com.pandulapeter.campfire.data.repository.api.ImageRepository
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
@@ -117,9 +118,9 @@ internal class SyncLibraryRefresher(
         val keys = changedFilesMutex.withLock { changedFiles.toSet().also { changedFiles.clear() } }
         if (keys.isEmpty()) return false
         try {
-            songRepository.refresh(keys.namesOf(LibraryFileKind.SONG))
-            setlistRepository.refresh(keys.namesOf(LibraryFileKind.SETLIST))
-            if (keys.any { it.kind == LibraryFileKind.FILE }) imageRepository.onLibraryImagesChanged()
+            songRepository.refresh(keys.namesOf(LibraryCollections.SONGS))
+            setlistRepository.refresh(keys.namesOf(LibraryCollections.SETLISTS))
+            if (keys.any { it.kind == LibraryCollections.FILES }) imageRepository.onLibraryImagesChanged()
         } catch (exception: CancellationException) {
             withContext(NonCancellable) { changedFilesMutex.withLock { changedFiles += keys } }
             throw exception
@@ -127,7 +128,7 @@ internal class SyncLibraryRefresher(
         return true
     }
 
-    private fun Set<SyncKey>.namesOf(kind: LibraryFileKind) = filter { it.kind == kind }.mapTo(mutableSetOf()) { it.name }
+    private fun Set<SyncKey>.namesOf(kind: SyncCollection) = filter { it.kind == kind }.mapTo(mutableSetOf()) { it.name }
 
     /**
      * The refresh a run ends with. A live one still reading is stopped first, which puts back what it had not got to,

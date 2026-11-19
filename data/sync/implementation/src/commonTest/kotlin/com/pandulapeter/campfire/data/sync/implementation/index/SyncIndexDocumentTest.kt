@@ -14,7 +14,7 @@ import com.pandulapeter.campfire.data.sync.implementation.SyncIndexEntry
 import com.pandulapeter.campfire.data.sync.implementation.SyncKey
 import com.pandulapeter.campfire.data.sync.implementation.song
 import com.pandulapeter.campfire.data.sync.implementation.testEnvironment
-import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.LibraryCollections
 import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPreferencesDocument
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
@@ -82,9 +82,9 @@ class SyncIndexDocumentTest {
         assertEquals(
             mapOf(
                 song(1) to SyncIndexEntry(localHash = "hash1", remoteRevision = "r1"),
-                SyncKey(LibraryFileKind.SETLIST, "Summer tour.setlist.json") to SyncIndexEntry(localHash = "hash2", remoteRevision = "r2"),
+                SyncKey(LibraryCollections.SETLISTS, "Summer tour.setlist.json") to SyncIndexEntry(localHash = "hash2", remoteRevision = "r2"),
             ),
-            document.toIndex(),
+            document.toIndex(LibraryCollections.all),
         )
     }
 
@@ -163,13 +163,13 @@ class SyncIndexDocumentTest {
     /** The index is keyed by a path, and a key has to survive the round trip through it unchanged. */
     @Test
     fun `a key survives being written to the index and read back`() {
-        val key = SyncKey(LibraryFileKind.SETLIST, "Summer tour.setlist.json")
-        assertEquals(expected = key, actual = SyncKey.fromPath(key.path))
+        val key = SyncKey(LibraryCollections.SETLISTS, "Summer tour.setlist.json")
+        assertEquals(expected = key, actual = SyncKey.fromPath(key.path, LibraryCollections.all))
     }
 
     @Test
     fun `a key with a slash in the name is not read back as something else`() =
-        assertEquals(expected = null, actual = SyncKey.fromPath("nonsense"))
+        assertEquals(expected = null, actual = SyncKey.fromPath("nonsense", LibraryCollections.all))
 
     private suspend fun TestScope.load(text: String) =
         SyncIndexStore(FakeSyncIndexLocalSource(index = text), testEnvironment()).load()

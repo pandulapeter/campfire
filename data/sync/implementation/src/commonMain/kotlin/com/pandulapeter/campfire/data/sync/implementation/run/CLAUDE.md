@@ -9,13 +9,13 @@
 -->
 # data/sync/run
 
-- `LibraryFileKind.matches` filters the remote listing and the index as well as the local listing: a file listed on one
+- `SyncCollection.matches` filters the remote listing and the index as well as the local listing: a file listed on one
   side only reads as a deletion. Anything else in the cloud folder is left alone.
 - Names match ignoring case and Unicode form: a remote name takes the local spelling, and an index entry neither listing
   has moves to the listed spelling that folds to it.
 - **What cannot be read is left out of the plan on both sides and named among the failures, never read as a deletion**:
-  a download above its name's limit (`maximumSize`: 8 MiB for a song or setlist, 50 MiB for a library file, whose
-  picture names are attachment names too), a local file above it (its index entry too), a remote name this device cannot
+  a download above its collection's limit (`SyncCollection.maxSize`: 8 MiB for a song or setlist, 50 MiB for a library
+  file, whose picture names are attachment names too), a local file above it (its index entry too), a remote name this device cannot
   hold (split off before name folding, named once), and a local file whose read fails (its index entry kept). If no file
   at all can be read, the run ends as a storage failure.
 - **Conflicts**: the incoming version is written next to the local one *before* the local one is uploaded, as ` (2)` or
@@ -69,7 +69,7 @@
   failed or still contested file is named beside `lastSyncedAt`, which any run that got to the end moves. A run ending
   in a non-`Exception` throwable rescans the whole library if any operation had finished, since it may have come
   mid-write.
-- **Pictures** (`LibraryFileKind.FILE`, named by content, attachments included: every "a song names" below is
+- **Pictures** (`LibraryCollections.FILES`, named by content, attachments included: every "a song names" below is
   `libraryFilesNamedBy`): never a conflict and never renamed.
   - Not read by the listing: the size stands for the hash (`localImageHash`), so a same-size damage goes unnoticed. Every
     transfer checks the bytes against the name (`ImageTransfers`): a damaged copy is never uploaded or written, and is

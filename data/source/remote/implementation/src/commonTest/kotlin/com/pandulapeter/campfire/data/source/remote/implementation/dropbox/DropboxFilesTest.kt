@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.remote.implementation.dropbox
 
-import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.LibraryCollections
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncDocumentTooLargeException
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncNetworkException
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteFile
@@ -66,8 +66,8 @@ class DropboxFilesTest {
 
         assertEquals(
             expected = listOf(
-                RemoteFile(LibraryFileKind.SONG, name = "Wonderwall.cho", revision = "r1", contentHash = "h1", size = 10),
-                RemoteFile(LibraryFileKind.SETLIST, name = "summer.setlist.json", revision = "r4", contentHash = null, size = 20),
+                RemoteFile(LibraryCollections.SONGS, name = "Wonderwall.cho", revision = "r1", contentHash = "h1", size = 10),
+                RemoteFile(LibraryCollections.SETLISTS, name = "summer.setlist.json", revision = "r4", contentHash = null, size = 20),
             ),
             actual = listing.files,
         )
@@ -83,7 +83,7 @@ class DropboxFilesTest {
             respondJson("""{"name":"song.cho","rev":"r6"}""")
         }
 
-        val result = provider.upload(LibraryFileKind.SONG, "song.cho", byteArrayOf(1), expectedRevision = "r5")
+        val result = provider.upload(LibraryCollections.SONGS, "song.cho", byteArrayOf(1), expectedRevision = "r5")
 
         assertEquals(RemoteWriteResult.Written("r6"), result)
         assertEquals(JsonPrimitive("/songs/song.cho"), argument?.field("path"))
@@ -100,7 +100,7 @@ class DropboxFilesTest {
             respondJson("""{"name":"song.cho","rev":"r1"}""")
         }
 
-        provider.upload(LibraryFileKind.SONG, "song.cho", byteArrayOf(1), expectedRevision = null)
+        provider.upload(LibraryCollections.SONGS, "song.cho", byteArrayOf(1), expectedRevision = null)
 
         assertEquals(JsonObject(mapOf(".tag" to JsonPrimitive("add"))), argument?.field("mode"))
         assertEquals(JsonPrimitive(false), argument?.field("autorename"))
@@ -113,7 +113,7 @@ class DropboxFilesTest {
         }
         assertEquals(
             expected = RemoteWriteResult.Conflict,
-            actual = provider.upload(LibraryFileKind.SONG, "song.cho", byteArrayOf(1), expectedRevision = "r5"),
+            actual = provider.upload(LibraryCollections.SONGS, "song.cho", byteArrayOf(1), expectedRevision = "r5"),
         )
     }
 
@@ -122,7 +122,7 @@ class DropboxFilesTest {
         val provider = dropboxProvider {
             respond(content = "song", status = HttpStatusCode.OK, headers = headersOf("Dropbox-API-Result", """{"rev":"r7"}"""))
         }
-        val downloaded = provider.download(LibraryFileKind.SONG, "song.cho", maxSize = SONG_LIMIT)
+        val downloaded = provider.download(LibraryCollections.SONGS, "song.cho", maxSize = SONG_LIMIT)
         assertEquals("song", downloaded.bytes.decodeToString())
         assertEquals("r7", downloaded.revision)
     }
@@ -130,7 +130,7 @@ class DropboxFilesTest {
     @Test
     fun `a download that names no revision fails`() = runTest {
         val provider = dropboxProvider { respond(content = "song", status = HttpStatusCode.OK) }
-        assertFailsWith<DropboxApiException> { provider.download(LibraryFileKind.SONG, "song.cho", maxSize = SONG_LIMIT) }
+        assertFailsWith<DropboxApiException> { provider.download(LibraryCollections.SONGS, "song.cho", maxSize = SONG_LIMIT) }
     }
 
     /** An empty object from something in between would otherwise read as an empty folder, and every song as deleted. */
@@ -152,7 +152,7 @@ class DropboxFilesTest {
     fun `an upload receipt without a revision is the network failing`() = runTest {
         for (receipt in listOf("""{"name":"song.cho"}""", """{"rev":""}""")) {
             val provider = dropboxProvider { respondJson(receipt) }
-            assertFailsWith<SyncNetworkException>(receipt) { provider.upload(LibraryFileKind.SONG, "song.cho", ByteArray(1), null) }
+            assertFailsWith<SyncNetworkException>(receipt) { provider.upload(LibraryCollections.SONGS, "song.cho", ByteArray(1), null) }
         }
     }
 
@@ -160,21 +160,21 @@ class DropboxFilesTest {
     @Test
     fun `a download shorter than the file Dropbox describes fails`() = runTest {
         val provider = dropboxProvider { downloadAnswer("""{"rev":"r7","size":4000}""") }
-        assertFailsWith<DropboxApiException> { provider.download(LibraryFileKind.SONG, "song.cho", maxSize = SONG_LIMIT) }
+        assertFailsWith<DropboxApiException> { provider.download(LibraryCollections.SONGS, "song.cho", maxSize = SONG_LIMIT) }
     }
 
     @Test
     fun `a download whose bytes do not hash to Dropbox's hash fails`() = runTest {
         val hash = dropboxContentHash("sing".encodeToByteArray())
         val provider = dropboxProvider { downloadAnswer("""{"rev":"r7","size":4,"content_hash":"$hash"}""") }
-        assertFailsWith<DropboxApiException> { provider.download(LibraryFileKind.SONG, "song.cho", maxSize = SONG_LIMIT) }
+        assertFailsWith<DropboxApiException> { provider.download(LibraryCollections.SONGS, "song.cho", maxSize = SONG_LIMIT) }
     }
 
     @Test
     fun `a download that matches its size and hash is accepted`() = runTest {
         val hash = dropboxContentHash("song".encodeToByteArray())
         val provider = dropboxProvider { downloadAnswer("""{"rev":"r7","size":4,"content_hash":"$hash"}""") }
-        val downloaded = provider.download(LibraryFileKind.SONG, "song.cho", maxSize = SONG_LIMIT)
+        val downloaded = provider.download(LibraryCollections.SONGS, "song.cho", maxSize = SONG_LIMIT)
         assertEquals("song", downloaded.bytes.decodeToString())
         assertEquals("r7", downloaded.revision)
     }
@@ -204,7 +204,7 @@ class DropboxFilesTest {
             respond(
                 content = unreadableBody(),
                 status = HttpStatusCode.OK,
-                headers = headersOf("Dropbox-API-Result", """{"rev":"r1","size":${DropboxDownloads.MAXIMUM_DOCUMENT_SIZE + 1}}"""),
+                headers = headersOf("Dropbox-API-Result", """{"rev":"r1","size":${MAXIMUM_DOCUMENT_SIZE + 1}}"""),
             )
         }
 
@@ -242,7 +242,7 @@ class DropboxFilesTest {
                 answer()
             }
 
-            assertFailsWith<DropboxApiException> { provider.download(LibraryFileKind.SONG, "song.cho", maxSize = SONG_LIMIT) }
+            assertFailsWith<DropboxApiException> { provider.download(LibraryCollections.SONGS, "song.cho", maxSize = SONG_LIMIT) }
             assertEquals(1, requests)
         }
     }
@@ -254,7 +254,7 @@ class DropboxFilesTest {
             respond(content = attachment, status = HttpStatusCode.OK, headers = headersOf("Dropbox-API-Result", """{"rev":"r1","size":${attachment.size}}"""))
         }
 
-        val downloaded = provider.download(LibraryFileKind.FILE, "3fa9c2e81b7d4f06.pdf", maxSize = attachment.size.toLong())
+        val downloaded = provider.download(LibraryCollections.FILES, "3fa9c2e81b7d4f06.pdf", maxSize = attachment.size.toLong())
 
         assertEquals(attachment.size, downloaded.bytes.size)
     }
@@ -266,7 +266,7 @@ class DropboxFilesTest {
         respond(content = "song", status = HttpStatusCode.OK, headers = headersOf("Dropbox-API-Result", metadata))
 
     /** A body one byte past the limit of a folder document. */
-    private fun oversizedBody() = ByteArray(DropboxDownloads.MAXIMUM_DOCUMENT_SIZE.toInt() + 1)
+    private fun oversizedBody() = ByteArray(MAXIMUM_DOCUMENT_SIZE.toInt() + 1)
 
     /** A body that fails the moment anything reads it, so a refusal that reads it is retried and ends as a network failure. */
     private fun unreadableBody(): ByteReadChannel = ByteChannel().apply { cancel(IllegalStateException("The body was read.")) }

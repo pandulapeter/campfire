@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.remote.implementation.dropbox
 
-import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.LibraryCollections
 import com.pandulapeter.campfire.data.model.sync.SyncAccount
 import com.pandulapeter.campfire.data.model.sync.SyncProviderId
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncAuthorizationException
@@ -68,7 +68,7 @@ class DropboxRequestTest {
         }
         assertEquals(
             expected = RemoteWriteResult.Written("0123456789abcdef"),
-            actual = provider.upload(LibraryFileKind.SONG, "song.cho", byteArrayOf(1, 2, 3), expectedRevision = null),
+            actual = provider.upload(LibraryCollections.SONGS, "song.cho", byteArrayOf(1, 2, 3), expectedRevision = null),
         )
     }
 
@@ -161,19 +161,19 @@ class DropboxRequestTest {
     @Test
     fun `an upload whose receipt cannot be read is one that may have landed`() = runTest {
         val provider = dropboxProvider { respond(content = "<html>", status = HttpStatusCode.OK) }
-        assertFailsWith<SyncNetworkException> { provider.upload(LibraryFileKind.SONG, "song.cho", ByteArray(1), null) }
+        assertFailsWith<SyncNetworkException> { provider.upload(LibraryCollections.SONGS, "song.cho", ByteArray(1), null) }
     }
 
     @Test
     fun `reports a full account as that rather than as one refused file`() = runTest {
         val provider = dropboxProvider { respondJson("""{"error_summary":"path/insufficient_space/..","error":{}}""", HttpStatusCode.Conflict) }
-        assertFailsWith<SyncRemoteStorageFullException> { provider.upload(LibraryFileKind.SONG, "song.cho", ByteArray(1), null) }
+        assertFailsWith<SyncRemoteStorageFullException> { provider.upload(LibraryCollections.SONGS, "song.cho", ByteArray(1), null) }
     }
 
     @Test
     fun `reports a refused name as the refusal of that one file`() = runTest {
         val provider = dropboxProvider { respondJson("""{"error_summary":"path/malformed_path/..","error":{}}""", HttpStatusCode.Conflict) }
-        assertFailsWith<DropboxApiException> { provider.upload(LibraryFileKind.SONG, "song.cho", ByteArray(1), null) }
+        assertFailsWith<DropboxApiException> { provider.upload(LibraryCollections.SONGS, "song.cho", ByteArray(1), null) }
     }
 
     /** A stopped run resumes every request in flight with a cancellation, and the engine has to be told that it is one. */
@@ -215,8 +215,8 @@ class DropboxRequestTest {
     fun `a request the browser could not send is the service not being reached`() = runTest {
         val provider = dropboxProvider { throw Error("Fail to fetch") }
         assertFailsWith<SyncNetworkException> { provider.list() }
-        assertFailsWith<SyncNetworkException> { provider.download(LibraryFileKind.SONG, "song.cho", maxSize = SONG_LIMIT) }
-        assertFailsWith<SyncNetworkException> { provider.upload(LibraryFileKind.SONG, "song.cho", ByteArray(1), null) }
+        assertFailsWith<SyncNetworkException> { provider.download(LibraryCollections.SONGS, "song.cho", maxSize = SONG_LIMIT) }
+        assertFailsWith<SyncNetworkException> { provider.upload(LibraryCollections.SONGS, "song.cho", ByteArray(1), null) }
     }
 
     @Test
@@ -383,7 +383,7 @@ class DropboxRequestTest {
         }
         assertEquals(
             expected = RemoteWriteResult.Written("0123456789abcdef"),
-            actual = provider.upload(LibraryFileKind.SONG, "song.cho", byteArrayOf(1, 2, 3), expectedRevision = null),
+            actual = provider.upload(LibraryCollections.SONGS, "song.cho", byteArrayOf(1, 2, 3), expectedRevision = null),
         )
     }
 
@@ -451,8 +451,8 @@ class DropboxRequestTest {
         }
         provider.loadAccount()
         provider.list()
-        provider.download(LibraryFileKind.SONG, "song.cho", maxSize = SONG_LIMIT)
-        provider.upload(LibraryFileKind.SONG, "song.cho", ByteArray(uploadSize), expectedRevision = null)
+        provider.download(LibraryCollections.SONGS, "song.cho", maxSize = SONG_LIMIT)
+        provider.upload(LibraryCollections.SONGS, "song.cho", ByteArray(uploadSize), expectedRevision = null)
         return bounds
     }
 

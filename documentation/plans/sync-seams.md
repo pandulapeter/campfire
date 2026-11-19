@@ -9,7 +9,7 @@
 -->
 # Plan: sync's knowledge of songs behind seams
 
-**Status:** in progress: C1 done; C2 is next. Checked against the code on 2026-11-18 (`main` at 85e23a2db). Split out of
+**Status:** in progress: C1 and C2 done; C3 is next. Checked against the code on 2026-11-18 (`main` at 85e23a2db). Split out of
 [sync-library-extraction.md](sync-library-extraction.md), which moves the result into `:libs:sync:*` modules later.
 
 **Goal:** the sync engine's rules (what to upload, download, delete, keep, and call a conflict) depend on a few narrow
@@ -37,9 +37,11 @@ and shared primitives (`Logger`, `Sha256`, NFC) stay where they are; moving them
    (`SyncModels.kt`, `path = "${kind.id}/$name"`), and the engine (14 imports). Interface: `SyncCollection(id, matches,
    maxSize, role)`, where `role` is `DOCUMENT` (counted by `DeletionGuard`, conflicts resolved) or `CONTENT_FILE`
    (named by its content, hashed by size in `LocalHashes.kt`, never a conflict, kept while referenced, restorable by
-   `LostFileRestorer`), in a `SyncCollections` wrapper (never a `List` injected). The Dropbox provider takes the
-   collections at construction (`DropboxEntries.libraryKind()` maps folder to kind today; `remotePath` uses `kind.id`).
-   Campfire declares three with the same ids, so index keys and remote paths are byte for byte the same.
+   `LostFileRestorer`), in a `SyncCollections` wrapper (never a `List` injected). Both live in `:data:model` (beside
+   the file models), not in the remote api: `:data:source:local:api`, which holds `LibraryFileLocalSource`, sees only
+   `:data:model`, and the two api modules stay apart. The Dropbox provider takes the collections at construction
+   (`DropboxEntries.libraryKind()` mapped folder to kind; `remotePath` uses `kind.id`). Campfire declares three with the
+   same ids, so index keys and remote paths are byte for byte the same.
 2. **References.** `libraryFilesNamedBy` (`:libs:chordpro`) is called by `run/LocalListingReader.kt:88`,
    `run/ImageTransfers.kt:99`, and `run/LostFileRestorer.kt:79` to learn which files a song names, which
    `SyncPlanner.withImagesKept` (`SyncPlanner.kt:99`) keeps. Interface: `SyncReferences.of(collection, bytes):
@@ -82,10 +84,11 @@ touches platform source sets also compiles iOS (`linkDebugFrameworkIosSimulatorA
 - **C1. Fixtures.** Done: `upgrade-5.5.0` fixtures, written by a worktree at tag 5.5.0, of the desktop/web
   `sync-credentials.json` (connected, and with a pending authorization; `SyncCredentialsUpgradeFrom550Test`) and the
   folder's `preferences.json` (`SyncedPreferencesUpgradeFrom550Test`).
-- **C2. Collections.** Seams 1 and 4: `SyncCollection` and `SyncCollections` in remote api replace `LibraryFileKind` in
-  `SyncFolder`, `LibraryFileLocalSource`, `SyncKey`, the engine, and the Dropbox provider; Campfire declares the three.
-  Done: `SyncPlannerUpgradeFrom520Test`, `TwoDeviceSyncTest`, `SyncSimulationTest`, and `DropboxFilesTest` green with
-  only call sites changed; no `LibraryFileKind` left under `run/`, `index/`, or `dropbox/`.
+- **C2. Collections.** Done: `SyncCollection` and `SyncCollections` in `:data:model` (not the remote api, which
+  `LibraryFileLocalSource`'s module cannot see) replace `LibraryFileKind`, now deleted, everywhere; Campfire declares
+  the three in `LibraryCollections`, with the large file threshold and the folder documents' cap, and
+  `DataSyncModule` and `DataRemoteSourceModule` pass them to the engine and the Dropbox provider. The engine still names
+  `LibraryCollections.SONGS`, `SETLISTS`, and `FILES` where C3's references and conflict policy will take over.
 - **C3. References and conflict policy.** Seams 2 and 3. Done: no chordpro import under `run/`;
   `SyncPlannerImageTest`, `SyncEngineSetlistDateTest`, and `SyncEnginePlantedDemoTest` unchanged; one new planner test
   over a test collection whose references come from a fake, not ChordPro.

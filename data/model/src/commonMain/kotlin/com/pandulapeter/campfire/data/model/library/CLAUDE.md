@@ -18,12 +18,12 @@
   limit) are iOS imported types, so the share extension takes them. JustChords' `.justchords`
   (`FOREIGN_JSON_EXTENSIONS`, read with the text limit and as JSON by its name) is one app's format, unlike JSON in
   general: an iOS imported type and document type, so iOS offers Campfire for it in Open with as well.
-- `isSongFileName` / `isSetlistFileName` (and `LibraryFileKind.matches`) are the one answer to which files are the
+- `isSongFileName` / `isSetlistFileName` (and `SyncCollection.matches`) are the one answer to which files are the
   library, for the scan and both sync listings: right extension and not hidden (`._song.cho` is macOS's AppleDouble).
 - `normalizedName` **must stay idempotent**: an exported name is normalized again on its way back in. NFC first (it
   composes non-Latin marks). Letters outside the BMP are kept as surrogate pairs, never cut; symbols, emoji, and planes
   14–16 become separators, as does a Latin letter `Accents.kt`'s `withoutAccent` table lacks, so extend the table.
-- `isLibraryFileName` is the one rule for `library/files` (`LibraryFileKind.FILE`): 16 to 64 lowercase hex digits of
+- `isLibraryFileName` is the one rule for `library/files` (`LibraryCollections.FILES`): 16 to 64 lowercase hex digits of
   the content's SHA-256 and a picture's extension (`isLibraryImageName`) or an attachment's (`isLibraryAttachmentName`,
   `ATTACHMENT_EXTENSIONS`, an allow-list with nothing that runs), never normalized; anything else there is left alone.
   `isLibraryFileNamedFor` tells a file that is what its name says from a damaged one.

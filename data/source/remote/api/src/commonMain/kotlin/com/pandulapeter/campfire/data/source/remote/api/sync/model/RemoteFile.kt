@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.remote.api.sync.model
 
-import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.SyncCollection
 
 /**
  * One file in the remote library folder.
@@ -22,7 +22,7 @@ import com.pandulapeter.campfire.data.model.library.LibraryFileKind
  *   decide what changed.
  */
 data class RemoteFile(
-    val kind: LibraryFileKind,
+    val kind: SyncCollection,
     val name: String,
     val revision: String,
     val contentHash: String?,

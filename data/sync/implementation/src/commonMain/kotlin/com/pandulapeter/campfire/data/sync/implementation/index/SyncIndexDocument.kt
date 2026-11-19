@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.sync.implementation.index
 
+import com.pandulapeter.campfire.data.model.library.SyncCollections
 import com.pandulapeter.campfire.data.sync.implementation.SyncIndexEntry
 import com.pandulapeter.campfire.data.sync.implementation.SyncKey
 import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPreferencesDocument
@@ -70,8 +71,8 @@ internal data class SyncIndexDocument(
         val remoteRevision: String = "",
     )
 
-    fun toIndex(): Map<SyncKey, SyncIndexEntry> = entries.mapNotNull { (path, entry) ->
-        SyncKey.fromPath(path)?.let { it to SyncIndexEntry(localHash = entry.localHash, remoteRevision = entry.remoteRevision) }
+    fun toIndex(collections: SyncCollections): Map<SyncKey, SyncIndexEntry> = entries.mapNotNull { (path, entry) ->
+        SyncKey.fromPath(path, collections)?.let { it to SyncIndexEntry(localHash = entry.localHash, remoteRevision = entry.remoteRevision) }
     }.toMap()
 
     /** [syncedPreferences] as a base this version can merge against: what its writer did not own taken out. */

@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.local.implementation.source
 
-import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.LibraryCollections
 import com.pandulapeter.campfire.data.source.local.implementation.InMemoryFileStorage
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StorageDirectory
 import kotlinx.coroutines.test.runTest
@@ -27,23 +27,23 @@ class LibraryFileLocalSourceImplTest {
     @Test
     fun `a conflict copy goes to the first free numbered name and leaves the existing files alone`() = runTest {
         val localSource = LibraryFileLocalSourceImpl(InMemoryFileStorage())
-        localSource.writeLibraryFile(LibraryFileKind.SONG, "Song.cho", LOCAL)
-        localSource.writeLibraryFile(LibraryFileKind.SONG, "Song (2).cho", OTHER)
+        localSource.writeLibraryFile(LibraryCollections.SONGS, "Song.cho", LOCAL)
+        localSource.writeLibraryFile(LibraryCollections.SONGS, "Song (2).cho", OTHER)
 
-        val name = localSource.writeLibraryFileToFreeName(LibraryFileKind.SONG, "Song.cho", REMOTE)
+        val name = localSource.writeLibraryFileToFreeName(LibraryCollections.SONGS, "Song.cho", REMOTE)
 
         assertEquals("Song (3).cho", name)
-        assertContentEquals(REMOTE, localSource.readLibraryFile(LibraryFileKind.SONG, name))
-        assertContentEquals(LOCAL, localSource.readLibraryFile(LibraryFileKind.SONG, "Song.cho"))
-        assertContentEquals(OTHER, localSource.readLibraryFile(LibraryFileKind.SONG, "Song (2).cho"))
+        assertContentEquals(REMOTE, localSource.readLibraryFile(LibraryCollections.SONGS, name))
+        assertContentEquals(LOCAL, localSource.readLibraryFile(LibraryCollections.SONGS, "Song.cho"))
+        assertContentEquals(OTHER, localSource.readLibraryFile(LibraryCollections.SONGS, "Song (2).cho"))
     }
 
     @Test
     fun `an attachment sync writes is kept out of the device backup and a picture is not`() = runTest {
         val storage = InMemoryFileStorage()
         val localSource = LibraryFileLocalSourceImpl(storage)
-        localSource.writeLibraryFile(LibraryFileKind.FILE, "0123456789abcdef.png", LOCAL)
-        localSource.writeLibraryFile(LibraryFileKind.FILE, "3fa9c2e81b7d4f06.pdf", REMOTE)
+        localSource.writeLibraryFile(LibraryCollections.FILES, "0123456789abcdef.png", LOCAL)
+        localSource.writeLibraryFile(LibraryCollections.FILES, "3fa9c2e81b7d4f06.pdf", REMOTE)
 
         assertEquals(listOf("0123456789abcdef.png"), storage.namesInDeviceBackup(StorageDirectory.FILES))
     }
@@ -51,80 +51,80 @@ class LibraryFileLocalSourceImplTest {
     @Test
     fun `a conflict copy skips a name the caller says is taken`() = runTest {
         val localSource = LibraryFileLocalSourceImpl(InMemoryFileStorage())
-        localSource.writeLibraryFile(LibraryFileKind.SETLIST, "gig.setlist.json", LOCAL)
+        localSource.writeLibraryFile(LibraryCollections.SETLISTS, "gig.setlist.json", LOCAL)
 
-        val name = localSource.writeLibraryFileToFreeName(LibraryFileKind.SETLIST, "gig.setlist.json", REMOTE) { it == "gig (2).setlist.json" }
+        val name = localSource.writeLibraryFileToFreeName(LibraryCollections.SETLISTS, "gig.setlist.json", REMOTE) { it == "gig (2).setlist.json" }
 
         assertEquals("gig (3).setlist.json", name)
-        assertContentEquals(REMOTE, localSource.readLibraryFile(LibraryFileKind.SETLIST, name))
+        assertContentEquals(REMOTE, localSource.readLibraryFile(LibraryCollections.SETLISTS, name))
     }
 
     @Test
     fun `a conflict copy under another case or Unicode form of an existing name does not overwrite it`() = runTest {
         // Where the file system folds names (macOS, iOS, Windows), these spellings are the file that is already there.
         val localSource = LibraryFileLocalSourceImpl(InMemoryFileStorage(foldsNames = true))
-        localSource.writeLibraryFile(LibraryFileKind.SONG, COMPOSED_LOWERCASE, LOCAL)
+        localSource.writeLibraryFile(LibraryCollections.SONGS, COMPOSED_LOWERCASE, LOCAL)
 
-        val name = localSource.writeLibraryFileToFreeName(LibraryFileKind.SONG, DECOMPOSED_CAPITAL, REMOTE)
+        val name = localSource.writeLibraryFileToFreeName(LibraryCollections.SONGS, DECOMPOSED_CAPITAL, REMOTE)
 
         assertEquals(DECOMPOSED_CAPITAL.removeSuffix(".cho") + " (2).cho", name)
-        assertContentEquals(REMOTE, localSource.readLibraryFile(LibraryFileKind.SONG, name))
-        assertContentEquals(LOCAL, localSource.readLibraryFile(LibraryFileKind.SONG, COMPOSED_LOWERCASE))
+        assertContentEquals(REMOTE, localSource.readLibraryFile(LibraryCollections.SONGS, name))
+        assertContentEquals(LOCAL, localSource.readLibraryFile(LibraryCollections.SONGS, COMPOSED_LOWERCASE))
     }
 
     @Test
     fun `a conflict copy is not given a name another file holds in another case where the file system tells case apart`() = runTest {
         // The sync service takes the two spellings for one file, so the copy would collide with the other file there.
         val localSource = LibraryFileLocalSourceImpl(InMemoryFileStorage(foldsNames = false))
-        localSource.writeLibraryFile(LibraryFileKind.SONG, "Song.cho", LOCAL)
-        localSource.writeLibraryFile(LibraryFileKind.SONG, "song (2).cho", OTHER)
+        localSource.writeLibraryFile(LibraryCollections.SONGS, "Song.cho", LOCAL)
+        localSource.writeLibraryFile(LibraryCollections.SONGS, "song (2).cho", OTHER)
 
-        val name = localSource.writeLibraryFileToFreeName(LibraryFileKind.SONG, "Song.cho", REMOTE)
+        val name = localSource.writeLibraryFileToFreeName(LibraryCollections.SONGS, "Song.cho", REMOTE)
 
         assertEquals("Song (3).cho", name)
-        assertContentEquals(OTHER, localSource.readLibraryFile(LibraryFileKind.SONG, "song (2).cho"))
+        assertContentEquals(OTHER, localSource.readLibraryFile(LibraryCollections.SONGS, "song (2).cho"))
     }
 
     @Test
     fun `a numbered variant holding the incoming bytes is found past one holding others`() = runTest {
         val localSource = LibraryFileLocalSourceImpl(InMemoryFileStorage(foldsNames = false))
-        localSource.writeLibraryFile(LibraryFileKind.SONG, "song_1.cho", LOCAL)
-        localSource.writeLibraryFile(LibraryFileKind.SONG, "song_1 (2).cho", OTHER)
-        localSource.writeLibraryFile(LibraryFileKind.SONG, "song_1 (3).cho", REMOTE)
-        localSource.writeLibraryFile(LibraryFileKind.SONG, "song_1 (4).cho", REMOTE)
+        localSource.writeLibraryFile(LibraryCollections.SONGS, "song_1.cho", LOCAL)
+        localSource.writeLibraryFile(LibraryCollections.SONGS, "song_1 (2).cho", OTHER)
+        localSource.writeLibraryFile(LibraryCollections.SONGS, "song_1 (3).cho", REMOTE)
+        localSource.writeLibraryFile(LibraryCollections.SONGS, "song_1 (4).cho", REMOTE)
 
-        assertEquals("song_1 (3).cho", localSource.numberedVariantHolding(LibraryFileKind.SONG, "song_1.cho", REMOTE))
+        assertEquals("song_1 (3).cho", localSource.numberedVariantHolding(LibraryCollections.SONGS, "song_1.cho", REMOTE))
     }
 
     @Test
     fun `a numbered variant is matched under another case`() = runTest {
         val localSource = LibraryFileLocalSourceImpl(InMemoryFileStorage(foldsNames = false))
-        localSource.writeLibraryFile(LibraryFileKind.SONG, "SONG_1 (2).CHO", REMOTE)
+        localSource.writeLibraryFile(LibraryCollections.SONGS, "SONG_1 (2).CHO", REMOTE)
 
-        assertEquals("SONG_1 (2).CHO", localSource.numberedVariantHolding(LibraryFileKind.SONG, "song_1.cho", REMOTE))
+        assertEquals("SONG_1 (2).CHO", localSource.numberedVariantHolding(LibraryCollections.SONGS, "song_1.cho", REMOTE))
     }
 
     @Test
     fun `names that only look like numbered variants are not`() = runTest {
         val localSource = LibraryFileLocalSourceImpl(InMemoryFileStorage(foldsNames = false))
-        localSource.writeLibraryFile(LibraryFileKind.SONG, "song_1.cho", REMOTE)
-        localSource.writeLibraryFile(LibraryFileKind.SONG, "song_12.cho", REMOTE)
-        localSource.writeLibraryFile(LibraryFileKind.SONG, "song_1 (2) copy.cho", REMOTE)
+        localSource.writeLibraryFile(LibraryCollections.SONGS, "song_1.cho", REMOTE)
+        localSource.writeLibraryFile(LibraryCollections.SONGS, "song_12.cho", REMOTE)
+        localSource.writeLibraryFile(LibraryCollections.SONGS, "song_1 (2) copy.cho", REMOTE)
 
-        assertNull(localSource.numberedVariantHolding(LibraryFileKind.SONG, "song_1.cho", REMOTE))
+        assertNull(localSource.numberedVariantHolding(LibraryCollections.SONGS, "song_1.cho", REMOTE))
     }
 
     @Test
     fun `a file is found under another case or Unicode form where the file system tells them apart`() = runTest {
         val localSource = LibraryFileLocalSourceImpl(InMemoryFileStorage(foldsNames = false))
-        localSource.writeLibraryFile(LibraryFileKind.SONG, COMPOSED_LOWERCASE, LOCAL)
-        localSource.writeLibraryFile(LibraryFileKind.SONG, "Song.cho", LOCAL)
-        localSource.writeLibraryFile(LibraryFileKind.SONG, "song.cho", OTHER)
+        localSource.writeLibraryFile(LibraryCollections.SONGS, COMPOSED_LOWERCASE, LOCAL)
+        localSource.writeLibraryFile(LibraryCollections.SONGS, "Song.cho", LOCAL)
+        localSource.writeLibraryFile(LibraryCollections.SONGS, "song.cho", OTHER)
 
-        assertEquals(COMPOSED_LOWERCASE, localSource.existingSpellingOf(LibraryFileKind.SONG, DECOMPOSED_CAPITAL))
-        assertEquals("song.cho", localSource.existingSpellingOf(LibraryFileKind.SONG, "song.cho"))
-        assertNull(localSource.existingSpellingOf(LibraryFileKind.SONG, "other.cho"))
-        assertNull(localSource.existingSpellingOf(LibraryFileKind.SETLIST, "song.cho"))
+        assertEquals(COMPOSED_LOWERCASE, localSource.existingSpellingOf(LibraryCollections.SONGS, DECOMPOSED_CAPITAL))
+        assertEquals("song.cho", localSource.existingSpellingOf(LibraryCollections.SONGS, "song.cho"))
+        assertNull(localSource.existingSpellingOf(LibraryCollections.SONGS, "other.cho"))
+        assertNull(localSource.existingSpellingOf(LibraryCollections.SETLISTS, "song.cho"))
     }
 
     private companion object {

@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.sync.implementation.run
 
-import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.SyncCollection
 import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash
 import com.pandulapeter.campfire.data.sync.implementation.SyncKey
 
@@ -18,7 +18,7 @@ import com.pandulapeter.campfire.data.sync.implementation.SyncKey
  * its content's hash, see [readLocalListing]. Every comparison with the index's `localHash` goes through this, or a
  * picture would read as changed on every run.
  */
-internal fun localHashOf(key: SyncKey, bytes: ByteArray) = if (key.kind == LibraryFileKind.FILE) localImageHash(bytes.size.toLong()) else localContentHash(bytes)
+internal fun localHashOf(key: SyncKey, bytes: ByteArray) = if (key.kind.role == SyncCollection.Role.CONTENT_FILE) localImageHash(bytes.size.toLong()) else localContentHash(bytes)
 
 internal fun localImageHash(size: Long) = "$IMAGE_HASH_PREFIX$size"
 

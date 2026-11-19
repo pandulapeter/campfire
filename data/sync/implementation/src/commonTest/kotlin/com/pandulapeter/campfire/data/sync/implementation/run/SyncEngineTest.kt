@@ -23,7 +23,7 @@ import com.pandulapeter.campfire.data.sync.implementation.librarySongs
 import com.pandulapeter.campfire.data.sync.implementation.song
 import com.pandulapeter.campfire.data.sync.implementation.syncedIndexOf
 import com.pandulapeter.campfire.data.sync.implementation.synchronize
-import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.LibraryCollections
 import com.pandulapeter.campfire.data.model.sync.SyncAccount
 import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.sync.SyncProviderId
@@ -256,7 +256,7 @@ class SyncEngineTest {
             onLocalFileChanged = { changed += it },
         )
 
-        assertEquals(setOf(SyncKey(kind = LibraryFileKind.SONG, name = "song_1 (2).cho")), changed)
+        assertEquals(setOf(SyncKey(kind = LibraryCollections.SONGS, name = "song_1 (2).cho")), changed)
     }
 
     @Test
@@ -268,7 +268,7 @@ class SyncEngineTest {
 
         synchronize(local, provider, indexOf(song(1) to ORIGINAL), onLocalFileChanged = { changed += it })
 
-        val copy = SyncKey(kind = LibraryFileKind.SONG, name = "song_1 (2).cho")
+        val copy = SyncKey(kind = LibraryCollections.SONGS, name = "song_1 (2).cho")
         assertEquals(listOf(copy, copy), changed)
         assertEquals(setOf(song(1)), local.files.keys)
     }

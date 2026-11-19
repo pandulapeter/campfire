@@ -19,7 +19,7 @@ import com.pandulapeter.campfire.data.sync.implementation.index.SyncIndexDocumen
 import com.pandulapeter.campfire.data.sync.implementation.indexOf
 import com.pandulapeter.campfire.data.sync.implementation.song
 import com.pandulapeter.campfire.data.sync.implementation.synchronize
-import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.LibraryCollections
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
@@ -47,7 +47,7 @@ class SyncEngineCancellationTest {
 
     @Test
     fun `a conflict copy stopped during its write still reports the copy`() = runTest {
-        val copy = SyncKey(kind = LibraryFileKind.SONG, name = "song_1 (2).cho")
+        val copy = SyncKey(kind = LibraryCollections.SONGS, name = "song_1 (2).cho")
         val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to HERE))
         val provider = FakeSyncProvider(files = mapOf(song(1) to THERE))
 

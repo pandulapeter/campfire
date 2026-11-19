@@ -10,19 +10,19 @@
 package com.pandulapeter.campfire.data.source.local.api
 
 import com.pandulapeter.campfire.data.model.library.LibraryFile
-import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.SyncCollection
 
 /**
  * The library as bytes, which is what sync moves around. The other local sources hand out parsed models; this one
  * deliberately does not look inside the files at all, so that a song Campfire cannot parse still travels between
  * devices unchanged.
  *
- * Everything a caller can name is a (kind, file name) pair, the same flat shape as `FileStorage`.
+ * Everything a caller can name is a (collection, file name) pair, the same flat shape as `FileStorage`.
  */
 interface LibraryFileLocalSource {
 
     /**
-     * Every song and setlist file in the library, by the rule the library scan uses (`LibraryFiles.isSongFileName`).
+     * Every file of every collection of the library, by the collection's own rule (`SyncCollection.matches`).
      * Whatever else the user keeps in the folder - files with another extension, the hidden ones a file manager
      * writes for itself - is left where it is rather than uploaded to their cloud storage.
      */
@@ -33,10 +33,10 @@ interface LibraryFileLocalSource {
      * [LibraryStorageException]. Sync is why the two must never be confused - a file reported as missing is planned
      * as a deletion, and that deletion reaches every other device.
      */
-    suspend fun readLibraryFile(kind: LibraryFileKind, name: String): ByteArray?
+    suspend fun readLibraryFile(kind: SyncCollection, name: String): ByteArray?
 
     /** The file's size without reading it, null where it is not there. */
-    suspend fun libraryFileSize(kind: LibraryFileKind, name: String): Long?
+    suspend fun libraryFileSize(kind: SyncCollection, name: String): Long?
 
     /**
      * The name a file here has that is [name] under any case or Unicode form (`LibraryFiles.isSameLibraryName`):
@@ -45,10 +45,10 @@ interface LibraryFileLocalSource {
      * to the cloud folder and every other device, but a second one to a file system that tells spellings apart
      * (Android, Linux, the web). Costs one listing where [name] itself is missing.
      */
-    suspend fun existingSpellingOf(kind: LibraryFileKind, name: String): String?
+    suspend fun existingSpellingOf(kind: SyncCollection, name: String): String?
 
     /** Creates the file or overwrites it. */
-    suspend fun writeLibraryFile(kind: LibraryFileKind, name: String, bytes: ByteArray)
+    suspend fun writeLibraryFile(kind: SyncCollection, name: String, bytes: ByteArray)
 
     /**
      * Writes [bytes] under the first free variant of [desiredName] (" (2)", " (3)"…) and returns the name it got.
@@ -57,7 +57,7 @@ interface LibraryFileLocalSource {
      * how sync keeps the copy off a name the cloud folder already holds for a file that has not come down yet.
      */
     suspend fun writeLibraryFileToFreeName(
-        kind: LibraryFileKind,
+        kind: SyncCollection,
         desiredName: String,
         bytes: ByteArray,
         isTaken: (name: String) -> Boolean = { false },
@@ -68,16 +68,16 @@ interface LibraryFileLocalSource {
      * under any case or Unicode form - whose bytes are exactly [bytes], or null. Sync asks before writing a conflict
      * copy, so that one incoming version gets one copy however many attempts it takes to settle the file.
      */
-    suspend fun numberedVariantHolding(kind: LibraryFileKind, name: String, bytes: ByteArray): String?
+    suspend fun numberedVariantHolding(kind: SyncCollection, name: String, bytes: ByteArray): String?
 
-    suspend fun deleteLibraryFile(kind: LibraryFileKind, name: String)
+    suspend fun deleteLibraryFile(kind: SyncCollection, name: String)
 
     /**
      * Whether this device's file system can hold a library file called [name] at all. Every platform answers no for a
      * name that is a path or nothing (a `/` or `\` in it, `.`, `..`), and Windows also for a name another platform
      * allows (`? : * " < > |` among others); sync leaves such a file where it is rather than failing on it every run.
      */
-    fun canHoldFileName(kind: LibraryFileKind, name: String): Boolean
+    fun canHoldFileName(kind: SyncCollection, name: String): Boolean
 }
 
 /**

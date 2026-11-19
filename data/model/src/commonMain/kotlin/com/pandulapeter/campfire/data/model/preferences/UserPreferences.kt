@@ -12,7 +12,6 @@ package com.pandulapeter.campfire.data.model.preferences
 import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.song.tagKey
-import com.pandulapeter.campfire.data.model.library.LibraryFileKind
 
 /**
  * Everything the user chose on this device, written as one document. Every map keyed by a song's file name is listed
@@ -276,7 +275,7 @@ data class UserPreferences(
     val isOnboardingPending: Boolean = false,
     /**
      * The content hash of every demo file this device planted, as it was written, keyed by its library path
-     * (`songs/<file name>`, `setlists/<file name>`: the folder is `LibraryFileKind.id`). Sync takes the cloud folder's
+     * (`songs/<file name>`, `setlists/<file name>`: the folder is `SyncCollection.id`). Sync takes the cloud folder's
      * version of a file that still has exactly that content instead of keeping both, see `SyncRepository`. Never
      * exported or synced.
      */

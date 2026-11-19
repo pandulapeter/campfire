@@ -9,8 +9,9 @@
  */
 package com.pandulapeter.campfire.data.sync.implementation
 
+import com.pandulapeter.campfire.data.model.library.LibraryCollections
 import com.pandulapeter.campfire.data.sync.implementation.run.SyncEngine
-import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.SyncCollection
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.sync.SyncAccount
 import com.pandulapeter.campfire.data.model.sync.SyncProviderId
@@ -219,7 +220,7 @@ internal class FakeSyncProvider(
         writes++
     }
 
-    override suspend fun download(kind: LibraryFileKind, name: String, maxSize: Long): RemoteDocument {
+    override suspend fun download(kind: SyncCollection, name: String, maxSize: Long): RemoteDocument {
         val key = SyncKey(kind = kind, name = name)
         downloadCounts[key] = (downloadCounts[key] ?: 0) + 1
         onDownload(key)
@@ -249,7 +250,7 @@ internal class FakeSyncProvider(
     private fun SyncKey.foldedForResolving() = copy(name = LibraryFiles.identityKey(name))
 
     override suspend fun upload(
-        kind: LibraryFileKind,
+        kind: SyncCollection,
         name: String,
         bytes: ByteArray,
         expectedRevision: String?,
@@ -297,7 +298,7 @@ internal class FakeSyncProvider(
 
     val restoreRequests = mutableListOf<SyncKey>()
 
-    override suspend fun restoreDeleted(kind: LibraryFileKind, name: String): Boolean {
+    override suspend fun restoreDeleted(kind: SyncCollection, name: String): Boolean {
         val key = SyncKey(kind = kind, name = name)
         restoreRequests += key
         if (stored(key) in files) return true
@@ -422,11 +423,11 @@ internal class FakeSyncProvider(
     override suspend fun changesSince(cursor: String): RemoteChanges {
         onChangesSince()
         val changed = feed.value.drop(cursor.toInt()).toSet()
-        val keys = changed.mapNotNull(SyncKey::fromPath)
+        val keys = changed.mapNotNull { SyncKey.fromPath(it, LibraryCollections.all) }
         return RemoteChanges(
             files = keys.mapNotNull { key -> files[key]?.let { (bytes, revision) -> remoteFile(key, bytes, revision) } },
             deletedFiles = keys.filter { it !in files }.map { RemoteChanges.DeletedFile(kind = it.kind, name = it.name) },
-            documents = changed.filterTo(mutableSetOf()) { SyncKey.fromPath(it) == null },
+            documents = changed.filterTo(mutableSetOf()) { SyncKey.fromPath(it, LibraryCollections.all) == null },
             cursor = feed.value.size.toString(),
         )
     }

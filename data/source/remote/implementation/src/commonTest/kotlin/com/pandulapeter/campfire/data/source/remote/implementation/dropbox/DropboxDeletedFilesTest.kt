@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.remote.implementation.dropbox
 
-import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.LibraryCollections
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.TextContent
 import kotlinx.coroutines.test.runTest
@@ -43,7 +43,7 @@ class DropboxDeletedFilesTest {
             }
         }
 
-        assertTrue(provider.restoreDeleted(LibraryFileKind.FILE, NAME))
+        assertTrue(provider.restoreDeleted(LibraryCollections.FILES, NAME))
         assertEquals(JsonPrimitive("/files/$NAME"), listedPath)
         assertEquals(listOf("rev3"), restored)
     }
@@ -60,7 +60,7 @@ class DropboxDeletedFilesTest {
             }
         }
 
-        assertFalse(provider.restoreDeleted(LibraryFileKind.FILE, NAME))
+        assertFalse(provider.restoreDeleted(LibraryCollections.FILES, NAME))
         assertEquals(3, restored.size)
     }
 
@@ -68,7 +68,7 @@ class DropboxDeletedFilesTest {
     fun `a name with no history is not restored`() = runTest {
         val provider = dropboxProvider { respondJson("""{"error_summary":"path/not_found/..","error":{}}""", HttpStatusCode.Conflict) }
 
-        assertFalse(provider.restoreDeleted(LibraryFileKind.FILE, NAME))
+        assertFalse(provider.restoreDeleted(LibraryCollections.FILES, NAME))
     }
 
     @Test
@@ -80,7 +80,7 @@ class DropboxDeletedFilesTest {
             )
         }
 
-        assertFalse(provider.restoreDeleted(LibraryFileKind.FILE, NAME))
+        assertFalse(provider.restoreDeleted(LibraryCollections.FILES, NAME))
     }
 
     @Test
@@ -90,7 +90,7 @@ class DropboxDeletedFilesTest {
             respondJson(revisions(isDeleted = false, "rev2"))
         }
 
-        assertTrue(provider.restoreDeleted(LibraryFileKind.FILE, NAME))
+        assertTrue(provider.restoreDeleted(LibraryCollections.FILES, NAME))
     }
 
     private fun revisions(isDeleted: Boolean, vararg revisions: String) =

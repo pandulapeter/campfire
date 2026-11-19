@@ -9,7 +9,8 @@
  */
 package com.pandulapeter.campfire.data.model.importing
 
-import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.LibraryCollections
+import com.pandulapeter.campfire.data.model.library.SyncCollection
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
 
 /**
@@ -23,12 +24,13 @@ import com.pandulapeter.campfire.data.model.library.LibraryFiles
 fun sharedLinkChoices(plan: ImportPlan, recorded: Set<String>) = ImportChoices(
     conflictResolutions = buildMap {
         plan.songs.forEachIndexed { index, entry ->
-            if (entry.status == ImportPlan.Status.CONFLICTING && recorded.containsName(LibraryFileKind.SONG, entry.replacesFileName ?: entry.fileName)) {
+            val fileName = entry.replacesFileName ?: entry.fileName
+            if (entry.status == ImportPlan.Status.CONFLICTING && recorded.containsName(LibraryCollections.SONGS, fileName)) {
                 put(ImportEntryKey(ImportEntryKey.Kind.SONG, index), ImportConflictResolution.REPLACE)
             }
         }
         plan.setlists.forEachIndexed { index, entry ->
-            if (entry.status == ImportPlan.Status.CONFLICTING && recorded.containsName(LibraryFileKind.SETLIST, entry.fileName)) {
+            if (entry.status == ImportPlan.Status.CONFLICTING && recorded.containsName(LibraryCollections.SETLISTS, entry.fileName)) {
                 put(ImportEntryKey(ImportEntryKey.Kind.SETLIST, index), ImportConflictResolution.REPLACE)
             }
         }
@@ -46,6 +48,6 @@ fun sharedLinkSongFileNamesWrittenBy(plan: ImportPlan, result: ImportResult) =
 fun sharedLinkSetlistFileNamesWrittenBy(plan: ImportPlan, result: ImportResult) =
     result.importedSetlistFileNames.filter { name -> plan.setlists.any { LibraryFiles.isSameLibraryName(it.fileName, name) } }
 
-private fun Set<String>.containsName(kind: LibraryFileKind, fileName: String) = any { path ->
+private fun Set<String>.containsName(kind: SyncCollection, fileName: String) = any { path ->
     path.substringBefore('/') == kind.id && LibraryFiles.isSameLibraryName(path.substringAfter('/'), fileName)
 }

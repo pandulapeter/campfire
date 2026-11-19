@@ -10,8 +10,9 @@
 package com.pandulapeter.campfire.data.source.local.implementation.source
 
 import com.pandulapeter.campfire.data.model.library.LibraryFile
-import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.LibraryCollections
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
+import com.pandulapeter.campfire.data.model.library.SyncCollection
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.FileStorage
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StorageDirectory
@@ -30,30 +31,30 @@ internal class LibraryFileLocalSourceImpl(
 ) : LibraryFileLocalSource {
 
     override suspend fun loadLibraryFiles(): List<LibraryFile> = coroutineScope {
-        LibraryFileKind.entries
+        LibraryCollections.all
             .map { kind -> async { fileStorage.list(kind.directory).filter { kind.matches(it.name) }.map { it.toLibraryFile(kind) } } }
             .awaitAll()
             .flatten()
     }
 
-    override suspend fun readLibraryFile(kind: LibraryFileKind, name: String) = fileStorage.readBytes(kind.directory, name)
+    override suspend fun readLibraryFile(kind: SyncCollection, name: String) = fileStorage.readBytes(kind.directory, name)
 
-    override suspend fun libraryFileSize(kind: LibraryFileKind, name: String) = fileStorage.info(kind.directory, name)?.size
+    override suspend fun libraryFileSize(kind: SyncCollection, name: String) = fileStorage.info(kind.directory, name)?.size
 
-    override suspend fun existingSpellingOf(kind: LibraryFileKind, name: String) = if (fileStorage.exists(kind.directory, name)) {
+    override suspend fun existingSpellingOf(kind: SyncCollection, name: String) = if (fileStorage.exists(kind.directory, name)) {
         name
     } else {
         fileStorage.listNames(kind.directory).firstOrNull { LibraryFiles.isSameLibraryName(it, name) }
     }
 
     /** Sync's download of an attachment is kept out of the device backup as the app's own write is (`ImageLocalSourceImpl`). */
-    override suspend fun writeLibraryFile(kind: LibraryFileKind, name: String, bytes: ByteArray) {
+    override suspend fun writeLibraryFile(kind: SyncCollection, name: String, bytes: ByteArray) {
         fileStorage.writeBytes(kind.directory, name, bytes)
-        if (kind == LibraryFileKind.FILE && isLibraryFileKeptOutOfDeviceBackup(name)) fileStorage.keepOutOfDeviceBackup(kind.directory, name)
+        if (kind == LibraryCollections.FILES && isLibraryFileKeptOutOfDeviceBackup(name)) fileStorage.keepOutOfDeviceBackup(kind.directory, name)
     }
 
     override suspend fun writeLibraryFileToFreeName(
-        kind: LibraryFileKind,
+        kind: SyncCollection,
         desiredName: String,
         bytes: ByteArray,
         isTaken: (name: String) -> Boolean,
@@ -63,7 +64,7 @@ internal class LibraryFileLocalSourceImpl(
         return name
     }
 
-    override suspend fun numberedVariantHolding(kind: LibraryFileKind, name: String, bytes: ByteArray): String? = fileStorage
+    override suspend fun numberedVariantHolding(kind: SyncCollection, name: String, bytes: ByteArray): String? = fileStorage
         .listNames(kind.directory)
         .mapNotNull { candidate -> candidate.arrivingVariantNumberOf(name)?.let { number -> number to candidate } }
         .sortedBy { (number, _) -> number }
@@ -71,17 +72,18 @@ internal class LibraryFileLocalSourceImpl(
         .firstOrNull { (_, candidate) -> fileStorage.readBytes(kind.directory, candidate)?.contentEquals(bytes) == true }
         ?.second
 
-    override suspend fun deleteLibraryFile(kind: LibraryFileKind, name: String) = fileStorage.delete(kind.directory, name)
+    override suspend fun deleteLibraryFile(kind: SyncCollection, name: String) = fileStorage.delete(kind.directory, name)
 
-    override fun canHoldFileName(kind: LibraryFileKind, name: String) = fileStorage.canHoldFileName(name)
+    override fun canHoldFileName(kind: SyncCollection, name: String) = fileStorage.canHoldFileName(name)
 
-    private fun StoredFileInfo.toLibraryFile(kind: LibraryFileKind) =
+    private fun StoredFileInfo.toLibraryFile(kind: SyncCollection) =
         LibraryFile(kind = kind, name = name, size = size, lastModified = lastModified)
 
-    private val LibraryFileKind.directory
+    private val SyncCollection.directory
         get() = when (this) {
-            LibraryFileKind.SONG -> StorageDirectory.SONGS
-            LibraryFileKind.SETLIST -> StorageDirectory.SETLISTS
-            LibraryFileKind.FILE -> StorageDirectory.FILES
+            LibraryCollections.SONGS -> StorageDirectory.SONGS
+            LibraryCollections.SETLISTS -> StorageDirectory.SETLISTS
+            LibraryCollections.FILES -> StorageDirectory.FILES
+            else -> throw IllegalArgumentException("Not a collection of the library: $id")
         }
 }

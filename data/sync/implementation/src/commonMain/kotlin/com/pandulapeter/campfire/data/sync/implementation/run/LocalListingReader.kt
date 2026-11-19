@@ -11,7 +11,8 @@ package com.pandulapeter.campfire.data.sync.implementation.run
 
 import com.pandulapeter.campfire.chordpro.edit.libraryFilesNamedBy
 import com.pandulapeter.campfire.data.model.Logger
-import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.LibraryCollections
+import com.pandulapeter.campfire.data.model.library.SyncCollection
 import com.pandulapeter.campfire.data.model.library.decodeLibraryText
 import com.pandulapeter.campfire.data.model.recovering
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource
@@ -24,7 +25,8 @@ import kotlinx.coroutines.coroutineScope
 /**
  * What [readLocalListing] found: the files it read, the ones it left alone for their size, and the ones it could not read.
  *
- * @param largeFiles The library files within their limit that a run still moves alone ([isLargeFile]).
+ * @param largeFiles The library files within their limit that a run still moves alone (over `SyncEngine`'s
+ *   `largeFileThreshold`).
  * @param imageReferences The library files each song of this device names (pictures and attachments), or null where a song could not be read (or was too
  *   large to be), which may name any of them: the planner then deletes no picture on either side.
  */
@@ -38,7 +40,7 @@ internal class LocalListing(
 
 /**
  * Reading and hashing every file is the slow part of the preparation, so the files are read in parallel. A file over
- * its limit ([maximumSize]) is not read at all: nothing the app writes is that large, so it was put into the folder from
+ * its limit (`SyncCollection.maxSize`) is not read at all: nothing the app writes is that large, so it was put into the folder from
  * outside, and it is no file any other device would download.
  *
  * A picture is not read either: its name is its content and nothing writes another content under it, so its size
@@ -54,10 +56,11 @@ internal suspend fun readLocalListing(
     libraryFileLocalSource: LibraryFileLocalSource,
     logger: Logger,
     batchSize: Int,
+    largeFileThreshold: Long,
 ): LocalListing = coroutineScope {
-    val (tooLarge, files) = libraryFileLocalSource.loadLibraryFiles().partition { it.size > SyncKey(kind = it.kind, name = it.name).maximumSize }
+    val (tooLarge, files) = libraryFileLocalSource.loadLibraryFiles().partition { it.size > it.kind.maxSize }
     tooLarge.forEach { logger.log("Skipped \"${it.name}\": ${it.size} bytes is more than a library file can hold.") }
-    val (images, documents) = files.partition { it.kind == LibraryFileKind.FILE }
+    val (images, documents) = files.partition { it.kind.role == SyncCollection.Role.CONTENT_FILE }
     // In batches for the same reason as the song scan in SongLocalSourceImpl: unbounded, a large library is thousands of
     // open handles and all of its bytes in memory at once.
     val reads = documents
@@ -67,13 +70,13 @@ internal suspend fun readLocalListing(
     val read = reads.filterIsInstance<LocalRead.Read>()
     val imageStates = images.map { LocalFileState(key = SyncKey(kind = it.kind, name = it.name), hash = localImageHash(it.size)) }
     if (read.isEmpty() && failures.isNotEmpty() && imageStates.isEmpty()) throw failures.first().exception
-    val isEverySongRead = (tooLarge.map { it.kind } + failures.map { it.key.kind }).none { it == LibraryFileKind.SONG }
+    val isEverySongRead = (tooLarge.map { it.kind } + failures.map { it.key.kind }).none { it == LibraryCollections.SONGS }
     LocalListing(
         states = read.map { it.state } + imageStates,
         tooLarge = tooLarge.mapTo(mutableSetOf()) { SyncKey(kind = it.kind, name = it.name) },
         unreadable = failures.mapTo(mutableSetOf()) { it.key },
-        largeFiles = images.filter { isLargeFile(it.size) }.mapTo(mutableSetOf()) { SyncKey(kind = it.kind, name = it.name) },
-        imageReferences = if (isEverySongRead) read.filter { it.state.key.kind == LibraryFileKind.SONG }.associate { it.state.key to it.imageReferences } else null,
+        largeFiles = images.filter { it.size > largeFileThreshold }.mapTo(mutableSetOf()) { SyncKey(kind = it.kind, name = it.name) },
+        imageReferences = if (isEverySongRead) read.filter { it.state.key.kind == LibraryCollections.SONGS }.associate { it.state.key to it.imageReferences } else null,
     )
 }
 
@@ -85,7 +88,7 @@ private suspend fun readLocalState(libraryFileLocalSource: LibraryFileLocalSourc
         LocalRead.Read(
             state = LocalFileState(key = key, hash = localHashOf(key, bytes)),
             // The same generous reading the library's pruning uses, so that sync never deletes a picture the library keeps.
-            imageReferences = if (key.kind == LibraryFileKind.SONG) libraryFilesNamedBy(bytes.decodeLibraryText()) else emptySet(),
+            imageReferences = if (key.kind == LibraryCollections.SONGS) libraryFilesNamedBy(bytes.decodeLibraryText()) else emptySet(),
         )
     } ?: LocalRead.Absent
 }

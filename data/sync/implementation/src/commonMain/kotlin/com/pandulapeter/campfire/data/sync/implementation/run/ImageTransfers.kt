@@ -12,8 +12,7 @@ package com.pandulapeter.campfire.data.sync.implementation.run
 import com.pandulapeter.campfire.chordpro.edit.libraryFilesNamedBy
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.hashing.Sha256
-import com.pandulapeter.campfire.data.model.importing.ImportLimits
-import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.LibraryCollections
 import com.pandulapeter.campfire.data.model.library.decodeLibraryText
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.sync.SyncSummary
@@ -93,9 +92,9 @@ internal class ImageTransfers(
     /** Every library file a song here names as the files are now (`libraryFilesNamedBy`), or null where one cannot be read. */
     private suspend fun namedNow(): Set<String>? = try {
         libraryFileLocalSource.loadLibraryFiles()
-            .filter { it.kind == LibraryFileKind.SONG }
+            .filter { it.kind == LibraryCollections.SONGS }
             .flatMapTo(mutableSetOf()) { file ->
-                if (file.size > ImportLimits.MAX_TEXT_FILE_SIZE) return null
+                if (file.size > file.kind.maxSize) return null
                 libraryFileLocalSource.readLibraryFile(file.kind, file.name)?.let { libraryFilesNamedBy(it.decodeLibraryText()) }.orEmpty()
             }
     } catch (exception: CancellationException) {
@@ -144,7 +143,7 @@ internal class ImageTransfers(
 
     /** Whether the folder's copy is one found damaged before, unchanged since; forgets every other one first. */
     private suspend fun isKnownDamaged(pass: SyncPass, key: SyncKey) = damagedInFolderLock.withLock {
-        damagedInFolder.entries.removeAll { (name, hash) -> pass.remoteFiles[SyncKey(kind = LibraryFileKind.FILE, name = name)]?.contentHash != hash }
+        damagedInFolder.entries.removeAll { (name, hash) -> pass.remoteFiles[SyncKey(kind = key.kind, name = name)]?.contentHash != hash }
         key.name in damagedInFolder
     }
 

@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.remote.api.sync.model
 
-import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.SyncCollection
 
 /**
  * What changed in the remote folder since a cursor, see [com.pandulapeter.campfire.data.source.remote.api.sync.SyncFolder.changesSince].
@@ -28,7 +28,7 @@ data class RemoteChanges(
 ) {
 
     data class DeletedFile(
-        val kind: LibraryFileKind,
+        val kind: SyncCollection,
         val name: String,
     )
 }

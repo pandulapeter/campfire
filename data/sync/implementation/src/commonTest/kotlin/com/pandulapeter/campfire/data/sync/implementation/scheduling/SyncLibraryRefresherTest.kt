@@ -15,7 +15,7 @@ import com.pandulapeter.campfire.data.sync.implementation.RecordingSongRepositor
 import com.pandulapeter.campfire.data.sync.implementation.SyncKey
 import com.pandulapeter.campfire.data.sync.implementation.song
 import com.pandulapeter.campfire.data.sync.implementation.testEnvironment
-import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.LibraryCollections
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
@@ -73,5 +73,5 @@ class SyncLibraryRefresherTest {
         assertEquals(listOf("a.cho"), songRepository.refreshed)
     }
 
-    private fun song(name: String) = SyncKey(kind = LibraryFileKind.SONG, name = "$name.cho")
+    private fun song(name: String) = SyncKey(kind = LibraryCollections.SONGS, name = "$name.cho")
 }

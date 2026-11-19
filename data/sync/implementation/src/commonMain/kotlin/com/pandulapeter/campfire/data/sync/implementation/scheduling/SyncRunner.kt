@@ -201,7 +201,7 @@ internal class SyncRunner(
                             SyncWatchPoint(
                                 folder = provider,
                                 cursor = cursor,
-                                index = completed.toIndex(),
+                                index = completed.toIndex(engine.collections),
                                 syncedPreferences = completed.syncedPreferences,
                             )
                         }
@@ -296,7 +296,7 @@ internal class SyncRunner(
     private suspend fun synchronizeSharedCopies(provider: SyncProvider, result: SyncEngine.Result.Completed) = try {
         sharedCopySync.synchronize(
             folder = provider,
-            index = result.index.toIndex(),
+            index = result.index.toIndex(engine.collections),
             sharedFiles = result.sharedFiles,
             registryRevision = result.documentRevisions[SharedLinksFormat.NAME],
         )

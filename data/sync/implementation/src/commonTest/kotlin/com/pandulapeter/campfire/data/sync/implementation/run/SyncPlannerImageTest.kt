@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.sync.implementation.run
 
-import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.LibraryCollections
 import com.pandulapeter.campfire.data.sync.implementation.LocalFileState
 import com.pandulapeter.campfire.data.sync.implementation.RemoteFileState
 import com.pandulapeter.campfire.data.sync.implementation.SyncIndexEntry
@@ -77,7 +77,7 @@ class SyncPlannerImageTest {
     )
 
     private companion object {
-        val FIRST = SyncKey(LibraryFileKind.FILE, "0123456789abcdef.png")
-        val SECOND = SyncKey(LibraryFileKind.FILE, "fedcba9876543210.jpg")
+        val FIRST = SyncKey(LibraryCollections.FILES, "0123456789abcdef.png")
+        val SECOND = SyncKey(LibraryCollections.FILES, "fedcba9876543210.jpg")
     }
 }

@@ -13,7 +13,7 @@ package com.pandulapeter.campfire.data.sync.implementation
 
 import com.pandulapeter.campfire.data.sync.implementation.run.SyncEngine
 import com.pandulapeter.campfire.data.model.library.LibraryFile
-import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.SyncCollection
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource
 import kotlin.time.Clock
@@ -47,7 +47,7 @@ internal class FakeLibraryFileLocalSource(
     private val modifiedAt = mutableMapOf<SyncKey, Long>()
 
     /** The key [kind] / [name] finds on this file system, or null for a name no file answers to. */
-    fun held(kind: LibraryFileKind, name: String) = SyncKey(kind = kind, name = name).takeIf { it in files }
+    fun held(kind: SyncCollection, name: String) = SyncKey(kind = kind, name = name).takeIf { it in files }
         ?: naming.key(name).let { key -> files.keys.firstOrNull { it.kind == kind && naming.key(it.name) == key } }
 
     /** What a save does: the file [key] finds is replaced, under the spelling the file system leaves it, or created. */
@@ -71,28 +71,28 @@ internal class FakeLibraryFileLocalSource(
         LibraryFile(kind = key.kind, name = key.name, size = bytes.size.toLong(), lastModified = modifiedAt[key] ?: 0)
     }
 
-    override suspend fun readLibraryFile(kind: LibraryFileKind, name: String): ByteArray? {
+    override suspend fun readLibraryFile(kind: SyncCollection, name: String): ByteArray? {
         val key = SyncKey(kind = kind, name = name)
         onRead(key)
         return held(kind, name)?.let(files::get)
     }
 
-    override suspend fun libraryFileSize(kind: LibraryFileKind, name: String) = held(kind, name)?.let(files::get)?.size?.toLong()
+    override suspend fun libraryFileSize(kind: SyncCollection, name: String) = held(kind, name)?.let(files::get)?.size?.toLong()
 
-    override suspend fun existingSpellingOf(kind: LibraryFileKind, name: String) = if (held(kind, name) != null) {
+    override suspend fun existingSpellingOf(kind: SyncCollection, name: String) = if (held(kind, name) != null) {
         name
     } else {
         files.keys.firstOrNull { it.kind == kind && LibraryFiles.isSameLibraryName(it.name, name) }?.name
     }
 
-    override suspend fun writeLibraryFile(kind: LibraryFileKind, name: String, bytes: ByteArray) {
+    override suspend fun writeLibraryFile(kind: SyncCollection, name: String, bytes: ByteArray) {
         val key = SyncKey(kind = kind, name = name)
         onWrite(key)
         put(key, bytes)
     }
 
     override suspend fun writeLibraryFileToFreeName(
-        kind: LibraryFileKind,
+        kind: SyncCollection,
         desiredName: String,
         bytes: ByteArray,
         isTaken: (name: String) -> Boolean,
@@ -109,7 +109,7 @@ internal class FakeLibraryFileLocalSource(
     }
 
     /** The variants [writeLibraryFileToFreeName] names, under any case or Unicode form, as the real storage finds them. */
-    override suspend fun numberedVariantHolding(kind: LibraryFileKind, name: String, bytes: ByteArray): String? {
+    override suspend fun numberedVariantHolding(kind: SyncCollection, name: String, bytes: ByteArray): String? {
         val extension = LibraryFiles.identityKey(name.extension())
         val base = LibraryFiles.identityKey(name.removeSuffix(name.extension()))
         val variant = Regex("""${Regex.escape(base)} \((\d+)\)${Regex.escape(extension)}""")
@@ -125,13 +125,13 @@ internal class FakeLibraryFileLocalSource(
             ?.first
     }
 
-    override suspend fun deleteLibraryFile(kind: LibraryFileKind, name: String) {
+    override suspend fun deleteLibraryFile(kind: SyncCollection, name: String) {
         val key = SyncKey(kind = kind, name = name)
         onDelete(key)
         if (remove(key) != null) onDeleted(key)
     }
 
-    override fun canHoldFileName(kind: LibraryFileKind, name: String) = canHoldFileName(name)
+    override fun canHoldFileName(kind: SyncCollection, name: String) = canHoldFileName(name)
 
     /** ".setlist.json" before the part after the last dot, as the real storage reads an extension. */
     private fun String.extension() = when {

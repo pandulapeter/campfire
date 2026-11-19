@@ -9,7 +9,8 @@
  */
 package com.pandulapeter.campfire.data.source.remote.implementation.dropbox
 
-import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.SyncCollection
+import com.pandulapeter.campfire.data.model.library.SyncCollections
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.sync.SyncAccount
 import com.pandulapeter.campfire.data.model.sync.SyncProviderId
@@ -64,6 +65,10 @@ internal class DropboxSyncProvider(
     private val httpClientHolder: HttpClientHolder,
     private val credentialsStore: SyncCredentialsStore,
     private val appKey: String,
+    /** The library's collections, a folder of the app folder each, named by its id. */
+    private val collections: SyncCollections,
+    /** The largest folder document ([downloadDocument]) downloaded, refused above it with its revision. */
+    maxDocumentSize: Long,
     private val logger: Logger,
 ) : SyncProvider {
 
@@ -84,11 +89,11 @@ internal class DropboxSyncProvider(
         http = SyncHttpTransport(tokens = tokens, errors = DropboxErrors),
     )
 
-    private val changeFeed = DropboxChangeFeed(httpClientHolder = httpClientHolder, requests = requests, logger = logger)
+    private val changeFeed = DropboxChangeFeed(httpClientHolder = httpClientHolder, requests = requests, collections = collections, logger = logger)
 
     private val sharing = DropboxSharing(requests = requests, logger = logger)
 
-    private val downloads = DropboxDownloads(httpClientHolder = httpClientHolder, requests = requests)
+    private val downloads = DropboxDownloads(httpClientHolder = httpClientHolder, requests = requests, maxDocumentSize = maxDocumentSize)
 
     private val deletedFiles = DropboxDeletedFiles(requests = requests, logger = logger)
 
@@ -242,7 +247,7 @@ internal class DropboxSyncProvider(
             deserializer = DropboxListFolderResponse.serializer(),
             browserTimeoutMillis = DropboxTransport.LISTING_BROWSER_TIMEOUT_MILLIS,
         )
-        files += response.entries.toRemoteFiles()
+        files += response.entries.toRemoteFiles(collections)
         documents += response.entries.toDocumentRevisions()
         sharedFiles += response.entries.toSharedFiles()
         while (response.hasMore) {
@@ -254,7 +259,7 @@ internal class DropboxSyncProvider(
                 deserializer = DropboxListFolderResponse.serializer(),
                 browserTimeoutMillis = DropboxTransport.LISTING_BROWSER_TIMEOUT_MILLIS,
             )
-            files += response.entries.toRemoteFiles()
+            files += response.entries.toRemoteFiles(collections)
             documents += response.entries.toDocumentRevisions()
             sharedFiles += response.entries.toSharedFiles()
         }
@@ -270,14 +275,14 @@ internal class DropboxSyncProvider(
 
     override suspend fun changesSince(cursor: String) = changeFeed.changesSince(cursor)
 
-    override suspend fun download(kind: LibraryFileKind, name: String, maxSize: Long) = downloads.download(remotePath(kind, name), maxSize)
+    override suspend fun download(kind: SyncCollection, name: String, maxSize: Long) = downloads.download(remotePath(kind, name), maxSize)
 
     override suspend fun downloadDocument(name: String) = downloads.downloadDocument(documentPath(name))
 
     override fun contentHashOf(bytes: ByteArray) = dropboxContentHash(bytes)
 
     override suspend fun upload(
-        kind: LibraryFileKind,
+        kind: SyncCollection,
         name: String,
         bytes: ByteArray,
         expectedRevision: String?,
@@ -295,7 +300,7 @@ internal class DropboxSyncProvider(
         expectedRevision: String?,
     ) = upload(path = sharedFilePath(shareId), bytes = bytes, expectedRevision = expectedRevision)
 
-    override suspend fun restoreDeleted(kind: LibraryFileKind, name: String) = deletedFiles.restore(remotePath(kind, name))
+    override suspend fun restoreDeleted(kind: SyncCollection, name: String) = deletedFiles.restore(remotePath(kind, name))
 
     override suspend fun createSharedLink(shareId: String) = sharing.createLink(sharedFilePath(shareId))
 
@@ -414,9 +419,9 @@ internal class DropboxSyncProvider(
         return deletions.map { DropboxDeleteBatchEntry(tag = "failure", failure = JsonObject(mapOf(".tag" to reason))) }
     }
 
-    private fun remotePath(kind: LibraryFileKind, name: String) = "/${kind.id}/$name"
+    private fun remotePath(kind: SyncCollection, name: String) = "/${kind.id}/$name"
 
-    /** At the top of the app folder, where [toRemoteFiles] never looks, beside the two library folders. */
+    /** At the top of the app folder, where [toRemoteFiles] never looks, beside the collections' folders. */
     private fun documentPath(name: String) = "/$name"
 
     internal companion object {

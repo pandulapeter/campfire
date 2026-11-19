@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.local.implementation.source
 
-import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.SyncCollection
 import com.pandulapeter.campfire.data.model.sync.SyncAccount
 import com.pandulapeter.campfire.data.model.sync.SyncProviderId
 import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash
@@ -38,7 +38,7 @@ internal class InMemorySyncProvider : SyncProvider {
 
     override val id = SyncProviderId.DROPBOX
 
-    private val files = mutableMapOf<Pair<LibraryFileKind, String>, Pair<ByteArray, String>>()
+    private val files = mutableMapOf<Pair<SyncCollection, String>, Pair<ByteArray, String>>()
     private val documents = mutableMapOf<String, Pair<ByteArray, String>>()
     private var nextRevision = 1
 
@@ -85,7 +85,7 @@ internal class InMemorySyncProvider : SyncProvider {
     override suspend fun changesSince(cursor: String) =
         RemoteChanges(files = emptyList(), deletedFiles = emptyList(), documents = emptySet(), cursor = cursor)
 
-    override suspend fun download(kind: LibraryFileKind, name: String, maxSize: Long): RemoteDocument {
+    override suspend fun download(kind: SyncCollection, name: String, maxSize: Long): RemoteDocument {
         val (bytes, revision) = synchronized(this) { files.getValue(kind to name) }
         check(bytes.size <= maxSize) { "$name is ${bytes.size} bytes, more than the $maxSize asked for." }
         return RemoteDocument(bytes, revision)
@@ -93,7 +93,7 @@ internal class InMemorySyncProvider : SyncProvider {
 
     override fun contentHashOf(bytes: ByteArray) = localContentHash(bytes)
 
-    override suspend fun upload(kind: LibraryFileKind, name: String, bytes: ByteArray, expectedRevision: String?) =
+    override suspend fun upload(kind: SyncCollection, name: String, bytes: ByteArray, expectedRevision: String?) =
         write(files, kind to name, bytes, expectedRevision)
 
     override suspend fun delete(deletions: List<RemoteDeletion>): Map<RemoteDeletion, String> = synchronized(this) {
@@ -104,7 +104,7 @@ internal class InMemorySyncProvider : SyncProvider {
         emptyMap()
     }
 
-    override suspend fun restoreDeleted(kind: LibraryFileKind, name: String) = synchronized(this) { (kind to name) in files }
+    override suspend fun restoreDeleted(kind: SyncCollection, name: String) = synchronized(this) { (kind to name) in files }
 
     override suspend fun downloadDocument(name: String) =
         synchronized(this) { documents[name] }?.let { (bytes, revision) -> RemoteDocument(bytes, revision) }

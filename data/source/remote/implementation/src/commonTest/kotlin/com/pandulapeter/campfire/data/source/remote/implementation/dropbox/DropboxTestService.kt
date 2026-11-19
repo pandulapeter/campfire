@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.remote.implementation.dropbox
 
+import com.pandulapeter.campfire.data.model.library.LibraryCollections
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.source.local.api.SyncCredentialsLocalSource
 import com.pandulapeter.campfire.data.source.remote.implementation.auth.StoredSyncCredentials
@@ -50,6 +51,8 @@ internal fun dropboxProvider(
     },
     credentialsStore = SyncCredentialsStore(storage, Logger.Standard),
     appKey = "test-app-key",
+    collections = LibraryCollections.all,
+    maxDocumentSize = MAXIMUM_DOCUMENT_SIZE,
     logger = Logger.Standard,
 )
 
@@ -58,6 +61,9 @@ internal fun MockRequestHandleScope.respondJson(content: String, status: HttpSta
     status = status,
     headers = headersOf("Content-Type", "application/json"),
 )
+
+/** The largest folder document the provider downloads, Campfire's own limit. */
+internal const val MAXIMUM_DOCUMENT_SIZE = LibraryCollections.MAX_FOLDER_DOCUMENT_SIZE
 
 /** An empty last page of a listing, the answer of a request whose own content does not matter. */
 internal const val EMPTY_LISTING = """{"entries":[],"cursor":"","has_more":false}"""

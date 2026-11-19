@@ -11,7 +11,8 @@ package com.pandulapeter.campfire.data.sync.implementation.run
 
 import com.pandulapeter.campfire.chordpro.edit.libraryFilesNamedBy
 import com.pandulapeter.campfire.data.model.Logger
-import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.LibraryCollections
+import com.pandulapeter.campfire.data.model.library.SyncCollection
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.library.decodeLibraryText
 import com.pandulapeter.campfire.data.model.recovering
@@ -52,18 +53,18 @@ internal class LostFileRestorer(
         after: Map<SyncKey, SyncIndexEntry>,
     ): Boolean {
         val held = (listed.map { SyncKey(kind = it.kind, name = it.name) } + local.states.map { it.key } + local.tooLarge + local.unreadable + after.keys)
-            .filter { it.kind == LibraryFileKind.FILE }
+            .filter { it.kind.role == SyncCollection.Role.CONTENT_FILE }
             .mapTo(mutableSetOf()) { LibraryFiles.identityKey(it.name) }
         // A song this run deleted here names nothing any more; one it wrote is read again for what it names now.
         val listedSongs = local.imageReferences?.filterKeys { it in after || it !in before }?.values?.flatten().orEmpty()
-        val written = after.filter { (key, entry) -> key.kind == LibraryFileKind.SONG && before[key]?.localHash != entry.localHash }.keys
+        val written = after.filter { (key, entry) -> key.kind == LibraryCollections.SONGS && before[key]?.localHash != entry.localHash }.keys
         val named = listedSongs + written.flatMap { namedBy(it) }
         val missing = named.distinct().filter { LibraryFiles.identityKey(it) !in held && it !in asked }.take(MAXIMUM_RESTORES)
         var isAnyRestored = false
         for (name in missing) {
             asked += name
             val isRestored = logger.recovering(describe = { "Could not restore \"$name\": ${it.message}" }, fallback = { null }) {
-                provider.restoreDeleted(LibraryFileKind.FILE, name)
+                provider.restoreDeleted(LibraryCollections.FILES, name)
             }
             if (isRestored == null) {
                 asked -= name

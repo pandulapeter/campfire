@@ -15,7 +15,7 @@ import com.pandulapeter.campfire.data.sync.implementation.SyncIndexEntry
 import com.pandulapeter.campfire.data.sync.implementation.SyncKey
 import com.pandulapeter.campfire.data.sync.implementation.SyncOperation
 import com.pandulapeter.campfire.data.sync.implementation.song
-import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.LibraryCollections
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -112,7 +112,7 @@ class SyncPlannerTest {
     /** The input a library folder that went missing hands the planner, and what the engine's remote guard keys on. */
     @Test
     fun `every file the index knows becomes a remote deletion when the library folder is gone`() {
-        val keys = (1..5).map { SyncKey(LibraryFileKind.SONG, "song_$it.cho") }
+        val keys = (1..5).map { SyncKey(LibraryCollections.SONGS, "song_$it.cho") }
         assertEquals(
             expected = keys.map { SyncOperation.DeleteRemote(it, revision = "r1") },
             actual = SyncPlanner.plan(
@@ -163,7 +163,7 @@ class SyncPlannerTest {
      */
     @Test
     fun `a file deleted remotely is put back when the same pass deletes its bytes remotely under another name`() {
-        val renamed = SyncKey(LibraryFileKind.SONG, "Artist - Old title.cho")
+        val renamed = SyncKey(LibraryCollections.SONGS, "Artist - Old title.cho")
         assertEquals(
             expected = listOf(
                 SyncOperation.Upload(SONG, expectedRevision = null),
@@ -180,8 +180,8 @@ class SyncPlannerTest {
     /** Songs and setlists are separate folders, so the same name in each is two different files. */
     @Test
     fun `the same name in the two folders is two files`() {
-        val songKey = SyncKey(LibraryFileKind.SONG, "Both.cho")
-        val setlistKey = SyncKey(LibraryFileKind.SETLIST, "Both.cho")
+        val songKey = SyncKey(LibraryCollections.SONGS, "Both.cho")
+        val setlistKey = SyncKey(LibraryCollections.SETLISTS, "Both.cho")
         val operations = SyncPlanner.plan(
             local = listOf(LocalFileState(songKey, "a")),
             remote = listOf(RemoteFileState(setlistKey, "r1", contentHash = null)),
@@ -199,7 +199,7 @@ class SyncPlannerTest {
     )
 
     private companion object {
-        val SONG = SyncKey(LibraryFileKind.SONG, "Artist - Title.cho")
+        val SONG = SyncKey(LibraryCollections.SONGS, "Artist - Title.cho")
 
         fun local(key: SyncKey, hash: String) = LocalFileState(key = key, hash = hash)
 

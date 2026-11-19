@@ -12,7 +12,7 @@ package com.pandulapeter.campfire.data.sync.implementation
 import com.pandulapeter.campfire.data.sync.implementation.index.SyncIndexDocument
 import com.pandulapeter.campfire.data.sync.implementation.run.SyncEngine
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
-import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.LibraryCollections
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.sync.SyncProviderId
@@ -29,14 +29,14 @@ internal val ORIGINAL = "Original".encodeToByteArray()
 internal val HERE = "Edited here".encodeToByteArray()
 internal val THERE = "Edited there".encodeToByteArray()
 
-internal val GIG = SyncKey(kind = LibraryFileKind.SETLIST, name = "gig.setlist.json")
-internal val GIG_COPY = SyncKey(kind = LibraryFileKind.SETLIST, name = "gig (2).setlist.json")
+internal val GIG = SyncKey(kind = LibraryCollections.SETLISTS, name = "gig.setlist.json")
+internal val GIG_COPY = SyncKey(kind = LibraryCollections.SETLISTS, name = "gig (2).setlist.json")
 
 internal fun song(number: Int) = song(name = "song_$number")
 
-internal fun song(name: String) = SyncKey(kind = LibraryFileKind.SONG, name = "$name.cho")
+internal fun song(name: String) = SyncKey(kind = LibraryCollections.SONGS, name = "$name.cho")
 
-internal fun foreign(name: String) = SyncKey(kind = LibraryFileKind.SONG, name = name)
+internal fun foreign(name: String) = SyncKey(kind = LibraryCollections.SONGS, name = name)
 
 /** A file one byte over what a run reads, put into the library from outside the app. */
 internal fun tooLarge() = ByteArray((ImportLimits.MAX_TEXT_FILE_SIZE + 1).toInt())
@@ -96,6 +96,8 @@ internal suspend fun synchronize(
     setlistComparison = setlistComparison,
     plantedContentHash = plantedContentHash,
     logger = logger,
+    collections = LibraryCollections.all,
+    largeFileThreshold = LibraryCollections.LARGE_FILE_THRESHOLD,
     imageWritesGate = { block -> block(heldPictures()) },
 ).synchronize(
     provider = provider,

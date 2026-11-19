@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.remote.implementation.dropbox
 
-import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.LibraryCollections
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncNetworkException
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteDeletion
 import io.ktor.client.engine.mock.MockEngine
@@ -142,7 +142,7 @@ class DropboxDeletionTest {
         assertEquals(expected = 1, actual = jobCount)
     }
 
-    private fun songDeletions(count: Int) = (1..count).map { RemoteDeletion(LibraryFileKind.SONG, "song_$it.cho", expectedRevision = null) }
+    private fun songDeletions(count: Int) = (1..count).map { RemoteDeletion(LibraryCollections.SONGS, "song_$it.cho", expectedRevision = null) }
 
     /** The files a `delete_batch` request names, read from its body the way Dropbox reads it. */
     private fun pathsOf(request: HttpRequestData) = Json.parseToJsonElement((request.body as TextContent).text)

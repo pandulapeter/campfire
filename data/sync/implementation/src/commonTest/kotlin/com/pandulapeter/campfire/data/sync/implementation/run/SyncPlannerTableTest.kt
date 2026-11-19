@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.sync.implementation.run
 
-import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.LibraryCollections
 import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteFile
 import com.pandulapeter.campfire.data.sync.implementation.LocalFileState
@@ -197,18 +197,18 @@ class SyncPlannerTableTest {
                 if (entry == null) add("deletes $key from the folder, which the index never saw")
                 if (entry != null && remote[key] != entry.remoteRevision) add("deletes $key from the folder, changed since the last run")
             }
-            val deletedPictures = (deletedHere + deletedThere).filter { it.kind == LibraryFileKind.FILE }
+            val deletedPictures = (deletedHere + deletedThere).filter { it.kind == LibraryCollections.FILES }
             deletedPictures.forEach { key ->
                 if (named == null) add("deletes $key while a song here could not be read")
                 if (named != null && key.name in named) add("deletes $key, which a song here names")
             }
             // A song coming down or going may name a picture this device cannot see named yet, or keep one by an edit.
-            if (deletedPictures.isNotEmpty() && operations.any { it.key.kind == LibraryFileKind.SONG && it.isSongSetChange }) {
+            if (deletedPictures.isNotEmpty() && operations.any { it.key.kind == LibraryCollections.SONGS && it.isSongSetChange }) {
                 add("deletes a picture in a pass that changes which songs there are")
             }
             // A picture's version is its name: two of one size are two versions, though the index knows both by it.
-            val versionsDeletedHere = deletedHere.mapTo(mutableSetOf()) { it.kind to if (it.kind == LibraryFileKind.FILE) it.name else local[it] }
-            val versionsDeletedThere = deletedThere.mapTo(mutableSetOf()) { it.kind to if (it.kind == LibraryFileKind.FILE) it.name else index[it]?.localHash }
+            val versionsDeletedHere = deletedHere.mapTo(mutableSetOf()) { it.kind to if (it.kind == LibraryCollections.FILES) it.name else local[it] }
+            val versionsDeletedThere = deletedThere.mapTo(mutableSetOf()) { it.kind to if (it.kind == LibraryCollections.FILES) it.name else index[it]?.localHash }
             (versionsDeletedHere intersect versionsDeletedThere).forEach { add("deletes the version ${it.second} on both sides") }
             (local.keys + remote.keys).forEach { key ->
                 val entry = index[key]
@@ -241,14 +241,14 @@ class SyncPlannerTableTest {
          * takes for the same file, and another name altogether, which a rename leaves (the planner knows no moves).
          */
         val DOCUMENTS = listOf(
-            SyncKey(LibraryFileKind.SONG, "Café - Title.cho") to listOf("café - title.cho", "Café - Title.cho", "Café - Old title.cho"),
-            SyncKey(LibraryFileKind.SETLIST, "Café night.setlist.json") to
+            SyncKey(LibraryCollections.SONGS, "Café - Title.cho") to listOf("café - title.cho", "Café - Title.cho", "Café - Old title.cho"),
+            SyncKey(LibraryCollections.SETLISTS, "Café night.setlist.json") to
                 listOf("café NIGHT.setlist.json", "Café night.setlist.json", "Old night.setlist.json"),
         ).map { (key, names) -> key to names.map { key.copy(name = it) } }
 
-        val NAMING_SONG = SyncKey(LibraryFileKind.SONG, "naming.cho")
-        val OTHER_SONG = SyncKey(LibraryFileKind.SONG, "other.cho")
-        val FIRST_PICTURE = SyncKey(LibraryFileKind.FILE, "0123456789abcdef.png")
-        val SECOND_PICTURE = SyncKey(LibraryFileKind.FILE, "fedcba9876543210.jpg")
+        val NAMING_SONG = SyncKey(LibraryCollections.SONGS, "naming.cho")
+        val OTHER_SONG = SyncKey(LibraryCollections.SONGS, "other.cho")
+        val FIRST_PICTURE = SyncKey(LibraryCollections.FILES, "0123456789abcdef.png")
+        val SECOND_PICTURE = SyncKey(LibraryCollections.FILES, "fedcba9876543210.jpg")
     }
 }

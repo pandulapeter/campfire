@@ -37,7 +37,7 @@ import com.pandulapeter.campfire.data.sync.implementation.song
 import com.pandulapeter.campfire.data.sync.implementation.synchronize
 import com.pandulapeter.campfire.data.sync.implementation.testEnvironment
 import com.pandulapeter.campfire.data.model.Logger
-import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.LibraryCollections
 import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.sync.SyncFailureReason
 import com.pandulapeter.campfire.data.model.sync.SyncOutcome
@@ -363,7 +363,7 @@ class SyncRunSchedulerTest {
         lastSyncedAt = 1,
         syncedPreferences = null,
         index = mapValues { (key, bytes) ->
-            SyncIndexEntry(localHash = if (key.kind == LibraryFileKind.FILE) localImageHash(bytes.size.toLong()) else localContentHash(bytes), remoteRevision = "r1")
+            SyncIndexEntry(localHash = if (key.kind == LibraryCollections.FILES) localImageHash(bytes.size.toLong()) else localContentHash(bytes), remoteRevision = "r1")
         },
     ).encoded()
 
@@ -446,9 +446,9 @@ class SyncRunSchedulerTest {
         val MARGIN = 1.seconds
 
         val PHOTO_BYTES = "photo".encodeToByteArray()
-        val PHOTO = SyncKey(kind = LibraryFileKind.FILE, name = localContentHash(PHOTO_BYTES).take(16) + ".png")
+        val PHOTO = SyncKey(kind = LibraryCollections.FILES, name = localContentHash(PHOTO_BYTES).take(16) + ".png")
         val SECOND_PHOTO_BYTES = "another photo".encodeToByteArray()
-        val SECOND_PHOTO = SyncKey(kind = LibraryFileKind.FILE, name = localContentHash(SECOND_PHOTO_BYTES).take(16) + ".png")
+        val SECOND_PHOTO = SyncKey(kind = LibraryCollections.FILES, name = localContentHash(SECOND_PHOTO_BYTES).take(16) + ".png")
 
         /** Two songs naming a picture each, and three naming none, so that deleting one is no question. */
         val FOLDER = (3..5).associate { song(it) to "Song $it".encodeToByteArray() } + mapOf(

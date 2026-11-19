@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.source.remote.implementation
 
 import com.pandulapeter.campfire.data.model.Logger
+import com.pandulapeter.campfire.data.model.library.LibraryCollections
 import com.pandulapeter.campfire.data.source.remote.api.catalogue.CoverArtSearchRemoteSources
 import com.pandulapeter.campfire.data.source.remote.api.catalogue.SongDetailsSearchRemoteSources
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncProviders
@@ -54,6 +55,8 @@ object DataRemoteSourceModule {
                         httpClientHolder = httpClientHolder,
                         credentialsStore = credentialsStore,
                         appKey = DROPBOX_APP_KEY,
+                        collections = LibraryCollections.all,
+                        maxDocumentSize = LibraryCollections.MAX_FOLDER_DOCUMENT_SIZE,
                         logger = logger,
                     ),
                 )

@@ -19,7 +19,7 @@ import com.pandulapeter.campfire.data.sync.implementation.SyncKey
 import com.pandulapeter.campfire.data.sync.implementation.indexOf
 import com.pandulapeter.campfire.data.sync.implementation.song
 import com.pandulapeter.campfire.data.sync.implementation.synchronize
-import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.LibraryCollections
 import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -100,7 +100,7 @@ class SyncEngineSetlistDateTest {
         val result = synchronize(local, provider, indexOf(song(1) to "Song;".encodeToByteArray()), setlistComparison = DayBlindSetlistComparison)
 
         assertContentEquals(here, local.files[song(1)])
-        assertContentEquals(there, local.files[SyncKey(kind = LibraryFileKind.SONG, name = "song_1 (2).cho")])
+        assertContentEquals(there, local.files[SyncKey(kind = LibraryCollections.SONGS, name = "song_1 (2).cho")])
         assertEquals(listOf("song_1 (2).cho"), assertIs<SyncEngine.Result.Completed>(result).summary.conflicts)
     }
 

@@ -11,7 +11,7 @@ package com.pandulapeter.campfire.data.sync.implementation.shared
 
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
-import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.LibraryCollections
 import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash
 import com.pandulapeter.campfire.data.model.share.SharedLinkKind
 import com.pandulapeter.campfire.data.sync.implementation.Device
@@ -469,12 +469,12 @@ class SharedCopySyncTest {
         /** A picture of the library, named by its content as sync requires, and its bytes. */
         fun picture(content: String): Pair<SyncKey, ByteArray> {
             val bytes = content.encodeToByteArray()
-            return SyncKey(kind = LibraryFileKind.FILE, name = localContentHash(bytes).take(16) + ".png") to bytes
+            return SyncKey(kind = LibraryCollections.FILES, name = localContentHash(bytes).take(16) + ".png") to bytes
         }
         /** A file attached to a song of the library, named by its content as sync requires, and its bytes. */
         fun attachment(content: String): Pair<SyncKey, ByteArray> {
             val bytes = content.encodeToByteArray()
-            return SyncKey(kind = LibraryFileKind.FILE, name = localContentHash(bytes).take(16) + ".pdf") to bytes
+            return SyncKey(kind = LibraryCollections.FILES, name = localContentHash(bytes).take(16) + ".pdf") to bytes
         }
 
         val ONE = "One".encodeToByteArray()

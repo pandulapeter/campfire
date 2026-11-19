@@ -76,8 +76,8 @@ class LibraryFilePredicatesTest {
         assertFalse(LibraryFiles.isLibraryAttachmentName("Rehearsal take.pdf"))
         assertTrue(LibraryFiles.isLibraryFileName("$digits.mp3"))
         assertTrue(LibraryFiles.isLibraryFileName("$digits.webp"))
-        assertTrue(LibraryFileKind.FILE.matches("$digits.mscz"))
-        assertFalse(LibraryFileKind.FILE.matches("$digits.sh"))
+        assertTrue(LibraryCollections.FILES.matches("$digits.mscz"))
+        assertFalse(LibraryCollections.FILES.matches("$digits.sh"))
     }
 
     @Test

@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.remote.implementation.dropbox
 
-import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.LibraryCollections
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncNetworkException
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteChanges
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteFile
@@ -194,8 +194,8 @@ class DropboxChangeFeedTest {
 
         assertEquals(
             expected = RemoteChanges(
-                files = listOf(RemoteFile(LibraryFileKind.SONG, name = "Wonderwall.cho", revision = "r1", contentHash = "h1", size = 10)),
-                deletedFiles = listOf(RemoteChanges.DeletedFile(LibraryFileKind.SONG, name = "gone.cho")),
+                files = listOf(RemoteFile(LibraryCollections.SONGS, name = "Wonderwall.cho", revision = "r1", contentHash = "h1", size = 10)),
+                deletedFiles = listOf(RemoteChanges.DeletedFile(LibraryCollections.SONGS, name = "gone.cho")),
                 documents = setOf("preferences.json", "setlists"),
                 cursor = "page 3",
             ),

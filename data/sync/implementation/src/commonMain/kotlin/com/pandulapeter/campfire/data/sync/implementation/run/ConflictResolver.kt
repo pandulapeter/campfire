@@ -11,7 +11,7 @@ package com.pandulapeter.campfire.data.sync.implementation.run
 
 import com.pandulapeter.campfire.data.sync.implementation.SyncIndexEntry
 import com.pandulapeter.campfire.data.sync.implementation.SyncKey
-import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.LibraryCollections
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.sync.SyncSummary
 import com.pandulapeter.campfire.data.model.recovering
@@ -82,7 +82,7 @@ internal class ConflictResolver(
         if (plantedHash != null && plantedHash == localContentHash(localBytes)) {
             return takeRemote(key = key, revision = revision, localBytes = localBytes, remote = remote, onLocalFileChanged = onLocalFileChanged)
         }
-        if (key.kind == LibraryFileKind.SETLIST) {
+        if (key.kind == LibraryCollections.SETLISTS) {
             // Byte for byte as this version encodes the document, which holds for every file the app wrote; one written
             // by hand never matches and keeps its conflict copy, which is the safe direction.
             val isOnlyTheDayHere = indexEntry != null &&
@@ -139,7 +139,7 @@ internal class ConflictResolver(
         if (uploaded !is RemoteWriteResult.Written) {
             // Contested - unless what is there now is what was just sent, which is how a write looks that landed and was
             // then retried. In that case the remote version is gone from the service, and the copy is all there is of it.
-            val isOwnWrite = provider.download(key.kind, key.name, maxSize = key.maximumSize).bytes.contentEquals(localBytes)
+            val isOwnWrite = provider.download(key.kind, key.name, maxSize = key.kind.maxSize).bytes.contentEquals(localBytes)
             if (!isOwnWrite && !isReused) discardCopy(copyKey, remote, onLocalFileChanged)
             return SyncEngine.OperationOutcome(
                 summary = if (isOwnWrite) SyncSummary(conflicts = listOf(copyName)) else SyncSummary(),

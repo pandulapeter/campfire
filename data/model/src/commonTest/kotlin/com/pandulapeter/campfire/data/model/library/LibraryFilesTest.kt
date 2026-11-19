@@ -132,8 +132,8 @@ internal class LibraryFilesTest {
         assertTrue(LibraryFiles.isSetlistFileName("s.setlist.json"))
         assertFalse(LibraryFiles.isSetlistFileName("._s.setlist.json"))
         assertFalse(LibraryFiles.isSetlistFileName("s.json"))
-        assertFalse(LibraryFileKind.SONG.matches("._a.cho"))
-        assertTrue(LibraryFileKind.SETLIST.matches("s.setlist.json"))
+        assertFalse(LibraryCollections.SONGS.matches("._a.cho"))
+        assertTrue(LibraryCollections.SETLISTS.matches("s.setlist.json"))
     }
 
     @Test

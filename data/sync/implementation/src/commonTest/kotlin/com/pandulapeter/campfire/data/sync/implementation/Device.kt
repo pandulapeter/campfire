@@ -11,6 +11,7 @@
 
 package com.pandulapeter.campfire.data.sync.implementation
 
+import com.pandulapeter.campfire.data.model.library.LibraryCollections
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLock
@@ -190,7 +191,7 @@ internal class Device(
                 buildNumber = buildNumber,
             ).synchronize(
                 folder = cloud,
-                index = completed.index.toIndex(),
+                index = completed.index.toIndex(LibraryCollections.all),
                 sharedFiles = completed.sharedFiles,
                 registryRevision = completed.documentRevisions[SharedLinksFormat.NAME],
             )
@@ -223,13 +224,13 @@ internal class Device(
     }
 
     /** What the index says the last run saw, by path: what a round of runs changed besides the files. */
-    val indexState get() = index.toIndex().entries.associate { (key, entry) -> key.path to entry.toString() }
+    val indexState get() = index.toIndex(LibraryCollections.all).entries.associate { (key, entry) -> key.path to entry.toString() }
 
     /**
      * The songs and setlists the index knew at any point of the last [attempt]: when it started, and in every index it
      * reported since. What the deletion guard measures a run's deletions against.
      */
-    val documentIndexKeysOfLastAttempt get() = writtenIndexes.flatMapTo(mutableSetOf()) { written -> written.toIndex().keys.filter { it.kind.isDocument } }
+    val documentIndexKeysOfLastAttempt get() = writtenIndexes.flatMapTo(mutableSetOf()) { written -> written.toIndex(LibraryCollections.all).keys.filter { it.kind.isDocument } }
 
     /** What the app's rename and deletion of a shared item leave for the next run. */
     suspend fun journal(entry: SharedLinksJournal.Entry) = sharedLinksJournal.append(listOf(entry))

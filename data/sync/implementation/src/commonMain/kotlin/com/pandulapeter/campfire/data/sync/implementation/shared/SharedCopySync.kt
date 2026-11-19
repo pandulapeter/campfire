@@ -11,7 +11,8 @@ package com.pandulapeter.campfire.data.sync.implementation.shared
 
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
-import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.LibraryCollections
+import com.pandulapeter.campfire.data.model.library.SyncCollection
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.library.decodeLibraryText
 import com.pandulapeter.campfire.data.model.library.sharedCopyAttachments
@@ -212,7 +213,7 @@ internal class SharedCopySync(
             val images = if (!index.hasImages) {
                 emptyList()
             } else if (kind == SharedLinkKind.SETLIST) {
-                filesNamedBy(songNames.orEmpty().mapNotNull { name -> libraryFileLocalSource.readLibraryFile(LibraryFileKind.SONG, index.localNameOf(name)) })
+                filesNamedBy(songNames.orEmpty().mapNotNull { name -> libraryFileLocalSource.readLibraryFile(LibraryCollections.SONGS, index.localNameOf(name)) })
             } else {
                 filesNamedBy(listOfNotNull(item ?: libraryFileLocalSource.readLibraryFile(libraryKind, localName)))
             }
@@ -220,7 +221,7 @@ internal class SharedCopySync(
                 kind = kind,
                 fileName = entry.fileName,
                 hash = item?.let(::localContentHash) ?: indexed!!.value.localHash,
-                songs = songNames?.map { name -> name to index.find(LibraryFileKind.SONG, name)?.value?.localHash },
+                songs = songNames?.map { name -> name to index.find(LibraryCollections.SONGS, name)?.value?.localHash },
                 images = images,
             )
             if (entry.isBuiltFrom(expected, remote)) {
@@ -246,7 +247,7 @@ internal class SharedCopySync(
             val files = linkedMapOf(entry.fileName to itemBytes.asExportedText())
             val songTexts = mutableListOf<ByteArray>()
             val songs = songNames?.map { name ->
-                val bytes = libraryFileLocalSource.readLibraryFile(LibraryFileKind.SONG, index.localNameOf(name))
+                val bytes = libraryFileLocalSource.readLibraryFile(LibraryCollections.SONGS, index.localNameOf(name))
                 if (bytes != null && name !in files) {
                     files[name] = bytes.asExportedText()
                     songTexts += bytes
@@ -341,11 +342,11 @@ internal class SharedCopySync(
          * a copy carries besides its songs, and what its fingerprint names.
          */
         private suspend fun filesNamedBy(songs: List<ByteArray>) = songs.flatMap { contents.libraryFileNamesOf(it) }.toSet()
-            .filter { LibraryFiles.isLibraryFileName(it) && index.find(LibraryFileKind.FILE, it) != null }
+            .filter { LibraryFiles.isLibraryFileName(it) && index.find(LibraryCollections.FILES, it) != null }
             .sorted()
 
         private suspend fun readFile(name: String) =
-            libraryFileLocalSource.readLibraryFile(LibraryFileKind.FILE, index.localNameOf(name, LibraryFileKind.FILE))
+            libraryFileLocalSource.readLibraryFile(LibraryCollections.FILES, index.localNameOf(name, LibraryCollections.FILES))
 
         private fun orphan(entry: SharedLinksEntry) {
             if (entry.state != SharedLinksEntry.STATE_ORPHANED) changes.update(entry.shareId) { it.copy(state = SharedLinksEntry.STATE_ORPHANED) }
@@ -362,13 +363,13 @@ internal class SharedCopySync(
 
         private val entries by lazy { index.entries.associateBy { (key, _) -> key.kind to LibraryFiles.identityKey(key.name) } }
 
-        fun find(kind: LibraryFileKind, name: String) = entries[kind to LibraryFiles.identityKey(name)]
+        fun find(kind: SyncCollection, name: String) = entries[kind to LibraryFiles.identityKey(name)]
 
         /** This device's spelling of [name], where the index knows the file under another one. */
-        fun localNameOf(name: String, kind: LibraryFileKind = LibraryFileKind.SONG) = find(kind, name)?.key?.name ?: name
+        fun localNameOf(name: String, kind: SyncCollection = LibraryCollections.SONGS) = find(kind, name)?.key?.name ?: name
 
         /** Whether the library held any picture at the end of the run, without which no song shows one. */
-        val hasImages by lazy { entries.keys.any { (kind, _) -> kind == LibraryFileKind.FILE } }
+        val hasImages by lazy { entries.keys.any { (kind, _) -> kind == LibraryCollections.FILES } }
     }
 
     /** A library text file as the export writes it: read as the app reads text, then written as UTF-8. */
@@ -376,8 +377,8 @@ internal class SharedCopySync(
 
     private val SharedLinkKind.libraryKind
         get() = when (this) {
-            SharedLinkKind.SETLIST -> LibraryFileKind.SETLIST
-            SharedLinkKind.SONG -> LibraryFileKind.SONG
+            SharedLinkKind.SETLIST -> LibraryCollections.SETLISTS
+            SharedLinkKind.SONG -> LibraryCollections.SONGS
         }
 
     private companion object {

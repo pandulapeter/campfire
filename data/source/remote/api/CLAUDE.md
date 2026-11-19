@@ -15,7 +15,7 @@ A second sync provider must be one new class, not an engine change; the rules ar
 ## Sync provider contract
 
 - A run is handed only the `SyncFolder`, so it never connects or re-authorizes.
-- One flat folder addressed by `(LibraryFileKind, name)`. Names are unique (a service allowing duplicates resolves that
+- One flat folder addressed by `(SyncCollection, name)`. Names are unique (a service allowing duplicates resolves that
   in its own `list`) and resolved ignoring case and Unicode form (`LibraryFiles.identityKey`), since the engine
   addresses a remote file by its local spelling. Dropbox does so itself; a service with exact names maps them to ids.
 - Revisions are **opaque strings**, never parsed. Every run lists the whole folder (correct after an interrupted run).

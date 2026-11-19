@@ -14,7 +14,8 @@ import com.pandulapeter.campfire.data.sync.implementation.RemoteFileState
 import com.pandulapeter.campfire.data.sync.implementation.SyncIndexEntry
 import com.pandulapeter.campfire.data.sync.implementation.SyncKey
 import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPreferencesDocument
-import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.LibraryCollections
+import com.pandulapeter.campfire.data.model.library.SyncCollection
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteFile
@@ -52,7 +53,7 @@ internal fun preparePass(
     local: List<LocalFileState>,
     tooLarge: Set<SyncKey>,
     unreadable: Set<SyncKey>,
-    canHoldFileName: (LibraryFileKind, String) -> Boolean,
+    canHoldFileName: (SyncCollection, String) -> Boolean,
     deletionPolicy: SyncDeletionPolicy,
     syncedPreferences: JsonObject?,
 ): PreparedPass {
@@ -101,7 +102,7 @@ internal fun preparePass(
         val localKeys = local.mapTo(mutableSetOf()) { it.key }
         val remoteKeys = remote.mapTo(mutableSetOf()) { it.key }
         val forgottenSongs = index.keys
-            .filter { it.kind == LibraryFileKind.SONG && it in localKeys && it !in remoteKeys }
+            .filter { it.kind == LibraryCollections.SONGS && it in localKeys && it !in remoteKeys }
             .mapTo(mutableSetOf()) { LibraryFiles.identityKey(it.name) }
         index = index.filterKeys { it !in localKeys || it in remoteKeys }
         // The same for what is set for those songs in preferences.json: with the base still naming them, the

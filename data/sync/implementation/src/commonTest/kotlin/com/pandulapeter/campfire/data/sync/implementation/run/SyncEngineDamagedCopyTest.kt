@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.data.sync.implementation.run
 
 import com.pandulapeter.campfire.data.model.Logger
-import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.LibraryCollections
 import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLock
 import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash
@@ -38,6 +38,8 @@ class SyncEngineDamagedCopyTest {
         setlistComparison = NoSetlistComparison,
         plantedContentHash = { null },
         logger = Logger.Standard,
+        collections = LibraryCollections.all,
+        largeFileThreshold = LibraryCollections.LARGE_FILE_THRESHOLD,
         imageWritesGate = { it(heldByEditor) },
     )
     private var heldByEditor = emptySet<String>()
@@ -96,9 +98,9 @@ class SyncEngineDamagedCopyTest {
 
     private companion object {
         val PHOTO_BYTES = "photo".encodeToByteArray()
-        val PHOTO = SyncKey(kind = LibraryFileKind.FILE, name = localContentHash(PHOTO_BYTES).take(16) + ".png")
+        val PHOTO = SyncKey(kind = LibraryCollections.FILES, name = localContentHash(PHOTO_BYTES).take(16) + ".png")
         val DAMAGED = "not the photo".encodeToByteArray()
-        val SONG = SyncKey(kind = LibraryFileKind.SONG, name = "artist-title.cho")
+        val SONG = SyncKey(kind = LibraryCollections.SONGS, name = "artist-title.cho")
         val SONG_BYTES = "{image: src=${PHOTO.name}}".encodeToByteArray()
     }
 }

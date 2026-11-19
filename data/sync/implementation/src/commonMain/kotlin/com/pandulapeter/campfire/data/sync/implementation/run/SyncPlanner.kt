@@ -9,7 +9,8 @@
  */
 package com.pandulapeter.campfire.data.sync.implementation.run
 
-import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.LibraryCollections
+import com.pandulapeter.campfire.data.model.library.SyncCollection
 import com.pandulapeter.campfire.data.sync.implementation.LocalFileState
 import com.pandulapeter.campfire.data.sync.implementation.RemoteFileState
 import com.pandulapeter.campfire.data.sync.implementation.SyncIndexEntry
@@ -35,7 +36,7 @@ import com.pandulapeter.campfire.data.sync.implementation.SyncOperation
  * while the rename's other half deletes the old name from the folder. So a pass never deletes one version on both
  * sides: a local deletion of bytes the same plan deletes remotely under another name puts the file back instead.
  *
- * Pictures ([LibraryFileKind.FILE]) follow the songs that name them, by one more rule, the twin of the edit beating the
+ * Pictures (a [SyncCollection.Role.CONTENT_FILE] collection) follow the songs that name them, by one more rule, the twin of the edit beating the
  * deletion: **a reference beats a deletion** ([withImagesKept]).
  */
 internal object SyncPlanner {
@@ -65,7 +66,7 @@ internal object SyncPlanner {
         val operations = kept.operations
         // Renames only: a picture has none, and its index hash is its size, which two pictures may share.
         val deletedRemotely = operations.filterIsInstance<SyncOperation.DeleteRemote>()
-            .filter { it.key.kind != LibraryFileKind.FILE }
+            .filter { it.key.kind.role != SyncCollection.Role.CONTENT_FILE }
             .mapNotNull { operation -> index[operation.key]?.let { operation.key.kind to it.localHash } }
             .toSet()
         if (deletedRemotely.isEmpty()) return kept
@@ -97,7 +98,7 @@ internal object SyncPlanner {
      * since the next run would wait as well.
      */
     private fun List<SyncOperation>.withImagesKept(imageReferences: Map<SyncKey, Set<String>>?): SyncPlan {
-        val songOperations = filter { it.key.kind == LibraryFileKind.SONG }
+        val songOperations = filter { it.key.kind == LibraryCollections.SONGS }
         // A song deleted from the folder counts too: another device's edit may beat that deletion, and bring the song back
         // naming a picture deleted beside it (a device of a version without pictures, which never puts one back).
         val isSongSetChanging = songOperations.any { it !is SyncOperation.Upload && it !is SyncOperation.Forget }
@@ -109,7 +110,7 @@ internal object SyncPlanner {
             val key = operation.key
             val isKept = kept?.contains(key.name) == true
             when {
-                key.kind != LibraryFileKind.FILE -> operation
+                key.kind.role != SyncCollection.Role.CONTENT_FILE -> operation
                 operation is SyncOperation.DeleteLocal -> when {
                     isKept -> SyncOperation.Upload(key, expectedRevision = null)
                     mayDelete -> operation

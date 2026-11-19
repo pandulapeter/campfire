@@ -23,7 +23,7 @@ import com.pandulapeter.campfire.data.sync.implementation.renamedIndexOf
 import com.pandulapeter.campfire.data.sync.implementation.song
 import com.pandulapeter.campfire.data.sync.implementation.syncedIndexOf
 import com.pandulapeter.campfire.data.sync.implementation.synchronize
-import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.LibraryCollections
 import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash
 import kotlinx.coroutines.test.runTest
@@ -161,10 +161,10 @@ class SyncEngineNameFoldingTest {
 
     @Test
     fun `names are only folded within the same kind`() = assertEquals(
-        expected = listOf(RemoteFileState(SyncKey(LibraryFileKind.SETLIST, "song.cho"), revision = "r1", contentHash = null)),
+        expected = listOf(RemoteFileState(SyncKey(LibraryCollections.SETLISTS, "song.cho"), revision = "r1", contentHash = null)),
         actual = foldRemoteNamesOntoLocal(
             local = listOf(LocalFileState(song("Song"), hash = "a")),
-            remote = listOf(RemoteFileState(SyncKey(LibraryFileKind.SETLIST, "song.cho"), revision = "r1", contentHash = null)),
+            remote = listOf(RemoteFileState(SyncKey(LibraryCollections.SETLISTS, "song.cho"), revision = "r1", contentHash = null)),
         ),
     )
 

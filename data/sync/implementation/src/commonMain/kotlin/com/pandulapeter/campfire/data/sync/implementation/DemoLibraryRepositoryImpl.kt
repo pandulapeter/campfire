@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.sync.implementation
 
-import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.LibraryCollections
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.recovering
 import com.pandulapeter.campfire.data.repository.api.DemoLibraryRepository
@@ -37,7 +37,7 @@ internal class DemoLibraryRepositoryImpl(
             describe = { "Could not remember the demo library: ${it.message}" },
             fallback = {},
         ) {
-            val keys = songFileNames.map { SyncKey(LibraryFileKind.SONG, it) } + setlistFileNames.map { SyncKey(LibraryFileKind.SETLIST, it) }
+            val keys = songFileNames.map { SyncKey(LibraryCollections.SONGS, it) } + setlistFileNames.map { SyncKey(LibraryCollections.SETLISTS, it) }
             // Read under the lock the repositories write under, so the bytes recorded are the ones the import left.
             val hashes = libraryFileLock.withLock {
                 keys.mapNotNull { key -> libraryFileLocalSource.readLibraryFile(key.kind, key.name)?.let { key.path to localContentHash(it) } }

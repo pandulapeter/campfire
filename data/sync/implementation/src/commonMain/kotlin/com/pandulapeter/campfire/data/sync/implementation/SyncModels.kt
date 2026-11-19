@@ -10,14 +10,15 @@
 package com.pandulapeter.campfire.data.sync.implementation
 
 import com.pandulapeter.campfire.data.sync.implementation.run.SyncEngine
-import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.SyncCollection
+import com.pandulapeter.campfire.data.model.library.SyncCollections
 
 /**
- * One file, on either side of the sync. Songs and setlists live in separate folders, so a name alone would not
- * identify anything.
+ * One file, on either side of the sync. Each collection is a folder of its own, so a name alone would not identify
+ * anything.
  */
 internal data class SyncKey(
-    val kind: LibraryFileKind,
+    val kind: SyncCollection,
     val name: String,
 ) {
 
@@ -26,8 +27,8 @@ internal data class SyncKey(
 
     companion object {
 
-        fun fromPath(path: String): SyncKey? {
-            val kind = LibraryFileKind.fromId(path.substringBefore('/')) ?: return null
+        fun fromPath(path: String, collections: SyncCollections): SyncKey? {
+            val kind = collections.byId(path.substringBefore('/')) ?: return null
             return path.substringAfter('/', "").takeIf { it.isNotEmpty() }?.let { SyncKey(kind = kind, name = it) }
         }
     }

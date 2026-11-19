@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.remote.api.sync
 
-import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.SyncCollection
 import com.pandulapeter.campfire.data.model.sync.SyncProviderId
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteChanges
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteDeletion
@@ -19,8 +19,9 @@ import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteWriteRe
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.SharedLinkResult
 
 /**
- * The files half of a [SyncProvider]: one cloud folder, flat, addressed by (kind, name) - exactly the shape the library
- * itself has, and everything a run reads and writes.
+ * The files half of a [SyncProvider]: one cloud folder, flat, addressed by (collection, name) - exactly the shape the
+ * library itself has, and everything a run reads and writes. A provider is built with the library's collections, a
+ * folder each named by its id, and the size limit of the folder's own documents.
  *
  * The rules that keep a second provider cheap, all of them load bearing:
  * - Revisions and cursors are opaque strings. The engine stores them and hands them back, and never parses one.
@@ -46,8 +47,8 @@ interface SyncFolder {
      * Every run lists the whole folder rather than asking what changed. For a library of songs that is one request,
      * and it is right even when a previous run was interrupted half way - which a delta would not be. The cursor the
      * listing carries is only for [awaitChanges] and [changesSince]. Whatever else the user
-     * keeps in the folder may be listed too. The engine leaves out what [LibraryFileKind.matches] does not recognise
-     * and refuses to download what is too large to be a song, so a provider does neither.
+     * keeps in the folder may be listed too. The engine leaves out what [SyncCollection.matches] does not recognise
+     * and refuses to download what is over its collection's limit, so a provider does neither.
      *
      * A listing is whole, and never older than what this device last read or wrote through the folder: the engine
      * reads a file missing from it as a deletion, and one it still names as there.
@@ -83,7 +84,7 @@ interface SyncFolder {
      * file's failure too, refused before its body is read where the service says its size first and never held whole
      * where it does not: the caller holds the file in memory, and its limit depends on what the file is.
      */
-    suspend fun download(kind: LibraryFileKind, name: String, maxSize: Long): RemoteDocument
+    suspend fun download(kind: SyncCollection, name: String, maxSize: Long): RemoteDocument
 
     /**
      * The hash of [bytes] in the same format as [RemoteFile.contentHash], or null where the provider offers none.
@@ -103,7 +104,7 @@ interface SyncFolder {
      * it did not: the engine takes back work it did in preparation for the write on the strength of that.
      */
     suspend fun upload(
-        kind: LibraryFileKind,
+        kind: SyncCollection,
         name: String,
         bytes: ByteArray,
         expectedRevision: String?,
@@ -136,7 +137,7 @@ interface SyncFolder {
      * Called for library files a song names that no side holds and the last run did not know: deleted by a device once
      * none of its songs named them, then named again by a song that a version knowing nothing of them edited back.
      */
-    suspend fun restoreDeleted(kind: LibraryFileKind, name: String): Boolean
+    suspend fun restoreDeleted(kind: SyncCollection, name: String): Boolean
 
     // Documents
 

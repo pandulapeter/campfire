@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.data.sync.implementation.run
 
 import com.pandulapeter.campfire.data.model.Logger
-import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.LibraryCollections
 import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLock
 import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash
@@ -43,6 +43,8 @@ class SyncEngineRestoreTest {
         setlistComparison = NoSetlistComparison,
         plantedContentHash = { null },
         logger = Logger.Standard,
+        collections = LibraryCollections.all,
+        largeFileThreshold = LibraryCollections.LARGE_FILE_THRESHOLD,
     )
     private var index = renamedIndexOf(song(1) to SONG, revision = "r1")
 
@@ -97,7 +99,7 @@ class SyncEngineRestoreTest {
 
     private companion object {
         val PHOTO_BYTES = "photo".encodeToByteArray()
-        val PHOTO = SyncKey(kind = LibraryFileKind.FILE, name = localContentHash(PHOTO_BYTES).take(16) + ".png")
+        val PHOTO = SyncKey(kind = LibraryCollections.FILES, name = localContentHash(PHOTO_BYTES).take(16) + ".png")
         val SONG = "{image: src=${PHOTO.name}}".encodeToByteArray()
     }
 }

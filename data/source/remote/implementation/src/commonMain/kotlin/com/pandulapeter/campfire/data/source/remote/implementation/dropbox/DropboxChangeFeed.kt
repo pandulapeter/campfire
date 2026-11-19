@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.source.remote.implementation.dropbox
 
 import com.pandulapeter.campfire.data.model.Logger
+import com.pandulapeter.campfire.data.model.library.SyncCollections
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncNetworkException
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteChanges
 import com.pandulapeter.campfire.data.source.remote.implementation.network.BrowserCallTimeout
@@ -28,6 +29,7 @@ import kotlinx.coroutines.delay
 internal class DropboxChangeFeed(
     private val httpClientHolder: HttpClientHolder,
     private val requests: DropboxTransport,
+    private val collections: SyncCollections,
     private val logger: Logger,
 ) {
 
@@ -84,9 +86,9 @@ internal class DropboxChangeFeed(
             next = response.cursor
         } while (response.hasMore)
         return RemoteChanges(
-            files = entries.toRemoteFiles(),
+            files = entries.toRemoteFiles(collections),
             deletedFiles = entries.filter { it.tag == "deleted" }.mapNotNull { entry ->
-                entry.libraryKind()?.let { kind -> RemoteChanges.DeletedFile(kind = kind, name = entry.name) }
+                entry.collectionIn(collections)?.let { kind -> RemoteChanges.DeletedFile(kind = kind, name = entry.name) }
             },
             // A deletion at the top of the folder is named here whatever it was: a library folder deleted whole may
             // arrive as that one entry rather than as one per file.

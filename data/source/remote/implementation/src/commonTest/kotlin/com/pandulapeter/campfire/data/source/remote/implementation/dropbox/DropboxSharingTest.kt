@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.remote.implementation.dropbox
 
-import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.LibraryCollections
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncRemoteStorageFullException
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteSharedFile
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteWriteResult
@@ -194,7 +194,7 @@ class DropboxSharingTest {
         val listing = provider.list()
 
         assertEquals(listOf(RemoteSharedFile(shareId = SHARE_ID, revision = "r1", contentHash = "h1", size = 10)), listing.sharedFiles)
-        assertEquals(listOf(LibraryFileKind.SONG), listing.files.map { it.kind })
+        assertEquals(listOf(LibraryCollections.SONGS), listing.files.map { it.kind })
         assertEquals(mapOf("shared-links.json" to "r5"), listing.documentRevisions)
     }
 

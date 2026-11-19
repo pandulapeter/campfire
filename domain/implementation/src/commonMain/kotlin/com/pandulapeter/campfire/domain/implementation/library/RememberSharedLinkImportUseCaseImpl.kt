@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.domain.implementation.library
 
 import com.pandulapeter.campfire.data.model.Logger
-import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.LibraryCollections
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.recovering
 import com.pandulapeter.campfire.data.repository.api.UserPreferencesRepository
@@ -45,7 +45,7 @@ internal class RememberSharedLinkImportUseCaseImpl(
      *   bytes the link serves.
      */
     suspend operator fun invoke(linkFileId: String, songFileNames: Collection<String>, setlistFileNames: Collection<String>) {
-        val paths = songFileNames.map { "${LibraryFileKind.SONG.id}/$it" } + setlistFileNames.map { "${LibraryFileKind.SETLIST.id}/$it" }
+        val paths = songFileNames.map { "${LibraryCollections.SONGS.id}/$it" } + setlistFileNames.map { "${LibraryCollections.SETLISTS.id}/$it" }
         if (linkFileId.isBlank() || paths.isEmpty()) return
         logger.recovering(
             describe = { "Could not remember a shared link's import: ${it.message}" },

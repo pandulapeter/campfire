@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.data.sync.implementation
 
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
-import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.LibraryCollections
 import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash
 import com.pandulapeter.campfire.data.sync.implementation.run.SyncEngine
@@ -50,7 +50,7 @@ class ImageSyncTest {
         val a = Device(mapOf(song(1) to naming(PHOTO), PHOTO.key to PHOTO.bytes, RECORDING.key to RECORDING.bytes, song(2) to attaching(RECORDING)))
         // The app dies while the files are in flight, after the other transfers have had every chance to finish.
         cloud.onUpload = { key ->
-            if (key.kind == LibraryFileKind.FILE) {
+            if (key.kind == LibraryCollections.FILES) {
                 repeat(10) { yield() }
                 throw ProcessKilled()
             }
@@ -71,7 +71,7 @@ class ImageSyncTest {
         a.library.files[PHOTO.key] = PHOTO.bytes
         a.library.files[song(1)] = naming(PHOTO)
         cloud.onUpload = { key ->
-            if (key.kind == LibraryFileKind.FILE) {
+            if (key.kind == LibraryCollections.FILES) {
                 repeat(10) { yield() }
                 throw ProcessKilled()
             }
@@ -83,8 +83,8 @@ class ImageSyncTest {
     }
 
     private fun assertNoSongNamesAFileTheFolderLacks() {
-        val held = cloud.files.keys.filter { it.kind == LibraryFileKind.FILE }.map { it.name }.toSet()
-        cloud.files.filterKeys { it.kind == LibraryFileKind.SONG }.forEach { (key, file) ->
+        val held = cloud.files.keys.filter { it.kind == LibraryCollections.FILES }.map { it.name }.toSet()
+        cloud.files.filterKeys { it.kind == LibraryCollections.SONGS }.forEach { (key, file) ->
             val named = Regex("""(?:src=|attachment )([^\s}]+)""").findAll(file.first.decodeToString()).map { it.groupValues[1] }.toSet()
             assertTrue(held.containsAll(named), "${key.name} names ${named - held}, which the folder lacks.")
         }
@@ -343,7 +343,7 @@ class ImageSyncTest {
         b.sync(cloud)
 
         assertEquals(listOf(song(2)), uploads, "Only B's song goes up.")
-        assertEquals(listOf(PHOTO.key.name), b.library.files.keys.filter { it.kind == LibraryFileKind.FILE }.map { it.name })
+        assertEquals(listOf(PHOTO.key.name), b.library.files.keys.filter { it.kind == LibraryCollections.FILES }.map { it.name })
         assertConverges(a, b)
     }
 
@@ -381,9 +381,9 @@ class ImageSyncTest {
 
     @Test
     fun `only names of the picture rule are pictures and anything else in the files folder is left alone`() = runTest {
-        val stray = SyncKey(kind = LibraryFileKind.FILE, name = "Holiday.JPG")
+        val stray = SyncKey(kind = LibraryCollections.FILES, name = "Holiday.JPG")
         cloud.files[stray] = PHOTO.bytes to "r1"
-        val b = Device(mapOf(SyncKey(kind = LibraryFileKind.FILE, name = "notes.txt") to "x".encodeToByteArray()))
+        val b = Device(mapOf(SyncKey(kind = LibraryCollections.FILES, name = "notes.txt") to "x".encodeToByteArray()))
         b.sync(cloud)
 
         assertFalse(b.library.files.containsKey(stray))
@@ -405,7 +405,7 @@ class ImageSyncTest {
         // And the run that deletes the pictures from the folder, once no song is changing, asks nothing either.
         assertIs<SyncEngine.Result.Completed>(a.attempt(cloud, SyncDeletionPolicy.ASK))
         assertConverges(a, b)
-        assertTrue(b.library.files.keys.none { it.kind == LibraryFileKind.FILE })
+        assertTrue(b.library.files.keys.none { it.kind == LibraryCollections.FILES })
     }
 
     @Test
@@ -430,7 +430,7 @@ class ImageSyncTest {
         var mostLargeInFlight = 0
         var mostInFlight = 0
         cloud.onDownload = { key ->
-            val isLarge = key.kind == LibraryFileKind.FILE
+            val isLarge = key.kind == LibraryCollections.FILES
             inFlight++
             if (isLarge) largeInFlight++
             mostInFlight = maxOf(mostInFlight, inFlight)
@@ -567,7 +567,7 @@ class ImageSyncTest {
         fun attachment(bytes: ByteArray) = libraryFile(bytes, extension = ".m4a")
 
         private fun libraryFile(bytes: ByteArray, extension: String) =
-            Picture(SyncKey(kind = LibraryFileKind.FILE, name = localContentHash(bytes).take(16) + extension), bytes)
+            Picture(SyncKey(kind = LibraryCollections.FILES, name = localContentHash(bytes).take(16) + extension), bytes)
 
         fun naming(vararg pictures: Picture, extra: String = "") =
             (pictures.joinToString("\n") { "{image: src=${it.key.name}}" } + "\n" + extra).encodeToByteArray()
