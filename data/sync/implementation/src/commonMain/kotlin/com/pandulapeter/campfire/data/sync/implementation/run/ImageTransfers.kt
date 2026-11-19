@@ -27,14 +27,16 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
 /**
- * How a picture moves. Its name is its content (`LibraryFiles.isLibraryFileNamedFor`), so two copies of one name are the same
- * picture unless one is damaged, and a picture is never a conflict: a copy whose bytes are not what its name says is
- * never uploaded, never written into the library, and is replaced by an intact one from the other side wherever there is
- * one. That check is also what stands in for the hash [readLocalListing] does not take of a picture.
+ * How a content file moves (in Campfire, a picture or an attachment). Its name is its content
+ * (`LibraryFiles.isLibraryFileNamedFor`), so two copies of one name are the same file unless one is damaged, and a
+ * content file is never a conflict: a copy whose bytes are not what its name says is never uploaded, never written into
+ * the library, and is replaced by an intact one from the other side wherever there is one. That check is also what
+ * stands in for the hash [readLocalListing] does not take of a content file.
  *
- * [imageWritesGate] is `ImageRepository.withImagesKept`, which the app holds from storing a picture to writing the song
- * that names it: [deleteLocally] decides inside it, so that a song saved during the run naming a picture this run was
- * about to delete either is on disk when the deletion looks, or is written after the picture is gone and stores it again.
+ * [imageWritesGate] is the app's gate around storing a content file and writing the document that names it (Campfire's
+ * `ImageRepository.withImagesKept`): [deleteLocally] decides inside it, so that a document saved during the run naming
+ * a file this run was about to delete either is on disk when the deletion looks, or is written after the file is gone
+ * and stores it again.
  */
 internal class ImageTransfers(
     private val libraryFileLocalSource: LibraryFileLocalSource,
@@ -54,11 +56,12 @@ internal class ImageTransfers(
     private val damagedInFolderLock = Mutex()
 
     /**
-     * The pass's deletions of pictures here, as one batch: the plan knew what the songs named when the run listed the
-     * library, which says nothing about a song saved since. So what every song here names is read again, under the
-     * library's lock and inside [imageWritesGate], and a picture a song names now goes back up instead; where a song
-     * cannot be read, nothing is deleted. A picture the editor's open text names (the gate's held names) is kept the same
-     * way. A picture changed since the listing goes up too, as [sendUp] decides.
+     * The pass's deletions of content files here, as one batch: the plan knew what the documents named when the run
+     * listed the library, which says nothing about a document saved since. So what every referencing document here names
+     * is read again, under the library's lock and inside [imageWritesGate], and a file one names now goes back up
+     * instead; where a referencing document cannot be read, nothing is deleted. A file the gate's held names hold (in
+     * Campfire, what the editor's open text names) is kept the same way. A file changed since the listing goes up too,
+     * as [sendUp] decides.
      */
     suspend fun deleteLocally(pass: SyncPass, operations: List<SyncOperation>): List<Pair<SyncOperation, SyncEngine.OperationOutcome>> {
         if (operations.isEmpty()) return emptyList()
@@ -99,12 +102,12 @@ internal class ImageTransfers(
     } catch (exception: CancellationException) {
         throw exception
     } catch (exception: Exception) {
-        logger.log("Kept the files this run would have deleted: the songs could not be read (${exception.message}).")
+        logger.log("Kept the files this run would have deleted: the documents naming files could not be read (${exception.message}).")
         null
     }
 
     /**
-     * A download, or a picture on both sides that the index does not know in step. An intact copy here is the picture,
+     * A download, or a content file on both sides that the index does not know in step. An intact copy here is the file,
      * which only needs the index entry, unless the service says the folder's copy holds other bytes, which this one then
      * replaces.
      */
@@ -118,8 +121,9 @@ internal class ImageTransfers(
             return damagedFolderCopy(pass, key, "the cloud folder's copy is not the file its name says")
         }
         val isWritten = libraryFileLock.withLock {
-            // Anything intact under this name is this very picture, written meanwhile by an import or a Save. Only a file
-            // that was not there before the download, or is of another size now, can be one, so only such a file is read.
+            // Anything intact under this name is this very file, written meanwhile by the app (an import or a Save). Only a
+            // file that was not there before the download, or is of another size now, can be one, so only such a file is
+            // read.
             val currentSize = libraryFileLocalSource.libraryFileSize(key.kind, key.name)
             val isWrittenMeanwhile = currentSize != null && currentSize != sizeHere &&
                 libraryFileLocalSource.readLibraryFile(key.kind, key.name)?.let { isIntact(key, it) } == true
@@ -147,11 +151,11 @@ internal class ImageTransfers(
     }
 
     /**
-     * A folder copy that is not what its name says, with no intact copy here to replace it. It is a failure only where a song
-     * here names it, or the editor's unsaved text does, since only then is something missing here; otherwise it is left
-     * out quietly, the index left alone. It is never deleted from the folder either way: whether a song on another device
-     * names it, nothing here can tell, and a picture is never deleted on a guess. Where some song here could not be read,
-     * it counts as named.
+     * A folder copy that is not what its name says, with no intact copy here to replace it. It is a failure only where a
+     * document here names it, or the gate's held names do, since only then is something missing here; otherwise it is
+     * left out quietly, the index left alone. It is never deleted from the folder either way: whether a document on
+     * another device names it, nothing here can tell, and a content file is never deleted on a guess. Where some
+     * referencing document here could not be read, it counts as named.
      */
     private suspend fun damagedFolderCopy(pass: SyncPass, key: SyncKey, reason: String): SyncEngine.OperationOutcome {
         var isHeld = false
@@ -162,7 +166,7 @@ internal class ImageTransfers(
 
     /**
      * What [bringDown] settles with the copy here alone: the outcome where it is intact, with the size of the copy that
-     * was there. The copy is read and let go of here, so a 50 MB picture is never held beside its download.
+     * was there. The copy is read and let go of here, so a 50 MB file is never held beside its download.
      */
     private suspend fun settleWithCopyHere(pass: SyncPass, key: SyncKey, revision: String): Pair<SyncEngine.OperationOutcome?, Long?> {
         val local = libraryFileLocalSource.readLibraryFile(key.kind, key.name) ?: return null to null
@@ -179,7 +183,7 @@ internal class ImageTransfers(
         return outcome to local.size.toLong()
     }
 
-    /** An upload: of an intact picture only, a damaged one being replaced from the folder where the folder has it. */
+    /** An upload: of an intact file only, a damaged one being replaced from the folder where the folder has it. */
     suspend fun sendUp(pass: SyncPass, operation: SyncOperation.Upload): SyncEngine.OperationOutcome {
         val key = operation.key
         // Deleted between the listing and now, which the next run will see as a deletion and handle properly.
@@ -196,11 +200,11 @@ internal class ImageTransfers(
                 summary = SyncSummary(uploaded = 1),
             )
 
-            // Another device put the picture there meanwhile: the next pass finds it on both sides and settles it here.
+            // Another device put the file there meanwhile: the next pass finds it on both sides and settles it here.
             RemoteWriteResult.Conflict -> SyncEngine.OperationOutcome(isUnresolved = true)
         }
 
-    /** Hashed a slice at a time with a yield between them, since a picture or an attachment may be 50 MB. */
+    /** Hashed a slice at a time with a yield between them, since a content file may be 50 MB. */
     private suspend fun isIntact(key: SyncKey, bytes: ByteArray) = LibraryFiles.isLibraryFileNamedFor(key.name, Sha256.hashToHexYielding(bytes))
 
     /** The index is left alone, so the next run sees this file as it was and tries again. */

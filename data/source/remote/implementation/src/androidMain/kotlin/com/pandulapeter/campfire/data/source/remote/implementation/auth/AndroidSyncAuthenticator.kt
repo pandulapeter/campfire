@@ -51,7 +51,7 @@ internal class AndroidSyncAuthenticator(
 
     override suspend fun prepareRedirectUri() = redirect.uri
 
-    /** The page is ignored: the browser closes itself, so nothing of Campfire's is ever rendered in it. */
+    /** The page is ignored: the browser closes itself, so nothing of the app's is ever rendered in it. */
     override suspend fun authorize(authorizationUrl: String, completionPage: AuthorizationCompletionPage): SyncAuthenticator.AuthorizationOutcome = coroutineScope {
         discardStaleRedirects()
         val application = context as? Application
@@ -87,7 +87,7 @@ internal class AndroidSyncAuthenticator(
     }
 
     /**
-     * The redirect that arrived with nobody waiting for it. The browser the consent page opens in pushes Campfire into
+     * The redirect that arrived with nobody waiting for it. The browser the consent page opens in pushes the app into
      * the background, and on a device short of memory the process is gone by the time the service answers: the
      * redirect then starts a new one, in which [authorize] is not running. The activity has put it into [redirects]
      * by the time start up asks, and the pending authorization was written down before the browser opened, which is

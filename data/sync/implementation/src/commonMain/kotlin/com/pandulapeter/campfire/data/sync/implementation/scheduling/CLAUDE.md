@@ -24,6 +24,8 @@
 - Returning to the front starts an automatic run (`synchronizeOnReturn`), except after `Interrupted`, which is reported
   rather than repeated, as at a launch, and while a deletion question is open (Sync now and a library change still ask
   again).
+- `SyncRunner` settles the folder document (`merge/`) after the files, then each `SyncRunStep` in order, all before the
+  index is saved; a failure there is its `id` in `SyncSummary.failedSteps`, never an unfinished library.
 - `SyncRemoteWatcher` watches the change feed while in front, from `SyncRunner.watchPoint`: the cursor of a completed
   run's last listing with the index it left. These are this device's own and start nothing: a change whose revision the
   index holds, a deletion of a file it no longer holds (names folded as the run files them), a `preferences.json`

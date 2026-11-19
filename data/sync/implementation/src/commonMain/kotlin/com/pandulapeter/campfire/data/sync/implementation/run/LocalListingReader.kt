@@ -41,7 +41,7 @@ internal class LocalListing(
  * its limit (`SyncCollection.maxSize`) is not read at all: nothing the app writes is that large, so it was put into the folder from
  * outside, and it is no file any other device would download.
  *
- * A picture is not read either: its name is its content and nothing writes another content under it, so its size
+ * A content file is not read either: its name is its content and nothing writes another content under it, so its size
  * stands for its hash ([localImageHash]), and the library's photos are not read and hashed on every return to the front.
  * Every transfer of one checks its bytes against its name instead (`ImageTransfers`).
  *
@@ -60,8 +60,8 @@ internal suspend fun readLocalListing(
     val (tooLarge, files) = libraryFileLocalSource.loadLibraryFiles().partition { it.size > it.kind.maxSize }
     tooLarge.forEach { logger.log("Skipped \"${it.name}\": ${it.size} bytes is more than a library file can hold.") }
     val (images, documents) = files.partition { it.kind.role == SyncCollection.Role.CONTENT_FILE }
-    // In batches for the same reason as the song scan in SongLocalSourceImpl: unbounded, a large library is thousands of
-    // open handles and all of its bytes in memory at once.
+    // In batches for the same reason as the app's own library scans: unbounded, a large library is thousands of open
+    // handles and all of its bytes in memory at once.
     val reads = documents
         .chunked(batchSize)
         .flatMap { batch -> batch.map { file -> async { readLocalState(libraryFileLocalSource, logger, references, SyncKey(kind = file.kind, name = file.name)) } }.awaitAll() }

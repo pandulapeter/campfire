@@ -10,12 +10,13 @@
 # :data:source:remote:api
 
 A second sync provider must be one new class, not an engine change; the rules are in the KDoc of `SyncFolder` and
-`SyncConnection`.
+`SyncConnection`. Nothing here names an app: a provider is handed the app's `SyncCollections`, its redirect, and its
+keys when it is built (`:data:source:remote:implementation`), and knows nothing of what a collection holds.
 
 ## Sync provider contract
 
 - A run is handed only the `SyncFolder`, so it never connects or re-authorizes.
-- One flat folder addressed by `(SyncCollection, name)`. Names are unique (a service allowing duplicates resolves that
+- One folder addressed by `(SyncCollection, name)`, a collection's files under its `id`. Names are unique (a service allowing duplicates resolves that
   in its own `list`) and resolved ignoring case and Unicode form (`LibraryFiles.identityKey`), since the engine
   addresses a remote file by its local spelling. Dropbox does so itself; a service with exact names maps them to ids.
 - Revisions are **opaque strings**, never parsed. Every run lists the whole folder (correct after an interrupted run).

@@ -35,6 +35,15 @@ provider. Nothing of the Drive work below is implemented.
   exactly), which Koin hands to the Android, iOS, and desktop authenticators and the shells' `isSyncRedirect` reads;
   the web's is `currentPageUrl()`. `SyncAuthenticator.prepareRedirectUri()` still takes no provider, and one
   configuration serves every provider.
+- Files are addressed by collection (sync-seams C2): `SyncFolder` takes a `SyncCollection` and a name, and a provider
+  is handed the app's `SyncCollections` and the folder document cap when it is built (Dropbox's in
+  `DropboxConfiguration`, from `syncProviders`), mapping a collection to its folder by `id` (`DropboxEntries`). D4's
+  ids are mapped over the same collections; a `CONTENT_FILE` collection's names are content hashes.
+- The provider core is apart from Dropbox (sync-seams C5, kept so by C6's `.github/scripts/check_sync_seams.py`):
+  `auth/`, `network/`, and `crypto/` import nothing of `dropbox/` or of the module root, where Campfire's values sit
+  (`CAMPFIRE_OAUTH_REDIRECT`, `USER_AGENT`, the generated `DROPBOX_APP_KEY`). Drive is a package beside `dropbox/` with
+  its own configuration built in `syncProviders`; the user agent is passed to `createHttpClient`, and a provider's
+  content hash sits in its own package (`dropbox/DropboxContentHash.kt`).
 - The UI connects `SyncController.offeredSyncProvider` (the first of `SyncRepository.availableProviders`) or a
   connected account's own provider; P2's picker replaces the former. `canConnectSync` replaced `canConnectDropbox`.
   Every Connect label is `settings_sync_connect_dropbox`.

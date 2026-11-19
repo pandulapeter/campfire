@@ -19,7 +19,7 @@ import kotlin.uuid.Uuid
 
 /**
  * The public client half of OAuth 2.0: a random verifier stays on the device, only its hash travels with the
- * authorization request, and the token exchange proves the two belong together. This is what lets Campfire talk to
+ * authorization request, and the token exchange proves the two belong together. This is what lets an app talk to
  * a cloud service with no client secret, and so with no server of its own to keep one on.
  */
 internal object Pkce {

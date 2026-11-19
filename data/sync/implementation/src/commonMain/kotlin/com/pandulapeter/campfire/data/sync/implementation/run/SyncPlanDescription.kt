@@ -13,7 +13,7 @@ import com.pandulapeter.campfire.data.sync.implementation.SyncOperation
 
 /**
  * What a pass of a run sets out to do, as the process log says it: how many files of each kind of operation, never
- * their names, which would name songs.
+ * their names, which would name the user's documents.
  */
 internal fun List<SyncOperation>.describedForLog(): String {
     if (isEmpty()) return "nothing to move"

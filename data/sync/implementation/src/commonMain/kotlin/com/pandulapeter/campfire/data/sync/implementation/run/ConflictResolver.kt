@@ -74,7 +74,7 @@ internal class ConflictResolver(
         }
         // A demo file this device planted and nobody has touched since, met in this folder for the first time: the
         // folder's version is an older or newer demo that another device planted under the same name (or the user's
-        // edit of one), and keeping both would be two copies of every demo song on every device. Nothing anybody wrote
+        // edit of one), and keeping both would be two copies of every demo file on every device. Nothing anybody wrote
         // is lost by taking it, which a content check rather than a name check is what guarantees. Not with an index
         // entry: a file the last run saw with other bytes and that is back at its planted ones was changed back on
         // purpose, and that change is kept like any other.
@@ -96,7 +96,7 @@ internal class ConflictResolver(
             return keepRemoteUnderName(pass = pass, key = key, revision = revision, localBytes = localBytes, remote = remote)
         }
         // Free on both sides, not only here: the listing may hold a file under the copy's name that has not come down
-        // yet - another device's copy, or a song that simply has that name - and is planned as a download later in
+        // yet - another device's copy, or a document that simply has that name - and is planned as a download later in
         // this pass. A copy written under it here would be taken for that file changed on this device, go up over it,
         // and push the file itself on to the next number. Folded, as the service may take two spellings for one name.
         val remoteNames = pass.remoteFiles.keys.filter { it.kind == key.kind }.mapTo(hashSetOf()) { it.folded().name }
@@ -106,7 +106,7 @@ internal class ConflictResolver(
         val (copyName, isReused) = libraryFileLock.withLock {
             withContext(NonCancellable) {
                 // A copy an earlier attempt left - one the network cut off before the file was settled - already holds
-                // the incoming version, and another one each attempt would pile up identical songs on every device.
+                // the incoming version, and another one each attempt would pile up identical documents on every device.
                 // Only one no other device knows, see isLeftCopy.
                 val reusable = libraryFileLocalSource.numberedVariantHolding(key.kind, key.name, remote)
                     ?.takeIf { name -> SyncKey(kind = key.kind, name = name).isLeftCopy(pass) }
@@ -163,7 +163,7 @@ internal class ConflictResolver(
     /**
      * The first time a device meets a file the cloud folder also holds, neither version is newer by anything sync knows,
      * and the folder's is the one every other device already has under that name. Kept there, the two versions cost
-     * each of them one new file to download; the local version keeping the name instead would rewrite the song on every
+     * each of them one new file to download; the local version keeping the name instead would rewrite the document on every
      * other device and move the version they had aside into a copy - all of them at once, for a device connected with
      * an old copy of the whole library.
      *

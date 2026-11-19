@@ -191,7 +191,7 @@ internal class SyncRunScheduler(
      * @param isAutomatic Whether nobody asked for this run - the one [schedule] waits to start. It is
      *   written into the index's marker, see [SyncIndexDocument.isAutomaticRunInProgress].
      * @param isFollowUp Whether this is the run another one asked for once it was done, which asks for none itself, so
-     *   that two devices changing songs in turn never keep each other's runs going.
+     *   that two devices changing documents in turn never keep each other's runs going.
      */
     private fun startRun(deletionPolicy: SyncDeletionPolicy, isAutomatic: Boolean = false, isFollowUp: Boolean = false): Boolean {
         val current = syncJob.load()

@@ -30,7 +30,7 @@ internal class SyncRun(
 /**
  * What stays the same for one pass of a run: the [index] the pass was planned from, the cloud folder's files as it
  * listed them, and what [preparePass] worked out. [largeFiles] are the ones large on either side (over `SyncEngine`'s
- * `largeFileThreshold`), and [imageReferences] what the songs here named when the pass listed them
+ * `largeFileThreshold`), and [imageReferences] what the referencing documents here named when the pass listed them
  * (`LocalListing.imageReferences`).
  */
 internal class SyncPass(

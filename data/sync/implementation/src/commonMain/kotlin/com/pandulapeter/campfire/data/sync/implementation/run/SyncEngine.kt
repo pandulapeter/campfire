@@ -47,14 +47,14 @@ import kotlinx.coroutines.sync.withPermit
  * downloads has to keep those four hundred: forgotten, every one of them would come back as a file present on both
  * sides with nothing to say which is newer, and any the user edited in between would end up as a conflict copy.
  *
- * A failure on one file does not end the run. A song the storage cannot read must not keep the other four hundred
+ * A failure on one file does not end the run. A file the storage cannot read must not keep the other four hundred
  * from travelling: it is left out of the plan on both sides, its index entry kept for the run that can read it, and
  * named in the summary. Only the failures that make every further call pointless - the credentials being refused, the
  * service being unreachable, the remote folder being full - stop it. A file that failed is named in the summary,
  * because a run that says nothing about it reads as a backup that works.
  *
  * Every change this makes to a library file is decided about and carried out under [libraryFileLock], the lock the
- * song and setlist repositories write under, and nothing else is: a request is never made while it is held. Each one is
+ * app's repositories write under, and nothing else is: a request is never made while it is held. Each one is
  * reported to [synchronize]'s `onLocalFileChanged` once it is on disk, and not before: whoever re-reads the file for it
  * must not be able to read it ahead of the change. That is what lets the repositories re-read the files a run touched
  * rather than the whole library.
@@ -92,7 +92,7 @@ internal class SyncEngine(
      * a `KEEP_AND_UPLOAD` makes new here, and written into every index with the fields this version owns.
      */
     private val folderDocument: MergedFolderDocument<*>,
-    /** Runs the deletion of pictures here exclusively of the app's writes of a picture and its song. */
+    /** Runs the deletion of content files here exclusively of the app's writes of such a file and the document naming it. */
     imageWritesGate: suspend (suspend (held: Set<String>) -> Unit) -> Unit = { it(emptySet()) },
 ) {
 
@@ -111,7 +111,7 @@ internal class SyncEngine(
         deletionPolicy: SyncDeletionPolicy,
     ): Result {
         // An index written for a different account describes a different remote folder, and acting on it would read
-        // that folder's absent files as deletions of this one's songs.
+        // that folder's absent files as deletions of this one's files.
         var index = document.takeIf { it.accountId == accountId }?.toIndex(collections).orEmpty()
         var syncedPreferences = folderDocument.baseIn(document).takeIf { document.accountId == accountId }
         var summary = SyncSummary()
@@ -252,18 +252,19 @@ internal class SyncEngine(
     }
 
     /**
-     * Every operation is at least one request of its own, and they used to be run one after another - which made a
-     * first sync of a few hundred songs a few hundred round trips end to end, and the slowest thing the app does by
-     * a wide margin. Files do not depend on each other, so they go at once, [CONCURRENT_TRANSFERS] at a time: enough
-     * to hide the latency, few enough that the service answers with files rather than with rate limiting.
+     * Every operation is at least one request of its own, and run one after another, a first sync of a few hundred
+     * files would be a few hundred round trips end to end, the slowest thing the app does by a wide margin. Files do not
+     * depend on each other, so they go at once, [CONCURRENT_TRANSFERS] at a time: enough to hide the latency, few enough
+     * that the service answers with files rather than with rate limiting.
      *
-     * The ordering that does matter is kept between the groups: outgoing pictures, incoming files, other uploads, deletions.
-     * A song uploaded before its pictures, by a run killed in between, names files the folder lacks, and a conflict uploads
-     * this device's version of a song too, so the pictures go first of all, needing nothing else on disk; a download has
-     * to be on disk before anything that reads the library acts on it, and a deletion that ran before a download would
-     * undo it. Remote deletions go to the provider together ([deleteRemotely]), and a
-     * picture's here as one batch ([ImageTransfers.deleteLocally]), neither spread over the permits. A large file moves
-     * alone besides ([largeFileThreshold]): a few attachments at 50 MB each, held whole, are more than a phone's heap.
+     * The ordering that does matter is kept between the groups: outgoing content files, incoming files, other uploads,
+     * deletions. A document uploaded before the files it names, by a run killed in between, names files the folder
+     * lacks, and a conflict uploads this device's version of a document too, so the content files go first of all,
+     * needing nothing else on disk; a download has to be on disk before anything that reads the library acts on it, and
+     * a deletion that ran before a download would undo it. Remote deletions go to the provider together
+     * ([deleteRemotely]), and a content file's here as one batch ([ImageTransfers.deleteLocally]), neither spread over
+     * the permits. A large file moves alone besides ([largeFileThreshold]): a few attachments at 50 MB each, held whole,
+     * are more than a phone's heap.
      *
      * [SyncRun.onIndexChanged] is called under the same lock the results are merged under, so the snapshots arrive in
      * the order they were taken and the last one handed out is always the most complete. What is handed out is a way to
@@ -319,7 +320,7 @@ internal class SyncEngine(
 
     private suspend fun runOperation(pass: SyncPass, operation: SyncOperation): OperationOutcome = try {
         when (operation) {
-            // A picture's name is its content, so both sides holding one hold the same picture or one of them is damaged:
+            // A content file's name is its content, so both sides holding one hold the same file or one of them is damaged:
             // there is never a conflict to keep two versions of.
             is SyncOperation.Download -> if (operation.isImage) imageTransfers.bringDown(pass, operation.key, operation.revision) else documentTransfers.download(pass, operation)
             is SyncOperation.Upload -> if (operation.isImage) imageTransfers.sendUp(pass, operation) else documentTransfers.upload(pass, operation)
@@ -397,8 +398,9 @@ internal class SyncEngine(
          * @param documentRevisions The folder-level documents' revisions, as the run's last listing named them.
          * @param sharedFiles The shared copies, as the run's last listing named them, for the shared-copy step.
          * @param asksForFollowUp Whether the run left something for one more run to finish, which nothing else would
-         *   start: pictures no song names any more, kept while the songs were changing ([SyncPlan.holdsDeletionsBack]),
-         *   or files a song names brought back into the folder from its history ([LostFileRestorer]).
+         *   start: content files no document names any more, kept while the documents were changing
+         *   ([SyncPlan.holdsDeletionsBack]), or files a document names brought back into the folder from its history
+         *   ([LostFileRestorer]).
          */
         data class Completed(
             val summary: SyncSummary,

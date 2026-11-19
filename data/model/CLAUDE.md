@@ -69,6 +69,9 @@ space less `minFreeSpaceFor` (a quarter of what the import needs, at most 512 Mi
   file-sized array goes through `hashToHexYielding` on a computation dispatcher. Content names and sync fingerprints
   depend on it bit for bit.
 - `JsonBounds` is the one check (depth, tokens outside strings) of outside JSON before it is parsed.
+- `library/SyncCollection` (wrapped in `SyncCollections`, never a `List` injected) is how sync names a kind of file
+  without knowing it; Campfire's three are `LibraryCollections`, whose ids are stored (index keys, folder paths) and
+  never change. `LibrarySyncSteps` names Campfire's folder document and run step in `SyncSummary.failedSteps`.
 - `SyncState.Connected` carries the last run's outcome so a failure stays on screen until replaced. `SyncSummary.failed`
   files or a failed `LibrarySyncSteps.PREFERENCES` (`havePreferencesFailed`) make a run look unfinished in Settings; a
   failed `SHARED_COPIES` never does.

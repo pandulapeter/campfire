@@ -40,10 +40,10 @@ internal fun foldRemoteNamesOntoLocal(local: List<LocalFileState>, remote: List<
  * Files an index entry under the spelling the listings now have for its file, where the two differ only by case.
  *
  * [foldRemoteNamesOntoLocal] matches the two listings with each other, but the planner looks the index up by exact
- * name as well. A song moved to another spelling of the same name (a file renamed by hand from `Hallelujah.cho`)
+ * name as well. A file moved to another spelling of the same name (a file renamed by hand from `Hallelujah.cho`)
  * keeps the old spelling in the cloud folder, and its entry under whichever spelling the last run saw. Left
  * like that, the planner reads one file as two: an entry whose file is gone from both sides, which it forgets, and a file
- * nobody has seen, which it downloads. A deletion made here then brings the song back, and an edit made elsewhere is
+ * nobody has seen, which it downloads. A deletion made here then brings the file back, and an edit made elsewhere is
  * taken for a conflict. An entry only moves when its own name is in neither listing and exactly one listed name
  * folds to it and has no entry of its own, so an index that already matches is returned as it is.
  */
@@ -73,7 +73,7 @@ internal fun SyncKey.folded() = copy(name = LibraryFiles.identityKey(name))
 
 /**
  * The key this device holds [key]'s file under: [key] itself, or another spelling of it made while the run was going (a
- * song saved under the folder's name in another case, a rename to one). The listings fold names, but an operation then
+ * document saved under the folder's name in another case, a rename to one). The listings fold names, but an operation then
  * names its file exactly, and a write under [key] next to such a file would be a second file to a file system that
  * tells spellings apart (Android, Linux, the web), which the service then refuses as a collision on every run. The other
  * file systems resolve [key] to that file anyway. Asked under `LibraryFileLock` just before a write over the name: one

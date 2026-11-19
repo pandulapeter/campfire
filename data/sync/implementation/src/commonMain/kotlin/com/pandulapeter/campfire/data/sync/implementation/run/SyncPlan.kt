@@ -14,8 +14,9 @@ import com.pandulapeter.campfire.data.sync.implementation.SyncOperation
 /**
  * What [SyncPlanner] worked out for one pass.
  *
- * @param holdsDeletionsBack Whether pictures that no song names any more were kept on either side only because the
- *   pass changes which songs there are: a run that follows once the songs have settled deletes them.
+ * @param holdsDeletionsBack Whether content files that no document names any more were kept on either side only
+ *   because the pass changes which referencing documents there are: a run that follows once they have settled deletes
+ *   them.
  */
 internal data class SyncPlan(
     val operations: List<SyncOperation>,

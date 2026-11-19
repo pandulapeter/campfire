@@ -38,13 +38,13 @@ internal data class SyncWatchPoint(
 
 /**
  * Whether [changes] hold a library file that is not as the run left it, or a document other than [ownDocuments] (the
- * folder document, which the caller judges, and the run steps'), which nothing here can judge. Nothing a run settles depends on a step's documents, and a change of one
- * anywhere (a share created or stopped, a run's own edits of the list included) would otherwise start a run on every
- * device in front. A
- * revision the index does not hold is another device's write, and a deletion of a file the index still holds is another
- * device's deletion. Revisions are only ever compared for equality, as the planner does.
- * Names are matched as the run files them, ignoring case and Unicode form where the index has no entry under the exact
- * one, so a service that holds two spellings apart keeps its exact matches.
+ * folder document, which the caller judges, and the run steps'), which nothing here can judge. Nothing a run settles
+ * depends on a step's documents, and a change of one anywhere (in Campfire, a share created or stopped, a run's own
+ * edits of the list included) would otherwise start a run on every device in front. A revision the index does not hold
+ * is another device's write, and a deletion of a file the index still holds is another device's deletion. Revisions are
+ * only ever compared for equality, as the planner does. Names are matched as the run files them, ignoring case and
+ * Unicode form where the index has no entry under the exact one, so a service that holds two spellings apart keeps its
+ * exact matches.
  */
 internal fun SyncWatchPoint.hasOtherChanges(changes: RemoteChanges, ownDocuments: Set<String>) =
     changes.files.any { !isOwnRevision(SyncKey(kind = it.kind, name = it.name), it.revision) } ||

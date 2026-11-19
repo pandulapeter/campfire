@@ -15,7 +15,7 @@ import com.pandulapeter.campfire.data.sync.implementation.SyncKey
 import com.pandulapeter.campfire.data.sync.implementation.SyncOperation
 
 /**
- * The songs and setlists a run's passes planned to delete on each side, and every one their planning indexes knew, by
+ * The documents a run's passes planned to delete on each side, and every one their planning indexes knew, by
  * folded name, so that [DeletionGuard] judges the run rather than the pass. A second pass happens exactly when another
  * device writes during the run, and that device may be deleting too: judged alone, each pass may delete less than half
  * of what it starts from while the two together delete most of the library. A pass is judged by what it and the passes

@@ -37,11 +37,11 @@
 - **Deletion guard** (`DeletionGuard`): a plan stops with `Result.DeletionsNeedConfirmation` if its deletions on one
   side exceed half the index (at least `MIN_DELETIONS_TO_ASK`) or are all of it, or if it would delete remotely while
   the local listing is empty and the index is not (a missing library folder lists as empty everywhere).
-  - `KEEP_AND_UPLOAD` drops the index entries of files here and not there (so they read as new) and those songs from the
-    last synced `preferences.json`, so their overrides travel back; `KEEP_AND_DOWNLOAD` is the mirror image.
+  - `KEEP_AND_UPLOAD` drops the index entries of files here and not there (so they read as new) and their entries from
+    the folder document's base (`merge/`), so their overrides travel back; `KEEP_AND_DOWNLOAD` is the mirror image.
   - It judges the run, not the pass (`RunDeletions`): a second pass happens exactly when another device writes during
-    the run, perhaps deleting too, so each pass counts what the earlier ones planned to delete out of every song and
-    setlist any pass's index knew. Such a question may come after the first pass deleted its part.
+    the run, perhaps deleting too, so each pass counts what the earlier ones planned to delete out of every document any
+    pass's index knew. Such a question may come after the first pass deleted its part.
   - An answer waives its own direction only, for one run: the policy is a parameter, never state. Settings' library
     deletion is the one run started with an answer already given.
   - Remote deletions go to `SyncProvider.delete` in one call, so the folder is half deleted (what another device's guard
@@ -82,7 +82,7 @@
     downloaded again instead of deleted. A pass that brings a song down, deletes one on either side, or follows an
     unreadable song deletes no picture on either side; the next run does (an older version's edit may beat a song's
     deletion in the folder, and it never puts a picture back), which the run that held them back asks for
-    (`SyncPlan.holdsDeletionsBack`, see `scheduling/`). The deletion guard counts songs and setlists only.
+    (`SyncPlan.holdsDeletionsBack`, see `scheduling/`). The deletion guard counts documents only.
   - **A file nothing holds comes back from the folder's history** (`LostFileRestorer`, `SyncFolder.restoreDeleted`):
     such an edit may name a picture already gone everywhere. A completed run asks back what songs here name and no side
     or index holds (20 a run, each name once per process); the follow-up downloads it. Dropbox keeps ~30 days; older

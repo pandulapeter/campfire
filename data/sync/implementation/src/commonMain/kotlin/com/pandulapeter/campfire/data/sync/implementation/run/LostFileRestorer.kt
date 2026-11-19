@@ -21,15 +21,15 @@ import com.pandulapeter.campfire.data.sync.implementation.SyncIndexEntry
 import com.pandulapeter.campfire.data.sync.implementation.SyncKey
 
 /**
- * Brings back from the folder's history ([SyncFolder.restoreDeleted]) the library files a song here names that no side
- * holds and the index does not know. A device deletes a file from the folder once none of its songs names it, and a
- * version that knows nothing of files may then put back an edit of a song that named it: the song returns everywhere,
- * naming a file nothing holds. The restored copy is downloaded by the next run, the one the run asks to follow it, and
- * checked against its name like any download.
+ * Brings back from the folder's history ([SyncFolder.restoreDeleted]) the content files a document here names that no
+ * side holds and the index does not know. A device deletes a file from the folder once none of its documents names it,
+ * and a version that knows nothing of such files may then put back an edit of a document that named it: the document
+ * returns everywhere, naming a file nothing holds. The restored copy is downloaded by the next run, the one the run
+ * asks to follow it, and checked against its name like any download.
  *
- * Each name is asked for once per process ([asked]): most of them are pictures a song named before it ever reached the
- * library (a placeholder offering to add one), which have no history to restore, and a restored copy found damaged is
- * not asked for again either. A name whose request failed is asked again by the next run.
+ * Each name is asked for once per process ([asked]): most of them are files a document named before the file ever
+ * reached the library (in Campfire, a picture placeholder offering to add one), which have no history to restore, and a
+ * restored copy found damaged is not asked for again either. A name whose request failed is asked again by the next run.
  *
  * A reference names no collection ([SyncReferences]), so a name is asked of each content collection in turn until one
  * brings it back.
@@ -45,9 +45,9 @@ internal class LostFileRestorer(
     private val contentCollections = collections.all.filter { it.role == SyncCollection.Role.CONTENT_FILE }
 
     /**
-     * Restores what the songs here name, as the run's last pass listed them ([local]) and as this run wrote them since
-     * (those whose index entry it changed, read now), that neither listing nor the index ([after], the run's last)
-     * holds: at most [MAXIMUM_RESTORES], one at a time. Answers whether any came back.
+     * Restores what the referencing documents here name, as the run's last pass listed them ([local]) and as this run
+     * wrote them since (those whose index entry it changed, read now), that neither listing nor the index ([after], the
+     * run's last) holds: at most [MAXIMUM_RESTORES], one at a time. Answers whether any came back.
      */
     suspend fun restoreMissing(
         provider: SyncFolder,
@@ -59,7 +59,7 @@ internal class LostFileRestorer(
         val held = (listed.map { SyncKey(kind = it.kind, name = it.name) } + local.states.map { it.key } + local.tooLarge + local.unreadable + after.keys)
             .filter { it.kind.role == SyncCollection.Role.CONTENT_FILE }
             .mapTo(mutableSetOf()) { LibraryFiles.identityKey(it.name) }
-        // A song this run deleted here names nothing any more; one it wrote is read again for what it names now.
+        // A document this run deleted here names nothing any more; one it wrote is read again for what it names now.
         val listedSongs = local.imageReferences?.filterKeys { it in after || it !in before }?.values?.flatten().orEmpty()
         val written = after.filter { (key, entry) -> key.kind in references && before[key]?.localHash != entry.localHash }.keys
         val named = listedSongs + written.flatMap { namedBy(it) }
@@ -74,7 +74,7 @@ internal class LostFileRestorer(
                 asked -= name
                 break
             }
-            if (isRestored) logger.log("Sync: restored \"$name\", which a song names and nothing held, from the folder's history")
+            if (isRestored) logger.log("Sync: restored \"$name\", which a document names and nothing held, from the folder's history")
             isAnyRestored = isAnyRestored || isRestored
         }
         return isAnyRestored
@@ -89,7 +89,7 @@ internal class LostFileRestorer(
     }
 
     private companion object {
-        /** A run asks for no more than this, so a library whose songs name many files nobody holds does not stall it. */
+        /** A run asks for no more than this, so a library whose documents name many files nobody holds does not stall it. */
         const val MAXIMUM_RESTORES = 20
     }
 }

@@ -13,8 +13,8 @@ package com.pandulapeter.campfire.data.source.remote.implementation.network
  * A JSON string literal that is safe to put in an HTTP header.
  *
  * Dropbox takes the arguments of its upload and download calls in a `Dropbox-API-Arg` header, and a header may only
- * carry ASCII - so every character above it becomes a `\uXXXX` escape rather than travelling as UTF-8. Song files
- * are named after their titles, so this is the ordinary case here, not an edge one.
+ * carry ASCII - so every character above it becomes a `\uXXXX` escape rather than travelling as UTF-8. Library files
+ * are often named after what the user typed, in any script, so this is the ordinary case here, not an edge one.
  */
 internal fun String.toAsciiJsonString() = buildString(length + 2) {
     append('"')

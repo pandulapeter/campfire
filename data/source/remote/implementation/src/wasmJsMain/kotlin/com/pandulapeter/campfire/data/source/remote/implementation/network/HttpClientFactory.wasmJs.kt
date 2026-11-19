@@ -13,9 +13,9 @@ import io.ktor.client.HttpClient
 import io.ktor.client.engine.js.Js
 
 /**
- * The browser engine goes through `fetch`, so every request Campfire makes is subject to the origin's CORS rules.
+ * The browser engine goes through `fetch`, so every request the app makes is subject to the origin's CORS rules.
  * Dropbox answers the calls used here with the headers that allows; a provider that does not would need a proxy,
- * which is exactly the sort of thing Campfire refuses to run. MusicBrainz and the Cover Art Archive send them too.
+ * a server of the app's own, which Campfire refuses to run. MusicBrainz and the Cover Art Archive send them too.
  *
  * No `User-Agent` of the app's own is sent from here, [userAgent] is ignored, see [configureClient]. MusicBrainz documents no other way for
  * a page to name itself, so what it sees is the browser's own user agent and the page's `Origin`, which is the address

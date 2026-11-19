@@ -21,7 +21,7 @@ import kotlinx.serialization.json.JsonObject
  * can tell a file that was deleted from one that has not arrived yet.
  *
  * [accountId] is part of it because an index describes one remote folder. Connecting a different account leaves it
- * meaningless, and acting on it would read that account's absent files as deletions of this one's songs.
+ * meaningless, and acting on it would read that account's absent files as deletions of this one's files.
  *
  * An index filed under the key an earlier version used is taken over rather than ignored, see [adoptedBy].
  */
@@ -43,7 +43,7 @@ internal data class SyncIndexDocument(
      * changes. Written and cleared together with [isRunInProgress].
      */
     val isAutomaticRunInProgress: Boolean = false,
-    /** Keyed by `songs/Artist - Title.cho`, see [SyncKey.path]. */
+    /** Keyed by `<collection id>/<name>` (Campfire's `songs/Artist - Title.cho`), see [SyncKey.path]. */
     val entries: Map<String, Entry> = emptyMap(),
     /**
      * The app's folder document (Campfire's `preferences.json`) as the last run that settled it left it on both sides,

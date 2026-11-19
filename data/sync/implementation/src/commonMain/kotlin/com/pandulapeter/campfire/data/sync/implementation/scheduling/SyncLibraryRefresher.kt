@@ -70,7 +70,7 @@ internal class SyncLibraryRefresher(
      * hands it the files the run has changed so far, which it reads again one by one. Throttled by what the last one
      * cost, see [liveRescanPauseAfter], since a first sync changes files several times a second and every refresh
      * rebuilds the lists downstream. A refresh asked for inside the pause waits for its end rather than being dropped: a
-     * run that downloads one song, the change another device made to the song open on screen, would otherwise show it
+     * run that downloads one file, the change another device made to the document open on screen, would otherwise show it
      * only once its last steps are over. One that found nothing to read starts no pause, since the run reports progress
      * before it has changed anything.
      */

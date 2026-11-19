@@ -19,7 +19,7 @@ import kotlinx.serialization.SerializationException
 
 /**
  * Runs [block], the part of a cover search that talks to [serviceName], turning anything the transport throws into a
- * [CatalogueSearchException], the way the Dropbox provider reads it: the browser engine reports a failed `fetch` as a
+ * [CatalogueSearchException], the way [SyncHttpTransport] reads it: the browser engine reports a failed `fetch` as a
  * `kotlin.Error`, so every `Throwable` that is not a cancellation of this coroutine counts.
  */
 internal suspend fun <T> catalogueTransport(serviceName: String, block: suspend () -> T): T = try {

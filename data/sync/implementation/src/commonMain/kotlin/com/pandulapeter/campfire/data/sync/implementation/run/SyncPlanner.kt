@@ -26,12 +26,12 @@ import com.pandulapeter.campfire.data.sync.implementation.SyncOperation
  * Two rules run through all of it:
  * - Content decides, never a clock. The four platforms disagree about modification times and one of them reports
  *   none at all, so a hash is the only thing that can say whether a file has changed.
- * - An edit beats a deletion. A file changed on one side and deleted on the other comes back, because a song that
- *   reappears is an annoyance while a song that silently vanishes is lost work.
+ * - An edit beats a deletion. A file changed on one side and deleted on the other comes back, because a document that
+ *   reappears is an annoyance while one that silently vanishes is lost work.
  *
  * The planner knows no moves, so a rename is a deletion of one name and a new file under another. Where the index
  * already knows the new name holding the same bytes (a run cut off between uploading a rename and deleting its old
- * name, or a song held twice), the renamed file reads as that file unchanged, and a deletion of it elsewhere would win
+ * name, or a document held twice), the renamed file reads as that file unchanged, and a deletion of it elsewhere would win
  * while the rename's other half deletes the old name from the folder. So a pass never deletes one version on both
  * sides: a local deletion of bytes the same plan deletes remotely under another name puts the file back instead.
  *
@@ -68,7 +68,7 @@ internal object SyncPlanner {
             operationFor(key = key, local = localByKey[key], remote = remoteByKey[key], indexEntry = index[key])
         }.withImagesKept(imageReferences, referencing)
         val operations = kept.operations
-        // Renames only: a picture has none, and its index hash is its size, which two pictures may share.
+        // Renames only: a content file has none, and its index hash is its size, which two such files may share.
         val deletedRemotely = operations.filterIsInstance<SyncOperation.DeleteRemote>()
             .filter { it.key.kind.role != SyncCollection.Role.CONTENT_FILE }
             .mapNotNull { operation -> index[operation.key]?.let { operation.key.kind to it.localHash } }
@@ -87,24 +87,25 @@ internal object SyncPlanner {
     }
 
     /**
-     * A device deletes a picture once no song of its own names it, and that deletion reaches every other device, where a
-     * song may have just started naming it. So a picture a song here names is never deleted on either side: one deleted
-     * over there goes back up, one deleted here comes back down. The device holding the song is the one that puts the
-     * picture back, which is why every device keeping its own songs' pictures is enough for none to be lost.
+     * A device deletes a content file once no document of its own names it, and that deletion reaches every other
+     * device, where a document may have just started naming it. So a file a document here names is never deleted on
+     * either side: one deleted over there goes back up, one deleted here comes back down. The device holding the
+     * document is the one that puts the file back, which is why every device keeping its own documents' files is enough
+     * for none to be lost.
      *
-     * What this device's songs name is known only for the songs it holds, and which songs it holds is what a pass that
-     * brings one down or deletes one on either side is changing: one coming down may name a picture this plan would
-     * delete, and one deleted here may still be kept by an edit made during the run. So such a pass deletes no picture
-     * at all, on either side, and neither does one where a song could not be read ([imageReferences] null): the
-     * deletions wait for a run that knows every song it will hold. A song this pass deletes here does not keep its
-     * pictures either, which would only send them back up for the next run to delete again. A plan whose deletions wait
-     * only for the songs to settle says so ([SyncPlan.holdsDeletionsBack]); one waiting for an unreadable song does not,
-     * since the next run would wait as well.
+     * What this device's documents name is known only for the ones it holds, and which ones it holds is what a pass that
+     * brings one down or deletes one on either side is changing: one coming down may name a file this plan would delete,
+     * and one deleted here may still be kept by an edit made during the run. So such a pass deletes no content file at
+     * all, on either side, and neither does one where a referencing document could not be read ([imageReferences]
+     * null): the deletions wait for a run that knows every document it will hold. A document this pass deletes here does
+     * not keep its files either, which would only send them back up for the next run to delete again. A plan whose
+     * deletions wait only for the documents to settle says so ([SyncPlan.holdsDeletionsBack]); one waiting for an
+     * unreadable document does not, since the next run would wait as well.
      */
     private fun List<SyncOperation>.withImagesKept(imageReferences: Map<SyncKey, Set<String>>?, referencing: Set<SyncCollection>): SyncPlan {
         val referencingOperations = filter { it.key.kind in referencing }
-        // A song deleted from the folder counts too: another device's edit may beat that deletion, and bring the song back
-        // naming a picture deleted beside it (a device of a version without pictures, which never puts one back).
+        // A document deleted from the folder counts too: another device's edit may beat that deletion, and bring it back
+        // naming a file deleted beside it (a device of a version that knows no content files, which never puts one back).
         val isReferencingSetChanging = referencingOperations.any { it !is SyncOperation.Upload && it !is SyncOperation.Forget }
         val leaving = referencingOperations.filterIsInstance<SyncOperation.DeleteLocal>().mapTo(mutableSetOf()) { it.key }
         val kept = imageReferences?.filterKeys { it !in leaving }?.values?.flatten()?.toSet()

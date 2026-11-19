@@ -13,8 +13,8 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * What a token endpoint answers an exchange with. A renewal may or may not hand out a new refresh token. Dropbox also
- * names the account; a service that does not leaves [accountId] empty.
+ * What a token endpoint answers an exchange with. A renewal may or may not hand out a new refresh token. A service may
+ * also name the account (Dropbox does); one that does not leaves [accountId] empty.
  */
 @Serializable
 internal data class OAuthTokenResponse(

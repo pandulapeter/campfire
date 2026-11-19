@@ -331,7 +331,7 @@ internal class SyncRunner(
      * the final write - waited for rather than cancelled, because on the web a cancelled write carries on in the
      * browser - the index as far as the run got without the marker saying one is going, and - where files may have
      * moved - the lists told about them. Without that last step the repositories keep the library from before the
-     * run in their caches, and the next change made to a cached setlist or song text writes the old version back over
+     * run in their caches, and the next change made to a cached document writes the old version back over
      * the one the run brought in.
      *
      * Always called inside [NonCancellable]: a stopped run is cancelled by definition, and a failed one may be - a

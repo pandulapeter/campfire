@@ -53,7 +53,7 @@ internal class IosSyncAuthenticator(
     /**
      * The session has to be created and started on the main thread, and the completion handler comes back on it.
      * Cancelling the coroutine (the "Cancel" row in Settings) dismisses the sheet through `invokeOnCancellation`. The
-     * page is ignored: the browser closes itself, so nothing of Campfire's is ever rendered in it.
+     * page is ignored: the browser closes itself, so nothing of the app's is ever rendered in it.
      */
     override suspend fun authorize(authorizationUrl: String, completionPage: AuthorizationCompletionPage): SyncAuthenticator.AuthorizationOutcome =
         withContext(Dispatchers.Main) {

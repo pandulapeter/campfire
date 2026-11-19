@@ -30,7 +30,7 @@ import kotlinx.coroutines.withContext
 /**
  * The desktop has no custom scheme to be redirected to, so it becomes a web server for the length of one
  * authorization: a socket on the loopback interface, whose address is the redirect URI. The browser delivers the
- * code to it, it answers with a page telling the user to go back to Campfire, and it closes again.
+ * code to it, it answers with a page telling the user to go back to the app, and it closes again.
  *
  * Loopback only, and only while the browser is open: nothing outside the machine can reach it.
  *

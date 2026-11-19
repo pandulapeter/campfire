@@ -67,7 +67,7 @@ internal class SyncRemoteWatcher(
                     continue
                 }
                 val changes = point.folder.changesSince(cursor)
-                // Counts and the folder's own document names only: a file's name would name a song.
+                // Counts and the folder's own document names only: a file's name would name the user's documents.
                 environment.logger.log(
                     "Sync feed: changes after ${askedAt.elapsedNow().inWholeSeconds}s (${changes.files.size} files, " +
                         "${changes.deletedFiles.size} deletions, documents: ${changes.documents.sorted().joinToString().ifEmpty { "none" }})",
@@ -92,7 +92,7 @@ internal class SyncRemoteWatcher(
             } catch (exception: CancellationException) {
                 throw exception
             } catch (exception: SyncNetworkException) {
-                // Offline, refused, or Dropbox busy: the same cursor is asked about again once the wait is over, or as soon as the
+                // Offline, refused, or the service busy: the same cursor is asked about again once the wait is over, or as soon as the
                 // device is back online, and nothing that changed meanwhile is lost by waiting.
                 environment.logger.log("Could not reach the sync folder's change feed: ${exception.message}")
                 if (connectivityMonitor.awaitReconnection(NETWORK_RETRY_DELAYS[minOf(failures, NETWORK_RETRY_DELAYS.lastIndex)])) {
@@ -112,7 +112,7 @@ internal class SyncRemoteWatcher(
     private companion object {
         /**
          * The waits after the feed could not be reached, the last one repeated. The first is short: a single failure on a
-         * working link - a pooled connection the far end had already closed, one 5xx of Dropbox's - is the common one,
+         * working link - a pooled connection the far end had already closed, one 5xx of the service's - is the common one,
          * no reconnection is reported to end the wait for it, and the desktop reports none at all, so a long first wait
          * would leave another device's change unseen for that long.
          */

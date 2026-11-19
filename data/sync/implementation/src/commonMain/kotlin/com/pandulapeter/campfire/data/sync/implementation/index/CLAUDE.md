@@ -18,6 +18,6 @@
 - An index that exists and cannot be read ends the run as `STORAGE` before anything is written; only one that reads but
   does not decode is taken for none. **Never rename its fields** (`SyncIndexDocumentTest` reads devices' real files):
   lenient decoding would read a renamed field as an empty index.
-- `syncedPreferencesRevision` is the folder's revision of `preferences.json` holding exactly `syncedPreferences`; only a
-  completed settle writes it, every other write leaves it null, so the next run downloads.
+- `syncedPreferencesRevision` is the folder's revision of the folder document (`merge/`) holding exactly
+  `syncedPreferences` (the keys keep Campfire's names, being stored); only a completed settle writes it, every other write leaves it null, so the next run downloads.
 - An `isRunInProgress` marker found at `restore` is reported as interrupted and stops the launch run.

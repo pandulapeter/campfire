@@ -21,8 +21,9 @@ import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.withContext
 
 /**
- * How a song or a setlist moves: every change to the local file is decided again just before it is made, under
- * [libraryFileLock], and a file changed on both sides goes to the [conflictResolver]. Pictures move by [ImageTransfers].
+ * How a document moves: every change to the local file is decided again just before it is made, under
+ * [libraryFileLock], and a file changed on both sides goes to the [conflictResolver]. Content files move by
+ * [ImageTransfers].
  */
 internal class DocumentTransfers(
     private val libraryFileLocalSource: LibraryFileLocalSource,
@@ -33,11 +34,12 @@ internal class DocumentTransfers(
 
     /**
      * Overwrites the local file, so it is read, decided about and only then written: the plan was made from hashes
-     * taken when the run listed the library, and a long run gives the user plenty of time to save an edit to a song
-     * that is still waiting to come down. The same goes for a file that was not there at all when the run listed the
-     * library and is now: nothing planned for this name knew about it, so it is never written over. Checked before the
-     * request, so that a file already in step is never transferred, and again after it, together with the write under
-     * [libraryFileLock], so that a save lands either before that check, which then sees it, or after the write.
+     * taken when the run listed the library, and a long run gives the user plenty of time to save an edit to a
+     * document that is still waiting to come down. The same goes for a file that was not there at all when the run
+     * listed the library and is now: nothing planned for this name knew about it, so it is never written over. Checked
+     * before the request, so that a file already in step is never transferred, and again after it, together with the
+     * write under [libraryFileLock], so that a save lands either before that check, which then sees it, or after the
+     * write.
      */
     suspend fun download(pass: SyncPass, operation: SyncOperation.Download): OperationOutcome {
         val key = operation.key
@@ -51,7 +53,7 @@ internal class DocumentTransfers(
         if (local != null && localHashOf(key, local) != index[key]?.localHash) {
             // Not the file the last run saw. With an index entry it was edited since the listing; with none it was not
             // there at all when the run listed the library, so it appeared since - a conflict copy written earlier in
-            // this pass, or a song the user made while the run was going. Either way it has changed on both sides, and
+            // this pass, or a document the user made while the run was going. Either way it has changed on both sides, and
             // it is resolved as that rather than written over.
             return resolve(pass, SyncOperation.Resolve(key, operation.revision), isFirstMeeting = false)
         }
@@ -148,8 +150,8 @@ internal class DocumentTransfers(
      * next to it under a free name and goes back up under that name, so that both devices end with both versions
      * and the same two names. A file both sides held when the pass listed them that the index has never seen
      * ([isFirstMeeting]) goes the other way round. Nothing is merged, and nothing is thrown away - except where the
-     * file is a setlist and the only difference is the day it names, which [ConflictResolver.resolveWith] settles by
-     * taking the remote version.
+     * file's collection has a [ConflictPolicy] and the only difference is the volatile part it ignores (a setlist's
+     * day, in Campfire), which [ConflictResolver.resolveWith] settles by taking the remote version.
      *
      * The incoming version is on disk before the local one goes up, because going up is what destroys it on the
      * remote: held only in memory across that request, a copy that then cannot be written - a full disk, a process

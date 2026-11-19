@@ -9,13 +9,36 @@
 -->
 # :data:sync:implementation
 
-`SyncEngine`, `SharedCopySync`, the folder document, and the run steps are built by `DataSyncModule` functions (a lambda
-over `UserPreferencesRepository` Koin cannot inject, and `LibrarySyncRules`, what the engine asks of songs and setlists;
-the build number; `SyncedPreferencesCodec`; `SharedCopyStep` wrapped in `SyncRunSteps`). The engine's packages (`run/`,
-`index/`, `scheduling/`, `connection/`, `merge/`) know nothing of songs, setlists, or the repositories: Campfire's side
-is `LibrarySyncRules`, `LibrarySyncObserver`, `preferences/`, and `shared/`.
-`DemoLibraryRepositoryImpl` lives here because it records demo files under `SyncKey.path`, the key the engine looks them
-up by.
+The sync engine, and Campfire's side of it. The engine is to become a library another app (a diary, a notes app)
+syncs its own documents with (`documentation/plans/sync-library-extraction.md`), so its packages (`run/`, `index/`,
+`scheduling/`, `connection/`, `merge/`) know nothing of songs, setlists, pictures, preferences, shares, or the
+repositories: they declare the seams below, and Campfire's side implements them. `.github/scripts/check_sync_seams.py`
+fails a main source file there that imports Campfire's side (after every edit, before every commit, and in CI); a test
+may wire Campfire in. The provider side is `:data:source:remote:implementation`'s.
+
+## Seams (engine → Campfire's side)
+
+- **Collections** (`SyncCollection` in `:data:model`): an id (the folder and the index key prefix, so a stored name),
+  what names it holds, a size limit, and a role. `DOCUMENT`s are counted by the deletion guard and kept both in a
+  conflict; `CONTENT_FILE`s are named by their content, hashed by size, never a conflict, kept while a document names
+  them, and restored from the folder's history. → `LibraryCollections` (`songs`, `setlists`, `files`).
+- **References** (`run/SyncReferences`, by collection): which content files a document names; a collection in the map
+  is a referencing one, whose unreadable or oversized document holds back every content file deletion.
+  **Conflict policies** (`run/ConflictPolicy`, by collection): parts a conflict may ignore. → `LibrarySyncRules` (songs
+  through `libraryFilesNamedBy`, setlists' day through `SetlistComparison`).
+- **Library observer** (`scheduling/SyncLibraryObserver`): what re-reading the files means for the app; the throttle
+  stays `SyncLibraryRefresher`'s. → `LibrarySyncObserver` (the song, setlist, and image repositories).
+- **Run steps** (`scheduling/SyncRunStep` in `SyncRunSteps`): what the app keeps in the folder beside the library, run
+  in order after the files inside the run lock, failures reported by id in `SyncSummary.failedSteps`, forgotten with
+  the index. → `shared/SharedCopyStep`; ids in `LibrarySyncSteps`.
+- **Folder document** (`merge/`, not a step: the index keeps its base): one JSON document three-way merged by
+  `MergedFolderDocument` through a `MergedFolderDocumentCodec`. → `preferences/SyncedPreferencesCodec`.
+- **Constructor values**: `imageWritesGate` (`ImageRepository.withImagesKept`), the planted demo hash (a lambda over
+  `UserPreferencesRepository`, which Koin cannot inject), the large file threshold. `DataSyncModule` builds all of it.
+
+Still Campfire's in the engine, for the extraction: `LibraryFiles`' name folding and content-name rule, `Logger`, and
+the index's `syncedPreferences*` keys (stored names). `DemoLibraryRepositoryImpl` lives here because it records demo
+files under `SyncKey.path`, the key the engine looks them up by.
 
 ## Locks
 

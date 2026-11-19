@@ -9,7 +9,7 @@
 -->
 # Plan: sync's knowledge of songs behind seams
 
-**Status:** in progress: C1–C6 done; C7 is next. Checked against the code on 2026-11-18 (`main` at 85e23a2db). Split out of
+**Status:** done: C1–C7 landed and verified live on 2026-11-19 (`main` at ca2f34a5f, see Verification). Split out of
 [sync-library-extraction.md](sync-library-extraction.md), which moves the result into `:libs:sync:*` modules later.
 
 **Goal:** the sync engine's rules (what to upload, download, delete, keep, and call a conflict) depend on a few narrow
@@ -160,9 +160,12 @@ touches platform source sets also compiles iOS (`linkDebugFrameworkIosSimulatorA
   the remote module's `auth/`, `network/`, and `crypto/` nothing of `dropbox/`, of the catalogue packages, or of the
   module's root package (`CAMPFIRE_OAUTH_REDIRECT`, `USER_AGENT`, the generated `RemoteConfiguration`). A star import
   fails when it would bring in a forbidden name. No exception list.
-- **C7. Docs.** `data/sync/implementation/CLAUDE.md` and its package files, and the remote api and implementation
-  ones, describe the seams, which side owns what, and the guard; the Drive plan's "What the groundwork left in place"
-  is updated for collections and the redirect configuration.
+- **C7. Docs.** Done: `data/sync/implementation/CLAUDE.md` lists the seams and which side owns each, with the guard;
+  the folder document's generic rules moved to a new `merge/CLAUDE.md`, `preferences/CLAUDE.md` keeping Campfire's
+  shape; the package files, `data/model`'s, and the remote api and implementation ones say the same of collections,
+  steps, and the provider core (the implementation's cut under its 1,500-word budget from about 2,300). KDoc and log
+  lines in the engine packages and the provider core speak of documents and content files, Campfire's songs and
+  pictures only as examples. The Drive plan's groundwork lists collections and the provider core.
 
 ## Risks
 
@@ -191,3 +194,9 @@ connection, and shared-links tests, `SyncPlannerUpgradeFrom520Test`, `SharedLink
 `SharedLinksUpgradeFrom540Test`, C1's `*UpgradeFrom550Test`s, and the Dropbox and transport tests. Once, after C5: a live sync of an
 existing install against a real Dropbox (the owner's live sync test recipe) shows no download of unchanged files and no
 conflict copy.
+
+Done on 2026-11-19: a desktop home synced by the 5.5.0 release against the owner's real Dropbox (335 files), then two
+runs of `main` at ca2f34a5f: zero downloads, uploads, deletions, conflicts, and failed steps. The folder was unchanged
+except `/shared-links.json`, whose entries' `built.build` was re-stamped (60 → 61) by `SharedCopySync.isBuiltFrom`,
+which re-packs copies on every build-number bump (behaviour since 5.5.0, not C1–C5; the re-packed zips were
+byte-identical and not uploaded); that file was restored afterwards.

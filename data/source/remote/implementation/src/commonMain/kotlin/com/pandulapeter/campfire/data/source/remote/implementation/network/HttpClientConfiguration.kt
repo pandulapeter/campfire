@@ -22,7 +22,7 @@ import io.ktor.util.AttributeKey
  * twice).
  *
  * A stalled connection has to end in a failure the user can retry rather than in a sync that never finishes, but a
- * slow one has to be allowed to finish: a `list_folder` page of a few thousand songs, or one long song, takes minutes
+ * slow one has to be allowed to finish: a listing page of a few thousand files, or one large file, takes minutes
  * on a 2G or congested link while data is arriving the whole time. So what is bounded is the time to connect and the
  * silence between two packets, and not the exchange as a whole.
  *
