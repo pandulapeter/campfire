@@ -27,8 +27,8 @@
 - `SyncRemoteWatcher` watches the change feed while in front, from `SyncRunner.watchPoint`: the cursor of a completed
   run's last listing with the index it left. These are this device's own and start nothing: a change whose revision the
   index holds, a deletion of a file it no longer holds (names folded as the run files them), a `preferences.json`
-  decoding to the one the run left. `shared-links.json` starts no run but is read into the mirror, so screens follow a
-  share made or stopped elsewhere. Anything else starts a run at once (no `AUTOMATIC_RUN_DELAY`, which is for this
+  decoding to the one the run left. A document a `SyncRunStep` owns starts no run but goes to that step
+  (`shared-links.json` is read into the mirror, so screens follow a share made or stopped elsewhere). Anything else starts a run at once (no `AUTOMATIC_RUN_DELAY`, which is for this
   device's edits) and stops watching until that run hands over a new point. A run clears the point as it starts and only
   a completed one sets it, so a stopped run or an open deletion question is never restarted by the feed.
 - A poll held for `HELD_POLL` and then lost is asked again at once; one failing sooner waits `NETWORK_RETRY_DELAYS`, the

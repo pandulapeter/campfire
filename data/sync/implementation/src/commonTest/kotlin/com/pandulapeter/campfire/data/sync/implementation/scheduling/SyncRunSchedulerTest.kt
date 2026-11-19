@@ -31,7 +31,7 @@ import com.pandulapeter.campfire.data.sync.implementation.SyncKey
 import com.pandulapeter.campfire.data.sync.implementation.SyncStateHolder
 import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPreferencesSync
 import com.pandulapeter.campfire.data.sync.implementation.scheduling.SyncRunScheduler.Companion.AUTOMATIC_RUN_DELAY
-import com.pandulapeter.campfire.data.sync.implementation.shared.sharedCopySync
+import com.pandulapeter.campfire.data.sync.implementation.shared.sharedCopySteps
 import com.pandulapeter.campfire.data.sync.implementation.scheduling.SyncRunScheduler.Companion.NETWORK_RETRY_DELAYS
 import com.pandulapeter.campfire.data.sync.implementation.TEST_ACCOUNT
 import com.pandulapeter.campfire.data.sync.implementation.song
@@ -413,6 +413,7 @@ class SyncRunSchedulerTest {
         val userPreferencesRepository = FakeUserPreferencesRepository()
         val libraryFileLocalSource = FakeLibraryFileLocalSource(files = localFiles)
         val syncedPreferencesSync = SyncedPreferencesSync(userPreferencesRepository, libraryFileLocalSource, Logger.Standard)
+        val steps = sharedCopySteps(library = libraryFileLocalSource, environment = environment)
         val runner = SyncRunner(
             syncProviders = syncProviders,
             engine = DataSyncModule.syncEngine(
@@ -424,7 +425,7 @@ class SyncRunSchedulerTest {
                 logger = Logger.Standard,
             ),
             syncedPreferencesSync = syncedPreferencesSync,
-            sharedCopySync = sharedCopySync(library = libraryFileLocalSource, environment = environment),
+            steps = steps,
             indexStore = SyncIndexStore(FakeSyncIndexLocalSource(index = index, onSaveIndex = runs::onSaveIndex), environment),
             libraryRefresher = SyncLibraryRefresher(LibrarySyncObserver(RecordingSongRepository(), RecordingSetlistRepository(), RecordingImageRepository()), environment),
             stateHolder = stateHolder,

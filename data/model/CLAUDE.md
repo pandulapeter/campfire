@@ -70,4 +70,5 @@ space less `minFreeSpaceFor` (a quarter of what the import needs, at most 512 Mi
   depend on it bit for bit.
 - `JsonBounds` is the one check (depth, tokens outside strings) of outside JSON before it is parsed.
 - `SyncState.Connected` carries the last run's outcome so a failure stays on screen until replaced. `SyncSummary.failed`
-  files or `havePreferencesFailed` make a run not `isComplete`; `haveSharedCopiesFailed` never does.
+  files or a failed `LibrarySyncSteps.PREFERENCES` (`havePreferencesFailed`) make a run look unfinished in Settings; a
+  failed `SHARED_COPIES` never does.

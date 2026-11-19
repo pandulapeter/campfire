@@ -17,9 +17,9 @@ up by.
 ## Locks
 
 - `SyncConnectionManager`'s restore lock: never held across a run; forgetting the stored connection runs under it.
-- `SyncRunner`'s run lock: held only by a run, by `disconnect` around deleting the index (and the shared links' mirror
-  and journal), and by a finished authorization around resetting them for another account and showing it. Sharing
-  actions never take it.
+- `SyncRunner`'s run lock: held only by a run (its `SyncRunSteps` included, in order, after the files), by `disconnect`
+  around deleting the index and forgetting the steps (the shared links' mirror and journal), and by a finished
+  authorization around resetting them for another account and showing it. Sharing actions never take it.
 - `SharedLinksJournal.whileApplying`: held by the run's shared-copy step (inside the run lock), by
   `SharedLinksJournalApplier` from loading the journal until what was applied is removed, and by Stop sharing and Stop
   sharing everything, so a step never uploads a copy stopped after it read the list; the journal's file lock inside it.

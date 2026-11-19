@@ -12,6 +12,7 @@
 package com.pandulapeter.campfire.data.sync.implementation.scheduling
 
 import com.pandulapeter.campfire.data.model.isOutOfSpace
+import com.pandulapeter.campfire.data.model.library.LibrarySyncSteps
 import com.pandulapeter.campfire.data.sync.implementation.SyncEnvironment
 import com.pandulapeter.campfire.data.sync.implementation.index.SyncIndexDocument
 import com.pandulapeter.campfire.data.sync.implementation.index.SyncIndexStore
@@ -20,8 +21,6 @@ import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPref
 import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPreferencesSync
 import com.pandulapeter.campfire.data.sync.implementation.index.indexKey
 import com.pandulapeter.campfire.data.sync.implementation.run.SyncEngine
-import com.pandulapeter.campfire.data.sync.implementation.shared.SharedCopySync
-import com.pandulapeter.campfire.data.sync.implementation.shared.SharedLinksFormat
 import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.sync.SyncFailureReason
 import com.pandulapeter.campfire.data.model.sync.SyncOutcome
@@ -49,15 +48,16 @@ import kotlin.time.ExperimentalTime
 import kotlin.time.TimeMark
 
 /**
- * Carries out one run at a time: the engine over the connected provider's folder, then `preferences.json`, with the
- * index written before anything moves, close behind the run and at its end, and the state told how it went.
+ * Carries out one run at a time: the engine over the connected provider's folder, then `preferences.json` and the app's
+ * [steps], with the index written before anything moves, close behind the run and at its end, and the state told how it
+ * went.
  */
 @Single
 internal class SyncRunner(
     private val syncProviders: SyncProviders,
     private val engine: SyncEngine,
     private val syncedPreferencesSync: SyncedPreferencesSync,
-    private val sharedCopySync: SharedCopySync,
+    private val steps: SyncRunSteps,
     private val indexStore: SyncIndexStore,
     private val libraryRefresher: SyncLibraryRefresher,
     private val stateHolder: SyncStateHolder,
@@ -181,11 +181,10 @@ internal class SyncRunner(
                         val settled = synchronizePreferences(provider, result, unchanged) { base ->
                             latestIndex = { result.index.copy(syncedPreferences = base) }
                         }
-                        // Before the index is saved and the watch point set, so that a run this step ends hands the feed no point.
-                        val areSharedCopiesSettled = synchronizeSharedCopies(provider, result)
+                        // Before the index is saved and the watch point set, so that a run a step ends hands the feed no point.
+                        val failedSteps = runSteps(provider, result)
                         val summary = result.summary.copy(
-                            havePreferencesFailed = settled == null,
-                            haveSharedCopiesFailed = !areSharedCopiesSettled,
+                            failedSteps = setOfNotNull(LibrarySyncSteps.PREFERENCES.takeIf { settled == null }) + failedSteps,
                         )
                         // Any run that got to the end, whatever files it could not move: those are listed beside the time,
                         // and one damaged file in the folder would otherwise leave a device with no time to show, ever.
@@ -262,7 +261,7 @@ internal class SyncRunner(
      * Settles `preferences.json` once the library files have been, and answers the document to remember with the folder's
      * revision of it, or null where it could not be settled; [unchanged] stands in for the first download, see
      * [SyncedPreferencesSync.synchronize]. A failure that ends a run (refused, the network, a full folder) ends this one with its
-     * reason: anything else is the one document's problem, reported as [com.pandulapeter.campfire.data.model.sync.SyncSummary.havePreferencesFailed], and the
+     * reason: anything else is the one document's problem, reported in [com.pandulapeter.campfire.data.model.sync.SyncSummary.failedSteps], and the
      * next run tries again.
      */
     private suspend fun synchronizePreferences(
@@ -288,25 +287,29 @@ internal class SyncRunner(
     }
 
     /**
-     * Brings the shared links' copies up to date with the library the run left, see [SharedCopySync], and answers whether
-     * every one was. A failure that ends a run ends this one with its reason, so that one cut short by the network is
-     * retried like any other; anything else, a connection made before sharing was asked for included, is reported as
-     * [com.pandulapeter.campfire.data.model.sync.SyncSummary.haveSharedCopiesFailed] and never fails the run.
+     * Runs every one of [steps] in order and answers the ids of those that failed. A failure that ends a run ends this one
+     * with its reason, so that one cut short by the network is retried like any other; anything else is that step's
+     * problem alone, and the steps after it still run.
      */
-    private suspend fun synchronizeSharedCopies(provider: SyncProvider, result: SyncEngine.Result.Completed) = try {
-        sharedCopySync.synchronize(
-            folder = provider,
-            index = result.index.toIndex(engine.collections),
-            sharedFiles = result.sharedFiles,
-            registryRevision = result.documentRevisions[SharedLinksFormat.NAME],
-        )
-    } catch (exception: CancellationException) {
-        throw exception
-    } catch (exception: SyncRunEndingException) {
-        throw exception
-    } catch (exception: Exception) {
-        environment.logger.log("Could not update the shared copies: ${exception::class.simpleName}")
-        false
+    private suspend fun runSteps(provider: SyncProvider, result: SyncEngine.Result.Completed): Set<String> {
+        val index = result.index.toIndex(engine.collections)
+        return steps.all.filterNot { step ->
+            try {
+                step.run(
+                    folder = provider,
+                    index = index,
+                    documentRevisions = result.documentRevisions,
+                    sharedFiles = result.sharedFiles,
+                )
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (exception: SyncRunEndingException) {
+                throw exception
+            } catch (exception: Exception) {
+                environment.logger.log("Could not complete the ${step.id} sync step: ${exception::class.simpleName}")
+                false
+            }
+        }.mapTo(mutableSetOf()) { it.id }
     }
 
     /**
@@ -354,7 +357,7 @@ private fun describe(outcome: SyncOutcome?) = when (outcome) {
     null -> "no outcome"
     is SyncOutcome.Success -> with(outcome.summary) {
         "completed: $downloaded downloaded, $uploaded uploaded, ${deletedLocally + deletedRemotely} deleted, ${conflicts.size} conflicts, " +
-            "${failed.size} failed${if (havePreferencesFailed) ", preferences failed" else ""}${if (haveSharedCopiesFailed) ", shared copies failed" else ""}"
+            "${failed.size} failed${failedSteps.sorted().joinToString(separator = "") { ", $it failed" }}"
     }
     is SyncOutcome.DeletionsNeedConfirmation -> "asks about ${outcome.count} deletions"
     SyncOutcome.Interrupted -> "stopped"

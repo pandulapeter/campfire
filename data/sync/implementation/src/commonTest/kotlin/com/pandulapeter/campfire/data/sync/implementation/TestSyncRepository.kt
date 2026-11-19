@@ -16,8 +16,11 @@ import com.pandulapeter.campfire.data.sync.implementation.scheduling.SyncLibrary
 import com.pandulapeter.campfire.data.sync.implementation.scheduling.SyncRemoteWatcher
 import com.pandulapeter.campfire.data.sync.implementation.scheduling.SyncRunScheduler
 import com.pandulapeter.campfire.data.sync.implementation.scheduling.SyncRunner
+import com.pandulapeter.campfire.data.sync.implementation.scheduling.SyncRunStep
+import com.pandulapeter.campfire.data.sync.implementation.scheduling.SyncRunSteps
 import com.pandulapeter.campfire.data.sync.implementation.shared.FakeSharedCopyContents
 import com.pandulapeter.campfire.data.sync.implementation.shared.FakeSharedLinksLocalSource
+import com.pandulapeter.campfire.data.sync.implementation.shared.SharedCopyStep
 import com.pandulapeter.campfire.data.sync.implementation.shared.SharedCopySync
 import com.pandulapeter.campfire.data.sync.implementation.shared.SharedLinksJournal
 import com.pandulapeter.campfire.data.sync.implementation.shared.SharedLinksMirror
@@ -50,7 +53,7 @@ internal const val TEST_REDIRECT = "campfire://sync?code=c&state=state"
  * The repository wired the way `DataSyncModule` wires it, over [provider] and the in-memory fakes, with every launched
  * job on the test's scheduler (see [testEnvironment]). [otherProvider] stands beside it where a test needs a second
  * provider, and [storedProviderId] is the provider the stored credentials name, [provider] unless the test says
- * otherwise.
+ * otherwise. [extraSteps] are run after the shared-copy step, given a way to try the run lock.
  */
 internal fun TestScope.syncRepository(
     provider: FakeSyncProvider,
@@ -66,6 +69,7 @@ internal fun TestScope.syncRepository(
     logger: Logger = Logger.Standard,
     connectivityMonitor: FakeConnectivityMonitor = FakeConnectivityMonitor(),
     sharedLinksLocalSource: FakeSharedLinksLocalSource = FakeSharedLinksLocalSource(),
+    extraSteps: (runLock: suspend (suspend () -> Unit) -> Unit) -> List<SyncRunStep> = { emptyList() },
 ): SyncRepositoryImpl {
     val environment = testEnvironment(logger = logger)
     val syncProviders = SyncProviders(listOfNotNull(provider, otherProvider), storedProviderId)
@@ -74,7 +78,23 @@ internal fun TestScope.syncRepository(
     val syncedPreferencesSync = SyncedPreferencesSync(userPreferencesRepository, libraryFileLocalSource, logger)
     val sharedLinksMirror = SharedLinksMirror(sharedLinksLocalSource, environment)
     val sharedLinksJournal = SharedLinksJournal(sharedLinksLocalSource, environment)
-    val runner = SyncRunner(
+    val sharedLinksRegistry = SharedLinksRegistry(sharedLinksMirror, environment)
+    val sharedCopySync = SharedCopySync(
+        libraryFileLocalSource = libraryFileLocalSource,
+        contents = FakeSharedCopyContents(),
+        registry = sharedLinksRegistry,
+        mirror = sharedLinksMirror,
+        journal = sharedLinksJournal,
+        logger = logger,
+        buildNumber = 1,
+    )
+    // Late, so that a step a test adds can try the lock of the runner that runs it.
+    lateinit var runner: SyncRunner
+    val steps = SyncRunSteps(
+        all = listOf(SharedCopyStep(sharedCopySync, sharedLinksRegistry, sharedLinksMirror, sharedLinksJournal, logger)) +
+            extraSteps { block -> runner.withRunLock { block() } },
+    )
+    runner = SyncRunner(
         syncProviders = syncProviders,
         engine = DataSyncModule.syncEngine(
             libraryFileLocalSource = libraryFileLocalSource,
@@ -85,15 +105,7 @@ internal fun TestScope.syncRepository(
             logger = logger,
         ),
         syncedPreferencesSync = syncedPreferencesSync,
-        sharedCopySync = SharedCopySync(
-            libraryFileLocalSource = libraryFileLocalSource,
-            contents = FakeSharedCopyContents(),
-            registry = SharedLinksRegistry(sharedLinksMirror, environment),
-            mirror = sharedLinksMirror,
-            journal = sharedLinksJournal,
-            logger = logger,
-            buildNumber = 1,
-        ),
+        steps = steps,
         indexStore = indexStore,
         libraryRefresher = SyncLibraryRefresher(LibrarySyncObserver(songRepository, setlistRepository, RecordingImageRepository()), environment),
         stateHolder = stateHolder,
@@ -119,8 +131,7 @@ internal fun TestScope.syncRepository(
             indexStore = indexStore,
             runner = runner,
             scheduler = scheduler,
-            sharedLinksMirror = sharedLinksMirror,
-            sharedLinksJournal = sharedLinksJournal,
+            steps = steps,
             environment = environment,
         ),
         scheduler = scheduler,
@@ -128,7 +139,7 @@ internal fun TestScope.syncRepository(
             runner = runner,
             scheduler = scheduler,
             connectivityMonitor = connectivityMonitor,
-            registry = SharedLinksRegistry(sharedLinksMirror, environment),
+            steps = steps,
             environment = environment,
         ),
     )

@@ -18,6 +18,7 @@ import com.pandulapeter.campfire.data.model.share.SharedLinkKind
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource
 import com.pandulapeter.campfire.data.sync.implementation.FakeSyncProvider
 import com.pandulapeter.campfire.data.sync.implementation.SyncEnvironment
+import com.pandulapeter.campfire.data.sync.implementation.scheduling.SyncRunSteps
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 
@@ -82,6 +83,27 @@ internal fun sharedCopySync(
         logger = Logger.Standard,
         buildNumber = buildNumber,
     )
+}
+
+/** One device's run steps: its shared-copy step, with its own mirror and journal in [localSource]. */
+internal fun sharedCopySteps(
+    library: LibraryFileLocalSource,
+    environment: SyncEnvironment,
+    localSource: FakeSharedLinksLocalSource = FakeSharedLinksLocalSource(),
+): SyncRunSteps {
+    val mirror = SharedLinksMirror(localSource, environment)
+    val registry = SharedLinksRegistry(mirror, environment)
+    val journal = SharedLinksJournal(localSource, environment)
+    val sharedCopySync = SharedCopySync(
+        libraryFileLocalSource = library,
+        contents = FakeSharedCopyContents(),
+        registry = registry,
+        mirror = mirror,
+        journal = journal,
+        logger = environment.logger,
+        buildNumber = 1,
+    )
+    return SyncRunSteps(all = listOf(SharedCopyStep(sharedCopySync, registry, mirror, journal, environment.logger)))
 }
 
 /** The registry as it is in [cloud]'s folder, or an empty one where there is none. */

@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.sync.implementation.scheduling
 
+import com.pandulapeter.campfire.data.model.library.havePreferencesFailed
 import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.sync.SyncOutcome
 import com.pandulapeter.campfire.data.sync.implementation.FakeLibraryFileLocalSource

@@ -10,6 +10,8 @@
 package com.pandulapeter.campfire.data.sync.implementation
 
 import com.pandulapeter.campfire.data.sync.implementation.run.SyncEngine
+import com.pandulapeter.campfire.data.sync.implementation.scheduling.SyncRunSteps
+import com.pandulapeter.campfire.data.sync.implementation.shared.SharedCopyStep
 import com.pandulapeter.campfire.data.sync.implementation.shared.SharedCopyContents
 import com.pandulapeter.campfire.data.sync.implementation.shared.SharedCopySync
 import com.pandulapeter.campfire.data.sync.implementation.shared.SharedLinksJournal
@@ -97,4 +99,8 @@ object DataSyncModule {
         logger = logger,
         buildNumber = CAMPFIRE_BUILD_NUMBER,
     )
+
+    /** What a run brings up to date after the library files, in order: Campfire's shared links. */
+    @Single
+    internal fun syncRunSteps(sharedCopyStep: SharedCopyStep): SyncRunSteps = SyncRunSteps(all = listOf(sharedCopyStep))
 }

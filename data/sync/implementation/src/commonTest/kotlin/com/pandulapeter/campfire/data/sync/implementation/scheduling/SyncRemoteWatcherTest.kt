@@ -39,12 +39,10 @@ import com.pandulapeter.campfire.data.sync.implementation.scheduling.SyncRunSche
 import com.pandulapeter.campfire.data.sync.implementation.shared.FakeSharedLinksLocalSource
 import com.pandulapeter.campfire.data.sync.implementation.shared.SharedLinksDocument
 import com.pandulapeter.campfire.data.sync.implementation.shared.SharedLinksFormat
-import com.pandulapeter.campfire.data.sync.implementation.shared.SharedLinksMirror
-import com.pandulapeter.campfire.data.sync.implementation.shared.SharedLinksRegistry
 import com.pandulapeter.campfire.data.sync.implementation.shared.mirrorOf
 import com.pandulapeter.campfire.data.sync.implementation.shared.registry
 import com.pandulapeter.campfire.data.sync.implementation.shared.share
-import com.pandulapeter.campfire.data.sync.implementation.shared.sharedCopySync
+import com.pandulapeter.campfire.data.sync.implementation.shared.sharedCopySteps
 import com.pandulapeter.campfire.data.sync.implementation.shared.sharedEntry
 import com.pandulapeter.campfire.data.sync.implementation.song
 import com.pandulapeter.campfire.data.sync.implementation.testEnvironment
@@ -465,6 +463,7 @@ class SyncRemoteWatcherTest {
         val userPreferencesRepository = FakeUserPreferencesRepository()
         val libraryFileLocalSource = FakeLibraryFileLocalSource(files = localFiles)
         val syncedPreferencesSync = SyncedPreferencesSync(userPreferencesRepository, libraryFileLocalSource, Logger.Standard)
+        val steps = sharedCopySteps(library = libraryFileLocalSource, environment = environment, localSource = sharedLinks)
         val runner = SyncRunner(
             syncProviders = syncProviders,
             engine = DataSyncModule.syncEngine(
@@ -476,7 +475,7 @@ class SyncRemoteWatcherTest {
                 logger = Logger.Standard,
             ),
             syncedPreferencesSync = syncedPreferencesSync,
-            sharedCopySync = sharedCopySync(library = libraryFileLocalSource, environment = environment, localSource = sharedLinks),
+            steps = steps,
             indexStore = SyncIndexStore(FakeSyncIndexLocalSource(onSaveIndex = runs::onSaveIndex), environment),
             libraryRefresher = SyncLibraryRefresher(LibrarySyncObserver(RecordingSongRepository(), RecordingSetlistRepository(), RecordingImageRepository()), environment),
             stateHolder = stateHolder,
@@ -498,7 +497,7 @@ class SyncRemoteWatcherTest {
                 runner = runner,
                 scheduler = scheduler,
                 connectivityMonitor = connectivityMonitor,
-                registry = SharedLinksRegistry(SharedLinksMirror(sharedLinks, environment), environment),
+                steps = steps,
                 environment = environment,
             ),
             runs = runs,

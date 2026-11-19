@@ -100,5 +100,6 @@
   a listing may leave out what the folder holds), makes it `orphaned` and `copyMissing` for good (a deleted
   file's link never comes back, measured: a copy uploaded again at its path is served by no link; a member, not a
   state, so older versions do not show it as working), whatever the library holds; such an entry is never built again.
-- Run-ending failures end the run; anything else, `SyncScopeMissingException` included, is
-  `SyncSummary.haveSharedCopiesFailed`, which is never counted as a file that failed.
+- A run's step (`SharedCopyStep`, the one `SyncRunStep` Campfire has). Run-ending failures end the run; anything else,
+  `SyncScopeMissingException` included, puts `LibrarySyncSteps.SHARED_COPIES` in `SyncSummary.failedSteps`, which is
+  never counted as a file that failed. Forgetting the step clears the mirror and the journal.
