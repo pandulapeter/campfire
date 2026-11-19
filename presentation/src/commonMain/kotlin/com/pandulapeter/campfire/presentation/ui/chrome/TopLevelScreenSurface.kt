@@ -11,14 +11,9 @@ package com.pandulapeter.campfire.presentation.ui.chrome
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -32,10 +27,11 @@ import com.pandulapeter.campfire.presentation.ui.components.WindowSize
  * that the chrome stays visible beside it. Given a [chrome], it draws that under itself where
  * [NavigationChromeScaffold] places the shared one, so that nothing moves as the one hands over to the other.
  *
- * A [Surface], so that it blocks touches from reaching the screen it covers during a transition, and so that it keeps
- * its screen below the status bar: none of the top level screens has a top app bar of its own to do that.
+ * A [Surface], so that it blocks touches from reaching the screen it covers during a transition. It reaches the window's
+ * top, under the status bar: none of the top level screens has a top app bar, so each places itself against the top
+ * inset its content padding carries ([KeyboardAwarePadding]), its fixed controls below it and what it scrolls going on
+ * up under it, faded out there.
  */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun TopLevelScreenSurface(
     scrim: NavigationScrim,
@@ -67,10 +63,7 @@ internal fun TopLevelScreenSurface(
                 // The chrome covers the insets on its own edge, so nothing inside should apply them a second time.
                 .consumeWindowInsets(chromeRoom),
             color = MaterialTheme.colorScheme.background,
-        ) {
-            Box(modifier = Modifier.windowInsetsPadding(WindowInsets.contentEdges.only(WindowInsetsSides.Top).withMinTopEdge)) {
-                content()
-            }
-        }
+            content = content,
+        )
     }
 }

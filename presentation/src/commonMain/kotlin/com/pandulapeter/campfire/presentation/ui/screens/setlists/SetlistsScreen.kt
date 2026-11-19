@@ -25,6 +25,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
+import com.pandulapeter.campfire.presentation.ui.screens.belowTopInset
+import com.pandulapeter.campfire.presentation.ui.screens.withoutTopInset
 import com.pandulapeter.campfire.presentation.ui.components.menu.LocalOverlayState
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.setlists_create_setlist
@@ -97,7 +99,7 @@ internal fun SetlistsScreen(
         { AppBarOverlap.of(reach = appBarReach, appBarReveal = appBarReveal.value) }
     }
     ListUnderAppBar(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize().belowTopInset(contentPadding),
         list = {
             SetlistList(
                 modifier = Modifier.fillMaxSize().underAppBar { appBarReveal.value },
@@ -114,7 +116,7 @@ internal fun SetlistsScreen(
                 navigator = viewModel.navigator,
                 listState = listState,
                 columnCount = columnCount,
-                contentPadding = contentPadding,
+                contentPadding = contentPadding.withoutTopInset(),
                 appBarOverlap = appBarOverlap,
                 reorderingSetlistFileName = reorderingSetlistFileName,
                 isReordering = isReordering,
@@ -132,7 +134,7 @@ internal fun SetlistsScreen(
         // Built afresh once the setlists first arrive, for the reason the songs screen gives.
         key(isAwaitingSetlists) {
             SearchableTopAppBar(
-                contentPadding = contentPadding,
+                contentPadding = contentPadding.withoutTopInset(),
                 appBarReveal = { appBarReveal.value },
                 placeholder = stringResource(Res.string.setlists_search),
                 searchState = viewModel.setlistsController.setlistsSearch,

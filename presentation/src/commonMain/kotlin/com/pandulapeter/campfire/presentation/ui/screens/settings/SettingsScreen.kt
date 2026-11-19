@@ -17,7 +17,6 @@ import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.calculateEndPadding
-import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -39,6 +38,7 @@ import androidx.navigationevent.compose.rememberNavigationEventState
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.data.model.sync.SyncOutcome
 import com.pandulapeter.campfire.data.model.sync.SyncState
+import com.pandulapeter.campfire.presentation.ui.screens.withoutTopInset
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedScrollState
@@ -139,7 +139,6 @@ internal fun SettingsScreen(
         derivedStateOf { (syncState.value as? SyncState.Connected)?.lastOutcome is SyncOutcome.DeletionsNeedConfirmation }
     }
     val layoutDirection = LocalLayoutDirection.current
-    val startPadding = contentPadding.calculateStartPadding(layoutDirection)
     val endPadding = contentPadding.calculateEndPadding(layoutDirection)
     val badgedTab = SettingsTab.LIBRARY.takeIf { isSyncAnswerPending }
     // Both layouts are drawn through the fade while a window is resized across the line between them, and so are the
@@ -154,7 +153,7 @@ internal fun SettingsScreen(
         if (isWide) {
             Row(modifier = Modifier.fillMaxSize()) {
                 SettingsCategoryPane(
-                    modifier = Modifier.padding(start = startPadding),
+                    modifier = Modifier.padding(contentPadding.only(start = true, top = true)),
                     tabs = tabs,
                     selectedTab = viewModel.navigator.settingsTab,
                     badgedTab = badgedTab,
@@ -181,7 +180,7 @@ internal fun SettingsScreen(
                         viewModel = viewModel,
                         tab = tab,
                         scrollState = scrollStates[tab.ordinal],
-                        contentPadding = contentPadding.only(bottom = true, extraEnd = endPadding),
+                        contentPadding = contentPadding.only(top = true, bottom = true, extraEnd = endPadding),
                         isImporting = isImporting,
                         isPerformanceModeEnabled = isPerformanceModeEnabled,
                         userPreferences = userPreferences,
@@ -194,8 +193,7 @@ internal fun SettingsScreen(
                 navigator = viewModel.navigator,
                 tabs = tabs,
                 badgedTab = badgedTab,
-                startPadding = startPadding,
-                endPadding = endPadding,
+                contentPadding = contentPadding,
                 backProgress = backProgress,
                 onSelectedTabPressed = scrollTabToTop,
             ) { tab ->
@@ -203,7 +201,7 @@ internal fun SettingsScreen(
                     viewModel = viewModel,
                     tab = tab,
                     scrollState = scrollStates[tab.ordinal],
-                    contentPadding = contentPadding,
+                    contentPadding = contentPadding.withoutTopInset(),
                     isImporting = isImporting,
                     isPerformanceModeEnabled = isPerformanceModeEnabled,
                     userPreferences = userPreferences,

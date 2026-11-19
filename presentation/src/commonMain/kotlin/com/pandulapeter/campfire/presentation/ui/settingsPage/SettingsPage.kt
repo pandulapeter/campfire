@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
+import com.pandulapeter.campfire.presentation.ui.components.topEdgeFadeHeight
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
 
@@ -53,7 +54,8 @@ import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
  *
  * @param sectionColumns How many [MIN_COLUMN_WIDTH] wide columns the page has room for, see [PageWidthLayout].
  * @param contentPadding The window insets left to the screen, applied inside the scroll so the rows pass under the
- *   system bars instead of stopping short of them.
+ *   system bars instead of stopping short of them; a page that reaches the window's top (the wide settings screen's)
+ *   carries the top inset in it, and fades out through the room under the status bar ([topEdgeFadeHeight]).
  * @param header Rows above the sections that span every column, so that a control which reads as one row (the Tuner
  *   tab's strings) is not cut to the width of one column of a wide window.
  * @param section Left out by a page that is all header (the Tuner tab).
@@ -76,10 +78,10 @@ internal fun SettingsPage(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .fadingTopEdge(scrollState, MaterialTheme.colorScheme.background)
+            .fadingTopEdge(scrollState, MaterialTheme.colorScheme.background, height = topEdgeFadeHeight(contentPadding.calculateTopPadding()))
             .bounceVerticalScroll(scrollState)
             // Asked while measuring rather than while composing, since the bottom follows the keyboard of a sheet's field.
-            .padding(contentPadding.only(start = true, end = true, bottom = true, extraTop = PAGE_TOP_PADDING, extraBottom = 16.dp)),
+            .padding(contentPadding.only(start = true, top = true, end = true, bottom = true, extraTop = PAGE_TOP_PADDING, extraBottom = 16.dp)),
     ) {
         if (header != null) {
             val headerSpan = maxOf(columnCount, minOf(headerColumns, sectionColumns), 1)

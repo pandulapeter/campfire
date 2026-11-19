@@ -24,6 +24,7 @@ import com.pandulapeter.campfire.presentation.ui.chrome.RailCapacity
 import com.pandulapeter.campfire.presentation.ui.chrome.groupedTools
 import com.pandulapeter.campfire.presentation.ui.chrome.backgroundSlideOffset
 import com.pandulapeter.campfire.presentation.ui.chrome.contentEdges
+import com.pandulapeter.campfire.presentation.ui.chrome.withMinTopEdge
 import com.pandulapeter.campfire.presentation.ui.chrome.coveredScreenScrim
 import com.pandulapeter.campfire.presentation.ui.chrome.endwardTranslation
 import com.pandulapeter.campfire.presentation.ui.chrome.navigationTransition
@@ -126,14 +127,14 @@ internal fun CampfireScreens(
     val settledListWidth = windowWidth - chromeSize.settledRailWidth
     val settledSongDetailsWidth = windowWidth
 
-    // What is left of the system bars and the display cutout once the chrome has covered the edge it sits on. The screens
-    // hand these to their lists as content padding, so that items scroll under the system bars instead of stopping short
-    // of them.
+    // What is left of the system bars and the display cutout once the chrome has covered its edge, handed to the screens'
+    // lists as content padding, so that items scroll under the system bars (the top too) instead of stopping short of them.
     val systemBars = WindowInsets.contentEdges.asPaddingValues()
     // Never read here, see KeyboardAwarePadding.
     val ime = rememberUpdatedState(WindowInsets.ime)
     val shellContentPadding: PaddingValues = KeyboardAwarePadding(
         start = if (windowSize.usesNavigationRail) NAVIGATION_RAIL_CONTENT_GAP else systemBars.calculateStartPadding(layoutDirection),
+        top = WindowInsets.contentEdges.withMinTopEdge.asPaddingValues().calculateTopPadding(),
         end = systemBars.calculateEndPadding(layoutDirection),
         bottom = if (windowSize.usesNavigationRail) systemBars.calculateBottomPadding() else 0.dp,
         chromeHeight = NoChromeRoom,

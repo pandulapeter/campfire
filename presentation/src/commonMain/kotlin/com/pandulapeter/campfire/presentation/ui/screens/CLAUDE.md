@@ -14,8 +14,16 @@ What every screen shares; each destination's package has its own notes.
 
 ## Insets and padding
 
-- Song details and the editor own their `TopAppBar`; top level screens get the status bar inset from
-  `TopLevelScreenSurface`. Every screen gets a `contentPadding` from the outer scaffold so lists scroll edge to edge.
+- Song details and the editor own their `TopAppBar`. Every screen gets a `contentPadding` from the outer scaffold so
+  lists scroll edge to edge; a top level screen's carries the top inset too (at least `MIN_TOP_EDGE`), since
+  `TopLevelScreenSurface` reaches the window's top.
+- **A top level screen places itself against that top**: pinned controls stand below it (Metronome's panel, Tuner's
+  instrument line, the settings tab row and category pane), and what scrolls from the top starts below it and goes on
+  under the status bar, faded out through that room (`topEdgeFadeHeight`: the wide settings page, Chords, Scales).
+  Songs and Setlists stay below it (`belowTopInset`): their cards vanish under the header row, so above it they could
+  only show in a strip of the status bar. On Chords and Scales the pinned search stays below the inset
+  (`stickingBelowContentPadding`, as Foundation pins a sticky item at the viewport's top whatever the padding), and the
+  room above it fills in with its background as it arrives (`pinnedSearchPageTopEdge`).
 - That padding follows the keyboard and the chrome's handover, read at use, not at creation (`KeyboardAwarePadding`), so
   they relayout lists without recomposing the app. Narrow it with `PaddingValues.only(…)`; taking it apart while
   composing brings the recomposition back.

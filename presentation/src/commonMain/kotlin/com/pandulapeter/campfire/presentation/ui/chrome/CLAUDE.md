@@ -40,8 +40,8 @@ The navigation chrome (bar, rail, transitions, and the Tools item).
 - **Each item's tooltip is its keys alone** (the label is on the item): Ctrl / Cmd + 1 to 7 number the screens switched
   on, Settings included, in the chrome's order (`screenShortcutOf`), and only while a main screen is on top (no own key
   for Settings, which would close a song to reach it); desktop and web only, so elsewhere items have none. The Tools item has no key; its tools keep their numbers, which their buttons name.
-- **No top level screen has a title bar**; the rail reaches the top of the window. `TopLevelScreenSurface` is opaque,
-  inset by the chrome and at least `MIN_TOP_EDGE` below the top.
+- **No top level screen has a title bar**; the rail reaches the top of the window, and so does `TopLevelScreenSurface`
+  (opaque, inset by the chrome only): each screen keeps below the top inset itself (`screens/CLAUDE.md`).
 
 ## The Tools item
 

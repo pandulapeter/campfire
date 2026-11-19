@@ -130,7 +130,7 @@ internal fun TunerScreen(
     )
     Column(
         // A tuner is used with both hands on the instrument, and a screen that dims and locks stops the listening.
-        modifier = modifier.fillMaxSize().then(if (isHearing) Modifier.keepScreenOn() else Modifier),
+        modifier = modifier.fillMaxSize().padding(contentPadding.only(top = true)).then(if (isHearing) Modifier.keepScreenOn() else Modifier),
     ) {
         userPreferences?.let { preferences ->
             TunerInstrumentRow(

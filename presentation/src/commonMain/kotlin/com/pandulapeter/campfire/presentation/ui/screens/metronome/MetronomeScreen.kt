@@ -83,7 +83,7 @@ internal fun MetronomeScreen(
     Column(
         // A metronome is practised with both hands on the instrument, and a screen that dims and locks takes the beat row
         // with it.
-        modifier = modifier.fillMaxSize().then(if (isPlaying) Modifier.keepScreenOn() else Modifier),
+        modifier = modifier.fillMaxSize().padding(contentPadding.only(top = true)).then(if (isPlaying) Modifier.keepScreenOn() else Modifier),
     ) {
         val panel = rememberMetronomePanelState(viewModel.metronomeController, viewModel.libraryState, viewModel.songTextStore)
         MetronomePanel(

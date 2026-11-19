@@ -32,9 +32,10 @@ import kotlinx.coroutines.flow.Flow
  * The search of a tool's page (the Chords and the Scales tabs), under the controls and pinned at the top of the page
  * once the cells are scrolled under it, so that it can be used from anywhere down the page. The cells fade out under it
  * the way they fade out under a bar, by a gradient drawn below the field over what passes under it, as strong as they
- * have been scrolled under it; the page's own fade gives way to it as it arrives at the top (see [pinnedSearchTopFade]).
- * It stands at [PINNED_SEARCH_INDEX], right after the controls; the key and the field are no wider than
- * [PINNED_SEARCH_MAX_WIDTH] together, at the start of a wide page.
+ * have been scrolled under it; the page's own fade gives way to it as it arrives at the top, and the room above it,
+ * under the status bar, is filled in with its background once it is pinned below that room (see
+ * [pinnedSearchPageTopEdge] and [stickingBelowContentPadding]). It stands at [PINNED_SEARCH_INDEX], right after the
+ * controls; the key and the field are no wider than [PINNED_SEARCH_MAX_WIDTH] together, at the start of a wide page.
  *
  * @param leading What the page is narrowed by besides the query, drawn before the field in its line and pinned with it:
  * the tabs' key, which the player changes as often as the query.
@@ -52,6 +53,7 @@ internal fun LazyGridScope.pinnedSearchField(
     val fadeHeight = with(LocalDensity.current) { EDGE_FADE_SIZE.toPx() }
     Row(
         modifier = Modifier
+            .stickingBelowContentPadding(gridState, PINNED_SEARCH_INDEX)
             .bleedHorizontally(TOOL_PAGE_PADDING)
             .drawWithContent {
                 drawContent()
@@ -95,21 +97,6 @@ internal fun LazyGridScope.pinnedSearchField(
                 onQueryChange = onQueryChanged,
             )
         }
-    }
-}
-
-/**
- * How far the page's top fade is to go for the content [gridState] scrolls: none once the search field is pinned, which
- * the fade would otherwise take the top of, as strong as the field is far from the top while it arrives, so that it is
- * gone by the time the field pins, and as far as the page has been scrolled before that.
- */
-internal fun pinnedSearchTopFade(gridState: LazyGridState, fadeHeight: Int): Int {
-    if (gridState.firstVisibleItemIndex >= PINNED_SEARCH_INDEX) return 0
-    val field = gridState.layoutInfo.visibleItemsInfo.firstOrNull { it.index == PINNED_SEARCH_INDEX }
-    return when {
-        field != null && field.offset.y < fadeHeight -> field.offset.y.coerceAtLeast(0)
-        gridState.firstVisibleItemIndex > 0 -> Int.MAX_VALUE
-        else -> gridState.firstVisibleItemScrollOffset
     }
 }
 

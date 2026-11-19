@@ -11,8 +11,12 @@ package com.pandulapeter.campfire.presentation.ui.screens.settings
 
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
@@ -21,11 +25,12 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.platform.LocalLayoutDirection
 import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedScrollState
 import com.pandulapeter.campfire.presentation.ui.navigation.Navigator
 import com.pandulapeter.campfire.presentation.ui.navigation.SettingsTab
 import com.pandulapeter.campfire.presentation.ui.components.bounceScrollableContent
+import com.pandulapeter.campfire.presentation.ui.components.only
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
@@ -38,6 +43,8 @@ import kotlinx.coroutines.launch
  * Every page is composed with the screen ([HorizontalPager]'s `beyondViewportPageCount` covers them all), so a tab is
  * never first composed as it is swiped to.
  *
+ * @param contentPadding The window insets left to the screen: the pager stands below the top one, and its row of tabs
+ *   keeps clear of the start and the end ones.
  * @param backProgress How far a predictive back gesture towards the first tab has come, or null while there is none. The
  *   pages follow it the whole way from the open tab to the first, the tabs between them passing by the way a press on
  *   the first tab passes them.
@@ -48,8 +55,7 @@ internal fun SettingsTabPager(
     navigator: Navigator,
     tabs: List<SettingsTab>,
     badgedTab: SettingsTab?,
-    startPadding: Dp,
-    endPadding: Dp,
+    contentPadding: PaddingValues,
     backProgress: () -> Float?,
     onSelectedTabPressed: (SettingsTab) -> Unit,
     page: @Composable (SettingsTab) -> Unit,
@@ -91,7 +97,8 @@ internal fun SettingsTabPager(
             }
         }
     }
-    Column(modifier = modifier.fillMaxSize()) {
+    val layoutDirection = LocalLayoutDirection.current
+    Column(modifier = modifier.fillMaxSize().padding(contentPadding.only(top = true))) {
         // The tab being headed for rather than the one on screen, so that its name lights up the moment it is pressed
         // instead of waiting for the pages to pass the halfway point; the indicator follows the pages themselves.
         SettingsTabRow(
@@ -103,8 +110,8 @@ internal fun SettingsTabPager(
             // answered, and the question is in the sync section, which may be a tab away.
             badgedTab = badgedTab,
             label = { it.label() },
-            startPadding = startPadding,
-            endPadding = endPadding,
+            startPadding = contentPadding.calculateStartPadding(layoutDirection),
+            endPadding = contentPadding.calculateEndPadding(layoutDirection),
             onTabSelected = {
                 val page = tabs.indexOf(it)
                 if (page == pagerState.targetPage) onSelectedTabPressed(it) else coroutineScope.launch { pagerState.animateScrollToPage(page) }

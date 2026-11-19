@@ -52,20 +52,24 @@ internal fun Modifier.fadingTopEdge(scrollState: ScrollState) = fadingTopEdge { 
  * The same fade over a known opaque background, without rasterizing the entire viewport into an offscreen buffer.
  * Only the edge strip is painted. Keep the masking overload for dialogs and other containers whose backing differs.
  */
-internal fun Modifier.fadingTopEdge(scrollState: ScrollState, backgroundColor: Color) = fadingTopEdge(
+internal fun Modifier.fadingTopEdge(scrollState: ScrollState, backgroundColor: Color, height: Dp = EDGE_FADE_SIZE) = fadingTopEdge(
     scrolled = { scrollState.value },
     backgroundColor = backgroundColor,
+    height = height,
 )
 
 /**
  * [fadingTopEdge] over a known opaque background, as strong as [scrolled], read while drawing, says. The color has to
  * be the one directly behind the container - a screen's background, or `sheetContainerColor()` in a sheet - with no
  * card or surface of another color in between, since it is what the content is painted over with.
+ *
+ * @param height How far down the fade reaches, [topEdgeFadeHeight] for a container that reaches under the status bar.
  */
-internal fun Modifier.fadingTopEdge(scrolled: () -> Int, backgroundColor: Color) = fadingVerticalEdges(
+internal fun Modifier.fadingTopEdge(scrolled: () -> Int, backgroundColor: Color, height: Dp = EDGE_FADE_SIZE) = fadingVerticalEdges(
     scrolledFromTop = scrolled,
     scrolledFromBottom = { 0 },
     backgroundColor = backgroundColor,
+    topHeight = height,
 )
 
 /**
@@ -127,17 +131,22 @@ internal fun Modifier.fadingVerticalEdges(
  * [fadingVerticalEdges] over a known opaque background (see the painted [fadingTopEdge]): the content stays where it is
  * drawn, and a strip of [backgroundColor] fading to transparent is painted over each edge, which shows the same pixels
  * the mask would there and needs no offscreen layer.
+ *
+ * @param topHeight How far down the top strip reaches, and so how far the content is scrolled before it is at full
+ *   strength.
  */
 internal fun Modifier.fadingVerticalEdges(
     scrolledFromTop: () -> Int,
     scrolledFromBottom: () -> Int,
     backgroundColor: Color,
+    topHeight: Dp = EDGE_FADE_SIZE,
 ) = drawWithCache {
     val height = EDGE_FADE_SIZE.toPx()
+    val topHeightPx = topHeight.toPx()
     val topGradient = Brush.verticalGradient(
         colors = listOf(backgroundColor, backgroundColor.copy(alpha = 0f)),
         startY = 0f,
-        endY = height,
+        endY = topHeightPx,
     )
     val bottomGradient = Brush.verticalGradient(
         colors = listOf(backgroundColor.copy(alpha = 0f), backgroundColor),
@@ -146,9 +155,9 @@ internal fun Modifier.fadingVerticalEdges(
     )
     onDrawWithContent {
         drawContent()
-        val topStrength = (scrolledFromTop() / height).coerceIn(0f, 1f)
+        val topStrength = (scrolledFromTop() / topHeightPx).coerceIn(0f, 1f)
         if (topStrength > 0f) {
-            drawRect(brush = topGradient, size = Size(size.width, height), alpha = topStrength)
+            drawRect(brush = topGradient, size = Size(size.width, topHeightPx), alpha = topStrength)
         }
         val bottomStrength = (scrolledFromBottom() / height).coerceIn(0f, 1f)
         if (bottomStrength > 0f) {
@@ -274,3 +283,11 @@ private fun LazyListState.scrolledFromTop() = if (firstVisibleItemIndex > 0) Int
 
 /** How far content fades in over below whatever it scrolls under, and how far it is scrolled before it fades fully. */
 internal val EDGE_FADE_SIZE = 24.dp
+
+/**
+ * How far down the top fade of a container that reaches the window's top reaches, given the [topInset] its content
+ * starts below: through the room under the status bar, so that what is scrolled up into it has faded out by the window's
+ * edge and the clock is read over the background, while what is below the inset is drawn whole. At least
+ * [EDGE_FADE_SIZE], which is all a window with no status bar (the desktop, the web) has to fade through.
+ */
+internal fun topEdgeFadeHeight(topInset: Dp) = maxOf(topInset, EDGE_FADE_SIZE)

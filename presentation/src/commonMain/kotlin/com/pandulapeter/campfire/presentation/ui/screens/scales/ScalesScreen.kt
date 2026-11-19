@@ -35,7 +35,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -57,10 +56,9 @@ import com.pandulapeter.campfire.presentation.resources.scales_search_no_scale
 import com.pandulapeter.campfire.presentation.localization.textResource
 import com.pandulapeter.campfire.presentation.ui.chords.LibraryKeyStepper
 import com.pandulapeter.campfire.presentation.ui.chords.shownChordName
-import com.pandulapeter.campfire.presentation.ui.components.EDGE_FADE_SIZE
 import com.pandulapeter.campfire.presentation.ui.components.QueryBackHandler
 import com.pandulapeter.campfire.presentation.ui.components.pinnedSearchField
-import com.pandulapeter.campfire.presentation.ui.components.pinnedSearchTopFade
+import com.pandulapeter.campfire.presentation.ui.components.pinnedSearchPageTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.rememberPinnedSearchFocus
 import com.pandulapeter.campfire.presentation.ui.scales.scaleName
 import com.pandulapeter.campfire.presentation.ui.scales.scaleTitle
@@ -71,7 +69,6 @@ import com.pandulapeter.campfire.presentation.ui.components.TOOL_PAGE_PADDING
 import com.pandulapeter.campfire.presentation.ui.navigation.ScrollToTopOnRequest
 import com.pandulapeter.campfire.presentation.ui.components.bleedHorizontally
 import com.pandulapeter.campfire.presentation.ui.components.bounceScrollableContent
-import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.list.listItemAnimation
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedLazyGridState
@@ -133,7 +130,6 @@ internal fun ScalesScreen(
     )
     val searchFocus = rememberPinnedSearchFocus(gridState)
     val searchPlaceholder = stringResource(Res.string.scales_search)
-    val fadeHeight = with(LocalDensity.current) { EDGE_FADE_SIZE.roundToPx() }
     Box(
         modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.TopStart,
@@ -142,16 +138,15 @@ internal fun ScalesScreen(
             modifier = Modifier
                 .widthIn(max = layout.animatedPageMaxWidth(sections = 2))
                 .fillMaxSize()
-                .fadingTopEdge(
-                    scrolled = { pinnedSearchTopFade(gridState, fadeHeight) },
-                    backgroundColor = MaterialTheme.colorScheme.background,
-                )
+                .pinnedSearchPageTopEdge(gridState, backgroundColor = MaterialTheme.colorScheme.background)
                 .bounceScrollableContent(gridState),
             state = gridState,
             columns = GridCells.Adaptive(minSize = SCALE_CELL_MIN_WIDTH),
-            // Nothing above the first row but its own room, as on the Chords tab, which the tools' button group switches between.
+            // Nothing above the first row but the room under the status bar and its own, as on the Chords tab, which the tools'
+            // button group switches between.
             contentPadding = contentPadding.only(
                 start = true,
+                top = true,
                 end = true,
                 bottom = true,
                 extraStart = TOOL_PAGE_PADDING,

@@ -30,6 +30,9 @@ import androidx.compose.ui.unit.dp
  * The navigation chrome's height is asked about when the padding is used too, for the same reason: it changes on every
  * frame of a handover between a bar and a rail (see [NavigationChromeSize]).
  *
+ * @param top The top level screens' top inset (see [TopLevelScreenSurface]), which only their fixed controls and the
+ *   start of their scrolling content are placed below: the content itself scrolls on up under the status bar. None for
+ *   the paddings of the screens with a bar of their own, and of what is laid out over the screens.
  * @param chromeHeight A floor for the bottom, for content laid out over the navigation bar rather than next to it.
  * @param coveredHeight How much of the keyboard's height is taken by chrome it slides over rather than pushes
  *   away, which is the navigation bar's.
@@ -40,6 +43,7 @@ import androidx.compose.ui.unit.dp
 @Stable
 internal class KeyboardAwarePadding(
     private val start: Dp,
+    private val top: Dp = 0.dp,
     private val end: Dp,
     private val bottom: Dp,
     private val chromeHeight: () -> Dp,
@@ -50,7 +54,7 @@ internal class KeyboardAwarePadding(
 
     override fun calculateLeftPadding(layoutDirection: LayoutDirection) = if (layoutDirection == LayoutDirection.Ltr) start else end
 
-    override fun calculateTopPadding() = 0.dp
+    override fun calculateTopPadding() = top
 
     override fun calculateRightPadding(layoutDirection: LayoutDirection) = if (layoutDirection == LayoutDirection.Ltr) end else start
 
@@ -58,6 +62,7 @@ internal class KeyboardAwarePadding(
 
     override fun equals(other: Any?) = other is KeyboardAwarePadding &&
             start == other.start &&
+            top == other.top &&
             end == other.end &&
             bottom == other.bottom &&
             chromeHeight === other.chromeHeight &&
@@ -65,5 +70,5 @@ internal class KeyboardAwarePadding(
             ime === other.ime &&
             density == other.density
 
-    override fun hashCode() = listOf(start, end, bottom, chromeHeight, coveredHeight, density).hashCode()
+    override fun hashCode() = listOf(start, top, end, bottom, chromeHeight, coveredHeight, density).hashCode()
 }

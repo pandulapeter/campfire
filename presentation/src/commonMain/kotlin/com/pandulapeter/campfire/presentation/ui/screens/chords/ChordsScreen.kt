@@ -41,7 +41,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -56,10 +55,9 @@ import com.pandulapeter.campfire.presentation.resources.chords_search_heading
 import com.pandulapeter.campfire.presentation.resources.chords_search_no_chord
 import com.pandulapeter.campfire.presentation.ui.components.QueryBackHandler
 import com.pandulapeter.campfire.presentation.ui.components.pinnedSearchField
-import com.pandulapeter.campfire.presentation.ui.components.pinnedSearchTopFade
+import com.pandulapeter.campfire.presentation.ui.components.pinnedSearchPageTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.rememberPinnedSearchFocus
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-import com.pandulapeter.campfire.presentation.ui.components.EDGE_FADE_SIZE
 import com.pandulapeter.campfire.presentation.ui.chords.ChordLibraryCell
 import com.pandulapeter.campfire.presentation.ui.chords.LibraryKeyStepper
 import com.pandulapeter.campfire.presentation.ui.chords.SongChord
@@ -68,7 +66,6 @@ import com.pandulapeter.campfire.presentation.ui.chords.selectShape
 import com.pandulapeter.campfire.presentation.ui.chords.shownChordName
 import com.pandulapeter.campfire.presentation.mapper.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.navigation.ScrollToTopOnRequest
-import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.list.listItemAnimation
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedLazyGridState
@@ -151,9 +148,6 @@ internal fun ChordsScreen(
     )
     val searchFocus = rememberPinnedSearchFocus(gridState)
     val searchPlaceholder = stringResource(Res.string.chords_search)
-    val density = LocalDensity.current
-    val backgroundColor = MaterialTheme.colorScheme.background
-    val fadeHeight = with(density) { EDGE_FADE_SIZE.roundToPx() }
     Box(
         modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.TopStart,
@@ -162,17 +156,15 @@ internal fun ChordsScreen(
             modifier = Modifier
                 .widthIn(max = layout.animatedPageMaxWidth(sections = 2))
                 .fillMaxSize()
-                .fadingTopEdge(
-                    scrolled = { pinnedSearchTopFade(gridState, fadeHeight) },
-                    backgroundColor = backgroundColor,
-                )
+                .pinnedSearchPageTopEdge(gridState, backgroundColor = MaterialTheme.colorScheme.background)
                 .bounceScrollableContent(gridState),
             state = gridState,
             columns = GridCells.Adaptive(minSize = chordCellMinWidth(shown?.tuning?.instrument ?: tuning?.instrument)),
-            // Nothing above the first row but its own room, so that its title starts where the Metronome's beats and the
-            // Tuner's note do, which the tools' button group switches between in place.
+            // Nothing above the first row but the room under the status bar and its own, so that its title starts where the
+            // Metronome's beats and the Tuner's note do, which the tools' button group switches between in place.
             contentPadding = contentPadding.only(
                 start = true,
+                top = true,
                 end = true,
                 bottom = true,
                 extraStart = TOOL_PAGE_PADDING,

@@ -77,6 +77,8 @@ import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedLazy
 import com.pandulapeter.campfire.presentation.ui.components.appBar.searchTravelSpec
 import com.pandulapeter.campfire.presentation.ui.components.appBar.underAppBar
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
+import com.pandulapeter.campfire.presentation.ui.screens.belowTopInset
+import com.pandulapeter.campfire.presentation.ui.screens.withoutTopInset
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import kotlinx.coroutines.flow.collectLatest
 import org.jetbrains.compose.resources.painterResource
@@ -145,7 +147,7 @@ internal fun SongsScreen(
     val appBarOverlap: () -> AppBarOverlap = remember(appBarProgress) {
         { AppBarOverlap.of(reach = appBarReach, appBarReveal = appBarProgress()) }
     }
-    Box(modifier = modifier.fillMaxSize()) {
+    Box(modifier = modifier.fillMaxSize().belowTopInset(contentPadding)) {
         ListUnderAppBar(
             modifier = Modifier.fillMaxSize(),
             list = {
@@ -172,7 +174,7 @@ internal fun SongsScreen(
                     songGroups = shownSongGroups,
                     columnCount = layout.columnCount,
                     hasLoadedLibrary = hasLoadedLibrary,
-                    contentPadding = contentPadding,
+                    contentPadding = contentPadding.withoutTopInset(),
                     appBarOverlap = appBarOverlap,
                     isSelecting = isSelecting,
                     selection = selection.orEmpty(),
@@ -184,7 +186,7 @@ internal fun SongsScreen(
             // making room for it would otherwise still be on their way in, clipped, when the launch screen leaves.
             key(placeholder == Placeholder.LOADING && !hasLoadedLibrary) {
                 SearchableTopAppBar(
-                    contentPadding = contentPadding,
+                    contentPadding = contentPadding.withoutTopInset(),
                     appBarReveal = appBarProgress,
                     placeholder = stringResource(Res.string.songs_search),
                     searchState = viewModel.songListState.songsSearch,
