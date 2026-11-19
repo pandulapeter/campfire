@@ -9,7 +9,7 @@
 -->
 # Plan: sync's knowledge of songs behind seams
 
-**Status:** in progress: C1–C5 done; C6 is next. Checked against the code on 2026-11-18 (`main` at 85e23a2db). Split out of
+**Status:** in progress: C1–C6 done; C7 is next. Checked against the code on 2026-11-18 (`main` at 85e23a2db). Split out of
 [sync-library-extraction.md](sync-library-extraction.md), which moves the result into `:libs:sync:*` modules later.
 
 **Goal:** the sync engine's rules (what to upload, download, delete, keep, and call a conflict) depend on a few narrow
@@ -150,12 +150,16 @@ touches platform source sets also compiles iOS (`linkDebugFrameworkIosSimulatorA
   - Tests: `OAuthRedirectConfigurationTest` (another app's scheme and host), `DesktopSyncAuthenticatorTest` (a
     configured port). For C6: `LoopbackRedirectListenerTest` (a test, under `auth/`) reads `CAMPFIRE_OAUTH_REDIRECT`;
     the guard checks main sources only. For C7: KDoc in `network/` still uses Dropbox as its example in places.
-- **C6. The guard.** A check in `.github/scripts` beside `check_layers.py` (or a second table in it), with its
-  `unittest`: main source files under the sync engine's packages (`run/`, `index/`, `scheduling/`, `connection/`, the
-  merge) import nothing of chordpro, `data.repository`, `data.model.song|setlist|preferences|share`, or `shared/`, and
-  the remote module's `auth/`, `network/`, and `crypto/` nothing of `dropbox/`. Run by the pre-commit hook, the Claude
-  Code edit hook, and `tests.yml` like the others; no exception list, since C2–C5 leave the tree clean. Done: the check
-  passes on the tree and its test shows each rule failing.
+- **C6. The guard.** Done: `.github/scripts/check_sync_seams.py` (its own script, since `check_layers.py`'s table is
+  `:presentation`'s layer order), with `test_check_sync_seams.py`, run by the pre-commit hook, the Claude Code edit hook,
+  and `tests.yml` (`--all` judges the whole tree, which passed with no change). Main source files under `run/`,
+  `index/`, `scheduling/`, `connection/`, and `merge/` import nothing of chordpro, `data.repository`,
+  `data.model.song|setlist|preferences|share|importing`, `LibraryCollections`, `LibrarySyncSteps` (and
+  `havePreferencesFailed`), `SetlistComparison`, `shared/`, `preferences/`, or the sync root's Campfire adapters
+  (`LibrarySyncObserver`, `LibrarySyncRules`, `DemoLibraryRepositoryImpl`, `SyncRepositoryImpl`, `DataSyncModule`);
+  the remote module's `auth/`, `network/`, and `crypto/` nothing of `dropbox/`, of the catalogue packages, or of the
+  module's root package (`CAMPFIRE_OAUTH_REDIRECT`, `USER_AGENT`, the generated `RemoteConfiguration`). A star import
+  fails when it would bring in a forbidden name. No exception list.
 - **C7. Docs.** `data/sync/implementation/CLAUDE.md` and its package files, and the remote api and implementation
   ones, describe the seams, which side owns what, and the guard; the Drive plan's "What the groundwork left in place"
   is updated for collections and the redirect configuration.
