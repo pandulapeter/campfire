@@ -59,6 +59,11 @@ internal class SongStepActions(
         if (continuousScrolling?.nudge(1) == true) return
         if (continuousScrolling == null && stepper?.canStep(1, from) == true) {
             coroutineScope.launch { stepper.step(1, from) }
+        } else if (continuousScrolling == null && stepper?.isStepping == true) {
+            // A press during the step that brings the end on screen is counted from that step's target, where there is
+            // nothing left to step to; the reader has not seen the end yet, so it is not the press that asks for the
+            // next song, and the confirmation waits for one made once the step has come to rest.
+            return
         } else if (pagerState.targetPage < lastPage && nextSongConfirmation.confirm(pagerState.targetPage)) {
             pageStepper.step(1)
         }
