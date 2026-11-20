@@ -20,11 +20,15 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
 import androidx.navigation3.ui.LocalNavAnimatedContentScope
+import androidx.navigationevent.NavigationEventTransitionState
+import androidx.navigationevent.compose.LocalNavigationEventDispatcherOwner
+import kotlinx.coroutines.flow.StateFlow
 
 /** How the deck is changing in the transition that is running, which decides which of its two screens is darkened. */
 internal enum class DeckMotion {
@@ -45,9 +49,12 @@ internal enum class DeckMotion {
  * What the transition specs tell every entry's scrim about the transition they have just decided on. The specs are
  * evaluated in the composition of each screen of a transition before that screen's own content, so the screen reads
  * the motion of the transition it is part of, an interrupted one included.
+ *
+ * It also tells the specs whether a back gesture is being followed ([isFollowingBackGesture]), read from [backGesture],
+ * the gestures of the dispatcher the back stack's handler is registered with.
  */
 @Stable
-internal class NavigationScrim {
+internal class NavigationScrim(private val backGesture: StateFlow<NavigationEventTransitionState>?) {
     var motion by mutableStateOf(DeckMotion.None)
 
     /**
@@ -55,6 +62,17 @@ internal class NavigationScrim {
      * is when the specs have last been asked about it, and plain rather than snapshot state, since nothing draws it.
      */
     var isPredictiveBack = false
+
+    /** Whether a back gesture is under way, read when a spec is asked rather than when it was handed over. */
+    val isFollowingBackGesture
+        get() = (backGesture?.value as? NavigationEventTransitionState.InProgress)?.direction == NavigationEventTransitionState.TRANSITIONING_BACK
+}
+
+/** A [NavigationScrim] following the back gestures of the dispatcher it is composed under. */
+@Composable
+internal fun rememberNavigationScrim(): NavigationScrim {
+    val dispatcher = LocalNavigationEventDispatcherOwner.current?.navigationEventDispatcher
+    return remember(dispatcher) { NavigationScrim(backGesture = dispatcher?.transitionState) }
 }
 
 /**

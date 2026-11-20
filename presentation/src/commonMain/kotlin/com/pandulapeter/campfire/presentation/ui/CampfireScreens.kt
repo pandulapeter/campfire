@@ -15,7 +15,7 @@ import com.pandulapeter.campfire.presentation.ui.chrome.NavigationChromeKind
 import com.pandulapeter.campfire.presentation.ui.chrome.NAVIGATION_RAIL_CONTENT_GAP
 import com.pandulapeter.campfire.presentation.ui.chrome.NavigationChromeScaffold
 import com.pandulapeter.campfire.presentation.ui.chrome.NavigationChromeSize
-import com.pandulapeter.campfire.presentation.ui.chrome.NavigationScrim
+import com.pandulapeter.campfire.presentation.ui.chrome.rememberNavigationScrim
 import com.pandulapeter.campfire.presentation.ui.chrome.NoChromeRoom
 import com.pandulapeter.campfire.presentation.ui.chrome.ScreenSurface
 import com.pandulapeter.campfire.presentation.ui.chrome.ToolScreenFrame
@@ -228,7 +228,7 @@ internal fun CampfireScreens(
     }
     // What the screens' own lifecycles are compared with, see ScreenSurface.
     val hostLifecycle = LocalLifecycleOwner.current.lifecycle
-    val navigationScrim = remember { NavigationScrim() }
+    val navigationScrim = rememberNavigationScrim()
     val topLevelScreen: @Composable (CampfireDestination.TopLevel, @Composable () -> Unit) -> Unit = { destination, content ->
         ReportNavigationTransition(viewModel, onNavigationTransitionRunningChanged)
         TopLevelScreenSurface(

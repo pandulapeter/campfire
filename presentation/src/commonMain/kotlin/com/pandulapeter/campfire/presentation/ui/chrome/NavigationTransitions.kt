@@ -69,6 +69,11 @@ internal fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.navigati
     val isOnboardingFinishing = isOnboardingFinishCelebrated &&
         initialState.entries.lastOrNull()?.contentKey == ONBOARDING_CONTENT_KEY &&
         targetState.entries.none { it.contentKey == ONBOARDING_CONTENT_KEY }
+    // AnimatedContent asks the spec of a screen it already shows through the one Navigation 3 handed it when that screen
+    // was first composed, so a back gesture started while a push is still running, which brings no screen of its own,
+    // reaches both screens through the push's rather than through predictivePopTransition. Their slides would then
+    // follow the finger along the pop's spring, the card far ahead of it, and stay where the gesture left them.
+    if (scrim.isFollowingBackGesture && targetState.zIndex < initialState.zIndex) return predictivePopTransition(scrim)
     scrim.isPredictiveBack = false
     scrim.motion = when {
         !isAppShown || isOnboardingFinishing || (from != null && to != null) -> DeckMotion.None

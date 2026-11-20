@@ -277,13 +277,28 @@ internal class AppTestScope(
 
     /** A predictive back gesture from the start edge, dragged halfway across and let go of. */
     fun swipeBack() {
-        backInput.backStarted(NavigationEvent(swipeEdge = NavigationEvent.EDGE_LEFT))
+        startBackGesture()
         waitForIdle()
-        backInput.backProgressed(NavigationEvent(swipeEdge = NavigationEvent.EDGE_LEFT, progress = 0.5f))
+        dragBackGesture(0.5f)
         waitForIdle()
         backInput.backCompleted()
         waitForIdle()
     }
+
+    /**
+     * A predictive back gesture from the start edge touching down, held until [dragBackGesture], [releaseBackGesture],
+     * or [cancelBackGesture], for a test that steps the clock itself through what happens meanwhile.
+     */
+    fun startBackGesture() = backInput.backStarted(NavigationEvent(swipeEdge = NavigationEvent.EDGE_LEFT))
+
+    /** The gesture [startBackGesture] began, dragged to [progress] of the way across. */
+    fun dragBackGesture(progress: Float) = backInput.backProgressed(NavigationEvent(swipeEdge = NavigationEvent.EDGE_LEFT, progress = progress))
+
+    /** The gesture let go of, which goes back. */
+    fun releaseBackGesture() = backInput.backCompleted()
+
+    /** The gesture called off, which stays. */
+    fun cancelBackGesture() = backInput.backCancelled()
 
     /** The whole window as it is drawn, dialogs and popups included, which a node's capture leaves out. */
     fun captureWindow() = test.captureToImage()
