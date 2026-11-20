@@ -40,7 +40,8 @@ internal class RenderEnvironment(
 )
 
 /**
- * Takes [shot] on [device] into [output], and the clip its drive records, if it does, into [frames] as numbered JPEGs:
+ * Takes [shot] on [device] into [output], and the clip its drive records, if it does, into [frames] as numbered JPEGs,
+ * and with [hasSemantics] the app's semantics at that moment into a text file beside it ([semanticsSnapshot]):
  * the library copied into a home of its own, the app started on it as the
  * device's platform, driven to the shot and drawn with the platform's chrome around it.
  *
@@ -52,6 +53,7 @@ internal suspend fun render(
     environment: RenderEnvironment,
     output: File,
     frames: File? = null,
+    hasSemantics: Boolean = false,
 ) = withCampfireApp(
     platform = device.platform,
     chrome = device.chrome,
@@ -148,6 +150,7 @@ internal suspend fun render(
         }
         output.parentFile.mkdirs()
         output.writeBytes(screen.render(time).use { checkNotNull(it.encodeToData(EncodedImageFormat.PNG)).bytes })
+        if (hasSemantics) output.resolveSibling("${output.nameWithoutExtension}.txt").writeText(screen.window.semanticsSnapshot())
     } finally {
         detector.close()
         screen.close()

@@ -25,7 +25,8 @@ import kotlin.system.exitProcess
  * run left there; `--args="--out <folder>"` writes them elsewhere, and `--only <names>` (comma separated, each a device's enum name, a
  * shot's id, or `listing`, `store-banners`, `website`, `readme-banners` or `promo`) renders part of them, and `--apple-chrome true` only
  * the devices whose system chrome is set in Apple's own fonts ([Device.hasAppleChrome]), which only a Mac has, and
- * `--apple-chrome false` the rest, which can be rendered anywhere. `--shard <index>/<count>` renders every
+ * `--apple-chrome false` the rest, which can be rendered anywhere. `--semantics true` writes beside each render a text
+ * file of what its screen shows as the app's semantics say it, for checking a state without reading the picture. `--shard <index>/<count>` renders every
  * count-th image from the index-th (to split a run across machines), and `--parallel <processes>` splits what is left
  * across that many processes of the tool ([renderInParallel]), by default half the processors and at most four, as each
  * takes about 1.6 GB. `--frame store` renders nothing: it frames the renders (from `--renders <folder>`, by default the
@@ -60,6 +61,7 @@ fun main(args: Array<String>) {
     val only = options["--only"]?.split(',')?.map(String::trim)?.toSet()
     val appleChrome = options["--apple-chrome"]?.let { requireNotNull(it.toBooleanStrictOrNull()) { "--apple-chrome takes true or false, not $it." } }
     val shard = options["--shard"]?.let(Shard::parse) ?: Shard(index = 0, count = 1)
+    val hasSemantics = options["--semantics"]?.let { requireNotNull(it.toBooleanStrictOrNull()) { "--semantics takes true or false, not $it." } } ?: false
     val processes = options["--parallel"]?.toInt() ?: (Runtime.getRuntime().availableProcessors() / 2).coerceIn(1, MAX_DEFAULT_PROCESSES)
     val library = File(requireProperty("campfire.screenshots.library"))
     require(File(library, "library/songs").isDirectory) {
@@ -119,6 +121,7 @@ fun main(args: Array<String>) {
                         environment = environment,
                         output = file,
                         frames = if (job.isClip) File(output, "${job.folder}/${job.name}") else null,
+                        hasSemantics = hasSemantics,
                     )
                     println("done")
                 } catch (exception: Exception) {

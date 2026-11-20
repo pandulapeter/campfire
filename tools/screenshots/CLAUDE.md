@@ -17,7 +17,9 @@ publishes them on CI (`.github/workflows/screenshots.yml`, `.github/CLAUDE.md`);
 
 - `./gradlew :tools:screenshots:run` writes `renders/<row label>/<NN-id>.png` (gitignored, replaced every run);
   `--args="--out <folder> --only <names>"`; `--apple-chrome true|false` and `--shard <index>/<count>` render a part, as
-  the release's jobs do (a device whose chrome is set in Apple's fonts needs a Mac).
+  the release's jobs do (a device whose chrome is set in Apple's fonts needs a Mac). `--semantics true` writes a
+  `<NN-id>.txt` beside each render, its screen's semantics pruned to an indented line a node that says or does
+  something (`SemanticsSnapshot.kt`), to check a state without reading the picture.
 - **Every framed file is named by `.github/scripts/store_images.py`** (`SETS`, what a store's API takes; `MANUAL`, what
   stays by hand): a new device or image fails the release's check until it is named there, with its store's rules.
 - **A run is split across processes** (`ParallelRun.kt`, each about 1.6 GB), since one process holds one app start at
