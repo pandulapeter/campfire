@@ -35,6 +35,10 @@ publishes them on CI (`.github/workflows/screenshots.yml`, `.github/CLAUDE.md`);
   set up before the scene and Koin stopped after, since storage, repositories, and the view model read their start
   once. The scene runs on `Dispatchers.Main` (Swing), which the view model dispatches to, pumped a frame at a time with
   a real `delay` so IO lands.
+- **`settle()` waits until the screen has settled** (`Settling.kt`): up to half a second (a second after the start) for
+  a first change, then until nothing has changed for a quarter of a second, measured on a grayscale thumbnail of one
+  sample per 4 dp square, so a caret or a spinner does not keep it waiting. `settle(milliseconds)` is only for a shot
+  that times something (a beat, a press). A shot whose state comes from the view model waits for that state.
 - **Looking like the platform**: `PlatformImpersonation` (`:presentation`'s desktop source set) supplies the platform's
   answers; insets go through `LocalPlatformWindowInsets` (an internal Compose API). The app's scene is only its window,
   the system chrome a full-screen scene laid over it: a dialog (every bottom sheet) is a layer as large as its scene,

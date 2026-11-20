@@ -93,11 +93,15 @@ internal open class PrepareScope(
     val viewModel: CampfireViewModel,
     val device: Device,
     val language: AppLanguage,
-    private val settle: suspend (milliseconds: Long) -> Unit,
+    private val wait: suspend (milliseconds: Long) -> Unit,
+    private val awaitSettled: suspend () -> Unit,
 ) {
 
-    /** Lets the app run for [milliseconds] of frames, for what was asked of it to arrive and finish animating. */
-    suspend fun settle(milliseconds: Long = 1_500) = settle.invoke(milliseconds)
+    /** Lets the app run until what was asked of it has arrived and finished animating ([SettleDetector]). */
+    suspend fun settle() = awaitSettled()
+
+    /** Lets the app run for exactly [milliseconds] of frames, for a shot that times something on purpose. */
+    suspend fun settle(milliseconds: Long) = wait(milliseconds)
 
     /** The text of the string resource called [key] in the shot's language, for finding what a screen shows. */
     fun string(key: String) = checkNotNull(
@@ -154,12 +158,13 @@ internal class ShotScope(
     viewModel: CampfireViewModel,
     device: Device,
     language: AppLanguage,
-    settle: suspend (milliseconds: Long) -> Unit,
+    wait: suspend (milliseconds: Long) -> Unit,
+    awaitSettled: suspend () -> Unit,
     private val scene: ImageComposeScene,
     private val windowTop: Float,
     private val captureFrame: suspend () -> Unit,
     val keyboard: OnScreenKeyboard,
-) : PrepareScope(viewModel, device, language, settle) {
+) : PrepareScope(viewModel, device, language, wait, awaitSettled) {
 
     /**
      * Records [frames] frames of the app as a clip, a sixtieth of a second of the scene's clock apart whatever the time

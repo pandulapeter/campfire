@@ -171,7 +171,9 @@ private suspend fun withBenchmarkApp(writeData: (File) -> Unit, block: suspend (
                 viewModel = checkNotNull(viewModel),
                 device = device,
                 language = AppLanguage.ENGLISH,
-                settle = { milliseconds -> repeat((milliseconds / FRAME_MILLIS).toInt().coerceAtLeast(1)) { frame() } },
+                wait = { milliseconds -> repeat((milliseconds / FRAME_MILLIS).toInt().coerceAtLeast(1)) { frame() } },
+                // What the benchmark times it waits for by frames of its own; settling is only a fixed while between two of them.
+                awaitSettled = { repeat((BENCHMARK_SETTLE_MILLIS / FRAME_MILLIS).toInt()) { frame() } },
                 scene = screen.window,
                 windowTop = screen.windowTop.toFloat(),
                 captureFrame = {},
@@ -247,6 +249,7 @@ private fun residentSetBytes() = runCatching {
 private fun peakHeapBytes() = ManagementFactory.getMemoryPoolMXBeans().filter { it.type == MemoryType.HEAP }.sumOf { it.peakUsage.used }
 
 private const val SEED = 2017
+private const val BENCHMARK_SETTLE_MILLIS = 1_500L
 private const val DEFAULT_RUNS = 3
 private const val DEFAULT_SONGS = 3000
 private const val PDF_SONGS = 60

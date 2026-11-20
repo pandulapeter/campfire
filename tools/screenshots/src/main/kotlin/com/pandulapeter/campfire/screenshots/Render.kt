@@ -26,7 +26,6 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import org.jetbrains.skia.Bitmap
 import org.jetbrains.skia.EncodedImageFormat
 import java.io.File
 import java.time.LocalDate
@@ -93,11 +92,15 @@ internal suspend fun render(
         },
     )
     var time = 0L
-    // Drawing a frame of a device's whole screen is most of what a render costs, so a long wait draws one every
-    // SETTLE_STEP_MILLIS rather than every frame: animations follow the scene's clock, not how many frames it drew, so
-    // they end where they would have, and the real pause, which the app's own coroutines need to land, is as long. A
-    // short wait times something, a metronome beat's pulse caught a few frames in, which starts on the first frame drawn
-    // after it, so it keeps every frame.
+    val detector = SettleDetector(widthPx = device.widthPx, heightPx = device.heightPx, density = device.density) { milliseconds ->
+        time += milliseconds * 1_000_000
+        screen.render(time).also { delay(milliseconds) }
+    }
+    // A wait of a set length, for a shot that times something. Drawing a frame of a device's whole screen is most of what
+    // a render costs, so a long one draws a frame every SETTLE_STEP_MILLIS rather than every frame: animations follow the
+    // scene's clock, not how many frames it drew, so they end where they would have, and the real pause, which the app's
+    // own coroutines need to land, is as long. A short one, a metronome beat's pulse caught a few frames in, which starts
+    // on the first frame drawn after it, keeps every frame.
     suspend fun settle(milliseconds: Long) {
         val stepSize = if (milliseconds < LONG_WAIT_MILLIS) FRAME_MILLIS else SETTLE_STEP_MILLIS
         var left = milliseconds.coerceAtLeast(FRAME_MILLIS)
@@ -129,26 +132,16 @@ internal suspend fun render(
             while (viewModel?.libraryState?.isLoading?.value != false) settle(FRAME_MILLIS)
         } ?: error("The library was not read within ${LAUNCH_TIMEOUT_MILLIS / 1000} seconds.")
         val currentViewModel = checkNotNull(viewModel)
-        PrepareScope(viewModel = currentViewModel, device = device, language = shot.language, settle = ::settle).apply { shot.prepare(this) }
+        PrepareScope(viewModel = currentViewModel, device = device, language = shot.language, wait = ::settle, awaitSettled = { detector.awaitSettled() }).apply { shot.prepare(this) }
         isPrepared = true
         withTimeoutOrNull(LAUNCH_TIMEOUT_MILLIS) {
             while (!isAppReady) settle(FRAME_MILLIS)
         } ?: error("The app did not finish starting within ${LAUNCH_TIMEOUT_MILLIS / 1000} seconds.")
-        settle(SETTLE_MILLIS)
-        ShotScope(viewModel = currentViewModel, device = device, language = shot.language, settle = ::settle, scene = screen.window, windowTop = screen.windowTop.toFloat(), captureFrame = ::captureFrame, keyboard = keyboard)
+        // Covers and the first screen's own reads land from other threads, so the first change is given longer here.
+        detector.awaitSettled(EXPECT_START_MILLIS)
+        ShotScope(viewModel = currentViewModel, device = device, language = shot.language, wait = ::settle, awaitSettled = { detector.awaitSettled() }, scene = screen.window, windowTop = screen.windowTop.toFloat(), captureFrame = ::captureFrame, keyboard = keyboard)
             .apply { shot.drive(this) }
-        settle(SETTLE_MILLIS)
-        // Covers arrive on their own time, a few at once, so the shot waits until the screen stops changing rather
-        // than for a fixed while that a slower start would outlast.
-        fun frameHash() = screen.render(time).use { image -> Bitmap.makeFromImage(image).use { checkNotNull(it.readPixels()).contentHashCode() } }
-        var previous = frameHash()
-        var checks = 0
-        while (checks++ < STABLE_CHECKS) {
-            settle(STABLE_INTERVAL_MILLIS)
-            val current = frameHash()
-            if (current == previous) break
-            previous = current
-        }
+        detector.awaitSettled()
         shot.beat?.let { beat ->
             (host.koin.get<Metronome>() as SilentMetronome).beat(beat)
             settle(FRAME_MILLIS * 3)
@@ -156,6 +149,7 @@ internal suspend fun render(
         output.parentFile.mkdirs()
         output.writeBytes(screen.render(time).use { checkNotNull(it.encodeToData(EncodedImageFormat.PNG)).bytes })
     } finally {
+        detector.close()
         screen.close()
     }
 }
@@ -218,11 +212,8 @@ private val ImpersonatedPlatform.canShare
         ImpersonatedPlatform.MACOS, ImpersonatedPlatform.WINDOWS -> false
     }
 
-private const val SETTLE_MILLIS = 1_500L
 private const val SETTLE_STEP_MILLIS = 100L
 private const val LONG_WAIT_MILLIS = 500L
-private const val STABLE_INTERVAL_MILLIS = 750L
-private const val STABLE_CHECKS = 20
 private const val LAUNCH_TIMEOUT_MILLIS = 30_000L
 private const val RECORDING_FRAME_NANOS = 1_000_000_000L / 60
 private const val JPEG_QUALITY = 95
