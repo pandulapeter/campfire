@@ -20,6 +20,7 @@ import java.io.IOException
 import java.net.ServerSocket
 import java.net.Socket
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.awaitCancellation
@@ -76,7 +77,10 @@ internal class LoopbackRedirectListener(
         // return. This sibling coroutine is what does that - cancelling the authorization cancels it too, and its
         // `finally` runs straight away rather than waiting for the blocked thread to notice something. Without it,
         // giving up in Settings would leave the thread and the port held until the five minute timeout expired.
-        val socketCloser = launch(Dispatchers.Default) {
+        // It starts undispatched so that its `try` is entered before anything can cancel it: a coroutine cancelled
+        // before it is first dispatched never runs its body, and the blocked `accept` would then keep the scope (and
+        // the `finally` below) waiting.
+        val socketCloser = launch(Dispatchers.Default, start = CoroutineStart.UNDISPATCHED) {
             try {
                 awaitCancellation()
             } finally {
