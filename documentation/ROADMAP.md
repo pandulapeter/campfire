@@ -13,6 +13,8 @@ What's planned for Campfire, grouped by area.
 
 ## In progress
 
+- Improve Song details screen content top and bottom padding
+- Fix this bug: tapping too often in a setlist song (not waiting for a scroll) causes the next song confirmation to appear too early
 - Add Slovak, Ukrainian and Dutch translations
 - Add an option to pin chord diagrams / scales. In once-column mode, with enough horizontal space, chord diagrams could be displayed on the side.
 
