@@ -13,6 +13,12 @@ import androidx.compose.ui.unit.dp
 
 internal val PAGE_TOP_PADDING = 2.dp // Inside the scroll, above the first row, and read with it.
 
+/**
+ * Added above [PAGE_TOP_PADDING] while no metronome panel is shown: under the app bar alone the first row would sit
+ * too close to it, while the panel already leaves a gap of its own.
+ */
+internal val PAGE_TOP_PADDING_UNDER_APP_BAR = 3.dp
+
 internal val PAGE_HORIZONTAL_PADDING = 8.dp
 internal val STEP_BUTTON_SIZE = 40.dp
 internal val STEP_BUTTON_GAP = 8.dp

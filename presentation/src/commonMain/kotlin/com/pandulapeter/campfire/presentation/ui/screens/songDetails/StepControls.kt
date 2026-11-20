@@ -158,7 +158,7 @@ internal fun BoxScope.StepControls(
  */
 internal fun stepControlsPadding(pageContentPadding: PaddingValues, layoutDirection: LayoutDirection) = PaddingValues(
     start = pageContentPadding.calculateStartPadding(layoutDirection) + PAGE_HORIZONTAL_PADDING,
-    top = PAGE_TOP_PADDING,
+    top = pageContentPadding.calculateTopPadding() + PAGE_TOP_PADDING,
     end = pageContentPadding.calculateEndPadding(layoutDirection) + PAGE_HORIZONTAL_PADDING,
     bottom = pageContentPadding.calculateBottomPadding() + STEP_BUTTON_EDGE_MARGIN,
 )

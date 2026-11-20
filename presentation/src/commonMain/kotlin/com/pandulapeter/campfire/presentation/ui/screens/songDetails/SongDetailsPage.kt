@@ -305,7 +305,7 @@ internal fun SongDetailsPage(
             }
             return@AnimatedContent
         }
-        val topPadding = PAGE_TOP_PADDING
+        val topPadding = contentPadding.calculateTopPadding() + PAGE_TOP_PADDING
         val topPaddingPx = with(LocalDensity.current) { topPadding.roundToPx() }
         LaunchedEffect(flingBehavior) { flingBehavior.keepReaderInPlace() }
         val isAcross = rememberIsAcross(flingBehavior, turnsByColumn = turnsByColumn)
@@ -443,7 +443,8 @@ internal fun pageViewportHeight(live: Dp, settled: Dp, followsViewport: Boolean)
  */
 private class SettledHeight(var height: Dp)
 
-private val PAGE_BOTTOM_PADDING = 4.dp
+/** As far above the bottom of the pages as the step buttons are, so the song ends where the bottom button does. */
+private val PAGE_BOTTOM_PADDING = STEP_BUTTON_EDGE_MARGIN
 
 /** The page's room with [content] centred in it: what stands in for a song that has nothing to show yet, or ever. */
 @Composable
