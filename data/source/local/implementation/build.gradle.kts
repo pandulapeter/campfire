@@ -54,6 +54,9 @@ kotlin {
 tasks.named<Test>("desktopTest") {
     val corpus = project.property("campfire.importCorpus").toString()
     systemProperty("campfire.importCorpus", corpus)
+    val pageCorpus = project.property("campfire.pageCorpus").toString()
+    systemProperty("campfire.pageCorpus", pageCorpus)
+    inputs.property("pageCorpus", pageCorpus)
     val sharedCopyParitySeeds = project.property("campfire.sharedCopyParitySeeds").toString()
     systemProperty("campfire.sharedCopyParitySeeds", sharedCopyParitySeeds)
     inputs.property("sharedCopyParitySeeds", sharedCopyParitySeeds)
