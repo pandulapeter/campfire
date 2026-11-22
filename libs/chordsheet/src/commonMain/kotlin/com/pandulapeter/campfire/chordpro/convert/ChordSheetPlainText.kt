@@ -31,7 +31,7 @@ internal object ChordSheetPlainText {
         // Chord names are music, written from the left in any sheet, and would otherwise outvote a short Hebrew lyric.
         val words = lines.filterNot(ChordSheetConverter::isChordLine).joinToString("\n")
         if (writingDirectionOf(words) == WritingDirection.LEFT_TO_RIGHT) return lines.map(::leftToRight)
-        val units = lines.map(::units)
+        val units = lines.map { ChordSheetColumns.of(it, expandsTabs = true) }
         val width = units.maxOf { it.size }
         // A row of starred chords (`Em*`) is one too, which the converter reads as it reads any other.
         val isChordRow = lines.map { line -> ChordSheetChordWords.chordRow(line)?.let { it.annotation == null && it.notes.isEmpty() } == true }
@@ -91,31 +91,6 @@ internal object ChordSheetPlainText {
         return ChordSheet.Line(spans)
     }
 
-    /**
-     * The columns of [line]: a character each, a letter's marks in its column (a display draws them over it), a tab as
-     * the spaces up to the next stop, and any other whitespace as one space.
-     */
-    private fun units(line: String): List<String> {
-        val units = mutableListOf<String>()
-        var index = 0
-        while (index < line.length) {
-            val character = line[index]
-            val next = line.getOrNull(index + 1)
-            when {
-                character == '\t' -> repeat(8 - units.size % 8) { units += " " }
-                character.isWhitespace() || character == ' ' -> units += " "
-                character.isHighSurrogate() && next != null && next.isLowSurrogate() -> {
-                    units += "$character$next"
-                    index++
-                }
-                units.isNotEmpty() && units.last() != " " && character.isMark() -> units[units.lastIndex] += character
-                else -> units += character.toString()
-            }
-            index++
-        }
-        return units
-    }
-
     private fun rightToLeft(units: List<String>, width: Int): ChordSheet.Line {
         val drawn = BidiOrder.drawnOrder(BidiOrder.levels(units, WritingDirection.RIGHT_TO_LEFT))
         val column = IntArray(units.size)
@@ -153,6 +128,4 @@ internal object ChordSheetPlainText {
             ),
         )
     }
-
-    private fun Char.isMark() = category == CharCategory.NON_SPACING_MARK || category == CharCategory.ENCLOSING_MARK
 }

@@ -133,6 +133,24 @@ class ChordSheetHtmlTest {
         assertTrue("\u05d3\u05de\u05e2\u05d5\u05ea \u05e9\u05dc [C]\u05de\u05dc\u05d0[C#dim7]\u05db\u05d9\u05dd [Fmaj7]" in song, song)
     }
 
+    @Test
+    fun `chord boxes over a pointed right-to-left lyric stand where they stand over the unpointed one`() {
+        // The points (U+05B0 to U+05BC) are drawn over their letters and take no column of their own.
+        fun song(isPointed: Boolean): String {
+            fun lyric(letters: String) = if (isPointed) letters.map { if (it == ' ') " " else "$it\u05b8" }.joinToString("") else letters
+            val html = "<div>" +
+                cell(chord = null, lyric = lyric("\u05d3\u05de\u05e2\u05d5\u05ea \u05e9\u05dc"), margin = "0px 0px 0px 0.3em") +
+                cell(chord = "C", lyric = lyric("\u05de\u05dc\u05d0"), margin = "0px 0px 0px 0.3em") +
+                cell(chord = "C#dim7", lyric = lyric("\u05db\u05d9\u05dd"), margin = "0px -0.3em 0px 0.3em") +
+                cell(chord = "Fmaj7", lyric = "", margin = "0px 0.3em") +
+                "</div>"
+            return ChordSheetConverter.convert(ChordSheet.ofPlainText(ChordSheetHtml.chordSheetText(html)!!)).single()
+        }
+        val unpointed = song(isPointed = false)
+        assertTrue("[C]\u05de\u05dc\u05d0[C#dim7]\u05db\u05d9\u05dd [Fmaj7]" in unpointed, unpointed)
+        assertEquals(unpointed, song(isPointed = true).filterNot { it in '\u05b0'..'\u05bc' })
+    }
+
     /** A box of a [chord] (none for a lyric alone) over its [lyric], as a page that sets each chord over its syllable draws it. */
     private fun cell(chord: String?, lyric: String, margin: String) = "<div style=\"display: inline-block; margin: $margin;\">" +
         chord?.let { "<div style=\"display: inline-block;\">$it</div>" }.orEmpty() + "<div>$lyric</div></div>"

@@ -43,7 +43,8 @@ internal object ChordSheetHtmlRightToLeft {
     private fun layout(line: ChordSheetHtmlReader.Line): Layout {
         val lyric = line.text.toString().replace('\u00a0', ' ').trimEnd()
         if (line.chords.isEmpty() || lyric.isBlank()) return Layout(lyric, lyric.length, line.chords.sortedBy { it.first })
-        val (units, unitOf) = units(lyric)
+        val unitOf = IntArray(lyric.length)
+        val units = ChordSheetColumns.of(lyric, expandsTabs = false, columnOf = unitOf)
         val drawn = BidiOrder.drawnOrder(BidiOrder.levels(units, WritingDirection.RIGHT_TO_LEFT))
         val column = IntArray(units.size)
         drawn.forEachIndexed { position, unit -> column[unit] = position - units.size }
@@ -81,22 +82,4 @@ internal object ChordSheetHtmlRightToLeft {
 
     /** Columns between a lyric's end and the chords sung after it, past the em a chord may stand off its letter. */
     private const val PAST_END_GAP = 3
-
-    /**
-     * The columns of [line] as [ChordSheetPlainText] counts them (a letter with its marks is one, as is a surrogate
-     * pair), and the column each of its characters is in.
-     */
-    private fun units(line: String): Pair<List<String>, IntArray> {
-        val units = mutableListOf<String>()
-        val unitOf = IntArray(line.length)
-        line.forEachIndexed { index, character ->
-            val isJoined = units.isNotEmpty() && (
-                (character.isLowSurrogate() && line.getOrNull(index - 1)?.isHighSurrogate() == true) ||
-                    (units.last() != " " && character.category.let { it == CharCategory.NON_SPACING_MARK || it == CharCategory.ENCLOSING_MARK })
-                )
-            if (isJoined) units[units.lastIndex] += character else units += if (character.isWhitespace()) " " else character.toString()
-            unitOf[index] = units.lastIndex
-        }
-        return units to unitOf
-    }
 }
