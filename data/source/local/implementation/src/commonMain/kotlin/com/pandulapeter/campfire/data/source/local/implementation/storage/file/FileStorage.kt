@@ -216,8 +216,8 @@ interface FileStorage {
     /**
      * Writes a copy of [fromName] of [from] as [toName] of [to], replacing a file there atomically, as [writeBytes]
      * does, without holding the file whole where the platform can copy it (on the web, which reads it whole, one file at
-     * a time). A file that is not there throws [LibraryStorageException]. The copy is a new file: whatever mark the
-     * original carried, such as [keepOutOfDeviceBackup]'s, it does not.
+     * a time). A file that is not there throws [LibraryStorageException]. The copy carries the original's backup mark
+     * on iOS ([keepOutOfDeviceBackup]'s), so a caller copying out of a folder kept out of the backup sets or clears it.
      */
     suspend fun copyInto(from: StorageDirectory, fromName: String, to: StorageDirectory, toName: String)
 

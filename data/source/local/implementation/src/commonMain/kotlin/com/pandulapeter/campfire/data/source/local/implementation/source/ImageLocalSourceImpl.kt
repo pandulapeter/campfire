@@ -47,11 +47,18 @@ internal class ImageLocalSourceImpl(
         null
     }
 
-    /** A copy is a new file, which carries no backup mark of the original's: a draft picture reaches the backup this way. */
+    /**
+     * The backup mark is set or cleared after the copy as after a move, since the copy carries the original's mark on iOS:
+     * a draft picture copied into the library by Save would otherwise stay out of the backup.
+     */
     override suspend fun copyImage(from: ImageShelf, name: String, to: ImageShelf, toName: String) {
         require(LibraryFiles.isLibraryFileName(name) && LibraryFiles.isLibraryFileName(toName)) { "Not a library file's name: \"$name\" or \"$toName\"." }
         fileStorage.copyInto(from = from.directory, fromName = name, to = to.directory, toName = toName)
-        keepOutOfDeviceBackupIfDue(to, toName)
+        if (to == ImageShelf.LIBRARY && !isLibraryFileKeptOutOfDeviceBackup(toName)) {
+            fileStorage.keepInDeviceBackup(to.directory, toName)
+        } else {
+            keepOutOfDeviceBackupIfDue(to, toName)
+        }
     }
 
     /**

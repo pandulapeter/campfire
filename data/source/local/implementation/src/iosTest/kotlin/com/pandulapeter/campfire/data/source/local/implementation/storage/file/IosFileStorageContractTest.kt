@@ -11,7 +11,11 @@
 
 package com.pandulapeter.campfire.data.source.local.implementation.storage.file
 
+import com.pandulapeter.campfire.data.model.Logger
+import com.pandulapeter.campfire.data.source.local.api.ImageShelf
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
+import com.pandulapeter.campfire.data.source.local.implementation.source.ImageLocalSourceImpl
+import com.pandulapeter.campfire.data.source.local.implementation.staging.ImportStaging
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.coroutines.test.runTest
 import platform.Foundation.NSFileManager
@@ -73,6 +77,17 @@ class IosFileStorageContractTest : FileStorageContractTest() {
     }
 
     @Test
+    fun `a draft picture copied into the library is in the device backup`() = runTest {
+        val storage = newStorage()
+        val images = ImageLocalSourceImpl(storage, ImportStaging(storage, Logger.Standard))
+        images.writeImage(ImageShelf.DRAFT, PICTURE, byteArrayOf(1, 2, 3))
+
+        images.copyImage(from = ImageShelf.DRAFT, name = PICTURE, to = ImageShelf.LIBRARY, toName = PICTURE)
+
+        assertFalse(isExcludedFromBackup(StorageDirectory.FILES, PICTURE))
+    }
+
+    @Test
     fun `a file the app owns is taken into the imports by a move over whatever had its name`() = runTest {
         val storage = newStorage()
         val bytes = byteArrayOf(4, 5, 6, 7)
@@ -103,4 +118,8 @@ class IosFileStorageContractTest : FileStorageContractTest() {
             ?.get(NSURLIsExcludedFromBackupKey) as? NSNumber)?.boolValue == true
 
     private fun directoryPath(directory: StorageDirectory) = "$root/${directory.pathSegments.joinToString("/")}"
+
+    private companion object {
+        const val PICTURE = "0123456789abcdef.png"
+    }
 }
