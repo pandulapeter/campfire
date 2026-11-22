@@ -9,12 +9,17 @@
  */
 package com.pandulapeter.campfire.data.formats.zip
 
+import kotlinx.coroutines.test.runTest
+import java.io.ByteArrayOutputStream
+import java.util.zip.DataFormatException
 import java.util.zip.Deflater
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
+import java.util.zip.Inflater as ZlibInflater
 
 /**
  * Cross-checks the hand written inflater against the JVM's own deflater. `java.util.zip` is only available here, in a
@@ -121,19 +126,77 @@ internal class InflaterTest {
         assertContentEquals(fixture.copyOf(100), Inflater.inflate(compressed, maxOutput = 100))
     }
 
-    private fun deflate(input: ByteArray, level: Int, nowrap: Boolean): ByteArray {
+    @Test
+    fun `generated data deflated by zlib at any level and strategy inflates back to it`() {
+        repeat(ROUND_TRIPS) { seed ->
+            val random = Random(seed)
+            val data = generatedData(random)
+            val level = random.nextInt(0, 10)
+            val strategy = STRATEGIES[random.nextInt(STRATEGIES.size)]
+            val compressed = deflate(data, level, nowrap = true, strategy = strategy)
+
+            assertContentEquals(data, Inflater.inflate(compressed, expectedSize = data.size), "Seed $seed, level $level, strategy $strategy")
+        }
+    }
+
+    /**
+     * Which of the two refuses a damaged stream is not compared: this inflater takes a distance code of one symbol at any
+     * length where zlib takes it only at length 1, and refuses an incomplete literal/length code zlib reads as a single
+     * length 1 code, so a damaged stream may be read by one of them alone.
+     */
+    @Test
+    fun `a damaged stream that zlib inflates too inflates to the same bytes`() = runTest {
+        val streams = deflateStreamsToDamage(maxSize = 100_000)
+        var compared = 0
+        repeat(MUTATIONS) { seed ->
+            val stream = Mutator(seed).mutate(streams[seed % streams.size])
+            val inflated = try {
+                Inflater.inflate(stream)
+            } catch (_: ZipException) {
+                null
+            }
+            val expected = zlibInflate(stream)
+            if (inflated != null && expected != null) {
+                assertContentEquals(expected, inflated, "Seed $seed")
+                compared++
+            }
+        }
+        assertTrue(compared >= MUTATIONS / 10, "Only $compared streams were read by both")
+    }
+
+    /** What zlib inflates [stream] to, or null where it refuses it, runs out of input, or passes [Inflater.MAX_ENTRY_SIZE]. */
+    private fun zlibInflate(stream: ByteArray): ByteArray? {
+        val inflater = ZlibInflater(true)
+        try {
+            inflater.setInput(stream)
+            val output = ByteArrayOutputStream()
+            val buffer = ByteArray(16 * 1024)
+            while (!inflater.finished()) {
+                val count = inflater.inflate(buffer)
+                if (count == 0 && (inflater.needsInput() || inflater.needsDictionary())) return null
+                output.write(buffer, 0, count)
+                if (output.size() > Inflater.MAX_ENTRY_SIZE) return null
+            }
+            return output.toByteArray()
+        } catch (_: DataFormatException) {
+            return null
+        } finally {
+            inflater.end()
+        }
+    }
+
+    private fun deflate(input: ByteArray, level: Int, nowrap: Boolean, strategy: Int = Deflater.DEFAULT_STRATEGY): ByteArray {
         val deflater = Deflater(level, nowrap)
+        deflater.setStrategy(strategy)
         try {
             deflater.setInput(input)
             deflater.finish()
-            val output = java.io.ByteArrayOutputStream()
+            val output = ByteArrayOutputStream()
             val buffer = ByteArray(16 * 1024)
+            // A strategy set before the first call takes effect with a call that returns nothing, so a call that writes no
+            // bytes does not mean the stream is done.
             while (!deflater.finished()) {
-                val count = deflater.deflate(buffer)
-                if (count == 0 && !deflater.finished()) {
-                    break
-                }
-                output.write(buffer, 0, count)
+                output.write(buffer, 0, deflater.deflate(buffer))
             }
             return output.toByteArray()
         } finally {
@@ -145,5 +208,8 @@ internal class InflaterTest {
         const val STORED_BLOCK = 0
         const val FIXED_BLOCK = 1
         const val DYNAMIC_BLOCK = 2
+        const val ROUND_TRIPS = 60
+        const val MUTATIONS = 3_000
+        val STRATEGIES = listOf(Deflater.DEFAULT_STRATEGY, Deflater.FILTERED, Deflater.HUFFMAN_ONLY)
     }
 }

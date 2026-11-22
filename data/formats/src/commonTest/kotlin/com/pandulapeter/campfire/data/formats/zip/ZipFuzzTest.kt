@@ -39,7 +39,7 @@ internal class ZipFuzzTest {
     @Test
     fun `generated data inflates back to what was deflated`() = runTest {
         repeat(ROUND_TRIPS) { seed ->
-            val data = data(Random(seed))
+            val data = generatedData(Random(seed))
             val deflated = ByteArrayBuilder().also { Deflater().deflate(data, it::u8) }.build()
             assertContentEquals(data, Inflater.inflate(deflated, expectedSize = data.size), "Seed $seed")
         }
@@ -88,9 +88,7 @@ internal class ZipFuzzTest {
 
     @Test
     fun `damaged deflate streams inflate or are refused`() = runTest {
-        val streams = listOf(DYNAMIC_STREAM.hexToByteArray()) + List(4) { seed ->
-            ByteArrayBuilder().also { Deflater().deflate(data(Random(seed), maxSize = 4_000), it::u8) }.build()
-        }
+        val streams = deflateStreamsToDamage(maxSize = 4_000)
         repeat(MUTATIONS) { seed ->
             val mutator = Mutator(seed)
             val stream = mutator.mutate(streams[seed % streams.size])
@@ -116,39 +114,36 @@ internal class ZipFuzzTest {
     }
 
     @Test
-    fun `damaged deflate streams inflate alike in memory and streaming`() = runTest {
-        val streams = listOf(DYNAMIC_STREAM.hexToByteArray()) + List(4) { seed ->
-            ByteArrayBuilder().also { Deflater().deflate(data(Random(seed), maxSize = 100_000), it::u8) }.build()
-        }
+    fun `damaged deflate streams inflate to one output however they are read`() = runTest {
+        val streams = deflateStreamsToDamage(maxSize = 100_000)
         repeat(MUTATIONS) { seed ->
             val mutator = Mutator(seed)
             val stream = mutator.mutate(streams[seed % streams.size])
-            val source = ByteArrayZipSource(stream)
             val maxOutput = mutator.random.nextInt(0, 1_000)
-            val prefix = runCatching { Inflater.inflate(stream, maxOutput = maxOutput) }
-            val streamedPrefix = runCatching { Inflater.inflatePrefix(source, 0, stream.size.toLong(), maxOutput) }
-            assertAlike(prefix, streamedPrefix, "Seed $seed, a prefix of $maxOutput")
-            // The size the stream really inflates to, where it does, so that the whole of it is compared as often as not.
-            val whole = runCatching { Inflater.inflate(stream) }.getOrNull()
+            val prefix = inflateOrRefuse("Seed $seed, a prefix of $maxOutput") { Inflater.inflate(stream, maxOutput = maxOutput) }
+            val whole = inflateOrRefuse("Seed $seed") { Inflater.inflate(stream) }
+            if (prefix != null && whole != null) {
+                assertContentEquals(whole.copyOf(minOf(maxOutput, whole.size)), prefix, "Seed $seed, a prefix of $maxOutput")
+            }
+            // The size the stream really inflates to, where it does, so that the whole of it is read into a sink as often as not.
             val declaredSize = if (whole != null && mutator.random.nextBoolean()) whole.size else mutator.random.nextInt(0, 200_000)
-            val inMemory = runCatching { Inflater.inflate(stream, expectedSize = declaredSize) }
             val sink = RecordingEntrySink()
-            val streamed = runCatching {
-                Inflater.inflate(source, 0, stream.size.toLong(), declaredSize.toLong(), inMemory.getOrNull()?.let(Crc32::of) ?: 0, sink)
+            val streamed = inflateOrRefuse("Seed $seed, $declaredSize bytes declared") {
+                Inflater.inflate(ByteArrayZipSource(stream), 0, stream.size.toLong(), declaredSize.toLong(), whole?.let(Crc32::of) ?: 0, sink)
                 sink.bytes
             }
-            assertAlike(inMemory, streamed, "Seed $seed, $declaredSize bytes declared")
+            if (whole != null && declaredSize == whole.size) assertContentEquals(whole, streamed, "Seed $seed, $declaredSize bytes declared")
             assertTrue(sink.isAbandoned != (sink.sha256Hex != null), "Seed $seed ended its sink ${if (sink.isAbandoned) "twice" else "never"}")
         }
     }
 
-    /** The same bytes, or a [ZipException] from both. */
-    private fun assertAlike(expected: Result<ByteArray>, actual: Result<ByteArray>, message: String) {
-        listOf(expected, actual).forEach { result ->
-            result.exceptionOrNull()?.let { if (it !is ZipException) fail("$message failed with $it", it) }
-        }
-        assertEquals(expected.isSuccess, actual.isSuccess, "$message: ${expected.exceptionOrNull()} / ${actual.exceptionOrNull()}")
-        if (expected.isSuccess) assertContentEquals(expected.getOrThrow(), actual.getOrThrow(), message)
+    /** What [inflate] returns, or null where it refuses the stream with a [ZipException], the only way it may fail. */
+    private inline fun inflateOrRefuse(message: String, inflate: () -> ByteArray): ByteArray? = try {
+        inflate()
+    } catch (_: ZipException) {
+        null
+    } catch (exception: Throwable) {
+        fail("$message failed with $exception", exception)
     }
 
     /** Overwrites the size, offset, and count fields of the end record, the central directory, and the local headers. */
@@ -179,38 +174,12 @@ internal class ZipFuzzTest {
             append(index)
             append(".cho")
         }
-        return ZipEntry(name, data(random, maxSize))
-    }
-
-    private fun data(random: Random, maxSize: Int = 100_000): ByteArray = when (random.nextInt(5)) {
-        0 -> ByteArray(0)
-        1 -> random.nextBytes(random.nextInt(maxSize))
-        2 -> ByteArray(random.nextInt(maxSize)) { (it % (1 + random.nextInt(3))).toByte() }
-        3 -> buildString { while (length < maxSize / 2 && random.nextInt(200) != 0) append(WORDS[random.nextInt(WORDS.size)]) }.encodeToByteArray()
-        else -> {
-            // A block repeated across the whole window and beyond, with noise between, reaches back as far as deflate can.
-            val block = random.nextBytes(random.nextInt(1, 2_000))
-            val builder = ByteArrayBuilder()
-            while (builder.size < maxSize - block.size - 64) {
-                builder.bytes(block)
-                builder.bytes(random.nextBytes(random.nextInt(64)))
-                if (random.nextInt(20) == 0) builder.bytes(ByteArray(minOf(maxSize - builder.size, random.nextInt(40_000))))
-            }
-            builder.build().copyOf(minOf(builder.size, maxSize))
-        }
+        return ZipEntry(name, generatedData(random, maxSize))
     }
 
     private companion object {
         const val ROUND_TRIPS = 60
         const val MUTATIONS = 3_000
         val NAME_CHARACTERS = listOf("a", "Z", "0", " ", "-", "_", ".", "é", "ő", "Ü", "ß", "日本", "😀", "א", "#", "&", "'")
-        val WORDS = listOf("[Am]", "[C]", "[G/B]", "the ", "river ", "light ", "{chorus}\n", "\n", "árvíztűrő ", "שלום ")
-
-        /** A raw DEFLATE stream with a dynamic Huffman block, which [Deflater] never writes: zlib's at level 9. */
-        const val DYNAMIC_STREAM =
-            "5d51c10d83300cfc7b8aac52f1600894178d1aa4b648819647d5213246e688b2571d5f4c050f08e73bdfc566f5ce5ce7ed69fcfc7066e8" +
-                "ed7dbaf91525dabc0b8d1e3a8bf3f2b0255298de2ea067f57846068b21a99528077d463f87d7f2855189ec5fa5800c9a4e65b0a81150e4" +
-                "c4b12ccb69cf463013728f12814978b41fcd72527cae63c47de29ac49e8ca95e11beb88676e6a47380d57a1b59a118c35418c107b20640" +
-                "d03621c3c0540428b775f4161f259e4df5cf8047d37fbf250a0f5bbceb909da512a12006f0944dff00"
     }
 }

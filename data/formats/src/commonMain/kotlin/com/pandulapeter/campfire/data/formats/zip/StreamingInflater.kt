@@ -59,12 +59,14 @@ internal suspend fun Inflater.inflatePrefix(source: ZipSource, offset: Long, len
 }
 
 /**
- * One inflate in the structure of [Inflater]'s own, which mirrors `puff.c`, kept apart so that the in-memory one, which
- * the PDF reader and the differential tests rely on, stays as it is. [bits] and [decode] remain plain functions over
- * [input]: only the block loops suspend, topping the input up between symbols to more than the longest one can take
- * (and sliding the window down when it is nearly full), so that no suspension is paid per bit.
+ * One inflate in the structure of `puff.c`, the module's only DEFLATE decoder: the zip reader runs it over a file, and
+ * [Inflater.inflate] over an array, without suspending. [bits] and [decode] remain plain functions over [input]: only the
+ * block loops suspend, topping the input up between symbols to more than the longest one can take (and sliding the
+ * window down when it is nearly full), so that no suspension is paid per bit. Its only suspension of its own is
+ * [refill]'s `yield`, which returns at once in a context without a dispatcher; everything else that suspends is
+ * [source] and [output].
  */
-private class StreamingInflate(
+internal class StreamingInflate(
     private val source: ZipSource,
     offset: Long,
     length: Long,
@@ -74,7 +76,9 @@ private class StreamingInflate(
 ) {
     private var sourcePosition = offset
     private val sourceEnd = checkedSum(offset, length)
-    private val input = ByteArray(INPUT_BUFFER_SIZE)
+
+    // A range shorter than the buffer is read in one refill, and the PDF reader inflates thousands of small streams.
+    private val input = ByteArray(minOf(INPUT_BUFFER_SIZE.toLong(), length).toInt())
     private var position = 0
     private var inputEnd = 0
     private var readBefore = 0L

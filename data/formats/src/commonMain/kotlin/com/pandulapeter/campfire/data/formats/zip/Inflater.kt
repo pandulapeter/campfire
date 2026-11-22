@@ -11,8 +11,9 @@ package com.pandulapeter.campfire.data.formats.zip
 
 /**
  * A raw DEFLATE decompressor (RFC 1951), written from scratch so that the zip support works identically on every
- * platform. It mirrors Mark Adler's public domain `puff.c`: canonical Huffman codes are decoded bit by bit against
- * per-length counts instead of lookup tables, which is plenty fast for the small files the app deals with.
+ * platform. Its one decoder, `StreamingInflate`, mirrors Mark Adler's public domain `puff.c`: canonical Huffman codes are
+ * decoded bit by bit against per-length counts instead of lookup tables, which is plenty fast for the small files the
+ * app deals with. This object holds the tables and limits it shares, and the in-memory entry point the PDF reader uses.
  */
 internal object Inflater {
 
@@ -42,237 +43,33 @@ internal object Inflater {
         if (!isPrefix && expectedSize > MAX_DECLARED_ENTRY_SIZE) {
             throw ZipException("Entry would inflate past $MAX_DECLARED_ENTRY_SIZE bytes.")
         }
-        val state = State(source, offset, length, if (isPrefix) -1 else expectedSize, maxOutput)
-        try {
-            state.inflate()
-        } catch (_: PrefixComplete) {
-            // The prefix is all that was asked for, so whatever the rest of the stream holds is none of this call's business.
-        }
-        val result = state.output()
-        if (!isPrefix && expectedSize >= 0 && result.size != expectedSize) {
-            throw ZipException("Deflate stream produced ${result.size} bytes instead of the expected $expectedSize.")
-        }
-        return result
-    }
-
-    private class State(
-        private val source: ByteArray,
-        offset: Int,
-        length: Int,
-        expectedSize: Int,
-        private val maxOutput: Int,
-    ) {
-        private val start = offset
-        private val end = offset + length
-        private var position = offset
-        private var bitBuffer = 0
-        private var bitCount = 0
         // The declared size comes from the archive itself, so it is only trusted as far as a first guess: a corrupted or
         // crafted central directory can claim gigabytes for a stream of a few bytes, and an allocation that large is an
         // OutOfMemoryError on Android and a trap on the web, neither of which an import can catch.
-        private var out = ByteArray(
+        val output = ByteArrayBuilder(
             when {
-                maxOutput >= 0 -> maxOutput
+                isPrefix -> maxOutput
                 expectedSize > 0 -> minOf(expectedSize, INITIAL_CAPACITY_LIMIT)
                 else -> 1024
             },
         )
-        private var outSize = 0
         // An entry is held to the size it declared as it inflates rather than once it has ended: an archive can name the
         // same stream from any number of entries, and each of them would otherwise be inflated to MAX_ENTRY_SIZE first.
-        private val outputLimit = when {
-            maxOutput >= 0 -> maxOutput
+        val outputLimit = when {
+            isPrefix -> maxOutput
             expectedSize >= 0 -> expectedSize
             else -> MAX_ENTRY_SIZE
         }
-
-        fun output(): ByteArray = if (outSize == out.size) out else out.copyOf(outSize)
-
-        fun inflate() {
-            var last: Int
-            do {
-                last = bits(1)
-                when (val type = bits(2)) {
-                    STORED -> stored()
-                    FIXED -> codes(fixedLengthCode, fixedDistanceCode)
-                    DYNAMIC -> dynamic()
-                    else -> throw ZipException("Invalid deflate block type $type.")
-                }
-            } while (last == 0)
+        completedWithoutSuspending {
+            StreamingInflate(ByteArrayZipSource(source), offset.toLong(), length.toLong(), maxOutput, outputLimit.toLong()) { bytes, from, count ->
+                output.bytes(bytes, from, count)
+            }.inflate()
         }
-
-        // region Bit reading
-
-        /** Reads [count] bits from the stream, least significant bit of each byte first. */
-        private fun bits(count: Int): Int {
-            while (bitCount < count) {
-                if (position >= end) {
-                    throw ZipException("Deflate stream ended while reading ${position - start + 1} bytes in.")
-                }
-                bitBuffer = bitBuffer or ((source[position++].toInt() and 0xFF) shl bitCount)
-                bitCount += 8
-            }
-            val value = bitBuffer and ((1 shl count) - 1)
-            bitBuffer = bitBuffer ushr count
-            bitCount -= count
-            return value
+        val result = output.build()
+        if (!isPrefix && expectedSize >= 0 && result.size != expectedSize) {
+            throw ZipException("Deflate stream produced ${result.size} bytes instead of the expected $expectedSize.")
         }
-
-        // endregion
-
-        // region Output
-
-        private fun emit(value: Int) {
-            if (prefixLeft(1) == 0) throw PrefixComplete
-            ensureCapacity(1)
-            out[outSize++] = value.toByte()
-        }
-
-        private fun copyBack(distance: Int, count: Int) {
-            if (distance > outSize) {
-                throw ZipException("Deflate back reference of $distance bytes points before the start of the output.")
-            }
-            val copied = prefixLeft(count)
-            ensureCapacity(copied)
-            var from = outSize - distance
-            repeat(copied) {
-                out[outSize++] = out[from++]
-            }
-            if (copied < count) throw PrefixComplete
-        }
-
-        /** How many of [count] bytes still fit into the prefix that was asked for, all of them where none was. */
-        private fun prefixLeft(count: Int) = if (maxOutput >= 0) minOf(count, maxOutput - outSize) else count
-
-        private fun ensureCapacity(additional: Int) {
-            val required = outSize + additional
-            if (required > outputLimit) {
-                throw ZipException("Deflate stream produces more than the $outputLimit bytes it declared.")
-            }
-            if (required > out.size) {
-                var newSize = if (out.size == 0) 1024 else out.size
-                while (newSize < required) {
-                    newSize *= 2
-                }
-                out = out.copyOf(minOf(newSize, outputLimit))
-            }
-        }
-
-        // endregion
-
-        // region Blocks
-
-        private fun stored() {
-            bitBuffer = 0
-            bitCount = 0
-            if (position + 4 > end) {
-                throw ZipException("Deflate stream ended inside a stored block header.")
-            }
-            val storedLength = (source[position].toInt() and 0xFF) or ((source[position + 1].toInt() and 0xFF) shl 8)
-            val complement = (source[position + 2].toInt() and 0xFF) or ((source[position + 3].toInt() and 0xFF) shl 8)
-            position += 4
-            if (storedLength != (complement.inv() and 0xFFFF)) {
-                throw ZipException("Stored deflate block length $storedLength does not match its complement.")
-            }
-            if (position + storedLength > end) {
-                throw ZipException("Deflate stream ended inside a stored block of $storedLength bytes.")
-            }
-            val copied = prefixLeft(storedLength)
-            ensureCapacity(copied)
-            source.copyInto(out, outSize, position, position + copied)
-            outSize += copied
-            position += storedLength
-            if (copied < storedLength) throw PrefixComplete
-        }
-
-        private fun dynamic() {
-            val literalCount = bits(5) + 257
-            val distanceCount = bits(5) + 1
-            val codeLengthCount = bits(4) + 4
-            if (literalCount > MAX_LITERAL_CODES || distanceCount > MAX_DISTANCE_CODES) {
-                throw ZipException("Dynamic deflate block declares too many codes ($literalCount / $distanceCount).")
-            }
-            val codeLengthLengths = IntArray(CODE_LENGTH_ORDER.size)
-            for (index in 0 until codeLengthCount) {
-                codeLengthLengths[CODE_LENGTH_ORDER[index]] = bits(3)
-            }
-            val codeLengthCode = Huffman(codeLengthLengths, allowIncomplete = false, what = "code length")
-            val lengths = IntArray(literalCount + distanceCount)
-            var index = 0
-            while (index < lengths.size) {
-                when (val symbol = decode(codeLengthCode)) {
-                    16 -> {
-                        if (index == 0) {
-                            throw ZipException("Dynamic deflate block repeats a code length before the first one.")
-                        }
-                        val previous = lengths[index - 1]
-                        repeat(3 + bits(2)) {
-                            if (index < lengths.size) lengths[index++] = previous else throw ZipException(TOO_MANY_LENGTHS)
-                        }
-                    }
-
-                    17 -> repeat(3 + bits(3)) {
-                        if (index < lengths.size) lengths[index++] = 0 else throw ZipException(TOO_MANY_LENGTHS)
-                    }
-
-                    18 -> repeat(11 + bits(7)) {
-                        if (index < lengths.size) lengths[index++] = 0 else throw ZipException(TOO_MANY_LENGTHS)
-                    }
-
-                    else -> lengths[index++] = symbol
-                }
-            }
-            if (lengths[256] == 0) {
-                throw ZipException("Dynamic deflate block has no end of block code.")
-            }
-            val lengthCode = Huffman(lengths.copyOfRange(0, literalCount), allowIncomplete = false, what = "literal/length")
-            // A distance code with a single symbol is incomplete but legal: it happens when a block has no back references.
-            val distanceLengths = lengths.copyOfRange(literalCount, lengths.size)
-            val distanceCode = Huffman(distanceLengths, allowIncomplete = distanceLengths.count { it != 0 } <= 1, what = "distance")
-            codes(lengthCode, distanceCode)
-        }
-
-        private fun codes(lengthCode: Huffman, distanceCode: Huffman) {
-            while (true) {
-                val symbol = decode(lengthCode)
-                when {
-                    symbol < 256 -> emit(symbol)
-                    symbol == 256 -> return
-                    else -> {
-                        val lengthIndex = symbol - 257
-                        if (lengthIndex >= LENGTH_BASE.size) {
-                            throw ZipException("Invalid deflate length symbol $symbol.")
-                        }
-                        val count = LENGTH_BASE[lengthIndex] + bits(LENGTH_EXTRA[lengthIndex])
-                        val distanceSymbol = decode(distanceCode)
-                        if (distanceSymbol >= DISTANCE_BASE.size) {
-                            throw ZipException("Invalid deflate distance symbol $distanceSymbol.")
-                        }
-                        copyBack(DISTANCE_BASE[distanceSymbol] + bits(DISTANCE_EXTRA[distanceSymbol]), count)
-                    }
-                }
-            }
-        }
-
-        /** Walks the canonical code one bit at a time until the accumulated code falls inside a length's range. */
-        private fun decode(huffman: Huffman): Int {
-            var code = 0
-            var first = 0
-            var index = 0
-            for (length in 1..MAX_CODE_LENGTH) {
-                code = code or bits(1)
-                val count = huffman.count[length]
-                if (code - count < first) {
-                    return huffman.symbol[index + (code - first)]
-                }
-                index += count
-                first = (first + count) shl 1
-                code = code shl 1
-            }
-            throw ZipException("Invalid Huffman code in the deflate stream.")
-        }
-
-        // endregion
+        return result
     }
 
     /** A canonical Huffman code: how many symbols use each bit length, and the symbols themselves in canonical order. */
@@ -310,9 +107,6 @@ internal object Inflater {
             }
         }
     }
-
-    /** Ends a prefix inflate once the prefix is full; never a [ZipException], since nothing is wrong with the stream. */
-    private object PrefixComplete : RuntimeException()
 
     /** The largest buffer allocated on the strength of a declared size alone; anything bigger grows into place. */
     const val INITIAL_CAPACITY_LIMIT = 1 shl 20

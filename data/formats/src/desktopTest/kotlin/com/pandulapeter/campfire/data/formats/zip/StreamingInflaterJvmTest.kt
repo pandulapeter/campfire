@@ -37,7 +37,7 @@ internal class StreamingInflaterJvmTest {
     )
 
     @Test
-    fun `inflates zlib's raw deflate at every level to the same bytes as the in-memory inflater`() = runTest {
+    fun `inflates zlib's raw deflate at every level to what was deflated`() = runTest {
         for ((name, fixture) in fixtures) {
             for (level in 0..9) {
                 val compressed = deflate(fixture, level)
@@ -45,17 +45,16 @@ internal class StreamingInflaterJvmTest {
 
                 Inflater.inflate(ByteArrayZipSource(compressed), 0, compressed.size.toLong(), fixture.size.toLong(), Crc32.of(fixture), sink)
 
-                assertContentEquals(Inflater.inflate(compressed, expectedSize = fixture.size), sink.bytes, "$name at level $level")
+                assertContentEquals(fixture, sink.bytes, "$name at level $level")
             }
         }
     }
 
     @Test
-    fun `refuses a truncated stream like the in-memory inflater`() = runTest {
+    fun `refuses a truncated stream`() = runTest {
         val fixture = fixtures.getValue("long repeats")
         val compressed = deflate(fixture, 9)
         for (length in listOf(0, 1, compressed.size / 2, compressed.size - 1)) {
-            assertFailsWith<ZipException> { Inflater.inflate(compressed, 0, length, fixture.size) }
             assertFailsWith<ZipException> {
                 Inflater.inflate(ByteArrayZipSource(compressed), 0, length.toLong(), fixture.size.toLong(), Crc32.of(fixture), RecordingEntrySink())
             }

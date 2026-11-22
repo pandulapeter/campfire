@@ -73,7 +73,7 @@ Documents are read locally, never rendered, uploaded, or kept.
 
 ## `zip/`
 
-Exists because no multiplatform zip library covers wasmJs. Reads STORED and DEFLATE (`Inflater` follows `puff.c`),
+Exists because no multiplatform zip library covers wasmJs. Reads STORED and DEFLATE (one decoder, after `puff.c`),
 ZIP64 included; encrypted or otherwise compressed entries are left out.
 
 - **`ZipWriter` deflates each entry where that makes it smaller, else stores it** (decided by trying, never by name),
@@ -122,12 +122,13 @@ ZIP64 included; encrypted or otherwise compressed entries are left out.
   from a damaged archive: its tool wrapped every size and offset around, so it is refused, never recovered.
 - `ZipDirectory.walk` reads an entry of any 64-bit size into its sink; `ZipReader.read(source)`, which holds entries in
   memory, leaves out one of 2 GiB or more.
-- **The streaming inflater** (`StreamingInflater.kt`) is `puff.c`'s structure again over a `ZipSource` range, with a
-  64 KiB input buffer and a 64 KiB output window that slides to keep 32 KiB of history; only its block loops suspend,
-  topping up between symbols. `Inflater.inflate(ByteArray)` stays as it is (the PDF reader's, and the reference the
-  fuzz test holds the streaming one to: the same bytes or a `ZipException` from both). Output goes to an `EntrySink`
-  through `EntrySink.receive`, which holds it to the declared size, takes its CRC-32 and SHA-256, yields every 256 KiB,
-  and ends the sink exactly once: `close` with the SHA-256, or `abandon` on any failure or cancellation.
+- **The inflater** (`StreamingInflater.kt`) is `puff.c`'s structure over a `ZipSource` range, with an input buffer of
+  at most 64 KiB and a 64 KiB output window that slides to keep 32 KiB of history; only its block loops suspend,
+  topping up between symbols. The PDF reader's `Inflater.inflate(ByteArray)` runs it through `completedWithoutSuspending`
+  (no `runBlocking` on the web), where a real suspension is an `AssertionError`, never a damaged PDF; zlib is the
+  `desktopTest` oracle. Output goes to an `EntrySink` through `EntrySink.receive`, which holds it to the declared size,
+  takes its CRC-32 and SHA-256, yields every 256 KiB, and ends the sink exactly once: `close` with the SHA-256, or
+  `abandon` on any failure or cancellation.
 - An unreadable entry is left out and reported by name (the module's one print); only an unwalkable
   archive is a `ZipException`.
 - Entry names are UTF-8 where flagged or valid (macOS does not flag), else code page 437. A backslash is a separator too

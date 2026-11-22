@@ -38,12 +38,13 @@ internal class StreamingInflaterTest {
             val data = Random(size).nextBytes(size)
             val stream = storedStream(data, final = true)
 
-            assertContentEquals(Inflater.inflate(stream, expectedSize = size), inflateStreaming(stream, data), "$size bytes")
+            assertContentEquals(data, inflateStreaming(stream, data), "$size bytes")
+            assertContentEquals(data, Inflater.inflate(stream, expectedSize = size), "$size bytes in memory")
         }
     }
 
     @Test
-    fun `fixed blocks written by the deflater inflate to the same bytes`() = runTest {
+    fun `fixed blocks written by the deflater inflate to what was deflated`() = runTest {
         val inputs = listOf(
             ByteArray(0),
             "a".encodeToByteArray(),
@@ -56,7 +57,7 @@ internal class StreamingInflaterTest {
         for (data in inputs) {
             val stream = deflate(data)
 
-            assertContentEquals(Inflater.inflate(stream, expectedSize = data.size), inflateStreaming(stream, data), "${data.size} bytes")
+            assertContentEquals(data, inflateStreaming(stream, data), "${data.size} bytes")
         }
     }
 
@@ -64,13 +65,13 @@ internal class StreamingInflaterTest {
     fun `back references of 32768 bytes reach across the window's slide`() = runTest {
         val literals = Random(5).nextBytes(70_000)
         val stream = storedStream(literals, final = false) + farBackReferences(count = 300)
-        val expected = Inflater.inflate(stream)
-        assertEquals(literals.size + 300 * 258, expected.size)
+        val expected = literals.copyOf(literals.size + 300 * 258)
         for (index in literals.size until expected.size) {
-            assertEquals(expected[index - 32_768], expected[index])
+            expected[index] = expected[index - 32_768]
         }
 
         assertContentEquals(expected, inflateStreaming(stream, expected))
+        assertContentEquals(expected, Inflater.inflate(stream))
     }
 
     @Test
@@ -160,16 +161,15 @@ internal class StreamingInflaterTest {
     }
 
     @Test
-    fun `a prefix is what the in-memory inflater peeks`() = runTest {
+    fun `a prefix is the start of what the stream inflates to`() = runTest {
         val inputs = listOf(ByteArray(0), "abc".repeat(1_000).encodeToByteArray(), Random(8).nextBytes(100_000))
         for (data in inputs) {
             for (stream in listOf(deflate(data), storedStream(data, final = true))) {
                 for (maxOutput in listOf(0, 1, 100, 512, 70_000, 200_000)) {
-                    assertContentEquals(
-                        Inflater.inflate(stream, maxOutput = maxOutput),
-                        Inflater.inflatePrefix(ByteArrayZipSource(stream), 0, stream.size.toLong(), maxOutput),
-                        "${data.size} bytes, $maxOutput wanted",
-                    )
+                    val expected = data.copyOf(minOf(maxOutput, data.size))
+                    val message = "${data.size} bytes, $maxOutput wanted"
+                    assertContentEquals(expected, Inflater.inflatePrefix(ByteArrayZipSource(stream), 0, stream.size.toLong(), maxOutput), message)
+                    assertContentEquals(expected, Inflater.inflate(stream, maxOutput = maxOutput), "$message in memory")
                 }
             }
         }
