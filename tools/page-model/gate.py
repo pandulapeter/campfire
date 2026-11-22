@@ -12,10 +12,13 @@ The plan's feasibility gate (`documentation/plans/song-from-any-page.md`, step 0
 by a model that never saw it, and compares each crop with the converter alone, which keeps every line of the page.
 
     .venv/bin/python -I tools/page-model/gate.py <corpus folder> [--synthetic <import corpus>] [--epochs N]
+        [--variants both] [--rescore]
 
 The report goes to `<corpus>/.runs/gate.txt` and the scores per page to `gate.tsv`: for each source and variant, how
 many pages the crop beats keeping everything on (line F1 of the song's lines, its metadata included), how many lose a
 song line (and how many lines), how pages with no song are told, and how often the title and artist lines are hit.
+Each variant's predictions are kept in `predictions.json`, so `--rescore` tries the crop rules again without training.
+A song line shown as the title or artist is not counted lost, since the app shows those lines too.
 """
 
 import argparse
@@ -38,6 +41,7 @@ from synthetic import synthetic_pages  # noqa: E402
 FOLDS = 5
 MIN_SONG_LINES = 4
 KEPT = {"SONG", "METADATA"}
+SHOWN = {"SONG", "METADATA", "TITLE", "ARTIST"}
 WEIGHTS = torch.tensor([1.0, 1.0, 4.0, 4.0, 2.0])
 
 
@@ -94,12 +98,23 @@ def predict(model, example):
         return [LABELS[index] for index in model(characters, values).argmax(dim=1).tolist()]
 
 
-def score(example, predicted):
+def cropped(predicted, printed, rule):
+    """The lines a crop keeps: `line` keeps each line predicted as the song or its metadata, `span` everything from the
+    first line predicted as the song to the last, so a line inside the song the model mistook for clutter stays."""
+    found = {index for index in printed if predicted[index] in KEPT}
+    if rule == "span":
+        song = [index for index in printed if predicted[index] == "SONG"]
+        if song:
+            found |= {index for index in printed if song[0] <= index <= song[-1]}
+    return found
+
+
+def score(example, predicted, rule="line"):
     """The crop against the converter alone on one page; lines with no text and lines the teacher disagreed on are left out."""
     printed = [index for index, line in enumerate(example["lines"]) if line["text"].strip() and example["labels"][index] != "IGNORE"]
     truth = {index for index in printed if example["labels"][index] in KEPT}
     song = {index for index in printed if example["labels"][index] == "SONG"}
-    found = {index for index in printed if predicted[index] in KEPT}
+    found = cropped(predicted, printed, rule)
     is_song = sum(1 for index in found if predicted[index] == "SONG") >= MIN_SONG_LINES
     # Where the model does not see a song, nothing is cropped and the converter has the whole page, as today.
     kept = found if is_song else set(printed)
@@ -121,8 +136,8 @@ def score(example, predicted):
         "saysSong": is_song,
         "baseline": f1(set(printed)),
         "crop": f1(kept),
-        "lostSong": len(song - kept),
-        "lost": [(index, example["lines"][index]["text"], predicted[index]) for index in sorted(song - kept)],
+        "lostSong": len(lost := {index for index in song - kept if predicted[index] not in SHOWN}),
+        "lost": [(index, example["lines"][index]["text"], predicted[index]) for index in sorted(lost)],
         "songLines": len(song),
         "extra": len(kept - truth),
         "title": None if not title else any(predicted[index] == "TITLE" for index in title),
@@ -173,6 +188,8 @@ def main():
     parser.add_argument("--epochs", type=int, default=12)
     parser.add_argument("--synthetic", metavar="IMPORT_CORPUS", help="add pages made of the import corpus's songs to training")
     parser.add_argument("--seed", type=int, default=7)
+    parser.add_argument("--variants", default="pages only,documents only,both", help="comma-separated variants to run")
+    parser.add_argument("--rescore", action="store_true", help="score the predictions the last run saved instead of training")
     arguments = parser.parse_args()
     torch.set_num_threads(max(1, (os.cpu_count() or 2) - 2))
     examples = load(arguments.corpus)
@@ -181,29 +198,44 @@ def main():
           f"{sum(1 for e in examples if e['isSynthetic'])} made-up documents")
     held_folds = folds(scored, arguments.seed)
     variants = {"pages only": {"page"}, "documents only": {"document"}, "both": {"page", "document"}}
-    report, rows, lost = [], [], []
-    for variant, sources in variants.items():
-        if not any(e["source"] in sources for e in scored):
-            continue
-        scores = []
-        started = time.time()
-        for fold in range(FOLDS):
-            held = held_folds[fold]
-            held_groups = {e["group"] for e in held}
-            training = [e for e in examples if e["source"] in sources and e["group"] not in held_groups]
-            if arguments.synthetic and "page" in sources:
-                training += synthetic_pages(arguments.synthetic, [e for e in training if e["source"] == "page"], held_groups, seed=arguments.seed + fold)
-            model = train(training, arguments.epochs, arguments.seed + fold)
-            for example in held:
-                scores.append(score(example, predict(model, example)))
-        for source in ("page", "document"):
-            part = [s for s in scores if s["source"] == source]
-            report.append(summary(f"{variant}, scored on {source}s", part))
-            lost += [f"## {variant}: {s['id']}\n" + "\n".join(f"{index}\t{label}\t{text}" for index, text, label in s["lost"]) for s in part if s["lost"]]
-            rows += [f"{variant}\t{s['source']}\t{s['id']}\t{s['baseline']:.3f}\t{s['crop']:.3f}\t{s['lostSong']}\t{s['songLines']}\t{s['extra']}" for s in part]
-        print(f"{variant}: {time.time() - started:.0f} s", flush=True)
+    chosen = [name.strip() for name in arguments.variants.split(",")]
     runs = os.path.join(arguments.corpus, ".runs")
     os.makedirs(runs, exist_ok=True)
+    saved_path = os.path.join(runs, "predictions.json")
+    saved = {}
+    if os.path.isfile(saved_path):
+        with open(saved_path, encoding="utf-8") as file:
+            saved = json.load(file)
+    by_id = {e["id"]: e for e in scored}
+    report, rows, lost = [], [], []
+    for variant in chosen:
+        sources = variants[variant]
+        if not any(e["source"] in sources for e in scored):
+            continue
+        started = time.time()
+        if not arguments.rescore:
+            predictions = {}
+            for fold in range(FOLDS):
+                held = held_folds[fold]
+                held_groups = {e["group"] for e in held}
+                training = [e for e in examples if e["source"] in sources and e["group"] not in held_groups]
+                if arguments.synthetic and "page" in sources:
+                    training += synthetic_pages(arguments.synthetic, [e for e in training if e["source"] == "page"], held_groups, seed=arguments.seed + fold)
+                model = train(training, arguments.epochs, arguments.seed + fold)
+                for example in held:
+                    predictions[example["id"]] = predict(model, example)
+            saved[variant] = predictions
+            with open(saved_path, "w", encoding="utf-8") as file:
+                json.dump(saved, file)
+        for rule in ("line", "span"):
+            scores = [score(by_id[identity], predicted, rule) for identity, predicted in saved[variant].items() if identity in by_id]
+            for source in ("page", "document"):
+                part = [s for s in scores if s["source"] == source]
+                name = f"{variant}, {rule} crop"
+                report.append(summary(f"{name}, scored on {source}s", part))
+                lost += [f"## {name}: {s['id']}\n" + "\n".join(f"{index}\t{label}\t{text}" for index, text, label in s["lost"]) for s in part if s["lost"]]
+                rows += [f"{name}\t{s['source']}\t{s['id']}\t{s['baseline']:.3f}\t{s['crop']:.3f}\t{s['lostSong']}\t{s['songLines']}\t{s['extra']}" for s in part]
+        print(f"{variant}: {time.time() - started:.0f} s", flush=True)
     with open(os.path.join(runs, "gate.txt"), "w", encoding="utf-8") as file:
         file.write("\n\n".join(report) + "\n")
     with open(os.path.join(runs, "gate.tsv"), "w", encoding="utf-8") as file:
