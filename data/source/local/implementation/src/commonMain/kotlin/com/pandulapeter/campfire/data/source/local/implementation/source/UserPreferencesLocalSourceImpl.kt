@@ -56,11 +56,13 @@ internal class UserPreferencesLocalSourceImpl(
 
     /**
      * The bytes rather than the text that was read, so the copy is the file and not a decoding of it. Failing to keep
-     * it is no reason to fail the read: the app would then not start on the settings it *could* read.
+     * it is no reason to fail the read: the app would then not start on the settings it *could* read. The copy is this
+     * device's to look into, so it stays out of the iOS device backup, as Android's backup rules leave it out.
      */
     private suspend fun keepUnreadableDocument() = try {
         fileStorage.readBytes(StorageDirectory.PREFERENCES, FILE_NAME)?.let {
             fileStorage.writeBytes(StorageDirectory.PREFERENCES, UNREADABLE_FILE_NAME, it)
+            fileStorage.keepOutOfDeviceBackup(StorageDirectory.PREFERENCES, UNREADABLE_FILE_NAME)
         }
     } catch (exception: CancellationException) {
         throw exception

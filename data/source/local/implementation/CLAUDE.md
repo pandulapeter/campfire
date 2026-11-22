@@ -21,9 +21,9 @@ Skipped or unreadable files are logged to the injected `Logger`.
 - **Directories**: Android's backup rules in `:app:android` name `library/songs/`, `library/setlists/`, and
   `preferences/preferences.json` by path (never `library/files/`, whose photos would pass the 25 MB quota);
   moving a directory or renaming the file means changing those XML files. iOS backs up whole directories, so
-  `SyncIndexLocalSourceImpl`, `SharedLinksLocalSourceImpl`, `EditorDraftLocalSourceImpl`, and `CoverArtLocalSourceImpl`
-  call `keepOutOfDeviceBackup` after **every** write: the exclusion is a file attribute and the atomic write replaces
-  the file.
+  `SyncIndexLocalSourceImpl`, `SharedLinksLocalSourceImpl`, `EditorDraftLocalSourceImpl`, `CoverArtLocalSourceImpl`, and
+  `UserPreferencesLocalSourceImpl` (for `preferences.json.bad`) call `keepOutOfDeviceBackup` after **every** write: the
+  exclusion is a file attribute and the atomic write replaces the file.
 - **Text**: written as UTF-8, read through `decodeLibraryText`; a fallback-read file is written back as UTF-8. The web
   decodes valid NUL-free UTF-8 with `TextDecoder`; bytes cross the Wasm boundary as a one-char-per-byte string (typed
   array copies are per byte).
