@@ -83,11 +83,10 @@ internal class PreferencesController(
 
     /**
      * The one preference enough screens ask about to be worth a state of its own: every list, menu, sheet and app
-     * bar in the app has something it takes away. Off while the songs are switched off, since its switch goes with
-     * them: the library actions of Settings would otherwise stay disabled with nothing on screen saying why.
+     * bar in the app has something it takes away, as it is in effect ([isReadOnlyInEffect]).
      */
     val isPerformanceModeEnabled = userPreferences
-        .map { it?.isPerformanceModeEnabled == true && it.areSongsEnabled }
+        .map { it.isReadOnlyInEffect }
         .asState(scope, false)
 
     /** Whether the app has songs at all, which the import asks before it opens one, see [UserPreferences.areSongsEnabled]. */

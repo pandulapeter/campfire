@@ -20,6 +20,7 @@ import com.pandulapeter.campfire.presentation.ui.navigation.NavigationState
 import com.pandulapeter.campfire.presentation.ui.state.setlists.ListedSetlists
 import com.pandulapeter.campfire.presentation.ui.state.songs.SongGroups
 import com.pandulapeter.campfire.presentation.ui.state.asState
+import com.pandulapeter.campfire.presentation.ui.state.isReadOnlyInEffect
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -134,7 +135,7 @@ internal class LaunchState(
      * held until then, see [isLaunchNavigationPending]. Only the first call counts, since only one start up can be
      * answered, and the answer is only taken while the app is still where every start opens: coming back from a
      * consent page opens Settings or the onboarding on its own, and that is the screen the user is waiting for.
-     * [resolve] is told whether performance mode is on as the preferences were read rather than as
+     * [resolve] is told whether read only mode is in effect as the preferences were read rather than as
      * `PreferencesController.isPerformanceModeEnabled` says, since that state may not have caught up with the read yet,
      * and the mode decides whether an editor may be opened at all.
      *
@@ -150,7 +151,7 @@ internal class LaunchState(
                 val state = combine(screenData, isDemoLibraryPending) { state, isDemoLibraryPending -> state.takeUnless { isDemoLibraryPending } }
                     .first { it != null && it !is DataState.Loading }
                     ?.data
-                val isPerformanceModeEnabled = userPreferencesState.first { it !is DataState.Loading }.data?.isPerformanceModeEnabled == true
+                val isPerformanceModeEnabled = userPreferencesState.first { it !is DataState.Loading }.data.isReadOnlyInEffect
                 val destination = resolve(state?.unfilteredSongs.orEmpty(), state?.setlists.orEmpty(), isPerformanceModeEnabled)
                 // A draft reopened on launch is unsaved text on screen, which an address does not get to replace.
                 editorDraftRecovery.await()
