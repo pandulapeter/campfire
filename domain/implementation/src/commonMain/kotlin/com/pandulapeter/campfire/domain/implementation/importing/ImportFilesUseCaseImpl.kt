@@ -29,7 +29,6 @@ import com.pandulapeter.campfire.data.repository.api.ImportStagingRepository
 import com.pandulapeter.campfire.data.repository.api.LibraryImageWriter
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
-import com.pandulapeter.campfire.domain.api.importing.ImportFilesUseCase
 import com.pandulapeter.campfire.domain.implementation.importing.ImportPlanner
 import com.pandulapeter.campfire.domain.implementation.importing.ImportPlanner.withSongFileNames
 import kotlinx.coroutines.CancellationException

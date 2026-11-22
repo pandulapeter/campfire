@@ -16,7 +16,6 @@ import com.pandulapeter.campfire.data.model.importing.ImportProgress
 import com.pandulapeter.campfire.data.model.importing.sharedLinkSetlistFileNamesWrittenBy
 import com.pandulapeter.campfire.data.model.importing.sharedLinkSongFileNamesWrittenBy
 import com.pandulapeter.campfire.domain.api.importing.ApplyImportUseCase
-import com.pandulapeter.campfire.domain.api.importing.ImportFilesUseCase
 import com.pandulapeter.campfire.domain.implementation.library.RememberDemoLibraryFilesUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.library.RememberSharedLinkImportUseCaseImpl
 import kotlinx.coroutines.NonCancellable

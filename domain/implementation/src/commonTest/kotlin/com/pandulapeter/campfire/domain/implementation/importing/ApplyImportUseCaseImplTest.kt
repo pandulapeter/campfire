@@ -18,7 +18,6 @@ import com.pandulapeter.campfire.data.model.importing.ImportResult
 import com.pandulapeter.campfire.data.model.importing.SharedLinkPart
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.data.repository.api.DemoLibraryRepository
-import com.pandulapeter.campfire.domain.api.importing.ImportFilesUseCase
 import com.pandulapeter.campfire.domain.implementation.TEST_PREFERENCES
 import com.pandulapeter.campfire.domain.implementation.UserPreferencesRepositoryStub
 import com.pandulapeter.campfire.domain.implementation.library.RememberDemoLibraryFilesUseCaseImpl
