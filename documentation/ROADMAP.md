@@ -13,7 +13,6 @@ What's planned for Campfire, grouped by area.
 
 ## In progress
 
-- Code review issues: Follow documentation/issues/EXECUTION.md.
 - **A song from any page**: share, paste, or (optionally) a browser extension button turns any website's song into a
   clean pre-filled editor, a small model of our own cropping the page's clutter on the device, no code per site; the same
   model then reads PDFs (websites printed to PDF, misread song details).
