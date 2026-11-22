@@ -134,19 +134,38 @@ def pick(document, indices, values, slack, key):
 
 
 def label_printed(document, page, page_labels):
-    """The printed lines take the labels of the page's lines they match, in order."""
-    page_words = [normalized(line) for line in page["lines"]]
+    """
+    The printed lines take the labels of the page's lines they match, in order; a line print wrapped differently from
+    the screen takes the label of the page line holding it. The alignment is judged by the song's own lines found.
+    """
+    page_words = [normalized(line) for line in page["lines"][: len(page_labels)]]
     printed_words = [normalized(line["text"]) for line in document["lines"]]
     labels = ["BLANK" if not words else None for words in printed_words]
     matcher = difflib.SequenceMatcher(None, page_words, printed_words, autojunk=False)
+    found = set()
     for tag, a0, a1, b0, b1 in matcher.get_opcodes():
         if tag == "equal":
             for offset in range(a1 - a0):
-                labels[b0 + offset] = page_labels[a0 + offset] if printed_words[b0 + offset] else "BLANK"
-    matched = sum(1 for label in labels if label not in (None, "BLANK"))
-    printed = sum(1 for words in printed_words if words)
-    labels = ["IGNORE" if label is None else label for label in labels]
-    return labels, matched / max(printed, 1)
+                if printed_words[b0 + offset]:
+                    labels[b0 + offset] = page_labels[a0 + offset]
+                    found.add(a0 + offset)
+    # A two-column print reads its lines in another order than the screen: a line found anywhere on the page counts.
+    label_of = {}
+    for words, label in zip(page_words, page_labels):
+        if words and label != "IGNORE":
+            label_of.setdefault(words, set()).add(label)
+    for index, label in enumerate(labels):
+        if label is None and len(label_of.get(printed_words[index], ())) == 1:
+            labels[index] = next(iter(label_of[printed_words[index]]))
+        if labels[index] is None and len(printed_words[index]) >= 6:
+            labels[index] = next((page_labels[at] for at, words in enumerate(page_words) if printed_words[index] in words and page_labels[at] != "IGNORE"), "IGNORE")
+        elif labels[index] is None:
+            labels[index] = "IGNORE"
+    song = [index for index, label in enumerate(page_labels) if label in ("SONG", "METADATA") and page_words[index]]
+    if not song:
+        return labels, 1.0 if sum(1 for label in labels if label not in ("IGNORE", "BLANK")) > len(labels) / 2 else 0.0
+    printed = set(printed_words)
+    return labels, sum(1 for index in song if index in found or page_words[index] in printed) / len(song)
 
 
 def label_synthetic(document, made):
@@ -163,6 +182,11 @@ def label_synthetic(document, made):
             for offset in range(a1 - a0):
                 if printed_words[b0 + offset]:
                     labels[b0 + offset] = made[a0 + offset][1]
+    # A line a narrow column wrapped is a run of the words of the line it was made from.
+    for index, label in enumerate(labels):
+        if label is None and len(printed_words[index]) >= 6:
+            label_of = next((made[at][1] for at, words in enumerate(made_words) if printed_words[index] in words), None)
+            labels[index] = label_of
     pages = {}
     for index, line in enumerate(document["lines"]):
         if printed_words[index]:

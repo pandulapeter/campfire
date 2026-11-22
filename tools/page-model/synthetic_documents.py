@@ -181,15 +181,17 @@ def document_html(rows, rng, runs):
       .detail {{ font-size: 0.9em; }}
       .label {{ font-weight: bold; margin-top: 0.6em; }}
       .gap {{ height: 0.8em; }}
-      pre {{ margin: 0; font-family: 'Courier New', monospace; }}
+      pre {{ margin: 0; font-family: 'Courier New', monospace; white-space: pre-wrap; }}
       .chords {{ font-weight: {rng.choice(['bold', 'normal'])}; color: #333; }}
-      .sung {{ display: block; white-space: nowrap; }}
-      .cell {{ display: inline-flex; flex-direction: column; }}
-      .chord {{ font-weight: bold; font-size: 0.85em; }}
+      .sung {{ display: flex; flex-wrap: wrap; }}
+      .cell {{ display: inline-flex; flex-direction: column; break-inside: avoid; }}
+      .chord {{ font-weight: bold; font-size: 0.85em; padding-inline-end: 0.4em; }}
       .junk {{ font-size: {rng.choice([0.7, 0.8, 0.9, 1.0])}em; color: #555; }}
     """
     body = f"<div class='top'>{top}</div><div class='song'>{song}</div><div>{inserted}</div><div class='bottom'>{bottom}</div>"
-    return f"<!doctype html><meta charset='utf-8'><style>{style}</style><body>{body}</body>", made, kind
+    letters = [c for _, value in rows if isinstance(value, str) for c in value if c.isalpha()]
+    direction = "rtl" if sum(1 for c in letters if "\u0590" <= c <= "\u06ff") > len(letters) / 2 else "ltr"
+    return f"<!doctype html><meta charset='utf-8'><style>{style}</style><body dir='{direction}'>{body}</body>", made, kind
 
 
 def junk_runs_of(corpus):
