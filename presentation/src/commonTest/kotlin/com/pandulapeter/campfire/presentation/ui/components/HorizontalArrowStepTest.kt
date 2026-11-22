@@ -34,4 +34,9 @@ class HorizontalArrowStepTest {
         assertNull(Key.DirectionUp.horizontalArrowStep(LayoutDirection.Rtl))
         assertNull(Key.PageDown.horizontalArrowStep(LayoutDirection.Ltr))
     }
+
+    @Test
+    fun `the arrow named for a step is the one read as that step`() = listOf(LayoutDirection.Ltr, LayoutDirection.Rtl).forEach { direction ->
+        listOf(-1, 1).forEach { step -> assertEquals(step, horizontalArrowFor(step, direction).horizontalArrowStep(direction)) }
+    }
 }

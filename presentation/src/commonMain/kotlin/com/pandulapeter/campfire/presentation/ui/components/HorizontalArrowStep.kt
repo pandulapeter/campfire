@@ -29,3 +29,7 @@ internal fun Key.horizontalArrowStep(layoutDirection: LayoutDirection): Int? {
         else -> null
     }
 }
+
+/** The arrow key [horizontalArrowStep] reads as [step] (1 for the next item, -1 for the previous one) in [layoutDirection]. */
+internal fun horizontalArrowFor(step: Int, layoutDirection: LayoutDirection) =
+    if ((step > 0) == (layoutDirection == LayoutDirection.Ltr)) Key.DirectionRight else Key.DirectionLeft
