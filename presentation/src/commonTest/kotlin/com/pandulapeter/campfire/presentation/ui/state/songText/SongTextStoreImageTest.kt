@@ -77,6 +77,16 @@ class SongTextStoreImageTest {
     }
 
     @Test
+    fun `a picture whose write fails is said to have failed`() = runTest {
+        val files = FakeSongFiles(mapOf(FILE to TEXT)).apply { imageSaveFailure = IllegalStateException("disk") }
+        val sink = MessageSink(backgroundScope)
+        files.songTextStore(backgroundScope, sink).addMissingImage(FILE, missingName = "photo.jpg") { listOf(ImportedFile("photo.jpg", byteArrayOf(1, 2))) }
+        runCurrent()
+        assertEquals(TEXT, files.files[FILE])
+        assertEquals(listOf<Message>(Message.OperationFailed), sink.messageQueue.value.map { it.value })
+    }
+
+    @Test
     fun `a refused picture is said why and nothing is written`() = runTest {
         val files = FakeSongFiles(mapOf(FILE to TEXT))
         val sink = MessageSink(backgroundScope)

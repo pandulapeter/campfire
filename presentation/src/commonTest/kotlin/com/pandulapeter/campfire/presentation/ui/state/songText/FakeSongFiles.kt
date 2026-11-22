@@ -74,7 +74,11 @@ internal class FakeSongFiles(
     /** The platform's re-encoder, which shrinks a picture to its first byte unless a test says it fails. */
     var reencode: (ByteArray) -> ByteArray? = { bytes -> byteArrayOf(bytes.first()) }
 
+    /** What storing a picture throws, where a test says it fails. */
+    var imageSaveFailure: Exception? = null
+
     override suspend fun invoke(fileName: String, expectedText: String, missingName: String, bytes: ByteArray) = when {
+        imageSaveFailure != null -> throw requireNotNull(imageSaveFailure)
         bytes.isEmpty() -> SaveSongImageResult.Refused(ImageRefusal.NOT_AN_IMAGE)
         else -> {
             val text = ChordProImages.withSourcesRewritten(expectedText) { source -> STORED_IMAGE_NAME.takeIf { source == missingName } }

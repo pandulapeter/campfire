@@ -25,6 +25,7 @@ import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.pictures.MissingImagePick
 import com.pandulapeter.campfire.presentation.ui.pictures.PictureFit
 import com.pandulapeter.campfire.chordpro.edit.ChordProImages
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -276,7 +277,20 @@ internal class SongTextStore(
     /** The missing picture a pick was under way for when the last view model went, once (`PendingMissingImagePick.take`). */
     fun takePendingMissingImagePick() = imageAdding.pendingPick.take()
 
-    private suspend fun storeMissingImage(fileName: String, missingName: String, file: ImportedFile) {
+    /**
+     * Runs under a bare [scope] launch, so a failure to fit or write the picture is a snackbar and a log line here rather
+     * than an exception thrown into the view model's scope.
+     */
+    private suspend fun storeMissingImage(fileName: String, missingName: String, file: ImportedFile) = try {
+        writeMissingImage(fileName = fileName, missingName = missingName, file = file)
+    } catch (exception: CancellationException) {
+        throw exception
+    } catch (exception: Exception) {
+        println("Could not store a picture for a missing one: ${exception::class.simpleName}")
+        messageSink.sendMessage(Message.OperationFailed)
+    }
+
+    private suspend fun writeMissingImage(fileName: String, missingName: String, file: ImportedFile) {
         if (file.isTooLarge) return messageSink.sendMessage(Message.ImageTooLargeToRead)
         val picture = when (val fit = imageAdding.fitter.fit(file.bytes)) {
             is PictureFit.Refused -> return messageSink.sendMessage(Message.ImageNotAdded(fit.reason))
