@@ -29,7 +29,12 @@ DETAIL_NAMES = {"key": "Key", "capo": "Capo", "tempo": "Tempo", "time": "Time", 
 
 
 def rendered(cho, rng):
-    """A `.cho` as a chord site shows it: (text, label) pairs."""
+    """
+    A `.cho` as a chord site shows it: (text, label) pairs. Its chords sit in a row over the lyric, or, as a page whose
+    chords are spans above their syllables reads once its text is taken, inside the lyric: glued into the word, set apart
+    by spaces, or left in brackets.
+    """
+    style = rng.choice(["rows", "rows", "glued", "spaced", "bracketed"])
     lines = []
     for raw in cho.splitlines():
         line = raw.rstrip()
@@ -51,7 +56,14 @@ def rendered(cho, rng):
         if not line.strip():
             lines.append(("", "BLANK"))
             continue
-        if "[" in line:
+        if "[" in line and style != "rows":
+            def inline(match):
+                chord = match.group(1)
+                return {"glued": chord, "spaced": f" {chord} ", "bracketed": f"[{chord}]"}[style]
+
+            text = re.sub(r"\[([^\]]*)\]", inline, line)
+            lines.append((" ".join(text.split()) if style == "spaced" else text, "SONG"))
+        elif "[" in line:
             chords, lyric = "", ""
             for part in re.split(r"(\[[^\]]*\])", line):
                 match = CHORD.fullmatch(part)

@@ -100,24 +100,19 @@ def predict(model, example):
     return {"labels": [LABELS[index] for index in probabilities.argmax(dim=1).tolist()], "kept": [round(value, 4) for value in kept.tolist()]}
 
 
-RULES = ("line", "unsure", "span")
-UNSURE = 0.15
+RULES = ("line", "unsure")
+UNSURE = 0.02
 
 
 def cropped(prediction, printed, rule):
     """
     The lines a crop keeps: `line` keeps each line predicted as the song or its metadata, `unsure` also each line the
-    model gives even a small chance of being either, and `span` everything from the first line predicted as the song to
-    the last, so a line inside the song the model mistook for clutter stays.
+    model gives even a small chance of being either, so a song line it is not sure of stays at the cost of a little
+    clutter.
     """
-    predicted = prediction["labels"]
-    found = {index for index in printed if predicted[index] in KEPT}
+    found = {index for index in printed if prediction["labels"][index] in KEPT}
     if rule == "unsure":
         found |= {index for index in printed if prediction["kept"][index] >= UNSURE}
-    if rule == "span":
-        song = [index for index in printed if predicted[index] == "SONG"]
-        if song:
-            found |= {index for index in printed if song[0] <= index <= song[-1]}
     return found
 
 
