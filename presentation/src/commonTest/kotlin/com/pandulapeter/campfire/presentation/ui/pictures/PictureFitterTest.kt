@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.data.formats.image.ImageFormat
 import com.pandulapeter.campfire.data.model.image.ImageIntake
 import com.pandulapeter.campfire.data.model.image.ImageRefusal
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
+import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.presentation.ui.messages.Message
 import com.pandulapeter.campfire.presentation.ui.platform.PictureAttempt
 import com.pandulapeter.campfire.presentation.ui.platform.PictureEncoding
@@ -47,6 +48,17 @@ class PictureFitterTest {
     init {
         intakes[COPY.toList()] = ImageIntake.Accepted("copy.jpg")
     }
+
+    @Test
+    fun `a file too large to be read is not examined`() = runTest {
+        assertEquals(PictureFit.TooLargeToRead, fitter.fit(ImportedFile.unread("huge.jpg", isTooLarge = true)))
+        assertEquals(Message.ImageTooLargeToRead, PictureFit.TooLargeToRead.message)
+        assertTrue(reencoded.isEmpty())
+    }
+
+    @Test
+    fun `a refusal says why the picture is not added`() =
+        assertEquals(Message.ImageNotAdded(ImageRefusal.TOO_LARGE), PictureFit.Refused(ImageRefusal.TOO_LARGE).message)
 
     @Test
     fun `a picture the library takes is kept as it is never re-encoded`() = runTest {

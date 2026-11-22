@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.data.formats.image.ImageFormats
 import com.pandulapeter.campfire.data.model.image.ImageIntake
 import com.pandulapeter.campfire.data.model.image.ImageRefusal
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
+import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.presentation.ui.platform.PictureAttempt
 import com.pandulapeter.campfire.presentation.ui.platform.PictureEncoding
 
@@ -35,6 +36,9 @@ internal class PictureFitter(
 ) {
 
     suspend fun fit(bytes: ByteArray): PictureFit = work.track { fitNow(bytes) }
+
+    /** [file] fitted, unless it is too large to have been read. */
+    suspend fun fit(file: ImportedFile): PictureFit = if (file.isTooLarge) PictureFit.TooLargeToRead else fit(file.bytes)
 
     private suspend fun fitNow(bytes: ByteArray): PictureFit {
         val reason = (examine(bytes) as? ImageIntake.Refused)?.reason ?: return PictureFit.Kept(bytes)

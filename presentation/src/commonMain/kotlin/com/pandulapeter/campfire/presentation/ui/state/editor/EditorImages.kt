@@ -178,23 +178,19 @@ internal class EditorImages(
     private class Outcome(val name: String?, val message: Message?)
 
     /** What [file] came to, fitted and then handed to [addDraftImage], or null where it could not be written. */
-    private suspend fun outcomeOf(file: ImportedFile): Outcome? = if (file.isTooLarge) {
-        Outcome(name = null, message = Message.ImageTooLargeToRead)
-    } else {
-        try {
-            when (val fit = pictureFitter.fit(file.bytes)) {
-                is PictureFit.Refused -> Outcome(name = null, message = Message.ImageNotAdded(fit.reason))
-                is PictureFit.Usable -> when (val intake = addDraftImage(fit.bytes)) {
-                    is ImageIntake.Accepted -> Outcome(name = intake.name, message = fit.notice)
-                    is ImageIntake.Refused -> Outcome(name = null, message = Message.ImageNotAdded(intake.reason))
-                }
+    private suspend fun outcomeOf(file: ImportedFile): Outcome? = try {
+        when (val fit = pictureFitter.fit(file)) {
+            is PictureFit.NotUsable -> Outcome(name = null, message = fit.message)
+            is PictureFit.Usable -> when (val intake = addDraftImage(fit.bytes)) {
+                is ImageIntake.Accepted -> Outcome(name = intake.name, message = fit.notice)
+                is ImageIntake.Refused -> Outcome(name = null, message = Message.ImageNotAdded(intake.reason))
             }
-        } catch (exception: CancellationException) {
-            throw exception
-        } catch (exception: Exception) {
-            println("Could not keep a picture for the editor: ${exception::class.simpleName}")
-            null
         }
+    } catch (exception: CancellationException) {
+        throw exception
+    } catch (exception: Exception) {
+        println("Could not keep a picture for the editor: ${exception::class.simpleName}")
+        null
     }
 
     /**

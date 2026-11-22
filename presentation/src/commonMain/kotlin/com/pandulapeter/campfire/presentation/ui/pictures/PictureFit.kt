@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.pictures
 
 import com.pandulapeter.campfire.data.model.image.ImageRefusal
+import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.presentation.ui.messages.Message
 
 /** What [PictureFitter] made of a picture the user adds. */
@@ -38,6 +39,18 @@ internal sealed interface PictureFit {
         override val notice: Message get() = Message.ImageConverted
     }
 
+    /** A picture that is not added, and the snackbar [message] saying why. */
+    sealed interface NotUsable : PictureFit {
+        val message: Message
+    }
+
     /** Refused for [reason], what the picture as it came was refused for, whether or not a copy was tried. */
-    data class Refused(val reason: ImageRefusal) : PictureFit
+    data class Refused(val reason: ImageRefusal) : NotUsable {
+        override val message: Message get() = Message.ImageNotAdded(reason)
+    }
+
+    /** Too large to be read at all ([ImportedFile.isTooLarge]), so never examined. */
+    data object TooLargeToRead : NotUsable {
+        override val message: Message get() = Message.ImageTooLargeToRead
+    }
 }

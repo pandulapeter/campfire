@@ -291,9 +291,8 @@ internal class SongTextStore(
     }
 
     private suspend fun writeMissingImage(fileName: String, missingName: String, file: ImportedFile) {
-        if (file.isTooLarge) return messageSink.sendMessage(Message.ImageTooLargeToRead)
-        val picture = when (val fit = imageAdding.fitter.fit(file.bytes)) {
-            is PictureFit.Refused -> return messageSink.sendMessage(Message.ImageNotAdded(fit.reason))
+        val picture = when (val fit = imageAdding.fitter.fit(file)) {
+            is PictureFit.NotUsable -> return messageSink.sendMessage(fit.message)
             is PictureFit.Usable -> fit
         }
         songWriteMutex.withLock {
