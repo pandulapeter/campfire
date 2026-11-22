@@ -95,13 +95,25 @@ def predict(model, example):
     model.eval()
     characters, values, _ = tensors(example)
     with torch.no_grad():
-        return [LABELS[index] for index in model(characters, values).argmax(dim=1).tolist()]
+        probabilities = model(characters, values).softmax(dim=1)
+    kept = probabilities[:, [LABELS.index(label) for label in KEPT]].sum(dim=1)
+    return {"labels": [LABELS[index] for index in probabilities.argmax(dim=1).tolist()], "kept": [round(value, 4) for value in kept.tolist()]}
 
 
-def cropped(predicted, printed, rule):
-    """The lines a crop keeps: `line` keeps each line predicted as the song or its metadata, `span` everything from the
-    first line predicted as the song to the last, so a line inside the song the model mistook for clutter stays."""
+RULES = ("line", "unsure", "span")
+UNSURE = 0.15
+
+
+def cropped(prediction, printed, rule):
+    """
+    The lines a crop keeps: `line` keeps each line predicted as the song or its metadata, `unsure` also each line the
+    model gives even a small chance of being either, and `span` everything from the first line predicted as the song to
+    the last, so a line inside the song the model mistook for clutter stays.
+    """
+    predicted = prediction["labels"]
     found = {index for index in printed if predicted[index] in KEPT}
+    if rule == "unsure":
+        found |= {index for index in printed if prediction["kept"][index] >= UNSURE}
     if rule == "span":
         song = [index for index in printed if predicted[index] == "SONG"]
         if song:
@@ -109,12 +121,13 @@ def cropped(predicted, printed, rule):
     return found
 
 
-def score(example, predicted, rule="line"):
+def score(example, prediction, rule="line"):
     """The crop against the converter alone on one page; lines with no text and lines the teacher disagreed on are left out."""
     printed = [index for index, line in enumerate(example["lines"]) if line["text"].strip() and example["labels"][index] != "IGNORE"]
     truth = {index for index in printed if example["labels"][index] in KEPT}
     song = {index for index in printed if example["labels"][index] == "SONG"}
-    found = cropped(predicted, printed, rule)
+    predicted = prediction["labels"]
+    found = cropped(prediction, printed, rule)
     is_song = sum(1 for index in found if predicted[index] == "SONG") >= MIN_SONG_LINES
     # Where the model does not see a song, nothing is cropped and the converter has the whole page, as today.
     kept = found if is_song else set(printed)
@@ -227,7 +240,7 @@ def main():
             saved[variant] = predictions
             with open(saved_path, "w", encoding="utf-8") as file:
                 json.dump(saved, file)
-        for rule in ("line", "span"):
+        for rule in RULES:
             scores = [score(by_id[identity], predicted, rule) for identity, predicted in saved[variant].items() if identity in by_id]
             for source in ("page", "document"):
                 part = [s for s in scores if s["source"] == source]
