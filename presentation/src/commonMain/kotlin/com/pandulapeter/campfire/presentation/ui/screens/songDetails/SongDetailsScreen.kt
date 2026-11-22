@@ -63,6 +63,7 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.pictures.LocalSongImageLoader
+import com.pandulapeter.campfire.presentation.ui.preferences.SongSections
 import com.pandulapeter.campfire.presentation.ui.screens.rememberSongActionHandler
 
 /**
@@ -148,7 +149,7 @@ internal fun SongDetailsScreen(
     // caught up with a change to it yet - so that two numberings are never mixed in one bar.
     val setlistSlots = remember(setlist, songs) { setlist?.let { buildSetlistSlots(it.entries, songs.map { song -> song.fileName }) } }
     val shouldShowChords = userPreferences?.areChordsEnabled != false
-    val chordDiagrams = rememberChordDiagrams(viewModel = viewModel, userPreferences = userPreferences, shouldShowChords = shouldShowChords)
+    val chordDiagrams = rememberChordDiagrams(viewModel = viewModel, userPreferences = userPreferences)
     val isMetronomeEnabled = userPreferences?.isMetronomeEnabled != false
     val isTunerEnabled = userPreferences?.isTunerEnabled != false
     val areSetlistsEnabled = userPreferences?.areSetlistsEnabled != false
@@ -446,9 +447,8 @@ private fun SongDetailsEffects(
 private fun rememberChordDiagrams(
     viewModel: CampfireViewModel,
     userPreferences: UserPreferences?,
-    shouldShowChords: Boolean,
 ): ChordDiagrams? {
-    val preferences = userPreferences?.takeIf { shouldShowChords && it.areChordDiagramsEnabled } ?: return null
+    val preferences = userPreferences?.takeIf { SongSections.of(it).areDiagramsShown } ?: return null
     val chordTuning = preferences.chordTuning()
     val storedChordShapes = chordTuning?.let { preferences.storedChordShapes(it) }.orEmpty()
     val instrument = preferences.instrument

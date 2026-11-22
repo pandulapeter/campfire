@@ -28,7 +28,7 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.fontScale.FontScaleController
 import com.pandulapeter.campfire.presentation.ui.instrument.storedChordShapes
 import com.pandulapeter.campfire.presentation.ui.messages.Message
-import com.pandulapeter.campfire.presentation.ui.navigation.FeatureSwitches
+import com.pandulapeter.campfire.presentation.ui.preferences.SongSections
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.platform.DEVELOPER_EMAIL
 import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
@@ -166,13 +166,14 @@ internal class ExportController(
         val spelling = preferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default
         // Collected whether or not the export asks for the diagrams, so that ticking them lays the pages out again rather
         // than reading the songs again; with the feature switched off the export does not offer them at all.
-        val chordTuning = preferences?.takeIf { it.areChordsEnabled && it.areChordDiagramsEnabled }?.chordTuning()
+        val sections = SongSections.of(preferences)
+        val chordTuning = preferences?.takeIf { sections.areDiagramsShown }?.chordTuning()
         val storedChordShapes = chordTuning?.let { preferences.storedChordShapes(it) }.orEmpty()
         // Read whether or not the export asks for them, as the chords are, and only where the song details screen suggests
         // them, which is also where the export offers them.
-        val suggestsScales = FeatureSwitches.of(preferences).areScaleSuggestionsEnabled && preferences?.areChordsEnabled != false
+        val suggestsScales = sections.areScaleSuggestionsShown
         // The diagrams name their degrees in print wherever they do on the screen.
-        val showsDegrees = preferences?.areChordDegreesEnabled == true
+        val showsDegrees = sections.areDegreesShown
         val capoKeepsKey = preferences?.capoKeepsKey == true
         // The tabs are printed for the reader as the screen shows them: theirs, moved to their strings.
         val tabs = preferences?.let { tabReadingOf(preferences = it, labels = tabNoticeLabels, isMoved = true) }

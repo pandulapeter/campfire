@@ -47,7 +47,7 @@ import com.pandulapeter.campfire.data.model.preferences.SongLayout
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.metronome.api.model.TimeSignature
 import com.pandulapeter.campfire.presentation.mapper.toChordNotation
-import com.pandulapeter.campfire.presentation.ui.navigation.FeatureSwitches
+import com.pandulapeter.campfire.presentation.ui.preferences.SongSections
 import com.pandulapeter.campfire.presentation.ui.songView.model.ScaleSuggestions
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.fontScale.FontScaleController
@@ -123,8 +123,8 @@ internal fun SongPages(
     // only so that nothing writes to a song file that is not there yet, so its diagrams open their sheets.
     val canPickChordShapes = !isPerformanceModeEnabled && (importPreview != null || !isReadOnly)
     val tabs = rememberTabReading(userPreferences)
-    val showsDegrees = chordDiagrams != null && userPreferences?.areChordDegreesEnabled == true
-    val scaleSuggestions = rememberScaleSuggestions(dialogHost = dialogHost, userPreferences = userPreferences, shouldShowChords = shouldShowChords)
+    val showsDegrees = SongSections.of(userPreferences).areDegreesShown
+    val scaleSuggestions = rememberScaleSuggestions(dialogHost = dialogHost, userPreferences = userPreferences)
     val isContinuous = userPreferences?.songLayout == SongLayout.CONTINUOUS
     LaunchedEffect(pagerState) {
         // A swipe right after a pinch must not hand the song it leaves the size from before the pinch once it stops being
@@ -347,9 +347,8 @@ private fun rememberPageChordDiagrams(
 private fun rememberScaleSuggestions(
     dialogHost: DialogHost,
     userPreferences: UserPreferences?,
-    shouldShowChords: Boolean,
 ): ScaleSuggestions? {
-    if (!shouldShowChords || !FeatureSwitches.of(userPreferences).areScaleSuggestionsEnabled) return null
+    if (!SongSections.of(userPreferences).areScaleSuggestionsShown) return null
     val notation = (userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default).notation.toChordNotation()
     return remember(notation) {
         ScaleSuggestions(

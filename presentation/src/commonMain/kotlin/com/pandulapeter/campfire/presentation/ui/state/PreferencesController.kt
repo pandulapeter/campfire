@@ -27,6 +27,7 @@ import com.pandulapeter.campfire.presentation.ui.instrument.withTuning
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.navigation.FeatureSwitches
 import com.pandulapeter.campfire.presentation.ui.platform.LibraryPersistence
+import com.pandulapeter.campfire.presentation.ui.preferences.SongSections
 import com.pandulapeter.campfire.presentation.ui.scales.ScaleLabels
 import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
 import kotlinx.coroutines.CoroutineScope
@@ -118,7 +119,7 @@ internal class PreferencesController(
         scope.launch {
             userPreferences
                 .map { preferences ->
-                    preferences?.takeIf { (it.areChordsEnabled && it.areChordDiagramsEnabled) || it.isChordLibraryEnabled }?.chordTuning()
+                    preferences?.takeIf { SongSections.of(it).areDiagramsShown || it.isChordLibraryEnabled }?.chordTuning()
                 }
                 .filterNotNull()
                 .distinctUntilChanged()
