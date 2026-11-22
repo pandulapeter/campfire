@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.chordpro.chords.ChordProChords
 import com.pandulapeter.campfire.chordpro.chords.ChordProNotation
 import com.pandulapeter.campfire.chordpro.chords.ChordProTransposer
 import com.pandulapeter.campfire.chordpro.edit.ChordProPrettifier
+import com.pandulapeter.campfire.chordpro.edit.libraryFilesNamedBy
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
@@ -25,9 +26,9 @@ import kotlin.test.fail
 
 /**
  * The module's promises held against generated songs: headers, sections and their recalls, chords of every shape and
- * words in brackets that are none, markup, comments, tabs, grids, `abc` tunes, and mid-song changes, each line picked
- * from a fixed vocabulary by a seeded random. A failure names its seed and the smallest text, cut line by line, that
- * still breaks the rule.
+ * words in brackets that are none, markup, comments, tabs, grids, `abc` tunes, pictures, attachments, and mid-song
+ * changes, each line picked from a fixed vocabulary by a seeded random. A failure names its seed and the smallest text,
+ * cut line by line, that still breaks the rule.
  *
  * Every rule but the round trip is also held to stray, unclosed, and repeated directives, which a text half typed is
  * full of. The round trip is held to well-formed songs only, as the corpus's are: [ChordProSerializer] writes the model
@@ -99,6 +100,11 @@ internal class GeneratedSongPropertyTest {
         }
     }
 
+    @Test
+    fun `a generated song's summary names the same library files as the reading the library keeps them by`() = forEachGenerated { text ->
+        assertEquals(libraryFilesNamedBy(text), ChordProParser.summarize(text).librarySources)
+    }
+
     /** Runs [check] on every generated song, reporting the seed and the shortest failing text cutting lines reaches. */
     private fun forEachGenerated(isWellFormed: Boolean = false, check: (String) -> Unit) = SEEDS.forEach { seed ->
         val random = Random(seed)
@@ -153,7 +159,7 @@ internal class GeneratedSongPropertyTest {
         else -> "{meta: album ${nextWords()}}"
     }
 
-    private fun Random.nextPart(isWellFormed: Boolean): List<String> = when (nextInt(16)) {
+    private fun Random.nextPart(isWellFormed: Boolean): List<String> = when (nextInt(17)) {
         0, 1 -> nextSection("verse")
         2 -> nextSection("chorus")
         3 -> nextSection("bridge")
@@ -171,7 +177,32 @@ internal class GeneratedSongPropertyTest {
         9 -> listOf(listOf("{key: ${nextKey()}}", "{tempo: ${nextInt(40, 220)}}", "{time: 3/4}", "{transpose: ${nextInt(-3, 4)}}", "{np}")[nextInt(5)])
         10 -> listOf("")
         11 -> if (isWellFormed) listOf("") else listOf(ODD_LINES[nextInt(ODD_LINES.size)])
+        12 -> nextLibraryFileLines()
         else -> List(nextInt(1, 4)) { nextLyrics() }
+    }
+
+    /**
+     * A picture or an attachment, as a song names one: drawn, defined as an asset or drawn by its id, for another
+     * instrument, commented out, or inside an environment handed to another program, where it is still the song's file.
+     */
+    private fun Random.nextLibraryFileLines(): List<String> {
+        val picture = PICTURES[nextInt(PICTURES.size)]
+        val attachment = ATTACHMENTS[nextInt(ATTACHMENTS.size)]
+        val line = listOf(
+            "{image: $picture}",
+            "{image: src=$picture width=50% title=\"${nextWords()}\"}",
+            "{image: id=logo src=$picture}",
+            "{image: id=logo scale=0.5}",
+            "{image-piano: $picture}",
+            "{meta: attachment $attachment}",
+            "{meta: attachment $attachment ${nextWords()}}",
+        )[nextInt(7)]
+        return when (nextInt(4)) {
+            0 -> listOf("# $line")
+            1 -> listOf("{start_of_abc}", "X:1", line, "K:C", "cde|", "{end_of_abc}")
+            2 -> listOf("{start_of_textblock}", line, "{end_of_textblock}")
+            else -> listOf(line)
+        }
     }
 
     private fun Random.nextSection(name: String): List<String> {
@@ -248,6 +279,8 @@ internal class GeneratedSongPropertyTest {
             "{chordcolour: #ff0000}", "{chordcolour}", "{textcolour: blue}", "{end_of_textblock}", "{end_of_ly}", "{soc}", "{eoc}", "{sot: Riff [G]}", "{eot}", "[am]la [e7]lo [Bbm]li",
             "[*x2] [|] [G] . . . | [C]", "{key:}", "{tempo:}", "{x_custom: value}", "{new_page}",
         )
+        val PICTURES = listOf("0a1b2c.png", "photo.jpg", "\"two words.webp\"", "art/cover.gif")
+        val ATTACHMENTS = listOf("3d4e5f.pdf", "take.mp3", "score.musicxml")
         val WORDS = listOf("la", "love", "Bad", "Eb", "and", "the", "fire", "árvíz", "שלום", "кино", "x2", "A", "!", "dog's", "<intro>", "a{b}", "x]y", "\u00A0", "am", "|", "%")
     }
 }
