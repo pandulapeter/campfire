@@ -27,10 +27,22 @@ class ImportNotificationTextTest {
     @Test
     fun `a phase says its line until it counts bytes`() {
         assertEquals("Downloading the file", WORDS.textOf(ImportWorkState.DOWNLOADING, null))
-        assertEquals(
-            "Unpacking the archive",
-            WORDS.textOf(ImportWorkState.UNPACKING, ImportProgress(ImportProgress.Phase.READING, completed = 3, total = 10)),
+        assertEquals("Unpacking the archive", WORDS.textOf(ImportWorkState.UNPACKING, null))
+    }
+
+    @Test
+    fun `each phase of the unpacking and the write is named as the import screen names it`() {
+        val named = mapOf(
+            ImportProgress.Phase.UNPACKING to "Unpacking the archive",
+            ImportProgress.Phase.DOWNLOADING_PICTURES to "Downloading pictures",
+            ImportProgress.Phase.READING to "Reading files",
+            ImportProgress.Phase.COMPARING to "Comparing with the library",
         )
+        named.forEach { (phase, words) ->
+            assertEquals(words, WORDS.textOf(ImportWorkState.UNPACKING, ImportProgress(phase, completed = 3, total = 10)), phase.name)
+        }
+        assertEquals("Adding files", WORDS.textOf(ImportWorkState.WRITING, ImportProgress(ImportProgress.Phase.IMPORTING)))
+        assertEquals("Finishing", WORDS.textOf(ImportWorkState.WRITING, ImportProgress(ImportProgress.Phase.FINISHING)))
     }
 
     @Test
@@ -105,6 +117,10 @@ class ImportNotificationTextTest {
             downloading = ImportNotification.Phase("Downloading the file", "Downloading {completed} of {total}", "{completed} downloaded so far"),
             unpacking = ImportNotification.Phase("Unpacking the archive", "Unpacking {completed} of {total}", "{completed} unpacked so far"),
             writing = "Adding files",
+            downloadingPictures = "Downloading pictures",
+            reading = "Reading files",
+            comparing = "Comparing with the library",
+            finishing = "Finishing",
             sizeUnits = listOf("{size} B", "{size} KB", "{size} MB", "{size} GB"),
             decimalSeparator = ",",
             cancelLabel = "Cancel",

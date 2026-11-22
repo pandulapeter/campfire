@@ -35,10 +35,20 @@ fun importBytesOf(state: ImportWorkState, progress: ImportProgress?): ImportByte
 
 /**
  * What the notification says about the work in [state], in the same words as the import screen's loading stage
- * (`ImportProgressContent`): the phase alone until it counts bytes, then how many. Null while the work is idle, when
- * there is nothing to show.
+ * (`ImportProgressContent`): the phase alone until it counts bytes, then how many. The unpacking's work and the write
+ * each go through phases of their own (reading, comparing, finishing), which are named as the screen names them. Null
+ * while the work is idle, when there is nothing to show.
  */
 fun ImportNotification.textOf(state: ImportWorkState, progress: ImportProgress?): String? {
+    if (state == ImportWorkState.UNPACKING || state == ImportWorkState.WRITING) {
+        when (progress?.phase) {
+            ImportProgress.Phase.DOWNLOADING_PICTURES -> return downloadingPictures
+            ImportProgress.Phase.READING -> return reading
+            ImportProgress.Phase.COMPARING -> return comparing
+            ImportProgress.Phase.FINISHING -> return finishing
+            else -> Unit
+        }
+    }
     val words = when (state) {
         ImportWorkState.IDLE -> return null
         ImportWorkState.WRITING -> return writing
