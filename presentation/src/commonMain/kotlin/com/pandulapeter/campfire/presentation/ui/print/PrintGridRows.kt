@@ -111,7 +111,7 @@ private class PrintGridLine(
                 is GridSegment.Chord -> drawn(gridSegmentLabel(drawn)!!, segment.x + metrics.segmentPadding, top, styles.chord)
                 is GridSegment.Hold -> {
                     val width = segment.width - metrics.segmentPadding * 2
-                    val thickness = metrics.heavyWidth * 0.6f
+                    val thickness = metrics.holdWidth
                     if (width > 0) rules += PrintRule(segment.x + metrics.segmentPadding, top + (metrics.boxHeight - thickness) / 2, width, thickness, gray = HOLD_GRAY)
                 }
                 is GridSegment.Repeat -> {
@@ -129,13 +129,13 @@ private class PrintGridLine(
 
     private fun edge(edge: GridEdge, side: Float, inwards: Float, top: Float) {
         if (edge == GridEdge.PLAIN) return
-        val inset = metrics.cornerRadius * 0.5f
+        val inset = metrics.edgeInset
         val x = if (inwards > 0) side else side - metrics.heavyWidth
         rules += PrintRule(x, top + inset, metrics.heavyWidth, metrics.boxHeight - inset * 2, gray = SIGN_GRAY)
         if (edge == GridEdge.REPEAT) {
             val radius = metrics.dotRadius
-            val centre = side + inwards * (metrics.heavyWidth + radius * 2.2f)
-            listOf(metrics.boxHeight / 3, metrics.boxHeight * 2 / 3).forEach { y ->
+            val centre = side + inwards * metrics.repeatDotOffset
+            metrics.repeatDotCentres.forEach { y ->
                 boxes += PrintBox(centre - radius, top + y - radius, radius * 2, radius * 2, cornerRadius = radius, fillGray = SIGN_GRAY)
             }
         }
@@ -143,8 +143,8 @@ private class PrintGridLine(
 
     private fun volta(label: String, placed: PlacedGridBar, top: Float) {
         val stroke = metrics.strokeWidth
-        val y = top - metrics.voltaHeight + stroke
-        val bottom = top - metrics.rowGap / 2
+        val y = metrics.voltaTopOf(top, stroke)
+        val bottom = metrics.voltaBottomOf(top)
         rules += PrintRule(placed.x, y - stroke / 2, placed.width, stroke, gray = SIGN_GRAY)
         rules += PrintRule(placed.x - stroke / 2, y, stroke, bottom - y, gray = SIGN_GRAY)
         val height = styles.volta.size * TEXT_HEIGHT

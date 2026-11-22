@@ -64,7 +64,7 @@ internal fun DrawScope.drawGridLine(placement: GridLinePlacement, metrics: GridM
                     val y = top + metrics.boxHeight / 2
                     val end = segment.x + segment.width - metrics.segmentPadding
                     if (end > segment.x + metrics.segmentPadding) {
-                        drawLine(colors.hold, Offset(segment.x + metrics.segmentPadding, y), Offset(end, y), metrics.heavyWidth * 0.6f)
+                        drawLine(colors.hold, Offset(segment.x + metrics.segmentPadding, y), Offset(end, y), metrics.holdWidth)
                     }
                 }
                 is GridSegment.Repeat -> {
@@ -91,13 +91,12 @@ private fun DrawScope.drawCentred(layout: TextLayoutResult, x: Float, top: Float
 private fun DrawScope.drawEdges(placed: PlacedGridBar, top: Float, metrics: GridMetrics, color: Color) {
     fun edge(edge: GridEdge, side: Float, inwards: Float) {
         if (edge == GridEdge.PLAIN) return
-        val inset = metrics.cornerRadius * 0.5f
+        val inset = metrics.edgeInset
         val barX = if (inwards > 0) side else side - metrics.heavyWidth
         drawRect(color, Offset(barX, top + inset), Size(metrics.heavyWidth, metrics.boxHeight - inset * 2))
         if (edge == GridEdge.REPEAT) {
-            val dotX = side + inwards * (metrics.heavyWidth + metrics.dotRadius * 2.2f)
-            drawCircle(color, metrics.dotRadius, Offset(dotX, top + metrics.boxHeight / 3))
-            drawCircle(color, metrics.dotRadius, Offset(dotX, top + metrics.boxHeight * 2 / 3))
+            val dotX = side + inwards * metrics.repeatDotOffset
+            metrics.repeatDotCentres.forEach { y -> drawCircle(color, metrics.dotRadius, Offset(dotX, top + y)) }
         }
     }
     edge(placed.bar.opening, side = placed.x, inwards = 1f)
@@ -106,8 +105,8 @@ private fun DrawScope.drawEdges(placed: PlacedGridBar, top: Float, metrics: Grid
 
 /** A volta's bracket over its bar, a line along its top with a tick down at its start, numbered under the line. */
 private fun DrawScope.drawVolta(label: TextLayoutResult, placed: PlacedGridBar, top: Float, metrics: GridMetrics, color: Color, stroke: Float) {
-    val y = top - metrics.voltaHeight + stroke
-    val bottom = top - metrics.rowGap / 2
+    val y = metrics.voltaTopOf(top, stroke)
+    val bottom = metrics.voltaBottomOf(top)
     drawLine(color, Offset(placed.x, y), Offset(placed.x + placed.width, y), stroke)
     drawLine(color, Offset(placed.x, y), Offset(placed.x, bottom), stroke)
     drawText(label, color = color, topLeft = Offset(placed.x + metrics.segmentPadding, y + (bottom - y - label.size.height) / 2))

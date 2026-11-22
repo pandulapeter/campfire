@@ -32,6 +32,24 @@ internal data class GridMetrics(
     val heavyWidth get() = em * 0.16f
     val dotRadius get() = em * 0.11f
 
+    /** How thick a held beat's line is drawn. */
+    val holdWidth get() = heavyWidth * 0.6f
+
+    /** How far a heavy edge's bar stands in from the box's top and bottom, clear of its rounded corners. */
+    val edgeInset get() = cornerRadius * 0.5f
+
+    /** How far a repeat's dots are centred from the side of the box they stand inside. */
+    val repeatDotOffset get() = heavyWidth + dotRadius * 2.2f
+
+    /** Where a repeat's two dots are centred, down from the box's top. */
+    val repeatDotCentres get() = listOf(boxHeight / 3, boxHeight * 2 / 3)
+
+    /** Where the line along a volta's top is drawn [stroke] thick, over a row starting at [top]. */
+    fun voltaTopOf(top: Float, stroke: Float) = top - voltaHeight + stroke
+
+    /** Where a volta's tick down at its start ends, over a row starting at [top]. */
+    fun voltaBottomOf(top: Float) = top - rowGap / 2
+
     /** How far inside the box its segments start or end next to an [edge], which leaves room for its stroke and dots. */
     fun insetOf(edge: GridEdge) = when (edge) {
         GridEdge.PLAIN -> 0f
