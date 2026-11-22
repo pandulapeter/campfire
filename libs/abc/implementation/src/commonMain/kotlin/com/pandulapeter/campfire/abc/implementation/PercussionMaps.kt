@@ -11,9 +11,9 @@ package com.pandulapeter.campfire.abc.implementation
 
 /**
  * [tune] with the percussion maps notation programs export (`I:percmap ^g g 42 x`: the note, the step it is shown at,
- * the MIDI drum, and the head) in abc2svg's form (`%%percmap ^g 42 x`: the note, the drum, and the head). abc2svg
- * takes the third word for the head's name, and a head named after no glyph is not drawn, so every note mapped that way
- * lost its head. xml2abc's `normal` head is abc2svg's default, which has no name of its own, so it is left out.
+ * the MIDI drum, and the head) in abc2svg's form (`I:percmap ^g 42 x`: the note, the drum, and the head), `I:` or `%%`
+ * as it was written. abc2svg takes the third word for the head's name, and a head named after no glyph is not drawn, so
+ * every note mapped that way lost its head. xml2abc's `normal` head is abc2svg's default, which has no name of its own, so it is left out.
  */
 internal fun withAbc2svgPercussionMaps(tune: String): String = EXPORTED_PERCUSSION_MAP.replace(tune) { match ->
     val (prefix, note, drum, head) = match.destructured
