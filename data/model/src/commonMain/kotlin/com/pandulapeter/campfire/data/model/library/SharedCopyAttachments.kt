@@ -27,8 +27,8 @@ class SharedCopyAttachments(
  * a file's size, null for one the library does not hold, which is neither carried nor left out; [onLeftOut] hears of each
  * one left out as soon as it is, so that a caller that read it to learn its size can let it go.
  *
- * The one rule for both builders of a copy, the share that makes it (the export) and the sync run that keeps it current,
- * so that the same files make the same copy wherever it is built.
+ * The shared copy's rule (`SharedCopyBuilder`, which builds the share's first copy and every one a sync run builds again),
+ * kept here beside the limits it budgets with.
  */
 inline fun sharedCopyAttachments(
     names: List<String>,

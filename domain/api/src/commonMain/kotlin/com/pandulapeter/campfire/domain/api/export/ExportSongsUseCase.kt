@@ -18,13 +18,12 @@ interface ExportSongsUseCase {
      * whatever the count: the songs ticked in the selection mode, whose export screen promised one. A single song that
      * shows a picture the library holds is a zip too, named after it, holding the song and the pictures it shows under
      * `images/`; every zip carries the pictures its songs show there, each once. Null when none of
-     * them can be read. [isSharedCopy] is as for `ExportSetlistUseCase`, and only matters for a zip. [rewrite] is given each
-     * song's file name and text as read and answers the text that goes out, the same text for the file as it is stored.
+     * them can be read. [rewrite] is given each song's file name and text as read and answers the text that goes out, the
+     * same text for the file as it is stored.
      */
     suspend operator fun invoke(
         fileNames: List<String>,
         isArchive: Boolean,
-        isSharedCopy: Boolean,
         rewrite: (fileName: String, text: String) -> String,
     ): ExportedFile?
 }

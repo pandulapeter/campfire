@@ -77,6 +77,7 @@ internal fun sharedCopySync(
     return SharedCopySync(
         libraryFileLocalSource = library,
         contents = contents,
+        builder = SharedCopyBuilder(library, contents),
         registry = SharedLinksRegistry(mirror, environment),
         mirror = mirror,
         journal = SharedLinksJournal(localSource, environment),
@@ -94,9 +95,11 @@ internal fun sharedCopySteps(
     val mirror = SharedLinksMirror(localSource, environment)
     val registry = SharedLinksRegistry(mirror, environment)
     val journal = SharedLinksJournal(localSource, environment)
+    val contents = FakeSharedCopyContents()
     val sharedCopySync = SharedCopySync(
         libraryFileLocalSource = library,
-        contents = FakeSharedCopyContents(),
+        contents = contents,
+        builder = SharedCopyBuilder(library, contents),
         registry = registry,
         mirror = mirror,
         journal = journal,

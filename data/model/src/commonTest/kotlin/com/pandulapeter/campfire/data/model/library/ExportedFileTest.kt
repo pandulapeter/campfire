@@ -55,25 +55,6 @@ internal class ExportedFileTest {
     }
 
     @Test
-    fun `a shared copy may be no larger than every version opening a link downloads - pictures included`() {
-        val limit = ImportLimits.MAX_SHARED_COPY_SIZE
-
-        assertFalse(archive(size = 1_000L, unpackedSize = limit, unpackedImageSize = limit - 1_000).isTooLargeToShare)
-        assertTrue(archive(size = 1_000L, unpackedSize = limit + 1, unpackedImageSize = limit).isTooLargeToShare)
-        assertTrue(archive(size = limit + 1, unpackedSize = limit + 1).isTooLargeToShare)
-    }
-
-    @Test
-    fun `a shared copy's attachments have a budget of their own beside its songs and pictures`() {
-        val limit = ImportLimits.MAX_SHARED_COPY_SIZE
-        val attachments = ImportLimits.MAX_SHARED_ATTACHMENTS_SIZE
-
-        assertFalse(archive(size = limit + attachments, unpackedSize = limit + attachments, unpackedAttachmentSize = attachments).isTooLargeToShare)
-        assertTrue(archive(size = 1_000L, unpackedSize = limit + attachments + 1, unpackedAttachmentSize = attachments + 1).isTooLargeToShare)
-        assertTrue(archive(size = limit + attachments + 1, unpackedSize = 1_000L).isTooLargeToShare)
-    }
-
-    @Test
     fun `a file that is no archive is never too large to import`() {
         val pdf = ExportedFile(name = "songs.pdf", mimeType = ExportedFile.PDF_MIME_TYPE, content = ExportedContent.Bytes(ByteArray(0)), unpackedSize = Long.MAX_VALUE)
 

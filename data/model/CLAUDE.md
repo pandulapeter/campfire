@@ -41,7 +41,7 @@ within `MAX_IMPORT_STAGED_SIZE`. `MAX_IMPORT_IMAGES_SIZE` (64 MiB) bounds only t
 past 16 GiB, `MAX_ARCHIVE_ENTRIES`, or `MAX_IMPORT_SIZE` of song text, the strings naming 16 GB. A shared link's copy
 stays at 24 MiB (`MAX_SHARED_COPY_SIZE`) of songs and pictures: versions before pictures download no more, and the copy is packed in
 memory. Its attachments have 50 MiB beside that (`MAX_SHARED_ATTACHMENTS_SIZE`), one that does not fit left out
-(`sharedCopyAttachments`, the one rule for the export and sync). A picture is read only where it was chosen itself
+(`sharedCopyAttachments`, the shared copy's rule). A picture is read only where it was chosen itself
 (`IMAGE_FILE_EXTENSIONS`, within `MAX_PICKED_IMAGE_FILE_SIZE`, 40 MiB, since `:presentation` shrinks one past
 `MAX_IMAGE_FILE_SIZE`); the folder walks leave pictures unread by name, and an archive reads one only for a song naming
 it, within `MAX_IMAGE_FILE_SIZE`.

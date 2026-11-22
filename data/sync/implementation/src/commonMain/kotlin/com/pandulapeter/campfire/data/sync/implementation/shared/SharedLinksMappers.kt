@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.sync.implementation.shared
 
+import com.pandulapeter.campfire.data.model.library.LibraryCollections
 import com.pandulapeter.campfire.data.model.share.Share
 import com.pandulapeter.campfire.data.model.share.ShareLinks
 import com.pandulapeter.campfire.data.model.share.ShareState
@@ -42,3 +43,10 @@ internal fun SharedLinksEntry.toShare(): Share? {
         leftOutAttachmentCount = leftOutAttachments.coerceAtLeast(0),
     )
 }
+
+/** The library collection the shared item lives in. */
+internal val SharedLinkKind.libraryKind
+    get() = when (this) {
+        SharedLinkKind.SETLIST -> LibraryCollections.SETLISTS
+        SharedLinkKind.SONG -> LibraryCollections.SONGS
+    }

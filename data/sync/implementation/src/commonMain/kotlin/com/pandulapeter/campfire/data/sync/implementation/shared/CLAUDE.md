@@ -44,9 +44,11 @@
 
 ## Sharing (`SharedLinksRepositoryImpl`)
 
-- A copy is named by a fresh `ShareIds` id, uploaded, linked, then added; a share of the same item found while adding
-  (another device's, by `LibraryFiles.isSameLibraryName`) is answered instead, so an item never has two links. A share
-  whose copy is gone (`copyMissing`) is never answered: the new entry replaces it in the same write.
+- A copy is built by `SharedCopyBuilder`, as a run builds it, by the library's listing (`ListedNames`; a run's is its
+  index, `IndexedNames`), so the first run uploads nothing; named by a fresh `ShareIds` id, uploaded, linked, then
+  added. A share of the same item found while adding (another device's, by `LibraryFiles.isSameLibraryName`) is
+  answered instead, so an item never has two links. A share whose copy is gone (`copyMissing`) is never answered: the
+  new entry replaces it in the same write.
 - Whatever fails after the upload deletes the copy again, best effort, only where the list surely does not name it: the
   edit, its re-read where it threw or was contended, and that decision run as one `NonCancellable` block; a copy nothing
   could tell about is kept (a leftover at worst).
@@ -76,22 +78,20 @@
   edit at the end, also after a failure; journal entries are forgotten only once written.
 - A copy is skipped unread when its `built` has the inputs fingerprint (`sharedCopyFingerprint`, from the index's
   `localHash`es; a setlist is the one file read), a build no older than `CAMPFIRE_BUILD_NUMBER`, and the listed hash (or
-  none while `tooLarge`). Otherwise it is packed from the library's files as the export packs them (undated, the item
-  and its songs as UTF-8 text without a byte order mark, as the export reads and writes them) and uploaded only when
-  its hash differs; a `Conflict` is dropped.
-- **Pictures**: a copy carries the library's pictures its songs name under `images/`, sorted, as the export does. The
-  fingerprint ends in their names (none for a copy showing none, so older fingerprints stand), since a picture arriving
-  under a name a song already gives changes no hash. So the step reads the shared songs (a setlist's too) for the names,
-  but only while the index holds any picture. A copy holds at most `ImportLimits.MAX_SHARED_COPY_SIZE` (24 MiB, what
+  none while `tooLarge`). Otherwise `SharedCopyBuilder` packs it from the library's files (undated, the item and its
+  songs as UTF-8 text without a byte order mark), uploaded only when its hash differs; a `Conflict` is dropped.
+- **Pictures**: a copy carries the library's pictures its songs name under `images/`, sorted. The fingerprint ends in
+  their names (none for a copy showing none, so older fingerprints stand), since a picture arriving under a name a song
+  already gives changes no hash. So the step reads the shared songs (a setlist's too) for the names, but only while the
+  index holds any picture. A copy holds at most `ImportLimits.MAX_SHARED_COPY_SIZE` (24 MiB, what
   versions before pictures download, and packed in memory here): pictures are read one at a time up to it, and one past
   it is `tooLarge` without packing, fingerprinted by what it was to hold so the next run reads nothing again.
 - **Attachments** (files its songs attach and none shows) go under `images/` too, the fingerprint naming them as it
   names pictures, so attaching a file republishes the copy. They have a budget of their own beside the 24 MiB
   (`MAX_SHARED_ATTACHMENTS_SIZE`, 50 MiB, what an import reads), filled in the order the songs name them by
-  `sharedCopyAttachments` (`:data:model`), the one rule the share's first copy (the export) follows too: one that does
-  not fit is left out, never refusing the share, its lines taken out of the copy's songs as the export takes them out,
-  and the next tried. The entry records how many (`leftOutAttachments`,
-  an unknown member to older versions), which the export screen and Settings → Sharing say; the fingerprint names the
+  `sharedCopyAttachments` (`:data:model`): one that does not fit is left out, never refusing the share, its lines
+  taken out of the copy's songs, and the next tried. The entry records how many (`leftOutAttachments`, an unknown
+  member to older versions), which the export screen and Settings → Sharing say; the fingerprint names the
   left-out ones as well, so an unchanged copy is not rebuilt for them.
 - **Accepted**: a 5.4.0 device and a current one rebuild a copy whose songs name files in turn, since they fingerprint it
   differently (5.4.0's copy carries no files): one upload per run of each until both are current. Left as it is.

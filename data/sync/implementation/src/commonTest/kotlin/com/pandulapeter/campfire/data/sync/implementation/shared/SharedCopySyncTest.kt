@@ -219,9 +219,12 @@ class SharedCopySyncTest {
         val registry = SharedLinksRegistry(mirror, environment)
         val journal = SharedLinksJournal(localSource, environment)
         val applier = SharedLinksJournalApplier(journal, registry, environment)
+        val library = FakeLibraryFileLocalSource()
+        val contents = FakeSharedCopyContents()
         val step = SharedCopySync(
-            libraryFileLocalSource = FakeLibraryFileLocalSource(),
-            contents = FakeSharedCopyContents(),
+            libraryFileLocalSource = library,
+            contents = contents,
+            builder = SharedCopyBuilder(library, contents),
             registry = registry,
             mirror = mirror,
             journal = journal,

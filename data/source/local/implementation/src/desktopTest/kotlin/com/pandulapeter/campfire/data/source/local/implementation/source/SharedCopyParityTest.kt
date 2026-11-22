@@ -25,18 +25,19 @@ import kotlin.test.assertTrue
 import kotlin.time.measureTime
 
 /**
- * A shared link's first copy comes from the export (`CreateShareLinkUseCase`), every later one from sync's
- * `SharedCopySync`; both must make the same bytes of the same files, and hold exactly what the user shared. Each seed
+ * A shared link's first copy (`CreateShareLinkUseCase`, before any run) and every later one (`SharedCopySync`) both come
+ * from sync's `SharedCopyBuilder`, the first by the library's listing and the later ones by the run's index; the two
+ * lookups must find the same files, so both make the same bytes, and hold exactly what the user shared. Each seed
  * generates a library ([SharedCopyLibrary]), shares some of its items on one device ([SharedCopyApp]), and syncs:
  *
- * - the run uploads no copy again, which it would where its build differed from the export's by a byte;
+ * - the run uploads no copy again, which it would where its build differed from the share's by a byte;
  * - each copy holds exactly the entries [SharedCopyLibrary.expectedCopy] works out, each the library's text but for
  *   the lines of attachments left out, and nothing else;
  * - editing a song nothing shared names, then syncing, changes no copy.
  *
  * Odd seeds find library files only under their stored spelling, as Android and Linux do. The seeds come from
- * `campfire.sharedCopyParitySeeds` (`gradle.properties`): 200 in every build, 10,000 by hand when sharing or the export
- * changes (`-Pcampfire.sharedCopyParitySeeds=10000`).
+ * `campfire.sharedCopyParitySeeds` (`gradle.properties`): 200 in every build, 10,000 by hand when `SharedCopyBuilder` or
+ * the lookups change (`-Pcampfire.sharedCopyParitySeeds=10000`).
  */
 class SharedCopyParityTest {
 

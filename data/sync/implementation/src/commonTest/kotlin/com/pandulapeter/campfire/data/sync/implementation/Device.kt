@@ -20,6 +20,7 @@ import com.pandulapeter.campfire.data.sync.implementation.run.SyncEngine
 import com.pandulapeter.campfire.data.sync.implementation.shared.FakeSharedCopyContents
 import com.pandulapeter.campfire.data.sync.implementation.shared.FakeSharedLinksLocalSource
 import com.pandulapeter.campfire.data.sync.implementation.shared.SharedLinksFormat
+import com.pandulapeter.campfire.data.sync.implementation.shared.SharedCopyBuilder
 import com.pandulapeter.campfire.data.sync.implementation.shared.SharedCopySync
 import com.pandulapeter.campfire.data.sync.implementation.shared.SharedLinksJournal
 import com.pandulapeter.campfire.data.sync.implementation.shared.SharedLinksJournalApplier
@@ -103,6 +104,9 @@ internal class Device(
         journal = sharedLinksJournal,
         journalApplier = SharedLinksJournalApplier(sharedLinksJournal, registry, environment),
         environment = environment,
+        builder = SharedCopyBuilder(library, sharedContents),
+        contents = sharedContents,
+        libraryFileLocalSource = library,
     ).also { sharingRepository = it }
 
     /** The library by file name, as text. */
@@ -183,6 +187,7 @@ internal class Device(
                 SharedCopySync(
                 libraryFileLocalSource = library,
                 contents = sharedContents,
+                builder = SharedCopyBuilder(library, sharedContents),
                 registry = registry,
                 mirror = mirror,
                 journal = sharedLinksJournal,

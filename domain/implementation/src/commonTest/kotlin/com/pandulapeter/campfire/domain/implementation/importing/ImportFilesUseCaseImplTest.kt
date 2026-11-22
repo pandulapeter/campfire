@@ -1032,7 +1032,7 @@ class ImportFilesUseCaseImplTest {
             archiveRepository = archive,
             exportFileRepository = FakeExportFileRepository(),
             imageRepository = source,
-        ).invoke(listOf("a.cho"), isArchive = false, isSharedCopy = false) { _, text -> text }
+        ).invoke(listOf("a.cho"), isArchive = false) { _, text -> text }
         // What unpacking finds for the song: the picture its directive names, in the archive's images/ folder.
         val exported = ImportedFile(
             name = "a.cho",

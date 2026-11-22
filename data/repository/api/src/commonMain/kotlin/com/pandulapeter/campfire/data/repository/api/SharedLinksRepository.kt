@@ -45,23 +45,22 @@ interface SharedLinksRepository {
     suspend fun refresh(): SharingFailure?
 
     /**
-     * Uploads [copy] as the shared copy of the library file [fileName], makes a public link to it, and adds it to the
-     * account's list. The caller has checked [shares], just refreshed, for a share of the same item; one that another
-     * device adds in the meantime is answered instead, and the copy uploaded here deleted, so an item never has two
-     * links. The renames and stops this device has not told the list yet go first, and a share fails while they cannot.
-     * A share of the item whose copy is gone ([ShareState.COPY_MISSING]) is replaced by this one, never answered.
-     * Whatever fails after the upload deletes the copy again, as far as it can, except a copy the account's list may
-     * name: a failure that leaves unclear whether the list was written keeps it. [leftOutAttachmentCount] is how many
-     * attachments the copy left out for their size, which the share then says until a sync run builds the copy again.
+     * Builds the shared copy of the library file [fileName] from the library's files, as every sync run builds it again,
+     * uploads it, makes a public link to it, and adds it to the account's list. The caller has checked [shares], just
+     * refreshed, for a share of the same item; one that another device adds in the meantime is answered instead, and the
+     * copy uploaded here deleted, so an item never has two links. The renames and stops this device has not told the list
+     * yet go first, and a share fails while they cannot. A share of the item whose copy is gone ([ShareState.COPY_MISSING])
+     * is replaced by this one, never answered. Whatever fails after the upload deletes the copy again, as far as it can,
+     * except a copy the account's list may name: a failure that leaves unclear whether the list was written keeps it.
      *
-     * Never throws but cancellation. Answers [CreateShareResult.Shared] or [CreateShareResult.Failed] only.
+     * Never throws but cancellation. Answers [CreateShareResult.Missing] for an item the library does not hold (or a
+     * setlist it cannot read), [CreateShareResult.TooLarge] for a copy too large to share, nothing uploaded for either,
+     * and otherwise [CreateShareResult.Shared] or [CreateShareResult.Failed].
      */
     suspend fun share(
         kind: SharedLinkKind,
         fileName: String,
         title: String,
-        copy: ByteArray,
-        leftOutAttachmentCount: Int,
     ): CreateShareResult
 
     /**

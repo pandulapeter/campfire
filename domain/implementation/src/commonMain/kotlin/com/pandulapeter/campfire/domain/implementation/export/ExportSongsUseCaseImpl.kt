@@ -33,19 +33,17 @@ internal class ExportSongsUseCaseImpl(
     override suspend operator fun invoke(
         fileNames: List<String>,
         isArchive: Boolean,
-        isSharedCopy: Boolean,
         rewrite: (fileName: String, text: String) -> String,
     ): ExportedFile? {
         // Read from the files rather than from the cache, which may hold a version a file has left behind since.
         // One song leaves as itself, named by its own header: a zip around a single text file would only be something
         // to unpack again. Not where a zip is what the caller's screen showed and the user picked, which is what saving
         // has to give them however many of the songs are left.
-        val images = ExportedImages.of(imageRepository, isSharedCopy)
+        val images = ExportedImages.of(imageRepository)
         if (fileNames.size == 1 && !isArchive) {
             val content = songContentRepository.loadSongContent(fileNames.single(), useCache = false) ?: return null
             val name = songRepository.songExportFileName(content)
             val text = rewrite(content.fileName, content.text)
-            if (isSharedCopy) images.decideSharedAttachments(listOf(text))
             // A song showing pictures is a zip of itself and them, which opens the same in any ChordPro program: a
             // lone file would show a missing picture wherever it went.
             if (images.isNamedBy(text)) {
@@ -53,18 +51,11 @@ internal class ExportSongsUseCaseImpl(
                     archiveRepository = archiveRepository,
                     exportFileRepository = exportFileRepository,
                     name = name.substringBeforeLast('.') + LibraryFiles.ARCHIVE_EXTENSION,
-                    entries = listOf { ArchiveEntry(name = name, bytes = images.named(text).encodeToByteArray()) },
+                    entries = listOf { ArchiveEntry(name = name, bytes = text.also(images::named).encodeToByteArray()) },
                     images = images,
-                    isDated = !isSharedCopy,
                 )
             }
             return ExportedFile(name = name, mimeType = ExportedFile.TEXT_MIME_TYPE, bytes = text.encodeToByteArray())
-        }
-        // A shared copy's songs are read once before they are written, for the attachments it carries (ExportedImages).
-        if (isSharedCopy) {
-            images.decideSharedAttachments(
-                fileNames.mapNotNull { fileName -> songContentRepository.loadSongContent(fileName, useCache = false)?.let { rewrite(it.fileName, it.text) } },
-            )
         }
         return exportedArchive(
             archiveRepository = archiveRepository,
@@ -73,12 +64,11 @@ internal class ExportSongsUseCaseImpl(
             entries = fileNames.map { fileName ->
                 {
                     songContentRepository.loadSongContent(fileName, useCache = false)?.let {
-                        ArchiveEntry(name = it.fileName, bytes = images.named(rewrite(it.fileName, it.text)).encodeToByteArray())
+                        ArchiveEntry(name = it.fileName, bytes = rewrite(it.fileName, it.text).also(images::named).encodeToByteArray())
                     }
                 }
             },
             images = images,
-            isDated = !isSharedCopy,
         )
     }
 

@@ -9,37 +9,27 @@
  */
 package com.pandulapeter.campfire.domain.implementation.sharing
 
-import com.pandulapeter.campfire.data.model.importing.ImportLimits
-import com.pandulapeter.campfire.data.model.library.ExportedContent
-import com.pandulapeter.campfire.data.model.library.ExportedFile
 import com.pandulapeter.campfire.data.model.share.CreateShareResult
 import com.pandulapeter.campfire.data.model.share.Share
 import com.pandulapeter.campfire.data.model.share.ShareLinks
 import com.pandulapeter.campfire.data.model.share.ShareState
 import com.pandulapeter.campfire.data.model.share.SharedLinkKind
 import com.pandulapeter.campfire.data.model.share.SharingFailure
-import com.pandulapeter.campfire.domain.api.export.ExportSetlistUseCase
-import com.pandulapeter.campfire.domain.api.export.ExportSongsUseCase
-import com.pandulapeter.campfire.domain.implementation.FakeExportFileRepository
 import com.pandulapeter.campfire.domain.implementation.SharedLinksRepositoryStub
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
-import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
-import kotlin.test.assertTrue
 
 class CreateShareLinkUseCaseImplTest {
 
-    private val exportFiles = FakeExportFileRepository()
-
     @Test
-    fun `an item already shared answers its link without building a copy`() = runTest {
+    fun `an item already shared answers its link without sharing it again`() = runTest {
         val existing = share(fileName = "Gig.setlist.json")
         val repository = FakeSharedLinksRepository(afterRefresh = listOf(existing))
 
-        val result = useCase(repository, setlist = { _, _ -> error("Built a copy.") }).invoke(SharedLinkKind.SETLIST, "gig.setlist.json", "Gig")
+        val result = CreateShareLinkUseCaseImpl(repository).invoke(SharedLinkKind.SETLIST, "gig.setlist.json", "Gig")
 
         assertEquals(CreateShareResult.Shared(existing), result)
         assertNull(repository.shared)
@@ -49,119 +39,28 @@ class CreateShareLinkUseCaseImplTest {
     fun `an item whose share lost its copy is shared anew`() = runTest {
         val repository = FakeSharedLinksRepository(afterRefresh = listOf(share(fileName = "gig.setlist.json", state = ShareState.COPY_MISSING)))
 
-        useCase(repository, setlist = { _, _ -> zip(1) }).invoke(SharedLinkKind.SETLIST, "gig.setlist.json", "Gig")
+        CreateShareLinkUseCaseImpl(repository).invoke(SharedLinkKind.SETLIST, "gig.setlist.json", "Gig")
 
-        assertContentEquals(ByteArray(1), repository.shared)
+        assertEquals(Triple(SharedLinkKind.SETLIST, "gig.setlist.json", "Gig"), repository.shared)
     }
 
     @Test
-    fun `a setlist is shared whole as a shared copy`() = runTest {
-        val repository = FakeSharedLinksRepository()
-        var request: Pair<String, Boolean>? = null
+    fun `what the share answers is answered - a missing item and a copy too large included`() = runTest {
+        listOf(CreateShareResult.Missing, CreateShareResult.TooLarge, CreateShareResult.Failed(SharingFailure.UNKNOWN)).forEach { answer ->
+            val result = CreateShareLinkUseCaseImpl(FakeSharedLinksRepository(answer = answer)).invoke(SharedLinkKind.SONG, "song.cho", "Song")
 
-        useCase(repository, setlist = { name, isSharedCopy -> zip(1).also { request = name to isSharedCopy } })
-            .invoke(SharedLinkKind.SETLIST, "gig.setlist.json", "Gig")
-
-        assertEquals("gig.setlist.json" to true, request)
-        assertContentEquals(ByteArray(1), repository.shared)
+            assertEquals(answer, result)
+        }
     }
 
     @Test
-    fun `the copy's temporary file is removed once uploaded or refused`() = runTest {
-        useCase(FakeSharedLinksRepository(), songs = { _, _, _ -> zip(1) }).invoke(SharedLinkKind.SONG, "song.cho", "Song")
-        useCase(FakeSharedLinksRepository(), songs = { _, _, _ -> zip(ImportLimits.MAX_SHARED_COPY_SIZE.toInt() + 1) }).invoke(SharedLinkKind.SONG, "song.cho", "Song")
-
-        assertEquals(listOf("copy.zip", "copy.zip"), exportFiles.discarded)
-        assertTrue(exportFiles.files.isEmpty())
-    }
-
-    @Test
-    fun `a song is shared as a shared copy's zip`() = runTest {
-        val repository = FakeSharedLinksRepository()
-        var request: Triple<List<String>, Boolean, Boolean>? = null
-
-        useCase(repository, songs = { names, isArchive, isSharedCopy -> zip(1).also { request = Triple(names, isArchive, isSharedCopy) } })
-            .invoke(SharedLinkKind.SONG, "song.cho", "Song")
-
-        assertEquals(Triple(listOf("song.cho"), true, true), request)
-    }
-
-    @Test
-    fun `a copy over the import limit is not shared`() = runTest {
-        val repository = FakeSharedLinksRepository()
-
-        val result = useCase(repository, songs = { _, _, _ -> zip(ImportLimits.MAX_SHARED_COPY_SIZE.toInt() + 1) })
-            .invoke(SharedLinkKind.SONG, "song.cho", "Song")
-
-        assertEquals(CreateShareResult.TooLarge, result)
-        assertNull(repository.shared)
-    }
-
-    @Test
-    fun `a copy compressed under the import limit that unpacks past it is not shared`() = runTest {
-        val repository = FakeSharedLinksRepository()
-        val copy = zip(1_000).copy(unpackedSize = ImportLimits.MAX_SHARED_COPY_SIZE + 1)
-
-        val result = useCase(repository, songs = { _, _, _ -> copy }).invoke(SharedLinkKind.SONG, "song.cho", "Song")
-
-        assertEquals(CreateShareResult.TooLarge, result)
-        assertNull(repository.shared)
-    }
-
-    @Test
-    fun `a copy that left attachments out for their size is shared - saying how many`() = runTest {
-        val repository = FakeSharedLinksRepository()
-
-        useCase(repository, songs = { _, _, _ -> zip(1).copy(leftOutAttachmentCount = 2) }).invoke(SharedLinkKind.SONG, "song.cho", "Song")
-
-        assertEquals(2, repository.leftOutAttachmentCount)
-    }
-
-    @Test
-    fun `an item no longer in the library is missing`() = runTest {
-        val result = useCase(FakeSharedLinksRepository(), songs = { _, _, _ -> null }).invoke(SharedLinkKind.SONG, "gone.cho", "Gone")
-
-        assertEquals(CreateShareResult.Missing, result)
-    }
-
-    @Test
-    fun `a list that cannot be read stops the share before anything is built`() = runTest {
+    fun `a list that cannot be read stops the share before anything is shared`() = runTest {
         val repository = FakeSharedLinksRepository(refreshFailure = SharingFailure.NETWORK)
 
-        val result = useCase(repository, songs = { _, _, _ -> error("Built a copy.") }).invoke(SharedLinkKind.SONG, "song.cho", "Song")
+        val result = CreateShareLinkUseCaseImpl(repository).invoke(SharedLinkKind.SONG, "song.cho", "Song")
 
         assertEquals(CreateShareResult.Failed(SharingFailure.NETWORK), result)
-    }
-
-    private fun useCase(
-        repository: FakeSharedLinksRepository,
-        setlist: (String, Boolean) -> ExportedFile? = { _, _ -> error("Not a setlist.") },
-        songs: (List<String>, Boolean, Boolean) -> ExportedFile? = { _, _, _ -> error("Not a song.") },
-    ) = CreateShareLinkUseCaseImpl(
-        sharedLinksRepository = repository,
-        exportSetlist = object : ExportSetlistUseCase {
-            override suspend fun invoke(setlistFileName: String, isSharedCopy: Boolean) = setlist(setlistFileName, isSharedCopy)
-        },
-        exportSongs = object : ExportSongsUseCase {
-            override suspend fun invoke(
-                fileNames: List<String>,
-                isArchive: Boolean,
-                isSharedCopy: Boolean,
-                rewrite: (fileName: String, text: String) -> String,
-            ) = songs(fileNames, isArchive, isSharedCopy)
-        },
-        exportFileRepository = exportFiles,
-        logger = {},
-    )
-
-    /** A copy in a temporary file, as the exports make it. */
-    private fun zip(size: Int): ExportedFile {
-        exportFiles.files["copy.zip"] = ByteArray(size)
-        return ExportedFile(
-            name = "copy.zip",
-            mimeType = ExportedFile.ZIP_MIME_TYPE,
-            content = ExportedContent.TemporaryFile(path = "/exports/copy.zip", size = size.toLong(), storedName = "copy.zip"),
-        )
+        assertNull(repository.shared)
     }
 
     private fun share(fileName: String, state: ShareState = ShareState.OK) = Share(
@@ -174,22 +73,21 @@ class CreateShareLinkUseCaseImplTest {
         state = state,
     )
 
-    /** Shows [afterRefresh] once refreshed, and keeps the copy it was asked to share. */
+    /** Shows [afterRefresh] once refreshed, and keeps what it was asked to share, answering [answer]. */
     private class FakeSharedLinksRepository(
         private val afterRefresh: List<Share> = emptyList(),
         private val refreshFailure: SharingFailure? = null,
+        private val answer: CreateShareResult = CreateShareResult.Failed(SharingFailure.UNKNOWN),
     ) : SharedLinksRepositoryStub() {
 
         override val shares = MutableStateFlow(emptyList<Share>())
-        var shared: ByteArray? = null
-        var leftOutAttachmentCount: Int? = null
+        var shared: Triple<SharedLinkKind, String, String>? = null
 
         override suspend fun refresh() = refreshFailure.also { if (it == null) shares.value = afterRefresh }
 
-        override suspend fun share(kind: SharedLinkKind, fileName: String, title: String, copy: ByteArray, leftOutAttachmentCount: Int): CreateShareResult {
-            shared = copy
-            this.leftOutAttachmentCount = leftOutAttachmentCount
-            return CreateShareResult.Failed(SharingFailure.UNKNOWN)
+        override suspend fun share(kind: SharedLinkKind, fileName: String, title: String): CreateShareResult {
+            shared = Triple(kind, fileName, title)
+            return answer
         }
     }
 }

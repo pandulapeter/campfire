@@ -19,7 +19,6 @@ import com.pandulapeter.campfire.domain.implementation.testSetlist
 import com.pandulapeter.campfire.domain.implementation.testSong
 import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.data.model.song.SongContent
-import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -33,7 +32,7 @@ class ExportSetlistUseCaseImplTest {
 
     @Test
     fun `a setlist is named by its title`() = runTest {
-        val exported = useCase(testSetlist(fileName = "summer_2.setlist.json", title = "Summer set")).invoke("summer_2.setlist.json", isSharedCopy = false)
+        val exported = useCase(testSetlist(fileName = "summer_2.setlist.json", title = "Summer set")).invoke("summer_2.setlist.json")
 
         assertEquals("summer_set.zip", assertNotNull(exported).name)
         assertEquals(setOf("summer_2.setlist.json"), archive.packed.keys)
@@ -41,7 +40,7 @@ class ExportSetlistUseCaseImplTest {
 
     @Test
     fun `a blank title is still a name`() = runTest {
-        val exported = useCase(testSetlist(fileName = "gig.setlist.json", title = "")).invoke("gig.setlist.json", isSharedCopy = false)
+        val exported = useCase(testSetlist(fileName = "gig.setlist.json", title = "")).invoke("gig.setlist.json")
 
         assertEquals("untitled.zip", assertNotNull(exported).name)
     }
@@ -50,7 +49,7 @@ class ExportSetlistUseCaseImplTest {
     fun `every song the setlist names goes in beside it - a missing one left out`() = runTest {
         val setlist = testSetlist(fileName = "gig.setlist.json", title = "Gig", entries = listOf("a.cho", "b.cho", "c.cho"))
 
-        useCase(FakeSetlistRepository(setlist), readable = setOf("a.cho", "c.cho")).invoke("gig.setlist.json", isSharedCopy = false)
+        useCase(FakeSetlistRepository(setlist), readable = setOf("a.cho", "c.cho")).invoke("gig.setlist.json")
 
         assertEquals(setOf("gig.setlist.json", "a.cho", "c.cho"), archive.packed.keys)
     }
@@ -61,7 +60,7 @@ class ExportSetlistUseCaseImplTest {
 
         val useCase = useCase(FakeSetlistRepository(setlist), readable = setOf("a.cho"), texts = mapOf("a.cho" to "{title: A}"))
 
-        useCase("gig.setlist.json", isSharedCopy = true)
+        useCase("gig.setlist.json")
 
         assertEquals("{title: A}", archive.packed.getValue("A.cho").decodeToString())
         assertEquals(setOf("gig.setlist.json", "A.cho"), archive.packed.keys)
@@ -71,7 +70,7 @@ class ExportSetlistUseCaseImplTest {
     fun `the archive knows what an import unpacks it to`() = runTest {
         val setlist = testSetlist(fileName = "gig.setlist.json", title = "Gig", entries = listOf("a.cho"))
 
-        val exported = useCase(FakeSetlistRepository(setlist), readable = setOf("a.cho")).invoke("gig.setlist.json", isSharedCopy = false)
+        val exported = useCase(FakeSetlistRepository(setlist), readable = setOf("a.cho")).invoke("gig.setlist.json")
 
         assertEquals(archive.packed.values.sumOf { it.size.toLong() }, assertNotNull(exported).unpackedSize)
     }
@@ -85,28 +84,10 @@ class ExportSetlistUseCaseImplTest {
         val setlist = testSetlist(fileName = "gig.setlist.json", title = "Gig", entries = listOf("a.cho", "b.cho"))
         val texts = mapOf("a.cho" to "{title: A}\n{image: src=$name}", "b.cho" to "{title: B}\n{image: src=$name}")
 
-        val exported = useCase(FakeSetlistRepository(setlist), readable = texts.keys, texts = texts).invoke("gig.setlist.json", isSharedCopy = false)
+        val exported = useCase(FakeSetlistRepository(setlist), readable = texts.keys, texts = texts).invoke("gig.setlist.json")
 
         assertEquals(listOf("gig.setlist.json", "a.cho", "b.cho", "images/$name"), archive.packed.keys.toList())
         assertEquals(picture.size.toLong(), assertNotNull(exported).unpackedImageSize)
-    }
-
-    @Test
-    fun `a shared copy's songs keep no line for an attachment it leaves out - whichever song names it`() = runTest {
-        images.library["0123456789abcdef.mp4"] = ByteArray((ImportLimits.MAX_SHARED_ATTACHMENTS_SIZE + 1).toInt())
-        images.library["fedcba9876543210.pdf"] = ByteArray(100)
-        val setlist = testSetlist(fileName = "gig.setlist.json", title = "Gig", entries = listOf("a.cho", "b.cho"))
-        val texts = mapOf(
-            "a.cho" to "{title: A}\n{meta: attachment fedcba9876543210.pdf Sheet}",
-            "b.cho" to "{title: B}\n{meta: attachment 0123456789abcdef.mp4 Video}\n[C]Line",
-        )
-
-        val exported = useCase(FakeSetlistRepository(setlist), readable = texts.keys, texts = texts).invoke("gig.setlist.json", isSharedCopy = true)
-
-        assertEquals(1, assertNotNull(exported).leftOutAttachmentCount)
-        assertEquals(texts.getValue("a.cho"), archive.packed.getValue("a.cho").decodeToString())
-        assertEquals("{title: B}\n[C]Line", archive.packed.getValue("b.cho").decodeToString())
-        assertEquals(listOf("gig.setlist.json", "a.cho", "b.cho", "images/fedcba9876543210.pdf"), archive.packed.keys.toList())
     }
 
     private fun useCase(

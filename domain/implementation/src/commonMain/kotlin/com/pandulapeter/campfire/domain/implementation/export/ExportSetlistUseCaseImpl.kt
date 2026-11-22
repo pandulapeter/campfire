@@ -37,7 +37,7 @@ internal class ExportSetlistUseCaseImpl(
      * the songs it names go in next to it. A song whose file is missing is left out rather than failing the export:
      * the setlist still names it, and importing it somewhere the song does exist will find it again.
      */
-    override suspend operator fun invoke(setlistFileName: String, isSharedCopy: Boolean): ExportedFile? {
+    override suspend operator fun invoke(setlistFileName: String): ExportedFile? {
         val setlist = setlistRepository.loadSetlistsIfNeeded().orEmpty().firstOrNull { it.fileName == setlistFileName } ?: return null
         val document = setlistRepository.loadSetlistDocument(setlistFileName) ?: return null
         // The entries keep their library names, accents and all: the setlist document points at its songs by file
@@ -45,24 +45,16 @@ internal class ExportSetlistUseCaseImpl(
         // A song the setlist names twice goes in once, as an archive cannot hold two entries of one name.
         val written = mutableSetOf(setlistFileName)
         // A setlist may spell a song as another case or Unicode form of its file's name, which only some file systems
-        // find: the song is read by the library's spelling on every platform, as sync's rebuild of a shared copy reads it,
-        // and goes in under the setlist's, which is what an import follows.
+        // find: the song is read by the library's spelling on every platform, as a shared copy reads it, and goes in
+        // under the setlist's, which is what an import follows.
         val libraryNames = songRepository.loadSongsIfNeeded().orEmpty().associate { LibraryFiles.identityKey(it.fileName) to it.fileName }
         val libraryNameOf = { name: String -> libraryNames[LibraryFiles.identityKey(name)] ?: name }
-        val images = ExportedImages.of(imageRepository, isSharedCopy)
-        // A shared copy's songs are read once before they are written, for the attachments it carries (ExportedImages).
-        if (isSharedCopy) {
-            images.decideSharedAttachments(
-                setlist.entries.map { it.songFileName }.distinct().mapNotNull { name ->
-                    songContentRepository.loadSongContent(libraryNameOf(name), useCache = false)?.text
-                },
-            )
-        }
+        val images = ExportedImages.of(imageRepository)
         val songs = setlist.entries.map { entry ->
             suspend {
                 songContentRepository.loadSongContent(libraryNameOf(entry.songFileName), useCache = false)
                     ?.takeIf { written.add(entry.songFileName) }
-                    ?.let { ArchiveEntry(name = entry.songFileName, bytes = images.named(it.text).encodeToByteArray()) }
+                    ?.let { ArchiveEntry(name = entry.songFileName, bytes = it.text.also(images::named).encodeToByteArray()) }
             }
         }
         return exportedArchive(
@@ -73,7 +65,6 @@ internal class ExportSetlistUseCaseImpl(
             name = exportFileName(base = setlist.title, extension = LibraryFiles.ARCHIVE_EXTENSION),
             entries = listOf<suspend () -> ArchiveEntry?>({ ArchiveEntry(name = setlistFileName, bytes = document.encodeToByteArray()) }) + songs,
             images = images,
-            isDated = !isSharedCopy,
         )
     }
 }

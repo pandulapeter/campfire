@@ -27,11 +27,10 @@ internal suspend fun exportedArchive(
     name: String,
     entries: List<suspend () -> ArchiveEntry?>,
     images: ExportedImages,
-    isDated: Boolean,
 ): ExportedFile? {
     val writer = exportFileRepository.createUnique(name)
     val packed = try {
-        archiveRepository.pack(entries = entries + images.entries, isDated = isDated, sink = writer)
+        archiveRepository.pack(entries = entries + images.entries, isDated = true, sink = writer)
     } catch (throwable: Throwable) {
         writer.abandon()
         throw throwable
@@ -53,7 +52,6 @@ internal suspend fun exportedArchive(
         unpackedSize = packed.unpackedSize,
         unpackedImageSize = images.size,
         unpackedAttachmentSize = images.attachmentSize,
-        leftOutAttachmentCount = images.leftOutAttachmentCount,
         entryCount = packed.entryCount,
     )
 }

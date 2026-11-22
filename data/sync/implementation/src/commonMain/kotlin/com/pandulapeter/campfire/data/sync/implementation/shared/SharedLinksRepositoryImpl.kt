@@ -18,6 +18,7 @@ import com.pandulapeter.campfire.data.model.share.SharingFailure
 import com.pandulapeter.campfire.data.model.sync.SyncProviderId
 import com.pandulapeter.campfire.data.model.sync.SyncState
 import com.pandulapeter.campfire.data.repository.api.SharedLinksRepository
+import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncAuthorizationException
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncFolder
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncNetworkException
@@ -53,6 +54,9 @@ internal class SharedLinksRepositoryImpl(
     private val journal: SharedLinksJournal,
     private val journalApplier: SharedLinksJournalApplier,
     private val environment: SyncEnvironment,
+    private val builder: SharedCopyBuilder,
+    private val contents: SharedCopyContents,
+    private val libraryFileLocalSource: LibraryFileLocalSource,
 ) : SharedLinksRepository {
 
     override val shares = combine(mirror.mirrored, journal.entries) { mirrored, pending -> pendingApplied(mirrored.document, pending).toShares() }
@@ -77,8 +81,6 @@ internal class SharedLinksRepositoryImpl(
         kind: SharedLinkKind,
         fileName: String,
         title: String,
-        copy: ByteArray,
-        leftOutAttachmentCount: Int,
     ): CreateShareResult {
         val folder = connectedFolder() ?: return CreateShareResult.Failed(SharingFailure.NOT_CONNECTED)
         // A stop by name or of everything, and a rename that names no share, are resolved against the list when applied,
@@ -88,6 +90,9 @@ internal class SharedLinksRepositoryImpl(
         var isUploaded = false
         var isKept = false
         return try {
+            val built = firstCopyOf(kind, fileName) ?: return CreateShareResult.Missing
+            // Anyone opening the link takes the copy in as an import, which an older version refuses past the limit.
+            val copy = built.copy ?: return CreateShareResult.TooLarge
             when (folder.uploadSharedFile(shareId = shareId, bytes = copy, expectedRevision = null)) {
                 is RemoteWriteResult.Written -> isUploaded = true
                 // A fresh id that is taken is a copy nobody's list names, which is not this share's to overwrite.
@@ -110,7 +115,7 @@ internal class SharedLinksRepositoryImpl(
                 fileId = fileId,
                 rlkey = rlkey,
                 sharedAt = environment.clock.now().toLocalDateTime(TimeZone.currentSystemDefault()).date.toString(),
-                leftOutAttachments = leftOutAttachmentCount,
+                leftOutAttachments = built.leftOut.size,
             )
             if (entry.toShare() == null) {
                 environment.logger.log("The service answered a link whose parts make no Campfire link.")
@@ -171,6 +176,23 @@ internal class SharedLinksRepositoryImpl(
                 }
             }
         }
+    }
+
+    /**
+     * The first copy of the item [fileName] of [kind], built as every run builds it again, by the library's listing, since
+     * a share may come before any run: the first run then finds the same bytes in the folder and uploads nothing. Null
+     * where the item is missing, or is no setlist that can be read.
+     */
+    private suspend fun firstCopyOf(kind: SharedLinkKind, fileName: String): SharedCopyBuilt? {
+        val itemBytes = libraryFileLocalSource.readLibraryFile(kind.libraryKind, fileName) ?: return null
+        val songNames = if (kind == SharedLinkKind.SETLIST) contents.setlistSongFileNames(itemBytes) ?: return null else null
+        return builder.build(
+            kind = kind,
+            fileName = fileName,
+            itemBytes = itemBytes,
+            songNames = songNames,
+            names = ListedNames(libraryFileLocalSource.loadLibraryFiles()),
+        )
     }
 
     /**

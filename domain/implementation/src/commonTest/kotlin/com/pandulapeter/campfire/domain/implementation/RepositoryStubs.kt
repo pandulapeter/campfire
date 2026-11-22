@@ -154,7 +154,7 @@ internal open class SharedLinksRepositoryStub : SharedLinksRepository {
     override val shares: Flow<List<Share>> get() = unexpected()
     override val hasPendingStops: Flow<Boolean> get() = unexpected()
     override suspend fun refresh(): SharingFailure? = unexpected()
-    override suspend fun share(kind: SharedLinkKind, fileName: String, title: String, copy: ByteArray, leftOutAttachmentCount: Int): CreateShareResult = unexpected()
+    override suspend fun share(kind: SharedLinkKind, fileName: String, title: String): CreateShareResult = unexpected()
     override suspend fun stopSharing(shareId: String): SharingFailure? = unexpected()
     override suspend fun followRename(kind: SharedLinkKind, fileName: String, newFileName: String): Unit = unexpected()
     override suspend fun stopSharingDeleted(kind: SharedLinkKind, fileName: String): Unit = unexpected()

@@ -22,6 +22,7 @@ import com.pandulapeter.campfire.data.sync.implementation.scheduling.SyncRunStep
 import com.pandulapeter.campfire.data.sync.implementation.shared.FakeSharedCopyContents
 import com.pandulapeter.campfire.data.sync.implementation.shared.FakeSharedLinksLocalSource
 import com.pandulapeter.campfire.data.sync.implementation.shared.SharedCopyStep
+import com.pandulapeter.campfire.data.sync.implementation.shared.SharedCopyBuilder
 import com.pandulapeter.campfire.data.sync.implementation.shared.SharedCopySync
 import com.pandulapeter.campfire.data.sync.implementation.shared.SharedLinksJournal
 import com.pandulapeter.campfire.data.sync.implementation.shared.SharedLinksMirror
@@ -80,9 +81,11 @@ internal fun TestScope.syncRepository(
     val sharedLinksMirror = SharedLinksMirror(sharedLinksLocalSource, environment)
     val sharedLinksJournal = SharedLinksJournal(sharedLinksLocalSource, environment)
     val sharedLinksRegistry = SharedLinksRegistry(sharedLinksMirror, environment)
+    val sharedCopyContents = FakeSharedCopyContents()
     val sharedCopySync = SharedCopySync(
         libraryFileLocalSource = libraryFileLocalSource,
-        contents = FakeSharedCopyContents(),
+        contents = sharedCopyContents,
+        builder = SharedCopyBuilder(libraryFileLocalSource, sharedCopyContents),
         registry = sharedLinksRegistry,
         mirror = sharedLinksMirror,
         journal = sharedLinksJournal,

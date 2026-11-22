@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.data.sync.implementation.merge.MergedFolderDocu
 import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPreferencesCodec
 import com.pandulapeter.campfire.data.sync.implementation.run.SyncEngine
 import com.pandulapeter.campfire.data.sync.implementation.scheduling.SyncRunSteps
+import com.pandulapeter.campfire.data.sync.implementation.shared.SharedCopyBuilder
 import com.pandulapeter.campfire.data.sync.implementation.shared.SharedCopyStep
 import com.pandulapeter.campfire.data.sync.implementation.shared.SharedCopyContents
 import com.pandulapeter.campfire.data.sync.implementation.shared.SharedCopySync
@@ -106,6 +107,7 @@ object DataSyncModule {
     internal fun sharedCopySync(
         libraryFileLocalSource: LibraryFileLocalSource,
         contents: SharedCopyContents,
+        builder: SharedCopyBuilder,
         registry: SharedLinksRegistry,
         mirror: SharedLinksMirror,
         journal: SharedLinksJournal,
@@ -113,6 +115,7 @@ object DataSyncModule {
     ): SharedCopySync = SharedCopySync(
         libraryFileLocalSource = libraryFileLocalSource,
         contents = contents,
+        builder = builder,
         registry = registry,
         mirror = mirror,
         journal = journal,

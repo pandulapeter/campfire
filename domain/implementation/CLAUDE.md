@@ -50,7 +50,5 @@ A failure a use case notes but does not throw goes to the injected `Logger`. `im
   (`a b` would sort after `ab c`).
 - Connecting and restoring at startup start a sync run at once (not debounced) and do not wait for it.
 - `CreateShareLinkUseCaseImpl` answers an existing share of the item (never one whose copy is gone,
-  `ShareState.COPY_MISSING`, which the new share replaces), builds the copy undated (the same files make the same bytes
-  on every device), and refuses one over what every version opening a link downloads (`ExportedFile.isTooLargeToShare`:
-  `ImportLimits.MAX_SHARED_COPY_SIZE` of songs and pictures, packed or unpacked); attachments past their own budget are
-  left out of the copy rather than refusing it, and the share records how many.
+  `ShareState.COPY_MISSING`, which the new share replaces), else leaves the share to `SharedLinksRepository.share`, which
+  builds the copy as every sync run builds it again, and answers a missing item or a copy too large.

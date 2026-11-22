@@ -369,9 +369,9 @@ internal class ExportController(
                 onSaved = { dialogHost.dismissSheet(dialog) },
             ) {
                 when {
-                    setlist != null -> useCases.exportSetlist(setlistFileName = setlist.fileName, isSharedCopy = false)
-                    dialog.songs.isNotEmpty() -> useCases.exportSongs(fileNames = dialog.songs.map { it.fileName }, isArchive = true, isSharedCopy = false, rewrite = rewrite)
-                    else -> useCases.exportSongs(fileNames = listOf(requireNotNull(dialog.song).fileName), isArchive = false, isSharedCopy = false, rewrite = rewrite)
+                    setlist != null -> useCases.exportSetlist(setlistFileName = setlist.fileName)
+                    dialog.songs.isNotEmpty() -> useCases.exportSongs(fileNames = dialog.songs.map { it.fileName }, isArchive = true, rewrite = rewrite)
+                    else -> useCases.exportSongs(fileNames = listOf(requireNotNull(dialog.song).fileName), isArchive = false, rewrite = rewrite)
                 }
             }
         }

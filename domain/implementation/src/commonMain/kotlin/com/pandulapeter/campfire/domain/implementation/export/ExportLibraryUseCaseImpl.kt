@@ -65,7 +65,7 @@ internal class ExportLibraryUseCaseImpl(
         val setlistFileSizes = setlistRepository.loadSetlistFileSizes()
         if (songFileSizes.isEmpty() && setlistFileSizes.isEmpty()) return@withContext null
         val skipped = mutableListOf<String>()
-        val images = ExportedImages.of(imageRepository, isSharedCopy = false)
+        val images = ExportedImages.of(imageRepository)
         val fileCount = songFileSizes.size + setlistFileSizes.size + images.entries.size
         val largestFileSize = maxOf(
             imageRepository.loadLibraryFileSizes().values.maxOrNull() ?: 0L,
@@ -85,7 +85,7 @@ internal class ExportLibraryUseCaseImpl(
                 }
                 val content = batch.remove(fileName)
                 if (content == null) skipped += fileName
-                content?.let { ArchiveEntry(name = "$SONGS_DIRECTORY/$fileName", bytes = images.named(it.text).encodeToByteArray()) }
+                content?.let { ArchiveEntry(name = "$SONGS_DIRECTORY/$fileName", bytes = it.text.also(images::named).encodeToByteArray()) }
             }
         }
         val setlists = setlistFileSizes.keys.sorted().map { fileName ->
@@ -105,7 +105,6 @@ internal class ExportLibraryUseCaseImpl(
             name = ARCHIVE_NAME,
             entries = songs + setlists,
             images = images,
-            isDated = true,
         ) ?: return@withContext null
         ExportLibraryUseCase.Result(file = file, skippedFileNames = skipped)
     }

@@ -88,7 +88,7 @@ internal class SharedCopyLibrary(val seed: Int) {
      * The entries the copy of the shared item [fileName] holds, by name: the item, the songs a setlist names that the
      * library holds (under the setlist's spelling), and under `images/` the library files they name, every picture they
      * show and the attachments that fit the budget in the order the songs name them. Each song is its library file's
-     * text but for the lines of the attachments left out, in UTF-8 as the export writes every text.
+     * text but for the lines of the attachments left out, in UTF-8 as a copy holds every text.
      */
     fun expectedCopy(kind: SharedLinkKind, fileName: String): ExpectedCopy {
         val byIdentity = (songs + unsharedSong).associateBy { LibraryFiles.identityKey(it.name) }
@@ -175,7 +175,7 @@ internal class SharedCopyLibrary(val seed: Int) {
 
         /**
          * The song as a copy carries it: its text without the lines of the attachments [leftOut], in UTF-8 and without a
-         * byte order mark, as the export writes every text it reads.
+         * byte order mark, as a copy holds every text it reads.
          */
         fun copiedWithout(leftOut: Set<String>) = text(leftOut).let { text ->
             // What of the text Windows-1252 can hold: the letters it cannot are stored as question marks.
