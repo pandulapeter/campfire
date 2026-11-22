@@ -31,6 +31,8 @@ What's planned for Campfire, grouped by area.
   Plan: [sync-library-extraction.md](plans/sync-library-extraction.md)
 - **Google Drive sync**, as a second provider beside Dropbox. The groundwork landed for v5.1.0; spikes S1–S5 are next.
   Plan: [google-drive-sync.md](plans/google-drive-sync.md)
+- **A random picks widget** on Android and iOS: a few songs from the library, a tap opening one, and a shuffle button,
+  drawn on its own rather than mirroring the songs list's picks. Plan: [home-screen-widgets.md](plans/home-screen-widgets.md)
 - **A more readable sync folder**: consider organizing it in a more user-readable way (subfolders for artists), as an
   option
 
