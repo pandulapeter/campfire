@@ -16,15 +16,15 @@ matrix arithmetic.
 import torch
 from torch import nn
 
-from lines import FEATURES, LABELS
+from lines import FEATURES, LABELS, visible
 
 BUCKETS = 4096
 MAX_CHARS = 160
 
 
 def hashed(text):
-    """A line's characters as bucket numbers from 1, 0 padding; the same hash the app's library computes."""
-    codes = [((ord(c) * 2654435761) % 4294967296) % BUCKETS + 1 for c in text[:MAX_CHARS]]
+    """A line's visible characters as bucket numbers from 1, 0 padding; the same hash the app's library computes."""
+    codes = [((ord(c) * 2654435761) % 4294967296) % BUCKETS + 1 for c in visible(text)[:MAX_CHARS]]
     return codes + [0] * (MAX_CHARS - len(codes))
 
 

@@ -20,7 +20,7 @@ LABELS = ["JUNK", "SONG", "TITLE", "ARTIST", "METADATA"]
 
 CHORD = re.compile(
     r"^[(\[]?(?:[A-H]|Do|Re|Ré|Mi|Fa|Sol|La|Si)(?:#|b|♯|♭|is|es)?"
-    r"(?:m|min|maj|M|dim|aug|sus|add|°|ø|\+|-|Δ|[0-9]|\(|\)|/[0-9])*"
+    r"(?:m|min|maj|M|dim|aug|sus|add|°|ø|\+|-|Δ|[0-9]|#|b|♯|♭|\(|\)|/[0-9])*"
     r"(?:/(?:[A-H]|Do|Re|Mi|Fa|Sol|La|Si)(?:#|b|♯|♭)?)?[)\]]?$"
 )
 FURNITURE = re.compile(r"^(?:\||\|\||/|-|x[0-9]+|[0-9]+x|\(x?[0-9]+x?\)|\.+|:\|\||\|\|:|%|N\.C\.?|NC)$", re.IGNORECASE)
@@ -40,15 +40,20 @@ LABELLED = re.compile(
 )
 
 
+def visible(text):
+    """The text without the invisible format characters (a word joiner, a zero-width space) some documents put in."""
+    return "".join(character for character in text if unicodedata.category(character) != "Cf")
+
+
 def normalized(text):
     """A line's words for matching across sources: NFC, lowercase, punctuation and spacing folded."""
-    text = unicodedata.normalize("NFC", text).lower()
+    text = unicodedata.normalize("NFC", visible(text)).lower()
     text = re.sub(r"[^\w\s]", " ", text)
     return " ".join(text.split())
 
 
 def chord_tokens(text):
-    words = text.split()
+    words = visible(text).split()
     if not words:
         return None
     chords = [word for word in words if CHORD.match(word)]
@@ -78,7 +83,7 @@ def features(line, source):
     The line's numbers beside its characters, all in about 0..1: what it reads as, its length, and, for a document, its
     layout. A page's text carries no layout, so those inputs are zero for it and the source flag tells the two apart.
     """
-    text = line["text"]
+    text = visible(line["text"])
     stripped = text.strip()
     letters = sum(1 for c in stripped if c.isalpha())
     values = [

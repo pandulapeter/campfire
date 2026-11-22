@@ -10,9 +10,9 @@
 Labels the documents' lines (`documents/*.json`, written by `PageCorpusDocumentsDump`) without anyone reading them, into
 `labels/<id>.json`:
 
-- an import corpus document by its hand-corrected `.cho`: a line holding one of the song's lyrics, chord rows, or
-  section labels is `SONG`, the line holding the `{title}` or `{artist}` value is `TITLE` or `ARTIST`, one naming a key,
-  capo, tempo, time, or credit is `METADATA`, the rest `JUNK`;
+- an import corpus document by its hand-corrected `.cho`: a chord row, a line holding one of the song's lyrics or
+  section labels, and a wrapped fragment of a lyric between those are `SONG`, the line holding the `{title}` or
+  `{artist}` value is `TITLE` or `ARTIST`, one naming a key, capo, tempo, time, or credit is `METADATA`, the rest `JUNK`;
 - a made-up document (`synthetic_documents.py`) by the lines it was made from;
 - a web page printed to PDF by its page's agreed labels (`labels/<page id>.json`), each printed line taking the label of
   the page line it matches.
@@ -43,7 +43,7 @@ SECTION_KEYS = {"start_of_verse", "start_of_chorus", "start_of_bridge", "start_o
 
 def song_parts(cho):
     """What a `.cho` says, as the document's lines would show it."""
-    parts = {"lyrics": set(), "chords": set(), "labels": set(), "titles": [], "artists": [], "metadata": [], "lyricCount": 0}
+    parts = {"lyrics": set(), "labels": set(), "titles": [], "artists": [], "metadata": [], "lyricCount": 0}
     for raw in cho.splitlines():
         line = raw.strip()
         directive = DIRECTIVE.match(line)
@@ -63,8 +63,6 @@ def song_parts(cho):
         if not line or line.startswith("#"):
             continue
         chords = INLINE_CHORD.findall(line)
-        if chords:
-            parts["chords"].add(" ".join(chord.strip("[]") for chord in chords))
         lyric = normalized(INLINE_CHORD.sub("", line))
         if lyric:
             parts["lyrics"].add(lyric)
@@ -80,8 +78,8 @@ def is_song_line(text, parts, lyric_words):
         return None
     if words in parts["lyrics"] or words in parts["labels"]:
         return words
-    tokens = chord_tokens(text.strip())
-    if tokens and all(token.strip("()[]") in parts["chords_set"] for token in tokens):
+    # Every chord row of a song's own document is the song's, whatever spelling (D#, Eb) or voicing it prints.
+    if chord_tokens(text.strip()):
         return ""
     # A lyric a narrow column wrapped is a run of a song line's words; a joined or respelled one matches most of one.
     if len(words) >= 8:
@@ -94,7 +92,6 @@ def is_song_line(text, parts, lyric_words):
 
 def label_import(document, cho):
     parts = song_parts(cho)
-    parts["chords_set"] = {chord for row in parts["chords"] for chord in row.split()}
     lyric_words = list(parts["lyrics"])
     labels, found = [], set()
     for line in document["lines"]:
@@ -112,6 +109,15 @@ def label_import(document, cho):
                 if match:
                     found.add(match)
         labels.append(label)
+    # A word or two a narrow column wrapped onto a line of its own ("us", "minds.") is the song's when it sits between
+    # the song's lines and a lyric holds it.
+    printed = [index for index, label in enumerate(labels) if label != "BLANK"]
+    for position, index in enumerate(printed):
+        if labels[index] != "JUNK" or not 0 < position < len(printed) - 1:
+            continue
+        words = normalized(document["lines"][index]["text"])
+        if labels[printed[position - 1]] == "SONG" and labels[printed[position + 1]] == "SONG" and any(words in lyric for lyric in lyric_words):
+            labels[index] = "SONG"
     # The title and the artist are picked among the lines that are not the song, since a chorus often sings the title: the
     # largest line holding the title (a site's "X chords by Y" included), then the shortest other one holding the artist.
     others = [index for index, label in enumerate(labels) if label in ("JUNK", "METADATA")]
