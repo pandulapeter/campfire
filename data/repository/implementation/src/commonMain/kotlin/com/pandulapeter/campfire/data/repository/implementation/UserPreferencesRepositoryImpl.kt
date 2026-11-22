@@ -28,10 +28,6 @@ internal class UserPreferencesRepositoryImpl(
 
     override suspend fun loadUserPreferencesIfNeeded() = loadDataIfNeeded()
 
-    override suspend fun saveUserPreferences(userPreferences: UserPreferences) = writeData(userPreferences) {
-        userPreferencesLocalSource.saveUserPreferences(it)
-    }
-
     override suspend fun updateUserPreferences(transform: (UserPreferences) -> UserPreferences) {
         loadDataIfNeeded()
         transformAndWriteData(transform) { userPreferencesLocalSource.saveUserPreferences(it) }

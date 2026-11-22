@@ -287,10 +287,6 @@ internal class FakeUserPreferencesRepository(
 
     override suspend fun loadUserPreferencesIfNeeded() = state.value.data
 
-    override suspend fun saveUserPreferences(userPreferences: UserPreferences) {
-        state.value = DataState.Idle(userPreferences)
-    }
-
     override suspend fun updateUserPreferences(transform: (UserPreferences) -> UserPreferences) {
         state.value = DataState.Idle(transform(current))
     }

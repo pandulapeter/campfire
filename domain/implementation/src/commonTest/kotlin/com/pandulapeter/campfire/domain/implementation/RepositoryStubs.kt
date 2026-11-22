@@ -128,7 +128,6 @@ internal open class SongContentRepositoryStub : SongContentRepository {
 internal open class UserPreferencesRepositoryStub : UserPreferencesRepository {
     override val userPreferences: Flow<DataState<UserPreferences>> get() = unexpected()
     override suspend fun loadUserPreferencesIfNeeded(): UserPreferences? = unexpected()
-    override suspend fun saveUserPreferences(userPreferences: UserPreferences): Unit = unexpected()
     override suspend fun updateUserPreferences(transform: (UserPreferences) -> UserPreferences): Unit = unexpected()
     override suspend fun hasStoredUserPreferences(): Boolean = unexpected()
 }
