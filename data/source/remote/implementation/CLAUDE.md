@@ -119,7 +119,8 @@ Shared by every provider; service specifics come from its `SyncHttpErrorMapper`.
 ## Downloads
 
 Each answer's sizes, bounds, and `Missing` / `Unreachable` split are in `coverArt/` and `importDownload/`. What they
-share: a cover's or a picture's every redirect hop goes only to a public `https` host (`isPublicHttpsAddress`); nothing
+share lives once, in `network/BoundedDownload` (the streamed import takes its status and failure rules too): a cover's
+or a picture's every redirect hop goes only to a public `https` host (`isPublicHttpsAddress`); nothing
 is read past its ceiling; 408, 429, 5xx, a transport failure, refused CORS, or a short body may change soon
 (`Unreachable`), any other refusal will not (`Missing`); no content type is trusted for a picture, which the domain
 tells by its bytes. A streamed import has no total bound, only a stall limit; the rest are bounded so a stalled host

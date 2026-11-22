@@ -61,6 +61,21 @@ class CoverArtRemoteSourceTest {
     }
 
     @Test
+    fun `a length past the ceiling is missing before the body is read`() = runTest {
+        val download = source { _ ->
+            respond(ByteArray(4), HttpStatusCode.OK, imageHeaders(contentLength = CoverArtRemoteSourceImpl.MAXIMUM_SIZE_BYTES + 1))
+        }.downloadCoverArt(URL)
+
+        assertEquals(CoverArtDownload.Missing, download)
+    }
+
+    @Test
+    fun `an empty image is missing - even with a length declared`() = runTest {
+        assertEquals(CoverArtDownload.Missing, source { _ -> respond(ByteArray(0), HttpStatusCode.OK, imageHeaders(contentLength = 0)) }.downloadCoverArt(URL))
+        assertEquals(CoverArtDownload.Missing, source { _ -> respond(ByteArray(0), HttpStatusCode.OK, imageHeaders(contentLength = 1000)) }.downloadCoverArt(URL))
+    }
+
+    @Test
     fun `a cover cut short of its declared length is unreachable`() = runTest {
         val download = source { _ -> respond(ByteArray(500), HttpStatusCode.OK, imageHeaders(contentLength = 1000)) }.downloadCoverArt(URL)
 
@@ -86,7 +101,10 @@ class CoverArtRemoteSourceTest {
     @Test
     fun `nothing at the address is missing and the service's own trouble is unreachable`() = runTest {
         assertEquals(CoverArtDownload.Missing, source { _ -> respondError(HttpStatusCode.NotFound) }.downloadCoverArt(URL))
+        assertEquals(CoverArtDownload.Missing, source { _ -> respondError(HttpStatusCode.Forbidden) }.downloadCoverArt(URL))
         assertEquals(CoverArtDownload.Unreachable, source { _ -> respondError(HttpStatusCode.BadGateway) }.downloadCoverArt(URL))
+        assertEquals(CoverArtDownload.Unreachable, source { _ -> respondError(HttpStatusCode.TooManyRequests) }.downloadCoverArt(URL))
+        assertEquals(CoverArtDownload.Unreachable, source { _ -> respondError(HttpStatusCode.RequestTimeout) }.downloadCoverArt(URL))
     }
 
     @Test

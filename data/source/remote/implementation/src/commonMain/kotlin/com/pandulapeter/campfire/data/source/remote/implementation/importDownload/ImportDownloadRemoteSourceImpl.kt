@@ -11,29 +11,18 @@ package com.pandulapeter.campfire.data.source.remote.implementation.importDownlo
 
 import com.pandulapeter.campfire.data.model.importing.ImportDownload
 import com.pandulapeter.campfire.data.source.remote.api.ImportDownloadRemoteSource
+import com.pandulapeter.campfire.data.source.remote.implementation.network.BoundedDownload
 import com.pandulapeter.campfire.data.source.remote.implementation.network.HttpClientHolder
-import com.pandulapeter.campfire.data.source.remote.implementation.network.PublicHostsOnly
-import com.pandulapeter.campfire.data.source.remote.implementation.network.RefusedAddressException
-import com.pandulapeter.campfire.data.source.remote.implementation.network.isCutShort
-import com.pandulapeter.campfire.data.source.remote.implementation.network.isPublicHttpsAddress
+import com.pandulapeter.campfire.data.source.remote.implementation.network.boundedFailureOf
+import com.pandulapeter.campfire.data.source.remote.implementation.network.boundedPublicGet
+import com.pandulapeter.campfire.data.source.remote.implementation.network.refusal
 import com.pandulapeter.campfire.data.source.remote.implementation.network.withStallLimit
 import io.ktor.client.plugins.HttpTimeoutConfig
 import io.ktor.client.plugins.timeout
-import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.prepareGet
 import io.ktor.client.statement.HttpResponse
-import io.ktor.client.statement.bodyAsChannel
 import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpStatusCode
-import io.ktor.http.Url
-import io.ktor.http.contentLength
-import io.ktor.http.isSuccess
 import io.ktor.http.parseUrl
-import io.ktor.utils.io.readBuffer
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.ensureActive
-import kotlinx.io.readByteArray
 import org.koin.core.annotation.Single
 
 /**
@@ -63,7 +52,7 @@ internal class ImportDownloadRemoteSourceImpl(
                     timeout { requestTimeoutMillis = HttpTimeoutConfig.INFINITE_TIMEOUT_MS }
                 }.execute { response ->
                     heard()
-                    refusalOf(response, maxSizeBytes) ?: response.streamBody(
+                    response.refusal(maxSizeBytes)?.toImportDownload() ?: response.streamBody(
                         maxSizeBytes = maxSizeBytes,
                         openSink = openSink,
                         onProgress = onProgress,
@@ -75,65 +64,27 @@ internal class ImportDownloadRemoteSourceImpl(
         } catch (failure: SinkFailure) {
             throw failure.cause
         } catch (throwable: Throwable) {
-            failureOf(throwable)
+            boundedFailureOf(throwable).toImportDownload()
         }
     }
 
-    override suspend fun downloadPicture(url: String, maxSizeBytes: Long): ImportDownload {
-        val address = parseUrl(url)?.takeIf(::isPublicHttpsAddress) ?: return ImportDownload.Missing
-        return fetch(address = address, maxSizeBytes = maxSizeBytes) {
-            attributes.put(PublicHostsOnly, Unit)
-            timeout { requestTimeoutMillis = PICTURE_TIMEOUT_MILLIS }
-        }
-    }
+    override suspend fun downloadPicture(url: String, maxSizeBytes: Long) = httpClientHolder.client().boundedPublicGet(
+        url = url,
+        maxSizeBytes = maxSizeBytes,
+        timeoutMillis = PICTURE_TIMEOUT_MILLIS,
+        imagesOnly = false,
+    ).toImportDownload()
 
-    private suspend fun fetch(address: Url, maxSizeBytes: Long, configure: HttpRequestBuilder.() -> Unit): ImportDownload = try {
-        httpClientHolder.client().prepareGet(address, configure).execute { response ->
-            refusalOf(response, maxSizeBytes) ?: run {
-                // A length is not promised, so the body is read one byte past the limit to find out, and a declared one
-                // the body falls short of is a transfer cut off, not a smaller file.
-                val bytes = response.bodyAsChannel().readBuffer(maxSizeBytes + 1).readByteArray()
-                when {
-                    bytes.isEmpty() -> ImportDownload.Missing
-                    bytes.size > maxSizeBytes -> ImportDownload.TooLarge
-                    response.isCutShort(bytes.size.toLong()) -> ImportDownload.Unreachable
-                    else -> ImportDownload.File(name = response.fileName, bytes = bytes)
-                }
-            }
-        }
-    } catch (throwable: Throwable) {
-        failureOf(throwable)
-    }
-
-    /** Why [response] is not the file, decided before its body, or null where its body is to be read. */
-    private fun refusalOf(response: HttpResponse, maxSizeBytes: Long) = when {
-        response.status.isTransient -> ImportDownload.Unreachable
-        !response.status.isSuccess() -> ImportDownload.Missing
-        (response.contentLength() ?: 0) > maxSizeBytes -> ImportDownload.TooLarge
-        else -> null
+    private fun BoundedDownload.toImportDownload() = when (this) {
+        is BoundedDownload.Body -> ImportDownload.File(name = importDownloadFileName(contentDisposition = contentDisposition, url = finalUrl), bytes = bytes)
+        BoundedDownload.Missing -> ImportDownload.Missing
+        BoundedDownload.TooLarge -> ImportDownload.TooLarge
+        BoundedDownload.Unreachable -> ImportDownload.Unreachable
     }
 
     /** The address the redirects ended at names the file better than the one that was asked. */
     private val HttpResponse.fileName
         get() = importDownloadFileName(contentDisposition = headers[HttpHeaders.ContentDisposition], url = call.request.url.toString())
-
-    /** What a download that threw [throwable] comes to; only a cancellation of this coroutine is thrown on. */
-    private suspend fun failureOf(throwable: Throwable): ImportDownload = when (throwable) {
-        // A redirect into the local network is the address's answer, not the network failing.
-        is RefusedAddressException -> ImportDownload.Missing
-        is CancellationException -> {
-            // Only a cancellation of this coroutine is one; anything else that arrives as one is the transport failing.
-            currentCoroutineContext().ensureActive()
-            ImportDownload.Unreachable
-        }
-        // The browser engine reports a failed fetch, a refused CORS check included, as a kotlin.Error, and a stalled
-        // streamed download ends in a StalledException.
-        else -> ImportDownload.Unreachable
-    }
-
-    /** The answers that say "not now" rather than "not here", which a later attempt may well get past. */
-    private val HttpStatusCode.isTransient
-        get() = this == HttpStatusCode.RequestTimeout || this == HttpStatusCode.TooManyRequests || value >= 500
 
     internal companion object {
 

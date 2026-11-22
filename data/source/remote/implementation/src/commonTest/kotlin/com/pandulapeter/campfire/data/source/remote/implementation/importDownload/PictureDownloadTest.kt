@@ -58,9 +58,52 @@ class PictureDownloadTest {
     }
 
     @Test
+    fun `an empty picture is missing - even with a length declared`() = runTest {
+        assertEquals(ImportDownload.Missing, source { _ -> respond(ByteArray(0), HttpStatusCode.OK) }.downloadPicture(URL, MAX))
+        assertEquals(
+            ImportDownload.Missing,
+            source { _ -> respond(ByteArray(0), HttpStatusCode.OK, headersOf(HttpHeaders.ContentLength, "500")) }.downloadPicture(URL, MAX),
+        )
+    }
+
+    @Test
+    fun `a picture cut short of its declared length is unreachable`() = runTest {
+        val download = source { _ -> respond(ByteArray(500), HttpStatusCode.OK, headersOf(HttpHeaders.ContentLength, "1000")) }.downloadPicture(URL, MAX)
+
+        assertEquals(ImportDownload.Unreachable, download)
+    }
+
+    @Test
+    fun `a picture is named by the address its redirects ended at`() = runTest {
+        val requests = mutableListOf<HttpRequestData>()
+        val download = source { request ->
+            requests += request
+            if (requests.size == 1) {
+                respond("", HttpStatusCode.Found, headersOf(HttpHeaders.Location, "https://cdn.example.com/files/chart.png"))
+            } else {
+                respond(byteArrayOf(1), HttpStatusCode.OK)
+            }
+        }.downloadPicture("https://example.com/link/42", MAX)
+
+        assertEquals("chart.png", assertIs<ImportDownload.File>(download).name)
+    }
+
+    @Test
+    fun `a picture's name comes from the header the host sends`() = runTest {
+        val download = source { _ ->
+            respond(byteArrayOf(1), HttpStatusCode.OK, headersOf(HttpHeaders.ContentDisposition, "attachment; filename=\"Chart.png\""))
+        }.downloadPicture(URL, MAX)
+
+        assertEquals("Chart.png", assertIs<ImportDownload.File>(download).name)
+    }
+
+    @Test
     fun `nothing at the address is missing and the host's own trouble or a failed transfer is unreachable`() = runTest {
         assertEquals(ImportDownload.Missing, source { _ -> respondError(HttpStatusCode.NotFound) }.downloadPicture(URL, MAX))
+        assertEquals(ImportDownload.Missing, source { _ -> respondError(HttpStatusCode.Forbidden) }.downloadPicture(URL, MAX))
         assertEquals(ImportDownload.Unreachable, source { _ -> respondError(HttpStatusCode.ServiceUnavailable) }.downloadPicture(URL, MAX))
+        assertEquals(ImportDownload.Unreachable, source { _ -> respondError(HttpStatusCode.TooManyRequests) }.downloadPicture(URL, MAX))
+        assertEquals(ImportDownload.Unreachable, source { _ -> respondError(HttpStatusCode.RequestTimeout) }.downloadPicture(URL, MAX))
         assertEquals(ImportDownload.Unreachable, source { _ -> throw IllegalStateException("No route to host") }.downloadPicture(URL, MAX))
     }
 
