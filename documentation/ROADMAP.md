@@ -13,6 +13,9 @@ What's planned for Campfire, grouped by area.
 
 ## In progress
 
+- **A song from any page**: share, paste, or (optionally) a browser extension button turns any website's song into a
+  clean pre-filled editor, a small model of our own cropping the page's clutter on the device, no code per site.
+  Plan: [song-from-any-page.md](plans/song-from-any-page.md)
 - Add Slovak, Ukrainian and Dutch translations
 - Add an option to pin chord diagrams / scales. In once-column mode, with enough horizontal space, chord diagrams could be displayed on the side.
 
