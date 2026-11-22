@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.data.source.local.implementation.source
 
+import com.pandulapeter.campfire.data.model.library.LibraryFiles.ARCHIVE_FILES_FOLDER
+
 /**
  * Which entry of an archive a song's `{image: src=…}` means, among the archive's entry [names]: the one ChordPro's
  * portable form means first, then where other tools put it.
@@ -38,7 +40,7 @@ internal class ArchiveImagePaths(names: Collection<String>) {
         val folder = normalized(songPath)?.substringBeforeLast('/', "")?.let { if (it.isEmpty()) "" else "$it/" } ?: ""
         val isAbsolute = value.startsWith('/')
         if (!isAbsolute) {
-            val inImagesFolder = if (normalized(value) == null) emptyList() else listOf("$IMAGES_FOLDER$value", "$folder$IMAGES_FOLDER$value")
+            val inImagesFolder = if (normalized(value) == null) emptyList() else listOf("$ARCHIVE_FILES_FOLDER$value", "$folder$ARCHIVE_FILES_FOLDER$value")
             (listOf("$folder$value") + inImagesFolder).forEach { candidate ->
                 normalized(candidate)?.let(byPath::get)?.let { return it }
             }
@@ -48,8 +50,6 @@ internal class ArchiveImagePaths(names: Collection<String>) {
     }
 
     private companion object {
-        const val IMAGES_FOLDER = "images/"
-
         /** [path] with `/` alone separating, no empty, `.` or `..` segment, and no leading `/`; null where it climbs above the root. */
         fun normalized(path: String): String? {
             val segments = ArrayDeque<String>()

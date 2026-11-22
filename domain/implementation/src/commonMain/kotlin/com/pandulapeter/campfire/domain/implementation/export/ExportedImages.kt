@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.chordpro.edit.ChordProAttachments
 import com.pandulapeter.campfire.chordpro.edit.ChordProImages
 import com.pandulapeter.campfire.chordpro.edit.libraryFilesNamedBy
 import com.pandulapeter.campfire.data.model.library.ArchiveEntry
+import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.library.sharedCopyAttachments
 import com.pandulapeter.campfire.data.repository.api.ImageRepository
 
@@ -91,7 +92,7 @@ internal class ExportedImages private constructor(
             } else {
                 imageRepository.loadImage(name)?.let { bytes ->
                     if (name in shown) size += bytes.size else attachmentSize += bytes.size
-                    ArchiveEntry(name = "$FOLDER$name", bytes = bytes)
+                    ArchiveEntry(name = "${LibraryFiles.ARCHIVE_FILES_FOLDER}$name", bytes = bytes)
                 }
             }
         }
@@ -111,9 +112,6 @@ internal class ExportedImages private constructor(
     }
 
     companion object {
-
-        /** The folder an archive keeps its pictures in. */
-        const val FOLDER = "images/"
 
         /** @param isSharedCopy Whether the archive is a shared link's copy, which leaves out the attachments that do not fit. */
         suspend fun of(imageRepository: ImageRepository, isSharedCopy: Boolean) =

@@ -35,6 +35,12 @@ object LibraryFiles {
 
     const val ARCHIVE_EXTENSION = ".zip"
 
+    /**
+     * The folder an archive keeps the pictures and attachments of its songs in, at its root: where Campfire's export and
+     * a shared copy write them, and where an import looks for them first.
+     */
+    const val ARCHIVE_FILES_FOLDER = "images/"
+
     /** ABC notation's tunes, one song per tune; see [FOREIGN_SONG_EXTENSIONS]. */
     const val ABC_EXTENSION = ".abc"
 

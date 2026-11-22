@@ -286,7 +286,7 @@ internal class SharedCopySync(
                     files[name] = contents.withoutAttachments(files.getValue(name), leftOut)
                 }
             }
-            intended.forEach { name -> read[name]?.let { files[IMAGES_FOLDER + name] = it } }
+            intended.forEach { name -> read[name]?.let { files[LibraryFiles.ARCHIVE_FILES_FOLDER + name] = it } }
             // A copy too large is judged by what it was to hold, so that the next run finds nothing changed and reads no
             // picture again; one that fits by what it holds and what it left out for its size, so that a file it could
             // not read is tried again.
@@ -380,9 +380,4 @@ internal class SharedCopySync(
             SharedLinkKind.SETLIST -> LibraryCollections.SETLISTS
             SharedLinkKind.SONG -> LibraryCollections.SONGS
         }
-
-    private companion object {
-        /** Where an archive keeps its pictures, as `ExportedImages` writes them. */
-        const val IMAGES_FOLDER = "images/"
-    }
 }
