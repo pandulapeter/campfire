@@ -275,39 +275,21 @@ private class AndroidAppUpdateController(
         }
     }
 
-    /**
-     * Play's 0-5 `updatePriority`, which is set per release in the Play Console and is the only place this policy
-     * is decided: 0-1 is left to Play's own schedule, 2-3 is worth a dismissible hint, and 4-5 is a release nobody
-     * should be left on - a build that damages the library or cannot sync any more.
-     *
-     * `isUpdateTypeAllowed` is asked rather than assumed, because Play refuses a flow it cannot run (a device with
-     * no room for the download, an update the account is not eligible for), and an offer that goes nowhere is worse
-     * than no offer at all.
-     */
-    private fun AppUpdateInfo.toAppUpdateState(): AppUpdateState {
-        val isRequired = updatePriority() >= MINIMUM_REQUIRED_PRIORITY
-        val isInProgress = updateAvailability() == UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS
-        return when {
-            // An immediate update the user walked out of halfway; Play resumes it, and until it does the app is the
-            // old one, which is exactly what the blocking screen is for. Play does not say which kind of flow is in
-            // progress, but the priority does: a required update is never started as anything else.
-            isInProgress && isRequired -> AppUpdateState.Required
-
-            installStatus() == InstallStatus.DOWNLOADED -> if (isPostponed) AppUpdateState.NotAvailable else AppUpdateState.ReadyToInstall
-
-            // A flexible download that is going already, which is what a recreated activity finds.
-            installStatus() == InstallStatus.PENDING || installStatus() == InstallStatus.DOWNLOADING -> AppUpdateState.Downloading
-
-            updateAvailability() != UpdateAvailability.UPDATE_AVAILABLE -> AppUpdateState.NotAvailable
-
-            isRequired -> if (isUpdateTypeAllowed(AppUpdateType.IMMEDIATE)) AppUpdateState.Required else AppUpdateState.NotAvailable
-
-            updatePriority() >= MINIMUM_OPTIONAL_PRIORITY ->
-                if (!isPostponed && isUpdateTypeAllowed(AppUpdateType.FLEXIBLE)) AppUpdateState.Optional else AppUpdateState.NotAvailable
-
-            else -> AppUpdateState.NotAvailable
-        }
-    }
+    /** Play's answer in the terms of [playUpdateStateOf], which holds the policy. */
+    private fun AppUpdateInfo.toAppUpdateState() = playUpdateStateOf(
+        priority = updatePriority(),
+        isUpdateAvailable = updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE,
+        isUpdateInProgress = updateAvailability() == UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS,
+        installStatus = when (installStatus()) {
+            InstallStatus.PENDING -> PlayInstallStatus.PENDING
+            InstallStatus.DOWNLOADING -> PlayInstallStatus.DOWNLOADING
+            InstallStatus.DOWNLOADED -> PlayInstallStatus.DOWNLOADED
+            else -> PlayInstallStatus.OTHER
+        },
+        isPostponed = isPostponed,
+        isFlexibleAllowed = isUpdateTypeAllowed(AppUpdateType.FLEXIBLE),
+        isImmediateAllowed = isUpdateTypeAllowed(AppUpdateType.IMMEDIATE),
+    )
 
     private fun registerInstallListener() {
         if (isListenerRegistered) return
@@ -321,6 +303,3 @@ private class AndroidAppUpdateController(
         appUpdateManager.unregisterListener(installStateListener)
     }
 }
-
-private const val MINIMUM_OPTIONAL_PRIORITY = 2
-private const val MINIMUM_REQUIRED_PRIORITY = 4
