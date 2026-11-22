@@ -23,7 +23,7 @@ import kotlinx.serialization.json.JsonPrimitive
 
 /**
  * Writes the lines the app's own document reader finds in the page model's documents (`tools/page-model`): the import
- * corpus's PDFs and Word files, and the web pages the collector printed to PDF, each line with the layout the model reads
+ * corpus's PDFs and Word files, the web pages the collector printed to PDF, and the documents made up for training, each line with the layout the model reads
  * (its type's size against the document's body, bold, italic, monospace, its left edge, its column, its page). It is the
  * model's only view of a document, so the training sees exactly what the app would hand it. Skipped unless
  * `campfire.pageCorpus` names the corpus folder; never in CI.
@@ -45,7 +45,9 @@ class PageCorpusDocumentsDump {
                     .filter { it.isFile && it.extension.lowercase() in EXTENSIONS }
                     .forEach { add("import__" + it.relativeTo(importCorpus).invariantSeparatorsPath.substringBeforeLast('.').replace('/', '_') to it) }
             }
-            File(corpus, "printed").listFiles { file -> file.extension == "pdf" }?.forEach { add("printed__" + it.nameWithoutExtension to it) }
+            for (folder in listOf("printed", "synthetic")) {
+                File(corpus, folder).listFiles { file -> file.extension == "pdf" }?.forEach { add("${folder}__" + it.nameWithoutExtension to it) }
+            }
         }
         var written = 0
         for ((name, file) in sources.sortedBy { it.first }) {

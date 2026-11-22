@@ -130,7 +130,7 @@ def merge(corpus):
             else:
                 labels.append("IGNORE")
         with open(os.path.join(corpus, "labels", page["id"] + ".json"), "w", encoding="utf-8") as file:
-            json.dump({"id": page["id"], "source": "page", "labels": labels, "agreement": round(agreement, 3), "noSong": bool(runs[0].get("noSong"))}, file)
+            json.dump({"id": page["id"], "source": "page", "group": "page:" + page["id"], "labels": labels, "agreement": round(agreement, 3), "noSong": bool(runs[0].get("noSong"))}, file)
         kept += 1
     for identity, agreement in dropped:
         print(f"dropped {identity}: agreement {agreement}")

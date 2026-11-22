@@ -53,7 +53,7 @@ def load(corpus):
         else:
             with open(os.path.join(corpus, "documents", labelled["id"] + ".json"), encoding="utf-8") as file:
                 lines = json.load(file)["lines"]
-        examples.append({"id": labelled["id"], "source": labelled["source"], "lines": lines, "labels": labelled["labels"], "noSong": labelled.get("noSong", False)})
+        examples.append({"id": labelled["id"], "source": labelled["source"], "lines": lines, "labels": labelled["labels"], "noSong": labelled.get("noSong", False), "group": labelled.get("group", labelled["id"]), "isSynthetic": labelled["id"].startswith("synthetic__")})
     return examples
 
 
@@ -122,6 +122,7 @@ def score(example, predicted):
         "baseline": f1(set(printed)),
         "crop": f1(kept),
         "lostSong": len(song - kept),
+        "lost": [(index, example["lines"][index]["text"], predicted[index]) for index in sorted(song - kept)],
         "songLines": len(song),
         "extra": len(kept - truth),
         "title": None if not title else any(predicted[index] == "TITLE" for index in title),
@@ -130,9 +131,11 @@ def score(example, predicted):
 
 
 def folds(examples, seed):
-    shuffled = examples[:]
-    random.Random(seed).shuffle(shuffled)
-    return [shuffled[fold::FOLDS] for fold in range(FOLDS)]
+    """Groups of held-out examples, a song's group whole in one, so no fold trains on a song it scores in another form."""
+    groups = sorted({example["group"] for example in examples})
+    random.Random(seed).shuffle(groups)
+    fold_of = {group: index % FOLDS for index, group in enumerate(groups)}
+    return [[example for example in examples if fold_of[example["group"]] == fold] for fold in range(FOLDS)]
 
 
 def summary(name, scores):
@@ -173,30 +176,30 @@ def main():
     arguments = parser.parse_args()
     torch.set_num_threads(max(1, (os.cpu_count() or 2) - 2))
     examples = load(arguments.corpus)
-    pages = [e for e in examples if e["source"] == "page"]
-    documents = [e for e in examples if e["source"] == "document"]
-    print(f"{len(pages)} pages, {len(documents)} documents")
-    page_folds, document_folds = folds(pages, arguments.seed), folds(documents, arguments.seed)
-    variants = {"pages only": (True, False), "documents only": (False, True), "both": (True, True)}
-    report, rows = [], []
-    for variant, (uses_pages, uses_documents) in variants.items():
+    scored = [e for e in examples if not e["isSynthetic"]]
+    print(f"{sum(1 for e in scored if e['source'] == 'page')} pages, {sum(1 for e in scored if e['source'] == 'document')} documents, "
+          f"{sum(1 for e in examples if e['isSynthetic'])} made-up documents")
+    held_folds = folds(scored, arguments.seed)
+    variants = {"pages only": {"page"}, "documents only": {"document"}, "both": {"page", "document"}}
+    report, rows, lost = [], [], []
+    for variant, sources in variants.items():
+        if not any(e["source"] in sources for e in scored):
+            continue
         scores = []
         started = time.time()
         for fold in range(FOLDS):
-            held = page_folds[fold] + document_folds[fold]
-            training = []
-            if uses_pages:
-                training += [e for f, examples_of in enumerate(page_folds) if f != fold for e in examples_of]
-            if uses_documents:
-                training += [e for f, examples_of in enumerate(document_folds) if f != fold for e in examples_of]
-            if arguments.synthetic and uses_pages:
-                training += synthetic_pages(arguments.synthetic, [e for e in training if e["source"] == "page"], held, seed=arguments.seed + fold)
+            held = held_folds[fold]
+            held_groups = {e["group"] for e in held}
+            training = [e for e in examples if e["source"] in sources and e["group"] not in held_groups]
+            if arguments.synthetic and "page" in sources:
+                training += synthetic_pages(arguments.synthetic, [e for e in training if e["source"] == "page"], held_groups, seed=arguments.seed + fold)
             model = train(training, arguments.epochs, arguments.seed + fold)
             for example in held:
                 scores.append(score(example, predict(model, example)))
         for source in ("page", "document"):
             part = [s for s in scores if s["source"] == source]
             report.append(summary(f"{variant}, scored on {source}s", part))
+            lost += [f"## {variant}: {s['id']}\n" + "\n".join(f"{index}\t{label}\t{text}" for index, text, label in s["lost"]) for s in part if s["lost"]]
             rows += [f"{variant}\t{s['source']}\t{s['id']}\t{s['baseline']:.3f}\t{s['crop']:.3f}\t{s['lostSong']}\t{s['songLines']}\t{s['extra']}" for s in part]
         print(f"{variant}: {time.time() - started:.0f} s", flush=True)
     runs = os.path.join(arguments.corpus, ".runs")
@@ -205,6 +208,8 @@ def main():
         file.write("\n\n".join(report) + "\n")
     with open(os.path.join(runs, "gate.tsv"), "w", encoding="utf-8") as file:
         file.write("variant\tsource\tid\tkeepAllF1\tcropF1\tlostSongLines\tsongLines\textraLines\n" + "\n".join(rows) + "\n")
+    with open(os.path.join(runs, "lost.txt"), "w", encoding="utf-8") as file:
+        file.write("\n\n".join(lost) + "\n")
     print("\n\n".join(report))
 
 

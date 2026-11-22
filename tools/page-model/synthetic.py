@@ -17,6 +17,11 @@ import glob
 import os
 import random
 import re
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from lines import normalized  # noqa: E402
 
 DIRECTIVE = re.compile(r"^\{\s*([a-z_]+)\s*[: ]?\s*(.*?)\s*\}$")
 CHORD = re.compile(r"\[([^\]]*)\]")
@@ -78,19 +83,20 @@ def junk_runs(pages):
     return runs
 
 
-def synthetic_pages(import_corpus, training_pages, held, seed, per_song=2):
+def synthetic_pages(import_corpus, training_pages, held_groups, seed, per_song=2):
     rng = random.Random(seed)
     runs = junk_runs(training_pages)
     if not runs:
         return []
-    held_sources = {example["id"] for example in held if example["source"] == "document"}
     pages = []
     for path in sorted(glob.glob(os.path.join(import_corpus, "**", "*.cho"), recursive=True)):
-        relative = os.path.relpath(path, import_corpus)
-        if "import__" + os.path.splitext(relative)[0].replace("/", "_") in held_sources:
-            continue
         with open(path, encoding="utf-8", errors="replace") as file:
-            song = rendered(file.read().split("{new_song}")[0], rng)
+            cho = file.read().split("{new_song}")[0]
+        directives = [DIRECTIVE.match(line.strip()) for line in cho.splitlines()]
+        title = next((match.group(2) for match in directives if match and match.group(1).lower() in ("title", "t")), None)
+        if title and normalized(title) in held_groups:
+            continue
+        song = rendered(cho, rng)
         if sum(1 for _, label in song if label == "SONG") < 4:
             continue
         for _ in range(per_song):
@@ -107,5 +113,7 @@ def synthetic_pages(import_corpus, training_pages, held, seed, per_song=2):
                 "lines": [{"text": text} for text, _ in lines],
                 "labels": [label if text.strip() else "BLANK" for text, label in lines],
                 "noSong": False,
+                "group": "synthetic",
+                "isSynthetic": True,
             })
     return pages

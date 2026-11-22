@@ -13,10 +13,12 @@ Labels the documents' lines (`documents/*.json`, written by `PageCorpusDocuments
 - an import corpus document by its hand-corrected `.cho`: a line holding one of the song's lyrics, chord rows, or
   section labels is `SONG`, the line holding the `{title}` or `{artist}` value is `TITLE` or `ARTIST`, one naming a key,
   capo, tempo, time, or credit is `METADATA`, the rest `JUNK`;
+- a made-up document (`synthetic_documents.py`) by the lines it was made from;
 - a web page printed to PDF by its page's agreed labels (`labels/<page id>.json`), each printed line taking the label of
   the page line it matches.
 
-A document whose song is not found well enough among its lines is left out rather than fixed by hand.
+Each label file names the song's group (its title, or its page), so the gate never trains on a song it scores. A
+document whose song is not found well enough among its lines is left out rather than fixed by hand.
 
     .venv/bin/python -I tools/page-model/align_documents.py <corpus folder>
 """
@@ -95,17 +97,12 @@ def label_import(document, cho):
     parts["chords_set"] = {chord for row in parts["chords"] for chord in row.split()}
     lyric_words = list(parts["lyrics"])
     labels, found = [], set()
-    title_done = artist_done = False
     for line in document["lines"]:
         text = line["text"]
         words = normalized(text)
         label = "JUNK"
         if not words:
             label = "BLANK"
-        elif not title_done and any(title and (words == title or (title in words and len(words) < len(title) + 12)) for title in parts["titles"]):
-            label, title_done = "TITLE", True
-        elif not artist_done and any(artist and artist in words and len(words) < len(artist) + 16 for artist in parts["artists"]):
-            label, artist_done = "ARTIST", True
         elif is_labelled(text.strip()) or any(value and re.search(rf"\b{re.escape(value)}\b", words) and len(words) < len(value) + 12 and words not in parts["lyrics"] for value in parts["metadata"]):
             label = "METADATA"
         else:
@@ -115,8 +112,25 @@ def label_import(document, cho):
                 if match:
                     found.add(match)
         labels.append(label)
+    # The title and the artist are picked among the lines that are not the song, since a chorus often sings the title: the
+    # largest line holding the title (a site's "X chords by Y" included), then the shortest other one holding the artist.
+    others = [index for index, label in enumerate(labels) if label in ("JUNK", "METADATA")]
+    title = pick(document, others, parts["titles"], slack=60, key=lambda index: (-document["lines"][index].get("size", 1.0), index))
+    if title is not None:
+        labels[title] = "TITLE"
+    artist = pick(document, [index for index in others if index != title], parts["artists"], slack=40, key=lambda index: (len(document["lines"][index]["text"]), index))
+    if artist is not None:
+        labels[artist] = "ARTIST"
     share = len(found & parts["lyrics"]) / max(len(parts["lyrics"]), 1)
     return labels, share
+
+
+def pick(document, indices, values, slack, key):
+    candidates = [
+        index for index in indices
+        if any(value and value in normalized(document["lines"][index]["text"]) and len(normalized(document["lines"][index]["text"])) <= len(value) + slack for value in values)
+    ]
+    return min(candidates, key=key) if candidates else None
 
 
 def label_printed(document, page, page_labels):
@@ -135,6 +149,37 @@ def label_printed(document, page, page_labels):
     return labels, matched / max(printed, 1)
 
 
+def label_synthetic(document, made):
+    """
+    A made-up document's lines take the labels they were made with. A printed line nothing was made for is the browser's
+    running header or footer where it opens or closes its page, and is left out of training anywhere else.
+    """
+    made_words = [normalized(text) for text, _ in made]
+    printed_words = [normalized(line["text"]) for line in document["lines"]]
+    labels = ["BLANK" if not words else None for words in printed_words]
+    matcher = difflib.SequenceMatcher(None, made_words, printed_words, autojunk=False)
+    for tag, a0, a1, b0, b1 in matcher.get_opcodes():
+        if tag == "equal":
+            for offset in range(a1 - a0):
+                if printed_words[b0 + offset]:
+                    labels[b0 + offset] = made[a0 + offset][1]
+    pages = {}
+    for index, line in enumerate(document["lines"]):
+        if printed_words[index]:
+            pages.setdefault(line.get("page", 0), []).append(index)
+    edges = {index for indices in pages.values() for index in indices[:2] + indices[-2:]}
+    for index, label in enumerate(labels):
+        if label is None:
+            labels[index] = "JUNK" if index in edges else "IGNORE"
+    matched = sum(1 for label in labels if label not in ("IGNORE", "BLANK"))
+    return labels, matched / max(sum(1 for words in printed_words if words), 1)
+
+
+def group_of(cho):
+    titles = song_parts(cho)["titles"]
+    return titles[0] if titles else None
+
+
 def main(corpus):
     written, skipped = 0, []
     os.makedirs(os.path.join(corpus, "labels"), exist_ok=True)
@@ -147,7 +192,14 @@ def main(corpus):
                 skipped.append((document["id"], "no .cho"))
                 continue
             with open(cho_path, encoding="utf-8", errors="replace") as file:
-                labels, share = label_import(document, file.read())
+                cho = file.read()
+            labels, share = label_import(document, cho)
+            group = group_of(cho) or document["id"]
+        elif document["id"].startswith("synthetic__"):
+            with open(os.path.join(corpus, "synthetic", document["id"].split("__", 1)[1] + ".lines.json"), encoding="utf-8") as file:
+                made = json.load(file)
+            labels, share = label_synthetic(document, [tuple(row) for row in made["lines"]])
+            group = made["group"]
         else:
             page_id = document["id"].split("__", 1)[1]
             label_path = os.path.join(corpus, "labels", page_id + ".json")
@@ -160,11 +212,12 @@ def main(corpus):
             with open(page_path, encoding="utf-8") as file:
                 page = json.load(file)
             labels, share = label_printed(document, page, page_labels)
+            group = "page:" + page_id
         if share < MIN_FOUND:
             skipped.append((document["id"], f"aligned {share:.2f}"))
             continue
         with open(os.path.join(corpus, "labels", document["id"] + ".json"), "w", encoding="utf-8") as file:
-            json.dump({"id": document["id"], "source": "document", "labels": labels, "aligned": round(share, 3)}, file)
+            json.dump({"id": document["id"], "source": "document", "group": group, "labels": labels, "aligned": round(share, 3)}, file)
         written += 1
     for identity, reason in skipped:
         print(f"skipped {identity}: {reason}")
