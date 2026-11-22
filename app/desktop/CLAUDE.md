@@ -63,8 +63,8 @@ only.
 - `instance.lock` via `tryLock()`; the holder listens on loopback and writes port and token to the owner-only
   `instance.endpoint`; a newcomer hands over its args and exits. On Windows the window comes forward by toggling
   `isAlwaysOnTop` (`toFront()` only flashes the taskbar). Fails open.
-- Lock held and no endpoint file means the holder is closing: wait up to 60 s, which must stay above the 30 + 15 + 2 s
-  of `settleSynchronizationBeforeExit`. An endpoint that doesn't answer: give up after ~5 s.
+- Lock held and no endpoint file means the holder is closing: wait up to 60 s, the 30 + 15 + 2 s of
+  `settleSynchronizationBeforeExit` (`MAX_EXIT_SETTLE_DURATION`) and a margin. An endpoint that doesn't answer: give up after ~5 s.
 - An exiting instance stops listening but keeps the lock, so it never acknowledges files it won't open.
 
 ## Input

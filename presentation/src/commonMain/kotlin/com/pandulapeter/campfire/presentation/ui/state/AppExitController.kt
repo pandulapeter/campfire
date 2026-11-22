@@ -259,17 +259,17 @@ internal class AppExitController(
         if (dialogType != pendingExit?.question) takePendingExit()?.onCancelled?.invoke()
         if (dialogType != DialogType.ConfirmExit) confirmedExit = null
     }
-
-    private companion object {
-        /**
-         * Long enough for the run an edit asks for, short enough to never look hung. The desktop's `SingleInstance.kt`
-         * waits `CLOSING_INSTANCE_WAIT_MILLIS` for a closing process, which has to stay above this, [EXIT_SYNC_STOP_GRACE]
-         * and [EXIT_IMPORT_GRACE] together, so raising any of them means raising that too.
-         */
-        val EXIT_SYNC_GRACE = 15.seconds
-        val EXIT_SYNC_STOP_GRACE = 2.seconds
-
-        /** Long enough for a few hundred songs to be written; only a stalled disk reaches it. */
-        val EXIT_IMPORT_GRACE = 30.seconds
-    }
 }
+
+/** Long enough for the run an edit asks for, short enough to never look hung. */
+private val EXIT_SYNC_GRACE = 15.seconds
+private val EXIT_SYNC_STOP_GRACE = 2.seconds
+
+/** Long enough for a few hundred songs to be written; only a stalled disk reaches it. */
+private val EXIT_IMPORT_GRACE = 30.seconds
+
+/**
+ * The longest [AppExitController.settleSynchronizationBeforeExit] waits, its waits being one after another: the desktop
+ * waits at least this long for a closing process before starting next to it (`SingleInstance.kt`).
+ */
+val MAX_EXIT_SETTLE_DURATION = EXIT_IMPORT_GRACE + EXIT_SYNC_GRACE + EXIT_SYNC_STOP_GRACE

@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire
 
+import com.pandulapeter.campfire.presentation.ui.state.MAX_EXIT_SETTLE_DURATION
 import java.io.File
 import java.io.IOException
 import java.net.InetAddress
@@ -25,6 +26,7 @@ import java.nio.file.attribute.PosixFilePermissions
 import java.security.MessageDigest
 import java.security.SecureRandom
 import kotlin.concurrent.thread
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Decides whether this process is the one that opens the library in [dataDirectory], and hands [arguments] to the one
@@ -229,10 +231,12 @@ private const val HAND_OVER_RETRY_MILLIS = 250L
 private const val UNANSWERED_HAND_OVER_MILLIS = 5_000L
 private const val NANOS_PER_MILLI = 1_000_000L
 
+/** What a closing process may take past its settling: the JVM's shutdown and the library's last writes. */
+private val CLOSING_SHUTDOWN_MARGIN = 13.seconds
+
 /**
- * How long a newcomer waits for a holder that has stopped listening, which is one that is closing. It has to exceed
- * what a quit may still take once the window is gone - `AppExitController.EXIT_IMPORT_GRACE`, `EXIT_SYNC_GRACE` and
- * `EXIT_SYNC_STOP_GRACE`, 30 seconds of letting an import finish and 15 + 2 of letting a sync run finish - plus the
- * JVM's own shutdown, with a margin; raising those means raising this.
+ * How long a newcomer waits for a holder that has stopped listening, which is one that is closing: what a quit may still
+ * take once the window is gone ([MAX_EXIT_SETTLE_DURATION], letting an import and then a sync run finish), plus the
+ * JVM's own shutdown, with a margin.
  */
-private const val CLOSING_INSTANCE_WAIT_MILLIS = 60_000L
+private val CLOSING_INSTANCE_WAIT_MILLIS = (MAX_EXIT_SETTLE_DURATION + CLOSING_SHUTDOWN_MARGIN).inWholeMilliseconds
