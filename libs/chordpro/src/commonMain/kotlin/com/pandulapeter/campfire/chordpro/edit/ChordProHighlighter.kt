@@ -17,9 +17,11 @@ import com.pandulapeter.campfire.chordpro.chords.ChordProChordNames
 import com.pandulapeter.campfire.chordpro.voicings.ChordProDefinitions
 import com.pandulapeter.campfire.chordpro.chords.ChordProNashville
 import com.pandulapeter.campfire.chordpro.syntax.ChordProChordRewriter
+import com.pandulapeter.campfire.chordpro.syntax.ChordProColors
 import com.pandulapeter.campfire.chordpro.model.GridToken
 import com.pandulapeter.campfire.chordpro.syntax.ChordProDirectives
 import com.pandulapeter.campfire.chordpro.syntax.ChordProHeaderLayout
+import com.pandulapeter.campfire.chordpro.syntax.ChordProImageDirectives
 import com.pandulapeter.campfire.chordpro.syntax.ChordProLineScanner
 import com.pandulapeter.campfire.chordpro.syntax.ChordProLines
 import com.pandulapeter.campfire.chordpro.syntax.ChordProMetaItems
@@ -27,11 +29,14 @@ import com.pandulapeter.campfire.chordpro.syntax.ChordProRowMarks
 import com.pandulapeter.campfire.chordpro.syntax.ChordProTokens
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.ABC
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.ANNOTATION_MARKER
+import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.CHORD_COLOUR
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.GRID
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.KEY
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.META
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.TAB
+import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.TEXT_COLOUR
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.TRANSPOSE
+import com.pandulapeter.campfire.chordpro.syntax.ImageBlocks
 import com.pandulapeter.campfire.chordpro.syntax.MetadataKind
 import com.pandulapeter.campfire.chordpro.tabs.ChordProTabTransposer
 
@@ -334,6 +339,8 @@ public object ChordProHighlighter {
             !ChordProMetaItems.isReadableValue(directive.name, value) -> true
             directive.name == KEY -> !ChordProChordRewriter.isKey(value)
             directive.name == TRANSPOSE -> ChordProParser.transposeSemitones(value) == null
+            directive.name == CHORD_COLOUR || directive.name == TEXT_COLOUR -> !ChordProColors.isReadable(value)
+            directive.name == ChordProImageDirectives.IMAGE -> !ImageBlocks.namesPicture(value)
             ChordProMetaItems.isCoverMeta(directive) -> ChordProMetaItems.cover(directive) == null
             ChordProMetaItems.isLinkMeta(directive) -> ChordProMetaItems.link(directive) == null
             ChordProMetaItems.isAttachmentMeta(directive) -> ChordProMetaItems.attachment(directive) == null

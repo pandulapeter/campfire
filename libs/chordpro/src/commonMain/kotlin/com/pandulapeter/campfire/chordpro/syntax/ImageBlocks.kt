@@ -31,8 +31,8 @@ internal class ImageBlocks {
     fun read(value: String?): ChordProBlock.Image? {
         val attributes = ChordProImageDirectives.attributes(value.orEmpty())
         val map = ChordProImageDirectives.attributeMap(attributes)
-        val source = ChordProImageDirectives.sources(attributes).firstOrNull()?.value?.takeIf { it.isNotEmpty() }
-        val id = map[ID]?.takeIf { it.isNotEmpty() }
+        val source = sourceOf(attributes)
+        val id = idOf(map)
         if (id != null && source != null) {
             assets[id] = source
             if (map.keys.all { it == ID || it == SRC }) return null
@@ -80,14 +80,28 @@ internal class ImageBlocks {
         return text.toDoubleOrNull()?.takeIf { it > 0 }
     }
 
-    private companion object {
-        const val WIDTH = "width"
-        const val HEIGHT = "height"
-        const val SCALE = "scale"
-        const val ALIGN = "align"
-        const val CENTER = "center"
-        const val TITLE = "title"
-        const val PERCENT = "%"
-        const val POINTS = "pt"
+    companion object {
+        private const val WIDTH = "width"
+        private const val HEIGHT = "height"
+        private const val SCALE = "scale"
+        private const val ALIGN = "align"
+        private const val CENTER = "center"
+        private const val TITLE = "title"
+        private const val PERCENT = "%"
+        private const val POINTS = "pt"
+
+        /**
+         * Whether a directive with [value] can draw or define a picture on its own line: it names a source, or an id that an
+         * asset definition elsewhere in the song may give one. One naming neither is read past by [read] wherever it stands.
+         */
+        fun namesPicture(value: String?): Boolean {
+            val attributes = ChordProImageDirectives.attributes(value.orEmpty())
+            return sourceOf(attributes) != null || idOf(ChordProImageDirectives.attributeMap(attributes)) != null
+        }
+
+        private fun sourceOf(attributes: List<ChordProImageDirectives.Attribute>) =
+            ChordProImageDirectives.sources(attributes).firstOrNull()?.value?.takeIf { it.isNotEmpty() }
+
+        private fun idOf(map: Map<String, String>) = map[ID]?.takeIf { it.isNotEmpty() }
     }
 }

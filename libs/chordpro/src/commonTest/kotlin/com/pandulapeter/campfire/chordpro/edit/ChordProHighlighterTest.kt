@@ -420,6 +420,10 @@ class ChordProHighlighterTest {
             "{meta: cover not an address}",
             "{meta: link ftp://example.com}",
             "{language: und}",
+            "{chordcolour: not a colour}",
+            "{textcolour: #12345}",
+            "{image: center}",
+            "{image: src= width=50}",
         ).forEach { line ->
             assertEquals(listOf(TokenType.INVALID to line), spans(line), line)
         }
@@ -455,6 +459,14 @@ class ChordProHighlighterTest {
             "{language: en-US}",
             "{title: 5/7}",
             "{unknown: whatever}",
+            "{chordcolour: #FF0000}",
+            "{chordcolour: Dark Red}",
+            "{textcolour: foreground}",
+            "{textcolour: }",
+            "{image: photo.jpg}",
+            "{image: src=a.png id=logo}",
+            "{image: id=logo scale=50%}",
+            "{image-piano: center}",
         ).forEach { line ->
             assertEquals(false, spans(line).any { it.first == TokenType.INVALID }, line)
         }

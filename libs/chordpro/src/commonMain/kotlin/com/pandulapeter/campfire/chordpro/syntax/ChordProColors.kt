@@ -32,6 +32,17 @@ internal object ChordProColors {
         }
     }
 
+    /**
+     * Whether [value] is one [parse] reads: a colour, or the reader's own colour back, which an empty value and
+     * `foreground` ask for. Anything else is dropped by the parser for the reader's colour too, but by accident.
+     */
+    fun isReadable(value: String?): Boolean {
+        val written = value?.trim().orEmpty()
+        return written.isEmpty() || written.equals(FOREGROUND, ignoreCase = true) || parse(written) != null
+    }
+
+    private const val FOREGROUND = "foreground"
+
     private const val HEX_DIGITS = "0123456789abcdef"
 
     private val namedColors = mapOf(
