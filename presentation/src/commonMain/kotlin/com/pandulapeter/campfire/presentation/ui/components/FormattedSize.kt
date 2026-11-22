@@ -27,11 +27,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_library_size_me
 @Composable
 internal fun formattedSize(bytes: Long): String {
     val size = byteSizeOf(bytes)
-    val number = when (val tenths = size.tenths) {
-        null -> size.whole.toString()
-        else -> "${size.whole}${stringResource(Res.string.settings_library_size_decimal_separator)}$tenths"
-    }
-    return stringResource(SIZE_UNITS[size.unit], number)
+    return stringResource(SIZE_UNITS[size.unit], size.numberWith(stringResource(Res.string.settings_library_size_decimal_separator)))
 }
 
 /**
@@ -43,6 +39,9 @@ internal data class ByteSize(
     val whole: Long,
     val tenths: Long? = null,
 )
+
+/** The number of this size, its [ByteSize.tenths] after [decimalSeparator] where it has them. */
+internal fun ByteSize.numberWith(decimalSeparator: String) = tenths?.let { "$whole$decimalSeparator$it" } ?: whole.toString()
 
 /** [bytes] rounded the way [formattedSize] writes them. */
 internal fun byteSizeOf(bytes: Long): ByteSize {
@@ -63,7 +62,8 @@ private fun Long.pow(exponent: Int) = (1..exponent).fold(1L) { result, _ -> resu
 
 private const val SIZE_STEP = 1000L
 
-private val SIZE_UNITS = listOf(
+/** The units [ByteSize.unit] counts in, each a sentence taking the number. */
+internal val SIZE_UNITS = listOf(
     Res.string.settings_library_size_bytes,
     Res.string.settings_library_size_kilobytes,
     Res.string.settings_library_size_megabytes,

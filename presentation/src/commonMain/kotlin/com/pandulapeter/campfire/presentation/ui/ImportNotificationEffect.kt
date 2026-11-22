@@ -11,26 +11,17 @@ package com.pandulapeter.campfire.presentation.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import com.pandulapeter.campfire.data.model.importing.ImportProgress
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.cancel
 import com.pandulapeter.campfire.presentation.resources.import_notification_channel
-import com.pandulapeter.campfire.presentation.resources.import_progress_bytes_downloading
-import com.pandulapeter.campfire.presentation.resources.import_progress_bytes_downloading_so_far
-import com.pandulapeter.campfire.presentation.resources.import_progress_bytes_receiving
-import com.pandulapeter.campfire.presentation.resources.import_progress_bytes_receiving_so_far
-import com.pandulapeter.campfire.presentation.resources.import_progress_bytes_unpacking
-import com.pandulapeter.campfire.presentation.resources.import_progress_bytes_unpacking_so_far
-import com.pandulapeter.campfire.presentation.resources.import_progress_downloading
-import com.pandulapeter.campfire.presentation.resources.import_progress_importing
-import com.pandulapeter.campfire.presentation.resources.import_progress_receiving
 import com.pandulapeter.campfire.presentation.resources.import_progress_title
-import com.pandulapeter.campfire.presentation.resources.import_progress_unpacking
-import com.pandulapeter.campfire.presentation.resources.settings_library_size_bytes
 import com.pandulapeter.campfire.presentation.resources.settings_library_size_decimal_separator
-import com.pandulapeter.campfire.presentation.resources.settings_library_size_gigabytes
-import com.pandulapeter.campfire.presentation.resources.settings_library_size_kilobytes
-import com.pandulapeter.campfire.presentation.resources.settings_library_size_megabytes
+import com.pandulapeter.campfire.presentation.ui.components.SIZE_UNITS
+import com.pandulapeter.campfire.presentation.ui.dialogs.bytesOfTotalLabel
+import com.pandulapeter.campfire.presentation.ui.dialogs.bytesSoFarLabel
+import com.pandulapeter.campfire.presentation.ui.dialogs.label
 import com.pandulapeter.campfire.presentation.ui.platform.ImportNotification
 import com.pandulapeter.campfire.presentation.ui.platform.LocalImportNotifier
 import com.pandulapeter.campfire.presentation.ui.state.importing.COMPLETED
@@ -49,30 +40,21 @@ internal fun ImportNotificationEffect() {
     val notification = ImportNotification(
         channelName = stringResource(Res.string.import_notification_channel),
         title = stringResource(Res.string.import_progress_title),
-        receiving = ImportNotification.Phase(
-            line = stringResource(Res.string.import_progress_receiving),
-            bytesOfTotal = stringResource(Res.string.import_progress_bytes_receiving, COMPLETED, TOTAL),
-            bytesSoFar = stringResource(Res.string.import_progress_bytes_receiving_so_far, COMPLETED),
-        ),
-        downloading = ImportNotification.Phase(
-            line = stringResource(Res.string.import_progress_downloading),
-            bytesOfTotal = stringResource(Res.string.import_progress_bytes_downloading, COMPLETED, TOTAL),
-            bytesSoFar = stringResource(Res.string.import_progress_bytes_downloading_so_far, COMPLETED),
-        ),
-        unpacking = ImportNotification.Phase(
-            line = stringResource(Res.string.import_progress_unpacking),
-            bytesOfTotal = stringResource(Res.string.import_progress_bytes_unpacking, COMPLETED, TOTAL),
-            bytesSoFar = stringResource(Res.string.import_progress_bytes_unpacking_so_far, COMPLETED),
-        ),
-        writing = stringResource(Res.string.import_progress_importing),
-        sizeUnits = listOf(
-            stringResource(Res.string.settings_library_size_bytes, SIZE),
-            stringResource(Res.string.settings_library_size_kilobytes, SIZE),
-            stringResource(Res.string.settings_library_size_megabytes, SIZE),
-            stringResource(Res.string.settings_library_size_gigabytes, SIZE),
-        ),
+        receiving = phaseWordsOf(ImportProgress.Phase.RECEIVING),
+        downloading = phaseWordsOf(ImportProgress.Phase.DOWNLOADING),
+        unpacking = phaseWordsOf(ImportProgress.Phase.UNPACKING),
+        writing = stringResource(ImportProgress.Phase.IMPORTING.label),
+        sizeUnits = SIZE_UNITS.map { stringResource(it, SIZE) },
         decimalSeparator = stringResource(Res.string.settings_library_size_decimal_separator),
         cancelLabel = stringResource(Res.string.cancel),
     )
     LaunchedEffect(importNotifier, notification) { importNotifier.onImportNotificationChanged(notification) }
 }
+
+/** The import screen's words for [phase], its sizes left as placeholders. */
+@Composable
+private fun phaseWordsOf(phase: ImportProgress.Phase) = ImportNotification.Phase(
+    line = stringResource(phase.label),
+    bytesOfTotal = stringResource(phase.bytesOfTotalLabel, COMPLETED, TOTAL),
+    bytesSoFar = stringResource(phase.bytesSoFarLabel, COMPLETED),
+)

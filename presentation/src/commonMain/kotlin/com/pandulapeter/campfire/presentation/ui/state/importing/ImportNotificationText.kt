@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.state.importing
 
 import com.pandulapeter.campfire.data.model.importing.ImportProgress
 import com.pandulapeter.campfire.presentation.ui.components.byteSizeOf
+import com.pandulapeter.campfire.presentation.ui.components.numberWith
 import com.pandulapeter.campfire.presentation.ui.platform.ImportNotification
 
 /**
@@ -82,8 +83,7 @@ const val IMPORT_NOTIFICATION_PROGRESS_STEPS = 1000
 /** [bytes] as the screen writes a size (`formattedSize`), in the words handed over. */
 internal fun ImportNotification.sizeOf(bytes: Long): String {
     val size = byteSizeOf(bytes)
-    val number = size.tenths?.let { "${size.whole}$decimalSeparator$it" } ?: size.whole.toString()
-    return sizeUnits.getOrElse(size.unit) { sizeUnits.last() }.replace(SIZE, number)
+    return sizeUnits.getOrElse(size.unit) { sizeUnits.last() }.replace(SIZE, size.numberWith(decimalSeparator))
 }
 
 /** The phase of [ImportProgress] whose bytes the work in this state counts. */
