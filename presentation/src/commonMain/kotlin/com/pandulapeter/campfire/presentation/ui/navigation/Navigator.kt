@@ -318,7 +318,7 @@ internal class Navigator(
             _scrollToTopRequests.tryEmit(ScrollToTopRequest(destination, destinationWhenAtTop?.takeIf { it != destination }))
             return
         }
-        if (hasUnsavedEditorText() && backStack.any { it is CampfireDestination.SongEditor }) return
+        if (isUnsavedEditorOpen(backStack, hasUnsavedEditorText)) return
         val home = topLevelDestinations().first()
         updateBackStack {
             clear()
@@ -377,7 +377,7 @@ internal class Navigator(
      * closed window away from being lost without it. Nothing is opened while the songs are switched off.
      */
     fun openImportedSong(fileName: String) {
-        if (hasUnsavedEditorText() && backStack.any { it is CampfireDestination.SongEditor }) return
+        if (isUnsavedEditorOpen(backStack, hasUnsavedEditorText)) return
         val songFileNames = listOf(fileName)
         val destination = CampfireDestination.SongDetails(songFileNames = songFileNames, setlistFileName = null, initialIndex = 0)
         if (!isEnabled(destination)) return

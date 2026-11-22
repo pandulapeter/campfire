@@ -102,6 +102,8 @@ internal class AppExitController(
             // still waiting for something.
             takePendingExit()?.onCancelled?.invoke()
             val question = when {
+                // Only an editor on top is asked about: the question's answers leave the editor, which only the one in
+                // view can do, and one under another screen keeps its text in the draft stored on the way out.
                 editorSession.hasUnsavedEditorText() && backStack.lastOrNull() is CampfireDestination.SongEditor -> DialogType.UnsavedChanges
                 importWork.state.value.isCancellable -> DialogType.StopImportBeforeExit
                 else -> return@launch onExit()

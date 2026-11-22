@@ -23,6 +23,7 @@ import com.pandulapeter.campfire.presentation.ui.messages.Message
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.navigation.ImportPreview
+import com.pandulapeter.campfire.presentation.ui.navigation.isUnsavedEditorOpen
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -186,7 +187,7 @@ internal class ImportReportState(
      */
     suspend fun awaitNothingInTheWay() {
         combine(dialogHost.visibleDialog, editorDraft, songTexts, snapshotFlow { backStack.toList() }) { dialog, _, _, stack ->
-            dialog == null && !(hasUnsavedEditorText() && stack.any { it is CampfireDestination.SongEditor }) &&
+            dialog == null && !isUnsavedEditorOpen(stack, hasUnsavedEditorText) &&
                 stack.none { it is CampfireDestination.Onboarding }
         }.first { it }
     }
@@ -203,7 +204,7 @@ internal class ImportReportState(
      * other than the onboarding.
      */
     fun screenAfterOnboarding(): CampfireDestination? {
-        val isEditorInTheWay = hasUnsavedEditorText() && backStack.any { it is CampfireDestination.SongEditor }
+        val isEditorInTheWay = isUnsavedEditorOpen(backStack, hasUnsavedEditorText)
         if (isOnBackStack || dialogHost.visibleDialog.value != null || isEditorInTheWay) return null
         _importReport.value?.let { return screenOf(it) }
         return songAfterOnboarding?.let { CampfireDestination.SongDetails(songFileNames = listOf(it), setlistFileName = null, initialIndex = 0) }
