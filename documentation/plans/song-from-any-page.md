@@ -17,6 +17,8 @@ extension button), and the editor opens on that song with the page's clutter gon
 comments, "related songs", and the site's calls to action. Today a share that is only a link (Ultimate Guitar, the
 most used site) is a dead end, and a share or paste that carries the page brings its clutter along, which the converter
 deliberately does not filter (`convert/CLAUDE.md`: "Ultimate Guitar's page furniture … is deliberately not filtered").
+The same model then serves documents: a website printed to PDF carries the same clutter, and a PDF's or Word file's
+title, artist, key, and capo are misread where they stand among the page's other words.
 
 ## Decisions
 
@@ -29,12 +31,20 @@ deliberately does not filter (`convert/CLAUDE.md`: "Ultimate Guitar's page furni
   columns.
 - **The model only crops; the converter still converts.** Chords, lyrics, sections, tabs, and metadata stay
   `ChordSheetConverter`'s job, already judged by the import corpus. The model answers what the converter cannot: where
-  the song starts and ends on a page, which lines inside it are clutter, and which line is the title and which the
-  artist. Labels: `SONG`, `TITLE`, `ARTIST`, `JUNK`.
+  the song starts and ends on a page, which lines inside it are clutter, which line is the title and which the
+  artist, and which lines hold the song's details. Labels: `SONG`, `TITLE`, `ARTIST`, `METADATA` (key, capo, tempo,
+  time, credits), `JUNK`. A `METADATA` line is still parsed by the converter's own rules; the model only says where
+  the details are, never what they say.
+- **One model for pages and documents.** The task is the same, and a website printed to PDF is both. A document's
+  lines bring what a page's text cannot (font size relative to the body, bold or italic, indent, column, a page
+  break, the line's place on its page), all already measured for the converter (`ChordSheet.Span`, `ChordSheetLook`,
+  `ChordSheetProfile`); for web text they are zero, and one input says which kind of source the lines came from.
+  Splitting a document into songs stays `ChordSheetSongSplit`'s; the model crops each song it gives. Two models only
+  if step 0 shows the shared one losing to one trained on either kind alone.
 - **Small and pure Kotlin.** A character-level line encoder (hashed code points, so every script the app supports needs
   no vocabulary) and a small bidirectional sequence layer across lines, with a few of the converter's own line features
-  (is a chord row, is a tab staff, is a heading) as extra inputs. About a million parameters at most, int8 weights, a
-  few MB. Inference is a handful of matrix multiplications written in `commonMain`: the same on Android, iOS, desktop,
+  (is a chord row, is a tab staff, is a heading) and the layout inputs as extra inputs. About a million parameters at
+  most, int8 weights, a few MB. Inference is a handful of matrix multiplications written in `commonMain`: the same on Android, iOS, desktop,
   and the web build, no native runtime, no dependency to credit or keep updated.
 - **Our own weights, trained on a private corpus.** The pages trained on are never committed or shipped (like
   `ImportCorpusTest`'s corpus), and a classifier this size cannot reproduce a song. The training tool is committed;
@@ -51,16 +61,18 @@ deliberately does not filter (`convert/CLAUDE.md`: "Ultimate Guitar's page furni
 
 ## The pipeline
 
-1. **Page in.** Lines of text as rendered (`innerText`, or a paste's plain text, or `ChordSheetHtml`'s reading of a
-   paste's HTML), plus the page title and address when known.
-2. **Crop.** `:libs:pagesong` labels each line; the `SONG` lines are kept in order, `TITLE` and `ARTIST` (checked
-   against the page title) become the header.
-3. **Convert.** The kept lines go to `ChordSheetConverter` as a paste does today, and the editor opens as for any
-   pasted new song (`presentation`'s rule: nothing written before Save).
+1. **Lines in.** From a page: lines of text as rendered (`innerText`, or a paste's plain text, or `ChordSheetHtml`'s
+   reading of a paste's HTML), plus the page title and address when known. From a PDF or Word file: each song's
+   placed lines as `ChordSheetSongSplit` cut them, with their layout.
+2. **Crop.** `:libs:pagesong` labels each line; the `SONG` and `METADATA` lines are kept in order, `TITLE` and
+   `ARTIST` (checked against the page title or the document's own) become the header.
+3. **Convert.** The kept lines go to `ChordSheetConverter` as today, and the editor opens as for any pasted new song
+   (`presentation`'s rule: nothing written before Save), or the import review lists the document's songs.
 
-The crop applies only to web-sourced input (a share, a paste, a drop of text or HTML, a loaded link, an extension),
-never to a PDF, Word, or plain text file, which are documents rather than pages. Where the model is not confident the
-page holds a song, nothing is cropped and today's behaviour stands.
+The crop applies to web-sourced input (a share, a paste, a drop of text or HTML, a loaded link, an extension) from
+step 4, and to PDF and Word files only from step 8, once `ImportCorpusTest` shows no document scoring worse with it.
+A plain text file is left alone. Where the model is not confident the lines hold a song, nothing is cropped and
+today's behaviour stands.
 
 ## Steps
 
@@ -68,9 +80,11 @@ page holds a song, nothing is cropped and today's behaviour stands.
 
 In `tools/page-model/` (Python, pinned `requirements.txt`, following `tools/fonts`): save about 300 real song pages
 from a varied set of sites and languages, label them with the teacher (step 1), train a first model (step 2), and
-compare its crops against the converter alone on the same pages. Go on only if the crop clearly wins on most pages and
-never loses a song's lines on a page where the converter alone kept them. If it does not, stop here; nothing in the app
-has changed.
+compare its crops against the converter alone on the same pages. Do the same for the import corpus's PDFs, labelled as
+step 1 says, and train three variants (pages only, documents only, both) to settle whether one model serves both. Go
+on only if the crop clearly wins on most pages and never loses a song's lines on a page where the converter alone kept
+them. If it does not, stop here; nothing in the app has changed. If only the documents fail the gate, go on with pages
+and drop step 8.
 
 ### 1. The corpus and its labels (`tools/page-model/`)
 
@@ -80,25 +94,35 @@ has changed.
   sites, and every app language, tabs and ABC pages included, plus pages with no song (the model must learn to say so).
 - **Teacher**: Claude labels each page's lines once, offline, through the API with the owner's key: line numbers and
   labels only, never text. Two runs per page; pages where the runs disagree are dropped rather than checked by hand.
+- **Documents, labelled for free**: the import corpus already pairs each PDF and Word file with its corrected `.cho`.
+  Aligning the two labels each line: a line found in the song is `SONG`, the line holding the `{title}` or `{artist}`
+  value is `TITLE` or `ARTIST`, one holding `{key}`, `{capo}`, `{tempo}`, `{time}`, or a credit is `METADATA`, and the
+  rest is `JUNK`. A document whose lines do not align well enough is left out rather than fixed by hand.
+- **Websites printed to PDF**: the collector also saves each page as a PDF (Playwright's `page.pdf`, the way a browser
+  prints), read back through the app's own PDF reader from a small Gradle task; the page's teacher labels carry over by
+  aligning its lines. Each app language's paper size and a print stylesheet come with the page, as a user's print would.
 - **Synthetic pages**: ChordPro songs (the private import corpus's corrected `.cho`s) rendered as chord sheets and
   wrapped in clutter sampled from the real pages' `JUNK` lines, so the labels are known by construction. They widen
   the training set; the score is always taken on real pages.
-- A fixed tenth of the real pages is held out as the test set and never trained on.
+- A fixed tenth of the real pages and of the documents is held out as the test set and never trained on.
 
 ### 2. The model and its training (`tools/page-model/`)
 
 - PyTorch, trained on a Mac in minutes to hours. Line encoder: hashed code points (4,096 buckets) → embedding → a few
   1-D convolutions → max-pool; per-line features computed by the same rules the Kotlin side will compute (step 3 pins
-  them to one definition); a two-layer bidirectional GRU across the page's lines; one softmax per line.
+  them to one definition), the layout inputs, and the source flag; a two-layer bidirectional GRU across the lines;
+  one softmax per line.
 - Export: int8 weights with per-row scales into one binary file, plus a golden file of a few pages' inputs and the
   logits PyTorch produced for them.
 - The trainer prints the held-out score (line accuracy, song-span precision and recall, title and artist hits) and
-  writes it next to the weights, so a retrain is judged by one number against the last.
+  writes it next to the weights, for pages and documents apart, so a retrain is judged against the last on both.
 
 ### 3. `:libs:pagesong` (pure Kotlin, `explicitApi()`)
 
-- `PageSong.crop(lines, pageTitle): Crop?`: the kept line indices, the title and artist, and whether the page holds a
-  song at all. Weights are passed in as a `ByteArray` by the caller, so the library holds no resources and depends on
+- `PageSong.crop(lines, source, title): Crop?`: each line's text and optional layout, the kind of source, and the
+  page's or document's own title; it answers the kept line indices, the title and artist, the metadata lines, and
+  whether the lines hold a song at all. The library's line type is its own; `:libs:chordsheet` maps its placed lines
+  onto it, so the dependency runs from `chordsheet` to `pagesong`. Weights are passed in as a `ByteArray` by the caller, so the library holds no resources and depends on
   no other module.
 - The forward pass in plain Kotlin arrays (embedding lookup, convolution, GRU, softmax), int8 dequantized per row.
 - Tests in `commonTest`: the golden logits matched within a tolerance on every platform's run, an empty page, a page
@@ -111,7 +135,8 @@ has changed.
 - `PrepareImportUseCaseImpl` (`domain/implementation/.../importing/`) passes web-sourced text through the crop before
   conversion; the weights ship under `presentation`'s `composeResources/files` and are read once, lazily.
 - A new `PageCorpusTest` beside `ImportCorpusTest` runs the whole pipeline over the held-out pages and writes a report
-  of each page's crop and song, never in CI. `ImportCorpusTest` must not move, since documents never pass the crop.
+  of each page's crop and song, never in CI. `ImportCorpusTest` must not move, since documents do not pass the crop
+  until step 8.
 
 ### 5. Loading a shared link
 
@@ -143,7 +168,17 @@ inbox, as a share does. On the desktop, how it reaches the running app (native m
 endpoint `instance.endpoint` already accepts) and the open web build tab is a spike of its own, settled before this
 step starts. Each store's listing and review is the cost; nothing else depends on it.
 
-### 8. Documentation
+### 8. Documents
+
+- The document import (`ChordSheetConverter`'s entry for placed lines) passes each song `ChordSheetSongSplit` gives
+  through the crop, with its layout, before the converter reads it; the `METADATA` lines the model marks are where the
+  converter looks for the song's details, so a key or capo among the page's other words is found, and a running
+  header, a page number, a site's footer, or a printed page's address and date is dropped.
+- Judged by `ImportCorpusTest` as every converter change is (`convert/CLAUDE.md`): it lands only if no document's
+  overall score falls, and the report's websites printed to PDF show the gain. Until then the crop stays off for
+  documents and the rest of the plan stands without it.
+
+### 9. Documentation
 
 - `libs/pagesong/CLAUDE.md`: the labels, the inputs, the weights format, and how a retrain is judged.
 - `tools/page-model/README` or `CLAUDE.md`: how to collect, label, train, and export.
@@ -153,6 +188,6 @@ step starts. Each store's listing and review is the cost; nothing else depends o
 ## Size and upkeep
 
 The tool is a few Python scripts; the library is a few small Kotlin files and one weights file of a few MB; the app
-changes are the crop's call, `PageSource` on two platforms, a switch, and the share doors. Upkeep is a retrain when
-`PageCorpusTest` on a fresh batch of pages shows the score falling, not code per site. The biggest effort is step 1;
-the biggest risk is step 0, which is why it comes first.
+changes are the crop's two calls (pages and documents), `PageSource` on two platforms, a switch, and the share doors.
+Upkeep is a retrain when `PageCorpusTest` on a fresh batch of pages, or `ImportCorpusTest`, shows the score falling,
+not code per site. The biggest effort is step 1; the biggest risk is step 0, which is why it comes first.
