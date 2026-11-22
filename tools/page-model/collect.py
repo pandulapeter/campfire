@@ -16,7 +16,8 @@ applied). A page already saved is skipped, so a run picks up where the last one 
 
 `urls.tsv` in the corpus folder holds one page a row: `kind` (`song`, or `none` for a page with no song), language, and
 address, tab-separated. What each page came to is written to `collect.tsv`: `ok`, `blocked` (a bot challenge, or next
-to no text), or the error.
+to no text), or the error. The browser says it is headless Chrome and a page that turns it away is left out, never
+worked around.
 """
 
 import asyncio
@@ -30,9 +31,6 @@ from playwright.async_api import async_playwright
 PARALLEL = 4
 TIMEOUT_MS = 30_000
 SETTLE_MS = 2_500
-USER_AGENT = (
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
-)
 CHALLENGES = ("just a moment", "attention required", "access denied", "are you a robot", "verify you are human", "captcha")
 
 
@@ -61,7 +59,7 @@ async def collect(browser, corpus, row, statuses):
     if os.path.exists(target):
         statuses[identity] = "ok"
         return
-    context = await browser.new_context(user_agent=USER_AGENT, locale=row["language"] if row["language"] != "xx" else "en", viewport={"width": 1280, "height": 900})
+    context = await browser.new_context(locale=row["language"] if row["language"] != "xx" else "en", viewport={"width": 1280, "height": 900})
     page = await context.new_page()
     try:
         await page.goto(row["url"], timeout=TIMEOUT_MS, wait_until="domcontentloaded")
@@ -95,7 +93,7 @@ async def main(corpus):
     rows = read_urls(corpus)
     statuses = {}
     async with async_playwright() as playwright:
-        browser = await playwright.chromium.launch(headless=True, args=["--disable-blink-features=AutomationControlled"])
+        browser = await playwright.chromium.launch(headless=True)
         queue = asyncio.Queue()
         for row in rows:
             queue.put_nowait(row)
