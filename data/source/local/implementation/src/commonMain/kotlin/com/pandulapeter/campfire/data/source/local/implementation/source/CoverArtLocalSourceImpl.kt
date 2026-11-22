@@ -24,15 +24,8 @@ internal class CoverArtLocalSourceImpl(
 
     override suspend fun loadCoverArt(key: String) = quietly { fileStorage.readBytes(StorageDirectory.COVERS, key) }
 
-    /**
-     * A copy is kept out of the device backup like the sync index is: it can be downloaded again, and it would only
-     * make the user's backup larger. The mark is set after every write, since an atomic write replaces the file.
-     */
     override suspend fun saveCoverArt(key: String, bytes: ByteArray) {
-        quietly {
-            fileStorage.writeBytes(StorageDirectory.COVERS, key, bytes)
-            fileStorage.keepOutOfDeviceBackup(StorageDirectory.COVERS, key)
-        }
+        quietly { fileStorage.writeBytes(StorageDirectory.COVERS, key, bytes) }
     }
 
     /**

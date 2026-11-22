@@ -23,7 +23,6 @@ import java.nio.file.Files
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
-import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -65,18 +64,6 @@ class CoverArtLocalSourceImplTest {
         assertContentEquals(ByteArray(0), localSource.loadCoverArt(KEY))
         localSource.keepOnlyCoverArt(emptySet())
         assertNull(localSource.loadCoverArt(KEY))
-    }
-
-    @Test
-    fun `every copy written is kept out of the device backup, however often it is written`() = runBlocking {
-        val fileStorage = InMemoryFileStorage()
-        val localSource = CoverArtLocalSourceImpl(fileStorage, Logger.Standard)
-
-        localSource.saveCoverArt(KEY, byteArrayOf(1))
-        localSource.saveCoverArt(KEY, byteArrayOf(2))
-
-        assertEquals(listOf(KEY), fileStorage.listNames(StorageDirectory.COVERS))
-        assertEquals(emptyList(), fileStorage.namesInDeviceBackup(StorageDirectory.COVERS))
     }
 
     @Test

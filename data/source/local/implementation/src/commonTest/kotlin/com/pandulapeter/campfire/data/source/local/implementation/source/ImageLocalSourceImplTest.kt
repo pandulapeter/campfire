@@ -34,16 +34,6 @@ class ImageLocalSourceImplTest {
     private val source = ImageLocalSourceImpl(storage, staging)
 
     @Test
-    fun `the library's attachments are kept out of the device backup and its pictures are not`() = runTest {
-        source.writeImage(ImageShelf.LIBRARY, PICTURE, byteArrayOf(1))
-        source.writeImage(ImageShelf.LIBRARY, ATTACHMENT, byteArrayOf(2, 3))
-        source.writeImage(ImageShelf.DRAFT, DRAFT_ATTACHMENT, byteArrayOf(4))
-
-        assertEquals(listOf(PICTURE), storage.namesInDeviceBackup(StorageDirectory.FILES))
-        assertEquals(emptyList(), storage.namesInDeviceBackup(StorageDirectory.DRAFT_IMAGES))
-    }
-
-    @Test
     fun `pictures and attachments are listed with their sizes and nothing else in the folder is`() = runTest {
         source.writeImage(ImageShelf.LIBRARY, PICTURE, byteArrayOf(1))
         source.writeImage(ImageShelf.LIBRARY, ATTACHMENT, byteArrayOf(2, 3))
@@ -54,16 +44,15 @@ class ImageLocalSourceImplTest {
     }
 
     @Test
-    fun `a draft picture copied into the library reaches the device backup and an attachment stays out of it`() = runTest {
+    fun `a draft file copied into the library is on both shelves`() = runTest {
         source.writeImage(ImageShelf.DRAFT, PICTURE, byteArrayOf(1))
         source.writeImage(ImageShelf.DRAFT, ATTACHMENT, byteArrayOf(2, 3))
 
         source.copyImage(ImageShelf.DRAFT, PICTURE, ImageShelf.LIBRARY, PICTURE)
         source.copyImage(ImageShelf.DRAFT, ATTACHMENT, ImageShelf.LIBRARY, ATTACHMENT)
 
-        assertEquals(listOf(PICTURE), storage.namesInDeviceBackup(StorageDirectory.FILES))
+        assertEquals(setOf(PICTURE, ATTACHMENT), source.listImageNames(ImageShelf.LIBRARY).toSet())
         assertEquals(setOf(PICTURE, ATTACHMENT), source.listImageNames(ImageShelf.DRAFT).toSet())
-        assertEquals(emptyList(), storage.namesInDeviceBackup(StorageDirectory.DRAFT_IMAGES))
     }
 
     @Test
@@ -100,18 +89,15 @@ class ImageLocalSourceImplTest {
     }
 
     @Test
-    fun `a staged picture moved into the library is in the device backup and an attachment is not`() = runTest {
+    fun `a staged picture and attachment moved into the library are read from there and gone from the imports`() = runTest {
         val picture = stage(byteArrayOf(1, 2, 3), ".png")
         val attachment = stage(byteArrayOf(4, 5), ".pdf")
-        storage.keepOutOfDeviceBackup(StorageDirectory.IMPORTS, picture.name)
-        storage.keepOutOfDeviceBackup(StorageDirectory.IMPORTS, attachment.name)
 
         source.moveStagedFile(picture, ImageShelf.LIBRARY, PICTURE)
         source.moveStagedFile(attachment, ImageShelf.LIBRARY, ATTACHMENT)
 
         assertContentEquals(byteArrayOf(1, 2, 3), source.readImage(ImageShelf.LIBRARY, PICTURE))
         assertContentEquals(byteArrayOf(4, 5), source.readImage(ImageShelf.LIBRARY, ATTACHMENT))
-        assertEquals(listOf(PICTURE), storage.namesInDeviceBackup(StorageDirectory.FILES))
         assertEquals(emptyList(), storage.listNames(StorageDirectory.IMPORTS))
     }
 
@@ -168,6 +154,5 @@ class ImageLocalSourceImplTest {
         const val PICTURE = "0123456789abcdef.png"
         const val OTHER_PICTURE = "0123456789abcdef0.png"
         const val ATTACHMENT = "3fa9c2e81b7d4f06.pdf"
-        const val DRAFT_ATTACHMENT = "3fa9c2e81b7d4f07.mp3"
     }
 }

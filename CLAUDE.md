@@ -37,8 +37,9 @@ Only these, all in `:data:source:remote:implementation`, the only module that ma
   (Android without `library/files/`, whose photos would pass its 25 MB cap; iOS without the attachments there) and
   `preferences.json` — never the sync credentials, the sync index, the shared links mirror and journal, the editor
   draft and its pictures, the iOS share inbox, `covers/`, `exports/`, or `imports/` (`app/android/src/main/res/xml`; on
-  iOS a device-bound Keychain item, `FileStorage.keepOutOfDeviceBackup`, and the share inbox's own exclusion). A launch with
-  no preferences document forgets any credentials it finds, since the iOS Keychain outlives an uninstall.
+  iOS a device-bound Keychain item, the iOS storage's allow-list (`DeviceBackup.kt`), and the share inbox's own
+  exclusion). A launch with no preferences document forgets any credentials it finds, since the iOS Keychain outlives an
+  uninstall.
 
 ## Architecture
 

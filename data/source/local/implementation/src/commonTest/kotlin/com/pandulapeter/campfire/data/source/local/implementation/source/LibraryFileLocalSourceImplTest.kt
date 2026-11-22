@@ -11,7 +11,6 @@ package com.pandulapeter.campfire.data.source.local.implementation.source
 
 import com.pandulapeter.campfire.data.model.library.LibraryCollections
 import com.pandulapeter.campfire.data.source.local.implementation.InMemoryFileStorage
-import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StorageDirectory
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
@@ -36,16 +35,6 @@ class LibraryFileLocalSourceImplTest {
         assertContentEquals(REMOTE, localSource.readLibraryFile(LibraryCollections.SONGS, name))
         assertContentEquals(LOCAL, localSource.readLibraryFile(LibraryCollections.SONGS, "Song.cho"))
         assertContentEquals(OTHER, localSource.readLibraryFile(LibraryCollections.SONGS, "Song (2).cho"))
-    }
-
-    @Test
-    fun `an attachment sync writes is kept out of the device backup and a picture is not`() = runTest {
-        val storage = InMemoryFileStorage()
-        val localSource = LibraryFileLocalSourceImpl(storage)
-        localSource.writeLibraryFile(LibraryCollections.FILES, "0123456789abcdef.png", LOCAL)
-        localSource.writeLibraryFile(LibraryCollections.FILES, "3fa9c2e81b7d4f06.pdf", REMOTE)
-
-        assertEquals(listOf("0123456789abcdef.png"), storage.namesInDeviceBackup(StorageDirectory.FILES))
     }
 
     @Test

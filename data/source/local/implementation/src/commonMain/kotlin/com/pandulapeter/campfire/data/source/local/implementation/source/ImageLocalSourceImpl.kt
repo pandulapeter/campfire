@@ -47,32 +47,14 @@ internal class ImageLocalSourceImpl(
         null
     }
 
-    /**
-     * The backup mark is set or cleared after the copy as after a move, since the copy carries the original's mark on iOS:
-     * a draft picture copied into the library by Save would otherwise stay out of the backup.
-     */
     override suspend fun copyImage(from: ImageShelf, name: String, to: ImageShelf, toName: String) {
         require(LibraryFiles.isLibraryFileName(name) && LibraryFiles.isLibraryFileName(toName)) { "Not a library file's name: \"$name\" or \"$toName\"." }
         fileStorage.copyInto(from = from.directory, fromName = name, to = to.directory, toName = toName)
-        if (to == ImageShelf.LIBRARY && !isLibraryFileKeptOutOfDeviceBackup(toName)) {
-            fileStorage.keepInDeviceBackup(to.directory, toName)
-        } else {
-            keepOutOfDeviceBackupIfDue(to, toName)
-        }
     }
 
-    /**
-     * The draft's files are kept out of the device backup the way the draft's text is, after every write, since an
-     * atomic write replaces the file and the mark with it; the library's as [isLibraryFileKeptOutOfDeviceBackup] says.
-     */
     override suspend fun writeImage(shelf: ImageShelf, name: String, bytes: ByteArray) {
         require(LibraryFiles.isLibraryFileName(name)) { "Not a library file's name: \"$name\"." }
         fileStorage.writeBytes(shelf.directory, name, bytes)
-        keepOutOfDeviceBackupIfDue(shelf, name)
-    }
-
-    private suspend fun keepOutOfDeviceBackupIfDue(shelf: ImageShelf, name: String) {
-        if (shelf == ImageShelf.DRAFT || isLibraryFileKeptOutOfDeviceBackup(name)) fileStorage.keepOutOfDeviceBackup(shelf.directory, name)
     }
 
     override suspend fun holdsContent(shelf: ImageShelf, name: String, content: IncomingContent): Boolean {
@@ -98,18 +80,9 @@ internal class ImageLocalSourceImpl(
         head
     }
 
-    /**
-     * The backup mark is set or cleared whether the file was moved, copied, or already there: a rename keeps the mark the
-     * staged file carried, and a picture belongs in the backup however it reached the library.
-     */
     override suspend fun moveStagedFile(staged: StagedFile, shelf: ImageShelf, name: String) {
         require(LibraryFiles.isLibraryFileName(name)) { "Not a library file's name: \"$name\"." }
         importStaging.moveOut(staged, shelf.directory, name)
-        if (shelf == ImageShelf.LIBRARY && !isLibraryFileKeptOutOfDeviceBackup(name)) {
-            fileStorage.keepInDeviceBackup(shelf.directory, name)
-        } else {
-            keepOutOfDeviceBackupIfDue(shelf, name)
-        }
     }
 
     override suspend fun listImageNames(shelf: ImageShelf) = fileStorage.listNames(shelf.directory).filter(LibraryFiles::isLibraryFileName)

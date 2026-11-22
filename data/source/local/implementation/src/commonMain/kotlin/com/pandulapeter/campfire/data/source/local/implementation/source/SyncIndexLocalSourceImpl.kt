@@ -24,23 +24,13 @@ internal class SyncIndexLocalSourceImpl(
     /**
      * The index records what the last run saw from this device. Restored onto another one, where no account is
      * connected yet, it would be a statement about a folder nobody can check, so it stays out of the device backup
-     * the way the credentials do; without it the first run there compares the two sides by content.
+     * the way the credentials do (`isInDeviceBackup`); without it the first run there compares the two sides by content.
      */
-    override suspend fun saveSyncIndex(document: String?) {
-        write(INDEX_FILE_NAME, document)
-        if (document != null) {
-            fileStorage.keepOutOfDeviceBackup(StorageDirectory.PREFERENCES, INDEX_FILE_NAME)
-        }
-    }
+    override suspend fun saveSyncIndex(document: String?) = write(INDEX_FILE_NAME, document)
 
     override suspend fun isForgettingCredentialsOwed() = fileStorage.exists(StorageDirectory.PREFERENCES, FORGETTING_OWED_FILE_NAME)
 
-    override suspend fun setForgettingCredentialsOwed(isOwed: Boolean) {
-        write(FORGETTING_OWED_FILE_NAME, if (isOwed) "" else null)
-        if (isOwed) {
-            fileStorage.keepOutOfDeviceBackup(StorageDirectory.PREFERENCES, FORGETTING_OWED_FILE_NAME)
-        }
-    }
+    override suspend fun setForgettingCredentialsOwed(isOwed: Boolean) = write(FORGETTING_OWED_FILE_NAME, if (isOwed) "" else null)
 
     private suspend fun write(name: String, document: String?) = if (document == null) {
         fileStorage.delete(StorageDirectory.PREFERENCES, name)

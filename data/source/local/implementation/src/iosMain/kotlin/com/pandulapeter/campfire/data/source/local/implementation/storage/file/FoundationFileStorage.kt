@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-@file:OptIn(BetaInteropApi::class, ExperimentalForeignApi::class)
+@file:OptIn(BetaInteropApi::class, ExperimentalAtomicApi::class, ExperimentalForeignApi::class)
 
 package com.pandulapeter.campfire.data.source.local.implementation.storage.file
 
@@ -55,11 +55,18 @@ import platform.posix.memcpy
 import platform.posix.remove
 import platform.posix.rename
 import platform.posix.strerror
+import kotlin.concurrent.atomics.AtomicBoolean
+import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.uuid.Uuid
 
 /**
  * A [FileStorage] on top of `NSFileManager`, under the folder [rootPath] names for each directory: the app's own
  * ([IosFileStorage]) or a test's.
+ *
+ * iOS backs up whole directories, so what [isInDeviceBackup] leaves out carries `NSURLIsExcludedFromBackupKey`, set here
+ * rather than by each writer. [FOLDER_MARKED] directories carry it on the folder, which covers every file added later;
+ * the others' files carry it one by one. The mark is an attribute of the file: an atomic write replaces the file and
+ * drops it, while a rename, an in place write, and `copyItemAtPath` keep it, so it is set again after each of them.
  */
 internal class FoundationFileStorage(
     private val logger: Logger,
@@ -77,6 +84,9 @@ internal class FoundationFileStorage(
     private val directoryPaths by lazy {
         StorageDirectory.entries.associateWith { "${rootPath(it)}/${it.pathSegments.joinToString("/")}" }
     }
+
+    /** Whether each directory has had its first use in this process, see [firstUse]. */
+    private val isDirectoryUsed = StorageDirectory.entries.associateWith { AtomicBoolean(false) }
 
     /**
      * The attributes every entry is listed with are asked for with the listing itself, rather than read one entry after
@@ -154,11 +164,12 @@ internal class FoundationFileStorage(
                 throw LibraryStorageException("Could not write \"$name\": ${error.value?.localizedDescription}", error.value.asStorageCause())
             }
         }
+        markForBackup(directory, name, isNewFile = true)
     }
 
     override suspend fun openSink(directory: StorageDirectory, name: String): FileSink = withContext(Dispatchers.IO) {
         createDirectory(directory)
-        PosixFileSink(path = filePath(directory, name), name = name)
+        PosixFileSink(path = filePath(directory, name), name = name).also { markForBackup(directory, name, isNewFile = false) }
     }
 
     override suspend fun openSource(directory: StorageDirectory, name: String): FileSource? = withContext(Dispatchers.IO) {
@@ -171,6 +182,7 @@ internal class FoundationFileStorage(
         val target = filePath(to, toName)
         createDirectory(to)
         if (rename(source, target) != 0) throw LibraryStorageException("Could not move \"$fromName\": ${strerror(errno)?.toKString()}")
+        markForBackup(to, toName, isNewFile = false)
     }
 
     /**
@@ -194,6 +206,7 @@ internal class FoundationFileStorage(
                     }
                 }
             }
+            markForBackup(directory, name, isNewFile = false)
             onProgress(fileManager.attributesOfItemAtPath(target, error = null)?.get(NSFileSize).let { it as? NSNumber }?.longLongValue ?: 0L)
         }
 
@@ -217,6 +230,7 @@ internal class FoundationFileStorage(
             remove(temporary)
             throw failure
         }
+        markForBackup(to, toName, isNewFile = false)
     }
 
     override suspend fun availableSpace(directory: StorageDirectory) = withContext(Dispatchers.IO) {
@@ -232,25 +246,6 @@ internal class FoundationFileStorage(
         val path = filePath(directory, name)
         if (fileManager.fileExistsAtPath(path) && !fileManager.removeItemAtPath(path, null)) {
             throw LibraryStorageException("Could not delete \"$name\".")
-        }
-    }
-
-    /**
-     * The mark is an attribute of the file, which an atomic write replaces, so it is set again after every write. One
-     * that cannot be set costs a stale copy in a backup and nothing else, which is not worth failing the write over.
-     */
-    override suspend fun keepOutOfDeviceBackup(directory: StorageDirectory, name: String) = withContext(Dispatchers.IO) {
-        val path = filePath(directory, name)
-        if (fileManager.fileExistsAtPath(path) && !NSURL.fileURLWithPath(path).setResourceValue(true, NSURLIsExcludedFromBackupKey, null)) {
-            logger.log("Could not keep \"$name\" out of the device backup.")
-        }
-    }
-
-    /** Cleared as [keepOutOfDeviceBackup] sets it; one that cannot be cleared costs the file's place in a backup and is logged. */
-    override suspend fun keepInDeviceBackup(directory: StorageDirectory, name: String) = withContext(Dispatchers.IO) {
-        val path = filePath(directory, name)
-        if (fileManager.fileExistsAtPath(path) && !NSURL.fileURLWithPath(path).setResourceValue(false, NSURLIsExcludedFromBackupKey, null)) {
-            logger.log("Could not put \"$name\" back into the device backup.")
         }
     }
 
@@ -272,17 +267,12 @@ internal class FoundationFileStorage(
         }
     }
 
-    /**
-     * Creates the directory where it is not there yet. The imports' folder is kept out of the device backup as a whole,
-     * on the folder itself, since what it holds comes and goes faster than a mark on each file would be set.
-     */
+    /** Creates the directory where it is not there yet, a [FOLDER_MARKED] one with its folder kept out of the backup. */
     private fun createDirectory(directory: StorageDirectory) {
         val path = directoryPath(directory)
         if (fileManager.fileExistsAtPath(path)) return
         fileManager.createDirectoryAtPath(path, true, null, null)
-        if (directory == StorageDirectory.IMPORTS && !NSURL.fileURLWithPath(path, isDirectory = true).setResourceValue(true, NSURLIsExcludedFromBackupKey, null)) {
-            logger.log("Could not keep the imports' folder out of the device backup.")
-        }
+        if (directory in FOLDER_MARKED) setExcludedFromBackup(NSURL.fileURLWithPath(path, isDirectory = true), isExcluded = true, name = directory.name)
     }
 
     private fun filePath(directory: StorageDirectory, name: String): String {
@@ -290,10 +280,60 @@ internal class FoundationFileStorage(
         return "${directoryPath(directory)}/$name"
     }
 
-    private fun directoryPath(directory: StorageDirectory) = directoryPaths.getValue(directory)
+    private fun directoryPath(directory: StorageDirectory): String {
+        val path = directoryPaths.getValue(directory)
+        if (isDirectoryUsed.getValue(directory).compareAndSet(expectedValue = false, newValue = true)) firstUse(directory, path)
+        return path
+    }
+
+    /**
+     * Brings what an older version left in [directory] in line with [isInDeviceBackup], once per process and before the
+     * directory is used: a [FOLDER_MARKED] folder made before the folder was marked gets its mark, and in the library's
+     * files and the preferences every file whose mark is wrong (a picture an older version's copy left out, an attachment
+     * or a preferences file written before its writer marked it) is set right. One listing per launch, read with the
+     * marks, and a write only where one is wrong. Two threads racing here would set the same marks, which is harmless.
+     */
+    private fun firstUse(directory: StorageDirectory, path: String) {
+        if (!fileManager.fileExistsAtPath(path)) return
+        when (directory) {
+            in FOLDER_MARKED -> setExcludedFromBackup(NSURL.fileURLWithPath(path, isDirectory = true), isExcluded = true, name = directory.name)
+            StorageDirectory.FILES, StorageDirectory.PREFERENCES -> {
+                val entries = fileManager.contentsOfDirectoryAtURL(NSURL.fileURLWithPath(path, isDirectory = true), LISTED_KEYS, 0u, null)
+                    ?: return logger.log("Could not read the device backup marks of ${directory.name}.")
+                entries.filterIsInstance<NSURL>().forEach { url ->
+                    val name = url.lastPathComponent ?: return@forEach
+                    val values = url.resourceValuesForKeys(LISTED_KEYS, null) ?: return@forEach logger.log("Could not read the device backup mark of \"$name\".")
+                    if ((values[NSURLIsDirectoryKey] as? NSNumber)?.boolValue != false) return@forEach
+                    val isExcluded = !isInDeviceBackup(directory, name)
+                    if ((values[NSURLIsExcludedFromBackupKey] as? NSNumber)?.boolValue != isExcluded) setExcludedFromBackup(url, isExcluded, name)
+                }
+            }
+            else -> Unit
+        }
+    }
+
+    /**
+     * Sets the backup mark of [name] in [directory] as [isInDeviceBackup] says: after an atomic write ([isNewFile]), whose
+     * new file carries none, only where it is to be out; after anything else either way, since a move, a copy, a take,
+     * and an in place write keep the mark the file had. A file of a [FOLDER_MARKED] directory gets no mark of its own, so
+     * one moved or copied out of it brings none along; the exports are in Caches, which no backup takes.
+     */
+    private fun markForBackup(directory: StorageDirectory, name: String, isNewFile: Boolean) {
+        if (directory in FOLDER_MARKED || directory == StorageDirectory.EXPORTS) return
+        val isExcluded = !isInDeviceBackup(directory, name)
+        if (isExcluded || !isNewFile) setExcludedFromBackup(NSURL.fileURLWithPath(filePath(directory, name)), isExcluded, name)
+    }
+
+    /** A mark that cannot be set costs a stale copy in a backup or a file's place in one, which is not worth failing a write over. */
+    private fun setExcludedFromBackup(url: NSURL, isExcluded: Boolean, name: String) {
+        if (!url.setResourceValue(isExcluded, NSURLIsExcludedFromBackupKey, null)) logger.log("Could not set the device backup mark of \"$name\".")
+    }
 
     private companion object {
-        val LISTED_KEYS = listOf(NSURLIsDirectoryKey, NSURLFileSizeKey, NSURLContentModificationDateKey)
+        val LISTED_KEYS = listOf(NSURLIsDirectoryKey, NSURLFileSizeKey, NSURLContentModificationDateKey, NSURLIsExcludedFromBackupKey)
+
+        /** The directories kept out of the backup by a mark on the folder, since everything they hold stays out. */
+        val FOLDER_MARKED = setOf(StorageDirectory.COVERS, StorageDirectory.DRAFT_IMAGES, StorageDirectory.IMPORTS)
     }
 }
 

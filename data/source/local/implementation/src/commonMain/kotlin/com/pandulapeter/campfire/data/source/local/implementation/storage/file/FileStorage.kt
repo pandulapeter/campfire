@@ -217,7 +217,7 @@ interface FileStorage {
      * Writes a copy of [fromName] of [from] as [toName] of [to], replacing a file there atomically, as [writeBytes]
      * does, without holding the file whole where the platform can copy it (on the web, which reads it whole, one file at
      * a time). A file that is not there throws [LibraryStorageException]. The copy carries the original's backup mark
-     * on iOS ([keepOutOfDeviceBackup]'s), so a caller copying out of a folder kept out of the backup sets or clears it.
+     * on iOS, so the storage sets it after the copy as [isInDeviceBackup] says, as after a write, a move, and a take.
      */
     suspend fun copyInto(from: StorageDirectory, fromName: String, to: StorageDirectory, toName: String)
 
@@ -253,21 +253,6 @@ interface FileStorage {
 
     /** Does nothing if the file does not exist. */
     suspend fun delete(directory: StorageDirectory, name: String)
-
-    /**
-     * Keeps a file that describes this installation rather than the user's work out of the system's backup and its
-     * transfer to a new device. Called after every write, since a platform may carry the mark on the file itself and
-     * an atomic write replaces the file. Only iOS acts on it: Android's backup rules are an allow-list in
-     * `:app:android` that names what travels, and the desktop and the web have no backup of the app's own.
-     */
-    suspend fun keepOutOfDeviceBackup(directory: StorageDirectory, name: String) = Unit
-
-    /**
-     * Undoes [keepOutOfDeviceBackup] for a file that a move brought out of a folder kept out of the backup into one whose
-     * files belong in it (a staged picture moved into the library), since a rename keeps a mark the file carries. Only
-     * iOS acts on it, as there.
-     */
-    suspend fun keepInDeviceBackup(directory: StorageDirectory, name: String) = Unit
 
     /**
      * Whether a file called [name] can exist in this storage at all. No storage takes a path or nothing for a name

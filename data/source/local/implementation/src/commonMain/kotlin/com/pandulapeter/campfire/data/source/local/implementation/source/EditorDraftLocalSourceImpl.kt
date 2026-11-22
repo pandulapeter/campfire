@@ -45,15 +45,13 @@ internal class EditorDraftLocalSourceImpl(
 
     /**
      * A draft restored onto another phone would reopen an editor over a song that phone may not have, for text the user
-     * left behind on the old one, so it stays out of the device backup the way the sync index does. The mark is set
-     * after every write, since an atomic write replaces the file and the mark with it.
+     * left behind on the old one, so it stays out of the device backup the way the sync index does (`isInDeviceBackup`).
      */
     override suspend fun saveEditorDraft(draft: SongContent?) {
         if (draft == null) {
             fileStorage.delete(StorageDirectory.PREFERENCES, FILE_NAME)
         } else {
             fileStorage.writeText(StorageDirectory.PREFERENCES, FILE_NAME, json.encodeToString(draft.toEditorDraftDocument()))
-            fileStorage.keepOutOfDeviceBackup(StorageDirectory.PREFERENCES, FILE_NAME)
         }
     }
 

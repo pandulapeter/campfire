@@ -21,9 +21,11 @@ Skipped or unreadable files are logged to the injected `Logger`.
 - **Directories**: Android's backup rules in `:app:android` name `library/songs/`, `library/setlists/`, and
   `preferences/preferences.json` by path (never `library/files/`, whose photos would pass the 25 MB quota);
   moving a directory or renaming the file means changing those XML files. iOS backs up whole directories, so
-  `SyncIndexLocalSourceImpl`, `SharedLinksLocalSourceImpl`, `EditorDraftLocalSourceImpl`, `CoverArtLocalSourceImpl`, and
-  `UserPreferencesLocalSourceImpl` (for `preferences.json.bad`) call `keepOutOfDeviceBackup` after **every** write: the
-  exclusion is a file attribute and the atomic write replaces the file.
+  `FoundationFileStorage` marks what the allow-list `isInDeviceBackup` (`storage/file/DeviceBackup.kt`) leaves out, and
+  no writer does: `covers/`, `editor-draft-images/`, and `imports/` as folders; in `library/files/` and `preferences/`
+  each file after every write, move, copy, take, and sink opened (the mark is a file attribute an atomic write drops and
+  a rename or a copy keeps). Each directory's first use in a process reconciles what is there: a folder made earlier is
+  marked, and every file of those two whose mark is wrong is set right (one listing per launch).
 - **Text**: written as UTF-8, read through `decodeLibraryText`; a fallback-read file is written back as UTF-8. The web
   decodes valid NUL-free UTF-8 with `TextDecoder`; bytes cross the Wasm boundary as a one-char-per-byte string (typed
   array copies are per byte).
@@ -59,7 +61,7 @@ Skipped or unreadable files are logged to the injected `Logger`.
   reads at 64-bit positions (JVM `FileChannel` opened `READ` only, iOS `pread`, the web slices of one `File` snapshot);
   a move is a rename (JVM `ATOMIC_MOVE`, iOS `rename`, every directory on one volume), on the web a read, a `writeBytes`,
   and a delete; a copy is the system's into a temporary name renamed over the target, so it is never held whole but on
-  the web, and carries no backup mark. `IMPORTS` holds what an import receives (see `staging/`); iOS marks its folder out of the backup. Kotlin/Native refuses a comma in a test name, which `check_test_names.py` checks.
+  the web, and carries the original's backup mark on iOS, which the storage then sets as `isInDeviceBackup` says. `IMPORTS` holds what an import receives (see `staging/`); iOS marks its folder out of the backup. Kotlin/Native refuses a comma in a test name, which `check_test_names.py` checks.
 - **Names**: `canHoldFileName` refuses a path or nothing (`/`, `\`, `.`, `..`) everywhere, and on Windows `? : * " < >
   |`, a trailing space or dot, or a control character. Refused, never mapped: a mapping that failed to reverse would
   send a second copy of the song to every device. Windows device names (`con.cho`) are stored with a leading underscore
@@ -88,8 +90,8 @@ it; iOS marks the folder) and no sync, and is emptied of other sessions' names o
 - `moveOut` (`ImageLocalSourceImpl.moveStagedFile`) puts an unpacked file into the library by `moveInto` (a rename; on
   the web the atomic `writeBytes`), never over a file of that name (one there holds the same bytes, so the staged copy
   is deleted), and gives its room back; where it went is remembered (`locate`) until its request is deleted, so the next
-  name a plan brings it under is copied from there. A picture moved into the library is put back into the iOS backup
-  (`keepInDeviceBackup`, a rename keeping the mark), an attachment kept out. `holdsContent` compares sizes, then the two
+  name a plan brings it under is copied from there. A picture moved into the library is put back into the iOS backup,
+  an attachment kept out. `holdsContent` compares sizes, then the two
   files 64 KiB at a time (`FileSource.holdsBytes`, `holdsSameBytesAs`).
 - `StagingSink`: room in the ledger before every write, SHA-256 over exactly the bytes written. A write that fails, a
   cancellation, the budget running out, or `abandon` delete the partial file and give its room back before the failure
@@ -142,9 +144,7 @@ it; iOS marks the folder) and no sync, and is emptied of other sessions' names o
 ## Sources
 
 - `ImageLocalSourceImpl`: reads, lists, and deletes only `LibraryFiles.isLibraryFileName` names (pictures and
-  attachments), on both shelves (`library/files`, and the draft's `editor-draft-images`, kept out of the iOS backup
-  after every write). A library attachment is kept out too (`isLibraryFileKeptOutOfDeviceBackup`, a name a picture
-  could have counting as a picture), here and in sync's `LibraryFileLocalSourceImpl.writeLibraryFile`.
+  attachments), on both shelves (`library/files`, and the draft's `editor-draft-images`).
 - `CoverArtLocalSourceImpl`: prune deletes only key-shaped names (64 lowercase hex): the directory also holds an
   in-progress temp file.
 - `SongLocalSourceImpl` reads the ChordPro family but writes only `.cho`, `importFileName` included. Metadata comes from

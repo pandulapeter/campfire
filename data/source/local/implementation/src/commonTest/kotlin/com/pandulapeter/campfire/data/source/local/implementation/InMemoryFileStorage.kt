@@ -21,23 +21,16 @@ import com.pandulapeter.campfire.data.source.local.implementation.storage.file.S
  * A [FileStorage] in memory. With [foldsNames] it behaves like APFS: a file keeps the spelling it was first written
  * with, and every question about a name is answered by its folded form, so that two spellings of one name are one
  * file. Without it every spelling is a file of its own, as on ext4.
- *
- * The device backup exclusion is kept the way iOS keeps it, as a mark on the file itself that a write drops along with
- * the file it replaces.
  */
 internal class InMemoryFileStorage(private val foldsNames: Boolean = false) : FileStorage {
 
-    private class StoredFile(val name: String, val bytes: ByteArray, val isKeptOutOfDeviceBackup: Boolean = false)
+    private class StoredFile(val name: String, val bytes: ByteArray)
 
     private val files = mutableMapOf<Pair<StorageDirectory, String>, StoredFile>()
     var existsCalls = 0
     var listCalls = 0
 
     private fun key(directory: StorageDirectory, name: String) = directory to if (foldsNames) name.normalizedToNfc().lowercase() else name
-
-    /** The names in [directory] that are not marked to be left out of the device backup. */
-    fun namesInDeviceBackup(directory: StorageDirectory) = files.filter { (key, file) -> key.first == directory && !file.isKeptOutOfDeviceBackup }
-        .map { it.value.name }
 
     override suspend fun list(directory: StorageDirectory) = files.filterKeys { it.first == directory }.values
         .map { StoredFileInfo(name = it.name, size = it.bytes.size.toLong(), lastModified = 0) }
@@ -95,7 +88,7 @@ internal class InMemoryFileStorage(private val foldsNames: Boolean = false) : Fi
 
     override suspend fun moveInto(from: StorageDirectory, fromName: String, to: StorageDirectory, toName: String) {
         val file = files.remove(key(from, fromName)) ?: throw LibraryStorageException("$fromName is not there to be moved.")
-        files[key(to, toName)] = StoredFile(name = toName, bytes = file.bytes, isKeptOutOfDeviceBackup = file.isKeptOutOfDeviceBackup)
+        files[key(to, toName)] = StoredFile(name = toName, bytes = file.bytes)
     }
 
     override suspend fun copyInto(from: StorageDirectory, fromName: String, to: StorageDirectory, toName: String) =
@@ -107,15 +100,5 @@ internal class InMemoryFileStorage(private val foldsNames: Boolean = false) : Fi
 
     override suspend fun delete(directory: StorageDirectory, name: String) {
         files -= key(directory, name)
-    }
-
-    override suspend fun keepOutOfDeviceBackup(directory: StorageDirectory, name: String) {
-        val key = key(directory, name)
-        files[key] = checkNotNull(files[key]) { "$name is not there to be marked." }.let { StoredFile(it.name, it.bytes, isKeptOutOfDeviceBackup = true) }
-    }
-
-    override suspend fun keepInDeviceBackup(directory: StorageDirectory, name: String) {
-        val key = key(directory, name)
-        files[key] = checkNotNull(files[key]) { "$name is not there to be marked." }.let { StoredFile(it.name, it.bytes, isKeptOutOfDeviceBackup = false) }
     }
 }

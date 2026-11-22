@@ -29,15 +29,13 @@ internal class SharedLinksLocalSourceImpl(
 
     /**
      * Both describe the account connected here, which a device the backup is restored on has not connected, so they
-     * stay out of it as the sync index does. The exclusion is a file attribute on iOS, and the atomic write replaces
-     * the file, so it is set again after every write.
+     * stay out of it as the sync index does (`isInDeviceBackup`).
      */
     private suspend fun write(name: String, document: String?) {
         if (document == null) {
             fileStorage.delete(StorageDirectory.PREFERENCES, name)
         } else {
             fileStorage.writeText(StorageDirectory.PREFERENCES, name, document)
-            fileStorage.keepOutOfDeviceBackup(StorageDirectory.PREFERENCES, name)
         }
     }
 
