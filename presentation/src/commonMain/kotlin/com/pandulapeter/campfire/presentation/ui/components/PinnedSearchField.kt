@@ -20,10 +20,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.unit.constrainWidth
@@ -63,26 +59,8 @@ internal fun LazyGridScope.pinnedSearchField(
         modifier = Modifier
             .stickingBelowContentPadding(gridState, PINNED_SEARCH_INDEX)
             .bleedHorizontally(TOOL_PAGE_PADDING)
-            .drawWithContent {
-                drawContent()
-                val scrolledUnder = when {
-                    gridState.firstVisibleItemIndex > PINNED_SEARCH_INDEX -> fadeHeight
-                    gridState.firstVisibleItemIndex == PINNED_SEARCH_INDEX -> gridState.firstVisibleItemScrollOffset.toFloat()
-                    else -> 0f
-                }
-                val strength = (scrolledUnder / fadeHeight).coerceIn(0f, 1f)
-                if (strength > 0f) {
-                    drawRect(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(backgroundColor, backgroundColor.copy(alpha = 0f)),
-                            startY = size.height,
-                            endY = size.height + fadeHeight,
-                        ),
-                        topLeft = Offset(0f, size.height),
-                        size = Size(size.width, fadeHeight),
-                        alpha = strength,
-                    )
-                }
+            .fadingBelowPinnedHeader(backgroundColor, fadeHeight) {
+                pinnedHeaderScrolledUnder(gridState.firstVisibleItemIndex, gridState.firstVisibleItemScrollOffset, PINNED_SEARCH_INDEX, fadeHeight)
             }
             .background(backgroundColor)
             .padding(bottom = 8.dp)

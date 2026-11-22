@@ -42,12 +42,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalDensity
@@ -81,6 +77,8 @@ import com.pandulapeter.campfire.presentation.resources.import_status_unreadable
 import com.pandulapeter.campfire.presentation.resources.songs_clear
 import com.pandulapeter.campfire.presentation.ui.components.CampfireIconButton
 import com.pandulapeter.campfire.presentation.ui.components.EDGE_FADE_SIZE
+import com.pandulapeter.campfire.presentation.ui.components.fadingBelowPinnedHeader
+import com.pandulapeter.campfire.presentation.ui.components.pinnedHeaderScrolledUnder
 import com.pandulapeter.campfire.presentation.ui.components.SearchState
 import com.pandulapeter.campfire.presentation.ui.components.appBar.TruncateSearchQuery
 import org.jetbrains.compose.resources.StringResource
@@ -179,26 +177,8 @@ internal fun LazyListScope.searchField(
     val fadeHeight = with(LocalDensity.current) { EDGE_FADE_SIZE.toPx() }
     Box(
         modifier = ItemWidth
-            .drawWithContent {
-                drawContent()
-                val scrolledUnder = when {
-                    listState.firstVisibleItemIndex > index -> fadeHeight
-                    listState.firstVisibleItemIndex == index -> listState.firstVisibleItemScrollOffset.toFloat()
-                    else -> 0f
-                }
-                val strength = (scrolledUnder / fadeHeight).coerceIn(0f, 1f)
-                if (strength > 0f) {
-                    drawRect(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(backgroundColor, backgroundColor.copy(alpha = 0f)),
-                            startY = size.height,
-                            endY = size.height + fadeHeight,
-                        ),
-                        topLeft = Offset(0f, size.height),
-                        size = Size(size.width, fadeHeight),
-                        alpha = strength,
-                    )
-                }
+            .fadingBelowPinnedHeader(backgroundColor, fadeHeight) {
+                pinnedHeaderScrolledUnder(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset, index, fadeHeight)
             }
             .background(backgroundColor)
             // Nothing under it: the rows fade out below it by the gradient, and the gap to the first heading is the

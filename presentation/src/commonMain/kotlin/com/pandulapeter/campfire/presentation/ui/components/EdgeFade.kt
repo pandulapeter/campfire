@@ -279,6 +279,42 @@ internal fun Modifier.fadingUnderStartOverlay(scrolledFromStart: () -> Int, over
         }
     }
 
+/**
+ * Fades what scrolls under a pinned header out below it, the way it fades out under a bar: a gradient of
+ * [backgroundColor] [fadeHeight] tall, drawn below the header over what passes under it, as strong as [strength] says
+ * ([pinnedHeaderScrolledUnder]), read while it is drawn so that a scroll recomposes nothing.
+ */
+internal fun Modifier.fadingBelowPinnedHeader(backgroundColor: Color, fadeHeight: Float, strength: () -> Float) = drawWithContent {
+    drawContent()
+    val shown = strength()
+    if (shown > 0f) {
+        drawRect(
+            brush = Brush.verticalGradient(
+                colors = listOf(backgroundColor, backgroundColor.copy(alpha = 0f)),
+                startY = size.height,
+                endY = size.height + fadeHeight,
+            ),
+            topLeft = Offset(0f, size.height),
+            size = Size(size.width, fadeHeight),
+            alpha = shown,
+        )
+    }
+}
+
+/**
+ * How strongly what scrolls under a header pinned at [index] of a lazy list fades out below it, 0 to 1: not at all
+ * while the header is not yet at the top, as far as its own item has scrolled under the top once it is
+ * ([firstVisibleOffset] over [fadeHeight]), and fully once the items past it are what is first visible.
+ */
+internal fun pinnedHeaderScrolledUnder(firstVisibleIndex: Int, firstVisibleOffset: Int, index: Int, fadeHeight: Float): Float {
+    val scrolledUnder = when {
+        firstVisibleIndex > index -> fadeHeight
+        firstVisibleIndex == index -> firstVisibleOffset.toFloat()
+        else -> 0f
+    }
+    return (scrolledUnder / fadeHeight).coerceIn(0f, 1f)
+}
+
 private fun LazyListState.scrolledFromTop() = if (firstVisibleItemIndex > 0) Int.MAX_VALUE else firstVisibleItemScrollOffset
 
 /** How far content fades in over below whatever it scrolls under, and how far it is scrolled before it fades fully. */
