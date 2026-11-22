@@ -91,6 +91,13 @@ class ChordProAttachmentsTest {
     }
 
     @Test
+    fun `a name with a non-breaking space and a tab is written with plain single spaces`() {
+        val text = ChordProAttachments.setAttachments("{title: T}\n[C]Line", listOf(ChordProAttachment(sheet, "Live\u00A0at\tthe Hall")))
+
+        assertEquals("{title: T}\n{meta: attachment $sheet Live at the Hall}\n[C]Line", text)
+    }
+
+    @Test
     fun `rewriting changes only the file - on every line that names one`() {
         val text = "{title: T}\n{meta:  attachment   $sheet  Sheet music}\n#{meta: attachment $take}\n{meta: link https://x.com}\n"
 

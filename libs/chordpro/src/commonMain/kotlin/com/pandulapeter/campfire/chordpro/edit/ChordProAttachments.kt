@@ -41,7 +41,7 @@ public object ChordProAttachments {
     public fun setAttachments(text: String, attachments: List<ChordProAttachment>): String {
         val wanted = attachments
             .filter { ChordProMetaItems.isAttachmentSource(it.source) }
-            .map { ChordProAttachment(source = it.source, name = cleanName(it.name)) }
+            .map { ChordProAttachment(source = it.source, name = ChordProDirectiveValues.name(it.name)) }
             .distinctBy { it.source }
         val wantedSources = wanted.mapTo(mutableSetOf()) { it.source }
         // Every place a wanted file already has is filled with the next attachment of the list, which there always is,
@@ -99,14 +99,5 @@ public object ChordProAttachments {
 
     /** The line that carries [attachment], what the editor inserts; its name cleaned as [setAttachments] cleans it. */
     public fun directive(attachment: ChordProAttachment): String =
-        "{meta: ${ChordProMetaItems.ATTACHMENT_NAME} ${listOfNotNull(attachment.source, cleanName(attachment.name)).joinToString(" ")}}"
-
-    private fun cleanName(name: String?): String? = name
-        ?.filterNot { it == '{' || it == '}' }
-        ?.map { if (it.isWhitespace()) ' ' else it }
-        ?.joinToString("")
-        ?.split(' ')
-        ?.filter { it.isNotEmpty() }
-        ?.joinToString(" ")
-        ?.takeIf { it.isNotEmpty() }
+        "{meta: ${ChordProMetaItems.ATTACHMENT_NAME} ${listOfNotNull(attachment.source, ChordProDirectiveValues.name(attachment.name)).joinToString(" ")}}"
 }

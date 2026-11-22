@@ -56,7 +56,7 @@ public object ChordProLinks {
      */
     public fun setLinks(text: String, links: List<ChordProLink>): String {
         val wanted = links.mapNotNull { link ->
-            usableUrl(link.url)?.let { ChordProLink(url = it, name = cleanName(link.name)) }
+            usableUrl(link.url)?.let { ChordProLink(url = it, name = ChordProDirectiveValues.name(link.name)) }
         }.distinctBy { it.url }
         val wantedUrls = wanted.mapTo(mutableSetOf()) { it.url }
         // Every place a wanted address already has is filled with the next link of the list, which there always is,
@@ -86,13 +86,7 @@ public object ChordProLinks {
     }
 
     /** The value of a link directive, shared by text editing and whole-song serialization. */
-    internal fun value(link: ChordProLink): String = cleanName(link.name)?.let { "${link.url} $it" } ?: link.url
-
-    private fun cleanName(name: String?): String? = name
-        ?.filterNot { it == '{' || it == '}' }
-        ?.replace(Regex("\\s+"), " ")
-        ?.trim()
-        ?.takeIf { it.isNotEmpty() }
+    internal fun value(link: ChordProLink): String = ChordProDirectiveValues.name(link.name)?.let { "${link.url} $it" } ?: link.url
 
     /**
      * [value] as the address [addLink] would write, or null where it would write nothing: trimmed, and only an `http`

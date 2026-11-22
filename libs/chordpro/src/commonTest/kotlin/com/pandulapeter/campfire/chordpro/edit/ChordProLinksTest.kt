@@ -149,6 +149,13 @@ class ChordProLinksTest {
     }
 
     @Test
+    fun `a name with a non-breaking space and a tab is written with plain single spaces`() {
+        val text = ChordProLinks.setLinks("{title: T}\n[C]Line", listOf(ChordProLink(video, "Live\u00A0at\tthe Hall")))
+
+        assertEquals("{title: T}\n{meta: link $video Live at the Hall}\n[C]Line", text)
+    }
+
+    @Test
     fun `metadata defaults to no links`() {
         assertEquals(emptyList(), ChordProMetadata().links)
     }

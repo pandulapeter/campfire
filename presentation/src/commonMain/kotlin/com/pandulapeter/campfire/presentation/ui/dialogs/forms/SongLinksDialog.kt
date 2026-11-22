@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.dialogs.forms
 
+import com.pandulapeter.campfire.chordpro.edit.ChordProDirectiveValues
 import com.pandulapeter.campfire.presentation.ui.components.CampfireIconButton
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
@@ -218,7 +219,7 @@ private fun SongLinkFields(
             OutlinedTextField(
                 modifier = Modifier.fillMaxWidth(),
                 value = link.name.orEmpty(),
-                onValueChange = { name -> onChange(link.copy(name = name.filterNot { it == '{' || it == '}' || it == '\n' || it == '\r' })) },
+                onValueChange = { name -> onChange(link.copy(name = ChordProDirectiveValues.typed(name))) },
                 label = { Text(stringResource(Res.string.song_details_link_name)) },
                 placeholder = { Text(linkLabel(link.url)) },
                 trailingIcon = rememberClearTextButton(isVisible = !link.name.isNullOrEmpty(), onClear = { onChange(link.copy(name = null)) }),
@@ -321,5 +322,5 @@ internal fun songLinksToSave(draft: List<ChordProLink>, offered: List<ChordProLi
 /** Compare the address and label as they will be written, keeping link order significant. */
 private fun ChordProLink.normalized() = copy(
     url = ChordProLinks.usableUrl(url).orEmpty(),
-    name = name?.filterNot { it == '{' || it == '}' }?.replace(Regex("\\s+"), " ")?.trim()?.takeIf { it.isNotEmpty() },
+    name = ChordProDirectiveValues.name(name),
 )

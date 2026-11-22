@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.dialogs.forms
 
+import com.pandulapeter.campfire.chordpro.edit.ChordProDirectiveValues
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.OutlinedTextField
@@ -46,14 +47,12 @@ internal fun SongMetadataField(
     OutlinedTextField(
         modifier = modifier,
         value = value,
-        // A brace would end the directive early or open another one, and a line break would leave the rest of the value
-        // in the song as lyrics.
         onValueChange = { newValue ->
             onValueChange(
                 when (field) {
                     Field.YEAR -> newValue.filter { it in '0'..'9' }.take(YEAR_LENGTH)
                     Field.DURATION -> durationDigitsTyped(newValue)
-                    else -> newValue.filterNot { it == '{' || it == '}' || it == '\n' || it == '\r' }.take(maxLength)
+                    else -> ChordProDirectiveValues.typed(newValue).take(maxLength)
                 },
             )
         },

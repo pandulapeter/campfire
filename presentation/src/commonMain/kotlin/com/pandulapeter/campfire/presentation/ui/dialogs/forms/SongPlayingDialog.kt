@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.dialogs.forms
 
+import com.pandulapeter.campfire.chordpro.edit.ChordProDirectiveValues
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
 import com.pandulapeter.campfire.presentation.ui.dialogs.songLabel
@@ -359,7 +360,7 @@ private fun SongPlayingField(
                 if (isNumeric) {
                     newValue.filter { it in '0'..'9' }.take(range?.last?.toString()?.length ?: Int.MAX_VALUE)
                 } else {
-                    newValue.filterNot { it == '{' || it == '}' || it == '\n' || it == '\r' }.take(MAX_KEY_LENGTH)
+                    ChordProDirectiveValues.typed(newValue).take(MAX_KEY_LENGTH)
                 },
             )
         },

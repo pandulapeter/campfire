@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.dialogs.lookup
 
+import com.pandulapeter.campfire.chordpro.edit.ChordProDirectiveValues
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.songInfo.SONG_METADATA_FIELDS
 import com.pandulapeter.campfire.presentation.ui.songInfo.durationDigitsOf
@@ -79,7 +80,7 @@ internal fun DialogType.SongDetailsLookup.filledForm(draft: Map<Field, String>) 
     fillCount = formFillCount + 1,
 )
 
-/** A brace would end the directive early or open another one, and a line break would leave the rest in the song as lyrics. */
-private fun String.cleanedForMetadata() = filterNot { it == '{' || it == '}' || it == '\n' || it == '\r' }.trim()
+/** As a directive's value may hold it (`ChordProDirectiveValues.typed`), trimmed. */
+private fun String.cleanedForMetadata() = ChordProDirectiveValues.typed(this).trim()
 
 private const val YEAR_LENGTH = 4

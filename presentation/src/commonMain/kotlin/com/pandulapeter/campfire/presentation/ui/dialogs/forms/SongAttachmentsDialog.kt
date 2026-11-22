@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.dialogs.forms
 
+import com.pandulapeter.campfire.chordpro.edit.ChordProDirectiveValues
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -187,7 +188,7 @@ private fun SongAttachmentFields(
         OutlinedTextField(
             modifier = Modifier.weight(1f),
             value = attachment.name.orEmpty(),
-            onValueChange = { name -> onChange(attachment.copy(name = name.filterNot { it == '{' || it == '}' || it == '\n' || it == '\r' })) },
+            onValueChange = { name -> onChange(attachment.copy(name = ChordProDirectiveValues.typed(name))) },
             label = { Text(stringResource(Res.string.song_details_link_name)) },
             placeholder = { Text(unnamed) },
             supportingText = { Text(if (size == null) stringResource(Res.string.song_details_attachment_missing) else formattedSize(size)) },
@@ -218,4 +219,4 @@ private val attachmentRowsSaver = listSaver<List<ChordProAttachment>, String>(
 internal fun songAttachmentsToSave(draft: List<ChordProAttachment>, offered: List<ChordProAttachment>): List<ChordProAttachment>? =
     draft.takeIf { it.map(ChordProAttachment::normalized) != offered.map(ChordProAttachment::normalized) }
 
-private fun ChordProAttachment.normalized() = copy(name = name?.replace(Regex("\\s+"), " ")?.trim()?.takeIf { it.isNotEmpty() })
+private fun ChordProAttachment.normalized() = copy(name = ChordProDirectiveValues.name(name))

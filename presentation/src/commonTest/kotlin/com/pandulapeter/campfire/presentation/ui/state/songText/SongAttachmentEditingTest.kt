@@ -121,6 +121,14 @@ class SongAttachmentEditingTest {
         assertEquals(offered.reversed(), songAttachmentsToSave(offered.reversed(), offered))
     }
 
+    @Test
+    fun `a draft whose names differ only by what the writer cleans away writes nothing`() {
+        val offered = listOf(ChordProAttachment(source = "0000000000000001.pdf", name = "Live at the Hall"))
+        listOf("Live\tat the Hall", "Live at {the} Hall", "Live   at the  Hall", "Live\u00A0at the Hall").forEach { name ->
+            assertNull(songAttachmentsToSave(listOf(offered[0].copy(name = name)), offered), name)
+        }
+    }
+
     private fun TestScope.editing(
         store: SongTextStore? = null,
         messageSink: MessageSink = MessageSink(backgroundScope),

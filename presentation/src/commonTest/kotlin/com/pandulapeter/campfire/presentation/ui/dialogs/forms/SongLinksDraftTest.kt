@@ -55,4 +55,12 @@ class SongLinksDraftTest {
         val link = ChordProLink(url = "example.com/tab")
         assertEquals(listOf(link), songLinksToSave(draft = listOf(link), offered = emptyList()))
     }
+
+    @Test
+    fun `a draft whose names differ only by what the writer cleans away writes nothing`() {
+        val offered = listOf(linkA.copy(name = "Live at the Hall"))
+        listOf("Live\tat the Hall", "Live at {the} Hall", "Live   at the  Hall", "Live\u00A0at the Hall").forEach { name ->
+            assertNull(songLinksToSave(draft = listOf(linkA.copy(name = name)), offered = offered), name)
+        }
+    }
 }
