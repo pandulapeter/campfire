@@ -58,7 +58,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.offset
-import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.metronome.api.model.TimeSignature
@@ -80,8 +79,9 @@ import com.pandulapeter.campfire.presentation.ui.pictures.LocalSongImageAdder
 import com.pandulapeter.campfire.presentation.ui.pictures.MissingImageAdder
 import com.pandulapeter.campfire.presentation.ui.pictures.rememberSongImageSizes
 import com.pandulapeter.campfire.presentation.ui.playing.ShapeNames
-import com.pandulapeter.campfire.presentation.ui.playing.withCapo
-import com.pandulapeter.campfire.presentation.ui.playing.withTempo
+import com.pandulapeter.campfire.presentation.ui.playing.shownSongOf
+import com.pandulapeter.campfire.presentation.ui.playing.songReadingOf
+import com.pandulapeter.campfire.presentation.ui.rendering.SongRenderer
 import com.pandulapeter.campfire.presentation.ui.songLayout.rememberDefaultSectionLabels
 import com.pandulapeter.campfire.presentation.ui.tabs.TabReading
 import com.pandulapeter.campfire.presentation.ui.tabs.abcTablature
@@ -115,7 +115,7 @@ import org.jetbrains.compose.resources.painterResource
  * @param shapeNames How the page names its chords where they are the shapes fingered above the capo, see [ShapeNames];
  *   null where it names what sounds.
  * @param inferredChordsKey The key the song's chords were found in (`InferredSongKeys`) for a file that names none, in the
- *   standard notation and in the frame of the chords [transposeSong] gives (`SongRenderer.movedKey`): what a numbering
+ *   standard notation and in the frame of the chords `SongRenderer.transposedSong` gives (`SongRenderer.movedKey`): what a numbering
  *   counts them from, its diagrams' and its Scales section's names included.
  * @param inferredKey The sounding key the song's chords were found in (`InferredSongKeys`), named by the read only line of
  *   a file that names none; null where the playing controls are drawn, which name it themselves.
@@ -172,8 +172,7 @@ internal fun SongDetailsPage(
     chordSpelling: UserPreferences.ChordSpelling,
     settledWidth: Dp,
     contentPadding: PaddingValues,
-    transposeSong: (text: String, transposition: Int, capo: Int, spelling: UserPreferences.ChordSpelling, tabs: TabReading?) -> ChordProSong,
-    notateSong: (song: ChordProSong, spelling: UserPreferences.ChordSpelling, inferredKey: String?) -> ChordProSong,
+    songRenderer: SongRenderer,
     onRetry: () -> Unit,
     headedOffset: () -> Int?,
     onTimingChanged: (SongTiming?) -> Unit,
@@ -233,23 +232,14 @@ internal fun SongDetailsPage(
         ) { inputs, searchesShapes ->
             // The scales are read from the song as its file capos it, the capo saying only which shapes the file is written
             // in; the page names the capo it is played at.
-            val transposed = transposeSong(inputs.text, inputs.transposition, inputs.tabCapo, inputs.spelling, inputs.tabs)
-            // Where the page names the shapes, it is read a second time, moved down by the capo with its tabs' frets left
-            // where they are: moving the song that sounds instead would apply its own key changes twice.
-            val shapes = inputs.shapeNames
-            val named = shapes?.let { transposeSong(inputs.text, inputs.transposition - it.capo, inputs.tabCapo - it.capo, inputs.spelling, inputs.tabs) } ?: transposed
-            val namedInferredKey = if (shapes == null) inputs.inferredChordsKey else shapes.inferredChordsKey
+            val reading = songRenderer.songReadingOf(inputs.text, inputs.transposition, inputs.tabCapo, inputs.spelling, inputs.tabs, inputs.shapeNames, inputs.inferredChordsKey)
             prepareSongLyrics(
-                song = notateSong(named.withTempo(inputs.tempoOverride).withCapo(inputs.capoOverride), inputs.spelling, namedInferredKey).let { song ->
-                    // The song is played in the key that sounds, whatever its chords are named by.
-                    val key = shapes?.soundingKey ?: inputs.inferredKey?.takeIf { song.metadata.key.isNullOrBlank() }
-                    key?.let { song.copy(metadata = song.metadata.copy(key = it)) } ?: song
-                },
-                standardSong = transposed,
-                namedSong = named,
-                nameCapo = shapes?.capo ?: 0,
-                namedInferredKey = namedInferredKey,
-                shapesKey = shapes?.shapesKey,
+                song = songRenderer.shownSongOf(reading, inputs.spelling, inputs.tempoOverride, inputs.capoOverride, inputs.inferredKey),
+                standardSong = reading.transposed,
+                namedSong = reading.named,
+                nameCapo = reading.nameCapo,
+                namedInferredKey = reading.namedInferredKey,
+                shapesKey = reading.shapeNames?.shapesKey,
                 inferredKey = inputs.inferredChordsKey,
                 shapeCapo = inputs.shapeCapo,
                 shouldShowChords = inputs.shouldShowChords,
@@ -261,7 +251,7 @@ internal fun SongDetailsPage(
                 searchesShapes = searchesShapes,
                 suggestsScales = inputs.suggestsScales,
                 showsDegrees = inputs.showsDegrees,
-                notationChords = notationChordsOf(inputs, transpose = named.metadata.transpose, nameCapo = shapes?.capo ?: 0),
+                notationChords = notationChordsOf(inputs, transpose = reading.named.metadata.transpose, nameCapo = reading.nameCapo),
                 imageSizes = inputs.imageSizes,
             )
         }

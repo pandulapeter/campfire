@@ -50,9 +50,9 @@ The values a song is played with and where each is kept.
   shapes fingered above the capo, `SOUNDING` what sounds; the keyboard always sounds. `namingTransposition` moves every
   name on the page (lyrics, comments, key-change lines, the Transposition control's key, the Chords section, the chords
   the Scales section names, a staff's chord symbols, the chord sheet's title, the PDF); under `SHAPES` a capo renames
-  none of them. The page reads the song twice (once sounding, for the Chords and Scales sections), and the key line
-  names the sounding key then the shapes' ("Capo 2 (Em shapes)"; the PDF's capo value the same, so the importer still
-  reads it).
+  none of them. The page, the PDF, and the chord shape sheet read the song twice in one function (`songReadingOf`,
+  once sounding, for the Chords and Scales sections), and the key line names the sounding key then the shapes' ("Capo
+  2 (Em shapes)"; the PDF's capo value the same, so the importer still reads it).
 - **The diagrams are the shapes**: the sounding chords moved down by the effective capo; on the keyboard what sounds.
   Since a capo raises the pitch for everybody, the keyboard has the capo stepper, the capo in the read only line and the
   PDF, and Song defaults, so a pianist sees why the key moved and can set the band's capo. Where the reader keeps the

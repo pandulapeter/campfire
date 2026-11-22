@@ -65,8 +65,10 @@ import com.pandulapeter.campfire.presentation.ui.navigation.FeatureSwitches
 import com.pandulapeter.campfire.presentation.ui.playing.PlayingOverridesSnapshot
 import com.pandulapeter.campfire.presentation.ui.playing.shapeCapoFor
 import com.pandulapeter.campfire.presentation.ui.playing.shapeNamesOf
+import com.pandulapeter.campfire.presentation.ui.playing.songReadingOf
 import com.pandulapeter.campfire.presentation.ui.playing.soundingTransposition
 import com.pandulapeter.campfire.presentation.ui.playing.songPlaybackOf
+import com.pandulapeter.campfire.presentation.ui.playing.tabCapoFor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -121,14 +123,14 @@ internal fun ChordShapeSheet(
     }
     // Named as the page names them, the shapes where it does (see `namedAsShapes`), since the page's name is what was tapped.
     val shapeNames = songRenderer.shapeNamesOf(song, playback, userPreferences, spelling, inferredKeys[song.fileName])
-    val chords by produceState<List<SongChord>?>(null, text, transposition, capo, spelling, tuning, inferredKey, shapeNames) {
+    // The page's tab capo keeps the two reads equal to the page's; with no tabs read it moves no name anyway.
+    val tabCapo = playback.tabCapoFor(userPreferences)
+    val chords by produceState<List<SongChord>?>(null, text, transposition, tabCapo, capo, spelling, tuning, inferredKey, shapeNames) {
         value = text?.let {
             withContext(Dispatchers.Default) {
-                val sounding = songChordsOf(songRenderer.transposedSong(it, transposition, spelling), notation, tuning, capo = capo, inferredKey = inferredKey)
-                shapeNames?.let { names ->
-                    val named = songRenderer.transposedSong(it, transposition - names.capo, spelling)
-                    sounding.namedAsShapes(named, notation, names.capo, names.inferredChordsKey)
-                } ?: sounding
+                val reading = songRenderer.songReadingOf(it, transposition, tabCapo, spelling, tabs = null, shapeNames, inferredChordsKey = inferredKey)
+                val sounding = songChordsOf(reading.transposed, notation, tuning, capo = capo, inferredKey = inferredKey)
+                if (reading.shapeNames == null) sounding else sounding.namedAsShapes(reading.named, notation, reading.nameCapo, reading.namedInferredKey)
             }
         }
     }
