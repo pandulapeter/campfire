@@ -84,6 +84,10 @@ import com.pandulapeter.campfire.presentation.ui.components.menu.NEW_ITEM_BUTTON
 import com.pandulapeter.campfire.presentation.ui.components.menu.overlappingAction
 import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
 import com.pandulapeter.campfire.presentation.ui.components.songCard.SONG_CARD_OUTER_PADDING
+import com.pandulapeter.campfire.presentation.ui.components.tabChrome.SEARCH_PILL_CONTENT_Z_INDEX
+import com.pandulapeter.campfire.presentation.ui.components.tabChrome.TabChromeElement
+import com.pandulapeter.campfire.presentation.ui.components.tabChrome.rememberSharedTabChrome
+import com.pandulapeter.campfire.presentation.ui.components.tabChrome.tabChromeForeground
 import com.pandulapeter.campfire.presentation.ui.platform.CompactKeyboardEffect
 import kotlinx.coroutines.flow.collectLatest
 import kotlin.math.roundToInt
@@ -224,6 +228,9 @@ internal fun SearchableTopAppBar(
     val pill = remember { SearchPill() }
     val closedPillHeight = with(density) { CLOSED_PILL_HEIGHT.toPx() }
     val pillProgress = searchTransition.animateFloat(transitionSpec = { searchTravelSpec() }) { if (it) 1f else 0f }
+    val closedBounds = { pill.closedBounds(height = closedPillHeight, detachProgress = detachProgress.value, layoutDirection = layoutDirection) }
+    val pillBounds = { lerp(closedBounds(), pill.openField, pillProgress.value) }
+    val sharedPill = rememberSharedTabChrome(TabChromeElement.SEARCH_PILL, isReady = { !pillBounds().isEmpty })
     val hasDetachedActions = areClosedSearchActionsShown && areClosedSearchActionsDetached
     val undetachedEndProgress = animateFloatAsState(targetValue = if (hasDetachedActions) 0f else 1f, animationSpec = searchTravelSpec())
     val reachEndPadding = endPadding + if (hasDetachedActions) 0.dp else UNDETACHED_PILL_END_INSET
@@ -258,31 +265,20 @@ internal fun SearchableTopAppBar(
                         // Always fully opaque: the pill is one surface whose color must not change anywhere along the trip,
                         // a back gesture's preview included, which fades what the field holds and leaves the pill alone.
                         // Thinner than the buttons' touch targets, which stay whole and reach past its top and bottom.
-                        val closedBounds = pill.closedBounds(
-                            height = closedPillHeight,
-                            detachProgress = detachProgress.value,
-                            layoutDirection = layoutDirection,
-                        )
-                        val bounds = lerp(closedBounds, pill.openField, pillProgress.value)
-                        drawRoundRect(
-                            color = pillColor,
-                            topLeft = bounds.topLeft,
-                            size = bounds.size,
-                            cornerRadius = CornerRadius(bounds.height / 2),
-                        )
+                        // SearchPillSurface draws it instead while two tabs swap, over both screens.
+                        if (sharedPill?.isSwapping != true) {
+                            val bounds = pillBounds()
+                            drawRoundRect(color = pillColor, topLeft = bounds.topLeft, size = bounds.size, cornerRadius = CornerRadius(bounds.height / 2))
+                        }
                     },
             ) {
+                SearchPillSurface(modifier = Modifier.matchParentSize(), sharedTabChrome = sharedPill, bounds = pillBounds, color = pillColor)
                 // Between the pill and the buttons, so that a press tints the pill under the icon rather than the icon.
-                SearchPillPresses(
-                    modifier = Modifier.matchParentSize(),
-                    pill = pill,
-                    closedBounds = {
-                        pill.closedBounds(height = closedPillHeight, detachProgress = detachProgress.value, layoutDirection = layoutDirection)
-                    },
-                    openProgress = { pillProgress.value },
-                )
+                SearchPillPresses(modifier = Modifier.matchParentSize(), pill = pill, closedBounds = closedBounds, openProgress = { pillProgress.value })
                 Row(
                     modifier = Modifier
+                        // Over the pill while two tabs swap, which it would otherwise cover, fading as its screen does.
+                        .tabChromeForeground(chrome = sharedPill, zIndex = SEARCH_PILL_CONTENT_Z_INDEX)
                         .fillMaxWidth()
                         .padding(
                             start = contentPadding.calculateStartPadding(layoutDirection) + APP_BAR_HORIZONTAL_PADDING,
