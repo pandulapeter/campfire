@@ -158,7 +158,8 @@ only.
 - `rewriteDebDesktopEntry` adds `StartupWMClass`, which **must equal** `setLinuxWindowClassName`'s value: launchers
   match windows by `WM_CLASS`. It also claims `x-scheme-handler/campfire`; `postinst` runs `update-desktop-database`,
   else the scheme waits for the next login. `postinst` and `prerm` call `xdg-desktop-menu` only where it exists: a
-  distrobox container can lack it with xdg-utils counted as installed.
+  distrobox container can lack it with xdg-utils counted as installed. The control file gains `Recommends:` WebKitGTK
+  (4.1, else 4.0), which only reading pages from links needs.
 - No file associations (they are keyed by MIME type, which would claim every text file).
 - **AppImage** (`packageReleaseAppImage`, Linux host only): the `.deb`'s app image behind the static type-2 runtime (no
   `libfuse2` needed), its desktop entry carrying the same keys. The scheme and menu entry exist only once an

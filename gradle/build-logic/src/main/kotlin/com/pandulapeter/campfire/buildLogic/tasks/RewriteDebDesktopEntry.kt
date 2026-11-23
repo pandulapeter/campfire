@@ -24,7 +24,7 @@ import javax.inject.Inject
 /**
  * Unpacks each .deb, rewrites its one desktop entry and builds it again: the entry gets the StartupWMClass key and
  * claims the [urlScheme] (`withUrlScheme`), and the post-install script refreshes the desktop database, without which
- * the scheme is only known after the next login. Both maintainer scripts call `xdg-desktop-menu` only where it
+ * the scheme is only known after the next login. The control file recommends [recommends] (`withRecommends`). Both maintainer scripts call `xdg-desktop-menu` only where it
  * exists (`withOptionalDesktopMenu`). It fails rather than doing nothing when there is no entry to rewrite, since a
  * package without it is wrong in a way only an installation shows. `fakeroot` keeps the repacked files owned by root,
  * as they were; the entry's line in the package's md5sums is brought up to date with it, so that a check of the
@@ -43,6 +43,9 @@ abstract class RewriteDebDesktopEntry : DefaultTask() {
 
     @get:Input
     abstract val urlScheme: Property<String>
+
+    @get:Input
+    abstract val recommends: Property<String>
 
     @get:Internal
     abstract val workingDirectory: DirectoryProperty
@@ -69,6 +72,8 @@ abstract class RewriteDebDesktopEntry : DefaultTask() {
             if (postinst.isFile) postinst.writeText(withDesktopDatabaseUpdate(withOptionalDesktopMenu(postinst.readLines())))
             val prerm = extracted.resolve("DEBIAN/prerm")
             if (prerm.isFile) prerm.writeText(withOptionalDesktopMenu(prerm.readLines()).joinToString(separator = "\n", postfix = "\n"))
+            val control = extracted.resolve("DEBIAN/control")
+            control.writeText(withRecommends(control.readLines(), recommends.get()))
             val md5sums = extracted.resolve("DEBIAN/md5sums")
             if (md5sums.isFile) {
                 val entryPath = entry.relativeTo(extracted).invariantSeparatorsPath

@@ -342,6 +342,8 @@ val rewriteDebDesktopEntry = tasks.register<RewriteDebDesktopEntry>("rewriteDebD
     this.packages.from(packages)
     windowClassName = "Campfire"
     urlScheme = "campfire"
+    // What reads a page from a link, loaded by the web view helper only when it runs: the app starts without it.
+    recommends = "libwebkit2gtk-4.1-0 | libwebkit2gtk-4.0-37"
     workingDirectory = layout.buildDirectory.dir("tmp/rewriteDebDesktopEntry")
     // The package is rewritten in place, so it is both what the task reads and what it leaves behind: an unchanged
     // package is not unpacked and built again on every run.

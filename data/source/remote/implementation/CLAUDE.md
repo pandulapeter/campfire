@@ -175,7 +175,8 @@ cannot tell from no answer.
   by SHA-256; credited). Every request, frames' and workers' included, goes through `WebResourceRequested`: pictures
   and media and anything off a public `https` host get a 403, as on Android. New windows, downloads, permissions, and
   script dialogs are refused. Its browser processes' folder is `%TEMP%\Campfire WebView2`.
-- **Linux**: WebKitGTK through `dlopen` (`webkit2gtk-4.1`, else 4.0; the few functions declared by hand), an ephemeral
+- **Linux**: WebKitGTK through `dlopen` (`webkit2gtk-4.1`, else 4.0; the few functions declared by hand; the `.deb`
+  recommends it rather than depending on it, the AppImage cannot name it), an ephemeral
   context, pictures off, in a `GtkOffscreenWindow`, on a GTK thread of the helper's own. It iterates the default main
   context only while a view is open, since AWT's GTK file dialog runs a loop over the same context on another thread.
   WebKitGTK does not tell a frame's navigation from the page's, so each is asked as a frame's (about:, data:, blob:

@@ -118,6 +118,18 @@ internal fun withOptionalDesktopMenu(lines: List<String>) = lines.map { line ->
     if (call.startsWith("xdg-desktop-menu ")) "if command -v xdg-desktop-menu >/dev/null 2>&1; then $call; fi" else line
 }
 
+/**
+ * A package's control file with one `Recommends` field, [packages], after its `Depends` (or last, where it has none).
+ * jpackage writes only `Depends`, which is for what the app cannot start without; a library one feature needs goes
+ * here, which `apt` installs by default and `--no-install-recommends` leaves out.
+ */
+internal fun withRecommends(lines: List<String>, packages: String): String {
+    val fields = lines.filter { it.isNotBlank() && !it.startsWith("Recommends:") }
+    val depends = fields.indexOfFirst { it.startsWith("Depends:") }
+    val updated = if (depends < 0) fields + "Recommends: $packages" else fields.take(depends + 1) + "Recommends: $packages" + fields.drop(depends + 1)
+    return updated.joinToString(separator = "\n", postfix = "\n")
+}
+
 /** A package's md5sums text with the line of [path] given [hash], every other line as it was. */
 internal fun withUpdatedMd5(lines: List<String>, path: String, hash: String) = lines.joinToString(separator = "\n", postfix = "\n") { line ->
     if (line.substringAfter("  ") == path) "$hash  $path" else line

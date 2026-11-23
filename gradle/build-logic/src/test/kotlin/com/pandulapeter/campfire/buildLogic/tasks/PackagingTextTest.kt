@@ -133,6 +133,18 @@ class PackagingTextTest {
     }
 
     @Test
+    fun `the control file recommends the packages right after its dependencies, once`() {
+        val lines = listOf("Package: campfire", "Depends: libc6, xdg-utils", "Section: sound", "")
+        val updated = withRecommends(lines, "libwebkit2gtk-4.1-0 | libwebkit2gtk-4.0-37")
+        assertEquals(
+            "Package: campfire\nDepends: libc6, xdg-utils\nRecommends: libwebkit2gtk-4.1-0 | libwebkit2gtk-4.0-37\nSection: sound\n",
+            updated,
+        )
+        assertEquals(updated, withRecommends(updated.lines(), "libwebkit2gtk-4.1-0 | libwebkit2gtk-4.0-37"))
+        assertEquals("Package: campfire\nRecommends: a\n", withRecommends(listOf("Package: campfire", "Recommends: b"), "a"))
+    }
+
+    @Test
     fun `only the line of the entry gets the new hash`() {
         val lines = listOf("aaa  opt/campfire/bin/Campfire", "bbb  opt/campfire/lib/campfire-Campfire.desktop", "ccc  opt/campfire/lib/app.cfg")
         assertEquals(
