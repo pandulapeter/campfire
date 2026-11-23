@@ -40,3 +40,6 @@ build/
 
 # Python bytecode, written next to the workflow scripts whenever they are run locally
 __pycache__/
+
+# The Python environment tools/page-model's scripts run in
+.venv/

@@ -7,7 +7,7 @@
 # https://mozilla.org/MPL/2.0/.
 
 """
-The plan's feasibility gate (`documentation/plans/song-from-any-page.md`, step 0): trains the page model three ways
+The page model's gate (step 6 of `tools/page-model/CLAUDE.md`): trains the page model three ways
 (pages only, documents only, both) with five-fold cross-validation, so every labelled page and document is scored once
 by a model that never saw it, and compares each crop with the converter alone, which keeps every line of the page.
 
