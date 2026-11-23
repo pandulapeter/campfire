@@ -40,8 +40,10 @@ internal class OffscreenPageSource(
         if (!isPublicHttpsAddress(trimmed)) return LoadedPage.NotRead(LoadedPage.NotRead.Reason.UNREADABLE)
         var latest: PageSnapshot? = null
         var lastLook: PageLook? = null
-        val browser = newBrowser()
+        // A web view that cannot be made (Android's being updated, or missing) is a page that cannot be read.
+        var browser: OffscreenBrowser? = null
         try {
+            browser = newBrowser()
             browser.open(trimmed)
             withTimeoutOrNull(TIME_LIMIT) {
                 var quietFor = Duration.ZERO
@@ -66,7 +68,7 @@ internal class OffscreenPageSource(
             logger.log("Could not read the page: ${exception::class.simpleName}")
             return LoadedPage.NotRead(LoadedPage.NotRead.Reason.UNREADABLE)
         } finally {
-            withContext(NonCancellable) { browser.close() }
+            withContext(NonCancellable) { browser?.close() }
         }
         return latest?.takeIf { it.isReadable }?.toLoadedPage() ?: LoadedPage.NotRead(notReadReasonOf(lastLook, latest))
     }

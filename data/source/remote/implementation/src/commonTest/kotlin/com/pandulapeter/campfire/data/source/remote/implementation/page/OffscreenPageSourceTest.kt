@@ -124,6 +124,14 @@ class OffscreenPageSourceTest {
         assertEquals(1, logged.size)
     }
 
+    @Test
+    fun `a web view that cannot be made is no page`() = runTest {
+        val logged = mutableListOf<String>()
+
+        assertEquals(UNREADABLE, OffscreenPageSource(newBrowser = { error("No WebView package") }, logger = { logged += it }).load(ADDRESS))
+        assertEquals(1, logged.size)
+    }
+
     private fun source(browser: FakeBrowser) = OffscreenPageSource(newBrowser = { browser }, logger = Logger { })
 
     private class FakeBrowser(private val look: () -> PageLook) : OffscreenBrowser {
