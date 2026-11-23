@@ -76,7 +76,7 @@ internal fun Modifier.sharedTabChrome(
                 val outline = if (isRectangular) Path().apply { addRect(travelling) } else stadiumOf(travelling)
                 chrome.currentContainerColor(counterpart)?.let { drawPath(path = outline, color = it) }
                 clipPath(path = outline) {
-                    withAlpha(chrome.matchedContentAlpha(counterpart)) {
+                    withAlpha(chrome.matchedContentAlpha(counterpart), bounds = travelling) {
                         scale(scale = chrome.matchedContentScale(counterpart), pivot = travelling.center) {
                             translate(left = travelling.center.x - size.width / 2, top = travelling.center.y - size.height / 2) {
                                 this@drawWithContent.drawContent()
@@ -119,10 +119,13 @@ internal fun Modifier.sharedTabChromeSurface(
         }
 }
 
-/** Draws [block] as one layer [alpha] opaque, so that overlapping parts of it do not show through each other. */
-internal fun DrawScope.withAlpha(alpha: Float, block: DrawScope.() -> Unit) {
+/**
+ * Draws [block] as one layer [alpha] opaque, so that overlapping parts of it do not show through each other. Nothing of
+ * [block] outside [bounds] is drawn, so content moved off the node (onto a travelling rectangle) passes that rectangle.
+ */
+internal fun DrawScope.withAlpha(alpha: Float, bounds: Rect = Rect(Offset.Zero, size), block: DrawScope.() -> Unit) {
     if (alpha <= 0f) return
-    drawContext.canvas.saveLayer(bounds = Rect(Offset.Zero, size), paint = Paint().apply { this.alpha = alpha })
+    drawContext.canvas.saveLayer(bounds = bounds, paint = Paint().apply { this.alpha = alpha })
     block()
     drawContext.canvas.restore()
 }
