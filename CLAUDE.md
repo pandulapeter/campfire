@@ -250,8 +250,9 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
   preview, anything more the review, whose song rows open the same preview; existing files are skipped, collisions
   numbered or replaced after confirmation: `ui/screens/songDetails`, `domain/implementation`.
 - A pasted, dropped, or shared chord sheet that is one new song opens the editor on it, a drop or share in read only
-  mode included, with a share's page title, else placeholders, for a missing title and artist; nothing is written before
-  Save, which needs a title; never a link followed, except a Campfire share link: `presentation`.
+  mode included, with a share's page title, else placeholders, for a missing title and artist; its page clutter is
+  cropped on the device by the page model (`:libs:pagesong`), and **Use the whole page** brings it back; nothing is
+  written before Save, which needs a title; never a link followed, except a Campfire share link: `presentation`.
 - Files and text dragged onto the app are taken on every platform (Android and iOS from another app), read only mode
   included: `presentation`.
 - A share from another app (Android, the iOS share extension) is imported like a paste or an "Open with"; the
@@ -303,7 +304,8 @@ run on the simulator, and the web, whose storage tests run in headless Chrome), 
 `publish-all.yml` builds anything.
 
 The importer is scored against a private corpus of other programs' documents (`ImportCorpusTest`, outside git, named by
-`campfire.importCorpus` in `local.properties`; a worktree passes it with `-P`), never in CI.
+`campfire.importCorpus` in `local.properties`; a worktree passes it with `-P`), never in CI. `PageCorpusTest` beside it
+scores the shipped page model's crop on the labelled web pages `campfire.pageCorpus` names, the same way.
 
 ## Build
 

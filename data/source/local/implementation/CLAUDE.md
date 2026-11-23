@@ -153,7 +153,9 @@ it; iOS marks the folder) and no sync, and is emptied of other sessions' names o
   publishes in batches. Unreadable or oversized files are skipped; an unlistable *directory* throws, so an unreachable
   library never looks empty.
 - Documents: 16 MiB limit. `ImportCorpusTest` (desktop) scores the import against the private corpus that
-  `campfire.importCorpus` names, writing its report into the corpus's `.runs/`; blank skips it.
+  `campfire.importCorpus` names, writing its report into the corpus's `.runs/`; blank skips it. `PageCorpusTest` runs
+  `:presentation`'s shipped page model over the labelled pages `campfire.pageCorpus` names, printing what the crop loses
+  and wins against keeping every line (blank, or no weights, skips it).
 - `ArchiveImportTest` (desktop) imports archives as the app does, each staged into an empty library of its own
   over the app's whole data and domain graph (`ImportApp`), twice, which must give the same plan, result, and
   library files, with no failure and nothing left in `imports/`; a ZIP64 archive must import as its twin without it

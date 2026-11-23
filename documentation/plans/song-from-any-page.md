@@ -10,7 +10,8 @@
 # Plan: a song from any page
 
 **Status:** step 0 passed (2026-11-23) with the review fallback below; steps 1 and 2 have their tooling
-(`tools/page-model`); step 2's export is next. Written against the code on 2026-11-22 (67d82f42a). `convert/` is
+(`tools/page-model`), step 3 is `:libs:pagesong`, and step 4 crops every paste, drop, and share that is one text, with
+**Use the whole page** in the editor; step 5 is next. Written against the code on 2026-11-22 (67d82f42a). `convert/` is
 `libs/chordsheet/src/commonMain/kotlin/com/pandulapeter/campfire/chordpro/convert/`.
 
 A user looking at a song with chords on any website shares it to Campfire (or pastes it, or presses an optional browser
@@ -149,6 +150,18 @@ alone will not reach zero. The gate is passed on that basis, with the "Use the w
 - A new `PageCorpusTest` beside `ImportCorpusTest` runs the whole pipeline over the held-out pages and writes a report
   of each page's crop and song, never in CI. `ImportCorpusTest` must not move, since documents do not pass the crop
   until step 8.
+
+**Done (2026-11-23).** The seam is `PageCropper` in `:domain:api`, which `:presentation` implements
+(`PageCropperImpl`: `Res.readBytes("files/page-model.bin")` once, on the first page, off the main thread, the page as
+`PageLineSource.PAGE` lines with no layout, the title and artist lines kept with the song) and `PrepareImportUseCaseImpl`
+asks for an `ImportedFile.isPageText` text (`PageTextCrop`). Only the paste, drop, or share that is one text is marked;
+several shared texts, a `.txt` picked or opened, ChordPro, ABC, and documents are read whole. No song, a failure, or no
+weights keep every line. A cropped song carries the whole page's conversion (`ImportPlan.SongEntry.wholePageText`), which
+the editor's banner offers as **Use the whole page** (`WholePageOffer`, `WholePageBanner`) until it is used, dismissed,
+or the text changes. `PageCorpusTest` (`data/source/local/implementation`) prints the gate's page-level numbers (song
+lines lost, how often the crop beats keeping everything) for the shipped weights over the corpus's labelled pages, all
+of which the shipped model was trained on, so only pages labelled after a training are held out; it asserts only loose
+bounds.
 
 ### 5. Loading a shared link
 

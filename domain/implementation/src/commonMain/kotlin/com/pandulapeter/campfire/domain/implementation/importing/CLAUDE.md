@@ -59,9 +59,13 @@
   written only on Import. One that brings nothing is left out unreported, its directive kept.
 - Plain text (a `.txt`, so every paste and share) is first asked `AbcText.isAbc`: ABC is one song per tune, since the
   converter would read its note groups (`[CEG]`) as chords; ChordPro holding an ABC block is no ABC. ChordPro
-  extensions never go through the converter. No readable text is `unreadableDocumentFileNames`, not unsupported. All
-  incoming songs are prettified after conversion, splitting, and notation normalization. No origin info survives in
-  the library.
+  extensions never go through the converter. A page's text (`ImportedFile.isPageText`: a paste, a drop, or a share that
+  is one text; never a file, nor ChordPro, which the converter hands back untouched) is cropped first (`PageTextCrop`,
+  through `:domain:api`'s `PageCropper`): only the lines the model keeps, with the blank lines between them; no song, a
+  crop keeping everything, one the converter finds nothing in, or a failure converts the whole text. A cropped page that
+  is one song carries the whole page's conversion (`SongEntry.wholePageText`) for the editor. No readable text is
+  `unreadableDocumentFileNames`, not unsupported. All incoming songs are prettified after conversion, splitting, and
+  notation normalization. No origin info survives in the library.
 
 ### Applying
 

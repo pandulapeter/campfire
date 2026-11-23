@@ -37,11 +37,14 @@ which the script checks; everything else is handed the holders, state, and callb
 
 ## Text and document imports
 
-- A pasted, dropped, or shared text goes down the import as a `.txt` (`isNewSongFromText`). One song the library does
-  not hold (a taken name included) opens the editor on it, unwritten (`EditorSession.openNewSongEditor`), read only mode
-  too when shared, with a snackbar saying how the text was read (chords over lyrics, ChordPro, lyrics only, or an ABC
-  tune's or block's notation kept); one the library holds is opened; anything else (several ABC tunes among them) is the
-  ordinary review.
+- A pasted, dropped, or shared text goes down the import as a `.txt` (`isNewSongFromText`), marked as a page's
+  (`ImportedFile.isPageText`) where it is one text, so its page clutter is cropped on the device before it is converted
+  (`PageCropperImpl`: the page model's weights, `files/page-model.bin`, read once on the first page, off the main thread;
+  any failure keeps the whole text). Several shared texts are not cropped. One song the library does not hold (a taken
+  name included) opens the editor on it, unwritten (`EditorSession.openNewSongEditor`), read only mode too when shared,
+  with a snackbar saying how the text was read (chords over lyrics, ChordPro, lyrics only, or an ABC tune's or block's
+  notation kept), and **Use the whole page** where the crop left lines out; one the library holds is opened; anything
+  else (several ABC tunes among them) is the ordinary review.
 - The editor waits, as the import screen does (`ImportReportState.awaitNothingInTheWay`), for any open dialog, unsaved
   editor text, and the onboarding; replaces an editor with nothing unsaved; and holds the queue until no editor is left,
   so texts arriving together (an iOS inbox drained at once) open one after another.
