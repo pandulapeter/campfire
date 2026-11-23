@@ -112,6 +112,9 @@ locales are filled in from the language), Play's `update-priority`, a `submit` a
 - `fix-issues.yml` (by hand): Claude Code lands the plans in `documentation/issues/`, one commit each in the README's
   merge order (or by `EXECUTION.md`), skipping a plan that needs iOS or changes `.github/workflows/`; it pushes main
   (a branch if main moved) and dispatches `tests.yml`.
+- The desktop's web view helper is compiled only for the machine Gradle runs on, so `tests.yml` compiles each
+  operating system's on its own runner (Linux in `compile`, macOS in `compile-ios`, Windows in `test-windows`). `CI`
+  makes a missing toolchain fail it, there and in every desktop package a release builds (`app/desktop/CLAUDE.md`).
 - `publish-web.yml` `rsync --delete`s the distribution over `app/` of the `campfire-website` repository
   (https://campfire-songbook.com/app/), a folder that holds only the distribution.
 

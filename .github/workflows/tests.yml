@@ -153,6 +153,7 @@ jobs:
           :app:android:assembleDebug
           :app:baselineprofile:compileNonMinifiedReleaseKotlin
           :app:desktop:proguardReleaseJars
+          :app:desktop:compileWebViewHelper
           :app:web:compileProductionExecutableKotlinWasmJs
           :tools:screenshots:compileKotlin
       # The web's file storage is the origin private file system, which only a browser has: the contract every
@@ -175,6 +176,11 @@ jobs:
       # Every library's iosMain and the framework the Xcode project embeds.
       - name: Compile the iOS framework
         run: ./gradlew :app:ios:linkDebugFrameworkIosSimulatorArm64
+      # The desktop's web view helper is compiled for the machine Gradle runs on, so each operating system's is compiled
+      # on a runner of its own: here macOS's, on Linux in the compile job, and Windows' in test-windows. A runner without
+      # the toolchain fails it (CI is set), as the release would.
+      - name: Compile the macOS web view helper
+        run: ./gradlew :app:desktop:compileWebViewHelper
       # The file storage contract (FileStorageContractTest) over the Foundation calls the app makes, on the simulator
       # Kotlin boots by default; only this module's tests run here. A runner without that simulator is answered in the
       # module's build file (testRuns["test"].deviceId), not here. Not in the pre-commit hook: the test link takes minutes.
@@ -197,6 +203,10 @@ jobs:
       - name: Run the unit tests
         shell: bash
         run: ./gradlew desktopTest --continue
+      # The web view helper over WebView2, with MSVC and the pinned WebView2 SDK, as the Microsoft Store build makes it.
+      - name: Compile the Windows web view helper
+        shell: bash
+        run: ./gradlew :app:desktop:compileWebViewHelper
       - name: Upload failed unit test reports
         if: ${{ failure() }}
         uses: actions/upload-artifact@v7
