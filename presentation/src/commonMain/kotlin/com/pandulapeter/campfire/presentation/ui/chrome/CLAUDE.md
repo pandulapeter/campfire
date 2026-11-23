@@ -22,6 +22,12 @@ The navigation chrome (bar, rail, transitions, and the Tools item).
   Songs is a cross fade (a fade through held halfway would show neither screen). `navigationTransition` decides push vs.
   pop from scene depth itself, because Navigation 3's detection is wrong after an interrupted transition and leaves an
   invisible screen swallowing clicks. A finished onboarding is the one exception: zoomed away, no scrim.
+- **A tab swap carries the New button and the search pill over** (`components/tabChrome`): `NavDisplay` sits in a
+  `SharedTransitionLayout` (`ScreenDeck`), each top level screen gets a `TabChromeScope` of its entry's visibility, and
+  the specs mark the swap (`TabChrome.swap`, snapshot state: none for cards, so they move with their screen as before).
+  A part the other tab has too shares its rectangle on the spatial spring (New ↔ Chords' and Scales' Preferences pill:
+  filled circle into tonal pill); one it lacks scales and fades on its own, drawn over both screens (`isMatchFound`),
+  since inside its screen it would blink out in 90 ms. Both are drawn in the layout's overlay, past the fade through.
 - **A back gesture started mid-transition**: Android runs Google's newer NavDisplay (`androidx-navigation3-android`),
   which follows it. Elsewhere `MidTransitionBackHandler` (composed after `NavDisplay`) takes it and goes back on release,
   retargeting the running slide: the multiplatform 1.2.0 seeks the running transition to follow a finger, which replays

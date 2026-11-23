@@ -31,6 +31,12 @@
 - New is a filled 48dp circle **beside the pill** that never moves as search opens and closes: the pill's end and the
   gap follow the search's spring, the circle fades and scales in place (a clipped shrink would slice it). The divider
   before it animates on the search action's spring, not in the button's exit, whose clipped shrink would cut it off.
+- **A tab swap carries the pill over** (`ui/chrome`): the bar draws its pill where no node stands, so
+  `SearchPillSurface` is a node laid at the pill's rectangle (closed, open, or between) that draws it only while two
+  tabs swap, the bar's own drawing left out meanwhile (else a second pill waits where the travelling one arrives). It
+  shares nothing until its rectangle is known (the first frame has none). The bar's row is drawn over it then
+  (`tabChromeForeground`), in place, fading on the screens' own fade-through curves (with the pill while that scales
+  alone); New inside is a part of its own. `FloatingPill`'s node is the pill itself, its buttons reaching past it.
 - `SearchBackHandler` uses `NavigationBackHandler` over a hoisted `NavigationEventState`, not `BackHandler` (which
   hears a gesture only on release), and previews the close via `SearchState.backProgress`. The offset is layout, not a
   drawn translation, so `animateBounds` carries on from where the gesture left.
