@@ -18,7 +18,6 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.localization.stringResource
@@ -34,6 +33,7 @@ import com.pandulapeter.campfire.presentation.ui.components.shortcuts.menuShortc
 import com.pandulapeter.campfire.presentation.ui.components.tabChrome.NEW_BUTTON_Z_INDEX
 import com.pandulapeter.campfire.presentation.ui.components.tabChrome.TabChromeContent
 import com.pandulapeter.campfire.presentation.ui.components.tabChrome.TabChromeElement
+import com.pandulapeter.campfire.presentation.ui.components.tabChrome.drawnContainerColor
 import com.pandulapeter.campfire.presentation.ui.components.tabChrome.rememberSharedTabChrome
 import com.pandulapeter.campfire.presentation.ui.components.tabChrome.sharedTabChrome
 import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
@@ -94,7 +94,10 @@ internal fun NewItemMenu(
                         .size(NEW_ITEM_BUTTON_SIZE),
                     onClick = open,
                     enabled = isEnabled,
-                    colors = if (chrome == null) colors else colors.copy(containerColor = Color.Transparent, disabledContainerColor = Color.Transparent),
+                    colors = colors.copy(
+                        containerColor = chrome.drawnContainerColor(colors.containerColor),
+                        disabledContainerColor = chrome.drawnContainerColor(colors.disabledContainerColor),
+                    ),
                 ) {
                     Icon(
                         painter = painterResource(Res.drawable.ic_add),

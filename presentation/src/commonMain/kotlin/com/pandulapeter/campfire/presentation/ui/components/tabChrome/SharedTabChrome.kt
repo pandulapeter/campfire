@@ -217,6 +217,12 @@ internal fun rememberSharedTabChrome(
 }
 
 /**
+ * The color the node a part stands for draws its own container in: [containerColor] outside a top level screen, and
+ * none on one, where [sharedTabChrome] draws the container instead, so that a tab swap can carry it over.
+ */
+internal fun SharedTabChrome?.drawnContainerColor(containerColor: Color) = if (this == null) containerColor else Color.Transparent
+
+/**
  * How far the screen this transition shows is in, 0 to 1: on [fadeThroughSpec] while two tabs fade through, snapped outside
  * a swap of two tabs, so that a part animating there never keeps a card's transition running, and linear along a back
  * gesture, which seeks the transition: a spring would run ahead of the finger and the screens.

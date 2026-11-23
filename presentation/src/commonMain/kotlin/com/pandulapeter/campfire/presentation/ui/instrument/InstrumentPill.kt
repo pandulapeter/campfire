@@ -34,7 +34,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.MeasurePolicy
 import androidx.compose.ui.layout.Placeable
@@ -55,6 +54,7 @@ import com.pandulapeter.campfire.presentation.resources.instrument_tuning_standa
 import com.pandulapeter.campfire.presentation.ui.components.controls.StepperDivider
 import com.pandulapeter.campfire.presentation.ui.components.tabChrome.TOOL_LINE_Z_INDEX
 import com.pandulapeter.campfire.presentation.ui.components.tabChrome.TabChromeElement
+import com.pandulapeter.campfire.presentation.ui.components.tabChrome.drawnContainerColor
 import com.pandulapeter.campfire.presentation.ui.components.tabChrome.rememberSharedTabChrome
 import com.pandulapeter.campfire.presentation.ui.components.tabChrome.sharedTabChrome
 import com.pandulapeter.campfire.presentation.ui.songView.songControlHeight
@@ -105,7 +105,7 @@ internal fun InstrumentPill(
             .height(songControlHeight(style))
             .alpha(alpha),
         shape = CircleShape,
-        color = if (chrome == null) containerColor else Color.Transparent,
+        color = chrome.drawnContainerColor(containerColor),
     ) {
         InstrumentPillHalves(
             instrument = instrument,

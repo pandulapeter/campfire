@@ -34,7 +34,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -55,6 +54,7 @@ import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcu
 import com.pandulapeter.campfire.presentation.ui.components.tabChrome.NEW_BUTTON_Z_INDEX
 import com.pandulapeter.campfire.presentation.ui.components.tabChrome.TabChromeContent
 import com.pandulapeter.campfire.presentation.ui.components.tabChrome.TabChromeElement
+import com.pandulapeter.campfire.presentation.ui.components.tabChrome.drawnContainerColor
 import com.pandulapeter.campfire.presentation.ui.components.tabChrome.rememberSharedTabChrome
 import com.pandulapeter.campfire.presentation.ui.components.tabChrome.sharedTabChrome
 import kotlinx.coroutines.flow.Flow
@@ -179,7 +179,7 @@ internal fun MetronomePanel(
                     .graphicsLayer { scaleX = contentProgress.value }
                     .semantics { contentDescription = label },
                 onClick = onPlayStop,
-                colors = if (chrome == null) colors else colors.copy(containerColor = Color.Transparent),
+                colors = colors.copy(containerColor = chrome.drawnContainerColor(colors.containerColor)),
             ) {
                 PlayStopMark(
                     isPlaying = isPlaying,

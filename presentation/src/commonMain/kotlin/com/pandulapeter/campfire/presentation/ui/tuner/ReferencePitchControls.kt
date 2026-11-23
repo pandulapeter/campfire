@@ -19,7 +19,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
@@ -41,6 +40,7 @@ import com.pandulapeter.campfire.presentation.ui.components.menu.NEW_ITEM_BUTTON
 import com.pandulapeter.campfire.presentation.ui.components.tabChrome.NEW_BUTTON_Z_INDEX
 import com.pandulapeter.campfire.presentation.ui.components.tabChrome.TabChromeContent
 import com.pandulapeter.campfire.presentation.ui.components.tabChrome.TabChromeElement
+import com.pandulapeter.campfire.presentation.ui.components.tabChrome.drawnContainerColor
 import com.pandulapeter.campfire.presentation.ui.components.tabChrome.rememberSharedTabChrome
 import com.pandulapeter.campfire.presentation.ui.components.tabChrome.sharedTabChrome
 import com.pandulapeter.campfire.presentation.ui.metronome.PlayStopMark
@@ -105,7 +105,7 @@ internal fun ReferencePitchControls(
         } else {
             null
         }
-        val drawnContainerColor = if (chrome == null) containerColor else Color.Transparent
+        val drawnContainerColor = chrome.drawnContainerColor(containerColor)
         FilledIconToggleButton(
             modifier = Modifier
                 .sharedTabChrome(chrome = chrome, zIndex = NEW_BUTTON_Z_INDEX, isContainerDrawnOutsideSwaps = true)
