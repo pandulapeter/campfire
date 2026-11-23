@@ -11,8 +11,8 @@ package com.pandulapeter.campfire.chordpro.convert
 
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordPlacement.noBreakSpaces
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordWords.chordTokens
-import com.pandulapeter.campfire.chordpro.convert.ChordSheetConverter.labelledRow
-import com.pandulapeter.campfire.chordpro.convert.ChordSheetConverter.metadata
+import com.pandulapeter.campfire.chordpro.convert.ChordSheetMetadata.labelledRow
+import com.pandulapeter.campfire.chordpro.convert.ChordSheetMetadata.metadata
 import kotlin.math.abs
 
 /**

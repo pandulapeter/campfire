@@ -112,8 +112,8 @@ internal object ChordSheetRomanChords {
      */
     private fun keys(lines: List<Rendered>): List<String?> {
         val named = lines.map { line ->
-            val field = ChordSheetConverter.metadata(line.text)?.takeIf { it.first == "key" }
-                ?: ChordSheetConverter.labelledRow(line.text, isHeader = true)?.firstOrNull { it.first == "key" }
+            val field = ChordSheetMetadata.metadata(line.text)?.takeIf { it.first == "key" }
+                ?: ChordSheetMetadata.labelledRow(line.text, isHeader = true)?.firstOrNull { it.first == "key" }
             field?.second?.trim()?.split(gap)?.first()?.let(::ascii)
                 ?.let { ChordProChordNames.latinExpanded(it) ?: it }
                 ?.takeIf { ChordProChordNames.isChordName(it.substringBefore(' ')) }
