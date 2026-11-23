@@ -24,12 +24,12 @@ import com.pandulapeter.campfire.presentation.ui.components.actions.SetlistActio
 import com.pandulapeter.campfire.presentation.ui.components.appBar.AppBarOverlap
 import com.pandulapeter.campfire.presentation.ui.components.list.SectionHeader
 import com.pandulapeter.campfire.presentation.ui.components.list.listItemAnimation
+import com.pandulapeter.campfire.presentation.ui.components.list.pinnedOverList
 import com.pandulapeter.campfire.presentation.ui.components.list.rememberSectionHeaderState
 import com.pandulapeter.campfire.presentation.ui.state.setlists.SetlistWithSongs
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
-import com.pandulapeter.campfire.presentation.ui.components.list.pinnedOverList
 
 /** The pinned header of a setlist in [SetlistList], with the setlist's menu outside performance mode. */
 internal fun LazyGridScope.setlistHeader(

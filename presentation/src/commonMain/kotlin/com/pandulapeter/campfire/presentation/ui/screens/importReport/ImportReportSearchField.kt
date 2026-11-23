@@ -81,9 +81,9 @@ import com.pandulapeter.campfire.presentation.ui.components.fadingBelowPinnedHea
 import com.pandulapeter.campfire.presentation.ui.components.pinnedHeaderScrolledUnder
 import com.pandulapeter.campfire.presentation.ui.components.SearchState
 import com.pandulapeter.campfire.presentation.ui.components.appBar.TruncateSearchQuery
+import com.pandulapeter.campfire.presentation.ui.components.list.pinnedOverList
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.painterResource
-import com.pandulapeter.campfire.presentation.ui.components.list.pinnedOverList
 
 /**
  * One line on a tonal pill, as the list screens' search field is, with the magnifier in front of it and a button that

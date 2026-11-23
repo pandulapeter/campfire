@@ -28,10 +28,10 @@ import androidx.compose.ui.unit.offset
 import com.pandulapeter.campfire.presentation.ui.components.appBar.LIST_APP_BAR_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.components.appBar.NEW_ITEM_BUTTON_END_INSET
 import com.pandulapeter.campfire.presentation.ui.components.appBar.NEW_ITEM_BUTTON_GAP
+import com.pandulapeter.campfire.presentation.ui.components.list.pinnedOverList
 import com.pandulapeter.campfire.presentation.ui.components.menu.NEW_ITEM_BUTTON_SIZE
 import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.Flow
-import com.pandulapeter.campfire.presentation.ui.components.list.pinnedOverList
 
 /**
  * The search of a tool's page (the Chords and the Scales tabs), under the controls and pinned at the top of the page

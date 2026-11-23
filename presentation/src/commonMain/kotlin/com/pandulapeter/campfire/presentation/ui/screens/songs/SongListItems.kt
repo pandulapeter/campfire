@@ -24,6 +24,7 @@ import com.pandulapeter.campfire.presentation.ui.components.list.ListPlaceholder
 import com.pandulapeter.campfire.presentation.ui.components.list.SectionHeader
 import com.pandulapeter.campfire.presentation.ui.components.list.anchoredTransition
 import com.pandulapeter.campfire.presentation.ui.components.list.listItemAnimation
+import com.pandulapeter.campfire.presentation.ui.components.list.pinnedOverList
 import com.pandulapeter.campfire.presentation.ui.components.list.rememberSectionHeaderState
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
@@ -38,7 +39,6 @@ import com.pandulapeter.campfire.presentation.ui.state.songs.SONG_HEADER_CONTENT
 import com.pandulapeter.campfire.presentation.ui.state.songs.SongGroupHeader
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import com.pandulapeter.campfire.presentation.ui.components.list.pinnedOverList
 
 /** [SongList]'s [placeholder], with the ways into a library it offers outside performance mode. */
 internal fun LazyGridScope.songListPlaceholder(
