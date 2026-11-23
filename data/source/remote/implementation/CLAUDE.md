@@ -150,8 +150,9 @@ cannot tell from no answer.
   503 may be a bot check that clears. A failed host lookup (also what no connection reports), connection, timeout, or
   I/O error is the network's.
 - iOS: a `WKWebView` in no window with a non-persistent data store; every navigation (frames too, which may also be
-  `about:`, `data:`, `blob:`) refused off a public `https` host. WebKit cannot refuse a subresource without a content
-  rule list, so those are the page's, as in Safari. An `NSURLErrorDomain` failure of no connection, a host not found,
+  `about:`, `data:`, `blob:`) refused off a public `https` host. The macOS helper's content rule list (compiled once per
+  process into Caches, the views going without it where it fails) refuses pictures, media, `http:`, and `ws:`; the
+  page's other subresources are its own, as in Safari. An `NSURLErrorDomain` failure of no connection, a host not found,
   not answering, or lost, or a timeout is the network's.
 - Web: `NoPageSource` (a tab may not read another site's page).
 
@@ -178,6 +179,6 @@ cannot tell from no answer.
   context, pictures off, in a `GtkOffscreenWindow`, on a GTK thread of the helper's own. It iterates the default main
   context only while a view is open, since AWT's GTK file dialog runs a loop over the same context on another thread.
   WebKitGTK does not tell a frame's navigation from the page's, so each is asked as a frame's (about:, data:, blob:
-  allowed, and an address off a public host never read). Subresources are the page's, as on iOS. Downloads are
+  allowed, and an address off a public host never read). Subresources other than pictures are the page's. Downloads are
   refused: a response that is an attachment or that the view cannot show is ignored, and any download started is
   cancelled.

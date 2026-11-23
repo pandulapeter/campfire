@@ -26,6 +26,7 @@ static jmethodID allowsNavigation, onLoadStarted, onLoadFinished, onLoadFailed, 
 // Pictures and media are refused, and so is anything plain http: or ws: the page asks for. WebKit refuses a
 // subresource only through a content rule list, which has no way to say "a public host", so the local network is
 // refused for navigations alone, as in the iOS app. A rule's filter takes no disjunction, hence a rule per scheme.
+// The iOS reader compiles the same list (WebKitBrowser.kt); keep the two in step.
 static NSString *const RULES =
     @"[{\"trigger\":{\"url-filter\":\".*\",\"resource-type\":[\"image\",\"media\"]},\"action\":{\"type\":\"block\"}},"
     @"{\"trigger\":{\"url-filter\":\"^http:\"},\"action\":{\"type\":\"block\"}},"

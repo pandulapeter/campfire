@@ -12,11 +12,14 @@ package com.pandulapeter.campfire.data.source.remote.implementation.page
 import com.pandulapeter.campfire.data.source.remote.implementation.network.isPublicHttpsAddress
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.ObjCSignatureOverride
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import platform.CoreGraphics.CGRectMake
+import platform.Foundation.NSCachesDirectory
 import platform.Foundation.NSError
+import platform.Foundation.NSFileManager
 import platform.Foundation.NSURL
 import platform.Foundation.NSURLErrorCancelled
 import platform.Foundation.NSURLErrorCannotConnectToHost
@@ -29,6 +32,9 @@ import platform.Foundation.NSURLErrorNetworkConnectionLost
 import platform.Foundation.NSURLErrorNotConnectedToInternet
 import platform.Foundation.NSURLErrorTimedOut
 import platform.Foundation.NSURLRequest
+import platform.Foundation.NSUserDomainMask
+import platform.WebKit.WKContentRuleList
+import platform.WebKit.WKContentRuleListStore
 import platform.WebKit.WKNavigation
 import platform.WebKit.WKNavigationAction
 import platform.WebKit.WKNavigationActionPolicy
@@ -45,8 +51,9 @@ import kotlin.coroutines.resume
  *
  * Its data store is a non-persistent one, so no cookie, cache, or storage outlives the read. Every navigation, the
  * first one, each redirect, and each frame's, is asked of [WebKitNavigation] and refused unless it is a public `https`
- * address (a frame may also be `about:`, `data:`, or `blob:`, which go nowhere). WebKit offers no way to refuse a
- * script's or a picture's request short of a content rule list, so those are left to the page, as they are in Safari.
+ * address (a frame may also be `about:`, `data:`, or `blob:`, which go nowhere). A content rule list, WebKit's only way
+ * to refuse a subresource, refuses pictures, media, `http:`, and `ws:`, so a read for the text spends no mobile data on
+ * what the page draws; a rule cannot say "a public host", so the page's other requests are its own, as in Safari.
  */
 @OptIn(ExperimentalForeignApi::class)
 internal class WebKitBrowser private constructor(
@@ -78,13 +85,41 @@ internal class WebKitBrowser private constructor(
 
     companion object {
 
+        /**
+         * The compiled [RULES], once per process: null until the first view asks for it, and only ever read or written on
+         * the main thread. WebKit's completion handler settles it, never a read's coroutine, so a read cancelled while it
+         * compiles leaves it to settle for the next one.
+         */
+        private var ruleList: CompletableDeferred<WKContentRuleList?>? = null
+
         /** Built on the main thread; the view holds its navigation delegate weakly, so the browser holds it. */
         suspend fun create() = withContext(Dispatchers.Main) {
-            val configuration = WKWebViewConfiguration().apply { websiteDataStore = WKWebsiteDataStore.nonPersistentDataStore() }
+            val rules = (ruleList ?: compileRuleList().also { ruleList = it }).await()
+            val configuration = WKWebViewConfiguration().apply {
+                websiteDataStore = WKWebsiteDataStore.nonPersistentDataStore()
+                // Without the list (it failed to compile) a page is still read, only with its pictures.
+                rules?.let(userContentController::addContentRuleList)
+            }
             val webView = WKWebView(frame = CGRectMake(0.0, 0.0, WIDTH, HEIGHT), configuration = configuration)
             val navigation = WebKitNavigation()
             webView.navigationDelegate = navigation
             WebKitBrowser(webView, navigation)
+        }
+
+        /** Compiled into Caches, which no device backup holds and the system may empty; it is then compiled again. */
+        private fun compileRuleList() = CompletableDeferred<WKContentRuleList?>().also { deferred ->
+            val folder = (NSFileManager.defaultManager.URLsForDirectory(NSCachesDirectory, NSUserDomainMask).firstOrNull() as? NSURL)
+                ?.URLByAppendingPathComponent("CampfireWebViewRules")
+            val store = folder?.let { WKContentRuleListStore.storeWithURL(it) }
+            if (store == null) {
+                println("The page reader's content rule list has no store to compile into.")
+                deferred.complete(null)
+            } else {
+                store.compileContentRuleListForIdentifier("campfire", RULES) { list, error ->
+                    if (list == null) println("The page reader's content rule list did not compile: ${error?.localizedDescription}")
+                    deferred.complete(list)
+                }
+            }
         }
 
         /** A current iPhone's screen in points, which is what a responsive page lays itself out for. */
@@ -156,3 +191,14 @@ private val UNREACHABLE_ERROR_CODES = setOf(
 
 /** What a frame inside the page may load besides a public `https` address: nothing that leaves the device. */
 private val FRAME_SCHEMES = setOf("about", "data", "blob")
+
+/**
+ * Pictures, media, and anything plain `http:` or `ws:` the page asks for are blocked; a filter takes no disjunction, hence
+ * a rule per scheme. The macOS helper's `RULES` (`desktopMain/native/macos/CampfireWebView.m`) is its twin: keep the
+ * two in step.
+ */
+private const val RULES = """[
+    {"trigger": {"url-filter": ".*", "resource-type": ["image", "media"]}, "action": {"type": "block"}},
+    {"trigger": {"url-filter": "^http:"}, "action": {"type": "block"}},
+    {"trigger": {"url-filter": "^ws:"}, "action": {"type": "block"}}
+]"""
