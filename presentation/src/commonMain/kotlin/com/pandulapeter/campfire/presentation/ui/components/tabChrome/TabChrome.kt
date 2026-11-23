@@ -1,0 +1,88 @@
+/*
+ * This file is part of Campfire.
+ * Copyright (c) Pandula Péter 2017-2026.
+ * https://github.com/pandulapeter/campfire
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * https://mozilla.org/MPL/2.0/.
+ */
+package com.pandulapeter.campfire.presentation.ui.components.tabChrome
+
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.navigation3.ui.LocalNavAnimatedContentScope
+
+/**
+ * What carries the parts of a top level screen that stay on screen while two tabs are swapped (the New button and the
+ * search pill, see [TabChromeElement]): the [SharedTransitionScope] laid around the screens, and which kind of transition
+ * the navigation specs last decided on ([swap]), since only a swap of two tabs carries them over. Snapshot state, unlike
+ * `PredictiveBackMark`, since the parts read it while they are laid out and drawn.
+ */
+@OptIn(ExperimentalSharedTransitionApi::class)
+@Stable
+internal class TabChrome {
+    /** Set by the layout around the screens before any of them is composed, which is the only one there is. */
+    lateinit var sharedTransitionScope: SharedTransitionScope
+
+    var swap by mutableStateOf(TabSwap.NONE)
+}
+
+/** How the screens of the running navigation transition change places, as far as [TabChrome] is concerned. */
+internal enum class TabSwap {
+    /** Not two tabs: a card dealt or taken off, or nothing animated at all while the launch screen covers the app. */
+    NONE,
+
+    /** Two tabs, the one being left fading out before the other fades in. */
+    FADE_THROUGH,
+
+    /** Two tabs cross faded along a back gesture. */
+    CROSS_FADE,
+}
+
+/** The parts of a tab that stay on screen while it is swapped for another, one key each, matched between the two. */
+internal enum class TabChromeElement {
+    /** The list screens' New button, and the one button pill standing on its spot on the Chords and the Scales tabs. */
+    NEW_BUTTON,
+
+    /** The list screens' search pill, open or closed. */
+    SEARCH_PILL,
+}
+
+/**
+ * One top level screen's share of [TabChrome]: the visibility of its own entry in the navigation transition. There is
+ * none outside a top level screen (a card, the screenshot tool's screens drawn alone), where the parts stay put.
+ */
+@Stable
+internal class TabChromeScope(
+    val tabChrome: TabChrome,
+    val visibilityScope: AnimatedVisibilityScope,
+) {
+    /** Whether two tabs are being swapped right now, this screen being one of them. */
+    val isSwapping: Boolean
+        get() = tabChrome.swap != TabSwap.NONE && visibilityScope.transition.let { it.currentState != it.targetState }
+}
+
+internal val LocalTabChromeScope = staticCompositionLocalOf<TabChromeScope?> { null }
+
+/** Hands the top level screen [content] is composed for its [TabChromeScope], its entry's visibility read from Navigation 3. */
+@Composable
+internal fun ProvideTabChromeScope(
+    tabChrome: TabChrome,
+    content: @Composable () -> Unit,
+) {
+    val visibilityScope = LocalNavAnimatedContentScope.current
+    CompositionLocalProvider(
+        LocalTabChromeScope provides remember(tabChrome, visibilityScope) { TabChromeScope(tabChrome, visibilityScope) },
+        content = content,
+    )
+}

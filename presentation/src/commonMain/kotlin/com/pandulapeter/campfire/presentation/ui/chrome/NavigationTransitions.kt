@@ -14,13 +14,9 @@ import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.core.FastOutLinearInEasing
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.SpringSpec
 import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -34,6 +30,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.navigation3.scene.Scene
+import com.pandulapeter.campfire.presentation.ui.components.tabChrome.TabChrome
+import com.pandulapeter.campfire.presentation.ui.components.tabChrome.TabSwap
+import com.pandulapeter.campfire.presentation.ui.components.tabChrome.predictiveBackSpec
+import com.pandulapeter.campfire.presentation.ui.components.tabChrome.tabFadeInSpec
+import com.pandulapeter.campfire.presentation.ui.components.tabChrome.tabFadeOutSpec
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import kotlin.math.roundToInt
 
@@ -58,7 +59,8 @@ import kotlin.math.roundToInt
  * The screen underneath is darkened for as long as a card covers any of it, by a veil of [scrimColor] on its own enter or
  * exit transition. A veil is one of the transition's own parts, so it moves with the slides wherever they go: along a
  * spring, seeked by Navigation 3, or driven by a back gesture, which on Android moves only those parts with the finger.
- * The decision whether a back gesture is followed is handed to [backMark].
+ * The decision whether a back gesture is followed is handed to [backMark], and whether two tabs are swapped to [tabChrome],
+ * whose parts are carried over from one tab to the other rather than faded through.
  *
  * Nothing moves while the launch screen still covers the app ([isAppShown]), and a finished onboarding
  * ([isOnboardingFinishCelebrated]) is not taken off the deck but zoomed away, see [onboardingFinishTransition].
@@ -70,6 +72,7 @@ internal fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.navigati
     motionScheme: MotionScheme,
     scrimColor: Color,
     backMark: PredictiveBackMark,
+    tabChrome: TabChrome,
 ): ContentTransform {
     val from = CampfireDestination.TopLevel.fromContentKey(initialState.entries.lastOrNull()?.contentKey)
     val to = CampfireDestination.TopLevel.fromContentKey(targetState.entries.lastOrNull()?.contentKey)
@@ -77,6 +80,7 @@ internal fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.navigati
         initialState.entries.lastOrNull()?.contentKey == ONBOARDING_CONTENT_KEY &&
         targetState.entries.none { it.contentKey == ONBOARDING_CONTENT_KEY }
     backMark.isPredictiveBack = false
+    tabChrome.swap = if (isAppShown && !isOnboardingFinishing && from != null && to != null) TabSwap.FADE_THROUGH else TabSwap.NONE
     return when {
         !isAppShown -> ContentTransform(EnterTransition.None, ExitTransition.None)
         isOnboardingFinishing -> onboardingFinishTransition(motionScheme)
@@ -207,12 +211,14 @@ internal fun MotionScheme.slideFractionSpec() = when (val spec = defaultSpatialS
 internal fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.predictivePopTransition(
     scrimColor: Color,
     backMark: PredictiveBackMark,
+    tabChrome: TabChrome,
 ): ContentTransform {
     backMark.isPredictiveBack = true
-    if (CampfireDestination.TopLevel.fromContentKey(initialState.entries.lastOrNull()?.contentKey) != null &&
+    val isTabSwap = CampfireDestination.TopLevel.fromContentKey(initialState.entries.lastOrNull()?.contentKey) != null &&
         CampfireDestination.TopLevel.fromContentKey(targetState.entries.lastOrNull()?.contentKey) != null
-    ) {
-        val spec = tween<Float>(PREDICTIVE_BACK_DURATION, easing = LinearEasing)
+    tabChrome.swap = if (isTabSwap) TabSwap.CROSS_FADE else TabSwap.NONE
+    if (isTabSwap) {
+        val spec = predictiveBackSpec<Float>()
         return ContentTransform(
             targetContentEnter = fadeIn(spec),
             initialContentExit = fadeOut(spec),
@@ -220,10 +226,10 @@ internal fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.predicti
         )
     }
     val towards = AnimatedContentTransitionScope.SlideDirection.End
-    val spec = tween<IntOffset>(PREDICTIVE_BACK_DURATION, easing = LinearEasing)
+    val spec = predictiveBackSpec<IntOffset>()
     return ContentTransform(
         targetContentEnter = slideIntoContainer(towards, spec, initialOffset = ::backgroundSlideOffset) +
-            unveilIn(tween(PREDICTIVE_BACK_DURATION, easing = LinearEasing), scrimColor),
+            unveilIn(predictiveBackSpec(), scrimColor),
         initialContentExit = slideOutOfContainer(towards, spec),
         targetContentZIndex = targetState.zIndex,
     )
@@ -236,8 +242,8 @@ internal fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.predicti
  * screens are painted on.
  */
 private fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.tabTransition() = ContentTransform(
-    targetContentEnter = fadeIn(tween(TAB_FADE_IN_DURATION, delayMillis = TAB_FADE_OUT_DURATION, easing = LinearOutSlowInEasing)),
-    initialContentExit = fadeOut(tween(TAB_FADE_OUT_DURATION, easing = FastOutLinearInEasing)),
+    targetContentEnter = fadeIn(tabFadeInSpec()),
+    initialContentExit = fadeOut(tabFadeOutSpec()),
     targetContentZIndex = targetState.zIndex,
 )
 
@@ -248,9 +254,6 @@ private fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.tabTransi
 private val Scene<CampfireDestination>.zIndex: Float
     get() = previousEntries.size.toFloat()
 
-private const val TAB_FADE_OUT_DURATION = 90
-private const val TAB_FADE_IN_DURATION = 210
-private const val PREDICTIVE_BACK_DURATION = 350
 private const val BACKGROUND_SLIDE_FRACTION = 0.12f
 private const val ONBOARDING_FINISH_APP_SCALE = 0.9f
 private const val ONBOARDING_FINISH_ONBOARDING_SCALE = 1.15f

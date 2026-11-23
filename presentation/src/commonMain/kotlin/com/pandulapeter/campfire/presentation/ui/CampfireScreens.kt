@@ -31,6 +31,7 @@ import com.pandulapeter.campfire.presentation.ui.chrome.coveredScreenScrimColor
 import com.pandulapeter.campfire.presentation.ui.chrome.endwardTranslation
 import com.pandulapeter.campfire.presentation.ui.chrome.navigationTransition
 import com.pandulapeter.campfire.presentation.ui.chrome.predictivePopTransition
+import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.PaddingValues
@@ -74,6 +75,8 @@ import com.pandulapeter.campfire.presentation.ui.screens.chords.ChordsScreen
 import com.pandulapeter.campfire.presentation.ui.screens.scales.ScalesScreen
 import com.pandulapeter.campfire.presentation.ui.components.list.ListLayout
 import com.pandulapeter.campfire.presentation.ui.components.WindowSize
+import com.pandulapeter.campfire.presentation.ui.components.tabChrome.ProvideTabChromeScope
+import com.pandulapeter.campfire.presentation.ui.components.tabChrome.TabChrome
 import com.pandulapeter.campfire.presentation.ui.screens.export.ExportTransition
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.screens.setlists.SetlistsScreen
@@ -234,162 +237,162 @@ internal fun CampfireScreens(
     // What the screens' own lifecycles are compared with, see ScreenSurface.
     val hostLifecycle = LocalLifecycleOwner.current.lifecycle
     val backMark = rememberPredictiveBackMark()
+    val tabChrome = remember { TabChrome() }
     val topLevelScreen: @Composable (CampfireDestination.TopLevel, @Composable () -> Unit) -> Unit = { destination, content ->
         ReportNavigationTransition(viewModel, onNavigationTransitionRunningChanged)
-        TopLevelScreenSurface(
-            windowSize = windowSize,
-            railWidth = railWidth,
-            navigationBarHeight = navigationBarHeight,
-            chrome = screenChrome(destination),
-            content = content,
-        )
+        ProvideTabChromeScope(tabChrome) {
+            TopLevelScreenSurface(
+                windowSize = windowSize,
+                railWidth = railWidth,
+                navigationBarHeight = navigationBarHeight,
+                chrome = screenChrome(destination),
+                content = content,
+            )
+        }
     }
     val cardScreen: @Composable (@Composable () -> Unit) -> Unit = { content ->
         ReportNavigationTransition(viewModel, onNavigationTransitionRunningChanged)
         ScreenSurface(hostLifecycle = hostLifecycle, content = content)
     }
     val scrimColor = MaterialTheme.colorScheme.scrim
-    // The export screen is drawn in this layout rather than in a window of its own, which a screen reader would take for
-    // modal, so the app under it is taken out of the semantics tree while it covers it - only once fully, so that the
-    // screen a back gesture is revealing is not empty to an accessibility service halfway through the swipe. Derived,
-    // so that the app is not recomposed on every frame of the slide.
-    val isExportCovering by remember { derivedStateOf { exportTransition.progress.value >= 1f } }
 
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
-        NavDisplay(
-            modifier = Modifier.fillMaxSize().underExportScreen(exportTransition, layoutDirection, scrimColor, isExportCovering),
-            backStack = backStack,
-            // NavDisplay's own back handler is the system's back, which completes a predictive gesture as often as not.
-            onBack = { viewModel.navigator.navigateBack(isPredictiveBackCompleted = backMark.isPredictiveBack) },
-            // The same spec decides the direction for both parameters, see navigationTransition. Nothing is animated
-            // while the launch screen still covers the app: a place the app was asked to open on (the web build's
-            // address, Settings after a consent page) is put on the stack behind it, and a screen still sliding in as
-            // the launch screen fades would be the app arriving twice.
-            transitionSpec = { navigationTransition(viewModel.launchState.hasShownApp, viewModel.navigator.isOnboardingFinishCelebrated, motionScheme, coveredScreenScrimColor(scrimColor), backMark) },
-            popTransitionSpec = { navigationTransition(viewModel.launchState.hasShownApp, viewModel.navigator.isOnboardingFinishCelebrated, motionScheme, coveredScreenScrimColor(scrimColor), backMark) },
-            predictivePopTransitionSpec = { predictivePopTransition(coveredScreenScrimColor(scrimColor), backMark) },
-            // Stable string content keys, so that the transitions can recognize the top level destinations.
-            entryProvider = entryProvider {
-                entry<CampfireDestination.Songs>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
-                    topLevelScreen(destination) {
-                        SongsScreen(
-                            viewModel = viewModel,
-                            layout = listLayout,
-                            contentPadding = shellContentPadding,
-                        )
-                    }
-                }
-                entry<CampfireDestination.Setlists>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
-                    topLevelScreen(destination) {
-                        SetlistsScreen(
-                            viewModel = viewModel,
-                            layout = listLayout,
-                            contentPadding = shellContentPadding,
-                        )
-                    }
-                }
-                entry<CampfireDestination.Metronome>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
-                    topLevelScreen(destination) {
-                        toolScreen(destination) {
-                            MetronomeScreen(
+        ScreenDeck(tabChrome = tabChrome, exportTransition = exportTransition, layoutDirection = layoutDirection, scrimColor = scrimColor) {
+            NavDisplay(
+                modifier = Modifier.fillMaxSize(),
+                backStack = backStack,
+                // NavDisplay's own back handler is the system's back, which completes a predictive gesture as often as not.
+                onBack = { viewModel.navigator.navigateBack(isPredictiveBackCompleted = backMark.isPredictiveBack) },
+                // The same spec decides the direction for both parameters, see navigationTransition. Nothing is animated
+                // while the launch screen still covers the app: a place the app was asked to open on (the web build's
+                // address, Settings after a consent page) is put on the stack behind it, and a screen still sliding in as
+                // the launch screen fades would be the app arriving twice.
+                transitionSpec = { navigationTransition(viewModel.launchState.hasShownApp, viewModel.navigator.isOnboardingFinishCelebrated, motionScheme, coveredScreenScrimColor(scrimColor), backMark, tabChrome) },
+                popTransitionSpec = { navigationTransition(viewModel.launchState.hasShownApp, viewModel.navigator.isOnboardingFinishCelebrated, motionScheme, coveredScreenScrimColor(scrimColor), backMark, tabChrome) },
+                predictivePopTransitionSpec = { predictivePopTransition(coveredScreenScrimColor(scrimColor), backMark, tabChrome) },
+                // Stable string content keys, so that the transitions can recognize the top level destinations.
+                entryProvider = entryProvider {
+                    entry<CampfireDestination.Songs>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
+                        topLevelScreen(destination) {
+                            SongsScreen(
                                 viewModel = viewModel,
-                                layout = settingsLayout,
-                                scrollPosition = viewModel.navigator.metronomeScrollPosition,
+                                layout = listLayout,
                                 contentPadding = shellContentPadding,
                             )
                         }
                     }
-                }
-                entry<CampfireDestination.Tuner>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
-                    topLevelScreen(destination) {
-                        toolScreen(destination) {
-                            TunerScreen(
+                    entry<CampfireDestination.Setlists>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
+                        topLevelScreen(destination) {
+                            SetlistsScreen(
                                 viewModel = viewModel,
-                                layout = settingsLayout,
-                                scrollPosition = viewModel.navigator.tunerScrollPosition,
+                                layout = listLayout,
                                 contentPadding = shellContentPadding,
                             )
                         }
                     }
-                }
-                entry<CampfireDestination.Chords>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
-                    topLevelScreen(destination) {
-                        toolScreen(destination) {
-                            ChordsScreen(
+                    entry<CampfireDestination.Metronome>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
+                        topLevelScreen(destination) {
+                            toolScreen(destination) {
+                                MetronomeScreen(
+                                    viewModel = viewModel,
+                                    layout = settingsLayout,
+                                    scrollPosition = viewModel.navigator.metronomeScrollPosition,
+                                    contentPadding = shellContentPadding,
+                                )
+                            }
+                        }
+                    }
+                    entry<CampfireDestination.Tuner>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
+                        topLevelScreen(destination) {
+                            toolScreen(destination) {
+                                TunerScreen(
+                                    viewModel = viewModel,
+                                    layout = settingsLayout,
+                                    scrollPosition = viewModel.navigator.tunerScrollPosition,
+                                    contentPadding = shellContentPadding,
+                                )
+                            }
+                        }
+                    }
+                    entry<CampfireDestination.Chords>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
+                        topLevelScreen(destination) {
+                            toolScreen(destination) {
+                                ChordsScreen(
+                                    viewModel = viewModel,
+                                    layout = settingsLayout,
+                                    contentPadding = shellContentPadding,
+                                )
+                            }
+                        }
+                    }
+                    entry<CampfireDestination.Scales>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
+                        topLevelScreen(destination) {
+                            toolScreen(destination) {
+                                ScalesScreen(
+                                    viewModel = viewModel,
+                                    layout = settingsLayout,
+                                    contentPadding = shellContentPadding,
+                                )
+                            }
+                        }
+                    }
+                    entry<CampfireDestination.Settings>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
+                        topLevelScreen(destination) {
+                            SettingsScreen(
                                 viewModel = viewModel,
                                 layout = settingsLayout,
                                 contentPadding = shellContentPadding,
+                                urlOpener = urlOpener,
                             )
                         }
                     }
-                }
-                entry<CampfireDestination.Scales>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
-                    topLevelScreen(destination) {
-                        toolScreen(destination) {
-                            ScalesScreen(
+                    // These four cover the chrome, so they are the only ones laid out edge to edge.
+                    entry<CampfireDestination.SongEditor>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
+                        cardScreen {
+                            SongEditorScreen(
                                 viewModel = viewModel,
-                                layout = settingsLayout,
-                                contentPadding = shellContentPadding,
+                                destination = destination,
+                                windowSize = windowSize,
+                                contentPadding = songEditorContentPadding,
+                                urlOpener = urlOpener,
+                                onBack = viewModel.navigator::navigateBack,
                             )
                         }
                     }
-                }
-                entry<CampfireDestination.Settings>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
-                    topLevelScreen(destination) {
-                        SettingsScreen(
-                            viewModel = viewModel,
-                            layout = settingsLayout,
-                            contentPadding = shellContentPadding,
-                            urlOpener = urlOpener,
-                        )
+                    entry<CampfireDestination.ImportReport>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) {
+                        cardScreen {
+                            ImportReportScreen(
+                                viewModel = viewModel,
+                                // Its search is typed into, so its list ends above the keyboard as the editor's text does.
+                                contentPadding = songEditorContentPadding,
+                                onBack = viewModel.navigator::navigateBack,
+                            )
+                        }
                     }
-                }
-                // These four cover the chrome, so they are the only ones laid out edge to edge.
-                entry<CampfireDestination.SongEditor>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
-                    cardScreen {
-                        SongEditorScreen(
-                            viewModel = viewModel,
-                            destination = destination,
-                            windowSize = windowSize,
-                            contentPadding = songEditorContentPadding,
-                            urlOpener = urlOpener,
-                            onBack = viewModel.navigator::navigateBack,
-                        )
+                    entry<CampfireDestination.Onboarding>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
+                        cardScreen {
+                            OnboardingScreen(
+                                viewModel = viewModel,
+                                destination = destination,
+                            )
+                        }
                     }
-                }
-                entry<CampfireDestination.ImportReport>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) {
-                    cardScreen {
-                        ImportReportScreen(
-                            viewModel = viewModel,
-                            // Its search is typed into, so its list ends above the keyboard as the editor's text does.
-                            contentPadding = songEditorContentPadding,
-                            onBack = viewModel.navigator::navigateBack,
-                        )
+                    entry<CampfireDestination.SongDetails>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
+                        cardScreen {
+                            SongDetailsScreen(
+                                viewModel = viewModel,
+                                destination = destination,
+                                settledWidth = settledSongDetailsWidth,
+                                contentPadding = songDetailsContentPadding,
+                                onBack = viewModel.navigator::navigateBack,
+                            )
+                        }
                     }
-                }
-                entry<CampfireDestination.Onboarding>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
-                    cardScreen {
-                        OnboardingScreen(
-                            viewModel = viewModel,
-                            destination = destination,
-                        )
-                    }
-                }
-                entry<CampfireDestination.SongDetails>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
-                    cardScreen {
-                        SongDetailsScreen(
-                            viewModel = viewModel,
-                            destination = destination,
-                            settledWidth = settledSongDetailsWidth,
-                            contentPadding = songDetailsContentPadding,
-                            onBack = viewModel.navigator::navigateBack,
-                        )
-                    }
-                }
-            },
-        )
+                },
+            )
+        }
         // After NavDisplay, so that it is heard before its handler, and before the overlays, whose own handlers come first.
         MidTransitionBackHandler(
             isTransitionRunning = isNavigationTransitionRunning,
@@ -408,6 +411,31 @@ internal fun CampfireScreens(
             exportTransition = exportTransition,
             messagesPadding = messagesPadding,
         )
+    }
+}
+
+/**
+ * The deck of screens, laid out in a [SharedTransitionLayout] so that the parts two tabs share are drawn over both while
+ * they swap (see [TabChrome]), and moved with the deck under the export screen, that overlay included.
+ */
+@Composable
+private fun ScreenDeck(
+    tabChrome: TabChrome,
+    exportTransition: ExportTransition,
+    layoutDirection: LayoutDirection,
+    scrimColor: Color,
+    content: @Composable () -> Unit,
+) {
+    // The export screen is drawn in this layout rather than in a window of its own, which a screen reader would take for
+    // modal, so the app under it is taken out of the semantics tree while it covers it - only once fully, so that the
+    // screen a back gesture is revealing is not empty to an accessibility service halfway through the swipe. Derived,
+    // so that the app is not recomposed on every frame of the slide.
+    val isExportCovering by remember { derivedStateOf { exportTransition.progress.value >= 1f } }
+    SharedTransitionLayout(
+        modifier = Modifier.fillMaxSize().underExportScreen(exportTransition, layoutDirection, scrimColor, isExportCovering),
+    ) {
+        tabChrome.sharedTransitionScope = this
+        content()
     }
 }
 
