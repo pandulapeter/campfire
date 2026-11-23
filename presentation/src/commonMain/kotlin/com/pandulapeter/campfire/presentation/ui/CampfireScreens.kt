@@ -120,7 +120,7 @@ internal fun CampfireScreens(
     val density = LocalDensity.current
     val motionScheme = MaterialTheme.motionScheme
     // Makes interrupted transitions retarget instead of getting stuck, see Navigator.navigationGeneration.
-    val navigationMetadata = mapOf(NAVIGATION_GENERATION_METADATA_KEY to viewModel.navigator.navigationGeneration)
+    val navigationMetadata = rememberNavigationMetadata(viewModel.navigator.navigationGeneration)
 
     // What the chrome takes out of the window on this frame, which follows it while it changes shape, and what it will
     // have taken out once it has settled. The insets are the first, read only by the layouts that use them so that a
@@ -220,7 +220,7 @@ internal fun CampfireScreens(
     // The tools the chrome offers behind its Tools item, and so the buttons their screens are switched by; none where every
     // screen has an item of its own. Decided by the kind the window has rather than by the chrome on screen, which hands
     // over between the two, so that the buttons come and go once as a window crosses from the bar to a taller rail.
-    val groupedTools = groupedTools(chromeKind, topLevelDestinations, railCapacity.of(chromeKind))
+    val groupedTools = rememberGroupedTools(chromeKind, topLevelDestinations, railCapacity.of(chromeKind))
     val toolScreen: @Composable (CampfireDestination.TopLevel, @Composable () -> Unit) -> Unit = { destination, content ->
         ToolScreenFrame(
             destination = destination,
@@ -470,5 +470,18 @@ private fun ReportNavigationTransition(
         onRunningChanged(isRunning)
     }
 }
+
+/**
+ * The metadata NavDisplay is handed, remembered: a new map on every composition of [CampfireScreens] would compose
+ * NavDisplay and every entry's frame again with it.
+ */
+@Composable
+private fun rememberNavigationMetadata(navigationGeneration: Int) =
+    remember(navigationGeneration) { mapOf(NAVIGATION_GENERATION_METADATA_KEY to navigationGeneration) }
+
+/** [groupedTools], remembered for the reason [rememberNavigationMetadata] gives: the screens' frames are handed it. */
+@Composable
+private fun rememberGroupedTools(chromeKind: NavigationChromeKind, destinations: List<CampfireDestination.TopLevel>, railCapacity: Int) =
+    remember(chromeKind, destinations, railCapacity) { groupedTools(chromeKind, destinations, railCapacity) }
 
 private const val NAVIGATION_GENERATION_METADATA_KEY = "navigationGeneration"
