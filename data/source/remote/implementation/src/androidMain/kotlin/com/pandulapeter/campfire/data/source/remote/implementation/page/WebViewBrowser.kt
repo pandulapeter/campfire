@@ -18,6 +18,7 @@ import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebSettings
+import android.webkit.WebStorage
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import com.pandulapeter.campfire.data.source.remote.implementation.network.isPublicHttpsAddress
@@ -35,7 +36,8 @@ import kotlin.coroutines.resume
  * nothing the page asks of a host that is not a public `https` one is fetched: its own navigations are refused in
  * [WebViewClient.shouldOverrideUrlLoading], and every other request (a script, a frame, a picture) is answered empty in
  * [WebViewClient.shouldInterceptRequest], `data:` and `blob:` addresses aside, which go nowhere. Cookies are the app's
- * own `WebView` jar, which nothing else in the app uses; third-party ones are refused.
+ * own `WebView` jar, which nothing else in the app uses; third-party ones are refused. The jar, the page's storage, and
+ * the cache are process-wide and kept on disk, so [close] empties them: nothing a page left outlives its read.
  */
 @SuppressLint("SetJavaScriptEnabled")
 internal class WebViewBrowser private constructor(private val webView: WebView) : OffscreenBrowser {
@@ -108,6 +110,11 @@ internal class WebViewBrowser private constructor(private val webView: WebView) 
 
     override suspend fun close() = withContext(Dispatchers.Main) {
         webView.stopLoading()
+        webView.clearCache(true)
+        webView.clearHistory()
+        CookieManager.getInstance().removeAllCookies(null)
+        CookieManager.getInstance().flush()
+        WebStorage.getInstance().deleteAllData()
         webView.destroy()
     }
 
