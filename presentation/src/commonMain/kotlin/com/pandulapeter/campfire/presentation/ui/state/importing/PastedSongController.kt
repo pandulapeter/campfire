@@ -39,7 +39,8 @@ import kotlinx.coroutines.launch
  * @param enqueueImport Queues the source, as a new song where that is true and as an ordinary import otherwise, with the
  *   title and artist the sender's subject suggests for a new song, and returns what completes once it has settled.
  * @param importSharedLink Imports a text that is a Campfire link as the link it is, see [sharedLinkIn].
- * @param isPageLoadingSupported Whether this platform can read a page by its address at all (`CanLoadPagesUseCase`).
+ * @param canLoadPages Whether this platform can read a page by its address at all (`CanLoadPagesUseCase`), asked only
+ *   when [isPageLoadingSupported] is read: the desktop's answer may still be on its way while the view model is built.
  * @param isPageLoadingEnabled Whether the user lets it (Settings → Features → Pages from links).
  */
 internal class PastedSongController(
@@ -51,9 +52,12 @@ internal class PastedSongController(
     private val isPerformanceModeEnabled: StateFlow<Boolean>,
     private val enqueueImport: (source: ImportSource, isNewSongFromText: Boolean, suggestion: PageTitle?) -> Deferred<Unit>,
     private val importSharedLink: (SharedLink) -> Deferred<Unit>,
-    val isPageLoadingSupported: Boolean,
+    private val canLoadPages: () -> Boolean,
     private val isPageLoadingEnabled: () -> Boolean,
 ) {
+
+    /** Whether this platform can read a page by its address at all. */
+    val isPageLoadingSupported get() = canLoadPages()
 
     /**
      * Whether a dropped text is answered now: only with the Songs screen on top and nothing over it - a dialog, a sheet

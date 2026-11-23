@@ -42,6 +42,7 @@ class PastedSongControllerTest {
     private val queued = mutableListOf<Pair<List<ImportedFile>, Boolean>>()
     private val pages = mutableListOf<String>()
     private var isPageLoadingSupported = true
+    private var pageLoadingSupportChecks = 0
 
     /** Off unless a test turns it on, so the tests of what a link is without it read as they did before pages were read. */
     private var isPageLoadingEnabled = false
@@ -74,7 +75,10 @@ class PastedSongControllerTest {
                 links += it
                 importSettled
             },
-            isPageLoadingSupported = isPageLoadingSupported,
+            canLoadPages = {
+                pageLoadingSupportChecks++
+                isPageLoadingSupported
+            },
             isPageLoadingEnabled = { isPageLoadingEnabled },
         )
     }
@@ -286,6 +290,14 @@ class PastedSongControllerTest {
         controller.newSongFromText("Listen to this: $LINK")
         assertEquals(1, links.size)
         assertTrue(pages.isEmpty())
+    }
+
+    @Test
+    fun `whether pages can be read is asked only once a page address is pasted`() = runTest {
+        val controller = controller()
+        assertEquals(0, pageLoadingSupportChecks)
+        controller.newSongFromText("https://example.com/song")
+        assertTrue(pageLoadingSupportChecks > 0)
     }
 
     @Test

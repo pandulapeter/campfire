@@ -524,7 +524,7 @@ class CampfireViewModel(
             importController.enqueueImport(source = source, shouldOpenSong = !isNewSong, isNewSongFromText = isNewSong, suggestion = suggestion)
         },
         importSharedLink = { importController.importSharedLink(it) },
-        isPageLoadingSupported = importWork.useCases.canLoadPages(),
+        canLoadPages = { importWork.useCases.canLoadPages() },
         isPageLoadingEnabled = { preferencesController.userPreferences.value?.isPageLinkLoadingEnabled != false },
     )
 
