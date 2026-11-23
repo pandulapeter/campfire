@@ -488,11 +488,36 @@ class ChordSheetConverterTest {
             "e---------------3---|\nB-----------3---1-0-|\nG-------0----------|   x2\nD-0-0-0------------|\n" +
             "A------------------|\nE------------------|"
         assertEquals(
-            "John Williams\nStar Wars Main Theme\n\n{comment: INTRO}\n{start_of_tab}\n" +
+            "John Williams\nStar Wars Main Theme\n\n{start_of_intro: INTRO}\n{start_of_tab}\n" +
                 "e---------------3---|\nB-----------3---1-0-|\nG-------0----------|   x2\nD-0-0-0------------|\n" +
-                "A------------------|\nE------------------|\n{end_of_tab}\n",
+                "A------------------|\nE------------------|\n{end_of_tab}\n{end_of_intro}\n",
             convert(text),
         )
+    }
+
+    @Test
+    fun `a heading naming no section of its own opens one around the tab under it`() {
+        val result = convert(
+            "[Intro]\n\ne|---0---|---3---|\nB|---1---|---1---|\n\n" +
+                "[Main Riff]\n\ne|---3---|---0---|\nB|---1---|---1---|\n\n[Verse]\nAm      C\nHello there friend",
+        )
+        assertTrue(
+            "{start_of_intro: Intro}\n\n{start_of_tab}\ne|---0---|---3---|\nB|---1---|---1---|\n{end_of_tab}\n\n{end_of_intro}" in result &&
+                "{start_of_riff: Main Riff}" in result && "{comment" !in result,
+            result,
+        )
+    }
+
+    @Test
+    fun `a section a heading opened over a tab ends where the lyrics start`() {
+        val result = convert("[Solo]\ne|---0---|\nB|---1---|\n\nAm      C\nHello there friend\n")
+        assertTrue("{end_of_tab}\n{end_of_solo}\n\n[Am]Hello th[C]ere friend" in result, result)
+    }
+
+    @Test
+    fun `a staff's harmonics and the playing marks under it stay in the tab`() {
+        val result = convert("e|---0---|\nB|---3*--|\nG|--<12>-|\nPM-|   PM")
+        assertEquals("{start_of_tab}\ne|---0---|\nB|---3*--|\nG|--<12>-|\nPM-|   PM\n{end_of_tab}\n", result)
     }
 
     @Test

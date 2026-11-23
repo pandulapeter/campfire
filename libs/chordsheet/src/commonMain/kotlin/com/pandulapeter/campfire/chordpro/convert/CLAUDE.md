@@ -16,8 +16,7 @@ that shows a new problem goes into the corpus with its corrected `.cho` before t
 adds. No rule names a producer or Campfire's export.
 
 `ChordSheetConverter` is one deterministic conversion for plain text, PDF, and Word; it knows no file format. Its
-heuristics and near misses are pinned in `ChordSheetConverterTest` and its siblings. What follows is what the tests
-cannot say: the principles, the contracts, and the limits kept on purpose.
+heuristics and near misses are pinned in `ChordSheetConverterTest` and its siblings.
 
 ## Principles
 
@@ -31,12 +30,13 @@ cannot say: the principles, the contracts, and the limits kept on purpose.
 - A row's columns are read only in text laid out in characters: a row of three or more chords typed one space apart
   over a much longer lyric lost them on copy and is written above its lyric, not into it.
 - **A chord row that opens with a bar line is a grid**, over a lyric too: its chords are counted by bars (and beats),
-  not set over syllables, so it stays a one-row grid above its lyric, which loses the indent that lined it up under the
+  so it stays a one-row grid above its lyric, which loses the indent that lined it up under the
   row. Its cells are written a space apart, chords spelled as a chord row's, and `||:` / `:||` as ChordPro's `|:` /
   `:|`, which it would read as chords. Its margins may hold text, as ChordPro's do: a label before the first bar line
   opens it as a bar would, and a word or two may follow the last (`x2`); `|.` and voltas (`|1`, `:|2`) are bar lines.
 - Over a lyric, the bar lines and repeat counts of any other chord row are dropped, but `N.C.` stays where it stands. A
-  row of chord names right over a tab staff is a line of the tab, kept as it stands.
+  row of chord names (or playing marks, `PM`) against a tab staff is a line of the tab, kept as it stands.
+- Over a tab, a heading naming no section (`Intro`, `Solo`) opens one of its kind, until the next heading or lyric.
 
 ## Words any sheet may print
 
@@ -51,8 +51,7 @@ cannot say: the principles, the contracts, and the limits kept on purpose.
 
 - **A plain text whose letters mostly read from the right is laid out as a right-to-left display shows it**
   (`ChordSheetPlainText`): every line flush right, its chord rows aligned visually, not logically, so read by index
-  their chords would land in the opposite order. `chrome-hebrew` in `:data:source:local:implementation`'s document
-  fixtures shows it. A chord row (starred chords too) and a line with no right-to-left letter (a tab's string) are one
+  their chords would land in the opposite order. A chord row (starred chords too) and a line with no right-to-left letter (a tab's string) are one
   left-to-right run; a chord row exactly as long as the lyric under it was padded to the lyric's width by a page that
   sets its rows left to right, so its spaces stay where they were typed. In such character columns a chord hangs
   from its letter's edge to within a quarter of a column, so one over the spaces between two words stays between them.

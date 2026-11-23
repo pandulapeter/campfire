@@ -154,6 +154,9 @@ internal object SongStructure {
                     if (type == "chorus" && (next == null || kinds[next] == LineKind.SECTION || isRecall)) add(Line.Recall)
                     else if (features[index].isLabel && nextContent(index)?.let { kinds[it] } == LineKind.TAB) openTab(label)
                     else if (type != null) open(type, label)
+                    // A heading naming no section of its own (`Intro`, `Solo`, `Main Riff`) over a tab heads what is
+                    // played there, so the tab is that section's rather than loose under a comment.
+                    else if (nextContent(index)?.let { kinds[it] } == LineKind.TAB) openInstrumental(ChordSheetHeadings.sectionType(label), label)
                     else {
                         // A heading the parser does not take for a section ends the lyrics before it only after a blank
                         // line; without one it would be a comment inside them, and what follows their continuation.
@@ -165,12 +168,14 @@ internal object SongStructure {
                 LineKind.CHORD -> {
                     openUnlabelled(index + 1)
                     if (!line.isFromLabel && kinds.getOrNull(index + 1) == LineKind.LYRIC && index + 1 !in omitted && !isUnaligned(line, candidates[index]!!, lyricAt(index + 1))) {
+                        closeInstrumental()
                         follow(index + 1)
                         addLyric(merge(line, lyricAt(index + 1), convertParentheses), continues(index + 1))
                         index++
                     } else add(Line.Chords(bracketed(candidates[index]!!, chordRow(line))))
                 }
                 LineKind.LYRIC -> {
+                    closeInstrumental()
                     openUnlabelled(index)
                     follow(index)
                     val lyric = inline(lyricAt(index), convertParentheses)
@@ -293,22 +298,36 @@ internal object SongStructure {
          * ([SongSections.endsAt]).
          */
         fun follow(look: ChordSheetLook, text: String) {
-            if (sections.endsAt(look)) {
-                // A section ending mid-song ends with its last stanza, before the blank lines parting it from the next.
-                val lines = section!!.lines
-                val blanks = lines.takeLastWhile { SongWriter.write(it).singleOrNull()?.isBlank() == true }.size
-                repeat(blanks) { lines.removeAt(lines.lastIndex) }
-                closeSection(isReturn = true)
-                repeat(blanks) { add(Line.Blank) }
-            }
+            if (sections.endsAt(look)) closeBeforeBlanks(isReturn = true)
             sections.record(look, text, isInSection = section != null)
         }
+
+        /** A section ending mid-song ends with its last line, before the blank lines parting it from what follows. */
+        private fun closeBeforeBlanks(isReturn: Boolean) {
+            val lines = section!!.lines
+            val blanks = lines.takeLastWhile { SongWriter.write(it).singleOrNull()?.isBlank() == true }.size
+            repeat(blanks) { lines.removeAt(lines.lastIndex) }
+            closeSection(isReturn)
+            repeat(blanks) { add(Line.Blank) }
+        }
+
+        /** Whether the open section is one a heading over a tab opened, which holds what is played, not what is sung. */
+        private var isInstrumental = false
+
+        fun openInstrumental(type: String, label: String) {
+            open(type, label)
+            isInstrumental = true
+        }
+
+        /** Ends an instrumental section where the lyrics start, which no heading of their own opened. */
+        fun closeInstrumental() { if (isInstrumental) closeBeforeBlanks(isReturn = false) }
 
         fun closeSection(isReturn: Boolean = false) {
             val open = section ?: return
             sections.closed(open.type, isReturn)
             section = null
             isNumbered = false
+            isInstrumental = false
             parts += Part.Section(open.type, open.label, open.lines.toList())
         }
 

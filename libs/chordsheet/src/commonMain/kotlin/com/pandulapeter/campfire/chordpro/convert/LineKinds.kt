@@ -68,9 +68,10 @@ internal object LineKinds {
     )
 
     fun of(lines: List<Rendered>, features: List<LineFeatures>, candidates: List<List<Token>?>): List<LineKind> {
+        fun isString(index: Int) = lines.getOrNull(index)?.let { tab.matches(it.text.trim()) } == true
         val isStaff = lines.indices.map { index ->
-            tab.matches(lines[index].text.trim()) && (lines.getOrNull(index - 1)?.let { tab.matches(it.text.trim()) } == true ||
-                lines.getOrNull(index + 1)?.let { tab.matches(it.text.trim()) } == true)
+            val text = lines[index].text.trim()
+            (tab.matches(text) || tabMarks.matches(text)) && (isString(index - 1) || isString(index + 1))
         }
         val context = Context(lines, features, candidates, isStaff, hasStructure(lines, candidates), hasUnambiguousChords(candidates), italicComments(lines, features, candidates))
         val firstPass = lines.indices.map { index -> rules.firstNotNullOfOrNull { rule -> rule.give(context, index) }?.kind ?: LineKind.LYRIC }
@@ -262,7 +263,14 @@ internal object LineKinds {
      * A string's name, then its staff: after a bar line (`e|---`), or straight after the name (`e-----`), as many sites
      * print it. The second needs the dash to touch the name and at least three dashes on the line, since a chord written
      * with dashes for its beats (`A - - -`, `E - x2`) is otherwise a staff too, two such lines a tab, its chords lost. Its
-     * techniques are written as letters too: hammer-on, pull-off, bend, release, dead note, and slide (`4s5`).
+     * techniques are written as letters too: hammer-on, pull-off, bend, release, dead note, and slide (`4s5`), and as
+     * marks: an artificial harmonic (`3*`), a natural one (`<12>`), a tap (`t`), and a vibrato bar (`v`, `^`).
      */
-    private val tab = Regex("^[eEaAbBdDgG](?:[#b])?(?:\\s*\\||-(?=(?:[^-]*-){2}))[-0-9|hpbrsx/\\\\~(). :]+$")
+    private val tab = Regex("^[eEaAbBdDgG](?:[#b])?(?:\\s*\\||-(?=(?:[^-]*-){2}))[-0-9|hpbrsxtv/\\\\~(). :*<>^]+$")
+
+    /**
+     * A row of playing marks printed against a staff's first or last string (`PM---|   PM`, `let ring`, `N.H.`), the
+     * staff's own: written as a lyric it would cut the tab in two.
+     */
+    private val tabMarks = Regex("^[-|.~* ]*(?:(?:P\\.?M\\.?|N\\.?H\\.?|A\\.?H\\.?|let ring|harm\\.?)[-|.~* ]*)+$", RegexOption.IGNORE_CASE)
 }
