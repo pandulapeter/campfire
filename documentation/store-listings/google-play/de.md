@@ -76,7 +76,7 @@ Organisieren und Bearbeiten
 • Ein PDF, eine Aufnahme oder ein Video an einen Song anhängen und aus dem Song öffnen
 
 Importieren, exportieren, teilen und synchronisieren
-• Akkordblatt einfügen, hineinziehen oder mit Campfire teilen: Akkorde über dem Text werden zu transponierbaren Akkorden
+• Akkordblatt, Webseite oder nur ihren Link einfügen, hineinziehen oder teilen: Der Rest der Seite bleibt weg, die Akkorde werden transponierbar
 • Import von ChordPro-, Text-, PDF-, Word- und ABC-Dateien, Zip-Archiven und Backups anderer Songbook-Apps
 • Druckfertiger PDF-Export mit deinem Papierformat und deinen Spalten
 • Song oder Setlist als Link oder QR-Code teilen, den jeder in Campfire öffnet, immer aktuell

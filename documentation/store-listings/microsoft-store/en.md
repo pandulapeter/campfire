@@ -34,7 +34,7 @@ Campfire is a songbook for the songs you play: your lyrics and chords, laid out 
 
 Chords sit right above the syllables they belong to, and a song flows into as many columns as the screen has room for, so you turn as few pages as possible.
 
-Campfire doesn't come with songs of its own. It is a home for yours. Write them in the built-in editor, paste a chord sheet copied from a website, or bring the ones you already have, even another songbook app's backup.
+Campfire doesn't come with songs of its own. It is a home for yours. Write them in the built-in editor, paste a song from a web page, or just the page's link, or bring the ones you already have, even another songbook app's backup.
 
 Reading
 • Turn a page or a column with a click, the arrow keys, or a Bluetooth page-turner pedal, and reach every line with Up and Down alone
@@ -82,6 +82,7 @@ Writing and editing
 
 Import, export, share, and sync
 • Paste a chord sheet or drag it onto the window, and it opens in the editor. Chords written above the lyrics become real chords you can transpose
+• Paste a whole web page, or just its link, and Campfire keeps only the song, leaving out the page's clutter, as it does for PDFs and Word documents
 • Import ChordPro, plain text, PDF, Word, and ABC files, whole zip archives, and other songbook apps' backups, reviewed before anything is saved
 • Export songs or a setlist as a print-ready PDF with your paper size, columns, and options
 • Share a song or setlist as a link or QR code that anyone opens in Campfire, kept up to date with your changes
@@ -95,7 +96,7 @@ Make it yours
 • English, Hungarian, Romanian, German, Spanish, French, Italian, Hebrew, Portuguese, Polish, and Czech, switchable inside the app
 
 Your songs are yours
-Your library is a folder of ordinary ChordPro text files on your device. Campfire works offline, needs no account, and collects no data: no analytics, no tracking, and no ads. It goes online only for what you ask of it: to sync and share through your own Dropbox, with no server in between, to open a shared link, and to fetch cover images, song details, and the pictures songs link to. You can export everything at any time.
+Your library is a folder of ordinary ChordPro text files on your device. Campfire works offline, needs no account, and collects no data: no analytics, no tracking, and no ads. It goes online only for what you ask of it: to sync and share through your own Dropbox, with no server in between, to open a shared link, to fetch cover images, song details, and the pictures songs link to, and to read, on your device, a web page whose link you paste. You can export everything at any time.
 
 Campfire is open source under the Mozilla Public License 2.0.
 ```
@@ -142,7 +143,7 @@ Pictures on a song's pages, such as a photo of the sheet music, and PDFs, record
 ChordPro editor with syntax highlighting, error marks, a live preview, and bold, italic, underline, and colors
 ```
 ```
-Paste or drop a chord sheet copied from a website, and it opens in the editor with real chords you can transpose
+Paste or drop a chord sheet or a whole web page, or paste just its link, and the song opens in the editor without the page's clutter, with real chords you can transpose
 ```
 ```
 Import ChordPro, plain text, PDF, Word, and ABC files (drawn as sheet music), zip archives, and other songbook apps' backups

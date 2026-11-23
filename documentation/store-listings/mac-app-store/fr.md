@@ -74,7 +74,7 @@ Organisation et édition
 • Joins un PDF, un enregistrement ou une vidéo à une chanson, et ouvre-le depuis la chanson
 
 Import, export, partage et synchro
-• Colle une grille d'accords ou glisse-la sur la fenêtre : les accords écrits sur les paroles deviennent transposables
+• Colle une grille d'accords, une page web ou juste son lien, ou glisse-la sur la fenêtre : sans le superflu de la page, et avec des accords transposables
 • Importe ChordPro, texte, PDF, Word, ABC, archives zip et sauvegardes d'autres apps de chansonnier
 • Export PDF prêt à imprimer, à ton format de papier et tes colonnes
 • Partage une chanson ou une setlist par lien ou code QR, ouvert par tous dans Campfire et tenu à jour

@@ -36,7 +36,7 @@ A Campfire daloskönyv a te dalaidhoz: dalszöveg és akkordok úgy elrendezve, 
 
 Az akkordok a hozzájuk tartozó szótag fölött állnak, a dal pedig annyi hasábba rendeződik, amennyi kifér a képernyőre, így a lehető legkevesebbet kell lapoznod.
 
-A Campfire nem hoz saját dalokat: a tieidnek ad otthont. Írd meg őket a beépített szerkesztőben, illessz be egy weboldalról kimásolt akkordlapot, vagy hozd a meglévőket, akár egy másik daloskönyv-app mentéséből.
+A Campfire nem hoz saját dalokat: a tieidnek ad otthont. Írd meg őket a beépített szerkesztőben, illessz be egy dalt egy weboldalról, vagy csak az oldal linkjét, vagy hozd a meglévőket, akár egy másik daloskönyv-app mentéséből.
 
 Olvasás
 • Lapozz oldalanként vagy hasábonként kattintással, a nyílbillentyűkkel vagy Bluetooth-pedállal; minden sor elérhető csak a fel és le nyíllal
@@ -84,6 +84,7 @@ Rendszerezés
 
 Importálás, exportálás, megosztás és szinkronizálás
 • Illessz be egy akkordlapot, vagy húzd rá az ablakra, és megnyílik a szerkesztőben. A dalszöveg fölé írt akkordokból valódi, transzponálható akkordok lesznek
+• Illessz be egy teljes weboldalt, vagy csak a linkjét, és a Campfire csak a dalt tartja meg, a lap sallangjai nélkül, ahogy a PDF- és Word-dokumentumoknál is
 • ChordPro-, egyszerű szöveg-, PDF-, Word- és ABC-fájlok, teljes zip archívumok és más daloskönyv-alkalmazások biztonsági mentéseinek importálása; mentés előtt mindent átnézhetsz
 • Dalok vagy listák exportálása nyomtatásra kész PDF-be a választott papírmérettel, hasábszámmal és beállításokkal
 • Ossz meg dalt vagy listát linkként vagy QR-kóddal: bárki megnyithatja a Campfire-ben, és a link követi a változtatásaidat
@@ -97,7 +98,7 @@ Szabd magadra
 • Angol, magyar, román, német, spanyol, francia, olasz, héber, portugál, lengyel és cseh nyelv, az appon belül váltható
 
 A dalaid a tieid
-A könyvtárad egy mappa az eszközödön, tele közönséges ChordPro-szövegfájlokkal. A Campfire offline is működik, nem kell hozzá fiók, és nem gyűjt adatokat: nincs analitika, követés és hirdetés. Csak akkor megy online, ha kéred: szinkronizáláshoz és megosztáshoz a saját Dropboxodon át, köztes szerver nélkül, megosztott link megnyitásához, borítóképek, daladatok és a dalokban linkelt képek letöltéséhez. Bármikor mindent exportálhatsz.
+A könyvtárad egy mappa az eszközödön, tele közönséges ChordPro-szövegfájlokkal. A Campfire offline is működik, nem kell hozzá fiók, és nem gyűjt adatokat: nincs analitika, követés és hirdetés. Csak akkor megy online, ha kéred: szinkronizáláshoz és megosztáshoz a saját Dropboxodon át, köztes szerver nélkül, megosztott link megnyitásához, borítóképek, daladatok és a dalokban linkelt képek letöltéséhez, és hogy az eszközödön beolvassa a weboldalt, amelynek a linkjét beilleszted. Bármikor mindent exportálhatsz.
 
 A Campfire nyílt forráskódú, a Mozilla Public License 2.0 alatt.
 ```
@@ -144,7 +145,7 @@ Képek a dal oldalain, például a kotta fényképe, és a dalhoz csatolt PDF-ek
 ChordPro-szerkesztő szintaxiskiemeléssel, hibajelzéssel, élő előnézettel, félkövér, dőlt, aláhúzott és színes betűkkel
 ```
 ```
-Illessz be vagy húzz az ablakra egy weboldalról kimásolt akkordlapot, és a szerkesztőben valódi, transzponálható akkordokkal nyílik meg
+Illessz be vagy húzz az ablakra egy akkordlapot vagy egy teljes weboldalt, vagy csak a linkjét illeszd be, és a dal a lap sallangjai nélkül, transzponálható akkordokkal nyílik meg a szerkesztőben
 ```
 ```
 ChordPro-, egyszerű szöveg-, PDF-, Word- és ABC-fájlok (kottaként megjelenítve), zip archívumok és más daloskönyv-alkalmazások biztonsági mentéseinek importálása

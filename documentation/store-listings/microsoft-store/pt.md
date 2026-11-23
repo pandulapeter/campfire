@@ -37,7 +37,7 @@ O Campfire é um cancioneiro para as músicas que você toca: suas letras e cifr
 
 Os acordes ficam bem em cima das sílabas a que pertencem, e cada música se espalha em tantas colunas quanto couberem na tela, para você virar o mínimo de páginas possível.
 
-O Campfire não vem com músicas próprias: ele é a casa das suas. Escreva no editor integrado, cole uma cifra copiada de um site ou traga as que você já tem, até o backup de outro app de cancioneiro.
+O Campfire não vem com músicas próprias: ele é a casa das suas. Escreva no editor integrado, cole uma música de uma página da web, ou só o link dela, ou traga as que você já tem, até o backup de outro app de cancioneiro.
 
 Leitura
 • Vire página ou coluna com um clique, as setas do teclado ou um pedal Bluetooth de virar página, e chegue a cada linha só com Cima e Baixo
@@ -85,6 +85,7 @@ Escrita e edição
 
 Importar, exportar, compartilhar e sincronizar
 • Cole uma cifra ou arraste-a para a janela, e ela abre no editor. Os acordes escritos sobre a letra viram acordes de verdade que você pode transpor
+• Cole uma página da web inteira, ou só o link dela, e o Campfire fica só com a música, sem o resto da página, como faz com PDFs e documentos do Word
 • Importe arquivos ChordPro, de texto simples, PDF, Word e ABC, arquivos zip inteiros e backups de outros apps de cancioneiro, revisados antes de qualquer coisa ser salva
 • Exporte músicas ou um repertório como PDF pronto para imprimir, com o seu tamanho de papel, suas colunas e suas opções
 • Compartilhe uma música ou um repertório como link ou QR code que qualquer pessoa abre no Campfire, sempre atualizado com as suas alterações
@@ -98,7 +99,7 @@ Do seu jeito
 • Inglês, húngaro, romeno, alemão, espanhol, francês, italiano, hebraico, português, polonês e tcheco, alternáveis dentro do app
 
 Suas músicas são suas
-Sua biblioteca é uma pasta de arquivos de texto ChordPro comuns no seu dispositivo. O Campfire funciona offline, não precisa de conta e não coleta dados: sem análises, sem rastreamento e sem anúncios. Ele só se conecta para o que você pede: sincronizar e compartilhar pelo seu próprio Dropbox, sem nenhum servidor no meio, abrir um link compartilhado e buscar capas, detalhes das músicas e as imagens vinculadas nas músicas. Você pode exportar tudo a qualquer momento.
+Sua biblioteca é uma pasta de arquivos de texto ChordPro comuns no seu dispositivo. O Campfire funciona offline, não precisa de conta e não coleta dados: sem análises, sem rastreamento e sem anúncios. Ele só se conecta para o que você pede: sincronizar e compartilhar pelo seu próprio Dropbox, sem nenhum servidor no meio, abrir um link compartilhado, buscar capas, detalhes das músicas e as imagens vinculadas nas músicas, e ler no seu dispositivo a página da web cujo link você cola. Você pode exportar tudo a qualquer momento.
 
 O Campfire é de código aberto, sob a Mozilla Public License 2.0.
 ```
@@ -145,7 +146,7 @@ Imagens nas páginas da música, como uma foto da partitura, e PDFs, gravações
 Editor ChordPro com destaque de sintaxe, marcas de erro, prévia ao vivo, e negrito, itálico, sublinhado e cores
 ```
 ```
-Cole ou solte uma cifra copiada de um site, e ela abre no editor com acordes de verdade que você pode transpor
+Cole ou solte uma cifra ou uma página da web inteira, ou cole só o link dela, e a música abre no editor sem o resto da página, com acordes de verdade que você pode transpor
 ```
 ```
 Importe arquivos ChordPro, de texto simples, PDF, Word e ABC (desenhados como partitura), arquivos zip e backups de outros apps de cancioneiro

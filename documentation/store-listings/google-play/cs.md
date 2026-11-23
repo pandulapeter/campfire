@@ -76,7 +76,7 @@ Organizace a úpravy
 • Přilož k písni PDF, nahrávku nebo video a otevři je z písně
 
 Import, export, sdílení a synchronizace
-• Vlož, přetáhni nebo nasdílej text s akordy do Campfire a akordy zapsané nad textem se změní na akordy, které můžeš transponovat
+• Vlož, přetáhni nebo nasdílej text s akordy, webovou stránku nebo jen její odkaz: zbytek stránky se vynechá a akordy půjdou transponovat
 • Importuj soubory ChordPro, textové soubory, PDF, Word a ABC, archivy zip i zálohy jiných zpěvníkových aplikací
 • Export do PDF připraveného k tisku, s tvým formátem papíru a sloupci
 • Sdílej píseň nebo setlist jako odkaz nebo QR kód, který kdokoli otevře v Campfire, vždy aktuální

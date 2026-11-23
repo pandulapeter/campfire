@@ -75,7 +75,7 @@ Porządkowanie i edycja
 • Załącz do piosenki PDF, nagranie lub wideo i otwieraj je z poziomu piosenki
 
 Import, eksport, udostępnianie i synchronizacja
-• Wklej tekst z akordami lub przeciągnij go na okno, a akordy nad tekstem staną się akordami do transponowania
+• Wklej tekst z akordami, stronę internetową albo sam link do niej lub przeciągnij je na okno: reszta strony zostanie pominięta, a akordy będzie można transponować
 • Importuj pliki ChordPro, tekstowe, PDF, Word i ABC, archiwa zip oraz kopie zapasowe innych aplikacji
 • Eksport do PDF gotowego do druku, z twoim formatem papieru i kolumnami
 • Udostępnij piosenkę lub setlistę jako link albo kod QR, który każdy otworzy w Campfire, zawsze aktualny

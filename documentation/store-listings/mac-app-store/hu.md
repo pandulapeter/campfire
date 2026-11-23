@@ -74,7 +74,7 @@ Rendszerezés és szerkesztés
 • Csatolj PDF-et, felvételt vagy videót egy dalhoz, és nyisd meg a dalból
 
 Import, export, megosztás, szinkronizálás
-• Illessz be egy akkordlapot, vagy húzd rá az ablakra, és a dalszöveg fölé írt akkordokból transzponálható akkordok lesznek
+• Illessz be egy akkordlapot, egy weboldalt vagy csak a linkjét, vagy húzd rá az ablakra: a lap sallangjai kimaradnak, az akkordokból transzponálható akkordok lesznek
 • Importálj ChordPro-, szöveg-, PDF-, Word- és ABC-fájlokat, zip archívumokat és más daloskönyv-appok mentéseit
 • Nyomtatásra kész PDF-export saját papírmérettel és hasábszámmal
 • Ossz meg dalt vagy listát linkként vagy QR-kóddal: bárki megnyithatja a Campfire-ben, és a link naprakész marad

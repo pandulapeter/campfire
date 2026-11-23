@@ -75,7 +75,7 @@ Organização e edição
 • Anexe um PDF, uma gravação ou um vídeo a uma música e abra-o a partir dela
 
 Importar, exportar, compartilhar e sincronizar
-• Cole uma cifra ou arraste-a para a janela, e os acordes sobre a letra viram acordes que você pode transpor
+• Cole uma cifra, uma página da web ou só o link dela, ou arraste-a para a janela: o resto da página fica de fora, e os acordes viram acordes que você pode transpor
 • Importe ChordPro, texto, PDF, Word, ABC, zip e backups de outros apps de cancioneiro
 • PDF pronto para imprimir, com seu tamanho de papel e colunas
 • Compartilhe músicas ou repertórios como link ou QR code que qualquer um abre no Campfire, sempre atualizado

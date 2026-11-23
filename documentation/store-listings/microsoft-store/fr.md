@@ -36,7 +36,7 @@ Campfire est un chansonnier pour les morceaux que tu joues : tes paroles et tes 
 
 Les accords sont placés juste au-dessus des syllabes auxquelles ils appartiennent, et une chanson se répartit sur autant de colonnes que l'écran peut en contenir, pour tourner le moins de pages possible.
 
-Campfire n'est pas livré avec ses propres chansons. C'est une maison pour les tiennes. Écris-les dans l'éditeur intégré, colle une grille d'accords copiée sur un site web, ou apporte celles que tu as déjà, même la sauvegarde d'une autre application de chansonnier.
+Campfire n'est pas livré avec ses propres chansons. C'est une maison pour les tiennes. Écris-les dans l'éditeur intégré, colle une chanson d'une page web, ou juste le lien de la page, ou apporte celles que tu as déjà, même la sauvegarde d'une autre application de chansonnier.
 
 Lecture
 • Tourne une page ou une colonne d'un clic, avec les flèches du clavier ou avec une pédale tourne-page Bluetooth, et atteins chaque ligne rien qu'avec Haut et Bas
@@ -84,6 +84,7 @@ Organisation
 
 Import, export, partage et synchronisation
 • Colle une grille d'accords ou fais-la glisser sur la fenêtre, et elle s'ouvre dans l'éditeur. Les accords écrits au-dessus des paroles deviennent de vrais accords transposables
+• Colle une page web entière, ou juste son lien : Campfire n'en garde que la chanson, sans le superflu de la page, comme pour les PDF et les documents Word
 • Importe des fichiers ChordPro, texte brut, PDF, Word et ABC, des archives zip entières et les sauvegardes d'autres applications de chansonnier, vérifiés avant que rien ne soit enregistré
 • Exporte des chansons ou une setlist en PDF prêt à imprimer, avec ton format de papier, tes colonnes et tes options
 • Partage une chanson ou une setlist par un lien ou un code QR que tout le monde peut ouvrir dans Campfire, tenu à jour avec tes modifications
@@ -97,7 +98,7 @@ Import, export, partage et synchronisation
 • Anglais, hongrois, roumain, allemand, espagnol, français, italien, hébreu, portugais, polonais et tchèque, au choix dans l'application
 
 Tes chansons t'appartiennent
-Ta bibliothèque est un dossier de simples fichiers texte ChordPro sur ton appareil. Campfire fonctionne hors ligne, ne demande aucun compte et ne collecte aucune donnée : ni statistiques, ni pistage, ni publicité. Il ne se connecte que pour ce que tu lui demandes : synchroniser et partager via ton propre Dropbox, sans serveur intermédiaire, ouvrir un lien partagé, et récupérer des pochettes, des infos sur les chansons et les images vers lesquelles elles renvoient. Tu peux tout exporter à tout moment.
+Ta bibliothèque est un dossier de simples fichiers texte ChordPro sur ton appareil. Campfire fonctionne hors ligne, ne demande aucun compte et ne collecte aucune donnée : ni statistiques, ni pistage, ni publicité. Il ne se connecte que pour ce que tu lui demandes : synchroniser et partager via ton propre Dropbox, sans serveur intermédiaire, ouvrir un lien partagé, récupérer des pochettes, des infos sur les chansons et les images vers lesquelles elles renvoient, et lire sur ton appareil la page web dont tu colles le lien. Tu peux tout exporter à tout moment.
 
 Campfire est open source, sous licence Mozilla Public License 2.0.
 ```
@@ -144,7 +145,7 @@ Des images sur les pages d'une chanson, comme une photo de la partition, et des 
 Éditeur ChordPro avec coloration syntaxique, signalement des erreurs, aperçu en direct, et gras, italique, souligné et couleurs
 ```
 ```
-Colle ou dépose une grille d'accords copiée sur un site web, et elle s'ouvre dans l'éditeur avec de vrais accords transposables
+Colle ou dépose une grille d'accords ou une page web entière, ou colle juste son lien : la chanson s'ouvre dans l'éditeur sans le superflu de la page, avec de vrais accords transposables
 ```
 ```
 Importe des fichiers ChordPro, texte brut, PDF, Word et ABC (dessinés en partition), des archives zip et les sauvegardes d'autres applications de chansonnier

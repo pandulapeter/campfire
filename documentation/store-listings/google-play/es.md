@@ -76,7 +76,7 @@ Organización y edición
 • Adjunta un PDF, una grabación o un vídeo a una canción, y ábrelo desde la canción
 
 Importar, exportar, compartir y sincronizar
-• Pega, suelta o comparte una hoja de acordes en Campfire, y los acordes sobre la letra se vuelven acordes que puedes transponer
+• Pega, suelta o comparte una hoja de acordes, una página web o solo su enlace: se deja fuera el resto de la página, y los acordes se pueden transponer
 • Importa ChordPro, texto, PDF, Word, ABC, zip y copias de seguridad de otras apps de cancioneros
 • PDF listo para imprimir, con tu tamaño de papel y columnas
 • Comparte canciones o repertorios como enlace o QR que cualquiera abre en Campfire, al día

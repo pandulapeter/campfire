@@ -36,7 +36,7 @@ Campfire to śpiewnik na piosenki, które grasz: twoje teksty i akordy ułożone
 
 Akordy stoją dokładnie nad sylabami, do których należą, a piosenka rozkłada się na tyle kolumn, ile zmieści ekran, więc przewracasz jak najmniej stron.
 
-Campfire nie ma własnych piosenek. To dom dla twoich. Napisz je we wbudowanym edytorze, wklej tekst z akordami skopiowany ze strony internetowej albo przenieś te, które już masz, nawet z kopii zapasowej innej aplikacji ze śpiewnikiem.
+Campfire nie ma własnych piosenek. To dom dla twoich. Napisz je we wbudowanym edytorze, wklej piosenkę ze strony internetowej lub tylko link do niej, albo przenieś te, które już masz, nawet z kopii zapasowej innej aplikacji ze śpiewnikiem.
 
 Czytanie
 • Przewracaj stronę lub kolumnę kliknięciem, z klawiatury albo pedałem Bluetooth do przewracania stron, a do każdej linijki dotrzesz samymi strzałkami w górę i w dół
@@ -84,6 +84,7 @@ Pisanie i edycja
 
 Import, eksport, udostępnianie i synchronizacja
 • Wklej tekst z akordami lub przeciągnij go na okno, a otworzy się w edytorze. Akordy zapisane nad tekstem staną się prawdziwymi akordami, które możesz transponować
+• Wklej całą stronę internetową albo tylko jej link, a Campfire zachowa samą piosenkę, bez reszty strony, tak jak w plikach PDF i Word
 • Importuj pliki ChordPro, zwykłe pliki tekstowe, PDF, Word i ABC, całe archiwa zip oraz kopie zapasowe innych aplikacji ze śpiewnikami, a przed zapisaniem czegokolwiek wszystko przejrzysz
 • Eksportuj piosenki lub setlistę do PDF gotowego do druku, z twoim formatem papieru, kolumnami i opcjami
 • Udostępnij piosenkę lub setlistę jako link albo kod QR, który każdy otworzy w Campfire, zawsze z twoimi najnowszymi zmianami
@@ -97,7 +98,7 @@ Po twojemu
 • Angielski, węgierski, rumuński, niemiecki, hiszpański, francuski, włoski, hebrajski, portugalski, polski i czeski, do przełączenia w aplikacji
 
 Twoje piosenki należą do ciebie
-Twoja biblioteka to folder zwykłych plików tekstowych ChordPro na twoim urządzeniu. Campfire działa offline, nie wymaga konta i nie zbiera danych: żadnej analityki, śledzenia ani reklam. Łączy się z internetem tylko wtedy, gdy o to prosisz: by synchronizować i udostępniać przez twojego Dropboxa, bez żadnego serwera pośrodku, by otworzyć udostępniony link oraz by pobrać okładki, szczegóły piosenek oraz obrazy, do których linkują piosenki. W każdej chwili możesz wszystko wyeksportować.
+Twoja biblioteka to folder zwykłych plików tekstowych ChordPro na twoim urządzeniu. Campfire działa offline, nie wymaga konta i nie zbiera danych: żadnej analityki, śledzenia ani reklam. Łączy się z internetem tylko wtedy, gdy o to prosisz: by synchronizować i udostępniać przez twojego Dropboxa, bez żadnego serwera pośrodku, by otworzyć udostępniony link, by pobrać okładki, szczegóły piosenek oraz obrazy, do których linkują piosenki, i by odczytać na twoim urządzeniu stronę internetową, której link wklejasz. W każdej chwili możesz wszystko wyeksportować.
 
 Campfire jest open source na licencji Mozilla Public License 2.0.
 ```
@@ -144,7 +145,7 @@ Obrazy na stronach piosenki, na przykład zdjęcie nut, oraz załączone do niej
 Edytor ChordPro z podświetlaniem składni, oznaczaniem błędów, podglądem na żywo oraz pogrubieniem, kursywą, podkreśleniem i kolorami
 ```
 ```
-Wklej lub upuść tekst z akordami skopiowany ze strony, a otworzy się w edytorze z prawdziwymi akordami do transponowania
+Wklej lub upuść tekst z akordami albo całą stronę internetową, albo wklej tylko jej link, a piosenka otworzy się w edytorze bez reszty strony, z prawdziwymi akordami do transponowania
 ```
 ```
 Importuj pliki ChordPro, tekstowe, PDF, Word i ABC (rysowane jako nuty), archiwa zip oraz kopie zapasowe innych aplikacji ze śpiewnikami

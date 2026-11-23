@@ -36,7 +36,7 @@ Campfire è un canzoniere per le canzoni che suoni: i tuoi testi e i tuoi accord
 
 Gli accordi stanno proprio sopra le sillabe a cui appartengono, e una canzone si distribuisce su tutte le colonne che lo schermo può contenere, così giri meno pagine possibile.
 
-Campfire non ha canzoni sue: è la casa delle tue. Scrivile nell'editor integrato, incolla un foglio di accordi copiato da un sito web o porta quelle che hai già, perfino il backup di un'altra app di canzonieri.
+Campfire non ha canzoni sue: è la casa delle tue. Scrivile nell'editor integrato, incolla una canzone da una pagina web, o solo il suo link, o porta quelle che hai già, perfino il backup di un'altra app di canzonieri.
 
 Lettura
 • Gira una pagina o una colonna con un clic, i tasti freccia o un pedale voltapagina Bluetooth, e raggiungi ogni riga solo con Su e Giù
@@ -84,6 +84,7 @@ Scrittura e modifica
 
 Importa, esporta, condividi e sincronizza
 • Incolla un foglio di accordi o trascinalo nella finestra, e si apre nell'editor. Gli accordi scritti sopra il testo diventano veri accordi da trasporre
+• Incolla una pagina web intera, o solo il suo link: Campfire tiene solo la canzone, senza il resto della pagina, come per i PDF e i documenti Word
 • Importa file ChordPro, di testo semplice, PDF, Word e ABC, interi archivi zip e i backup di altre app di canzonieri, da controllare prima che venga salvato qualcosa
 • Esporta canzoni o una scaletta in un PDF pronto per la stampa, con il tuo formato di carta, le tue colonne e le tue opzioni
 • Condividi una canzone o una scaletta come link o codice QR che chiunque può aprire in Campfire, sempre aggiornato con le tue modifiche
@@ -97,7 +98,7 @@ Rendila tua
 • Inglese, ungherese, rumeno, tedesco, spagnolo, francese, italiano, ebraico, portoghese, polacco e ceco, da cambiare dentro l'app
 
 Le tue canzoni sono tue
-La tua libreria è una cartella di normali file di testo ChordPro sul tuo dispositivo. Campfire funziona offline, non richiede un account e non raccoglie dati: niente statistiche, niente tracciamento, niente pubblicità. Va online solo per ciò che le chiedi: per sincronizzare e condividere tramite il tuo Dropbox, senza nessun server in mezzo, per aprire un link condiviso e per scaricare copertine, dati delle canzoni e le immagini a cui rimandano le canzoni. Puoi esportare tutto in qualsiasi momento.
+La tua libreria è una cartella di normali file di testo ChordPro sul tuo dispositivo. Campfire funziona offline, non richiede un account e non raccoglie dati: niente statistiche, niente tracciamento, niente pubblicità. Va online solo per ciò che le chiedi: per sincronizzare e condividere tramite il tuo Dropbox, senza nessun server in mezzo, per aprire un link condiviso, per scaricare copertine, dati delle canzoni e le immagini a cui rimandano le canzoni, e per leggere sul tuo dispositivo la pagina web di cui incolli il link. Puoi esportare tutto in qualsiasi momento.
 
 Campfire è open source con licenza Mozilla Public License 2.0.
 ```
@@ -144,7 +145,7 @@ Immagini sulle pagine di una canzone, come la foto di uno spartito, e PDF, regis
 Editor ChordPro con evidenziazione della sintassi, segnalazione degli errori, anteprima dal vivo e grassetto, corsivo, sottolineato e colori
 ```
 ```
-Incolla o trascina un foglio di accordi copiato da un sito web, e si apre nell'editor con veri accordi da trasporre
+Incolla o trascina un foglio di accordi o una pagina web intera, o incolla solo il suo link, e la canzone si apre nell'editor senza il resto della pagina, con veri accordi da trasporre
 ```
 ```
 Importa file ChordPro, di testo semplice, PDF, Word e ABC (disegnati come spartito), archivi zip e i backup di altre app di canzonieri

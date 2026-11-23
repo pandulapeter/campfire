@@ -85,7 +85,7 @@ Organizzazione e modifica
 • Allega a una canzone un PDF, una registrazione o un video, e aprilo dalla canzone
 
 Importa, esporta, condividi e sincronizza
-• Incolla, trascina o condividi un foglio di accordi: quelli sopra il testo diventano accordi da trasporre
+• Incolla, trascina o condividi un foglio di accordi, una pagina web o solo il suo link: il resto della pagina resta fuori, e gli accordi si possono trasporre
 • Importa file ChordPro, testo, PDF, Word e ABC, archivi zip e backup di altre app di canzonieri
 • Esportazione PDF pronta per la stampa, con formato carta e colonne a scelta
 • Condividi una canzone o una scaletta come link o codice QR che chiunque apre in Campfire, sempre aggiornato

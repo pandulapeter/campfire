@@ -72,7 +72,7 @@ Organizing and editing
 • Attach a PDF, a recording, or a video to a song, and open it from the song
 
 Import, export, share, and sync
-• Paste a chord sheet or drag it onto the window, and chords written above the lyrics become chords you can transpose
+• Paste a chord sheet, a web page, or just its link, or drag it onto the window: the page's clutter is left out, and the chords become chords you can transpose
 • Import ChordPro, text, PDF, Word, and ABC files, zip archives, and other songbook apps' backups
 • Print-ready PDF export with your paper size and columns
 • Share a song or setlist as a link or QR code that anyone opens in Campfire, kept up to date

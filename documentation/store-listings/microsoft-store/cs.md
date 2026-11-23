@@ -36,7 +36,7 @@ Campfire je zpěvník pro písně, které hraješ: tvoje texty a akordy připrav
 
 Akordy stojí přesně nad slabikami, ke kterým patří, a píseň se rozloží do tolika sloupců, kolik se jich vejde na obrazovku, takže otáčíš co nejméně stránek.
 
-Campfire nemá vlastní písně. Je domovem pro ty tvoje. Napiš je ve vestavěném editoru, vlož text s akordy zkopírovaný z webové stránky nebo přenes ty, které už máš, třeba i ze zálohy jiné zpěvníkové aplikace.
+Campfire nemá vlastní písně. Je domovem pro ty tvoje. Napiš je ve vestavěném editoru, vlož píseň z webové stránky, nebo jen odkaz na ni, nebo přenes ty, které už máš, třeba i ze zálohy jiné zpěvníkové aplikace.
 
 Čtení
 • Otáčej stránku nebo sloupec kliknutím, šipkami na klávesnici nebo pedálem Bluetooth na otáčení stránek a ke každému řádku se dostaneš jen šipkami nahoru a dolů
@@ -84,6 +84,7 @@ Psaní a úpravy
 
 Import, export, sdílení a synchronizace
 • Vlož text s akordy nebo ho přetáhni do okna a otevře se v editoru. Akordy zapsané nad textem se změní na skutečné akordy, které můžeš transponovat
+• Vlož celou webovou stránku, nebo jen její odkaz, a Campfire si nechá jen píseň bez zbytku stránky, stejně jako u PDF a dokumentů Word
 • Importuj soubory ChordPro, prosté textové soubory, PDF, Word a ABC, celé archivy zip i zálohy jiných zpěvníkových aplikací, a než se cokoli uloží, všechno si prohlédneš
 • Exportuj písně nebo setlist do PDF připraveného k tisku, s tvým formátem papíru, sloupci a volbami
 • Sdílej píseň nebo setlist jako odkaz nebo QR kód, který kdokoli otevře v Campfire, vždy s tvými posledními změnami
@@ -97,7 +98,7 @@ Po tvém
 • Angličtina, maďarština, rumunština, němčina, španělština, francouzština, italština, hebrejština, portugalština, polština a čeština, přepínatelné v aplikaci
 
 Tvoje písně patří tobě
-Tvoje knihovna je složka obyčejných textových souborů ChordPro ve tvém zařízení. Campfire funguje offline, nepotřebuje účet a nesbírá žádná data: žádná analytika, sledování ani reklamy. Na internet se připojí jen kvůli tomu, o co ho požádáš: aby synchronizoval a sdílel přes tvůj vlastní Dropbox, bez jakéhokoli serveru mezi tím, aby otevřel sdílený odkaz a aby stáhl obaly, podrobnosti písní a obrázky, na které písně odkazují. Všechno můžeš kdykoli exportovat.
+Tvoje knihovna je složka obyčejných textových souborů ChordPro ve tvém zařízení. Campfire funguje offline, nepotřebuje účet a nesbírá žádná data: žádná analytika, sledování ani reklamy. Na internet se připojí jen kvůli tomu, o co ho požádáš: aby synchronizoval a sdílel přes tvůj vlastní Dropbox, bez jakéhokoli serveru mezi tím, aby otevřel sdílený odkaz, aby stáhl obaly, podrobnosti písní a obrázky, na které písně odkazují, a aby ve tvém zařízení přečetl webovou stránku, jejíž odkaz vložíš. Všechno můžeš kdykoli exportovat.
 
 Campfire je open source pod licencí Mozilla Public License 2.0.
 ```
@@ -144,7 +145,7 @@ Obrázky na stránkách písně, například fotka not, a k ní přiložená PDF
 Editor ChordPro se zvýrazněním syntaxe, označením chyb, živým náhledem, tučným písmem, kurzívou, podtržením a barvami
 ```
 ```
-Vlož nebo přetáhni text s akordy zkopírovaný z webu a otevře se v editoru se skutečnými akordy, které můžeš transponovat
+Vlož nebo přetáhni text s akordy či celou webovou stránku, nebo vlož jen její odkaz, a píseň se otevře v editoru bez zbytku stránky, se skutečnými akordy, které můžeš transponovat
 ```
 ```
 Importuj soubory ChordPro, textové soubory, PDF, Word a ABC (vykreslené jako noty), archivy zip i zálohy jiných zpěvníkových aplikací

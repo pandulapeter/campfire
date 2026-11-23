@@ -85,7 +85,7 @@ Organizare și editare
 • Atașezi la un cântec un PDF, o înregistrare sau un videoclip și le deschizi din cântec
 
 Import, export, partajare, sincronizare
-• Lipești, tragi sau partajezi o foaie cu acorduri în Campfire, iar acordurile de deasupra versurilor se pot transpune
+• Lipești, tragi sau partajezi o foaie cu acorduri, o pagină web ori doar linkul ei: restul paginii e lăsat deoparte, iar acordurile se pot transpune
 • Import de fișiere ChordPro, text, PDF, Word și ABC, arhive zip și backupuri din alte aplicații de cântece
 • Export PDF gata de tipar, cu formatul de hârtie și coloanele tale
 • Partajezi un cântec sau o listă ca link sau cod QR, deschis de oricine în Campfire și ținut la zi
