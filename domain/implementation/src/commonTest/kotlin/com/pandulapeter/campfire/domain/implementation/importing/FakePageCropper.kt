@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.domain.implementation.importing
 
 import com.pandulapeter.campfire.domain.api.importing.PageCropper
+import com.pandulapeter.campfire.domain.api.importing.PageSongLines
 import com.pandulapeter.campfire.pagesong.PageLine
 import com.pandulapeter.campfire.pagesong.PageLineScores
 
@@ -19,13 +20,13 @@ import com.pandulapeter.campfire.pagesong.PageLineScores
  */
 internal class FakePageCropper(
     private val documentScoresOf: (lines: List<PageLine>) -> List<PageLineScores>? = { null },
-    private val songLinesOf: (lines: List<String>) -> List<Int>? = { null },
+    private val songLinesOf: (lines: List<String>) -> PageSongLines? = { null },
 ) : PageCropper {
 
     val asked = mutableListOf<List<String>>()
     val askedDocuments = mutableListOf<List<PageLine>>()
 
-    override suspend fun songLinesOf(lines: List<String>): List<Int>? {
+    override suspend fun songLinesOf(lines: List<String>): PageSongLines? {
         asked += lines
         return songLinesOf.invoke(lines)
     }
@@ -35,3 +36,7 @@ internal class FakePageCropper(
         return documentScoresOf.invoke(lines)
     }
 }
+
+/** A crop keeping [kept], with [headerLines] heading the song. */
+internal fun songLines(vararg kept: Int, titleLine: Int? = null, artistLine: Int? = null, headerLines: List<Int> = emptyList()) =
+    PageSongLines(keptLines = kept.toList(), titleLine = titleLine, artistLine = artistLine, headerLines = headerLines)

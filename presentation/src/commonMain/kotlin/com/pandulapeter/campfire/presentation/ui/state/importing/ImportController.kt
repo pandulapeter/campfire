@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.state.importing
 
 import androidx.compose.runtime.snapshotFlow
+import com.pandulapeter.campfire.chordpro.convert.PageTitle
 import com.pandulapeter.campfire.data.model.importing.ImportBookkeeping
 import com.pandulapeter.campfire.data.model.importing.ImportChoices
 import com.pandulapeter.campfire.data.model.importing.ImportConflictResolution
@@ -28,7 +29,6 @@ import com.pandulapeter.campfire.presentation.ui.messages.Message
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
-import com.pandulapeter.campfire.presentation.ui.platform.SharedTextTitle
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
@@ -74,7 +74,7 @@ internal class ImportController(
     private val reportState: ImportReportState,
     private val openLibraryItem: (LibraryItemToOpen) -> Unit,
     private val loadSongText: suspend (fileName: String) -> Unit,
-    private val openNewSongEditor: suspend (song: ImportPlan.SongEntry, suggestion: SharedTextTitle?) -> Boolean,
+    private val openNewSongEditor: suspend (song: ImportPlan.SongEntry, suggestion: PageTitle?) -> Boolean,
     private val areSongsEnabled: () -> Boolean,
     private val songLookup: Flow<SongLookup>,
     private val launchFileTransfer: (block: suspend () -> Unit) -> Job?,
@@ -182,7 +182,7 @@ internal class ImportController(
         shouldReview: Boolean = true,
         isDemoLibrary: Boolean = false,
         isNewSongFromText: Boolean = false,
-        suggestion: SharedTextTitle? = null,
+        suggestion: PageTitle? = null,
         sharedLinkFileId: String? = null,
     ): CompletableDeferred<Unit> {
         val request = ImportRequest(

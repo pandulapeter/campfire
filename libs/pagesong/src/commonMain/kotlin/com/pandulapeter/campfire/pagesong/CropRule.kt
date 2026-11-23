@@ -34,11 +34,14 @@ internal fun cropOf(scores: List<PageLineScores>, lineCount: Int): PageCrop {
             round((scores[index][PageLineLabel.SONG] + scores[index][PageLineLabel.METADATA]).toDouble() * 10_000) / 10_000 >= UNSURE
     }
     val holdsSong = kept.count { labels[it] == PageLineLabel.SONG } >= MIN_SONG_LINES
+    val titleLine = bestLineOf(scores, labels, PageLineLabel.TITLE)
+    val artistLine = bestLineOf(scores, labels, PageLineLabel.ARTIST)
     return PageCrop(
         holdsSong = holdsSong,
         keptLines = if (holdsSong) kept else List(lineCount) { it },
-        titleLine = bestLineOf(scores, labels, PageLineLabel.TITLE),
-        artistLine = bestLineOf(scores, labels, PageLineLabel.ARTIST),
+        titleLine = titleLine,
+        artistLine = artistLine,
+        headerLines = if (holdsSong) headerLinesOf(listOfNotNull(titleLine, artistLine), kept, kept.first { labels[it] == PageLineLabel.SONG }) else emptyList(),
         metadataLines = labels.indices.filter { labels[it] == PageLineLabel.METADATA },
         scores = scores,
     )
@@ -46,3 +49,15 @@ internal fun cropOf(scores: List<PageLineScores>, lineCount: Int): PageCrop {
 
 private fun bestLineOf(scores: List<PageLineScores>, labels: List<PageLineLabel>, label: PageLineLabel) =
     labels.indices.filter { labels[it] == label }.maxByOrNull { scores[it][label] }
+
+/**
+ * Those of [named] (the title and artist lines) that head a song starting at [firstSongLine]. A title or artist line inside
+ * or after the song, one the model also gives a chance of being the song, and any of them where the last one runs straight
+ * into the song's first line are left where they are, read as possibly a line of the song the model misjudged: a lyric
+ * read as a title most often opens the song itself, and a song line left out would be lost.
+ */
+private fun headerLinesOf(named: List<Int>, kept: List<Int>, firstSongLine: Int): List<Int> {
+    val before = named.filter { it < firstSongLine }
+    if (before.isEmpty() || before.max() + 1 == firstSongLine) return emptyList()
+    return before.filter { it !in kept }.sorted()
+}

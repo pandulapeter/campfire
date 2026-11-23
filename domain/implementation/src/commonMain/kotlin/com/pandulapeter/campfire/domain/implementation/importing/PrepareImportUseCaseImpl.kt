@@ -207,6 +207,7 @@ internal class PrepareImportUseCaseImpl(
             val isDocument = index >= files.size
             val original = if (isDocument) null else file.bytes.decodeLibraryText()
             var wholePage: List<String>? = null
+            var croppedPage: PageTextCrop.ConvertedPage? = null
             val converted = when {
                 isDocument -> {
                     val extracted = documentRepository.extract(file)
@@ -226,8 +227,7 @@ internal class PrepareImportUseCaseImpl(
                     // converter hands back untouched: that text is a song somebody wrote, not a page around one. A crop
                     // the converter finds nothing in is no crop either, so the whole page stands.
                     val cropped = if (file.isPageText && whole != listOf(original)) PageTextCrop.cropped(original, pageCropper, logger) else null
-                    cropped?.let { ChordSheetConverter.convert(ChordSheet.ofPlainText(it), String::normalizedToNfc) }
-                        ?.takeIf { it.any(String::isNotBlank) }?.also { wholePage = whole } ?: whole
+                    cropped?.let(PageTextCrop::converted)?.also { wholePage = whole; croppedPage = it }?.songs ?: whole
                 }
                 else -> listOf(original!!)
             }
@@ -270,6 +270,8 @@ internal class PrepareImportUseCaseImpl(
                     artist = metadata.artist.orEmpty(),
                     images = songImages,
                     wholePageText = wholePageText?.takeIf { it != text },
+                    pageTitle = croppedPage?.title?.takeIf { parts.size == 1 },
+                    pageArtist = croppedPage?.artist?.takeIf { parts.size == 1 },
                 )
             }
             // Formatting adds section separators and a final newline; keep the resulting text within the same

@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.state.importing
 
+import com.pandulapeter.campfire.chordpro.convert.PageTitle
 import com.pandulapeter.campfire.data.model.importing.ImportBookkeeping
 import com.pandulapeter.campfire.data.model.importing.ImportChoices
 import com.pandulapeter.campfire.data.model.importing.ImportDownload
@@ -22,7 +23,6 @@ import com.pandulapeter.campfire.data.model.importing.StagingRefusedException
 import com.pandulapeter.campfire.data.model.isOutOfSpace
 import com.pandulapeter.campfire.data.model.importing.IncomingContent
 import com.pandulapeter.campfire.presentation.ApplicationScope
-import com.pandulapeter.campfire.presentation.ui.platform.sharedTextTitle
 import com.pandulapeter.campfire.presentation.ui.platform.sharedTextsToImportedFiles
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
@@ -352,7 +352,7 @@ class ImportWork(
             true
         }
         if (!holdsSong) return null
-        if (request.suggestion == null) request.suggestion = sharedTextTitle(page.title)
+        if (request.suggestion == null) request.suggestion = PageTitle.of(page.title)
         return sharedTextsToImportedFiles(listOf(page.text), page.title).map { it.copy(isPageText = true) }
     }
 

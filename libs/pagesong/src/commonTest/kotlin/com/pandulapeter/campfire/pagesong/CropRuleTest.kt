@@ -84,6 +84,36 @@ class CropRuleTest {
     }
 
     @Test
+    fun `a title and an artist before the song and set apart from it head it`() {
+        val crop = cropOf(listOf(junk, title, artist, metadata, junk, song, song, song, song), lineCount = 9)
+
+        assertEquals(listOf(1, 2), crop.headerLines)
+    }
+
+    @Test
+    fun `a title after the song's first line stays in the song`() {
+        assertEquals(emptyList(), cropOf(listOf(junk, metadata, song, song, title, song, song), lineCount = 7).headerLines)
+    }
+
+    @Test
+    fun `a title running straight into the song may be its first line and heads nothing`() {
+        assertEquals(emptyList(), cropOf(listOf(junk, title, artist, song, song, song, song), lineCount = 7).headerLines)
+    }
+
+    @Test
+    fun `a title the model gives a chance of being the song stays in it`() {
+        val unsureTitle = scores(title = 0.9f, song = 0.1f)
+        val crop = cropOf(listOf(unsureTitle, artist, junk, song, song, song, song), lineCount = 7)
+
+        assertEquals(listOf(1), crop.headerLines)
+    }
+
+    @Test
+    fun `a page with no song has no header`() {
+        assertEquals(emptyList(), cropOf(listOf(title, junk, song, song, song), lineCount = 5).headerLines)
+    }
+
+    @Test
     fun `lines scored already are cropped by the same rule`() {
         val crop = PageCrop.of(listOf(junk, song, song, metadata, song, song, junk))
 
@@ -96,6 +126,8 @@ class CropRuleTest {
     private val junk = scores(junk = 1f)
     private val song = scores(song = 1f)
     private val metadata = scores(metadata = 1f)
+    private val title = scores(title = 1f)
+    private val artist = scores(artist = 1f)
 
     private fun scores(junk: Float = 0f, song: Float = 0f, title: Float = 0f, artist: Float = 0f, metadata: Float = 0f) =
         PageLineScores(floatArrayOf(junk, song, title, artist, metadata))

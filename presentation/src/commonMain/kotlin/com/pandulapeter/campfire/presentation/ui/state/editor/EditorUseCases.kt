@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.state.editor
 
+import com.pandulapeter.campfire.chordpro.convert.PageTitle
 import com.pandulapeter.campfire.domain.api.images.AddDraftAttachmentUseCase
 import com.pandulapeter.campfire.domain.api.images.AddDraftImageUseCase
 import com.pandulapeter.campfire.domain.api.images.ClearDraftImagesUseCase
@@ -29,7 +30,6 @@ import com.pandulapeter.campfire.presentation.ui.pictures.AttachmentIntake
 import com.pandulapeter.campfire.presentation.ui.pictures.PictureFitter
 import com.pandulapeter.campfire.presentation.ui.pictures.PictureLinkDownloader
 import com.pandulapeter.campfire.presentation.ui.pictures.PictureWork
-import com.pandulapeter.campfire.presentation.ui.platform.SharedTextTitle
 import com.pandulapeter.campfire.presentation.ui.platform.reencodePicture
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -58,7 +58,7 @@ class EditorUseCases(
      * [text] shaped like a new song ([draftSongFromText]), with the [suggestion]'s title and artist, else the localized
      * placeholders, for what it does not declare.
      */
-    internal suspend fun newSongDraft(text: String, suggestion: SharedTextTitle?) = draftSongFromText(
+    internal suspend fun newSongDraft(text: String, suggestion: PageTitle?) = draftSongFromText(
         text = text,
         placeholderTitle = LocalizedStrings.get(Res.string.new_song_placeholder_title),
         placeholderArtist = LocalizedStrings.get(Res.string.new_song_placeholder_artist),

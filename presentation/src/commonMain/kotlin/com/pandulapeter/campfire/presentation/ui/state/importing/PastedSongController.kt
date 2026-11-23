@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.state.importing
 
+import com.pandulapeter.campfire.chordpro.convert.PageTitle
 import com.pandulapeter.campfire.data.model.share.SharedLink
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.messages.Message
@@ -17,12 +18,10 @@ import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.platform.ClipboardText
 import com.pandulapeter.campfire.presentation.ui.platform.ClipboardTextReader
 import com.pandulapeter.campfire.presentation.ui.platform.SharedTextPayload
-import com.pandulapeter.campfire.presentation.ui.platform.SharedTextTitle
 import com.pandulapeter.campfire.presentation.ui.platform.fitsImport
 import com.pandulapeter.campfire.presentation.ui.platform.isLinkWithTitle
 import com.pandulapeter.campfire.presentation.ui.platform.isOnlyLinks
 import com.pandulapeter.campfire.presentation.ui.platform.pageAddressIn
-import com.pandulapeter.campfire.presentation.ui.platform.sharedTextTitle
 import com.pandulapeter.campfire.presentation.ui.platform.sharedTextsToImportedFiles
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
@@ -50,7 +49,7 @@ internal class PastedSongController(
     private val backStack: List<CampfireDestination>,
     private val isImporting: StateFlow<Boolean>,
     private val isPerformanceModeEnabled: StateFlow<Boolean>,
-    private val enqueueImport: (source: ImportSource, isNewSongFromText: Boolean, suggestion: SharedTextTitle?) -> Deferred<Unit>,
+    private val enqueueImport: (source: ImportSource, isNewSongFromText: Boolean, suggestion: PageTitle?) -> Deferred<Unit>,
     private val importSharedLink: (SharedLink) -> Deferred<Unit>,
     val isPageLoadingSupported: Boolean,
     private val isPageLoadingEnabled: () -> Boolean,
@@ -92,11 +91,11 @@ internal class PastedSongController(
         return when {
             text.isBlank() -> answered(Message.ClipboardEmpty)
             pageAddress != null && !isPageLoadingSupported -> answered(Message.PageLinkNotReadHere)
-            pageAddress != null && isPageLoadingEnabled() -> enqueueImport(ImportSource.Page(pageAddress), true, sharedTextTitle(subject))
+            pageAddress != null && isPageLoadingEnabled() -> enqueueImport(ImportSource.Page(pageAddress), true, PageTitle.of(subject))
             text.isOnlyLinks() || text.isLinkWithTitle() -> answered(onlyLinks)
             !text.fitsImport() -> answered(Message.PastedTextTooLarge)
             // From a web page or another app, so its page clutter is cropped (ImportedFile.isPageText).
-            else -> enqueueImport(ImportSource.Files(sharedTextsToImportedFiles(listOf(text), subject).map { it.copy(isPageText = true) }), true, sharedTextTitle(subject))
+            else -> enqueueImport(ImportSource.Files(sharedTextsToImportedFiles(listOf(text), subject).map { it.copy(isPageText = true) }), true, PageTitle.of(subject))
         }
     }
 

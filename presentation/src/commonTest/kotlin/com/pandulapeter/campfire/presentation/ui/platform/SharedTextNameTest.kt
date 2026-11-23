@@ -25,32 +25,8 @@ class SharedTextNameTest {
     }
 
     @Test
-    fun `a subject's title keeps its case and single spaces and an artist only after the page kind's by`() {
-        assertEquals(
-            SharedTextTitle(title = "Riverlight", artist = "The Invented Band"),
-            sharedTextTitle("Riverlight   Chords by The Invented Band @ Ultimate-Guitar.Com"),
-        )
-        assertEquals(SharedTextTitle(title = "Stand by Me", artist = "Ben E. King"), sharedTextTitle("Stand by Me Chords by Ben E. King"))
-        assertEquals(SharedTextTitle(title = "WONDERWALL", artist = "Oasis"), sharedTextTitle("WONDERWALL CHORDS (ver 2) by Oasis @ Ultimate-Guitar.Com"))
-        assertEquals(SharedTextTitle(title = "Stand by Me", artist = null), sharedTextTitle("Stand by Me Lyrics"))
-        assertEquals(SharedTextTitle(title = "Oasis - Wonderwall", artist = null), sharedTextTitle("Oasis - Wonderwall Chords | Ultimate Guitar"))
-        assertNull(sharedTextTitle(null))
-    }
-
-    @Test
     fun `a subject that is a plain title keeps its words`() {
         assertEquals("amazing_grace", sharedTextName("Amazing Grace"))
-    }
-
-    @Test
-    fun `a page word inside a title is the title's own and one ending a part of it is the page's`() {
-        assertEquals(
-            SharedTextTitle(title = "The Lost Chord", artist = "The Invented Band"),
-            sharedTextTitle("The Lost Chord Chords by The Invented Band @ Ultimate-Guitar.Com"),
-        )
-        assertEquals("Three Chords and the Truth", sharedTextTitle("Three Chords and the Truth Chords by The Invented Band")?.title)
-        assertEquals("Riverlight - The Invented Band", sharedTextTitle("Riverlight Chords - The Invented Band")?.title)
-        assertEquals("Riverlight", sharedTextTitle("Chords: Riverlight")?.title)
     }
 
     @Test

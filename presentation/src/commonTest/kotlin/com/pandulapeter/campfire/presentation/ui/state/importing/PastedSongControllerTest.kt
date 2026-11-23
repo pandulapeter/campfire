@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.state.importing
 
 import androidx.compose.runtime.mutableStateListOf
+import com.pandulapeter.campfire.chordpro.convert.PageTitle
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.share.SharedLink
@@ -22,7 +23,6 @@ import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.platform.ClipboardText
 import com.pandulapeter.campfire.presentation.ui.platform.SharedTextPayload
-import com.pandulapeter.campfire.presentation.ui.platform.SharedTextTitle
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestScope
@@ -45,7 +45,7 @@ class PastedSongControllerTest {
 
     /** Off unless a test turns it on, so the tests of what a link is without it read as they did before pages were read. */
     private var isPageLoadingEnabled = false
-    private val suggestions = mutableListOf<SharedTextTitle?>()
+    private val suggestions = mutableListOf<PageTitle?>()
     private val links = mutableListOf<SharedLink>()
     private val importSettled = CompletableDeferred<Unit>()
     private lateinit var messageSink: MessageSink
@@ -132,7 +132,7 @@ class PastedSongControllerTest {
         val subject = "Riverlight Chords by The Invented Band @ Ultimate-Guitar.Com"
         controller.importSharedText(SharedTextPayload(texts = listOf("Am  C\nHello"), subject = subject))
         controller.newSongFromText("Am  C\nHello")
-        assertEquals(listOf(SharedTextTitle(title = "Riverlight", artist = "The Invented Band"), null), suggestions)
+        assertEquals(listOf(PageTitle(title = "Riverlight", artist = "The Invented Band"), null), suggestions)
     }
 
     @Test
@@ -265,7 +265,7 @@ class PastedSongControllerTest {
         controller.newSongFromText("https://example.com/song")
         controller.importSharedText(SharedTextPayload(texts = listOf("Check out Riverlight on Example Chords: https://example.com/riverlight."), subject = "Riverlight Chords by The Invented Band"))
         assertEquals(listOf("https://example.com/song", "https://example.com/riverlight"), pages)
-        assertEquals(listOf(null, SharedTextTitle(title = "Riverlight", artist = "The Invented Band")), suggestions)
+        assertEquals(listOf(null, PageTitle(title = "Riverlight", artist = "The Invented Band")), suggestions)
         assertTrue(queued.isEmpty())
         assertTrue(messages.isEmpty())
     }

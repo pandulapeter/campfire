@@ -23,7 +23,7 @@ class PageSongTest {
     fun `an empty page holds no song and keeps nothing`() {
         val crop = pageSong.crop(emptyList(), PageLineSource.PAGE)
 
-        assertEquals(PageCrop(holdsSong = false, keptLines = emptyList(), titleLine = null, artistLine = null, metadataLines = emptyList(), scores = emptyList()), crop)
+        assertEquals(PageCrop(holdsSong = false, keptLines = emptyList(), titleLine = null, artistLine = null, headerLines = emptyList(), metadataLines = emptyList(), scores = emptyList()), crop)
     }
 
     @Test

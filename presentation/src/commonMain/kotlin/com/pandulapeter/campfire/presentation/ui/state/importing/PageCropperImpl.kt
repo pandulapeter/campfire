@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.state.importing
 
 import com.pandulapeter.campfire.domain.api.importing.PageCropper
+import com.pandulapeter.campfire.domain.api.importing.PageSongLines
 import com.pandulapeter.campfire.pagesong.PageLine
 import com.pandulapeter.campfire.pagesong.PageLineScores
 import com.pandulapeter.campfire.pagesong.PageLineSource
@@ -28,9 +29,9 @@ import org.koin.core.annotation.Single
  * tried again, and every page is then converted whole, as it was before the model ([songLinesOf] throws, since its null
  * means a page with no song).
  *
- * The title and artist lines are kept with the song even where the model does not think them part of it, so the
- * converter's own reading of a song's header still finds them. A document's lines are only scored here, as a whole;
- * the converter crops each of its songs by the scores (`ChordSheetSongCrop`).
+ * The title and artist lines are answered apart from the song, for the import to read as its header (`PageTextCrop`).
+ * A document's lines are only scored here, as a whole; the converter crops each of its songs by the scores
+ * (`ChordSheetSongCrop`).
  */
 @Single
 internal class PageCropperImpl : PageCropper {
@@ -39,11 +40,17 @@ internal class PageCropperImpl : PageCropper {
     private var pageSong: PageSong? = null
     private var isRead = false
 
-    override suspend fun songLinesOf(lines: List<String>): List<Int>? {
+    override suspend fun songLinesOf(lines: List<String>): PageSongLines? {
         // No model is no reason to say a page holds no song, which would refuse a page read from its address.
         val pageSong = pageSong() ?: throw IllegalStateException("The page model is not there")
         val crop = withContext(Dispatchers.Default) { pageSong.crop(lines.map(::PageLine), PageLineSource.PAGE) }
-        return if (crop.holdsSong) (crop.keptLines + listOfNotNull(crop.titleLine, crop.artistLine)).distinct().sorted() else null
+        if (!crop.holdsSong) return null
+        return PageSongLines(
+            keptLines = crop.keptLines,
+            titleLine = crop.titleLine,
+            artistLine = crop.artistLine,
+            headerLines = crop.headerLines,
+        )
     }
 
     override suspend fun documentScoresOf(lines: List<PageLine>): List<PageLineScores>? {

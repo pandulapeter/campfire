@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.data.source.local.implementation.source
 
 import com.pandulapeter.campfire.data.model.sync.SystemBrowser
 import com.pandulapeter.campfire.domain.api.importing.PageCropper
+import com.pandulapeter.campfire.domain.api.importing.PageSongLines
 import com.pandulapeter.campfire.pagesong.PageLine
 import com.pandulapeter.campfire.pagesong.PageLineScores
 import org.koin.core.annotation.Module
@@ -28,7 +29,7 @@ object PresentationStandIns {
 
     @Single
     fun pageCropper(): PageCropper = object : PageCropper {
-        override suspend fun songLinesOf(lines: List<String>): List<Int>? = null
+        override suspend fun songLinesOf(lines: List<String>): PageSongLines? = null
 
         override suspend fun documentScoresOf(lines: List<PageLine>): List<PageLineScores>? = null
     }

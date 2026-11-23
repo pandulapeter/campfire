@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.state.editor
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import com.pandulapeter.campfire.chordpro.ChordProParser
+import com.pandulapeter.campfire.chordpro.convert.PageTitle
 import com.pandulapeter.campfire.data.model.song.SongContent
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.data.model.importing.ImportPlan
@@ -27,7 +28,6 @@ import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination.SongEditor.Companion.NEW_SONG_FILE_NAME
 import com.pandulapeter.campfire.presentation.ui.navigation.songEditorEntries
-import com.pandulapeter.campfire.presentation.ui.platform.SharedTextTitle
 import com.pandulapeter.campfire.presentation.ui.rendering.SongRenderer
 import com.pandulapeter.campfire.presentation.ui.state.PendingExit
 import com.pandulapeter.campfire.presentation.ui.state.songText.SongTextStore
@@ -188,18 +188,22 @@ internal class EditorSession(
      * [suggestion]'s title and artist, or placeholders, for what it does not declare, the title selected to be typed over.
      * An editor it replaces on top has nothing unsaved: the import queue waits that out. The draft goes to disk at once, as
      * the only copy of a share the iOS share extension's inbox lets go of. False, opening nothing, where every picture was refused.
-     * A page's text the import cropped offers its whole page ([WholePageOffer]).
+     * A page's text the import cropped offers its whole page ([WholePageOffer]), which keeps its header lines and so is
+     * suggested only the subject's title; the crop's song takes the title and artist those lines name first
+     * ([ImportPlan.SongEntry.pageTitle]).
      */
-    suspend fun openNewSongEditor(song: ImportPlan.SongEntry, suggestion: SharedTextTitle?): Boolean {
+    suspend fun openNewSongEditor(song: ImportPlan.SongEntry, suggestion: PageTitle?): Boolean {
         val isPictureSong = song.isPictureSong
         val text = if (isPictureSong) images.pictureSongText(song.images) ?: return false else song.text.also { images.keepBrought(song.images) }
-        val suggestion = suggestion ?: SharedTextTitle(title = song.title, artist = null).takeIf { isPictureSong }
+        val suggestion = suggestion ?: PageTitle(title = song.title, artist = null).takeIf { isPictureSong }
+        // The lines the page heads its song with name it more surely than the share's subject, which may name the site.
+        val pageSuggestion = song.pageHeaderOver(suggestion)
         arePreferencesLoaded.first { it }
         val placeholderTitle = LocalizedStrings.get(Res.string.new_song_placeholder_title)
-        val draft = editorTextOf(useCases.newSongDraft(text, suggestion))
+        val draft = editorTextOf(useCases.newSongDraft(text, pageSuggestion))
         onEditorTextChanged(fileName = NEW_SONG_FILE_NAME, text = draft)
         wholePage.offer(draft = draft, wholePageDraft = song.wholePageText?.let { editorTextOf(useCases.newSongDraft(it, suggestion)) })
-        retainedEditorField = NEW_SONG_FILE_NAME to TextFieldState(initialText = draft, initialSelection = placeholderTitleSelection(draft, suggestion?.title ?: placeholderTitle))
+        retainedEditorField = NEW_SONG_FILE_NAME to TextFieldState(initialText = draft, initialSelection = placeholderTitleSelection(draft, pageSuggestion?.title?.ifBlank { null } ?: placeholderTitle))
         updateBackStack {
             if (lastOrNull() is CampfireDestination.SongEditor) removeAt(lastIndex)
             add(CampfireDestination.SongEditor.newSong())

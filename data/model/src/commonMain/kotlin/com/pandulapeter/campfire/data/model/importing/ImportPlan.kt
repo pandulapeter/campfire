@@ -92,6 +92,13 @@ data class ImportPlan(
          * out of [text]: what the editor's Use the whole page puts back. Null where nothing was left out.
          */
         val wholePageText: String? = null,
+        /**
+         * For a page's text whose crop found the lines heading the song (a title line, an artist line) and left them out
+         * of [text], which declares no title: the title and artist they name, which the editor opened on it suggests ahead
+         * of the share's subject for what [text] does not declare.
+         */
+        val pageTitle: String? = null,
+        val pageArtist: String? = null,
     )
 
     /**

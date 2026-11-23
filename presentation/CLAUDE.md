@@ -54,7 +54,9 @@ which the script checks; everything else is handed the holders, state, and callb
   refused one, which would ask twice); iOS reads `public.html` or Safari's web archive in a single `items` access, since
   each access may ask Allow Paste.
 - A share's subject (a page title) fills in, selected, the title the text does not declare, and the artist only from
-  `<title> Chords by <artist>` (`sharedTextTitle`): a bare " by " or a dash is never split.
+  `<title> Chords by <artist>` (`:libs:chordsheet`'s `PageTitle.of`): a bare " by " or a dash is never split. A cropped
+  page's own title and artist lines, read by the same rule (`SongEntry.pageTitle` / `pageArtist`), come first, field by
+  field (`pageHeaderOver`); Use the whole page, which keeps those lines, gets only the subject's.
 - A blank, links-only (an address, alone or beside a one-line title), or over-8 MB paste or share is a snackbar before
   anything is prepared, except that a blank share goes to the import, reported as skipped; several shared texts are one
   import.

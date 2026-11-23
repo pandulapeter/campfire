@@ -266,12 +266,29 @@ class PrepareImportUseCaseImplTest {
 
     @Test
     fun `a page's clutter is left out of its song and the whole page is kept for the editor`() = runTest {
-        val plan = prepare(pageCropper = FakePageCropper { listOf(3, 4, 6, 7) })(listOf(page(PAGE)))
+        val plan = prepare(pageCropper = FakePageCropper { songLines(3, 4, 6, 7) })(listOf(page(PAGE)))
 
         val song = plan.songs.single()
         assertTrue("river light" in song.text && "morning" in song.text)
         assertTrue("Sign in" !in song.text && "Great song" !in song.text)
         assertTrue(song.wholePageText.orEmpty().let { "Great song" in it && "river light" in it })
+    }
+
+    @Test
+    fun `a page's title line before its song leaves the song and is suggested as its title and artist`() = runTest {
+        val page = "Sign in\nRiverlight Chords by The Invented Band\nStrumming: down down up\n\n" + PAGE.substringAfter("Sign in\n\n")
+        val plan = prepare(pageCropper = FakePageCropper { songLines(2, 4, 5, 7, 8, titleLine = 1, headerLines = listOf(1)) })(listOf(page(page)))
+
+        val song = plan.songs.single()
+        assertEquals("Riverlight", song.pageTitle)
+        assertEquals("The Invented Band", song.pageArtist)
+        assertTrue("Riverlight" !in song.text && "river light" in song.text)
+        assertTrue(song.wholePageText.orEmpty().let { "Riverlight" in it && "Great song" in it })
+    }
+
+    @Test
+    fun `a page's song with no title line is suggested nothing`() = runTest {
+        assertEquals(null, prepare(pageCropper = FakePageCropper { songLines(3, 4, 6, 7) })(listOf(page(PAGE))).songs.single().pageTitle)
     }
 
     @Test
@@ -292,7 +309,7 @@ class PrepareImportUseCaseImplTest {
 
     @Test
     fun `a text file is never cropped`() = runTest {
-        val cropper = FakePageCropper { listOf(3, 4, 6, 7) }
+        val cropper = FakePageCropper { songLines(3, 4, 6, 7) }
 
         val plan = prepare(pageCropper = cropper)(listOf(ImportedFile("page.txt", PAGE.encodeToByteArray())))
 
@@ -302,7 +319,7 @@ class PrepareImportUseCaseImplTest {
 
     @Test
     fun `ChordPro from a page is never cropped`() = runTest {
-        val cropper = FakePageCropper { listOf(0) }
+        val cropper = FakePageCropper { songLines(0) }
 
         val plan = prepare(pageCropper = cropper)(listOf(page("{title: River}\n[G]Down by the [D]river light\n[C]We sang until morning\n")))
 

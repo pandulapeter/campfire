@@ -9,6 +9,11 @@
  */
 package com.pandulapeter.campfire.data.source.local.implementation.document.corpus
 
+import com.pandulapeter.campfire.chordpro.ChordProParser
+import com.pandulapeter.campfire.chordpro.ChordProSplitter
+import com.pandulapeter.campfire.chordpro.convert.ChordSheet
+import com.pandulapeter.campfire.chordpro.convert.ChordSheetConverter
+import com.pandulapeter.campfire.chordpro.convert.PageTitle
 import com.pandulapeter.campfire.pagesong.PageLine
 import com.pandulapeter.campfire.pagesong.PageLineSource
 import com.pandulapeter.campfire.pagesong.PageSong
@@ -26,7 +31,8 @@ import kotlinx.serialization.json.jsonPrimitive
 /**
  * Scores the page model the app ships (`composeResources/files/page-model.bin`) on the labelled web pages of the private
  * corpus named by `campfire.pageCorpus` (`tools/page-model`): each page cropped as the import crops a paste
- * (`PageCropperImpl`: the kept lines with the title and artist lines, the whole page where the model sees no song)
+ * (`PageCropperImpl` and `PageTextCrop`: the kept lines with the title and artist lines, less those heading the song where
+ * the converter reads no title from them, which title the song instead; the whole page where the model sees no song)
  * against keeping every line, as `gate.py` scores a held-out fold. Its numbers are only held-out ones for pages added
  * after the weights were trained; on the rest they show what the shipped model does, not how it generalizes. It prints
  * and asserts only loose sanity bounds, which a broken model or a broken crop would miss by far. Skipped where the
@@ -70,7 +76,9 @@ class PageCorpusTest {
             song pages: ${songs.size}; crop beats keeping everything on $wins, ties $ties, worse on ${songs.size - wins - ties}
             mean line F1: keep everything ${"%.4f".format(songs.map { it.baseline }.average())}, crop ${"%.4f".format(songs.map { it.crop }.average())}
             pages losing a song line: ${songs.count { it.lostSongLines > 0 }} ($lostLines of $songLines song lines lost)
-            title kept on ${songs.count { it.titleKept == true }} of ${songs.count { it.titleKept != null }} song pages labelling one, artist on ${songs.count { it.artistKept == true }} of ${songs.count { it.artistKept != null }}
+            title kept or read on ${songs.count { it.titleKept == true }} of ${songs.count { it.titleKept != null }} song pages labelling one, artist on ${songs.count { it.artistKept == true }} of ${songs.count { it.artistKept != null }}
+            header lines read as the title and artist on ${songs.count { it.header != null }} song pages; read by the converter instead on ${songs.count { it.isHeaderConverted }}
+            some of them: ${songs.mapNotNull { it.header }.take(12).joinToString(" | ") { "${it.title} / ${it.artist ?: "-"}" }}
             pages with no song: ${noSongs.size}, told as none ${noSongs.count { !it.holdsSong }}
             most song lines lost: ${songs.filter { it.lostSongLines > 0 }.sortedByDescending { it.lostSongLines }.take(8).joinToString { "${it.id} (${it.lostSongLines}/${it.songLines})" }}
             """.trimIndent(),
@@ -82,14 +90,26 @@ class PageCorpusTest {
 
     private fun score(id: String, lines: List<String>, labels: List<String>, isNoSong: Boolean, pageSong: PageSong): PageScore {
         val crop = pageSong.crop(lines.map(::PageLine), PageLineSource.PAGE)
-        val kept = if (crop.holdsSong) (crop.keptLines + listOfNotNull(crop.titleLine, crop.artistLine)).toSet() else lines.indices.toSet()
+        val withHeader = if (crop.holdsSong) (crop.keptLines + listOfNotNull(crop.titleLine, crop.artistLine)).toSet() else lines.indices.toSet()
+        val heading = crop.headerLines.toSet()
+        // The header lines leave the song only where the converter reads no title from the crop with them, as the import does.
+        val isHeaderConverted = heading.isNotEmpty() && keptText(lines, withHeader).let { text ->
+            val songs = ChordSheetConverter.convert(ChordSheet.ofPlainText(text)).flatMap(ChordProSplitter::split)
+            songs.size != 1 || !ChordProParser.parseMetadata(songs.single()).title.isNullOrBlank()
+        }
+        val isHeaderRead = heading.isNotEmpty() && !isHeaderConverted
+        val kept = if (isHeaderRead) withHeader - heading else withHeader
+        val header = if (!isHeaderRead) null else {
+            val title = crop.titleLine?.takeIf { it in heading }?.let { PageTitle.of(lines[it]) }
+            PageTitle(title = title?.title.orEmpty(), artist = title?.artist ?: crop.artistLine?.takeIf { it in heading }?.let { PageTitle.artistOf(lines[it]) })
+        }
         // Lines with no text and lines the teacher's two runs disagreed on are left out, as the gate leaves them out.
         val printed = lines.indices.filter { lines[it].isNotBlank() && labels[it] != "IGNORE" }.toSet()
         val truth = printed.filter { labels[it] == "SONG" || labels[it] == "METADATA" }.toSet()
         val song = printed.filter { labels[it] == "SONG" }.toSet()
 
         /** Whether a line labelled [label] is kept, or null where the page labels none. */
-        fun keptOf(label: String) = printed.filter { labels[it] == label }.takeIf { it.isNotEmpty() }?.any { it in kept }
+        fun keptOf(label: String) = printed.filter { labels[it] == label }.takeIf { it.isNotEmpty() }?.any { it in kept || it in heading && isHeaderRead }
         fun f1(chosen: Set<Int>): Double {
             if (truth.isEmpty()) return if (chosen.isEmpty()) 1.0 else 0.0
             val hits = (chosen intersect truth).size
@@ -108,8 +128,14 @@ class PageCorpusTest {
             lostSongLines = (song - kept).size,
             titleKept = keptOf("TITLE"),
             artistKept = keptOf("ARTIST"),
+            header = header,
+            isHeaderConverted = isHeaderConverted,
         )
     }
+
+    /** The kept lines' text with the blank lines between the first and the last, as `PageTextCrop` hands it on. */
+    private fun keptText(lines: List<String>, kept: Set<Int>) =
+        lines.indices.filter { it in kept || (lines[it].isBlank() && it in kept.min()..kept.max()) }.joinToString("\n") { lines[it] }
 
     private fun JsonObject.isNoSong() = this["noSong"]?.jsonPrimitive?.boolean == true
 
@@ -123,5 +149,7 @@ class PageCorpusTest {
         val lostSongLines: Int,
         val titleKept: Boolean?,
         val artistKept: Boolean?,
+        val header: PageTitle?,
+        val isHeaderConverted: Boolean,
     )
 }

@@ -9,11 +9,11 @@
  */
 package com.pandulapeter.campfire.presentation.ui.state.importing
 
+import com.pandulapeter.campfire.chordpro.convert.PageTitle
 import com.pandulapeter.campfire.data.model.importing.StagedFile
 import com.pandulapeter.campfire.data.model.importing.StagedFileMissingException
 import com.pandulapeter.campfire.data.model.importing.sharedLinkChoices
 import com.pandulapeter.campfire.presentation.ui.firstRun.DemoLibrary
-import com.pandulapeter.campfire.presentation.ui.platform.SharedTextTitle
 import kotlinx.coroutines.CompletableDeferred
 
 /**
@@ -42,7 +42,7 @@ internal class ImportRequest(
     val shouldReview: Boolean = true,
     val isDemoLibrary: Boolean = false,
     val isNewSongFromText: Boolean = false,
-    var suggestion: SharedTextTitle? = null,
+    var suggestion: PageTitle? = null,
     val sharedLinkFileId: String? = null,
     val settled: CompletableDeferred<Unit> = CompletableDeferred(),
 ) {

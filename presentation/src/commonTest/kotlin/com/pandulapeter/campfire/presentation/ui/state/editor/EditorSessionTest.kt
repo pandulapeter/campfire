@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.state.editor
 
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.text.TextRange
+import com.pandulapeter.campfire.chordpro.convert.PageTitle
 import com.pandulapeter.campfire.chordpro.edit.ChordProImages
 import com.pandulapeter.campfire.data.model.image.ImageIntake
 import com.pandulapeter.campfire.data.model.image.ImageRefusal
@@ -45,7 +46,6 @@ import com.pandulapeter.campfire.presentation.ui.messages.Message
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.navigation.followNewSongCreated
-import com.pandulapeter.campfire.presentation.ui.platform.SharedTextTitle
 import com.pandulapeter.campfire.presentation.ui.rendering.testSongRenderer
 import com.pandulapeter.campfire.presentation.ui.pictures.PendingMissingImagePick
 import com.pandulapeter.campfire.presentation.ui.pictures.PictureFitter
@@ -398,10 +398,28 @@ class EditorSessionTest {
     @Test
     fun `a suggested title is selected in a new song's editor`() = runTest {
         val fixture = fixture()
-        fixture.session.openNewSongEditor("[G]Hello", SharedTextTitle(title = "Riverlight", artist = "The Invented Band"))
+        fixture.session.openNewSongEditor("[G]Hello", PageTitle(title = "Riverlight", artist = "The Invented Band"))
         assertEquals("{title: Riverlight}\n{artist: The Invented Band}\n[G]Hello", fixture.session.editorDraft.value?.text)
         val field = fixture.session.retainedEditorField(CampfireDestination.SongEditor.NEW_SONG_FILE_NAME)
         assertEquals(TextRange(8, 18), field?.selection)
+    }
+
+    @Test
+    fun `the title a page's header names comes before the subject's and is selected while its whole page keeps the subject's`() = runTest {
+        val fixture = fixture()
+        val song = ImportPlan.SongEntry(
+            fileName = "new.cho",
+            text = "[G]Hello",
+            status = ImportPlan.Status.NEW,
+            sourceFileName = "Pasted.txt",
+            wholePageText = "Riverlight Chords\n[G]Hello",
+            pageTitle = "Riverlight",
+        )
+        fixture.session.openNewSongEditor(song, PageTitle(title = "Riverlight Chords @ Site", artist = "The Invented Band"))
+        runCurrent()
+        assertEquals("{title: Riverlight}\n{artist: The Invented Band}\n[G]Hello", fixture.session.editorDraft.value?.text)
+        assertEquals(TextRange(8, 18), fixture.session.retainedEditorField(CampfireDestination.SongEditor.NEW_SONG_FILE_NAME)?.selection)
+        assertEquals(true, fixture.session.wholePage.wholePageDraft.value?.startsWith("{title: Riverlight Chords @ Site}"))
     }
 
     @Test
@@ -740,7 +758,7 @@ class EditorSessionTest {
     )
 
     /** A pasted [text], as the import hands it over. */
-    private suspend fun EditorSession.openNewSongEditor(text: String, suggestion: SharedTextTitle?) =
+    private suspend fun EditorSession.openNewSongEditor(text: String, suggestion: PageTitle?) =
         openNewSongEditor(ImportPlan.SongEntry(fileName = "new.cho", text = text, status = ImportPlan.Status.NEW, sourceFileName = "Pasted.txt"), suggestion)
 
     private fun preferences(notation: UserPreferences.Notation) = UserPreferences(

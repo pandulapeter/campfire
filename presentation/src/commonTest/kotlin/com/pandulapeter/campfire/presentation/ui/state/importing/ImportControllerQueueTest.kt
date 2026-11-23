@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.state.importing
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.snapshots.Snapshot
 import androidx.lifecycle.SavedStateHandle
+import com.pandulapeter.campfire.chordpro.convert.PageTitle
 import com.pandulapeter.campfire.data.model.importing.ImportBookkeeping
 import com.pandulapeter.campfire.data.model.importing.ImportChoices
 import com.pandulapeter.campfire.data.model.importing.ImportConflictResolution
@@ -42,6 +43,7 @@ import com.pandulapeter.campfire.domain.api.importing.ApplyImportUseCase
 import com.pandulapeter.campfire.domain.api.importing.CanLoadPagesUseCase
 import com.pandulapeter.campfire.domain.api.importing.LoadPageUseCase
 import com.pandulapeter.campfire.domain.api.importing.PageCropper
+import com.pandulapeter.campfire.domain.api.importing.PageSongLines
 import com.pandulapeter.campfire.domain.api.importing.ClearImportStagingUseCase
 import com.pandulapeter.campfire.domain.api.importing.DeleteImportStagingUseCase
 import com.pandulapeter.campfire.domain.api.importing.PrepareImportUseCase
@@ -55,7 +57,6 @@ import com.pandulapeter.campfire.presentation.ui.messages.Message
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.navigation.ImportPreview
-import com.pandulapeter.campfire.presentation.ui.platform.SharedTextTitle
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore
 import com.pandulapeter.campfire.presentation.ui.state.SongLookup
 import com.pandulapeter.campfire.presentation.ApplicationScope
@@ -97,7 +98,7 @@ class ImportControllerQueueTest {
     private val loadedSongTexts = mutableListOf<String>()
     private val newSongTexts = mutableListOf<String>()
     private val newSongPictures = mutableListOf<String>()
-    private val newSongSuggestions = mutableListOf<SharedTextTitle?>()
+    private val newSongSuggestions = mutableListOf<PageTitle?>()
     private val library = MutableStateFlow(SongLookup(songsByFileName = emptyMap(), isLibraryRead = true))
     private var isLibraryIndexedAtOnce = true
     private var areSongsEnabled = true
@@ -121,7 +122,7 @@ class ImportControllerQueueTest {
     private val loadedPageAddresses = mutableListOf<String>()
 
     /** What the page model keeps of a page read by its address: null where it finds no song; it throws where it cannot run. */
-    private var pageSongLines: () -> List<Int>? = { listOf(0) }
+    private var pageSongLines: () -> PageSongLines? = { SONG_LINES }
     private val preparedFiles = mutableListOf<List<ImportedFile>>()
     private var sharedLinkImports = mapOf<String, Set<String>>()
     private val rememberedSharedLinkImports = mutableListOf<Pair<String, List<String>>>()
@@ -391,10 +392,10 @@ class ImportControllerQueueTest {
     fun `a new song from a share opens the editor with its suggestion`() = runTest {
         plannedSongs = listOf(songEntry("new.cho", text = "[G]Hello"))
         startController()
-        val suggestion = SharedTextTitle(title = "Riverlight", artist = "The Invented Band")
+        val suggestion = PageTitle(title = "Riverlight", artist = "The Invented Band")
         enqueuePaste(suggestion)
         runCurrent()
-        assertEquals(listOf<SharedTextTitle?>(suggestion), newSongSuggestions)
+        assertEquals(listOf<PageTitle?>(suggestion), newSongSuggestions)
     }
 
     @Test
@@ -978,7 +979,7 @@ class ImportControllerQueueTest {
         assertEquals("Menu\nG\nHello\nComments", file.bytes.decodeToString())
         assertTrue(file.isPageText)
         assertEquals(listOf("[G]Hello"), newSongTexts)
-        assertEquals(listOf<SharedTextTitle?>(SharedTextTitle(title = "Riverlight", artist = "The Invented Band")), newSongSuggestions)
+        assertEquals(listOf<PageTitle?>(PageTitle(title = "Riverlight", artist = "The Invented Band")), newSongSuggestions)
         assertTrue(backStack.last().let { it is CampfireDestination.SongEditor && it.isNewSong })
         assertTrue(backStack.none { it == CampfireDestination.ImportReport })
         assertTrue(settled.isCompleted)
@@ -996,7 +997,7 @@ class ImportControllerQueueTest {
         assertEquals(ImportFailure.PAGE_NOT_READ, failed.reason)
         assertEquals("example.com", failed.sourceName)
         assertEquals(0, prepareCount)
-        pageSongLines = { listOf(0) }
+        pageSongLines = { SONG_LINES }
         controller.retryImport()
         settle()
         assertEquals(listOf(PAGE, PAGE), loadedPageAddresses)
@@ -1475,7 +1476,7 @@ class ImportControllerQueueTest {
 
     private fun enqueuePage() = controller.enqueueImport(source = ImportSource.Page(PAGE), isNewSongFromText = true)
 
-    private fun enqueuePaste(suggestion: SharedTextTitle? = null) = controller.enqueueImport(
+    private fun enqueuePaste(suggestion: PageTitle? = null) = controller.enqueueImport(
         source = ImportSource.Files(listOf(ImportedFile(name = "Pasted.txt", bytes = "Pasted".encodeToByteArray()))),
         isNewSongFromText = true,
         suggestion = suggestion,
@@ -1546,5 +1547,7 @@ private fun setlistEntry(fileName: String, status: ImportPlan.Status) = ImportPl
 )
 
 private const val PAGE = "https://example.com/riverlight"
+
+private val SONG_LINES = PageSongLines(keptLines = listOf(0), titleLine = null, artistLine = null, headerLines = emptyList())
 
 private val ZIP_BYTES = byteArrayOf(0x50, 0x4b, 3, 4, 20, 0)

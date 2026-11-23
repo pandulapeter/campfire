@@ -25,13 +25,12 @@ import com.pandulapeter.campfire.pagesong.PageSong
 interface PageCropper {
 
     /**
-     * The indices of [lines] to convert, in ascending order: the song, its details, and the lines naming its title and
-     * artist. Null where the lines hold no song as far as the model can tell, which a page read from its address is
-     * refused for. Throws where the model cannot run (its weights could not be read) or fails, never answering null for
-     * it, so that a page is then converted whole, as a paste is, rather than refused: a crop must never cost the song its
-     * own text.
+     * Which of [lines] are the song, its details, and the lines naming its title and artist. Null where the lines hold no
+     * song as far as the model can tell, which a page read from its address is refused for. Throws where the model cannot
+     * run (its weights could not be read) or fails, never answering null for it, so that a page is then converted whole,
+     * as a paste is, rather than refused: a crop must never cost the song its own text.
      */
-    suspend fun songLinesOf(lines: List<String>): List<Int>?
+    suspend fun songLinesOf(lines: List<String>): PageSongLines?
 
     /**
      * The model's scores of a document's [lines] (`ChordSheetPageLines`, with their layout), one for each of the first
