@@ -8,9 +8,10 @@
 
 """
 Pages made up for training, their labels known by construction: a ChordPro song of the import corpus rendered as a chord
-sheet (chord rows over lyrics, section labels, its title, artist, and details), wrapped in runs of the clutter the real
-training pages' `JUNK` lines hold, a few of them dropped inside the song as a site's ads are. They only widen the
-training set: the gate always scores real pages, and a song whose document is held out is never rendered.
+sheet (chord rows over lyrics, section labels, its title, artist, and details) with the notes, outros, and chord lists
+pages put around a song, wrapped in runs of the clutter the real training pages' `JUNK` lines hold, a few of them dropped
+inside the song as a site's ads are. They only widen the training set: the gate always scores real pages, and a song
+whose document is held out is never rendered.
 """
 
 import glob
@@ -25,6 +26,39 @@ from lines import normalized  # noqa: E402
 
 DIRECTIVE = re.compile(r"^\{\s*([a-z_]+)\s*[: ]?\s*(.*?)\s*\}$")
 CHORD = re.compile(r"\[([^\]]*)\]")
+SHAPES = {"C": "x32010", "D": "xx0232", "E": "022100", "F": "133211", "G": "320003", "A": "x02220", "Am": "x02210",
+          "Em": "022000", "Dm": "xx0231", "Bm": "x24432", "B7": "x21202", "E7": "020100", "A7": "x02020", "D7": "xx0212",
+          "G7": "320001", "C7": "x32310", "F#m": "244222", "Bb": "x13331", "Cadd9": "x32033", "Dsus4": "xx0233"}
+NOTES = ["Repeat chorus", "(Repeat chorus)", "Repeat chorus x2", "Same chords for the other verses",
+         "Those chords are the same for the other verse", "Play the intro riff again", "Adlib:", "Instrumental",
+         "(x2)", "x2", "Repeat till fade", "Repeat chorus till end.", "Inter:", "Solo over verse chords",
+         "*palm mute", "N.C.", "(slowly)", "Last time:"]
+
+
+def edges(song, chords, rng):
+    """
+    The song's own lines a page often puts at its edges or between its sections, which a crop must keep: a performance
+    note after a section, the last line sung again as an outro, and a list of the chords used with their shapes.
+    """
+    result = []
+    for text, label in song:
+        result.append((text, label))
+        if label == "BLANK" and rng.random() < 0.12:
+            result += [(rng.choice(NOTES), "SONG"), ("", "BLANK")]
+    sung = [text for text, label in song if label == "SONG" and text.strip() and not text.startswith(" ")]
+    if sung and rng.random() < 0.3:
+        result += [(sung[-1], "SONG")] * rng.randint(1, 3)
+    names = list(dict.fromkeys(chords))
+    if names and rng.random() < 0.35:
+        heading = rng.choice(["Chords used:", "Chords:", "Accords:", "Chords used: Relative to capo.", ""])
+        result += [("", "BLANK")] + ([(heading, "SONG")] if heading else [])
+        layout = rng.choice(["{}: {}", "{} - {}", "{} {}", "{}:    {}"])
+        for name in names:
+            shape = SHAPES.get(name) or "".join(rng.choice("x0123") for _ in range(6))
+            result.append((layout.format(name, shape), "SONG"))
+    return result
+
+
 DETAIL_NAMES = {"key": "Key", "capo": "Capo", "tempo": "Tempo", "time": "Time", "composer": "Music", "lyricist": "Words"}
 
 
@@ -108,7 +142,7 @@ def synthetic_pages(import_corpus, training_pages, held_groups, seed, per_song=2
         title = next((match.group(2) for match in directives if match and match.group(1).lower() in ("title", "t")), None)
         if title and normalized(title) in held_groups:
             continue
-        song = rendered(cho, rng)
+        song = edges(rendered(cho, rng), CHORD.findall(cho), rng)
         if sum(1 for _, label in song if label == "SONG") < 4:
             continue
         for _ in range(per_song):
