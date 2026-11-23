@@ -55,9 +55,18 @@ enum SharedName {
 /// containing app, whose name and icon it shows and whose settings decide it.
 enum ShareNotification {
 
-    /// Whether the notification was added, which is what the sheet's second line says. Awaited for at most a second:
-    /// the extension is ended once its request completes, and must not be held open by the notification center.
+    /// Whether the notification was added, which is what the sheet's second line says. Awaited for at most a second,
+    /// the settings' answer included: the extension is ended once its request completes, and must not be held open by
+    /// the notification center.
     static func post(_ share: SavedShare) async -> Bool {
+        await withCheckedContinuation { continuation in
+            let once = Once(continuation)
+            Task { once.resume(await add(share)) }
+            DispatchQueue.main.asyncAfter(deadline: .now() + timeoutSeconds) { once.resume(false) }
+        }
+    }
+
+    private static func add(_ share: SavedShare) async -> Bool {
         let center = UNUserNotificationCenter.current()
         let settings = await center.notificationSettings()
         guard settings.authorizationStatus == .authorized || settings.authorizationStatus == .provisional,
@@ -66,10 +75,11 @@ enum ShareNotification {
         content.body = share.name.waitingText
         content.threadIdentifier = threadIdentifier
         let request = UNNotificationRequest(identifier: share.id, content: content, trigger: nil)
-        return await withCheckedContinuation { continuation in
-            let once = Once(continuation)
-            center.add(request) { error in once.resume(error == nil) }
-            DispatchQueue.main.asyncAfter(deadline: .now() + timeoutSeconds) { once.resume(false) }
+        do {
+            try await center.add(request)
+            return true
+        } catch {
+            return false
         }
     }
 
@@ -77,7 +87,7 @@ enum ShareNotification {
     private static let threadIdentifier = "share-inbox"
     private static let timeoutSeconds = 1.0
 
-    /// Resumes its continuation with the first answer, the add's completion or the timeout, and ignores the other. Sendable
+    /// Resumes its continuation with the first answer, the add's or the timeout's, and ignores the other. Sendable
     /// by its lock, which guards the one thing it holds.
     private final class Once: @unchecked Sendable {
         private var continuation: CheckedContinuation<Bool, Never>?
