@@ -106,6 +106,7 @@ fun CampfireApp(
     onAppReady: () -> Unit = {},
     onBackgroundColorChanged: (Color) -> Unit = {},
 ) {
+    prefetchLazyGridsWithoutCacheWindow()
     ImportHandOverEffects(viewModel = viewModel, filesToImport = filesToImport, sharedTexts = sharedTexts, shareLinks = shareLinks)
     val showSyncNotification = rememberSyncNotifications(viewModel.syncController.syncState)
     ImportNotificationEffect()
