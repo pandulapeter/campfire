@@ -60,12 +60,13 @@ heuristics and near misses are pinned in `ChordSheetConverterTest` and its sibli
   of the titles.
 - **Then each song is cropped** by the page model's scores of the whole document's lines (`pageScores`, read through
   `ChordSheetPageLines`, the one mapping the model was trained on: change it only with a retrain), held to the model's
-  crop rule on its own lines (`ChordSheetSongCrop`), so the contents page still splits. Kept besides: every line with a
-  2% chance of being the title or the artist (the header the converter reads), a blank line between kept ones, and a
-  chord row inside the song or straight after it, past only blank lines and other such rows (the model reads a lone
-  closing chord as a page number; a chord diagram block under the song, past its heading or first mark, goes). A song the
-  model sees none in, or reaching past the lines it read, is converted whole. Its `METADATA` lines are kept, so the
-  rules below find a key or capo the clutter around it hid.
+  crop rule on its own lines (`ChordSheetSongCrop`), so the contents page still splits. Kept besides: every line
+  labelled the title or the artist, and above the song every line with a 2% chance of being either (the header the
+  converter reads; below it such a line is a printed page's running header), a blank line between kept ones, and a chord
+  row inside the song or straight after it, past only blank lines and other such rows (the model reads a lone closing
+  chord as a page number; a chord diagram block under the song, past its heading or first mark, goes). A song the model
+  sees none in, or reaching past the lines it read, is converted whole. Its `METADATA` lines are kept, so the rules
+  below find a key or capo the clutter around it hid.
 - A section set apart by look (`ChordSheetLook`: bold, italic, or inset) ends where the lyrics return to the verses'
   look, not only at the next heading; with no heading, a run of bold or italic lyrics is a chorus. An inset alone is
   not one (a second column or a bridge starts further in too), and a run right under the title is the header's (a

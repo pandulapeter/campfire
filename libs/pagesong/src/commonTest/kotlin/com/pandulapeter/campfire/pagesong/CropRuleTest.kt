@@ -42,6 +42,13 @@ class CropRuleTest {
     }
 
     @Test
+    fun `a chance of several labels together is unsure where it rounds to the threshold as in the gate`() {
+        assertTrue(scores(junk = 0.98004f, title = 0.01f, artist = 0.00996f).isUnsure(PageLineLabel.TITLE, PageLineLabel.ARTIST))
+        assertFalse(scores(junk = 0.9805f, title = 0.01f, artist = 0.0095f).isUnsure(PageLineLabel.TITLE, PageLineLabel.ARTIST))
+        assertFalse(scores(junk = 0.98f, title = 0.02f).isUnsure(PageLineLabel.ARTIST))
+    }
+
+    @Test
     fun `fewer than four song lines hold no song and every line is kept`() {
         val crop = cropOf(listOf(junk, song, song, song, metadata), lineCount = 7, blankLines = emptySet())
 

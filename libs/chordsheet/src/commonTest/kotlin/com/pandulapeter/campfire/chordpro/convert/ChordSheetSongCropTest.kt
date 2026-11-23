@@ -89,6 +89,53 @@ class ChordSheetSongCropTest {
     }
 
     @Test
+    fun `a running header inside the song the model gives a small chance of being the title is left out`() {
+        val lines = listOf(
+            "Amazing Grace" to title,
+            "G           C        G" to song,
+            "Amazing grace, how sweet the sound" to song,
+            "G                D" to song,
+            "That saved a wretch like me" to song,
+            "Amazing Grace - John Newton | Songs.example" to runningHeader,
+            "C           G" to song,
+            "I once was lost but now am found" to song,
+        )
+
+        assertEquals(converted(lines.filter { it.second != runningHeader }), converted(lines, cropped = true))
+    }
+
+    @Test
+    fun `a line above the song the model gives a small chance of being the title is kept for the header`() {
+        val lines = listOf(
+            "Page 1" to junk,
+            "Amazing Grace - John Newton" to runningHeader,
+            "G           C        G" to song,
+            "Amazing grace, how sweet the sound" to song,
+            "G                D" to song,
+            "That saved a wretch like me" to song,
+        )
+
+        assertEquals(converted(lines.drop(1)), converted(lines, cropped = true))
+    }
+
+    @Test
+    fun `a line labelled the title inside the song is kept though a surer one heads it`() {
+        val lines = listOf(
+            "Amazing Grace" to title,
+            "G           C        G" to song,
+            "Amazing grace, how sweet the sound" to song,
+            "G                D" to song,
+            "That saved a wretch like me" to song,
+            "Amazing grace" to scores(junk = 0.1f, title = 0.9f),
+            "C           G" to song,
+            "I once was lost but now am found" to song,
+            "Footer" to junk,
+        )
+
+        assertEquals(converted(lines.dropLast(1)), converted(lines, cropped = true))
+    }
+
+    @Test
     fun `a song the model sees no song in is converted whole`() {
         val lines = listOf(
             "Page 1" to junk,
@@ -156,6 +203,7 @@ class ChordSheetSongCropTest {
     private val junk = scores(junk = 1f)
     private val song = scores(song = 1f)
     private val title = scores(title = 1f)
+    private val runningHeader = scores(junk = 0.95f, title = 0.03f, artist = 0.02f)
 
     private fun scores(junk: Float = 0f, song: Float = 0f, title: Float = 0f, artist: Float = 0f, metadata: Float = 0f) =
         PageLineScores(floatArrayOf(junk, song, title, artist, metadata))

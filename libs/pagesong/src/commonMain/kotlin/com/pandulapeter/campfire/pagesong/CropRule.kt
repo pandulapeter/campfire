@@ -9,8 +9,6 @@
  */
 package com.pandulapeter.campfire.pagesong
 
-import kotlin.math.round
-
 /**
  * The lowest chance of being the song or its details that keeps a line. The gate (`tools/page-model/gate.py`, its
  * `unsure` rule) judged the model with it: a song line the model is not sure of stays at the cost of a little clutter.
@@ -34,7 +32,7 @@ internal fun cropOf(scores: List<PageLineScores>, lineCount: Int, blankLines: Se
         index !in blankLines && (
             labels[index] == PageLineLabel.SONG ||
                 labels[index] == PageLineLabel.METADATA ||
-                round((scores[index][PageLineLabel.SONG] + scores[index][PageLineLabel.METADATA]).toDouble() * 10_000) / 10_000 >= UNSURE
+                scores[index].isUnsure(PageLineLabel.SONG, PageLineLabel.METADATA)
             )
     }
     val holdsSong = kept.count { labels[it] == PageLineLabel.SONG } >= MIN_SONG_LINES

@@ -23,11 +23,12 @@ internal object ChordSheetSongCrop {
 
     /**
      * The lines of [song] whose sheet lines the model keeps, by [scores] of every line of the document (null keeps every
-     * line): the song and its details, the lines it reads as the title and the artist (so the converter still reads the
-     * song's header from them), and a blank line between two kept ones. A chord row the model drops is kept too, since it
-     * reads a lone closing chord as a page number: inside the song, and after its last kept line only while nothing but
-     * blank lines and other such chord rows came between, so an outro's chords stay but a chord diagram block printed
-     * under the song ("Chords used", each name over its marks) goes. The whole song where the model sees none in it, or
+     * line): the song and its details, the lines it reads as the title and the artist and, above the song, those it gives a
+     * small chance of being either (so the converter still reads the song's header from them), and a blank line between
+     * two kept ones. A chord row the model drops is kept too, since it reads a lone closing chord as a page number: inside
+     * the song, and after its last kept line only while nothing but blank lines and other such chord rows came between,
+     * so an outro's chords stay but a chord diagram block printed under the song ("Chords used", each name over its
+     * marks) goes. The whole song where the model sees none in it, or
      * where a line of it is past the lines the model read.
      */
     fun cropped(song: List<Rendered>, scores: List<PageLineScores>?): List<Rendered> {
@@ -38,10 +39,11 @@ internal object ChordSheetSongCrop {
         val blankLines = origins.indices.filterTo(mutableSetOf()) { origins[it] !in printed }
         val crop = PageCrop.of(origins.map { scores[it] }, blankLines)
         if (!crop.holdsSong) return song
-        val header = crop.scores.indices.filter { it !in blankLines && isHeader(crop.scores[it]) }
+        val firstSongLine = crop.scores.indices.first { it !in blankLines && crop.scores[it].label == PageLineLabel.SONG }
+        val header = crop.scores.indices.filter { it !in blankLines && isHeader(crop.scores[it], isAboveSong = it < firstSongLine) }
         val kept = (crop.keptLines + header).map { origins[it] }.toSet()
         val span = kept.min()..kept.max()
-        val body = origins[crop.scores.indices.first { it !in blankLines && crop.scores[it].label == PageLineLabel.SONG }]
+        val body = origins[firstSongLine]
         var isClosing = true
         return song.filter { line ->
             val origin = line.origin ?: return@filter true
@@ -55,8 +57,11 @@ internal object ChordSheetSongCrop {
         }
     }
 
-    private fun isHeader(scores: PageLineScores) = scores.label == PageLineLabel.TITLE || scores.label == PageLineLabel.ARTIST ||
-        scores[PageLineLabel.TITLE] + scores[PageLineLabel.ARTIST] >= UNSURE
-
-    private const val UNSURE = 0.02f
+    /**
+     * A line labelled the title or the artist wherever it is, since one inside the song is most often a lyric naming the
+     * song, which must not be lost; and one the model is only unsure of only above the song, where the converter reads the
+     * header: below its first song line, such a line is a printed page's running header repeated on the next page.
+     */
+    private fun isHeader(scores: PageLineScores, isAboveSong: Boolean) =
+        scores.label == PageLineLabel.TITLE || scores.label == PageLineLabel.ARTIST || isAboveSong && scores.isUnsure(PageLineLabel.TITLE, PageLineLabel.ARTIST)
 }
