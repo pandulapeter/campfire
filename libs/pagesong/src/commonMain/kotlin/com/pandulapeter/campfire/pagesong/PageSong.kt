@@ -30,8 +30,8 @@ public class PageSong(
     private val model = PageModel(PageModelWeights(weights))
 
     /**
-     * Labels the first [MAX_LINES] of [lines] and crops them; lines past that are never kept, as a song is rarely that far
-     * down a page. An empty list answers a crop holding no song.
+     * Labels the first [MAX_LINES] of [lines] and crops them; lines past that are kept only in a crop holding no song, which
+     * keeps every line, as a song is rarely that far down a page. An empty list answers a crop holding no song.
      */
     public fun crop(lines: List<PageLine>, source: PageLineSource): PageCrop =
         cropOf(scores = logitsOf(lines.take(MAX_LINES), source).map(::scoresOf), lineCount = lines.size)
@@ -47,7 +47,7 @@ public class PageSong(
 
     public companion object {
 
-        /** How many of a page's lines are read; the rest are never kept. */
+        /** How many of a page's lines are read; the rest are kept only where the model sees no song in these. */
         public const val MAX_LINES: Int = 1500
     }
 }

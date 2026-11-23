@@ -31,7 +31,7 @@ weights' bytes to `PageSong`, which only answers line indices and never changes 
   kept lines are likeliest `SONG`, else every line is kept. The title and artist are the surest of the lines likeliest
   so; `headerLines` are those of them heading the song (before its first `SONG` line, not running straight into it, and
   not kept), which no gate scored: the rest may be misjudged song lines and stay with it. Only the first 1,500 lines are
-  read; the rest are never kept. `PageCrop.of` holds a part of lines scored as a whole (one song of a document) to the
+  read; the rest are kept only where those hold no song. `PageCrop.of` holds a part of lines scored as a whole (one song of a document) to the
   same rule. A document's lines and layout are `:libs:chordsheet`'s `ChordSheetPageLines`, which the trainer's documents
   were dumped through.
 - **A retrain is judged by the gate** (`tools/page-model/gate.py`): its held-out score on pages and on documents against

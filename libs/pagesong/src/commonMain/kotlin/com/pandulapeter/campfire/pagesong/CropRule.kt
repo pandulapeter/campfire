@@ -23,8 +23,8 @@ internal const val UNSURE = 0.02
 internal const val MIN_SONG_LINES = 4
 
 /**
- * The crop of a page of [lineCount] lines whose first lines the model scored as [scores] (the rest are never kept), by
- * the same rule the gate scored the model with.
+ * The crop of a page of [lineCount] lines whose first lines the model scored as [scores] (the rest are kept only where
+ * those hold no song, as every line then is), by the same rule the gate scored the model with.
  */
 internal fun cropOf(scores: List<PageLineScores>, lineCount: Int): PageCrop {
     val labels = scores.map { it.label }

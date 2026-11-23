@@ -15,7 +15,8 @@ package com.pandulapeter.campfire.pagesong
  * @param holdsSong whether the model sees a song in the lines. When it does not, [keptLines] is every line and the
  * caller converts the page as it would without the model.
  * @param keptLines the lines to convert, in order: the song and its details, including every line the model is not sure
- * is clutter. Never a line past [PageSong.MAX_LINES].
+ * is clutter. Where the model sees a song, never a line past [PageSong.MAX_LINES]; where it does not, every line, those
+ * past it included.
  * @param titleLine the line the model reads as the song's title, if any; it is not among [keptLines] unless the model
  * also gives it a chance of being the song or its details.
  * @param artistLine the line the model reads as the song's artist, if any, kept on the same terms as [titleLine].
