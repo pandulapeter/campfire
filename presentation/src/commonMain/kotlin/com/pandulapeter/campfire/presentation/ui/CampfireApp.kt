@@ -62,7 +62,7 @@ import com.pandulapeter.campfire.presentation.ui.messages.MessagePlaces
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeHapticsEffect
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeNotificationEffect
 import com.pandulapeter.campfire.presentation.ui.progress.WorkProgressBar
-import com.pandulapeter.campfire.presentation.ui.state.importing.ImportReport
+import com.pandulapeter.campfire.presentation.ui.state.importing.drawsItsOwnProgress
 import com.pandulapeter.campfire.presentation.ui.progress.workProgress
 import com.pandulapeter.campfire.presentation.ui.sync.SyncLifecycleEffects
 import com.pandulapeter.campfire.presentation.ui.sync.rememberSyncNotifications
@@ -235,8 +235,7 @@ private fun AppWorkProgressBar(
     WorkProgressBar(
         modifier = modifier,
         progress = workProgress(
-            isProgressOnScreen = viewModel.navigator.backStack.lastOrNull() == CampfireDestination.ImportReport &&
-                (importReport is ImportReport.Loading || importReport == ImportReport.Importing),
+            isProgressOnScreen = viewModel.navigator.backStack.lastOrNull() == CampfireDestination.ImportReport && importReport.drawsItsOwnProgress,
             isImporting = isImporting,
             isDemoLibraryPending = isDemoLibraryPending,
             importProgress = importProgress,

@@ -103,6 +103,13 @@ sealed interface ImportReport {
  */
 internal val ImportReport?.isUnfinished get() = this != null && this !is ImportReport.Finished
 
+/**
+ * Whether the import screen draws a progress line of its own while it shows this stage: reading the files
+ * ([ImportReport.Loading]) or writing them ([ImportReport.Importing]), the two stages it gives `ImportLoadingContent`. The
+ * window's bar stays down meanwhile (`workProgress`'s `isProgressOnScreen`), so that it never shows two at once.
+ */
+internal val ImportReport?.drawsItsOwnProgress get() = this is ImportReport.Loading || this == ImportReport.Importing
+
 /** Why [ImportReport.Failed] has nothing to review. */
 enum class ImportFailure {
     /** The host could not be reached, did not answer in time, or was busy; worth asking again a minute later. */

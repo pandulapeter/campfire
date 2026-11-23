@@ -38,6 +38,16 @@ class ImportReportTest {
     }
 
     @Test
+    fun `the import screen draws its own progress only while it reads or writes the files`() {
+        assertTrue(ImportReport.Loading(sourceName = "songs.zip").drawsItsOwnProgress)
+        assertTrue(ImportReport.Importing.drawsItsOwnProgress)
+        assertFalse(ImportReport.Failed(reason = ImportFailure.UNREADABLE, sourceName = null).drawsItsOwnProgress)
+        assertFalse(ImportReport.Review(plan = ImportPlan(), choices = ImportChoices(), isDemoLibrary = false).drawsItsOwnProgress)
+        assertFalse(ImportReport.Finished(null).drawsItsOwnProgress)
+        assertFalse((null as ImportReport?).drawsItsOwnProgress)
+    }
+
+    @Test
     fun `a shared link's review is named by the setlist or the one song it holds not by its download`() {
         val setlist = Setlist(
             fileName = "night.setlist.json", title = "Campfire night", description = "", date = LocalDate(2026, 10, 21),
