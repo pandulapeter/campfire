@@ -178,7 +178,7 @@ internal fun SongPages(
         val shownText = if (!hasShownLyrics && !isFollowingGesture && pagerState.isScrollInProgress) null else text
         if (shownText != null && !hasShownLyrics) SideEffect { hasShownLyrics = true }
         val foldedSections = foldedSectionsOf(song.fileName, importPreview, userPreferences, isPerformanceModeEnabled)
-        val toggleFold = foldToggleOf(song.fileName, importPreview, preferencesController).takeUnless { isPerformanceModeEnabled }
+        val toggleFold = rememberFoldToggle(song.fileName, importPreview, preferencesController, isPerformanceModeEnabled)
         val isChordSectionFolded = CHORDS_FOLD_KEY in foldedSections
         val isScaleSectionFolded = SCALES_FOLD_KEY in foldedSections
         val playback = songPlaybackOf(song = song, setlistFileName = destination.setlistFileName, overrides = playingOverrides)
@@ -371,6 +371,21 @@ private fun foldedSectionsOf(
     emptySet()
 } else {
     (importPreview?.folds?.get(songFileName) ?: userPreferences?.foldedSections?.get(songFileName)).orEmpty()
+}
+
+/**
+ * What folds or unfolds a section of [songFileName]'s page by its key: in memory for a preview, else in the preferences;
+ * none in performance mode. Remembered, so that the page is handed the same callback each time the pager recomposes it
+ * and can skip.
+ */
+@Composable
+private fun rememberFoldToggle(
+    songFileName: String,
+    importPreview: ImportPreviewState?,
+    preferencesController: PreferencesController,
+    isPerformanceModeEnabled: Boolean,
+): ((key: String) -> Unit)? = remember(songFileName, importPreview, preferencesController, isPerformanceModeEnabled) {
+    foldToggleOf(songFileName, importPreview, preferencesController).takeUnless { isPerformanceModeEnabled }
 }
 
 /** What folds or unfolds a section of [songFileName]'s page by its key: in memory for a preview, else in the preferences. */
