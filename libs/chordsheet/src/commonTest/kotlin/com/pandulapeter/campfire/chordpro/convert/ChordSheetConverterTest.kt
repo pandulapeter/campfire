@@ -540,6 +540,14 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `a backslash marking a strum leaves a row of chords one - its chords over their columns`() {
+        assertEquals(
+            "[Am]Itt lakom, lá[C]tod: ez az a [F]ház\n[Am] [C] [F] [*x2]\n",
+            convert("Am           C             F  \\\nItt lakom, látod: ez az a ház\nAm  C  F  \\  (x2)"),
+        )
+    }
+
+    @Test
     fun `parenthesized chords need a majority`() {
         assertEquals("[Am] Today [C] the day (repeat)\n", convert("(Am) Today (C) the day (repeat)"))
         assertEquals("(Am) Today (repeat)\n", convert("(Am) Today (repeat)"))

@@ -41,7 +41,15 @@ internal object ChordSheetChordWords {
     internal fun isBareLatinNote(value: String) = ascii(value).removeSurrounding("(", ")").let { ChordProChordNames.latinNoteLength(it) == it.length }
     internal fun isLatinChordBeyondNote(value: String) = ascii(value).removeSurrounding("(", ")").let { ChordProChordNames.latinExpanded(it) != null && !isBareLatinNote(it) }
     internal fun isPositioned(row: List<Token>) = row.zipWithNext().any { (a, b) -> b.index - (a.index + a.text.length) >= 2 }
-    internal fun furniture(value: String) = value in listOf("|", "||", "|:", ":|", "||:", ":||", ":|:", "-", "/", "%", "(", ")", "...", "\u2026", ".") || value in noChord || ChordProRowMarks.repeatCount.matches(value)
+    internal fun furniture(value: String) = value in listOf("|", "||", "|:", ":|", "||:", ":||", ":|:", "-", "/", "%", "(", ")", "...", "\u2026", ".", STRUM_MARK) ||
+        value in noChord || ChordProRowMarks.repeatCount.matches(value)
+
+    /**
+     * A backslash a sheet ends a chord row with, or sets among its chords, to mark a strum or a chord let ring (`F  \`).
+     * It is no chord and no beat, so the row is chords all the same and the mark is left out of it, every chord keeping
+     * its column.
+     */
+    private const val STRUM_MARK = "\\"
     internal fun chordTokens(line: Rendered): List<Token>? = chordRow(line)?.tokens
 
     /**
@@ -72,6 +80,7 @@ internal object ChordSheetChordWords {
         var index = 0
         while (index < start) {
             val word = words[index]
+            if (word.text == STRUM_MARK) { index++; continue }
             val end = if (isNote?.invoke(word) == true) {
                 (index until start).takeWhile { isNote(words[it]) }.last()
             } else if (word.text.startsWith('(') && !rowChord(word.text)) {
