@@ -10,8 +10,12 @@
 
 /* The share extension's Hungarian strings. Keep in step with en.lproj. */
 "share_saving" = "Mentés a Campfire számára…";
-"share_saved" = "Elmentve a Campfire számára";
-"share_saved_detail" = "Nyisd meg a Campfire-t, hogy a könyvtáradba kerüljön.";
+"share_waiting_named" = "„%@” a Campfire-ben vár";
+"share_waiting_unnamed" = "A megosztásod a Campfire-ben vár";
+"share_open_app" = "Nyisd meg a Campfire-t, hogy hozzáadd.";
+"share_open_app_several" = "Nyisd meg a Campfire-t, hogy hozzáadd őket.";
+"share_open_notification" = "Nyisd meg az értesítést vagy a Campfire-t, hogy hozzáadd.";
+"share_open_notification_several" = "Nyisd meg az értesítést vagy a Campfire-t, hogy hozzáadd őket.";
 "share_unsupported" = "Ezt a Campfire nem tudja importálni.";
 "share_unsupported_detail" = "Dalokat, egyszerű szöveget, PDF- és Word-dokumentumokat, valamint zip archívumokat importál.";
 "share_too_large" = "Ez túl nagy az importáláshoz.";

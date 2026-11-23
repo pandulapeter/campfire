@@ -10,8 +10,12 @@
 
 /* The share extension's German strings. Keep in step with en.lproj. */
 "share_saving" = "Wird in Campfire gespeichert…";
-"share_saved" = "In Campfire gespeichert";
-"share_saved_detail" = "Öffne Campfire, um es deiner Bibliothek hinzuzufügen.";
+"share_waiting_named" = "„%@“ wartet in Campfire";
+"share_waiting_unnamed" = "Dein geteilter Inhalt wartet in Campfire";
+"share_open_app" = "Öffne Campfire, um es hinzuzufügen.";
+"share_open_app_several" = "Öffne Campfire, um sie hinzuzufügen.";
+"share_open_notification" = "Öffne die Mitteilung oder Campfire, um es hinzuzufügen.";
+"share_open_notification_several" = "Öffne die Mitteilung oder Campfire, um sie hinzuzufügen.";
 "share_unsupported" = "Campfire kann das nicht importieren.";
 "share_unsupported_detail" = "Campfire importiert Songs, reinen Text, PDF- und Word-Dokumente sowie Zip-Archive.";
 "share_too_large" = "Das ist zu groß zum Importieren.";

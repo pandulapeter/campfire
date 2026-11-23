@@ -10,8 +10,12 @@
 
 /* The share extension's Romanian strings. Keep in step with en.lproj. */
 "share_saving" = "Se salvează pentru Campfire…";
-"share_saved" = "Salvat pentru Campfire";
-"share_saved_detail" = "Deschide Campfire ca să-l adaugi în bibliotecă.";
+"share_waiting_named" = "„%@” te așteaptă în Campfire";
+"share_waiting_unnamed" = "Ce ai partajat te așteaptă în Campfire";
+"share_open_app" = "Deschide Campfire ca să-l adaugi.";
+"share_open_app_several" = "Deschide Campfire ca să le adaugi.";
+"share_open_notification" = "Deschide notificarea sau Campfire ca să-l adaugi.";
+"share_open_notification_several" = "Deschide notificarea sau Campfire ca să le adaugi.";
 "share_unsupported" = "Campfire nu poate importa asta.";
 "share_unsupported_detail" = "Importă cântece, text simplu, documente PDF și Word și arhive zip.";
 "share_too_large" = "E prea mare pentru import.";

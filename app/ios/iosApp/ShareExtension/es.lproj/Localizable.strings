@@ -10,8 +10,12 @@
 
 /* The share extension's Spanish strings. Keep in step with en.lproj. */
 "share_saving" = "Guardando en Campfire…";
-"share_saved" = "Guardado en Campfire";
-"share_saved_detail" = "Abre Campfire para añadirlo a tu biblioteca.";
+"share_waiting_named" = "«%@» te espera en Campfire";
+"share_waiting_unnamed" = "Lo que compartiste te espera en Campfire";
+"share_open_app" = "Abre Campfire para añadirlo.";
+"share_open_app_several" = "Abre Campfire para añadirlos.";
+"share_open_notification" = "Abre la notificación o Campfire para añadirlo.";
+"share_open_notification_several" = "Abre la notificación o Campfire para añadirlos.";
 "share_unsupported" = "Campfire no puede importar esto.";
 "share_unsupported_detail" = "Importa canciones, texto sin formato, documentos PDF y Word, y archivos zip.";
 "share_too_large" = "Es demasiado grande para importarlo.";

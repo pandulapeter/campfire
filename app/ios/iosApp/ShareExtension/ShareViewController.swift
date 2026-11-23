@@ -12,7 +12,8 @@ import UIKit
 
 /// The extension's principal class (`NSExtensionPrincipalClass` in its `Info.plist`, no storyboard): writes what was
 /// shared into the inbox and says what came of it. It never opens Campfire - only a Today widget may open its app, and
-/// the ways around that are not API - so the app picks the share up the next time it is in front.
+/// the ways around that are not API - so the app picks the share up the next time it is in front, which the notification
+/// it posts where Campfire's notifications are allowed (`ShareNotification`) is one way to bring about.
 ///
 /// Its view is shown in a sheet of the sharing app's, which an extension cannot size or replace (its own presentation
 /// style is ignored: it is hosted in a remote view), so the sheet is kept short-lived instead: a saved share closes it
@@ -32,8 +33,14 @@ final class ShareViewController: UIViewController {
         let items = extensionContext?.inputItems.compactMap { $0 as? NSExtensionItem } ?? []
         Task {
             let outcome = await ShareInboxWriter().write(items)
+            if case let .saved(share) = outcome {
+                // Before the sheet says anything, since its second line depends on it, and long before completeRequest,
+                // after which the extension may be ended at any moment.
+                state.isNotified = await ShareNotification.post(share)
+                ShareInboxWriter.announce()
+            }
             state.outcome = outcome
-            if outcome == .saved {
+            if case .saved = outcome {
                 try? await Task.sleep(nanoseconds: Self.savedNanoseconds)
                 close()
             }
@@ -49,6 +56,6 @@ final class ShareViewController: UIViewController {
 
     private var isClosed = false
 
-    /// Long enough to read "Saved to Campfire" and the line under it.
+    /// Long enough to read what is waiting in Campfire and the line under it.
     private static let savedNanoseconds: UInt64 = 2_000_000_000
 }

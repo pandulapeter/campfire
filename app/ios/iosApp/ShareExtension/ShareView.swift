@@ -13,6 +13,8 @@ import SwiftUI
 final class ShareState: ObservableObject {
     /// Nil while the share is still being written.
     @Published var outcome: ShareOutcome?
+    /// Whether a saved share's notification was posted, set before [outcome].
+    var isNotified = false
 }
 
 /// One line of state, one under it, and Done. A saved share closes the sheet by itself (`ShareViewController`); a
@@ -26,7 +28,7 @@ struct ShareView: View {
             VStack(spacing: 12) {
                 if let outcome = state.outcome {
                     Text(outcome.title).font(.headline)
-                    if let detail = outcome.detail {
+                    if let detail = outcome.detail(isNotified: state.isNotified) {
                         Text(detail).foregroundColor(.secondary)
                     }
                 } else {
@@ -55,7 +57,7 @@ struct ShareView: View {
 private extension ShareOutcome {
     var title: String {
         switch self {
-        case .saved: return NSLocalizedString("share_saved", comment: "")
+        case let .saved(share): return share.name.waitingText
         case .unsupported: return NSLocalizedString("share_unsupported", comment: "")
         case .tooLarge: return NSLocalizedString("share_too_large", comment: "")
         case .inboxFull: return NSLocalizedString("share_inbox_full", comment: "")
@@ -64,9 +66,15 @@ private extension ShareOutcome {
         }
     }
 
-    var detail: String? {
+    func detail(isNotified: Bool) -> String? {
         switch self {
-        case .saved: return NSLocalizedString("share_saved_detail", comment: "")
+        case let .saved(share):
+            switch (isNotified, share.name.isSeveral) {
+            case (true, false): return NSLocalizedString("share_open_notification", comment: "")
+            case (true, true): return NSLocalizedString("share_open_notification_several", comment: "")
+            case (false, false): return NSLocalizedString("share_open_app", comment: "")
+            case (false, true): return NSLocalizedString("share_open_app_several", comment: "")
+            }
         case .unsupported: return NSLocalizedString("share_unsupported_detail", comment: "")
         case .tooLarge: return NSLocalizedString("share_too_large_detail", comment: "")
         case .inboxFull: return NSLocalizedString("share_inbox_full_detail", comment: "")

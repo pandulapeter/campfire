@@ -77,6 +77,12 @@ extension (`iosApp/ShareExtension/`, Swift only).
 - **It never opens the app**: only a Today widget may, and the responder-chain way round is not API and is refused by
   review. The app drains the inbox on every `.active` scene phase and on the Darwin notification
   `com.pandulapeter.campfire.share-inbox`, for an iPad's Split View where it stays active.
+- **A notification hands over instead** (`ShareNotification.swift`): where Campfire's notifications are already allowed
+  (authorized or provisional; the app asks only when a sync run starts, the extension never asks), it posts one naming
+  what waits (a title, a file's name, or "N files"), identified by the share's folder, threaded `share-inbox`, before
+  the Darwin notification and awaited for at most a second before `completeRequest`. Opening it brings the app to the
+  front, which drains the inbox, so it routes nothing; a drain takes down the delivered notifications of the shares it
+  lists. The sheet's second line says whether one was posted.
 - One folder per share, written as `<time>-<UUID>.partial` and renamed when complete; the app ignores `.partial` ones
   and deletes them after an hour. Its `share.json` is decoded by `:presentation` (`ui/platform/CLAUDE.md`). A share is
   one batch (one `ImportBudget`), and its folder is deleted only once the app has taken it (its import settled, or a
@@ -98,7 +104,7 @@ extension (`iosApp/ShareExtension/`, Swift only).
   `share_too_large_detail` names these limits in every language. It copies rather than loads (about 120 MB of memory),
   and reads sizes as URL resource values (no file timestamp API).
 - `ShareInbox/` is excluded from device backup (by the extension, and again by the app). Its strings are its own
-  `Localizable.strings`, in the system's language.
+  `Localizable.strings` (and `Localizable.stringsdict` for the counted line), in the system's language.
 - An extension cannot size or replace the sharing app's sheet, so a saved share closes it by itself after two seconds;
   a refusal waits for Done.
 

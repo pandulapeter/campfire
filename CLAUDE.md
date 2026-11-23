@@ -265,7 +265,8 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
 - Files and text dragged onto the app are taken on every platform (Android and iOS from another app), read only mode
   included: `presentation`.
 - A share from another app (Android, the iOS share extension) is imported like a paste or an "Open with"; the
-  extension never opens the app: `presentation`, `app/ios`.
+  extension never opens the app, but posts a notification that does where Campfire's notifications are allowed:
+  `presentation`, `app/ios`.
 - A song is named by its own header; renames happen only when asked or when lossless: `domain/implementation`,
   `data/source/local/implementation`.
 - A rename reaches sync as delete + create, and an edit beats a deletion: `data/sync/implementation`.

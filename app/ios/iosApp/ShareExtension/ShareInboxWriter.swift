@@ -12,7 +12,7 @@ import UniformTypeIdentifiers
 
 /// What a share came to, which is the one thing the extension's sheet says.
 enum ShareOutcome {
-    case saved
+    case saved(SavedShare)
     case unsupported
     case tooLarge
     case inboxFull
@@ -100,8 +100,8 @@ struct ShareInboxWriter {
         if waiting.count >= Self.maxWaitingShares { return .inboxFull }
         let name = "\(Self.timestamp())-\(UUID().uuidString)"
         let partial = inbox.appendingPathComponent(name + Self.partialSuffix, isDirectory: true)
-        let outcome = await writeShare(files: files, texts: texts, subject: subject, into: partial, waitingBytes: waiting.bytes)
-        guard outcome == .saved else {
+        let outcome = await writeShare(files: files, texts: texts, subject: subject, id: name, into: partial, waitingBytes: waiting.bytes)
+        guard case .saved = outcome else {
             try? fileManager.removeItem(at: partial)
             return outcome
         }
@@ -111,23 +111,29 @@ struct ShareInboxWriter {
             try? fileManager.removeItem(at: partial)
             return .failed
         }
-        // The one way an extension can reach an app that is running: an iPad's other half of Split View, where Campfire
-        // stays active and so would not look at the inbox until it next comes to the front.
-        CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), CFNotificationName(Self.notificationName as CFString), nil, nil, true)
-        return .saved
+        return outcome
     }
 
-    private func writeShare(files: [(NSItemProvider, String)], texts: [String], subject: String?, into folder: URL, waitingBytes: Int64) async -> ShareOutcome {
+    /// The one way an extension can reach an app that is running: an iPad's other half of Split View, where Campfire stays
+    /// active and so would not look at the inbox until it next comes to the front. Said after the share's notification is
+    /// added, so the drain it starts finds that notification to take down.
+    static func announce() {
+        CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), CFNotificationName(notificationName as CFString), nil, nil, true)
+    }
+
+    private func writeShare(files: [(NSItemProvider, String)], texts: [String], subject: String?, id: String, into folder: URL, waitingBytes: Int64) async -> ShareOutcome {
         let fileManager = FileManager.default
         var remaining = ShareLimits.maxShareSize
         var filePaths: [String] = []
         var textPaths: [String] = []
+        var fileNames: [String] = []
         do {
             try fileManager.createDirectory(at: folder, withIntermediateDirectories: true)
             for (index, (provider, type)) in files.enumerated() {
                 switch await copyFile(provider, typeIdentifier: type, to: folder, index: index, remaining: remaining) {
-                case let .copied(path, counted):
+                case let .copied(path, shownName, counted):
                     filePaths.append(path)
+                    fileNames.append(shownName)
                     remaining -= counted
                 case .tooLarge: return .tooLarge
                 case .noSpace: return .noSpace
@@ -147,16 +153,18 @@ struct ShareInboxWriter {
             var manifest: [String: Any] = ["version": Self.manifestVersion, "files": filePaths, "texts": textPaths]
             manifest["subject"] = subject
             try JSONSerialization.data(withJSONObject: manifest).write(to: folder.appendingPathComponent("share.json"))
-            return .saved
+            let name: SharedName = fileNames.count > 1 ? .files(fileNames.count) : (fileNames.first ?? subject).map(SharedName.titled) ?? .unnamed
+            return .saved(SavedShare(id: id, name: name))
         } catch {
             return .failed
         }
     }
 
     private enum Copy {
-        /// [counted] is what the file takes of the share's bounds: nothing for an archive the app moves on into its
-        /// staging folder, which is bounded by the device's free space instead.
-        case copied(path: String, counted: Int64)
+        /// [shownName] is the name the sender gave, as the user saw it. [counted] is what the file takes of the share's
+        /// bounds: nothing for an archive the app moves on into its staging folder, which is bounded by the device's free
+        /// space instead.
+        case copied(path: String, shownName: String, counted: Int64)
         case tooLarge
         case noSpace
         case failed
@@ -186,7 +194,7 @@ struct ShareInboxWriter {
                 do {
                     try FileManager.default.createDirectory(at: folder.appendingPathComponent("files/\(index)", isDirectory: true), withIntermediateDirectories: true)
                     try FileManager.default.copyItem(at: url, to: folder.appendingPathComponent(path))
-                    continuation.resume(returning: .copied(path: path, counted: isStaged ? 0 : size))
+                    continuation.resume(returning: .copied(path: path, shownName: suggestedName ?? url.lastPathComponent, counted: isStaged ? 0 : size))
                 } catch {
                     continuation.resume(returning: .failed)
                 }

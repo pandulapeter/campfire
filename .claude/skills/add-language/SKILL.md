@@ -78,10 +78,12 @@ Each item is checked by `wiring` in step 7.
      translate the `NSMicrophoneUsageDescription` English text from `iosApp/Info.plist`.
    - `ShareExtension/<code>.lproj/Localizable.strings`: copy `en.lproj/Localizable.strings`, change its comment to
      "The share extension's <Language> strings. Keep in step with en.lproj.", translate every value. Add `<code>.lproj`
-     to the "Keep … in step" sentence of `en.lproj`'s comment.
+     to the "Keep … in step" sentence of `en.lproj`'s comment. Beside it `Localizable.stringsdict`: copy `hu.lproj`'s and
+     give `share_waiting_files` an item for every plural category the language's rule names.
    - `iosApp.xcodeproj/project.pbxproj`, four places; copy each `hu` line and change `hu` to the code:
-     two `PBXFileReference` lines (`path = <code>.lproj/Localizable.strings` and `path = <code>.lproj/InfoPlist.strings`),
-     their IDs added to the `Localizable.strings` and `InfoPlist.strings` `PBXVariantGroup` children, and `<code>,` in
+     three `PBXFileReference` lines (`path = <code>.lproj/Localizable.strings`, `…/Localizable.stringsdict`, and
+     `path = <code>.lproj/InfoPlist.strings`), their IDs added to the `Localizable.strings`, `Localizable.stringsdict`,
+     and `InfoPlist.strings` `PBXVariantGroup` children, and `<code>,` in
      `knownRegions`. New IDs: the same 24 hex digits as the neighbours with a new ending; `grep -c <ID>` must be 0 first.
      Afterwards `plutil -lint` the project, both plists, and both new `.strings` files.
 7. Web, `app/web/src/wasmJsMain/resources/index.html`: add a `<code>: { … }` block to `TEXTS` with every key the

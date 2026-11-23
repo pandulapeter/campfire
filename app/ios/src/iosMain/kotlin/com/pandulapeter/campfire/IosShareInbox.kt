@@ -37,6 +37,7 @@ import platform.Foundation.create
 import platform.Foundation.stringWithContentsOfFile
 import platform.Foundation.timeIntervalSinceNow
 import platform.Foundation.writeToFile
+import platform.UserNotifications.UNUserNotificationCenter
 
 /**
  * Shares the share extension left, kept apart from files opened with the app because each is deleted from the inbox
@@ -87,7 +88,11 @@ private suspend fun drain() {
             fileManager.removeItemAtPath("$inboxPath/$name", error = null)
         }
     }
-    names.filterNot { it.endsWith(PARTIAL_SUFFIX) }.forEach { name -> importShare("$inboxPath/$name") }
+    val shares = names.filterNot { it.endsWith(PARTIAL_SUFFIX) }
+    // The notification the extension posts for a share is named by its folder. Once the app is in front to take the
+    // shares, it has served its purpose, and left in Notification Center it would offer a share already imported.
+    if (shares.isNotEmpty()) UNUserNotificationCenter.currentNotificationCenter().removeDeliveredNotificationsWithIdentifiers(shares)
+    shares.forEach { name -> importShare("$inboxPath/$name") }
 }
 
 @OptIn(ExperimentalForeignApi::class)

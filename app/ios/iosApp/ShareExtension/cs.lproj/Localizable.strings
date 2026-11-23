@@ -9,8 +9,12 @@
  */
 /* The share extension's Czech strings. Keep in step with en.lproj. */
 "share_saving" = "Ukládání do Campfire…";
-"share_saved" = "Uloženo do Campfire";
-"share_saved_detail" = "Otevři Campfire a přidej to do knihovny.";
+"share_waiting_named" = "„%@“ čeká v Campfire";
+"share_waiting_unnamed" = "Sdílený obsah čeká v Campfire";
+"share_open_app" = "Otevři Campfire a přidej to.";
+"share_open_app_several" = "Otevři Campfire a přidej je.";
+"share_open_notification" = "Otevři oznámení nebo Campfire a přidej to.";
+"share_open_notification_several" = "Otevři oznámení nebo Campfire a přidej je.";
 "share_unsupported" = "Tohle Campfire neumí importovat.";
 "share_unsupported_detail" = "Importuje písně, prostý text, dokumenty PDF a Word a archivy zip.";
 "share_too_large" = "Tohle je na import příliš velké.";

@@ -11,6 +11,8 @@
 		C4F2000A2E80000000000005 /* ShareInboxWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4F2000A2E80000000000004 /* ShareInboxWriter.swift */; };
 		C4F2000A2E80000000000051 /* PageText.js in Resources */ = {isa = PBXBuildFile; fileRef = C4F2000A2E80000000000050 /* PageText.js */; };
 		C4F2000A2E80000000000007 /* ShareView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4F2000A2E80000000000006 /* ShareView.swift */; };
+		C4F2000A2E80000000000053 /* ShareNotification.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4F2000A2E80000000000052 /* ShareNotification.swift */; };
+		C4F2000A2E80000000000055 /* Localizable.stringsdict in Resources */ = {isa = PBXBuildFile; fileRef = C4F2000A2E80000000000054 /* Localizable.stringsdict */; };
 		C4F2000A2E8000000000000B /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = C4F2000A2E8000000000000A /* PrivacyInfo.xcprivacy */; };
 		C4F2000A2E8000000000000D /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = C4F2000A2E8000000000000C /* Localizable.strings */; };
 		C4F2000A2E80000000000011 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C4F2000A2E80000000000010 /* Assets.xcassets */; };
@@ -55,6 +57,18 @@
 		C4F2000A2E80000000000004 /* ShareInboxWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareInboxWriter.swift; sourceTree = "<group>"; };
 		C4F2000A2E80000000000050 /* PageText.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = PageText.js; sourceTree = "<group>"; };
 		C4F2000A2E80000000000006 /* ShareView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareView.swift; sourceTree = "<group>"; };
+		C4F2000A2E80000000000052 /* ShareNotification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareNotification.swift; sourceTree = "<group>"; };
+		C4F2000A2E80000000000060 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = en; path = en.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
+		C4F2000A2E80000000000061 /* hu */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = hu; path = hu.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
+		C4F2000A2E80000000000062 /* ro */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = ro; path = ro.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
+		C4F2000A2E80000000000063 /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = de; path = de.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
+		C4F2000A2E80000000000064 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = es; path = es.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
+		C4F2000A2E80000000000065 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = fr; path = fr.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
+		C4F2000A2E80000000000066 /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = it; path = it.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
+		C4F2000A2E80000000000067 /* he */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = he; path = he.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
+		C4F2000A2E80000000000068 /* pt */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = pt; path = pt.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
+		C4F2000A2E80000000000069 /* pl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = pl; path = pl.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
+		C4F2000A2E8000000000006A /* cs */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = cs; path = cs.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
 		C4F2000A2E80000000000008 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		C4F2000A2E80000000000009 /* ShareExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ShareExtension.entitlements; sourceTree = "<group>"; };
 		C4F2000A2E8000000000000A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
@@ -179,10 +193,12 @@
 				C4F2000A2E80000000000010 /* Assets.xcassets */,
 				C4F2000A2E80000000000008 /* Info.plist */,
 				C4F2000A2E8000000000000C /* Localizable.strings */,
+				C4F2000A2E80000000000054 /* Localizable.stringsdict */,
 				C4F2000A2E80000000000050 /* PageText.js */,
 				C4F2000A2E8000000000000A /* PrivacyInfo.xcprivacy */,
 				C4F2000A2E80000000000009 /* ShareExtension.entitlements */,
 				C4F2000A2E80000000000004 /* ShareInboxWriter.swift */,
+				C4F2000A2E80000000000052 /* ShareNotification.swift */,
 				C4F2000A2E80000000000006 /* ShareView.swift */,
 				C4F2000A2E80000000000002 /* ShareViewController.swift */,
 			);
@@ -305,6 +321,7 @@
 				C4F2000A2E80000000000011 /* Assets.xcassets in Resources */,
 				C4F2000A2E8000000000000B /* PrivacyInfo.xcprivacy in Resources */,
 				C4F2000A2E8000000000000D /* Localizable.strings in Resources */,
+				C4F2000A2E80000000000055 /* Localizable.stringsdict in Resources */,
 				C4F2000A2E80000000000051 /* PageText.js in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -387,6 +404,7 @@
 			files = (
 				C4F2000A2E80000000000005 /* ShareInboxWriter.swift in Sources */,
 				C4F2000A2E80000000000007 /* ShareView.swift in Sources */,
+				C4F2000A2E80000000000053 /* ShareNotification.swift in Sources */,
 				C4F2000A2E80000000000003 /* ShareViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -435,6 +453,24 @@
 				C4F2000A2E80000000000048 /* cs */,
 			);
 			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+		C4F2000A2E80000000000054 /* Localizable.stringsdict */ = {
+			isa = PBXVariantGroup;
+			children = (
+				C4F2000A2E80000000000060 /* en */,
+				C4F2000A2E80000000000061 /* hu */,
+				C4F2000A2E80000000000062 /* ro */,
+				C4F2000A2E80000000000063 /* de */,
+				C4F2000A2E80000000000064 /* es */,
+				C4F2000A2E80000000000065 /* fr */,
+				C4F2000A2E80000000000066 /* it */,
+				C4F2000A2E80000000000067 /* he */,
+				C4F2000A2E80000000000068 /* pt */,
+				C4F2000A2E80000000000069 /* pl */,
+				C4F2000A2E8000000000006A /* cs */,
+			);
+			name = Localizable.stringsdict;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */
