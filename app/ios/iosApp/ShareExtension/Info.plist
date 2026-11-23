@@ -59,9 +59,11 @@
 			<!--
 			     Selected text, a web page, and the files the import reads. A predicate rather than the dictionary form,
 			     whose file key takes any file at all. Plain text covers .txt, the ChordPro family, and ABC tunes, whose
-			     types (declared by the app) conform to it. A page from Safari arrives as the property list PageText.js
-			     answers (its own text, title, and address); one from another browser, or any app sharing a link, as a
-			     URL that is no file's, which the app reads once by itself (a Campfire share link is opened as one).
+			     types (declared by the app) conform to it. A web page is offered as a URL that is no file's: Safari
+			     then hands the extension the property list PageText.js answers instead (its own text, title, and
+			     address), so the rule names no property list, which would offer Campfire for every .plist file; any
+			     other browser, or any app sharing a link, hands over the URL itself, which the app reads once by
+			     itself (a Campfire share link is opened as one).
 			     JSON conforms to public.text but not to public.plain-text, so it is named for the songs another
 			     app's export holds. Keep in step with LibraryFiles.IMPORTABLE_EXTENSIONS, as the app's document
 			     types are with SONG_EXTENSIONS: the legacy .doc (which the import only reports as unreadable) is
@@ -90,7 +92,6 @@
         || ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "org.webmproject.webp"
         || ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.heic"
         || ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.heif"
-        || ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "com.apple.property-list"
         || SUBQUERY (
             $attachment.registeredTypeIdentifiers,
             $type,
