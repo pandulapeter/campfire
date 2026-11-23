@@ -60,9 +60,9 @@ internal object PageTextCrop {
             logger.log("Could not crop the page: ${exception.message}")
             null
         } ?: return null
-        val headerLines = listOfNotNull(found.titleLine, found.artistLine).filter { it in lines.indices }
-        val songLines = (found.keptLines.filter { it in lines.indices } + headerLines).toSet()
-        val heading = found.headerLines.filter { it in headerLines }.toSet()
+        val namedLines = listOfNotNull(found.titleLine, found.artistLine).filter { it in lines.indices }
+        val songLines = (found.keptLines.filter { it in lines.indices } + namedLines).toSet()
+        val heading = found.headerLines.filter { it in namedLines }.toSet()
         val withHeader = keptText(lines, songLines) ?: return null
         if (withHeader.size == lines.size) return null
         val title = found.titleLine?.takeIf { it in heading }?.let { PageTitle.of(lines[it]) }
