@@ -31,10 +31,10 @@ internal object PageTextCrop {
         } catch (exception: Exception) {
             logger.log("Could not crop the page: ${exception.message}")
             null
-        }?.filter { it in lines.indices }?.toSortedSet()
+        }?.filter { it in lines.indices }?.toSet()
         if (songLines.isNullOrEmpty()) return null
-        val first = songLines.first()
-        val last = songLines.last()
+        val first = songLines.min()
+        val last = songLines.max()
         val kept = lines.indices.filter { index -> index in songLines || (lines[index].isBlank() && index in first..last) }
         return if (kept.size == lines.size) null else kept.joinToString("\n") { lines[it] }
     }
