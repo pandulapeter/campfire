@@ -29,6 +29,10 @@ import com.pandulapeter.campfire.presentation.resources.import_files
 import com.pandulapeter.campfire.presentation.resources.songs_paste_from_clipboard
 import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
 import com.pandulapeter.campfire.presentation.ui.components.shortcuts.menuShortcutHint
+import com.pandulapeter.campfire.presentation.ui.components.tabChrome.NEW_BUTTON_Z_INDEX
+import com.pandulapeter.campfire.presentation.ui.components.tabChrome.TabChromeElement
+import com.pandulapeter.campfire.presentation.ui.components.tabChrome.rememberSharedTabChrome
+import com.pandulapeter.campfire.presentation.ui.components.tabChrome.sharedTabChrome
 import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import org.jetbrains.compose.resources.painterResource
@@ -73,7 +77,14 @@ internal fun NewItemMenu(
             // Filled in the accent color, unlike the bar's other actions: it is the way to fill the list, and a plain
             // icon among search, sort, and filter is the one that gets overlooked.
             CampfireTooltip(label = contentDescription) {
-                FilledIconButton(modifier = Modifier.size(NEW_ITEM_BUTTON_SIZE), onClick = open, enabled = isEnabled) {
+                // The tab swaps carry it over, into the other list screen's or into the pill on its spot (Chords, Scales).
+                FilledIconButton(
+                    modifier = Modifier
+                        .sharedTabChrome(chrome = rememberSharedTabChrome(TabChromeElement.NEW_BUTTON), zIndex = NEW_BUTTON_Z_INDEX)
+                        .size(NEW_ITEM_BUTTON_SIZE),
+                    onClick = open,
+                    enabled = isEnabled,
+                ) {
                     Icon(
                         painter = painterResource(Res.drawable.ic_add),
                         contentDescription = contentDescription,
