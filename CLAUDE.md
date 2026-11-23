@@ -236,7 +236,9 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
 - Settings links only to the website, GitHub, the author's site, donations, and its own store's rating page:
   `ui/screens/settings`.
 - Printing and export: `ui/screens/export`, `ui/print`.
-- Documents are converted locally to ChordPro, never uploaded or kept: `data/formats`, `chordsheet`.
+- Documents are converted locally to ChordPro, never uploaded or kept, each song first cropped by the page model to
+  its lines (a running header, a page number, a printed page's address and date left out): `data/formats`,
+  `chordsheet`, `pagesong`.
 - Other apps' songs and backups are translated locally (SongbookPro, OpenSong and OpenSongApp, OnSong, JSON exports),
   their sets into setlists (an OpenSong set's songs found in its archive, else by title), and ABC tunes into one song
   each with a chord grid and the tune kept; backups are read as archives:

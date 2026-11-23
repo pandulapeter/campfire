@@ -24,15 +24,15 @@ internal object ChordSheetHeaderParts {
     fun split(lines: List<ChordSheet.Line>): List<PlacedLine> {
         var read = 0
         var inHeader = true
-        return lines.flatMap { line ->
+        return lines.flatMapIndexed { origin, line ->
             val text = text(line.spans)
             if (text.isNotEmpty()) read++
             if (read > MAX_LINES || ChordSheetConverter.isChordRow(text)) inHeader = false
-            if (!inHeader || line.spans.any { it.isMonospace }) listOf(PlacedLine(line)) else parts(line)
+            if (!inHeader || line.spans.any { it.isMonospace }) listOf(PlacedLine(line, origin)) else parts(line, origin)
         }
     }
 
-    private fun parts(line: ChordSheet.Line): List<PlacedLine> {
+    private fun parts(line: ChordSheet.Line, origin: Int): List<PlacedLine> {
         val parts = mutableListOf(mutableListOf<ChordSheet.Span>())
         var previous: ChordSheet.Span? = null
         for (span in line.spans) {
@@ -41,6 +41,6 @@ internal object ChordSheetHeaderParts {
             parts.last() += span
             previous = span
         }
-        return parts.mapIndexed { index, spans -> PlacedLine(line.copy(spans = spans), isHeaderPart = index > 0) }
+        return parts.mapIndexed { index, spans -> PlacedLine(line.copy(spans = spans), origin, isHeaderPart = index > 0) }
     }
 }

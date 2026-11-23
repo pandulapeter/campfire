@@ -31,4 +31,14 @@ public data class PageCrop(
     val artistLine: Int?,
     val metadataLines: List<Int>,
     val scores: List<PageLineScores>,
-)
+) {
+
+    public companion object {
+
+        /**
+         * The crop of lines the model has already scored, by the same rule as [PageSong.crop]: for a part of a longer
+         * page read whole, such as one song of a document, whose lines the model judged in the whole document's context.
+         */
+        public fun of(scores: List<PageLineScores>): PageCrop = cropOf(scores, scores.size)
+    }
+}

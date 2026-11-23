@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.state.importing
 
 import com.pandulapeter.campfire.domain.api.importing.PageCropper
 import com.pandulapeter.campfire.pagesong.PageLine
+import com.pandulapeter.campfire.pagesong.PageLineScores
 import com.pandulapeter.campfire.pagesong.PageLineSource
 import com.pandulapeter.campfire.pagesong.PageSong
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -27,7 +28,8 @@ import org.koin.core.annotation.Single
  * tried again, and every page is then converted whole, as it was before the model.
  *
  * The title and artist lines are kept with the song even where the model does not think them part of it, so the
- * converter's own reading of a song's header still finds them.
+ * converter's own reading of a song's header still finds them. A document's lines are only scored here, as a whole;
+ * the converter crops each of its songs by the scores (`ChordSheetSongCrop`).
  */
 @Single
 internal class PageCropperImpl : PageCropper {
@@ -40,6 +42,11 @@ internal class PageCropperImpl : PageCropper {
         val pageSong = pageSong() ?: return null
         val crop = withContext(Dispatchers.Default) { pageSong.crop(lines.map(::PageLine), PageLineSource.PAGE) }
         return if (crop.holdsSong) (crop.keptLines + listOfNotNull(crop.titleLine, crop.artistLine)).distinct().sorted() else null
+    }
+
+    override suspend fun documentScoresOf(lines: List<PageLine>): List<PageLineScores>? {
+        val pageSong = pageSong() ?: return null
+        return withContext(Dispatchers.Default) { pageSong.crop(lines, PageLineSource.DOCUMENT).scores }
     }
 
     private suspend fun pageSong() = mutex.withLock {

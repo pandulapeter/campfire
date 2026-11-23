@@ -12,11 +12,14 @@ package com.pandulapeter.campfire.data.source.local.implementation.document.corp
 import com.pandulapeter.campfire.chordpro.convert.ChordSheet
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetConverter
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetHtml
+import com.pandulapeter.campfire.chordpro.convert.ChordSheetPageLines
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.library.decodeLibraryText
 import com.pandulapeter.campfire.data.model.library.normalizedToNfc
 import com.pandulapeter.campfire.data.source.local.implementation.source.DocumentLocalSourceImpl
+import com.pandulapeter.campfire.pagesong.PageLineSource
+import com.pandulapeter.campfire.pagesong.PageSong
 import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertTrue
@@ -80,7 +83,9 @@ class ImportCorpusTest {
         .toList()
 
     /**
-     * Exactly the import's path: a document through the extraction and the app's mapping, a text as a pasted sheet. A text
+     * Exactly the import's path: a document through the extraction, the shipped page model's scores of its lines (as
+     * `PageCropperImpl` gives them; none where the weights are missing), and the app's mapping, a text as a pasted sheet,
+     * which a file's text is, so it is never cropped. A text
      * with an `.html` of the same name beside it is one clipboard's two flavours, read as the app's paste reads them
      * (`pastedText`): the chord sheet the HTML holds, else the text.
      */
@@ -91,10 +96,13 @@ class ImportCorpusTest {
             ChordSheetConverter.convert(ChordSheet.ofPlainText(text), String::normalizedToNfc)
         } else {
             val document = DocumentLocalSourceImpl(Logger.Standard).extract(ImportedFile(file.name, file.readBytes())) ?: return null
-            ChordSheetConverter.convert(document, String::normalizedToNfc)
+            val pageScores = pageSong?.crop(ChordSheetPageLines.of(document), PageLineSource.DOCUMENT)?.scores
+            ChordSheetConverter.convert(document, String::normalizedToNfc, pageScores = pageScores)
         }
         return songs.joinToString("{new_song}\n")
     }
+
+    private val pageSong = File(System.getProperty("pageModelWeights").orEmpty()).takeIf { it.isFile }?.let { PageSong(it.readBytes()) }
 
     private companion object {
         const val RUNS = ".runs"

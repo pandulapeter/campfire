@@ -11,8 +11,9 @@
 
 **Status:** step 0 passed (2026-11-23) with the review fallback below; steps 1 and 2 have their tooling
 (`tools/page-model`), step 3 is `:libs:pagesong`, step 4 crops every paste, drop, and share that is one text, with
-**Use the whole page** in the editor, and steps 5 and 6 read a page shared or pasted by its address on Android and iOS
-and take Safari's own page text; step 7 (optional) or 8 is next. Written against the code on 2026-11-22 (67d82f42a). `convert/` is
+**Use the whole page** in the editor, steps 5 and 6 read a page shared or pasted by its address on Android and iOS
+and take Safari's own page text, and step 8 crops every PDF and Word import's songs; step 7 (optional) and step 9 are
+left. Written against the code on 2026-11-22 (67d82f42a). `convert/` is
 `libs/chordsheet/src/commonMain/kotlin/com/pandulapeter/campfire/chordpro/convert/`.
 
 A user looking at a song with chords on any website shares it to Campfire (or pastes it, or presses an optional browser
@@ -227,6 +228,20 @@ step starts. Each store's listing and review is the cost; nothing else depends o
 - Judged by `ImportCorpusTest` as every converter change is (`convert/CLAUDE.md`): it lands only if no document's
   overall score falls, and the report's websites printed to PDF show the gain. Until then the crop stays off for
   documents and the rest of the plan stands without it.
+
+**Done (2026-11-23).** `ChordSheetPageLines` (`:libs:chordsheet`, now depending on `:libs:pagesong`) is the one mapping
+of a document's lines and layout, which `PageCorpusDocumentsDump` now writes the trainer's documents through (a re-dump
+matched the trained-on inputs on all 155,882 lines). `PrepareImportUseCaseImpl` asks `PageCropper.documentScoresOf` for
+the whole document's scores (`PageDocumentCrop`; the model reads the document whole, as in training), and
+`ChordSheetConverter.convert`'s `pageScores` crops each song `ChordSheetSongSplit` gives by them (`ChordSheetSongCrop`,
+`PageCrop.of`): the crop rule on the song's own lines, plus every line with a 2% chance of being the title or artist
+(the best one alone lost a wrapped title and picked an album line over the title), the blank lines between kept ones,
+and a chord row from the song's first song line on (a lone closing chord read as a page number). `ImportCorpusTest`
+crops as the app does: against the unchanged code no document falls, 14 rise (overall 0.8422 → 0.8514), the four
+tab4u pages printed to PDF most (+0.08 to +0.28); one, `kol_galgal_print`, gains overall but its header falls (a credit
+now read as the artist). Every corpus document was in the model's training set, so these are not held-out numbers. The
+import review offers no **Use the whole page**: a document's songs are not opened in the editor, and nothing in the
+corpus asked for it.
 
 ### 9. Documentation
 

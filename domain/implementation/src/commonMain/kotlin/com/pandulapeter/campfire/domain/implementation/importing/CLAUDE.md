@@ -64,7 +64,9 @@
   through `:domain:api`'s `PageCropper`): only the lines the model keeps, with the blank lines between them; no song, a
   crop keeping everything, one the converter finds nothing in, or a failure converts the whole text. A cropped page that
   is one song carries the whole page's conversion (`SongEntry.wholePageText`) for the editor. No readable text is
-  `unreadableDocumentFileNames`, not unsupported. All incoming songs are prettified after conversion, splitting, and
+  `unreadableDocumentFileNames`, not unsupported. A PDF or Word document's lines are scored by the same
+  `PageCropper` (`PageDocumentCrop`), and the converter crops each of its songs by them; no model or a failure converts
+  it whole. Its review offers no whole page. All incoming songs are prettified after conversion, splitting, and
   notation normalization. No origin info survives in the library.
 
 ### Applying

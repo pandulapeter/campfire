@@ -40,8 +40,8 @@ which the script checks; everything else is handed the holders, state, and callb
 - A pasted, dropped, or shared text goes down the import as a `.txt` (`isNewSongFromText`), marked as a page's
   (`ImportedFile.isPageText`) where it is one text, so its page clutter is cropped on the device before it is converted
   (`PageCropperImpl`: the page model's weights, `files/page-model.bin`, read once on the first page, off the main thread;
-  any failure keeps the whole text). Several shared texts are not cropped. One song the library does not hold (a taken
-  name included) opens the editor on it, unwritten (`EditorSession.openNewSongEditor`), read only mode too when shared,
+  any failure keeps the whole text; a PDF's or Word file's lines are scored there too, for the converter to crop each
+  song). Several shared texts are not cropped. One song the library does not hold (a taken name included) opens the editor on it, unwritten (`EditorSession.openNewSongEditor`), read only mode too when shared,
   with a snackbar saying how the text was read (chords over lyrics, ChordPro, lyrics only, or an ABC tune's or block's
   notation kept), and **Use the whole page** where the crop left lines out; one the library holds is opened; anything
   else (several ABC tunes among them) is the ordinary review.

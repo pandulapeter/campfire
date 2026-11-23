@@ -47,6 +47,8 @@ import com.pandulapeter.campfire.domain.api.importing.DeleteImportStagingUseCase
 import com.pandulapeter.campfire.domain.api.importing.PrepareImportUseCase
 import com.pandulapeter.campfire.domain.api.importing.ReceiveImportArchiveUseCase
 import com.pandulapeter.campfire.domain.api.library.GetSharedLinkImportUseCase
+import com.pandulapeter.campfire.pagesong.PageLine
+import com.pandulapeter.campfire.pagesong.PageLineScores
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.messages.Message
@@ -223,6 +225,8 @@ class ImportControllerQueueTest {
                 },
                 pageCropper = object : PageCropper {
                     override suspend fun songLinesOf(lines: List<String>) = pageSongLines
+
+                    override suspend fun documentScoresOf(lines: List<PageLine>): List<PageLineScores>? = null
                 },
             ),
         )

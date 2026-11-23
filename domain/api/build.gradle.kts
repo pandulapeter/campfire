@@ -16,6 +16,8 @@ kotlin {
         commonMain.dependencies {
             api(project(":data:model"))
             api(project(":libs:chordpro"))
+            // PageCropper speaks the page model's line and score types.
+            api(project(":libs:pagesong"))
             implementation(libs.kotlin.coroutines)
         }
     }

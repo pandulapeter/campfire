@@ -83,6 +83,16 @@ class CropRuleTest {
         assertNull(crop.artistLine)
     }
 
+    @Test
+    fun `lines scored already are cropped by the same rule`() {
+        val crop = PageCrop.of(listOf(junk, song, song, metadata, song, song, junk))
+
+        assertTrue(crop.holdsSong)
+        assertEquals(listOf(1, 2, 3, 4, 5), crop.keptLines)
+        assertFalse(PageCrop.of(listOf(junk, song, song, song)).holdsSong)
+        assertEquals(listOf(0, 1, 2, 3), PageCrop.of(listOf(junk, song, song, song)).keptLines)
+    }
+
     private val junk = scores(junk = 1f)
     private val song = scores(song = 1f)
     private val metadata = scores(metadata = 1f)

@@ -12,8 +12,9 @@ package com.pandulapeter.campfire.chordpro.convert
 /**
  * A line of a sheet with what its place on the page says about it, which its text alone cannot: a section label printed
  * in the margin ([ChordSheetMarginLabels]), or a part of a header line other than its first ([ChordSheetHeaderParts]).
+ * [origin] is the index of the page's line it was cut from.
  */
-internal data class PlacedLine(val line: ChordSheet.Line, val isMarginLabel: Boolean = false, val isHeaderPart: Boolean = false) {
+internal data class PlacedLine(val line: ChordSheet.Line, val origin: Int, val isMarginLabel: Boolean = false, val isHeaderPart: Boolean = false) {
     internal companion object {
         /** The words of [spans], one space between those standing apart, for judging a part of a line by its text. */
         fun text(spans: List<ChordSheet.Span>) = buildString {

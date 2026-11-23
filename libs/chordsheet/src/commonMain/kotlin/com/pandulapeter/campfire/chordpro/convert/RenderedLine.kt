@@ -9,7 +9,10 @@
  */
 package com.pandulapeter.campfire.chordpro.convert
 
-/** [isFromLabel] is the chord row a heading's label was followed by on its line, which no lyric is written under. */
+/**
+ * [isFromLabel] is the chord row a heading's label was followed by on its line, which no lyric is written under. [origin]
+ * is the index of the sheet's line it was read from among all the document's lines, in [ChordSheetPageLines]' order.
+ */
 internal data class Rendered(
     val text: String,
     val positions: DoubleArray,
@@ -17,6 +20,7 @@ internal data class Rendered(
     val isFromLabel: Boolean = false,
     val isMarginLabel: Boolean = false,
     val isHeaderPart: Boolean = false,
+    val origin: Int? = null,
     /** Where the chords over a row holding right-to-left text in reading order hang from. */
     val bidi: ChordSheetBidiAnchors? = null,
 )

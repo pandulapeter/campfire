@@ -59,6 +59,13 @@ cannot say: the principles, the contracts, and the limits kept on purpose.
 - A document is cut into songs by `ChordSheetSongSplit` (by a title type that stands out, else by a contents page,
   `ChordSheetIndexTitles`), so a cover in a type of its own does not stop the split. Song-counting numbers are left out
   of the titles.
+- **Then each song is cropped** by the page model's scores of the whole document's lines (`pageScores`, read through
+  `ChordSheetPageLines`, the one mapping the model was trained on: change it only with a retrain), held to the model's
+  crop rule on its own lines (`ChordSheetSongCrop`), so the contents page still splits. Kept besides: every line with a
+  2% chance of being the title or the artist (the header the converter reads), a blank line between kept ones, and a
+  chord row from the song's first song line on (the model reads a lone closing chord as a page number). A song the
+  model sees none in, or reaching past the lines it read, is converted whole. Its `METADATA` lines are kept, so the
+  rules below find a key or capo the clutter around it hid.
 - A section set apart by look (`ChordSheetLook`: bold, italic, or inset) ends where the lyrics return to the verses'
   look, not only at the next heading; with no heading, a run of bold or italic lyrics is a chorus. An inset alone is
   not one (a second column or a bridge starts further in too), and a run right under the title is the header's (a

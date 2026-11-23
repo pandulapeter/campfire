@@ -214,7 +214,7 @@ internal class PrepareImportUseCaseImpl(
                         triage.unreadableDocumentFileNames += file.name
                         return@flatMapIndexed emptyList()
                     }
-                    ChordSheetConverter.convert(extracted, String::normalizedToNfc)
+                    ChordSheetConverter.convert(extracted, String::normalizedToNfc, pageScores = PageDocumentCrop.scoresOf(extracted, pageCropper, logger))
                 }
                 file.name.endsWith(LibraryFiles.TEXT_EXTENSION, true) || file.isPlainTextByContent -> if (AbcText.isAbc(original!!)) {
                     // Asked first: the chord sheet converter would read ABC's bracketed note groups (`[CEG]`) as chords

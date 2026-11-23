@@ -9,9 +9,6 @@
  */
 package com.pandulapeter.campfire.chordpro.convert
 
-import com.pandulapeter.campfire.chordpro.chords.ChordNotation
-import com.pandulapeter.campfire.chordpro.chords.ChordProNotation
-import com.pandulapeter.campfire.chordpro.chords.ChordProTransposer
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordWords.ascii
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordWords.chord
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordWords.chordRow
@@ -30,6 +27,7 @@ import com.pandulapeter.campfire.chordpro.convert.ChordSheetText.clean
 import com.pandulapeter.campfire.chordpro.edit.ChordProLiteralText
 import com.pandulapeter.campfire.chordpro.syntax.ChordProDirectives
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary
+import com.pandulapeter.campfire.pagesong.PageLineScores
 import kotlin.math.roundToInt
 
 /** Deterministic, conservative conversion of positioned chord sheets to ordinary ChordPro. */
@@ -45,12 +43,20 @@ public object ChordSheetConverter {
      *
      * @param guessesTitle false for a caller that knows the song's title from elsewhere (another app's field): the first
      * lines are then read as the song's lines, the title and the credit under it included.
+     * @param pageScores the page model's scores of the document's lines ([ChordSheetPageLines]), by which each song is
+     * cropped to its lines before it is converted ([ChordSheetSongCrop]); null converts every line.
      */
-    public fun convert(sheet: ChordSheet, normalize: (String) -> String = { it }, guessesTitle: Boolean = true): List<String> {
+    public fun convert(
+        sheet: ChordSheet,
+        normalize: (String) -> String = { it },
+        guessesTitle: Boolean = true,
+        pageScores: List<PageLineScores>? = null,
+    ): List<String> {
         sheet.originalText?.takeIf(::isChordPro)?.let { return listOf(it) }
-        val pages = sheet.pages.map { page ->
+        val firstLines = sheet.pages.runningFold(0) { count, page -> count + page.lines.size }
+        val pages = sheet.pages.mapIndexed { pageIndex, page ->
             ChordSheetMarginLabels.split(ChordSheetHeaderParts.split(page.lines)).map { placed ->
-                render(placed.line, normalize).copy(isMarginLabel = placed.isMarginLabel, isHeaderPart = placed.isHeaderPart)
+                render(placed.line, normalize).copy(isMarginLabel = placed.isMarginLabel, isHeaderPart = placed.isHeaderPart, origin = firstLines[pageIndex] + placed.origin)
             }
         }
         val all = pages.flatten()
@@ -66,7 +72,8 @@ public object ChordSheetConverter {
                 if (place !in cuts.dropped) groups.last() += cuts.numbers[place]?.let { length -> withoutNumber(line, length) } ?: line
             }
         }
-        return groups.map { normalize(convertSong(expandLabels(withoutInjections(singleSpaced(ChordSheetRomanChords.named(it)))), guessesTitle, profile)) }.filter { it.isNotBlank() }
+        return groups.map { ChordSheetSongCrop.cropped(it, pageScores) }
+            .map { normalize(convertSong(expandLabels(withoutInjections(singleSpaced(ChordSheetRomanChords.named(it)))), guessesTitle, profile)) }.filter { it.isNotBlank() }
     }
 
     /**
@@ -399,24 +406,6 @@ public object ChordSheetConverter {
         // The key lines after the header and the blank line under it are the key changes the body writes.
         val keyChanges = output.drop(if (song.header.isEmpty()) 0 else song.header.size + 1).count { it.startsWith("{${ChordProVocabulary.KEY}: ") }
         return asCapoChart(collapse(output), fields.soundingCapo, keyChanges)
-    }
-
-    /**
-     * [song] as the capo chart it was printed from, where its chords are named as they sound over a [capo]: a Campfire
-     * file's chords under a `{capo}` are the shapes played above it, so they and the key move down by the capo, while a
-     * tab's frets, printed counted from the capo, stay. The move reads only the standard notation (a Latin name is no
-     * chord to it), so the text is brought into it first, as the import would bring it afterwards. The song's last
-     * [keyChanges] `{key}` lines are the key changes written in its body, and each part from one on is moved apart, spelled
-     * by its own key moved down, which the move reads off the part's opening `{key}`: one move of the whole would spell
-     * a flat key's chorus by the sharp key the song starts in.
-     */
-    private fun asCapoChart(song: String, capo: Int, keyChanges: Int): String {
-        if (capo == 0) return song
-        val lines = ChordProNotation.convertText(song, ChordNotation.STANDARD, ChordNotation.STANDARD).split('\n')
-        val cuts = lines.indices.filter { lines[it].startsWith("{${ChordProVocabulary.KEY}: ") }.takeLast(keyChanges).filter { it > 0 }
-        return (listOf(0) + cuts + lines.size).zipWithNext { from, until ->
-            ChordProTransposer.transposeText(lines.subList(from, until).joinToString("\n"), -capo, capo = -capo)
-        }.joinToString("\n")
     }
 
     /**

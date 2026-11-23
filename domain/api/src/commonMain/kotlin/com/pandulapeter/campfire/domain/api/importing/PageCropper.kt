@@ -9,10 +9,15 @@
  */
 package com.pandulapeter.campfire.domain.api.importing
 
+import com.pandulapeter.campfire.pagesong.PageLine
+import com.pandulapeter.campfire.pagesong.PageLineScores
+import com.pandulapeter.campfire.pagesong.PageSong
+
 /**
- * Finds the song among the lines of a text that came from a web page or another app (a paste, a drop, a share), so that
- * [PrepareImportUseCase] converts the song rather than the page's menus, comments, and calls to action around it. It
- * only ever answers which lines to keep, never a line's text, so nothing it decides can change what the song says.
+ * Finds the song among the lines of a text that came from a web page or another app (a paste, a drop, a share), or of a
+ * PDF or Word document, so that [PrepareImportUseCase] converts the song rather than the page's menus, comments, and
+ * calls to action around it, or a document's running headers and page numbers. It only ever answers which lines to keep
+ * or how sure it is of each, never a line's text, so nothing it decides can change what the song says.
  *
  * Provided by `:presentation`, which ships the page model's weights (`:libs:pagesong`) as a resource the domain cannot
  * read. The weights are large, so an implementation reads them once, on its first call, and never on the main thread.
@@ -25,4 +30,11 @@ interface PageCropper {
      * not there. May throw; the import then keeps every line too, since a crop must never cost the song its own text.
      */
     suspend fun songLinesOf(lines: List<String>): List<Int>?
+
+    /**
+     * The model's scores of a document's [lines] (`ChordSheetPageLines`, with their layout), one for each of the first
+     * [PageSong.MAX_LINES], read as a whole as the model was trained to; the converter crops each song of the document by
+     * them. Null where the model is not there, and the document is then converted whole. May throw, with the same outcome.
+     */
+    suspend fun documentScoresOf(lines: List<PageLine>): List<PageLineScores>?
 }

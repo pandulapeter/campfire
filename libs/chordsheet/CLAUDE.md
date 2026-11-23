@@ -11,8 +11,8 @@
 
 Chord sheets (plain text, and the positioned lines `:data:formats` reads from a PDF or a Word file) converted into
 ChordPro: the import's heuristics, kept out of `:libs:chordpro`'s dependency-free core. It depends on `:libs:chordpro`
-alone, has no Koin, and is called directly. Its rules are in the package's own `CLAUDE.md`
-(`src/commonMain/kotlin/com/pandulapeter/campfire/chordpro/convert/CLAUDE.md`).
+and `:libs:pagesong` (whose scores crop a document's songs, `ChordSheetSongCrop`) alone, has no Koin, and is called
+directly. Its rules are in the package's own `CLAUDE.md` (`src/commonMain/kotlin/com/pandulapeter/campfire/chordpro/convert/CLAUDE.md`).
 
 `ChordSheetHtml` reads the HTML a browser copies of a page whose plain text loses the chords' places, in two shapes. A
 page that draws its chords with CSS (`content: attr(data-…)`): an element with nothing in it whose first chord-valued
