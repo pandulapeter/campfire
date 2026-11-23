@@ -44,7 +44,9 @@ which the script checks; everything else is handed the holders, state, and callb
   song). Several shared texts are not cropped. One song the library does not hold (a taken name included) opens the editor on it, unwritten (`EditorSession.openNewSongEditor`), read only mode too when shared,
   with a snackbar saying how the text was read (chords over lyrics, ChordPro, lyrics only, or an ABC tune's or block's
   notation kept), and **Use the whole page** where the crop left lines out; one the library holds is opened; anything
-  else (several ABC tunes among them) is the ordinary review.
+  else (several ABC tunes among them) is the ordinary review. Both drafts declaring no key are given the one song details
+  would infer (`withInferredKey`, `writtenKeyOfText`), where the chords make one clear: the key of the chords as written,
+  so over a `{capo}` the shapes', as a typed `{key}` is.
 - The editor waits, as the import screen does (`ImportReportState.awaitNothingInTheWay`), for any open dialog, unsaved
   editor text, and the onboarding; replaces an editor with nothing unsaved; and holds the queue until no editor is left,
   so texts arriving together (an iOS inbox drained at once) open one after another.

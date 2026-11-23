@@ -33,6 +33,7 @@ import com.pandulapeter.campfire.presentation.ui.pictures.PictureWork
 import com.pandulapeter.campfire.presentation.ui.platform.reencodePicture
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Factory
 
 /**
@@ -56,15 +57,19 @@ class EditorUseCases(
 
     /**
      * [text] shaped like a new song ([draftSongFromText]), with the [suggestion]'s title and artist, else the localized
-     * placeholders, for what it does not declare.
+     * placeholders, for what it does not declare, and the key [keyOfChords] finds where it declares none
+     * ([withInferredKey], walked off the main thread).
      */
-    internal suspend fun newSongDraft(text: String, suggestion: PageTitle?) = draftSongFromText(
-        text = text,
-        placeholderTitle = LocalizedStrings.get(Res.string.new_song_placeholder_title),
-        placeholderArtist = LocalizedStrings.get(Res.string.new_song_placeholder_artist),
-        suggestedTitle = suggestion?.title,
-        suggestedArtist = suggestion?.artist,
-    )
+    internal suspend fun newSongDraft(text: String, suggestion: PageTitle?, keyOfChords: (text: String) -> String?): String {
+        val draft = draftSongFromText(
+            text = text,
+            placeholderTitle = LocalizedStrings.get(Res.string.new_song_placeholder_title),
+            placeholderArtist = LocalizedStrings.get(Res.string.new_song_placeholder_artist),
+            suggestedTitle = suggestion?.title,
+            suggestedArtist = suggestion?.artist,
+        )
+        return withContext(Dispatchers.Default) { withInferredKey(draft, keyOfChords) }
+    }
 
     /**
      * The editor's draft pictures, kept and let go of in [scope], their refusals said through [messageSink], their fitting

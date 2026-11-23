@@ -347,9 +347,26 @@ class EditorSessionTest {
         val editor = backStack.last() as CampfireDestination.SongEditor
         assertTrue(editor.isNewSong)
         assertEquals(listOf(CampfireDestination.Songs, editor), backStack.toList())
-        assertEquals("{title: New song}\n{artist: Unknown artist}\n[G]Hello", fixture.session.editorDraft.value?.text)
+        assertEquals("{title: New song}\n{artist: Unknown artist}\n{key: G}\n[G]Hello", fixture.session.editorDraft.value?.text)
         assertTrue(fixture.session.hasUnsavedEditorText())
         assertEquals(fixture.session.editorDraft.value, storedDraft)
+        assertTrue(files.isEmpty())
+    }
+
+    @Test
+    fun `a new song naming no key opens with the key its chords are in under its title and artist and so does its whole page`() = runTest {
+        val fixture = fixture()
+        val song = ImportPlan.SongEntry(
+            fileName = "new.cho",
+            text = "[G]one [C]two [D]three [G]four",
+            status = ImportPlan.Status.NEW,
+            sourceFileName = "Pasted.txt",
+            wholePageText = "Menu\n[G]one [C]two [D]three [G]four",
+        )
+        fixture.session.openNewSongEditor(song, null)
+        runCurrent()
+        assertEquals("{title: New song}\n{artist: Unknown artist}\n{key: G}\n[G]one [C]two [D]three [G]four", fixture.session.editorDraft.value?.text)
+        assertEquals("{title: New song}\n{artist: Unknown artist}\n{key: G}\nMenu\n[G]one [C]two [D]three [G]four", fixture.session.wholePage.wholePageDraft.value)
         assertTrue(files.isEmpty())
     }
 
@@ -358,11 +375,11 @@ class EditorSessionTest {
         val fixture = fixture()
         fixture.session.openNewSongEditor(croppedPage(), null)
         runCurrent()
-        assertEquals("{title: New song}\n{artist: Unknown artist}\nMenu\n[G]Hello", fixture.session.wholePage.wholePageDraft.value)
+        assertEquals("{title: New song}\n{artist: Unknown artist}\n{key: G}\nMenu\n[G]Hello", fixture.session.wholePage.wholePageDraft.value)
         fixture.session.onEditorTextChanged(CampfireDestination.SongEditor.NEW_SONG_FILE_NAME, "{title: Riverlight}\n[G]Hello")
         runCurrent()
         assertNull(fixture.session.wholePage.wholePageDraft.value)
-        fixture.session.onEditorTextChanged(CampfireDestination.SongEditor.NEW_SONG_FILE_NAME, "{title: New song}\n{artist: Unknown artist}\n[G]Hello")
+        fixture.session.onEditorTextChanged(CampfireDestination.SongEditor.NEW_SONG_FILE_NAME, "{title: New song}\n{artist: Unknown artist}\n{key: G}\n[G]Hello")
         runCurrent()
         assertNull(fixture.session.wholePage.wholePageDraft.value)
     }
@@ -377,7 +394,7 @@ class EditorSessionTest {
         fixture.session.wholePage.use()
         runCurrent()
         val draft = fixture.session.editorDraft.value?.text.orEmpty()
-        assertEquals("{title: New song}\n{artist: Unknown artist}\nMenu\n[G]Hello", edits.single().edit(draft))
+        assertEquals("{title: New song}\n{artist: Unknown artist}\n{key: G}\nMenu\n[G]Hello", edits.single().edit(draft))
         assertNull(fixture.session.wholePage.wholePageDraft.value)
     }
 
@@ -399,7 +416,7 @@ class EditorSessionTest {
     fun `a suggested title is selected in a new song's editor`() = runTest {
         val fixture = fixture()
         fixture.session.openNewSongEditor("[G]Hello", PageTitle(title = "Riverlight", artist = "The Invented Band"))
-        assertEquals("{title: Riverlight}\n{artist: The Invented Band}\n[G]Hello", fixture.session.editorDraft.value?.text)
+        assertEquals("{title: Riverlight}\n{artist: The Invented Band}\n{key: G}\n[G]Hello", fixture.session.editorDraft.value?.text)
         val field = fixture.session.retainedEditorField(CampfireDestination.SongEditor.NEW_SONG_FILE_NAME)
         assertEquals(TextRange(8, 18), field?.selection)
     }
@@ -417,7 +434,7 @@ class EditorSessionTest {
         )
         fixture.session.openNewSongEditor(song, PageTitle(title = "Riverlight Chords @ Site", artist = "The Invented Band"))
         runCurrent()
-        assertEquals("{title: Riverlight}\n{artist: The Invented Band}\n[G]Hello", fixture.session.editorDraft.value?.text)
+        assertEquals("{title: Riverlight}\n{artist: The Invented Band}\n{key: G}\n[G]Hello", fixture.session.editorDraft.value?.text)
         assertEquals(TextRange(8, 18), fixture.session.retainedEditorField(CampfireDestination.SongEditor.NEW_SONG_FILE_NAME)?.selection)
         assertEquals(true, fixture.session.wholePage.wholePageDraft.value?.startsWith("{title: Riverlight Chords @ Site}"))
     }

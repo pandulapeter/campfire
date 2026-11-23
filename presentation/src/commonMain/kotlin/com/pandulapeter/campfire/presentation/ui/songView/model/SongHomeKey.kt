@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.songView.model
 
+import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.chordpro.scales.ScaleGroup
@@ -68,6 +69,16 @@ internal fun inferredKeyOf(song: ChordProSong): String? {
 
 /** [inferredKeyOf] the song file [text], read as the screen and the PDF both read it, so that they infer one way. */
 internal fun SongRenderer.inferredKeyOfText(text: String) = inferredKeyOf(transposedSong(text = text, transposition = 0, spelling = UserPreferences.ChordSpelling.Default))
+
+/**
+ * The key the song file [text], naming none, would name in its `{key}`: [inferredKeyOfText] moved back by the file's own
+ * opening `{transpose}`, which that key was found after. A `{key}` names the key of the chords as written, and so does
+ * this: the capo moves nothing here, so over a `{capo}` it is the shapes' key, as a typed one is, and song details moves
+ * either by the capo to name what sounds.
+ */
+internal fun SongRenderer.writtenKeyOfText(text: String) = inferredKeyOfText(text)?.let { key ->
+    movedKey(inferredKey = key, transposition = -ChordProParser.parseMetadata(text).transpose, spelling = UserPreferences.ChordSpelling.Default)
+}
 
 private const val MINOR_THIRD = 3
 private const val MAJOR_THIRD = 4

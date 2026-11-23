@@ -29,6 +29,7 @@ import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination.SongEditor.Companion.NEW_SONG_FILE_NAME
 import com.pandulapeter.campfire.presentation.ui.navigation.songEditorEntries
 import com.pandulapeter.campfire.presentation.ui.rendering.SongRenderer
+import com.pandulapeter.campfire.presentation.ui.songView.model.writtenKeyOfText
 import com.pandulapeter.campfire.presentation.ui.state.PendingExit
 import com.pandulapeter.campfire.presentation.ui.state.songText.SongTextStore
 import com.pandulapeter.campfire.presentation.ui.state.asState
@@ -200,9 +201,9 @@ internal class EditorSession(
         val pageSuggestion = song.pageHeaderOver(suggestion)
         arePreferencesLoaded.first { it }
         val placeholderTitle = LocalizedStrings.get(Res.string.new_song_placeholder_title)
-        val draft = editorTextOf(useCases.newSongDraft(text, pageSuggestion))
+        val draft = editorTextOf(useCases.newSongDraft(text, pageSuggestion, songRenderer::writtenKeyOfText))
         onEditorTextChanged(fileName = NEW_SONG_FILE_NAME, text = draft)
-        wholePage.offer(draft = draft, wholePageDraft = song.wholePageText?.let { editorTextOf(useCases.newSongDraft(it, suggestion)) })
+        wholePage.offer(draft = draft, wholePageDraft = song.wholePageText?.let { editorTextOf(useCases.newSongDraft(it, suggestion, songRenderer::writtenKeyOfText)) })
         retainedEditorField = NEW_SONG_FILE_NAME to TextFieldState(initialText = draft, initialSelection = placeholderTitleSelection(draft, pageSuggestion?.title?.ifBlank { null } ?: placeholderTitle))
         updateBackStack {
             if (lastOrNull() is CampfireDestination.SongEditor) removeAt(lastIndex)
