@@ -160,20 +160,22 @@ internal class PastedSongController(
     fun newSongFromCopiedPage(reader: ClipboardTextReader, onAccepted: () -> Unit) {
         if (isImporting.value) return
         scope.launch {
-            val text = when (val clipboardText = readClipboard(reader)) {
-                is ClipboardText.Text -> clipboardText.value
-                ClipboardText.None -> return@launch messageSink.sendMessage(Message.ClipboardEmpty)
-                is ClipboardText.Refused -> return@launch messageSink.sendMessage(Message.ClipboardRefused(clipboardText.message))
+            val clipboardText = readClipboard(reader)
+            val text = (clipboardText as? ClipboardText.Text)?.value.orEmpty()
+            val refusal = when {
+                clipboardText is ClipboardText.Refused -> Message.ClipboardRefused(clipboardText.message)
+                text.isBlank() -> Message.ClipboardEmpty
+                pageAddressIn(text) != null || text.isOnlyLinks() || text.isLinkWithTitle() -> Message.PageNotCopiedYet
+                !text.fitsImport() -> Message.PastedTextTooLarge
+                else -> null
             }
-            when {
-                text.isBlank() -> messageSink.sendMessage(Message.ClipboardEmpty)
-                pageAddressIn(text) != null || text.isOnlyLinks() || text.isLinkWithTitle() -> messageSink.sendMessage(Message.PageNotCopiedYet)
-                !text.fitsImport() -> messageSink.sendMessage(Message.PastedTextTooLarge)
-                else -> {
-                    onAccepted()
-                    pageTextImport(text = text, subject = null)
-                }
+            if (refusal != null) {
+                println("Copied page not pasted: ${refusal::class.simpleName}")
+                return@launch messageSink.sendMessage(refusal)
             }
+            println("Copied page pasted")
+            onAccepted()
+            pageTextImport(text = text, subject = null)
         }
     }
 

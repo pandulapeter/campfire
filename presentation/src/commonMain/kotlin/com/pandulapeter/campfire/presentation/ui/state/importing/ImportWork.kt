@@ -295,7 +295,10 @@ class ImportWork(
 
                 // The source stays the address, so Try again reads the page again rather than the text it came to.
                 is ImportSource.Page -> when (val page = readPage(source = source, enter = enter, throttle = throttle)) {
-                    is LoadedPage.NotRead -> return Preparation.Failed(pageFailureOf(page.reason))
+                    is LoadedPage.NotRead -> {
+                        println("Page not read: ${page.reason}")
+                        return Preparation.Failed(pageFailureOf(page.reason))
+                    }
                     is LoadedPage.Read -> pageFiles(request = request, page = page) ?: return Preparation.Failed(ImportFailure.PAGE_NOT_READ)
                 }
 
