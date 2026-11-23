@@ -9,7 +9,8 @@
 -->
 # Plan: a song from any page
 
-**Status:** not started. Written against the code on 2026-11-22 (67d82f42a). `convert/` is
+**Status:** step 0 passed (2026-11-23) with the review fallback below; steps 1 and 2 have their tooling
+(`tools/page-model`); step 2's export is next. Written against the code on 2026-11-22 (67d82f42a). `convert/` is
 `libs/chordsheet/src/commonMain/kotlin/com/pandulapeter/campfire/chordpro/convert/`.
 
 A user looking at a song with chords on any website shares it to Campfire (or pastes it, or presses an optional browser
@@ -72,7 +73,9 @@ title, artist, key, and capo are misread where they stand among the page's other
 The crop applies to web-sourced input (a share, a paste, a drop of text or HTML, a loaded link, an extension) from
 step 4, and to PDF and Word files only from step 8, once `ImportCorpusTest` shows no document scoring worse with it.
 A plain text file is left alone. Where the model is not confident the lines hold a song, nothing is cropped and
-today's behaviour stands.
+today's behaviour stands. The crop keeps every line the model gives even a small chance (2%) of being the song or its
+details, and a cropped import always offers **Use the whole page**, which converts every line as today: the gate showed
+the crop losing about 1–2% of song lines on sites it never saw, so the user can always get them back.
 
 ## Steps
 
@@ -86,14 +89,23 @@ on only if the crop clearly wins on most pages and never loses a song's lines on
 them. If it does not, stop here; nothing in the app has changed. If only the documents fail the gate, go on with pages
 and drop step 8.
 
+**Result (2026-11-23).** 616 labelled pages (two thirds English, about 250 sites, 20 languages) and 939 documents (87
+import corpus files, 483 pages printed to PDF, 369 made up), five folds by song, two seeds. One model trained on both
+beats either trained alone, on pages and on documents. With the 2% crop it beats keeping every line on 427–431 of 473
+song pages (worse on 4–6; line F1 0.53 → 0.88) and on 377–396 of 456 song documents (worse on 22–28; 0.70 → 0.89–0.92),
+and tells about 94% of the pages with no song. It still loses about 1–2% of song lines, mostly on kinds of page it has
+not seen (lyrics with no chords, chords glued into words), and each new batch of sites brings new ones, so more data
+alone will not reach zero. The gate is passed on that basis, with the "Use the whole page" fallback as the condition.
+
 ### 1. The corpus and its labels (`tools/page-model/`)
 
 - **Collector**: given a list of addresses, renders each page in headless Chrome (Playwright) and saves its `innerText`
   lines, title, and address as one JSON file into the private folder named by a new `campfire.pageCorpus` property
   (in `local.properties` only). A few thousand pages across the big chord sites, smaller ones, blogs, forums, worship
   sites, and every app language, tabs and ABC pages included, plus pages with no song (the model must learn to say so).
-- **Teacher**: Claude labels each page's lines once, offline, through the API with the owner's key: line numbers and
-  labels only, never text. Two runs per page; pages where the runs disagree are dropped rather than checked by hand.
+- **Teacher**: Claude labels each page's lines offline (subagents in a Claude Code session, following
+  `teacher/INSTRUCTIONS.md`): line numbers and labels only, never text. Two independent runs per page; pages where the
+  runs disagree are dropped rather than checked by hand.
 - **Documents, labelled for free**: the import corpus already pairs each PDF and Word file with its corrected `.cho`.
   Aligning the two labels each line: a line found in the song is `SONG`, the line holding the `{title}` or `{artist}`
   value is `TITLE` or `ARTIST`, one holding `{key}`, `{capo}`, `{tempo}`, `{time}`, or a credit is `METADATA`, and the
