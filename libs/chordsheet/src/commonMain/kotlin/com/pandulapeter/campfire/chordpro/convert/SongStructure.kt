@@ -14,11 +14,13 @@ import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordPlacement.inlin
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordPlacement.isUnaligned
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordPlacement.merge
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordWords.chordRow
+import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordWords.isCharacterColumns
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordWords.rowChord
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordWords.rowChordName
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordWords.tokens
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetText.headerValue
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetText.headingLabel
+import kotlin.math.roundToInt
 
 /**
  * Every decision about a song's body: where its sections open and close (by heading or by look), which heading recalls a
@@ -97,6 +99,7 @@ internal object SongStructure {
         fun openUnlabelled(at: Int) { if (at in unlabelled) { closeNumbered(); openChorus() } }
         val marginLabels = lines.filter { it.isMarginLabel }.map { it.text }
         val verseNumbers = ChordSheetVerseNumbers.of(lines, kinds)
+        val tabIndents = tabIndents(lines, kinds)
         val unopenedNumbers = verseNumbers.toMutableMap()
         fun lyricAt(at: Int) = if (at in verseNumbers) ChordSheetVerseNumbers.withoutNumber(lines[at]) else lines[at]
         var index = 0
@@ -167,7 +170,7 @@ internal object SongStructure {
                         add(Line.Comment(label, isBoxed = false))
                     }
                 }
-                LineKind.TAB -> { if (!isInTab) openTab(label = null); add(Line.Raw(line.text)) }
+                LineKind.TAB -> { if (!isInTab) openTab(label = null); add(Line.Raw(" ".repeat(tabIndents[index] ?: 0) + line.text)) }
                 LineKind.CHORD -> {
                     openUnlabelled(index + 1)
                     if (!line.isFromLabel && kinds.getOrNull(index + 1) == LineKind.LYRIC && index + 1 !in omitted && !isUnaligned(line, candidates[index]!!, lyricAt(index + 1))) {
@@ -197,6 +200,27 @@ internal object SongStructure {
         closeSection()
         flushChanges()
         built()
+    }
+
+    /**
+     * How far each line of a tab laid out in characters stands in from the leftmost line of its run, which a line's text
+     * no longer says: its leading spaces are read as where it starts. The chord row over a staff names the beats under
+     * it, so it keeps its place against the strings, and a staff set in by a margin loses only the margin.
+     */
+    private fun tabIndents(lines: List<Rendered>, kinds: List<LineKind>): Map<Int, Int> {
+        val indents = mutableMapOf<Int, Int>()
+        var start = 0
+        while (start < lines.size) {
+            if (kinds[start] != LineKind.TAB) { start++; continue }
+            val end = (start until lines.size).takeWhile { kinds[it] == LineKind.TAB }.last()
+            val run = (start..end).filter { lines[it].positions.isNotEmpty() }
+            if (run.all { isCharacterColumns(lines[it]) && lines[it].bidi == null }) {
+                val margin = run.minOfOrNull { lines[it].positions[0] } ?: 0.0
+                run.forEach { indents[it] = (lines[it].positions[0] - margin).roundToInt() }
+            }
+            start = end + 1
+        }
+        return indents
     }
 
     /**

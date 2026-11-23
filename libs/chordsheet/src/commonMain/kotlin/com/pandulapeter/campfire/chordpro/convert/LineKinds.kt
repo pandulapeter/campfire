@@ -261,12 +261,12 @@ internal object LineKinds {
 
     /**
      * A string's name, then its staff: after a bar line (`e|---`), or straight after the name (`e-----`), as many sites
-     * print it. The second needs the dash to touch the name and at least three dashes on the line, since a chord written
+     * print it. The B string is named `H` in a sheet written in German or Hungarian (`H|---`). The second needs the dash to touch the name and at least three dashes on the line, since a chord written
      * with dashes for its beats (`A - - -`, `E - x2`) is otherwise a staff too, two such lines a tab, its chords lost. Its
      * techniques are written as letters too: hammer-on, pull-off, bend, release, dead note, and slide (`4s5`), and as
      * marks: an artificial harmonic (`3*`), a natural one (`<12>`), a tap (`t`), and a vibrato bar (`v`, `^`).
      */
-    private val tab = Regex("^[eEaAbBdDgG](?:[#b])?(?:\\s*\\||-(?=(?:[^-]*-){2}))[-0-9|hpbrsxtv/\\\\~(). :*<>^]+$")
+    private val tab = Regex("^[eEaAbBdDgGhH](?:[#b])?(?:\\s*\\||-(?=(?:[^-]*-){2}))[-0-9|hpbrsxtv/\\\\~(). :*<>^]+$")
 
     /**
      * A row of playing marks printed against a staff's first or last string (`PM---|   PM`, `let ring`, `N.H.`), the

@@ -483,6 +483,14 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `a staff naming its B string H is a tab - the chord row over it one of its lines`() {
+        assertEquals(
+            "{start_of_tab}\n   Am        C\ne |---0---|---3---|\nH |---1---|---1---|\nG |---0---|---0---|\n{end_of_tab}\n",
+            convert("     Am        C\n  e |---0---|---3---|\n  H |---1---|---1---|\n  G |---0---|---0---|"),
+        )
+    }
+
+    @Test
     fun `a staff whose string names are followed by dashes alone is a tab - its repeat count kept`() {
         val text = "John Williams\nStar Wars Main Theme\n\nINTRO\n" +
             "e---------------3---|\nB-----------3---1-0-|\nG-------0----------|   x2\nD-0-0-0------------|\n" +
