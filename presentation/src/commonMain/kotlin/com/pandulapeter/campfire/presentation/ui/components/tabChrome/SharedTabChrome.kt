@@ -11,6 +11,8 @@ package com.pandulapeter.campfire.presentation.ui.components.tabChrome
 
 import androidx.compose.animation.EnterExitState
 import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.core.FiniteAnimationSpec
+import androidx.compose.animation.core.Transition
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.snap
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -37,8 +39,8 @@ import androidx.compose.ui.layout.positionInRoot
  * ([sharedTabChrome]), so the screens' fade through passes it by:
  *
  * - Where the other screen has the same part, the two are one surface at one rectangle ([travellingBounds]), which
- *   goes from the rectangle of the copy being left to that of the one being opened as the latter's [presenceProgress]
- *   does, on the theme's spatial spring. Both copies work it out from the same two rectangles and the same progress,
+ *   goes from the rectangle of the copy being left to that of the one being opened as the latter's presence does, on
+ *   the theme's spatial spring. Both copies work it out from the same two rectangles and the same progress,
  *   so they never part. Only the copy being left draws the container there, its color going from its own to the other
  *   part's on the same progress, so a filled New button turns into the tonal Preferences pill rather than one fading
  *   out under the other. What each copy holds rides the rectangle, clipped to it, and crosses with the other's
@@ -62,7 +64,6 @@ internal class SharedTabChrome(
     private val presence: State<Float>,
     private val fade: State<Float>,
     private val screenAlpha: State<Float>,
-    private val crossfade: State<Float>,
     containerColor: Color,
     content: TabChromeContent?,
 ) {
@@ -100,9 +101,6 @@ internal class SharedTabChrome(
     /** Whether the screen holding the part is the one being opened. */
     val isEntering get() = scope.visibilityScope.transition.targetState == EnterExitState.Visible
 
-    /** How far the part is in on the spatial spring: 0 out of sight, 1 whole, past 1 on the spring's overshoot. */
-    val presenceProgress get() = presence.value
-
     /** How large the part is drawn while it is [isAlone], around its middle; whole otherwise. */
     val aloneScale get() = if (isAlone) TAB_CHROME_HIDDEN_SCALE + (1f - TAB_CHROME_HIDDEN_SCALE) * presence.value else 1f
 
@@ -123,7 +121,7 @@ internal class SharedTabChrome(
      * opened, drawn over the one being left, comes in whole during the first half of the crossfade, and the one being
      * left only goes during the second, so it never dims; where they differ, the two cross as [crossfadeAlpha] does.
      */
-    val matchedContentAlpha get() = if (isContentShared) (crossfade.value * 2f).coerceIn(0f, 1f) else crossfadeAlpha
+    val matchedContentAlpha get() = if (isContentShared) (fade.value * 2f).coerceIn(0f, 1f) else crossfadeAlpha
 
     /**
      * How large what stands on the part is drawn while it is [isMatched], around the travelling rectangle's middle:
@@ -137,7 +135,7 @@ internal class SharedTabChrome(
      * and a closed pill's buttons, which [matchedContentAlpha] would show whole on top of each other halfway): a plain
      * crossfade, the one going as the other comes.
      */
-    val crossfadeAlpha get() = crossfade.value.coerceIn(0f, 1f)
+    val crossfadeAlpha get() = aloneAlpha
 
     /** The part's own rectangle in the root's coordinates, or null while it has none (not placed, or empty). */
     fun boundsInRoot(): Rect? {
@@ -192,44 +190,11 @@ internal fun rememberSharedTabChrome(
     val scope = LocalTabChromeScope.current ?: return null
     val motionScheme = MaterialTheme.motionScheme
     val transition = scope.visibilityScope.transition
-    // Snapped outside a swap of two tabs, so that a part animating there never keeps a card's transition running, and
-    // linear along a back gesture, which seeks the transition: a spring would run ahead of the finger and the screens.
-    val presence = transition.animateFloat(
-        transitionSpec = {
-            when (scope.tabChrome.swap) {
-                TabSwap.NONE -> snap()
-                TabSwap.FADE_THROUGH -> motionScheme.defaultSpatialSpec()
-                TabSwap.CROSS_FADE -> predictiveBackSpec()
-            }
-        },
-    ) { if (it == EnterExitState.Visible) 1f else 0f }
-    val fade = transition.animateFloat(
-        transitionSpec = {
-            when (scope.tabChrome.swap) {
-                TabSwap.NONE -> snap()
-                TabSwap.FADE_THROUGH -> motionScheme.defaultEffectsSpec()
-                TabSwap.CROSS_FADE -> predictiveBackSpec()
-            }
-        },
-    ) { if (it == EnterExitState.Visible) 1f else 0f }
-    val screenAlpha = transition.animateFloat(
-        transitionSpec = {
-            when (scope.tabChrome.swap) {
-                TabSwap.NONE -> snap()
-                TabSwap.FADE_THROUGH -> if (targetState == EnterExitState.Visible) tabFadeInSpec() else tabFadeOutSpec()
-                TabSwap.CROSS_FADE -> predictiveBackSpec()
-            }
-        },
-    ) { if (it == EnterExitState.Visible) 1f else 0f }
-    val crossfade = transition.animateFloat(
-        transitionSpec = {
-            when (scope.tabChrome.swap) {
-                TabSwap.NONE -> snap()
-                TabSwap.FADE_THROUGH -> motionScheme.defaultEffectsSpec()
-                TabSwap.CROSS_FADE -> predictiveBackSpec()
-            }
-        },
-    ) { if (it == EnterExitState.Visible) 1f else 0f }
+    val presence = transition.animateSwap(scope) { motionScheme.defaultSpatialSpec() }
+    val fade = transition.animateSwap(scope) { motionScheme.defaultEffectsSpec() }
+    val screenAlpha = transition.animateSwap(scope) {
+        if (targetState == EnterExitState.Visible) tabFadeInSpec() else tabFadeOutSpec()
+    }
     val chrome = remember(scope, element) {
         SharedTabChrome(
             scope = scope,
@@ -237,7 +202,6 @@ internal fun rememberSharedTabChrome(
             presence = presence,
             fade = fade,
             screenAlpha = screenAlpha,
-            crossfade = crossfade,
             containerColor = containerColor,
             content = content,
         )
@@ -253,6 +217,25 @@ internal fun rememberSharedTabChrome(
     }
     return chrome
 }
+
+/**
+ * How far the screen this transition shows is in, 0 to 1: on [fadeThroughSpec] while two tabs fade through, snapped outside
+ * a swap of two tabs, so that a part animating there never keeps a card's transition running, and linear along a back
+ * gesture, which seeks the transition: a spring would run ahead of the finger and the screens.
+ */
+@Composable
+private fun Transition<EnterExitState>.animateSwap(
+    scope: TabChromeScope,
+    fadeThroughSpec: Transition.Segment<EnterExitState>.() -> FiniteAnimationSpec<Float>,
+): State<Float> = animateFloat(
+    transitionSpec = {
+        when (scope.tabChrome.swap) {
+            TabSwap.NONE -> snap()
+            TabSwap.FADE_THROUGH -> fadeThroughSpec()
+            TabSwap.CROSS_FADE -> predictiveBackSpec()
+        }
+    },
+) { if (it == EnterExitState.Visible) 1f else 0f }
 
 /** How small a part is as it scales out of the screen being left or into the one being opened, see [SharedTabChrome]. */
 internal const val TAB_CHROME_HIDDEN_SCALE = 0.6f
