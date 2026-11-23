@@ -49,4 +49,32 @@ class ChordSheetSpelledChordsTest {
 
         assertEquals(lines, ChordSheetSpelledChords.lines(lines))
     }
+
+    @Test
+    fun `a lyric cut into pieces between spoken names a line each is put back together under its chords`() {
+        val sheet = listOf(
+            "Verse 1", "Em", "G", "(E minor)", "Today is ", "(G major)", "gonna be the day",
+            "D", "A", "Rea", "(D major)", "lized what to do ", "(A major)",
+            "Em", "G", "(E minor)", "(G major)",
+            "C", "(C major)", "1995",
+        ).joinToString("\n")
+        val result = ChordSheetConverter.convert(ChordSheet.ofPlainText(sheet), guessesTitle = false).single()
+
+        assertTrue("[Em]Today is [G]gonna be the day\nRea[D]lized what to do [A]\n[Em] [G]\n[C]" in result, result)
+    }
+
+    @Test
+    fun `pieces of a lyric end at a heading after the row's last chord`() {
+        assertEquals(
+            listOf("Em    G", "Words", "Chorus"),
+            ChordSheetSpelledChords.lines(listOf("Em", "G", "(E minor)", "Words ", "(G major)", "Chorus")).map { it.trimEnd() },
+        )
+    }
+
+    @Test
+    fun `a lyric line with no spoken name after its chord row is not joined to the next`() {
+        val lines = listOf("G", "First line", "Second line (G major)")
+
+        assertEquals(lines, ChordSheetSpelledChords.lines(lines))
+    }
 }

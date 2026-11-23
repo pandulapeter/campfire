@@ -76,7 +76,8 @@ heuristics and near misses are pinned in `ChordSheetConverterTest` and its sibli
   header lines printed in left, centre, and right parts (`ChordSheetHeaderParts`).
 - A page whose chords lose their places on copy, leaving each on a row of its own and its spoken name in the lyric
   (`(C sharp minor)These`), is set back into chord rows over the lyric by `ChordSheetSpelledChords`, only where every
-  spoken name's root is the next chord's.
+  spoken name's root is the next chord's. A page whose names are a line each, the lyric cut into pieces between them
+  (an offscreen web view's `innerText`), has its pieces joined first, up to the row's last chord and the piece after it.
 - Genius's injected `You might also like` and closing `12Embed` are left out of a song (never of prose).
 - **A chord site's details and chrome** (`ChordSheetSiteDetails`, by labels and words in every app language, never a
   site's name): a details block whose labels the copy glued onto the values before them (`Tuning: E A D G B EKey: G`)
