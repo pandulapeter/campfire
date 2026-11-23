@@ -19,26 +19,19 @@ import com.pandulapeter.campfire.presentation.ui.screens.songEditor.toolbar.shee
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.search.EditorSearchMode
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.search.EditorSearchSheet
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.search.rememberEditorSearch
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -334,6 +327,7 @@ internal fun LoadedSongEditor(
                 }
             },
         )
+        WholePageBanner(offer = editorSession.wholePage, contentPadding = contentPadding)
         val abcProblems = rememberAbcProblems(text)
         val editor: @Composable (Modifier) -> Unit = { paneModifier ->
             ChordProTextField(
@@ -373,21 +367,7 @@ internal fun LoadedSongEditor(
         // The panes take what the app bar and the toggle above them leave, rather than the whole window: a Column
         // measures a child that does not weigh anything against an unbounded height, and a song longer than the
         // screen then lays the field out past the bottom edge of it instead of scrolling inside it.
-        if (hasSideBySidePreview) {
-            Row(modifier = Modifier.weight(1f).fillMaxWidth()) {
-                editor(Modifier.weight(1f).fillMaxHeight())
-                VerticalDivider()
-                preview(Modifier.weight(1f).fillMaxHeight())
-            }
-        } else {
-            AnimatedContent(
-                modifier = Modifier.weight(1f).fillMaxWidth(),
-                targetState = panes == EditorPanes.PREVIEW,
-                transitionSpec = { fadeIn() togetherWith fadeOut() },
-            ) { showPreview ->
-                if (showPreview) preview(Modifier.fillMaxSize()) else editor(Modifier.fillMaxSize())
-            }
-        }
+        EditorPaneLayout(modifier = Modifier.weight(1f).fillMaxWidth(), panes = panes, editor = editor, preview = preview)
     }
     if (search.mode != null) {
         EditorSearchSheet(

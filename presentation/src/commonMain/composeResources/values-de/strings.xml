@@ -954,6 +954,9 @@
     <string name="song_editor_shortcuts">Tastenkürzel</string>
     <string name="song_editor_show_shortcuts">Tastenkürzel einblenden</string>
     <string name="song_editor_hide_shortcuts">Tastenkürzel ausblenden</string>
+    <string name="song_editor_page_cropped">Seitenballast entfernt</string>
+    <string name="song_editor_use_whole_page">Ganze Seite verwenden</string>
+    <string name="song_editor_keep_cropped">Nur das Lied behalten</string>
     <string name="song_editor_insert_chord">Akkord</string>
     <string name="song_editor_insert_annotation">Anmerkung</string>
     <string name="song_editor_format_bold">Fett</string>

@@ -953,6 +953,9 @@
     <string name="song_editor_shortcuts">Gyorsgombok</string>
     <string name="song_editor_show_shortcuts">Gyorsgombok megjelenítése</string>
     <string name="song_editor_hide_shortcuts">Gyorsgombok elrejtése</string>
+    <string name="song_editor_page_cropped">Az oldal fölösleges részei kihagyva</string>
+    <string name="song_editor_use_whole_page">A teljes oldal használata</string>
+    <string name="song_editor_keep_cropped">Csak a dal megtartása</string>
     <string name="song_editor_insert_chord">Akkord</string>
     <string name="song_editor_insert_annotation">Annotáció</string>
     <string name="song_editor_format_bold">Félkövér</string>

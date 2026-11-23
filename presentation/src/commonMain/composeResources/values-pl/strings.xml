@@ -988,6 +988,9 @@
     <string name="song_editor_shortcuts">Skróty</string>
     <string name="song_editor_show_shortcuts">Pokaż skróty</string>
     <string name="song_editor_hide_shortcuts">Ukryj skróty</string>
+    <string name="song_editor_page_cropped">Usunięto zbędne elementy strony</string>
+    <string name="song_editor_use_whole_page">Użyj całej strony</string>
+    <string name="song_editor_keep_cropped">Zachowaj tylko piosenkę</string>
     <string name="song_editor_insert_chord">Akord</string>
     <string name="song_editor_insert_annotation">Adnotacja</string>
     <string name="song_editor_format_bold">Pogrubienie</string>

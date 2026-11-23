@@ -20,11 +20,16 @@ import com.pandulapeter.campfire.domain.api.songs.CreateSongFromTextUseCase
 import com.pandulapeter.campfire.domain.api.songs.DraftSongFromTextUseCase
 import com.pandulapeter.campfire.domain.api.songs.GetEditorDraftUseCase
 import com.pandulapeter.campfire.domain.api.songs.SaveEditorDraftUseCase
+import com.pandulapeter.campfire.presentation.localization.LocalizedStrings
+import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.new_song_placeholder_artist
+import com.pandulapeter.campfire.presentation.resources.new_song_placeholder_title
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.pictures.AttachmentIntake
 import com.pandulapeter.campfire.presentation.ui.pictures.PictureFitter
 import com.pandulapeter.campfire.presentation.ui.pictures.PictureLinkDownloader
 import com.pandulapeter.campfire.presentation.ui.pictures.PictureWork
+import com.pandulapeter.campfire.presentation.ui.platform.SharedTextTitle
 import com.pandulapeter.campfire.presentation.ui.platform.reencodePicture
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -48,6 +53,18 @@ class EditorUseCases(
     internal val downloadPicture: DownloadPictureUseCase,
     internal val addDraftAttachment: AddDraftAttachmentUseCase,
 ) {
+
+    /**
+     * [text] shaped like a new song ([draftSongFromText]), with the [suggestion]'s title and artist, else the localized
+     * placeholders, for what it does not declare.
+     */
+    internal suspend fun newSongDraft(text: String, suggestion: SharedTextTitle?) = draftSongFromText(
+        text = text,
+        placeholderTitle = LocalizedStrings.get(Res.string.new_song_placeholder_title),
+        placeholderArtist = LocalizedStrings.get(Res.string.new_song_placeholder_artist),
+        suggestedTitle = suggestion?.title,
+        suggestedArtist = suggestion?.artist,
+    )
 
     /**
      * The editor's draft pictures, kept and let go of in [scope], their refusals said through [messageSink], their fitting

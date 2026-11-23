@@ -354,6 +354,48 @@ class EditorSessionTest {
     }
 
     @Test
+    fun `a cropped page offers its whole page until the text is edited`() = runTest {
+        val fixture = fixture()
+        fixture.session.openNewSongEditor(croppedPage(), null)
+        runCurrent()
+        assertEquals("{title: New song}\n{artist: Unknown artist}\nMenu\n[G]Hello", fixture.session.wholePage.wholePageDraft.value)
+        fixture.session.onEditorTextChanged(CampfireDestination.SongEditor.NEW_SONG_FILE_NAME, "{title: Riverlight}\n[G]Hello")
+        runCurrent()
+        assertNull(fixture.session.wholePage.wholePageDraft.value)
+        fixture.session.onEditorTextChanged(CampfireDestination.SongEditor.NEW_SONG_FILE_NAME, "{title: New song}\n{artist: Unknown artist}\n[G]Hello")
+        runCurrent()
+        assertNull(fixture.session.wholePage.wholePageDraft.value)
+    }
+
+    @Test
+    fun `using the whole page hands it to the editor and ends the offer`() = runTest {
+        val fixture = fixture()
+        val edits = mutableListOf<EditorTextEdit>()
+        backgroundScope.launch { fixture.session.editorTextEdits.collect { edits += it } }
+        fixture.session.openNewSongEditor(croppedPage(), null)
+        runCurrent()
+        fixture.session.wholePage.use()
+        runCurrent()
+        val draft = fixture.session.editorDraft.value?.text.orEmpty()
+        assertEquals("{title: New song}\n{artist: Unknown artist}\nMenu\n[G]Hello", edits.single().edit(draft))
+        assertNull(fixture.session.wholePage.wholePageDraft.value)
+    }
+
+    @Test
+    fun `a dismissed offer is gone and a page that was not cropped offers nothing`() = runTest {
+        val fixture = fixture()
+        fixture.session.openNewSongEditor(croppedPage(), null)
+        runCurrent()
+        fixture.session.wholePage.dismiss()
+        runCurrent()
+        assertNull(fixture.session.wholePage.wholePageDraft.value)
+        fixture.session.onEditorClosed(CampfireDestination.SongEditor.NEW_SONG_FILE_NAME)
+        fixture.session.openNewSongEditor("[G]Hello", null)
+        runCurrent()
+        assertNull(fixture.session.wholePage.wholePageDraft.value)
+    }
+
+    @Test
     fun `a suggested title is selected in a new song's editor`() = runTest {
         val fixture = fixture()
         fixture.session.openNewSongEditor("[G]Hello", SharedTextTitle(title = "Riverlight", artist = "The Invented Band"))
@@ -686,6 +728,15 @@ class EditorSessionTest {
         sourceFileName = "page 1.jpg",
         title = "page 1",
         images = pictures.mapIndexed { index, bytes -> ImportPlan.SongImage(source = "page ${index + 1}.jpg", name = null, content = IncomingContent.Bytes(bytes), problem = null) },
+    )
+
+    /** A page whose clutter the import cropped, as it hands it over. */
+    private fun croppedPage() = ImportPlan.SongEntry(
+        fileName = "new.cho",
+        text = "[G]Hello",
+        status = ImportPlan.Status.NEW,
+        sourceFileName = "Pasted.txt",
+        wholePageText = "Menu\n[G]Hello",
     )
 
     /** A pasted [text], as the import hands it over. */

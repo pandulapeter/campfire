@@ -998,6 +998,9 @@
     <string name="song_editor_shortcuts">Comenzi rapide</string>
     <string name="song_editor_show_shortcuts">Arată comenzile rapide</string>
     <string name="song_editor_hide_shortcuts">Ascunde comenzile rapide</string>
+    <string name="song_editor_page_cropped">Elementele inutile ale paginii au fost eliminate</string>
+    <string name="song_editor_use_whole_page">Folosește toată pagina</string>
+    <string name="song_editor_keep_cropped">Păstrează doar cântecul</string>
     <string name="song_editor_insert_chord">Acord</string>
     <string name="song_editor_insert_annotation">Adnotare</string>
     <string name="song_editor_format_bold">Aldin</string>

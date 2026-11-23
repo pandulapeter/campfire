@@ -959,6 +959,9 @@
     <string name="song_editor_shortcuts">Raccourcis</string>
     <string name="song_editor_show_shortcuts">Afficher les raccourcis</string>
     <string name="song_editor_hide_shortcuts">Masquer les raccourcis</string>
+    <string name="song_editor_page_cropped">Éléments superflus de la page retirés</string>
+    <string name="song_editor_use_whole_page">Utiliser toute la page</string>
+    <string name="song_editor_keep_cropped">Ne garder que la chanson</string>
     <string name="song_editor_insert_chord">Accord</string>
     <string name="song_editor_insert_annotation">Annotation</string>
     <string name="song_editor_format_bold">Gras</string>

@@ -954,6 +954,9 @@
     <string name="song_editor_shortcuts">Atajos</string>
     <string name="song_editor_show_shortcuts">Mostrar atajos</string>
     <string name="song_editor_hide_shortcuts">Ocultar atajos</string>
+    <string name="song_editor_page_cropped">Se quitó lo que sobraba de la página</string>
+    <string name="song_editor_use_whole_page">Usar la página completa</string>
+    <string name="song_editor_keep_cropped">Conservar solo la canción</string>
     <string name="song_editor_insert_chord">Acorde</string>
     <string name="song_editor_insert_annotation">Anotación</string>
     <string name="song_editor_format_bold">Negrita</string>

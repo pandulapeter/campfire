@@ -22,7 +22,6 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.messages.Message
 import com.pandulapeter.campfire.presentation.localization.LocalizedStrings
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.new_song_placeholder_artist
 import com.pandulapeter.campfire.presentation.resources.new_song_placeholder_title
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
@@ -106,6 +105,8 @@ internal class EditorSession(
     private val _editorDraft = MutableStateFlow<SongContent?>(null)
     val editorDraft: StateFlow<SongContent?> = _editorDraft.asStateFlow()
 
+    val wholePage = WholePageOffer(scope = scope, editorDraft = editorDraft, emitEdit = { emitEditorTextEdit(it) })
+
     /**
      * The draft as it was last put on disk, so that a pause that finds the same text writes nothing. Only read or written
      * under [editorDraftStoreMutex], and only once [recoverEditorDraft] has read what a previous run left.
@@ -187,6 +188,7 @@ internal class EditorSession(
      * [suggestion]'s title and artist, or placeholders, for what it does not declare, the title selected to be typed over.
      * An editor it replaces on top has nothing unsaved: the import queue waits that out. The draft goes to disk at once, as
      * the only copy of a share the iOS share extension's inbox lets go of. False, opening nothing, where every picture was refused.
+     * A page's text the import cropped offers its whole page ([WholePageOffer]).
      */
     suspend fun openNewSongEditor(song: ImportPlan.SongEntry, suggestion: SharedTextTitle?): Boolean {
         val isPictureSong = song.isPictureSong
@@ -194,16 +196,9 @@ internal class EditorSession(
         val suggestion = suggestion ?: SharedTextTitle(title = song.title, artist = null).takeIf { isPictureSong }
         arePreferencesLoaded.first { it }
         val placeholderTitle = LocalizedStrings.get(Res.string.new_song_placeholder_title)
-        val draft = editorTextOf(
-            useCases.draftSongFromText(
-                text = text,
-                placeholderTitle = placeholderTitle,
-                placeholderArtist = LocalizedStrings.get(Res.string.new_song_placeholder_artist),
-                suggestedTitle = suggestion?.title,
-                suggestedArtist = suggestion?.artist,
-            )
-        )
+        val draft = editorTextOf(useCases.newSongDraft(text, suggestion))
         onEditorTextChanged(fileName = NEW_SONG_FILE_NAME, text = draft)
+        wholePage.offer(draft = draft, wholePageDraft = song.wholePageText?.let { editorTextOf(useCases.newSongDraft(it, suggestion)) })
         retainedEditorField = NEW_SONG_FILE_NAME to TextFieldState(initialText = draft, initialSelection = placeholderTitleSelection(draft, suggestion?.title ?: placeholderTitle))
         updateBackStack {
             if (lastOrNull() is CampfireDestination.SongEditor) removeAt(lastIndex)

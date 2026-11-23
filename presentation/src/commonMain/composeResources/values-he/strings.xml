@@ -996,6 +996,9 @@
     <string name="song_editor_shortcuts">קיצורים</string>
     <string name="song_editor_show_shortcuts">הצגת קיצורים</string>
     <string name="song_editor_hide_shortcuts">הסתרת קיצורים</string>
+    <string name="song_editor_page_cropped">עומס הדף הוסר</string>
+    <string name="song_editor_use_whole_page">שימוש בדף כולו</string>
+    <string name="song_editor_keep_cropped">השארת השיר בלבד</string>
     <string name="song_editor_insert_chord">אקורד</string>
     <string name="song_editor_insert_annotation">הערה מעל השורה</string>
     <string name="song_editor_format_bold">מודגש</string>

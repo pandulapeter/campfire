@@ -956,6 +956,9 @@
     <string name="song_editor_shortcuts">Atalhos</string>
     <string name="song_editor_show_shortcuts">Mostrar atalhos</string>
     <string name="song_editor_hide_shortcuts">Ocultar atalhos</string>
+    <string name="song_editor_page_cropped">Elementos supérfluos da página removidos</string>
+    <string name="song_editor_use_whole_page">Usar a página inteira</string>
+    <string name="song_editor_keep_cropped">Manter só a música</string>
     <string name="song_editor_insert_chord">Acorde</string>
     <string name="song_editor_insert_annotation">Anotação</string>
     <string name="song_editor_format_bold">Negrito</string>

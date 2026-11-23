@@ -954,6 +954,9 @@
     <string name="song_editor_shortcuts">Scorciatoie</string>
     <string name="song_editor_show_shortcuts">Mostra scorciatoie</string>
     <string name="song_editor_hide_shortcuts">Nascondi scorciatoie</string>
+    <string name="song_editor_page_cropped">Elementi superflui della pagina rimossi</string>
+    <string name="song_editor_use_whole_page">Usa l\'intera pagina</string>
+    <string name="song_editor_keep_cropped">Mantieni solo la canzone</string>
     <string name="song_editor_insert_chord">Accordo</string>
     <string name="song_editor_insert_annotation">Annotazione</string>
     <string name="song_editor_format_bold">Grassetto</string>
