@@ -301,15 +301,43 @@ class PastedSongControllerTest {
     }
 
     @Test
-    fun `where no page can be read a page address says to copy the page itself`() = runTest {
+    fun `where no page can be read a page address opens the steps for copying it from the browser`() = runTest {
         isPageLoadingSupported = false
         isPageLoadingEnabled = true
         val controller = controller()
         controller.newSongFromText("https://example.com/song")
-        controller.importSharedText(SharedTextPayload(texts = listOf("Check this out: https://example.com/song"), subject = null))
-        assertEquals(listOf(Message.PageLinkNotReadHere, Message.PageLinkNotReadHere), messages)
+        assertEquals(DialogType.PageLink("https://example.com/song"), dialogHost.visibleDialog.value)
+        dialogHost.dismissDialog()
+        controller.importSharedText(SharedTextPayload(texts = listOf("Check this out: https://example.com/other"), subject = null))
+        assertEquals(DialogType.PageLink("https://example.com/other"), dialogHost.visibleDialog.value)
+        assertTrue(messages.isEmpty())
         assertTrue(pages.isEmpty())
         assertTrue(queued.isEmpty())
+    }
+
+    @Test
+    fun `a page copied in the browser becomes a new song once what asked for it is put away`() = runTest {
+        val controller = controller()
+        var accepted = 0
+        controller.newSongFromCopiedPage({ ClipboardText.Text("Menu\nAm  C\nHello") }) { accepted++ }
+        runCurrent()
+        assertEquals(1, accepted)
+        val (files, isNewSongFromText) = queued.single()
+        assertTrue(isNewSongFromText)
+        assertTrue(files.single().isPageText)
+    }
+
+    @Test
+    fun `a clipboard still holding the address keeps the copy steps up and says to copy the page`() = runTest {
+        val controller = controller()
+        var accepted = 0
+        controller.newSongFromCopiedPage({ ClipboardText.Text("https://example.com/song") }) { accepted++ }
+        controller.newSongFromCopiedPage({ ClipboardText.None }) { accepted++ }
+        runCurrent()
+        assertEquals(0, accepted)
+        assertEquals(listOf(Message.PageNotCopiedYet, Message.ClipboardEmpty), messages)
+        assertTrue(queued.isEmpty())
+        assertTrue(pages.isEmpty())
     }
 }
 

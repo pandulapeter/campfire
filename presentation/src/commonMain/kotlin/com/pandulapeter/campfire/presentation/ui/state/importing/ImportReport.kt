@@ -32,7 +32,8 @@ sealed interface ImportReport {
      * and [neededBytes] the free space an [ImportFailure.NO_SPACE] import needs, where that is known. Not [canRetry]
      * where nothing is left to read again: an archive that arrived could not be received whole, and the stream or the
      * grant it was read through is gone, so the user has to bring it again; nor for an [ImportFailure.WRAPPED_ARCHIVE],
-     * which reading again could only refuse again (the screen offers Done instead).
+     * which reading again could only refuse again (the screen offers Done instead). [pageAddress] is the page a shared or
+     * pasted address named, where that is what was not read, for the screen to offer bringing it over from the browser.
      */
     data class Failed(
         val reason: ImportFailure,
@@ -40,6 +41,7 @@ sealed interface ImportReport {
         val sourceCount: Int = 1,
         val neededBytes: Long? = null,
         val canRetry: Boolean = true,
+        val pageAddress: String? = null,
     ) : ImportReport
 
     /**

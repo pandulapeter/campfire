@@ -261,8 +261,9 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
   mode included, with a share's page title, else placeholders, for a missing title and artist; its page clutter is
   cropped on the device by the page model (`:libs:pagesong`), and **Use the whole page** brings it back; nothing is
   written before Save, which needs a title; a shared or pasted page's address alone (a call to action around it
-  included) is read once on the device where Pages from links allows it (Android, iOS, desktop; the web a sentence
-  offering the app), and a Campfire share link is opened as its own import: `presentation`.
+  included) is read once on the device where Pages from links allows it (Android, iOS, desktop); a page left unread
+  (no web view, or the read failed) opens steps for copying it from the browser, the web's also offering the app, and a
+  Campfire share link is opened as its own import: `presentation`.
 - Files and text dragged onto the app are taken on every platform (Android and iOS from another app), read only mode
   included: `presentation`.
 - A share from another app (Android, the iOS share extension) is imported like a paste or an "Open with"; the

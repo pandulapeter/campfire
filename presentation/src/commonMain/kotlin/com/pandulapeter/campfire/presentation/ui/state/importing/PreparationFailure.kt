@@ -45,7 +45,14 @@ internal class ArchiveNotReceivedException(cause: Throwable) : Exception("An arc
 
 /** The failure stage that says why [source] could not be read. */
 internal fun Preparation.Failed.reportFor(source: ImportSource) =
-    ImportReport.Failed(reason = reason, sourceName = source.name, sourceCount = source.fileCount, neededBytes = neededBytes, canRetry = canRetry)
+    ImportReport.Failed(
+        reason = reason,
+        sourceName = source.name,
+        sourceCount = source.fileCount,
+        neededBytes = neededBytes,
+        canRetry = canRetry,
+        pageAddress = (source as? ImportSource.Page)?.url?.takeIf { reason == ImportFailure.PAGE_NOT_READ || reason == ImportFailure.PAGE_UNREACHABLE },
+    )
 
 internal val Preparation.Failed.message get() = if (reason == ImportFailure.NO_SPACE) Message.StorageFull else Message.ImportFailed
 

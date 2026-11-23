@@ -61,10 +61,8 @@ import com.pandulapeter.campfire.presentation.resources.import_result_songs
 import com.pandulapeter.campfire.presentation.resources.onboarding_clipboard_link_open
 import com.pandulapeter.campfire.presentation.resources.onboarding_clipboard_link_question
 import com.pandulapeter.campfire.presentation.resources.paste_clipboard_empty
+import com.pandulapeter.campfire.presentation.resources.page_not_copied_yet
 import com.pandulapeter.campfire.presentation.resources.paste_only_links
-import com.pandulapeter.campfire.presentation.resources.paste_page_link
-import com.pandulapeter.campfire.presentation.resources.paste_page_link_get_app
-import com.pandulapeter.campfire.presentation.resources.paste_page_link_web
 import com.pandulapeter.campfire.presentation.resources.paste_too_large
 import com.pandulapeter.campfire.presentation.resources.shared_link_from_newer_version
 import com.pandulapeter.campfire.presentation.resources.clipboard_not_campfire_link
@@ -108,9 +106,6 @@ import com.pandulapeter.campfire.presentation.resources.settings_sync_reconnect_
 import com.pandulapeter.campfire.presentation.localization.pluralTextResource
 import com.pandulapeter.campfire.presentation.localization.textResource
 import com.pandulapeter.campfire.presentation.ui.firstRun.FirstRunController
-import com.pandulapeter.campfire.presentation.ui.platform.AppBuild
-import com.pandulapeter.campfire.presentation.ui.platform.WEBSITE_URL
-import com.pandulapeter.campfire.presentation.ui.platform.appBuild
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportController
 
 /**
@@ -125,7 +120,6 @@ internal fun Messages(
     messageSink: MessageSink,
     importController: ImportController,
     firstRunController: FirstRunController,
-    urlOpener: (String) -> Unit,
 ) {
     // Only the head of the view model's queue is read: the text of a message can only be built in a composition
     // (string resources are composable), and two identical results in a row are still two messages - which is what
@@ -138,11 +132,9 @@ internal fun Messages(
     val text = messageText(head?.value)
     val importFinished = head?.value as? Message.ImportFinished
     val isClipboardLinkOffer = head?.value == Message.ClipboardLinkOffered
-    val isAppOffer = head?.value == Message.PageLinkNotReadHere && appBuild == AppBuild.WEB
     val actionLabel = when {
         importFinished?.hasDetails == true -> stringResource(Res.string.import_details)
         isClipboardLinkOffer -> stringResource(Res.string.onboarding_clipboard_link_open)
-        isAppOffer -> stringResource(Res.string.paste_page_link_get_app)
         else -> null
     }
     LaunchedEffect(head?.index) {
@@ -156,7 +148,6 @@ internal fun Messages(
                 when {
                     importFinished != null -> importController.openImportReport(importFinished.result)
                     isClipboardLinkOffer -> firstRunController.openClipboardLink()
-                    isAppOffer -> urlOpener("$WEBSITE_URL#download")
                 }
             } else if (isClipboardLinkOffer) {
                 // Let go, the offer is not kept for anything to read the clipboard later.
@@ -251,11 +242,7 @@ private fun messageText(current: Message?): String? =
         Message.PastedOnlyLinks -> stringResource(Res.string.paste_only_links)
         Message.PastedTextTooLarge -> stringResource(Res.string.paste_too_large)
         Message.SharedLinkNotImported -> stringResource(Res.string.shared_link_not_imported)
-        // The browser has no web view to read a page in, so the web build also offers the app, which reads the song from
-        // its link alone. A desktop without a web view is offered nothing: it is the app already.
-        Message.PageLinkNotReadHere -> stringResource(
-            if (appBuild == AppBuild.WEB) Res.string.paste_page_link_web else Res.string.paste_page_link,
-        )
+        Message.PageNotCopiedYet -> stringResource(Res.string.page_not_copied_yet)
         Message.SharedLinkFromNewerVersion -> stringResource(Res.string.shared_link_from_newer_version)
         Message.LinkCopied -> stringResource(Res.string.share_link_copied)
         Message.QrCodeSaved -> stringResource(Res.string.share_qr_code_saved)

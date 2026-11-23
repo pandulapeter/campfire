@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.state.importing
 import com.pandulapeter.campfire.chordpro.convert.PageTitle
 import com.pandulapeter.campfire.data.model.share.SharedLink
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.messages.Message
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
@@ -80,7 +81,8 @@ internal class PastedSongController(
      * is the user asking for a song, and the share is the one way in that mode leaves. One that arrives while the editor
      * holds unsaved text waits in the import queue for that editor to be left. A text that is a Campfire link, and nothing
      * else, is that link's import instead, and one that is another page's address the page read once on the device, where
-     * the platform and the Pages from links switch allow it (see [pageAddressIn]).
+     * the platform and the Pages from links switch allow it (see [pageAddressIn]); where the platform cannot read pages at
+     * all, the address opens [DialogType.PageLink], which walks the user through copying the page in their browser.
      *
      * @param subject What the text was called where it came from, which titles the new song, and names its artist where
      *   it says "<title> Chords by <artist>", for what the text does not declare.
@@ -94,14 +96,20 @@ internal class PastedSongController(
         val pageAddress = pageAddressIn(text)
         return when {
             text.isBlank() -> answered(Message.ClipboardEmpty)
-            pageAddress != null && !isPageLoadingSupported -> answered(Message.PageLinkNotReadHere)
+            pageAddress != null && !isPageLoadingSupported -> {
+                dialogHost.showDialog(DialogType.PageLink(pageAddress))
+                CompletableDeferred(Unit)
+            }
             pageAddress != null && isPageLoadingEnabled() -> enqueueImport(ImportSource.Page(pageAddress), true, PageTitle.of(subject))
             text.isOnlyLinks() || text.isLinkWithTitle() -> answered(onlyLinks)
             !text.fitsImport() -> answered(Message.PastedTextTooLarge)
-            // From a web page or another app, so its page clutter is cropped (ImportedFile.isPageText).
-            else -> enqueueImport(ImportSource.Files(sharedTextsToImportedFiles(listOf(text), subject).map { it.copy(isPageText = true) }), true, PageTitle.of(subject))
+            else -> pageTextImport(text = text, subject = subject)
         }
     }
+
+    /** From a web page or another app, so its page clutter is cropped (`ImportedFile.isPageText`). */
+    private fun pageTextImport(text: String, subject: String?) =
+        enqueueImport(ImportSource.Files(sharedTextsToImportedFiles(listOf(text), subject).map { it.copy(isPageText = true) }), true, PageTitle.of(subject))
 
     /**
      * Texts shared to Campfire from another app. One text is a song to make, as a paste is, or the link's import where it
@@ -134,19 +142,47 @@ internal class PastedSongController(
     fun newSongFromClipboard(reader: ClipboardTextReader) {
         if (isImporting.value) return
         scope.launch {
-            val clipboardText = try {
-                reader.read()
-            } catch (exception: CancellationException) {
-                throw exception
-            } catch (exception: Exception) {
-                println("Could not read the clipboard: ${exception.message}")
-                ClipboardText.None
-            }
-            when (clipboardText) {
+            when (val clipboardText = readClipboard(reader)) {
                 is ClipboardText.Text -> newSongFromText(clipboardText.value)
                 ClipboardText.None -> messageSink.sendMessage(Message.ClipboardEmpty)
                 is ClipboardText.Refused -> messageSink.sendMessage(Message.ClipboardRefused(clipboardText.message))
             }
         }
+    }
+
+    /**
+     * [DialogType.PageLink]'s Paste: the page the user copied in their browser, read from the clipboard and made a new
+     * song as a paste is, after [onAccepted] has put away what asked for it. A clipboard still holding an address (the
+     * page's, or links alone) is no page yet, and is answered with a sentence in the sheet, which stays up for the copy;
+     * nothing on the clipboard, or a refusal, is answered as the paste shortcut answers it. Launched here for the reason
+     * [newSongFromClipboard] is.
+     */
+    fun newSongFromCopiedPage(reader: ClipboardTextReader, onAccepted: () -> Unit) {
+        if (isImporting.value) return
+        scope.launch {
+            val text = when (val clipboardText = readClipboard(reader)) {
+                is ClipboardText.Text -> clipboardText.value
+                ClipboardText.None -> return@launch messageSink.sendMessage(Message.ClipboardEmpty)
+                is ClipboardText.Refused -> return@launch messageSink.sendMessage(Message.ClipboardRefused(clipboardText.message))
+            }
+            when {
+                text.isBlank() -> messageSink.sendMessage(Message.ClipboardEmpty)
+                pageAddressIn(text) != null || text.isOnlyLinks() || text.isLinkWithTitle() -> messageSink.sendMessage(Message.PageNotCopiedYet)
+                !text.fitsImport() -> messageSink.sendMessage(Message.PastedTextTooLarge)
+                else -> {
+                    onAccepted()
+                    pageTextImport(text = text, subject = null)
+                }
+            }
+        }
+    }
+
+    private suspend fun readClipboard(reader: ClipboardTextReader) = try {
+        reader.read()
+    } catch (exception: CancellationException) {
+        throw exception
+    } catch (exception: Exception) {
+        println("Could not read the clipboard: ${exception.message}")
+        ClipboardText.None
     }
 }

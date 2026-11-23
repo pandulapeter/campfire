@@ -996,6 +996,7 @@ class ImportControllerQueueTest {
         val failed = assertIs<ImportReport.Failed>(reportState.importReport.value)
         assertEquals(ImportFailure.PAGE_NOT_READ, failed.reason)
         assertEquals("example.com", failed.sourceName)
+        assertEquals(PAGE, failed.pageAddress)
         assertEquals(0, prepareCount)
         pageSongLines = { SONG_LINES }
         controller.retryImport()
@@ -1034,7 +1035,9 @@ class ImportControllerQueueTest {
         startController()
         enqueuePage()
         settle()
-        assertEquals(ImportFailure.PAGE_UNREACHABLE, assertIs<ImportReport.Failed>(reportState.importReport.value).reason)
+        val failed = assertIs<ImportReport.Failed>(reportState.importReport.value)
+        assertEquals(ImportFailure.PAGE_UNREACHABLE, failed.reason)
+        assertEquals(PAGE, failed.pageAddress)
         assertEquals(0, prepareCount)
         loadedPage = LoadedPage.Read(text = "G\nHello", title = "Example", address = PAGE)
         controller.retryImport()

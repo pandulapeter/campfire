@@ -70,9 +70,15 @@ which the script checks; everything else is handed the holders, state, and callb
   network, a host not answering, nothing drawn in time) is the failure stage's `PAGE_UNREACHABLE` sentence (check the
   connection); one not read otherwise (a bot check, an empty page), or one the page model finds no song on (asked before
   conversion; a model that cannot run throws, and the page is converted whole), is `PAGE_NOT_READ`'s (open it in the
-  browser, bring the page itself); both with Try again, which reads it again. With Pages from links off it is the links-only snackbar as before; where the platform cannot
-  read pages (the web, a desktop without WebView2 or WebKitGTK) it is `Message.PageLinkNotReadHere`: copy the page
-  itself, and on the web, get the app (an action opening the website's downloads).
+  browser, bring the page itself); both with Try again, which reads it again. With Pages from links off it is the
+  links-only snackbar as before.
+- **Every page left unread is brought over by hand** in one sheet (`DialogType.PageLink`): where the platform cannot
+  read pages (the web, a desktop without WebView2 or WebKitGTK) a pasted, dropped, or shared address opens it at once,
+  and both page failures offer it under their sentence. Open the page (the system browser, a new tab on the web), select
+  everything and copy it, then Paste (or Ctrl / Cmd + V in the sheet), which makes the song as a pasted page
+  (`PastedSongController.newSongFromCopiedPage`); a clipboard still holding an address keeps the sheet up with a
+  sentence, and a paste over the failure closes that import screen first, since a text waits behind a failure on
+  screen. Only the web also offers the app (the website's downloads), which reads the song from the link alone.
 - A text that is one Campfire link and nothing else (`sharedLinkIn`) is that link's import; a link beside other words
   stays text. Every way ends in `ImportController.importSharedLink`: a newer version's link is a snackbar, any other is
   downloaded from the address `SharedLink.Readable.downloadUrl` builds (never one the text names) and reviewed, unless

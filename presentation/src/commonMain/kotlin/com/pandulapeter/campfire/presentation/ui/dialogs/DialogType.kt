@@ -279,6 +279,12 @@ sealed interface DialogType {
      */
     data class PictureLink(val editorFileName: String) : DialogType
 
+    /**
+     * A web page's [address] that Campfire cannot read itself (no web view on the platform, or the page not read), with
+     * the steps for bringing the song over from the browser by copy and paste, and on the web, the app offered.
+     */
+    data class PageLink(val address: String) : DialogType
+
     /** The current version's introduction, shown once after the first installed version. */
     data object WhatsNew : DialogType
 

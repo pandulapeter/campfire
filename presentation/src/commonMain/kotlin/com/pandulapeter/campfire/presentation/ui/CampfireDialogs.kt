@@ -354,18 +354,23 @@ private fun CampfireDialog(
 
         DialogType.ConfirmExit, DialogType.StopImportBeforeExit -> ExitQuestionDialog(dialog = dialog, appExitController = viewModel.appExitController, dialogHost = viewModel.dialogHost)
 
-        DialogType.UnsavedChanges -> UnsavedChangesDialog(
-            isSaving = viewModel.editorSession.isSavingSong.collectAsStateWithLifecycle().value,
-            onCancel = viewModel.dialogHost::dismissDialog,
-            onDiscard = viewModel.editorSession::leaveEditorWithoutSaving,
-            onSave = viewModel.editorSession::saveEditorChangesAndLeave,
-        )
+        DialogType.UnsavedChanges -> EditorUnsavedChangesDialog(viewModel)
 
         DialogType.WhatsNew -> RecordedWhatsNewDialog(viewModel)
 
         DialogType.SpreadTheWord -> SpreadTheWordHost(viewModel = viewModel, urlOpener = urlOpener)
+        is DialogType.PageLink -> PageLinkHost(viewModel = viewModel, dialog = dialog, urlOpener = urlOpener)
     }
 }
+
+/** [UnsavedChangesDialog] over the editor session it asks about. */
+@Composable
+private fun EditorUnsavedChangesDialog(viewModel: CampfireViewModel) = UnsavedChangesDialog(
+    isSaving = viewModel.editorSession.isSavingSong.collectAsStateWithLifecycle().value,
+    onCancel = viewModel.dialogHost::dismissDialog,
+    onDiscard = viewModel.editorSession::leaveEditorWithoutSaving,
+    onSave = viewModel.editorSession::saveEditorChangesAndLeave,
+)
 
 /** [SongFiltersSheet] over the song list's filters as the view model holds them. */
 @Composable

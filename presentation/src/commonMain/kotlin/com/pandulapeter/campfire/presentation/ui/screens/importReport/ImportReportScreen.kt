@@ -164,7 +164,7 @@ internal fun ImportReportScreen(
                         modifier = Modifier.fillMaxSize().padding(contentPadding.only(bottom = true)),
                         contentAlignment = Alignment.Center,
                     ) {
-                        ImportFailedContent(failure = stage)
+                        ImportFailedContent(failure = stage, onCopyPage = { viewModel.dialogHost.showDialog(DialogType.PageLink(it)) })
                     }
 
                     is ImportReport.Review -> ReportList(

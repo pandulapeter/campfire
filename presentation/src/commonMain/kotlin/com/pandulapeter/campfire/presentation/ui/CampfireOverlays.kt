@@ -81,7 +81,6 @@ internal fun BoxScope.CampfireOverlays(
             messageSink = viewModel.messageSink,
             importController = viewModel.importController,
             firstRunController = viewModel.firstRunController,
-            urlOpener = urlOpener,
         )
     }
     MessagesPresenter(
