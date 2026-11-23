@@ -144,10 +144,11 @@ cannot tell from no answer.
   or the page was still loading with nothing readable at 20 s, which trying again may get past; else `UNREADABLE` (a
   bot check, an error page, a page loaded with no text).
 - Android: a `WebView` attached to no window, laid out at the screen's size, scripts on, no file or content access,
-  pictures not loaded, third-party cookies refused; navigations and every subresource refused off a public `https` host
-  (`data:` and `blob:` aside); its cache, cookies, and storage emptied once it is let go of. A 404 or 410 fails the
-  load; a 403 or 503 may be a bot check that clears. A failed host lookup (also what no connection reports),
-  connection, timeout, or I/O error is the network's.
+  pictures not loaded, third-party cookies refused; navigations and every subresource (a service worker's too, through
+  the process-wide `ServiceWorkerClient` set with the first view) refused off a public `https` host (`data:` and
+  `blob:` aside); its cache, cookies, and storage emptied once it is let go of. A 404 or 410 fails the load; a 403 or
+  503 may be a bot check that clears. A failed host lookup (also what no connection reports), connection, timeout, or
+  I/O error is the network's.
 - iOS: a `WKWebView` in no window with a non-persistent data store; every navigation (frames too, which may also be
   `about:`, `data:`, `blob:`) refused off a public `https` host. WebKit cannot refuse a subresource without a content
   rule list, so those are the page's, as in Safari. An `NSURLErrorDomain` failure of no connection, a host not found,
