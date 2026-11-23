@@ -36,7 +36,9 @@ internal class OffscreenPageSource(
     override val canLoadPages = true
 
     override suspend fun load(address: String): LoadedPage {
-        val trimmed = address.trim()
+        // An http address the user saw a moment ago (an old forum link, one typed by hand) is read over TLS instead of
+        // refused: nothing is ever fetched in plain text, and a host with no TLS fails to connect as any other would.
+        val trimmed = address.trim().replace(HTTP_SCHEME, "https://")
         if (!isPublicHttpsAddress(trimmed)) return LoadedPage.NotRead(LoadedPage.NotRead.Reason.UNREADABLE)
         var latest: PageSnapshot? = null
         var lastLook: PageLook? = null
@@ -89,5 +91,6 @@ internal class OffscreenPageSource(
         val POLL_INTERVAL = 500.milliseconds
         val QUIET_PERIOD = 1500.milliseconds
         val TIME_LIMIT = 20.seconds
+        private val HTTP_SCHEME = Regex("^http://", RegexOption.IGNORE_CASE)
     }
 }

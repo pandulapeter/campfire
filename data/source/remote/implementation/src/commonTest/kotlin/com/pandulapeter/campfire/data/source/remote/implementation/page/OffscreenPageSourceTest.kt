@@ -23,12 +23,20 @@ class OffscreenPageSourceTest {
 
     @Test
     fun `an address that is not a public https one is never opened`() = runTest {
-        listOf("http://chords.example.com/a", "https://localhost/a", "https://10.0.0.1/a", "not an address").forEach { address ->
+        listOf("http://localhost/a", "https://localhost/a", "https://10.0.0.1/a", "not an address").forEach { address ->
             val browser = FakeBrowser { PageLook(snapshot = null, isLoaded = false, hasFailed = false, isUnreachable = false) }
 
             assertEquals(UNREADABLE, source(browser).load(address), address)
             assertFalse(browser.isOpened, address)
         }
+    }
+
+    @Test
+    fun `an http address is opened by its https form`() = runTest {
+        val browser = FakeBrowser { PageLook(snapshot = PageSnapshot(text = SONG, title = "Song", address = ADDRESS), isLoaded = true, hasFailed = false, isUnreachable = false) }
+
+        assertIs<LoadedPage.Read>(source(browser).load(" HTTP://chords.example.com/wonderwall "))
+        assertEquals(ADDRESS, browser.openedAddress)
     }
 
     @Test

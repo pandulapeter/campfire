@@ -142,7 +142,7 @@ cannot tell from no answer.
   20 s; a bot check (`PageSnapshot.isBotCheck`, short pages only) is waited past, never taken. The view is let go of
   however the read ends. Nothing read is `UNREACHABLE` where the load failed for the network (`PageLook.isUnreachable`)
   or the page was still loading with nothing readable at 20 s, which trying again may get past; else `UNREADABLE` (a
-  bot check, an error page, a page loaded with no text).
+  bot check, an error page, a page loaded with no text). An `http` address is read by its `https` form.
 - Android: a `WebView` attached to no window, laid out at the screen's size, scripts on, no file or content access,
   pictures not loaded, third-party cookies refused; navigations and every subresource (a service worker's too, through
   the process-wide `ServiceWorkerClient` set with the first view) refused off a public `https` host (`data:` and
