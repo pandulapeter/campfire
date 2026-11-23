@@ -31,12 +31,26 @@ import kotlin.test.assertTrue
 internal class PredictiveBackTest {
 
     @Test
-    fun `a back gesture started while a song is still sliding in follows the finger and stays when called off`() = runAppTest {
+    fun `a back gesture started while a song is still sliding in lets it land and keeps it when called off`() = runAppTest {
         holdBackGestureDuringPush()
         val heldStart = songDetailsStart()
         cancelBackGesture()
         mainClock.advanceTimeBy(SETTLE_MILLIS)
         val restingStart = songDetailsStart()
+        assertTrue(
+            abs(heldStart - restingStart) < TOLERANCE * TestWindow.PHONE.width.value,
+            "The song details screen was held ${heldStart - restingStart} away from where it rests.",
+        )
+    }
+
+    @Test
+    fun `a back gesture after one called off mid slide follows the finger`() = runAppTest {
+        holdBackGestureDuringPush()
+        cancelBackGesture()
+        mainClock.advanceTimeBy(SETTLE_MILLIS)
+        val restingStart = songDetailsStart()
+        dragBackGestureAndHold()
+        val heldStart = songDetailsStart()
         val fingerOffset = HELD_PROGRESS * TestWindow.PHONE.width.value
         assertTrue(
             abs(heldStart - restingStart - fingerOffset) < TOLERANCE * TestWindow.PHONE.width.value,
@@ -57,6 +71,11 @@ internal class PredictiveBackTest {
         mainClock.autoAdvance = false
         onNode(hasText(RISING_SUN_TITLE) and hasClickAction()).performTouchInput { click() }
         mainClock.advanceTimeBy(PUSH_MILLIS_BEFORE_GESTURE)
+        dragBackGestureAndHold()
+    }
+
+    /** Starts a back gesture and drags it [HELD_PROGRESS] of the way across, where it is held until things settle. */
+    private fun AppTestScope.dragBackGestureAndHold() {
         startBackGesture()
         HELD_STEPS.forEach { step ->
             mainClock.advanceTimeBy(DRAG_STEP_MILLIS)

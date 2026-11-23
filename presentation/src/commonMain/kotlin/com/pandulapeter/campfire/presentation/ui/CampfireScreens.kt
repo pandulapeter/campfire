@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui
 
 import com.pandulapeter.campfire.presentation.ui.chrome.KeyboardAwarePadding
+import com.pandulapeter.campfire.presentation.ui.chrome.MidTransitionBackHandler
 import com.pandulapeter.campfire.presentation.ui.chrome.NavigationChrome
 import com.pandulapeter.campfire.presentation.ui.chrome.NavigationChromeKind
 import com.pandulapeter.campfire.presentation.ui.chrome.NAVIGATION_RAIL_CONTENT_GAP
@@ -51,11 +52,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -104,6 +107,7 @@ internal fun CampfireScreens(
     chromeInScreens: Boolean,
     exportTransition: ExportTransition,
     metronomeBeat: MetronomeIconBeat,
+    isNavigationTransitionRunning: Boolean,
     onNavigationTransitionRunningChanged: (Boolean) -> Unit,
 ) {
     val backStack = viewModel.navigator.backStack
@@ -255,17 +259,7 @@ internal fun CampfireScreens(
         modifier = Modifier.fillMaxSize()
     ) {
         NavDisplay(
-            // The export screen is dealt over the screens the way a destination is, so they give way to it the same way.
-            modifier = Modifier
-                .fillMaxSize()
-                .graphicsLayer {
-                    translationX = endwardTranslation(
-                        distance = -backgroundSlideOffset((exportTransition.progress.value * size.width).roundToInt()).toFloat(),
-                        layoutDirection = layoutDirection,
-                    )
-                }
-                .coveredScreenScrim(scrimColor) { exportTransition.progress.value }
-                .then(if (isExportCovering) Modifier.clearAndSetSemantics { } else Modifier),
+            modifier = Modifier.fillMaxSize().underExportScreen(exportTransition, layoutDirection, scrimColor, isExportCovering),
             backStack = backStack,
             // NavDisplay's own back handler is the system's back, which completes a predictive gesture as often as not.
             onBack = { viewModel.navigator.navigateBack(isPredictiveBackCompleted = navigationScrim.isPredictiveBack) },
@@ -396,6 +390,12 @@ internal fun CampfireScreens(
                 }
             },
         )
+        // After NavDisplay, so that it is heard before its handler, and before the overlays, whose own handlers come first.
+        MidTransitionBackHandler(
+            isTransitionRunning = isNavigationTransitionRunning,
+            canGoBack = backStack.size > 1,
+            onBack = viewModel.navigator::navigateBack,
+        )
         CampfireOverlays(
             viewModel = viewModel,
             urlOpener = urlOpener,
@@ -410,6 +410,21 @@ internal fun CampfireScreens(
         )
     }
 }
+
+/** The export screen is dealt over the screens the way a destination is, so they give way to it the same way. */
+private fun Modifier.underExportScreen(
+    exportTransition: ExportTransition,
+    layoutDirection: LayoutDirection,
+    scrimColor: Color,
+    isExportCovering: Boolean,
+) = graphicsLayer {
+    translationX = endwardTranslation(
+        distance = -backgroundSlideOffset((exportTransition.progress.value * size.width).roundToInt()).toFloat(),
+        layoutDirection = layoutDirection,
+    )
+}
+    .coveredScreenScrim(scrimColor) { exportTransition.progress.value }
+    .then(if (isExportCovering) Modifier.clearAndSetSemantics { } else Modifier)
 
 /**
  * Every entry reports whether the [NavDisplay] transition hosting it is running, so that the view model knows when

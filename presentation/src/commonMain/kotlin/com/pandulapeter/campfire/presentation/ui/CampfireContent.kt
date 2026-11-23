@@ -146,6 +146,7 @@ internal fun CampfireContent(
                 chromeInScreens = chromeInScreens,
                 exportTransition = exportTransition,
                 metronomeBeat = metronomeBeat,
+                isNavigationTransitionRunning = isNavigationTransitionRunning,
                 onNavigationTransitionRunningChanged = { isNavigationTransitionRunning = it },
             )
             OnboardingCelebration(
