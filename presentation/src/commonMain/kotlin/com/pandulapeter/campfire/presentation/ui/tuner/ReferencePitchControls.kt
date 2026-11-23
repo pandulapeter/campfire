@@ -19,6 +19,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -38,6 +39,10 @@ import com.pandulapeter.campfire.presentation.ui.components.controls.Stepper
 import com.pandulapeter.campfire.presentation.ui.components.controls.StepperEntry
 import com.pandulapeter.campfire.presentation.ui.components.appBar.NEW_ITEM_BUTTON_GAP
 import com.pandulapeter.campfire.presentation.ui.components.menu.NEW_ITEM_BUTTON_SIZE
+import com.pandulapeter.campfire.presentation.ui.components.tabChrome.NEW_BUTTON_Z_INDEX
+import com.pandulapeter.campfire.presentation.ui.components.tabChrome.TabChromeElement
+import com.pandulapeter.campfire.presentation.ui.components.tabChrome.rememberSharedTabChrome
+import com.pandulapeter.campfire.presentation.ui.components.tabChrome.sharedTabChrome
 import com.pandulapeter.campfire.presentation.ui.metronome.PlayStopMark
 import com.pandulapeter.campfire.presentation.ui.songView.songControlHeight
 import com.pandulapeter.campfire.tuner.api.Pitch
@@ -49,6 +54,8 @@ import org.jetbrains.compose.resources.painterResource
  * circle of the list screens' bar, where they stand on the Tuner tab (see `ToolInstrumentSetting`), under the instrument
  * where the line is too narrow for both, the pill as tall as the instrument's beside it, as on a song's page, and under the strings of song details' tuner sheet. There is no label to read; a
  * screen reader hears the note with the frequency.
+ *
+ * @param isTabChromePart Whether the circle is the Tuner tab's, which a tab swap carries over as the New button.
  */
 @Composable
 internal fun ReferencePitchControls(
@@ -58,6 +65,7 @@ internal fun ReferencePitchControls(
     isReferenceTonePlaying: Boolean,
     onReferencePitchChanged: (Int) -> Unit,
     onToggleReferenceTone: () -> Unit,
+    isTabChromePart: Boolean = false,
 ) = Row(
     modifier = modifier,
     verticalAlignment = Alignment.CenterVertically,
@@ -85,14 +93,21 @@ internal fun ReferencePitchControls(
     )
     val description = stringResource(Res.string.tuner_play_reference, noteName(REFERENCE_NOTE, notation))
     CampfireTooltip(label = description) {
+        // On the Tuner tab, a tab swap carries it over as the New button whose spot it takes on a wide line: one
+        // container, only the icon crossing (see SharedTabChrome), which draws the container in its stead.
+        val containerColor = MaterialTheme.colorScheme.primary
+        val chrome = if (isTabChromePart) rememberSharedTabChrome(TabChromeElement.NEW_BUTTON, containerColor = containerColor) else null
+        val drawnContainerColor = if (chrome == null) containerColor else Color.Transparent
         FilledIconToggleButton(
-            modifier = Modifier.size(NEW_ITEM_BUTTON_SIZE),
+            modifier = Modifier
+                .sharedTabChrome(chrome = chrome, zIndex = NEW_BUTTON_Z_INDEX, isContainerDrawnOutsideSwaps = true)
+                .size(NEW_ITEM_BUTTON_SIZE),
             checked = isReferenceTonePlaying,
             onCheckedChange = { onToggleReferenceTone() },
             colors = IconButtonDefaults.filledIconToggleButtonColors(
-                containerColor = MaterialTheme.colorScheme.primary,
+                containerColor = drawnContainerColor,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
-                checkedContainerColor = MaterialTheme.colorScheme.primary,
+                checkedContainerColor = drawnContainerColor,
                 checkedContentColor = MaterialTheme.colorScheme.onPrimary,
             ),
         ) {

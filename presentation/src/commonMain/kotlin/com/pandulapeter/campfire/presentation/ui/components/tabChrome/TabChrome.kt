@@ -55,7 +55,10 @@ internal enum class TabSwap {
 
 /** The parts of a tab that stay on screen while it is swapped for another, one key each, matched between the two. */
 internal enum class TabChromeElement {
-    /** The list screens' New button, and the one button pill standing on its spot on the Chords and the Scales tabs. */
+    /**
+     * The list screens' New button, and what stands on its spot on the tools: the one button pill on the Chords and the
+     * Scales tabs, the Metronome's play button, and the Tuner's reference tone (a row lower on a narrow line).
+     */
     NEW_BUTTON,
 
     /** The list screens' search pill, open or closed. */

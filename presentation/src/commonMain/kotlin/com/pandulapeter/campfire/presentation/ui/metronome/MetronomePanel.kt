@@ -29,10 +29,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -50,6 +52,10 @@ import com.pandulapeter.campfire.presentation.ui.components.CampfireTooltip
 import com.pandulapeter.campfire.presentation.ui.components.appBar.NEW_ITEM_BUTTON_END_INSET
 import com.pandulapeter.campfire.presentation.ui.components.menu.NEW_ITEM_BUTTON_SIZE
 import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
+import com.pandulapeter.campfire.presentation.ui.components.tabChrome.NEW_BUTTON_Z_INDEX
+import com.pandulapeter.campfire.presentation.ui.components.tabChrome.TabChromeElement
+import com.pandulapeter.campfire.presentation.ui.components.tabChrome.rememberSharedTabChrome
+import com.pandulapeter.campfire.presentation.ui.components.tabChrome.sharedTabChrome
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -152,13 +158,19 @@ internal fun MetronomePanel(
         }
         val label = stringResource(if (isPlaying) Res.string.metronome_stop else Res.string.metronome_start)
         CampfireTooltip(label = label, shortcut = playShortcut) {
+            // The tab's button stands on the New button's spot, so a tab swap carries it over as that button: one
+            // container, only the icon crossing (see SharedTabChrome), which draws the container in its stead.
+            val colors = IconButtonDefaults.filledIconButtonColors()
+            val chrome = if (isProminent) rememberSharedTabChrome(TabChromeElement.NEW_BUTTON, containerColor = colors.containerColor) else null
             FilledIconButton(
                 modifier = Modifier
+                    .sharedTabChrome(chrome = chrome, zIndex = NEW_BUTTON_Z_INDEX, isContainerDrawnOutsideSwaps = true)
                     .then(if (isProminent) Modifier.size(PROMINENT_PANEL_HEIGHT) else Modifier)
                     // The row already squashes it vertically, so this is what keeps the button round as it scales down.
                     .graphicsLayer { scaleX = contentProgress.value }
                     .semantics { contentDescription = label },
                 onClick = onPlayStop,
+                colors = if (chrome == null) colors else colors.copy(containerColor = Color.Transparent),
             ) {
                 PlayStopMark(
                     isPlaying = isPlaying,

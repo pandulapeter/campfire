@@ -25,12 +25,12 @@ The navigation chrome (bar, rail, transitions, and the Tools item).
 - **A tab swap carries the New button and the search pill over** (`components/tabChrome`): `NavDisplay` sits in a
   `SharedTransitionLayout` (`ScreenDeck`), each top level screen gets a `TabChromeScope` of its entry's visibility, and
   the specs mark the swap (`TabChrome.swap`, snapshot state: none for cards, so they move with their screen as before).
-  A part the other tab has too shares its rectangle on the spatial spring as **one surface**: only the copy being opened
-  (the one that stays) draws the container, its color going from the other's to its own (New ↔ Chords' and Scales'
-  Preferences pill: filled circle into tonal pill; New ↔ New: no change at all), never two containers crossfading; only
-  the icons cross, clipped to it, the opened one coming in whole under the left one before that goes, so a shared icon
-  never dims (`matchedContentAlpha`). One it lacks scales and fades on its own, drawn over both screens
-  (`isMatchFound`), since inside its screen it would blink out in 90 ms. Both are drawn in the layout's overlay.
+  The New button's spot is one part on every tab filling it: New, the Preferences pill, the Metronome's play button,
+  the Tuner's reference tone. Both copies draw in the overlay, never by Compose's shared bounds: their own rectangles (root
+  coordinates, read while drawing) and the opened copy's `presence` make **one travelling rectangle**, so they never
+  part, a reversed swap included. Only the opened copy draws the container, its color going from the other's to its own;
+  the icons ride it, clipped, a shared one never dimming (`matchedContentAlpha`). A part the other tab lacks scales and
+  fades alone, since inside its screen it would blink out in 90 ms. A back gesture moves every part linearly.
 - **A back gesture started mid-transition**: Android runs Google's newer NavDisplay (`androidx-navigation3-android`),
   which follows it. Elsewhere `MidTransitionBackHandler` (composed after `NavDisplay`) takes it and goes back on release,
   retargeting the running slide: the multiplatform 1.2.0 seeks the running transition to follow a finger, which replays

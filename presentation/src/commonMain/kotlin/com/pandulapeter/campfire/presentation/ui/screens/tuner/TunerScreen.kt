@@ -239,6 +239,7 @@ private fun TunerInstrumentRow(
         isReferenceTonePlaying = isReferenceTonePlaying,
         onReferencePitchChanged = onReferencePitchChanged,
         onToggleReferenceTone = onToggleReferenceTone,
+        isTabChromePart = true,
     )
 }
 

@@ -32,13 +32,14 @@
   gap follow the search's spring, the circle fades and scales in place (a clipped shrink would slice it). The divider
   before it animates on the search action's spring, not in the button's exit, whose clipped shrink would cut it off.
 - **A tab swap carries the pill over** (`ui/chrome`): the bar draws its pill where no node stands, so
-  `SearchPillSurface` is a node laid at the pill's rectangle (closed, open, or between) that draws it only while two
-  tabs swap, the bar's own drawing left out meanwhile (else a second pill waits where the travelling one arrives). It
-  shares nothing until its rectangle is known (the first frame has none). The bar's row is drawn over it then
-  (`searchPillForeground`): what stands on the pill (closed buttons, the open field) **rides the travelling pill**,
-  start edge on its start edge (`SearchPill.travellingBounds`), clipped to it and crossing with the other tab's, so open
-  ↔ closed reads as one pill; the rest (an open search's close button and actions) fades in place, all of it with the
-  pill while that scales alone. New is a part of its own. `FloatingPill`'s node is the pill itself, buttons reaching past.
+  `SearchPillSurface` is a node over the whole bar whose part's rectangle is the pill's (closed, open, or between), and
+  which draws it only while two tabs swap, the bar's own drawing left out meanwhile (else a second pill waits where the
+  travelling one arrives). It shares nothing while its rectangle is empty (the first frame). The bar's row, laid at the
+  same origin, is drawn over it then (`searchPillForeground`): what stands on the pill (closed buttons, the open field)
+  **rides the travelling pill**, start edge on its start edge (`SharedTabChrome.travellingBounds`), clipped to it and
+  crossfading with the other tab's (`crossfadeAlpha`, since an open field and closed buttons differ), so open ↔ closed
+  reads as one pill; the rest (an open search's close button and actions) fades in place, all of it with the pill while
+  that scales alone. New is a part of its own. `FloatingPill`'s node is the pill itself, buttons reaching past.
 - `SearchBackHandler` uses `NavigationBackHandler` over a hoisted `NavigationEventState`, not `BackHandler` (which
   hears a gesture only on release), and previews the close via `SearchState.backProgress`. The offset is layout, not a
   drawn translation, so `animateBounds` carries on from where the gesture left.
