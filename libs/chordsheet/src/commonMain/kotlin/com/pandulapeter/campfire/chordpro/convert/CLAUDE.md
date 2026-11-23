@@ -35,7 +35,9 @@ heuristics and near misses are pinned in `ChordSheetConverterTest` and its sibli
   `:|`, which it would read as chords. Its margins may hold text, as ChordPro's do: a label before the first bar line
   opens it as a bar would, and a word or two may follow the last (`x2`); `|.` and voltas (`|1`, `:|2`) are bar lines.
 - Over a lyric, the bar lines and repeat counts of any other chord row are dropped, but `N.C.` stays where it stands. A
-  row of chord names (or playing marks, `PM`) against a tab staff is a line of the tab, kept as it stands.
+  `\` among a row's chords is a strum mark, dropped. A row of chord names (or playing marks, `PM`) against a tab staff
+  is a line of the tab, kept as it stands in its columns against the strings (a margin all its lines share goes); a
+  German or Hungarian staff names its B string `H`.
 - Over a tab, a heading naming no section (`Intro`, `Solo`) opens one of its kind, until the next heading or lyric.
 
 ## Words any sheet may print
@@ -87,6 +89,9 @@ heuristics and near misses are pinned in `ChordSheetConverterTest` and its sibli
   none nothing. Values that are the site's (difficulty, a transcriber's credit that counts its contributors) and whole
   lines that are its controls or calls to action (`Autoscroll`, `1,234 views`) are left out only before the first chord
   row, after the last, or alone between blank lines: between two lyrics they are as likely sung. `Author:` alone stays.
+  A list of the chords the song plays, one a line (`ChordSheetChordList`), goes only corroborated: three or more, each
+  once, all played in the song, outside it and under no heading. A line before the song that is just its title and
+  artist (`Artist - Title`, the header's or a caller's `knownTitle`, a page's header) goes too.
 - **Documented limits**: `Artist - Title` is read artist first, since both orders are common on the web; a title
   ending in a page word with no credit after it (`Three Chords`) loses that word.
 
