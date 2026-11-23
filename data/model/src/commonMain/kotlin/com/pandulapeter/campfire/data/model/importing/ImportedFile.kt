@@ -36,6 +36,9 @@ import com.pandulapeter.campfire.data.model.library.LibraryFiles
  * by file: the title each entry's song had there, by the file name the entry points at, for an entry whose song the
  * archive it came in did not hold. The import looks for it among the batch's other songs and then in the library by
  * that title, and leaves the entry as a missing song where neither holds one.
+ *
+ * [isPageText] marks a text that came from a web page or another app as one new song (a paste, a drop, a share), whose
+ * page clutter the import crops before it converts the text (`PageCropper`); a text file picked or opened is read whole.
  */
 data class ImportedFile(
     val name: String,
@@ -46,6 +49,7 @@ data class ImportedFile(
     val staged: StagedFile? = null,
     val receiving: ReceivingArchive? = null,
     val setlistSongTitles: Map<String, String> = emptyMap(),
+    val isPageText: Boolean = false,
 ) {
 
     /**
@@ -73,12 +77,13 @@ data class ImportedFile(
     override fun equals(other: Any?) = this === other || (
         other is ImportedFile && name == other.name && isTooLarge == other.isTooLarge &&
             isPlainTextByContent == other.isPlainTextByContent && bytes.contentEquals(other.bytes) && images == other.images &&
-            staged == other.staged && receiving == other.receiving && setlistSongTitles == other.setlistSongTitles
+            staged == other.staged && receiving == other.receiving && setlistSongTitles == other.setlistSongTitles &&
+            isPageText == other.isPageText
         )
 
     override fun hashCode() =
         31 * (31 * (31 * (31 * (31 * name.hashCode() + isTooLarge.hashCode()) + isPlainTextByContent.hashCode()) + bytes.contentHashCode()) + images.hashCode()) +
-            31 * (31 * staged.hashCode() + receiving.hashCode()) + setlistSongTitles.hashCode()
+            31 * (31 * staged.hashCode() + receiving.hashCode()) + 31 * setlistSongTitles.hashCode() + isPageText.hashCode()
 
     companion object {
 

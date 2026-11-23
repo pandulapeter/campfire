@@ -52,6 +52,8 @@ internal object ImportPlanner {
         val artist: String = "",
         /** See [ImportPlan.SongEntry.images]. */
         val images: List<ImportPlan.SongImage> = emptyList(),
+        /** See [ImportPlan.SongEntry.wholePageText]. */
+        val wholePageText: String? = null,
     )
 
     /** One setlist of the batch, as `SetlistRepository.parseSetlist` named it, and the name of the file it arrived in. */
@@ -330,6 +332,7 @@ internal object ImportPlanner {
         title = title,
         artist = artist,
         images = images,
+        wholePageText = wholePageText,
     )
 
     private suspend fun readAll(

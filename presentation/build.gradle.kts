@@ -49,6 +49,8 @@ kotlin {
                 implementation(project(":libs:chordpro"))
                 // Text pasted or shared into the app is read as a chord sheet.
                 implementation(project(":libs:chordsheet"))
+                // Its page clutter is cropped first by the page model, whose weights are one of this module's resources.
+                implementation(project(":libs:pagesong"))
                 // The click is the app's rather than a screen's, and is handed a complete pattern by the view model.
                 // ABC tunes are engraved as staff notation by abc2svg, behind its own module like the click.
                 implementation(project(":libs:abc:api"))

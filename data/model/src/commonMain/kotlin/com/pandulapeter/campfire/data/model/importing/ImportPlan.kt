@@ -87,6 +87,11 @@ data class ImportPlan(
          * it arrived.
          */
         val images: List<SongImage> = emptyList(),
+        /**
+         * What the whole text converts to, for a text of [ImportedFile.isPageText] whose page clutter the import left
+         * out of [text]: what the editor's Use the whole page puts back. Null where nothing was left out.
+         */
+        val wholePageText: String? = null,
     )
 
     /**

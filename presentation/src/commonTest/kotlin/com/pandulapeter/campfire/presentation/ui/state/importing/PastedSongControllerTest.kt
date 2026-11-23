@@ -71,13 +71,14 @@ class PastedSongControllerTest {
     private val messages get() = messageSink.messageQueue.value.map { it.value }
 
     @Test
-    fun `a chord sheet is queued as a new song named by its first line that is not chords`() = runTest {
+    fun `a chord sheet is queued as a new song from a page named by its first line that is not chords`() = runTest {
         controller().newSongFromText("Am  C\nHello")
         val (files, isNewSongFromText) = queued.single()
         val file = files.single()
         assertEquals("hello.txt", file.name)
         assertEquals("Am  C\nHello", file.bytes.decodeToString())
         assertTrue(isNewSongFromText)
+        assertTrue(file.isPageText)
     }
 
     @Test
@@ -129,6 +130,7 @@ class PastedSongControllerTest {
         val (files, isNewSongFromText) = queued.single()
         assertEquals(listOf("one.txt", "two.txt"), files.map { it.name })
         assertFalse(isNewSongFromText)
+        assertTrue(files.none { it.isPageText })
     }
 
     @Test

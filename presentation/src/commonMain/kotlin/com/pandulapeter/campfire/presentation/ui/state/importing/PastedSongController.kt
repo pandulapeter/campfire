@@ -87,7 +87,8 @@ internal class PastedSongController(
         text.isBlank() -> answered(Message.ClipboardEmpty)
         text.isOnlyLinks() || text.isLinkWithTitle() -> answered(Message.PastedOnlyLinks)
         !text.fitsImport() -> answered(Message.PastedTextTooLarge)
-        else -> enqueueImport(sharedTextsToImportedFiles(listOf(text), subject), true, sharedTextTitle(subject))
+        // From a web page or another app, so its page clutter is cropped (ImportedFile.isPageText).
+        else -> enqueueImport(sharedTextsToImportedFiles(listOf(text), subject).map { it.copy(isPageText = true) }, true, sharedTextTitle(subject))
     }
 
     /**

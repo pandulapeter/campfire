@@ -33,6 +33,7 @@ import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.song.SongContent
 import com.pandulapeter.campfire.data.repository.api.ArchiveRepository
 import com.pandulapeter.campfire.data.repository.api.DocumentRepository
+import com.pandulapeter.campfire.domain.api.importing.PageCropper
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -263,9 +264,59 @@ class PrepareImportUseCaseImplTest {
         assertEquals(listOf("gig.setlist.json"), plan.setlists.map { it.sourceFileName })
     }
 
+    @Test
+    fun `a page's clutter is left out of its song and the whole page is kept for the editor`() = runTest {
+        val plan = prepare(pageCropper = FakePageCropper { listOf(3, 4, 6, 7) })(listOf(page(PAGE)))
+
+        val song = plan.songs.single()
+        assertTrue("river light" in song.text && "morning" in song.text)
+        assertTrue("Sign in" !in song.text && "Great song" !in song.text)
+        assertTrue(song.wholePageText.orEmpty().let { "Great song" in it && "river light" in it })
+    }
+
+    @Test
+    fun `a page the cropper finds no song in is converted whole`() = runTest {
+        val plan = prepare(pageCropper = FakePageCropper { null })(listOf(page(PAGE)))
+
+        assertTrue("Great song" in plan.songs.single().text)
+        assertEquals(null, plan.songs.single().wholePageText)
+    }
+
+    @Test
+    fun `a page is converted whole when the cropper fails`() = runTest {
+        val plan = prepare(pageCropper = FakePageCropper { error("No weights") })(listOf(page(PAGE)))
+
+        assertTrue("Great song" in plan.songs.single().text)
+        assertEquals(null, plan.songs.single().wholePageText)
+    }
+
+    @Test
+    fun `a text file is never cropped`() = runTest {
+        val cropper = FakePageCropper { listOf(3, 4, 6, 7) }
+
+        val plan = prepare(pageCropper = cropper)(listOf(ImportedFile("page.txt", PAGE.encodeToByteArray())))
+
+        assertTrue(cropper.asked.isEmpty())
+        assertTrue("Great song" in plan.songs.single().text)
+    }
+
+    @Test
+    fun `ChordPro from a page is never cropped`() = runTest {
+        val cropper = FakePageCropper { listOf(0) }
+
+        val plan = prepare(pageCropper = cropper)(listOf(page("{title: River}\n[G]Down by the [D]river light\n[C]We sang until morning\n")))
+
+        assertTrue(cropper.asked.isEmpty())
+        assertTrue("morning" in plan.songs.single().text)
+    }
+
+    private fun page(text: String) = ImportedFile("page.txt", text.encodeToByteArray(), isPageText = true)
+
     private fun song(name: String) = ImportedFile(name, "{title: ${name.substringBeforeLast('.')}}\n".encodeToByteArray())
 
     private companion object {
+        const val PAGE = "Home | Chords | Tabs\nSign in\n\nG         D\nDown by the river light\n\nC         G\nWe sang until morning\n\n" +
+            "Comments (12)\nGreat song!\n"
         const val SHEET = "G         D\nDown by the river light\nC         G\nWe sang until morning\n"
     }
 
@@ -273,6 +324,7 @@ class PrepareImportUseCaseImplTest {
     private fun prepare(
         archive: ArchiveRepository = FakeArchiveRepository(),
         parseSetlist: (String) -> ParsedSetlist? = { null },
+        pageCropper: PageCropper = FakePageCropper(),
     ) = PrepareImportUseCaseImpl(
         archiveRepository = archive,
         songRepository = object : SongRepositoryStub() {
@@ -291,6 +343,7 @@ class PrepareImportUseCaseImplTest {
         },
         imageRepository = FakeImageRepository(),
         pictureLinks = incomingPictureLinks(),
+        pageCropper = pageCropper,
         logger = Logger.Standard,
     )
 }

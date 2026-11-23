@@ -268,6 +268,7 @@ class ImportFilesUseCaseImplTest {
         documentRepository = documents,
         imageRepository = images,
         pictureLinks = incomingPictureLinks(downloads = downloads, images = images),
+        pageCropper = FakePageCropper(),
         logger = Logger.Standard,
     )
 
@@ -966,6 +967,7 @@ class ImportFilesUseCaseImplTest {
             },
             imageRepository = images,
             pictureLinks = incomingPictureLinks(downloads = downloads, images = images, isEnabled = false),
+            pageCropper = FakePageCropper(),
             logger = Logger.Standard,
         )(listOf(ImportedFile("a.cho", text.encodeToByteArray())))
 

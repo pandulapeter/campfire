@@ -40,6 +40,7 @@ import com.pandulapeter.campfire.data.repository.api.ImageRepository
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongContentRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
+import com.pandulapeter.campfire.domain.api.importing.PageCropper
 import com.pandulapeter.campfire.domain.api.importing.PrepareImportUseCase
 import com.pandulapeter.campfire.domain.implementation.importing.ImportPlanner
 import kotlinx.coroutines.CancellationException
@@ -57,6 +58,7 @@ internal class PrepareImportUseCaseImpl(
     private val documentRepository: DocumentRepository,
     private val imageRepository: ImageRepository,
     private val pictureLinks: IncomingPictureLinks,
+    private val pageCropper: PageCropper,
     private val logger: Logger,
 ) : PrepareImportUseCase {
 
@@ -204,6 +206,7 @@ internal class PrepareImportUseCaseImpl(
             yield()
             val isDocument = index >= files.size
             val original = if (isDocument) null else file.bytes.decodeLibraryText()
+            var wholePage: List<String>? = null
             val converted = when {
                 isDocument -> {
                     val extracted = documentRepository.extract(file)
@@ -218,7 +221,13 @@ internal class PrepareImportUseCaseImpl(
                     // and the rest as prose, where each tune is a song with a chord grid and the tune kept whole.
                     AbcTunes.split(original).map { tune -> AbcToChordPro.convert(tune).text }
                 } else {
-                    ChordSheetConverter.convert(ChordSheet.ofPlainText(original), String::normalizedToNfc)
+                    val whole = ChordSheetConverter.convert(ChordSheet.ofPlainText(original), String::normalizedToNfc)
+                    // A page's clutter is cropped before the converter reads it, but never from ChordPro, which the
+                    // converter hands back untouched: that text is a song somebody wrote, not a page around one. A crop
+                    // the converter finds nothing in is no crop either, so the whole page stands.
+                    val cropped = if (file.isPageText && whole != listOf(original)) PageTextCrop.cropped(original, pageCropper, logger) else null
+                    cropped?.let { ChordSheetConverter.convert(ChordSheet.ofPlainText(it), String::normalizedToNfc) }
+                        ?.takeIf { it.any(String::isNotBlank) }?.also { wholePage = whole } ?: whole
                 }
                 else -> listOf(original!!)
             }
@@ -232,6 +241,8 @@ internal class PrepareImportUseCaseImpl(
                 if (isDocument) triage.unreadableDocumentFileNames += file.name else triage.skippedFileNames += file.name
                 return@flatMapIndexed emptyList()
             }
+            // Offered only to a page that is one song, which is what opens the editor where Use the whole page is.
+            val wholePageText = wholePage?.takeIf { parts.size == 1 }?.flatMap(ChordProSplitter::split)?.joinToString("\n") { it.prettified() }
             val (arrivedAttachments, arrivedPictures) = file.images.partition { it.isAttachment }
             val images = linkedImages + IncomingImages.planned(arrivedPictures, imageRepository)
             val attachments = IncomingImages.planned(arrivedAttachments, imageRepository)
@@ -244,7 +255,7 @@ internal class PrepareImportUseCaseImpl(
                 // All sources share the same formatter after conversion and splitting, and before naming or
                 // comparing. The editor's manual action uses it too. Notation conversion still precedes formatting.
                 val (text, songImages) = IncomingImages.rewritten(
-                    text = ChordProPrettifier.prettify(ChordProNotation.convertText(part, ChordNotation.STANDARD, ChordNotation.STANDARD)),
+                    text = part.prettified(),
                     planned = images,
                     plannedAttachments = attachments,
                 )
@@ -258,6 +269,7 @@ internal class PrepareImportUseCaseImpl(
                     title = metadata.displayTitle(fallback = fallbackTitle),
                     artist = metadata.artist.orEmpty(),
                     images = songImages,
+                    wholePageText = wholePageText?.takeIf { it != text },
                 )
             }
             // Formatting adds section separators and a final newline; keep the resulting text within the same
@@ -317,6 +329,8 @@ internal class PrepareImportUseCaseImpl(
             songFileNames = songFileNames,
         )
     }
+
+    private fun String.prettified() = ChordProPrettifier.prettify(ChordProNotation.convertText(this, ChordNotation.STANDARD, ChordNotation.STANDARD))
 
     /**
      * Whether this is a file an import would read anything from: not hidden, a song, a document or a setlist by its
