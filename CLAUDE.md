@@ -115,10 +115,10 @@ campfire.log / campfire.log.1          desktop only, here (the other platforms k
 - Modules apply the convention plugins in `gradle/build-logic`. Platform code goes in `androidMain` / `desktopMain` /
   `iosMain` / `wasmJsMain`, JVM code shared by Android and desktop in `jvmSharedMain`. The four platform `:app:*`
   modules, `:app:baselineprofile`, and `:tools:screenshots` are single-platform; every other module is multiplatform.
-- `:libs:chordpro`, `:libs:chordsheet`, and the `api` modules of `:libs:abc`, `:libs:metronome`, and `:libs:tuner` use
-  `explicitApi()`. Layers are crossed through `mapper/` packages. The rest of the code style (JVM-free shared code,
-  `Impl` naming, Material 3 Expressive only, never M2) is the `code-style` skill's; formatting, license headers, and
-  file sizes are enforced by Spotless and the `.github/scripts` checks.
+- `:libs:chordpro`, `:libs:chordsheet`, `:libs:pagesong`, and the `api` modules of `:libs:abc`, `:libs:metronome`, and
+  `:libs:tuner` use `explicitApi()`. Layers are crossed through `mapper/` packages. The rest of the code style (JVM-free
+  shared code, `Impl` naming, Material 3 Expressive only, never M2) is the `code-style` skill's; formatting, license
+  headers, and file sizes are enforced by Spotless and the `.github/scripts` checks.
 
 ### Koin (Koin Annotations via the Koin compiler plugin, `campfire-koin`)
 
