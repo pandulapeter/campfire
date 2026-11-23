@@ -47,4 +47,11 @@ class ChordSheetHeadingsTest {
             listOf("V1", "Ch1", "Ch 2", "Br", "Br.", "PC", "Pre", "Chimes").map { ChordSheetHeadings.sectionType(it) },
         )
     }
+
+    @Test
+    fun `an abbreviated verse heading is one with its colon - alone it is as likely sung`() {
+        assertEquals(ChordSheetHeadings.Heading("Ver", "verse", isAmbiguous = false), ChordSheetHeadings.parse("Ver:"))
+        assertEquals(true, ChordSheetHeadings.parse("Ver")?.isAmbiguous)
+        assertEquals(null, ChordSheetHeadings.parse("Very"))
+    }
 }
