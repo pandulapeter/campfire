@@ -13,15 +13,16 @@ What's planned for Campfire, grouped by area.
 
 ## In progress
 
-- **A song from any page**: share, paste, or (optionally) a browser extension button turns any website's song into a
-  clean pre-filled editor, a small model of our own cropping the page's clutter on the device, no code per site; the same
-  model then reads PDFs (websites printed to PDF, misread song details).
-  Plan: [song-from-any-page.md](plans/song-from-any-page.md)
+- **A song from any page**: an optional browser extension button (Chrome, Edge, Firefox, and Safari) handing a page to
+  Campfire, and the page model's training tool documented. Plan: [song-from-any-page.md](plans/song-from-any-page.md)
+- UI performance improvements
+- The instrument picker should also be a shared element
+- Fix FAB icon transition issues
+- **App shortcuts** on Android and iOS: a long press on the app icon offers New song, Paste a song, and the main
+  screens that are switched on. Plan: [app-shortcuts.md](plans/app-shortcuts.md)
 - **Home screen widgets** on Android and iOS: random picks (a few songs, a tap opening one, and a shuffle button, drawn
   on its own rather than mirroring the songs list's picks), and a setlist (the next gig or a pinned one, a tap opening
   its first song in setlist mode). Plan: [home-screen-widgets.md](plans/home-screen-widgets.md)
-- **App shortcuts** on Android and iOS: a long press on the app icon offers New song, Paste a song, and the main
-  screens that are switched on. Plan: [app-shortcuts.md](plans/app-shortcuts.md)
 - **A more readable sync folder**: consider organizing it in a more user-readable way (subfolders for artists), as an
   option
 

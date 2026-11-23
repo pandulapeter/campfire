@@ -9,7 +9,10 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songEditor.toolbar
 
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import com.pandulapeter.campfire.chordpro.ChordProTime
+import com.pandulapeter.campfire.chordpro.chords.ChordProTransposer
 
 /**
  * The lines an empty Sheet music block starts with: `X:1`, which abc2svg draws no tune without, the song's meter where
@@ -31,6 +34,12 @@ internal fun sheetMusicHeader(key: String?, time: String?): List<String> = listO
     "L:1/8",
     "K:${abcKeyOf(key)}",
 )
+
+/** [sheetMusicHeader] for the song's own `{key}` and `{time}`, a key the transposer does not read counting as none. */
+@Composable
+internal fun rememberSheetMusicHeader(key: String?, time: String?) = remember(key, time) {
+    sheetMusicHeader(key?.takeIf(ChordProTransposer::isKey), time)
+}
 
 private fun meterOf(time: String?): String? {
     val (beats, unit) = ChordProTime.parse(time) ?: return null

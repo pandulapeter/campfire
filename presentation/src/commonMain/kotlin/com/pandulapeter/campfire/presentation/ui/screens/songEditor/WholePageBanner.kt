@@ -44,22 +44,26 @@ import org.jetbrains.compose.resources.painterResource
  *
  * A card in [com.pandulapeter.campfire.presentation.ui.components.WarningCard]'s colors and shape, so it stands apart
  * from the bar and the field, edged like the field's text. Its height is one button row, since a pasted song opens with
- * the keyboard up; [isCompact] (typing in a short window) takes the gaps around it too.
+ * the keyboard up; [isCompact] (typing in a short window) takes the gaps around it too. Under the toolbar, whose own
+ * bottom padding already matches the gap below the card and the preview's top padding together, [isUnderToolbar] takes
+ * the gap above it, so the card sits as far from the buttons as from the preview's first card.
  */
 @Composable
 internal fun ColumnScope.WholePageBanner(
     offer: WholePageOffer,
     contentPadding: PaddingValues,
     isCompact: Boolean,
+    isUnderToolbar: Boolean,
 ) {
     val wholePageDraft by offer.wholePageDraft.collectAsStateWithLifecycle()
     val gap by animateDpAsState(if (isCompact) 0.dp else 8.dp)
+    val topGap by animateDpAsState(if (isCompact || isUnderToolbar) 0.dp else 4.dp)
     AnimatedVisibility(visible = wholePageDraft != null) {
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(contentPadding.only(start = true, end = true))
-                .padding(start = 16.dp, end = 16.dp, top = gap / 2, bottom = gap),
+                .padding(start = 16.dp, end = 16.dp, top = topGap, bottom = gap),
             shape = MaterialTheme.shapes.large,
             color = MaterialTheme.colorScheme.secondaryContainer,
             contentColor = MaterialTheme.colorScheme.onSecondaryContainer,

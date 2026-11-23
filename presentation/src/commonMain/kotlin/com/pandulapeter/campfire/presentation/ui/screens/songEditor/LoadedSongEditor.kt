@@ -15,7 +15,7 @@ import com.pandulapeter.campfire.presentation.ui.screens.songEditor.toolbar.reme
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.toolbar.EditorControlRow
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.toolbar.EditorImagePick
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.toolbar.EditorToolbar
-import com.pandulapeter.campfire.presentation.ui.screens.songEditor.toolbar.sheetMusicHeader
+import com.pandulapeter.campfire.presentation.ui.screens.songEditor.toolbar.rememberSheetMusicHeader
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.search.EditorSearchMode
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.search.EditorSearchSheet
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.search.rememberEditorSearch
@@ -191,9 +191,9 @@ internal fun LoadedSongEditor(
     val isTypingInShortWindow by keyboard.isTypingInShortWindowState
     val isControlRowHidden by keyboard.isControlRowHiddenState
     CompactKeyboardEffect(isEnabled = isTypingInShortWindow && LocalWindowInfo.current.containerDpSize.height < SHORT_WINDOW_HEIGHT)
-    var isToolbarExpanded by rememberSaveable {
-        mutableStateOf(!isSmallScreen)
-    }
+    var isToolbarExpanded by rememberSaveable { mutableStateOf(!isSmallScreen) }
+    // Nothing below can act on a preview, so the insertions leave with the field they write into.
+    val isToolbarShown = isToolbarExpanded && panes != EditorPanes.PREVIEW
     // Collapse once when the keyboard appears. The user can reopen the shortcuts while typing, and closing
     // the keyboard leaves their current choice intact.
     LaunchedEffect(isKeyboardVisible) {
@@ -311,23 +311,20 @@ internal fun LoadedSongEditor(
                         onToolbarToggled = { isToolbarExpanded = !isToolbarExpanded },
                     )
                 }
-                // Nothing below can act on a preview, so the insertions leave with the field they write into.
-                AnimatedVisibility(visible = isToolbarExpanded && panes != EditorPanes.PREVIEW) {
+                AnimatedVisibility(visible = isToolbarShown) {
                     EditorToolbar(
                         textFieldState = textFieldState,
                         contentPadding = contentPadding,
                         chordShapes = rememberEditorChordShapes(userPreferences, notation),
                         tabStaff = rememberTabStaff(userPreferences, notation),
-                        sheetMusicHeader = remember(summary.metadata.key, summary.metadata.time) {
-                            sheetMusicHeader(summary.metadata.key?.takeIf(ChordProTransposer::isKey), summary.metadata.time)
-                        },
+                        sheetMusicHeader = rememberSheetMusicHeader(summary.metadata.key, summary.metadata.time),
                         imagePick = imagePick,
                         onValueToType = typingRequest::request,
                     )
                 }
             },
         )
-        WholePageBanner(offer = editorSession.wholePage, contentPadding = contentPadding, isCompact = isTypingInShortWindow)
+        WholePageBanner(editorSession.wholePage, contentPadding, isCompact = isTypingInShortWindow, isUnderToolbar = isToolbarShown)
         val abcProblems = rememberAbcProblems(text)
         val editor: @Composable (Modifier) -> Unit = { paneModifier ->
             ChordProTextField(
