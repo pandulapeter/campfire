@@ -108,6 +108,7 @@ include(
     ":libs:chordsheet",
     ":libs:metronome:api",
     ":libs:metronome:implementation",
+    ":libs:pagesong",
     ":libs:tuner:api",
     ":libs:tuner:implementation",
     ":presentation",

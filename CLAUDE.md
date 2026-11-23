@@ -61,6 +61,7 @@ app:android / desktop / ios / web     entry points, platform chrome, "open with"
   libs:*                              code that knows nothing of the app: depends on other libs:* modules only
     chordpro                          dependency-free ChordPro parser, transposer, chords, tabs, scales, ABC reading
       chordsheet                      chord sheets (text, PDF, Word lines) converted into ChordPro
+    pagesong                          the page model: which lines of a page or a document are the song, run in plain Kotlin
     abc:api / :implementation         ABC tunes engraved by abc2svg in an embedded engine
     metronome:api / :implementation   the click engine
     tuner:api / :implementation       pitch detection, tones, mic input

@@ -98,6 +98,14 @@ FIXTURE_PAGE = [
     "Strofa 2", "C x32010   Am x02210", "Árvíztűrő tükörfúrógép", "שלום עולם", "Žluťoučký kůň úpěl ďábelské ódy",
     "Zażółć gęślą jaźń", "⁠G   ⁠D", "Em7b5  D#maj7  Bb/F", "https://example.com/song", "Report a correction",
     "Words & Music: John Newton", "Tempo: 90 bpm", "    indented line", "😀 emoji line 🎸", "x" * 200,
+    "||: G / / D :|| (x2) N.C. nc % . 4x |", "Do Re Mi Fa Sol La Si Ré/Sol", "Cis Fes Hmaj7 Asus4 Bbadd9 C° Bø7 D+ F#m7(b5) A/C#",
+    "G  Dm  keyboard", "VERSE 2:", "(Pre-Chorus)", "[PRECHORUS 2]", "Ritornello:", "R.", "V.1", "\u0131ntro", "\u0130NTRO",
+    "[Chorus                                      ]", "Intro: G D", "CAPOTRASTE: 3", "Kapodaszter = 1", "keyboard: Yamaha",
+    "key2: x", "Written by - Someone", "Słowa: ktoś", "Keyé: x", "Tonalité : Ré", "\u212aey: A", "www.campfire.org",
+    "site.community", "visit example.com.", "example.comé", "HTTP://EXAMPLE", "A|--2--2--0--2--|", "D#|-------5h7p5--|",
+    "|-0-0-0-0-0-0-|", "e|0 1 2 3 4 5 6 7|", "Ve\u200brse 1", "G\u00a0\u00a0D", "\u3000Chorus", "G\u2003Am", "\u001fG D",
+    "\U00020000\U00020001 CJK", "\U0001f3f4\U000e0067\U000e0062\U000e0073\U000e0063\U000e0074\U000e007f flag", "\u00ad",
+    "   ", "\t\tG\tD",
 ]
 FIXTURE_DOCUMENT = [
     {"text": "AMAZING GRACE", "page": 0, "column": -1, "size": 1.8, "bold": True, "italic": False, "monospace": False, "indent": 0.3, "heading": True},
