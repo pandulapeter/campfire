@@ -31,9 +31,11 @@ internal data class WorkProgress(
  * that would flash on nearly every return. Once up, the bar stays for the rest of the run, whose second pass lists again. An import fills
  * while it writes, the one phase whose file count runs once from zero to the end (the reading and comparing before it
  * each count again from zero, which would send the fill back), and while it receives, downloads, or unpacks an archive
- * whose size it knows, by bytes.
+ * whose size it knows, by bytes. While the screen on top draws a progress line of its own ([isProgressOnScreen]: the
+ * import screen reading or writing), the bar stays down, whatever the work, so that the window never shows two at once.
  */
 internal fun workProgress(
+    isProgressOnScreen: Boolean,
     isImporting: Boolean,
     isDemoLibraryPending: Boolean,
     importProgress: ImportProgress?,
@@ -42,6 +44,7 @@ internal fun workProgress(
     isFittingPictures: Boolean,
     syncProgress: SyncProgress?,
 ): WorkProgress? = when {
+    isProgressOnScreen -> null
     (isImporting && !isDemoLibraryPending) || isAddingToReview || isEditingSongs || isFittingPictures -> WorkProgress(
         fraction = importProgress?.byteFraction ?: importProgress
             ?.takeIf { it.phase == ImportProgress.Phase.IMPORTING }

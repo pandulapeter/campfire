@@ -11,8 +11,9 @@
 # :presentation — ui/progress
 
 - `WorkProgressBar` is the one progress line for work on the library: a trackless line along the top of the window,
-  over everything and every inset, drawn by `CampfireApp`. No screen draws a line of its own under its bar; the import
-  screen's Loading and Importing stages keep their own progress text.
+  over everything and every inset, drawn by `CampfireApp`. One progress indicator at a time: no screen draws a line of
+  its own under its bar, and while the import screen is on top in its Loading or Importing stage, which draw their own
+  progress, the bar stays down for any work (`workProgress`'s `isProgressOnScreen`).
 - It stands for an import, files read into a review, the selection's edits, a picture the user added being shrunk or
   converted (`ui/pictures`' `PictureWork`, only once it has run 400 ms, so a picture kept as it is brings nothing up),
   and a sync run with files to transfer, in that order (`workProgress`, tested); a sync run that only lists never brings

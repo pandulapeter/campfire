@@ -92,7 +92,20 @@ class WorkProgressTest {
         assertNull(progress(isImporting = true, isDemoLibraryPending = true))
     }
 
+    @Test
+    fun `a screen drawing its own progress keeps the bar down`() {
+        assertNull(
+            progress(
+                isProgressOnScreen = true,
+                isImporting = true,
+                importProgress = ImportProgress(ImportProgress.Phase.READING_PAGE),
+                syncProgress = SyncProgress(completed = 1, total = 4),
+            ),
+        )
+    }
+
     private fun progress(
+        isProgressOnScreen: Boolean = false,
         isImporting: Boolean = false,
         isDemoLibraryPending: Boolean = false,
         importProgress: ImportProgress? = null,
@@ -101,6 +114,7 @@ class WorkProgressTest {
         isFittingPictures: Boolean = false,
         syncProgress: SyncProgress? = null,
     ) = workProgress(
+        isProgressOnScreen = isProgressOnScreen,
         isImporting = isImporting,
         isDemoLibraryPending = isDemoLibraryPending,
         importProgress = importProgress,
