@@ -73,6 +73,12 @@ internal class SearchPill {
 
     var openField by mutableStateOf(Rect.Zero)
 
+    /**
+     * Where the pill is on this frame while a tab swap carries it over to the other tab's (see [SearchPillSurface]), so
+     * that what stands on it rides it; null before it is first placed.
+     */
+    var travellingBounds by mutableStateOf<Rect?>(null)
+
     /** How wide the closed search's own actions and the divider before them are, which a detached button takes off [closedActions]. */
     var closedSearchActionsWidth by mutableFloatStateOf(0f)
 

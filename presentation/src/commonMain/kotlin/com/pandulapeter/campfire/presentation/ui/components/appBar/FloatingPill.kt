@@ -44,9 +44,10 @@ import com.pandulapeter.campfire.presentation.ui.components.tabChrome.sharedTabC
  * drawn across their shares of it ([SearchPillPresses]). It never opens, so it is the closed pill's rectangle around
  * its buttons and nothing else.
  *
- * Given [sharedTabChrome], it is that part of its tab: while two tabs are swapped the pill (a node as tall as the pill,
- * its buttons reaching past its top and bottom) is drawn over both screens in its own color, morphing into the other
- * tab's part or scaling on its own, and the presses drawn under it, which nothing is pressing then, are left behind.
+ * Given [sharedTabChrome] (made with the pill's color, `surfaceContainerHigh`), it is that part of its tab: while two
+ * tabs are swapped the pill (a node as tall as the pill, its buttons reaching past its top and bottom) is drawn over
+ * both screens, morphing into the other tab's part or scaling on its own, and the presses drawn under it, which nothing
+ * is pressing then, are left behind.
  */
 @Composable
 internal fun FloatingPill(
@@ -88,12 +89,7 @@ internal fun FloatingPill(
             SearchPillPresses(modifier = Modifier.matchParentSize(), pill = pill, closedBounds = bounds, openProgress = { 0f })
             Box(
                 modifier = Modifier
-                    .sharedTabChrome(chrome = sharedTabChrome, zIndex = NEW_BUTTON_Z_INDEX)
-                    .drawBehind {
-                        if (sharedTabChrome?.isSwapping == true) {
-                            drawRoundRect(color = pillColor, cornerRadius = CornerRadius(size.height / 2))
-                        }
-                    }
+                    .sharedTabChrome(chrome = sharedTabChrome, zIndex = NEW_BUTTON_Z_INDEX, isContainerDrawnOutsideSwaps = false)
                     .overflowingPill(overflow, FIELD_HEIGHT),
             ) {
                 // The actions of a top app bar are drawn in a quieter color than its content, as the bar's own are.

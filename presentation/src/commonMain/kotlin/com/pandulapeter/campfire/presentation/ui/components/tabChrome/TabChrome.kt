@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -35,6 +36,9 @@ internal class TabChrome {
     lateinit var sharedTransitionScope: SharedTransitionScope
 
     var swap by mutableStateOf(TabSwap.NONE)
+
+    /** Every part composed on a top level screen, for a matched one to read the container color of the other's. */
+    val parts = mutableStateListOf<SharedTabChrome>()
 }
 
 /** How the screens of the running navigation transition change places, as far as [TabChrome] is concerned. */

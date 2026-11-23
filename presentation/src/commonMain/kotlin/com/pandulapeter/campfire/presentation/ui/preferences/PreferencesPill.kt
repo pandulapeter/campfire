@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.preferences
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.pandulapeter.campfire.presentation.localization.stringResource
@@ -39,7 +40,7 @@ internal fun PreferencesPill(
 ) = FloatingPill(
     modifier = modifier,
     // It stands on the New button's spot, so a tab swap morphs one into the other.
-    sharedTabChrome = rememberSharedTabChrome(TabChromeElement.NEW_BUTTON),
+    sharedTabChrome = rememberSharedTabChrome(TabChromeElement.NEW_BUTTON, containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
 ) {
     val label = stringResource(Res.string.settings_preferences)
     PillIconButton(

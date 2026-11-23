@@ -14,9 +14,11 @@ import com.pandulapeter.campfire.presentation.ui.components.list.allowsNewItemMe
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.localization.stringResource
@@ -77,13 +79,20 @@ internal fun NewItemMenu(
             // Filled in the accent color, unlike the bar's other actions: it is the way to fill the list, and a plain
             // icon among search, sort, and filter is the one that gets overlooked.
             CampfireTooltip(label = contentDescription) {
-                // The tab swaps carry it over, into the other list screen's or into the pill on its spot (Chords, Scales).
+                // The tab swaps carry it over, into the other list screen's or into the pill on its spot (Chords, Scales),
+                // as one container changing color and shape under the icons, so the button draws none of its own.
+                val colors = IconButtonDefaults.filledIconButtonColors()
+                val chrome = rememberSharedTabChrome(
+                    element = TabChromeElement.NEW_BUTTON,
+                    containerColor = if (isEnabled) colors.containerColor else colors.disabledContainerColor,
+                )
                 FilledIconButton(
                     modifier = Modifier
-                        .sharedTabChrome(chrome = rememberSharedTabChrome(TabChromeElement.NEW_BUTTON), zIndex = NEW_BUTTON_Z_INDEX)
+                        .sharedTabChrome(chrome = chrome, zIndex = NEW_BUTTON_Z_INDEX, isContainerDrawnOutsideSwaps = true)
                         .size(NEW_ITEM_BUTTON_SIZE),
                     onClick = open,
                     enabled = isEnabled,
+                    colors = if (chrome == null) colors else colors.copy(containerColor = Color.Transparent, disabledContainerColor = Color.Transparent),
                 ) {
                     Icon(
                         painter = painterResource(Res.drawable.ic_add),
