@@ -375,6 +375,15 @@ internal val openSourceComponents = listOf(
         builds = APPIMAGE,
     ),
     apache("Stately", "Touchlab", "https://github.com/touchlab/Stately"),
+    OpenSourceComponent(
+        name = "WebView2 loader",
+        holder = "Microsoft Corporation",
+        url = "https://www.nuget.org/packages/Microsoft.Web.WebView2",
+        licenseName = BSD_3,
+        licenseFile = "$LICENSES/webview2_loader_bsd_3.txt",
+        licenseUrl = BSD_3_URL,
+        builds = setOf(AppBuild.WINDOWS),
+    ),
     apache("Wuffs", "The Wuffs Authors", "https://github.com/google/wuffs", SKIA),
     OpenSourceComponent(
         name = "zlib",

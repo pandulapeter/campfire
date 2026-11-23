@@ -71,7 +71,8 @@ which the script checks; everything else is handed the holders, state, and callb
   connection); one not read otherwise (a bot check, an empty page), or one the page model finds no song on (asked before
   conversion; a model that cannot run throws, and the page is converted whole), is `PAGE_NOT_READ`'s (open it in the
   browser, bring the page itself); both with Try again, which reads it again. With Pages from links off it is the links-only snackbar as before; where the platform cannot
-  read pages (desktop, web) it is `Message.PageLinkNotReadHere`: copy the page itself.
+  read pages (the web, a desktop without WebView2 or WebKitGTK) it is `Message.PageLinkNotReadHere`: copy the page
+  itself.
 - A text that is one Campfire link and nothing else (`sharedLinkIn`) is that link's import; a link beside other words
   stays text. Every way ends in `ImportController.importSharedLink`: a newer version's link is a snackbar, any other is
   downloaded from the address `SharedLink.Readable.downloadUrl` builds (never one the text names) and reviewed, unless

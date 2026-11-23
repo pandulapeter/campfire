@@ -12,9 +12,9 @@
 **Status:** step 0 passed (2026-11-23) with the review fallback below; steps 1 and 2 have their tooling
 (`tools/page-model`), step 3 is `:libs:pagesong`, step 4 crops every paste, drop, and share that is one text, with
 **Use the whole page** in the editor, and reads the title and artist lines heading the song as its header, steps 5 and
-6 read a page shared or pasted by its address on Android and iOS and take Safari's own page text, and step 8 crops
-every PDF and Word import's songs; step 7 (optional) and step 9 are left. Written against the code on 2026-11-22
-(67d82f42a). `convert/` is `libs/chordsheet/src/commonMain/kotlin/com/pandulapeter/campfire/chordpro/convert/`.
+6 read a page shared or pasted by its address on Android, iOS, and the desktop and take Safari's own page text, and
+step 8 crops every PDF and Word import's songs; step 7 (optional) and step 9 are left. Written against the code on
+2026-11-22 (67d82f42a). `convert/` is `libs/chordsheet/src/commonMain/kotlin/com/pandulapeter/campfire/chordpro/convert/`.
 
 A user looking at a song with chords on any website shares it to Campfire (or pastes it, or presses an optional browser
 extension button), and the editor opens on that song with the page's clutter gone: menus, ads, cookie banners,
@@ -206,6 +206,13 @@ weights unread) throws rather than answering no song (`PageCropper.songLinesOf`)
 editor, as a paste does, with no Use the whole page. **Pages from links**
 (`isPageLinkLoadingEnabled`, on by default, `upgrade-5.5.0`) sits under Pictures from links, only where pages can be
 read.
+
+**Done for the desktop (2026-11-23).** The desktop now reads pages too, in the operating system's own web view and no
+bundled engine: `DesktopPageSource` runs `OffscreenPageSource` over `NativeWebViewBrowser`, a JNI helper of the app's
+own (`src/desktopMain/native/`: WKWebView on macOS, WebView2 on Windows, WebKitGTK through `dlopen` on Linux) that
+`:app:desktop` compiles for the host and ships as an app resource. Where the helper or the engine is missing (no
+WebView2 runtime, no WebKitGTK, no display) it is still `NoPageSource`, and Pages from links is hidden. The web build
+still cannot read a page.
 
 ### 6. The share doors
 

@@ -50,6 +50,7 @@ quickjs = "1.0.18" # https://github.com/dokar3/quickjs-kt/releases
 #noinspection NewerVersionAvailable
 skiko = "0.156.1" # Must equal the skiko version Compose brings in: ./gradlew :app:desktop:dependencies --configuration runtimeClasspath | grep skiko
 spotless = "8.11.0" # https://github.com/diffplug/spotless/blob/main/plugin-gradle/CHANGES.md
+webview2 = "1.0.4191.47" # https://www.nuget.org/packages/Microsoft.Web.WebView2 (its SHA-256 is in :app:desktop's build file)
 zxing = "3.5.4" # https://github.com/zxing/zxing/releases
 
 [libraries]

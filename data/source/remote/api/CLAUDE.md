@@ -74,7 +74,7 @@ keys when it is built (`:data:source:remote:implementation`), and knows nothing 
 
 ## Pages (`PageSource`)
 
-- A platform without a web view says so (`canLoadPages`), so the caller answers at once rather than after a wait. Only a
-  public `https` host is opened, never throws but cancellation, and keeps nothing. `LoadedPage.NotRead` says why, by
-  what the user can do: `UNREACHABLE` (no network, a host not found or not answering, nothing drawn in time: try again)
+- A platform without a web view says so (`canLoadPages`: the web, and a desktop whose system web view the app cannot
+  reach), so the caller answers at once rather than after a wait. Only a public `https` host is opened, never throws
+  but cancellation, and keeps nothing. `LoadedPage.NotRead` says why, by what the user can do: `UNREACHABLE` (no network, a host not found or not answering, nothing drawn in time: try again)
   or `UNREADABLE` (a bot check, an empty or error page, a final address off a public host: bring the page itself).

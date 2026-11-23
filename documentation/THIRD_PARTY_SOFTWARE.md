@@ -64,6 +64,7 @@ of the source set of the builds that ship them.
 | [SLF4J](https://www.slf4j.org) | QOS.ch | [MIT](../presentation/src/commonMain/composeResources/files/licenses/slf4j_mit.txt) | Android, desktop |
 | [squashfuse](https://github.com/vasi/squashfuse), inside the AppImage runtime | Dave Vasilevsky, Phillip Lougher | [BSD 2-Clause](../presentation/src/desktopMain/composeResources/files/licenses/squashfuse_bsd_2.txt) | Linux AppImage |
 | [Stately](https://github.com/touchlab/Stately) | Touchlab | [Apache 2.0](../presentation/src/commonMain/composeResources/files/licenses/apache_2.0.txt) | All |
+| [WebView2 loader](https://www.nuget.org/packages/Microsoft.Web.WebView2) 1.0.4191.47, linked into the web view helper | Microsoft Corporation | [BSD 3-Clause](../presentation/src/desktopMain/composeResources/files/licenses/webview2_loader_bsd_3.txt) | Windows |
 | [Wuffs](https://github.com/google/wuffs), inside Skia | The Wuffs Authors | [Apache 2.0](../presentation/src/commonMain/composeResources/files/licenses/apache_2.0.txt) | Desktop, iOS, web |
 | [zlib](https://zlib.net), inside Skia and the AppImage runtime | Jean-loup Gailly and Mark Adler | [zlib License](../presentation/src/commonMain/composeResources/files/licenses/zlib.txt) | Desktop, iOS, web |
 | [Zstandard](https://facebook.github.io/zstd/), inside the AppImage runtime | Meta Platforms, Inc. and affiliates | [BSD 3-Clause](../presentation/src/desktopMain/composeResources/files/licenses/zstd_bsd_3.txt) | Linux AppImage |

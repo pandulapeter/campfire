@@ -33,7 +33,7 @@ do the wide layout's pages. A build without sync leaves Sharing out.
 - **About**: Help starts with Keyboard shortcuts on a desktop or web build, elsewhere only while a keyboard is attached.
 - **Features**: one switch per tab in the navigation's order (Attachments after Setlists, being part of a song), then
   an Online group, so the switches that make requests are found together (`ui/CLAUDE.md`); Pages from links is left out
-  where the platform cannot read a page (the desktop, the web).
+  where the platform cannot read a page (the web, a desktop without WebView2 or WebKitGTK).
 
 ## Layout invariants
 

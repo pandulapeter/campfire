@@ -151,4 +151,29 @@ cannot tell from no answer.
   `about:`, `data:`, `blob:`) refused off a public `https` host. WebKit cannot refuse a subresource without a content
   rule list, so those are the page's, as in Safari. An `NSURLErrorDomain` failure of no connection, a host not found,
   not answering, or lost, or a timeout is the network's.
-- Desktop and web: `NoPageSource` (no web view; a tab may not read another site's page).
+- Web: `NoPageSource` (a tab may not read another site's page).
+
+### Desktop (`NativeWebView`, `src/desktopMain/native/`)
+
+- No browser engine is bundled: a JNI helper of the app's own (`campfirewebview`, 50–60 KB on macOS) drives the system's
+  web view, loaded from the app resources folder (`compose.application.resources.dir`); `:app:desktop` compiles it for
+  the host (`CompileWebViewHelper`). Not FFM (the runtime is Java 21) and not JNA, JCEF, or JavaFX. Without the helper,
+  or with no engine (`isEngineAvailable`: no WebView2 runtime; no WebKitGTK or no display), it is `NoPageSource`.
+- Every native call returns at once and the engine answers on its own thread through `NativeWebViewEvents`, whose
+  method names are the C side's contract (`proguard-rules.pro` keeps them); the helper hands an error's domain and
+  code over raw and `NativeLoadFailure` reads them (tested). Strings cross as UTF-16, since `NewStringUTF`'s modified
+  UTF-8 mangles a page's emoji. Laid out at 1280 × 800.
+- **macOS**: a `WKWebView` in no window, non-persistent data store, built and touched on the AppKit main thread (AWT's
+  first thread, not Compose's event thread) by `dispatch_async`, never waited for, so nothing deadlocks with AWT. A
+  content rule list (compiled once into a store in the temporary folder) refuses pictures, media, `http:`, and `ws:`;
+  navigations as on iOS. Works under the Mac App Store sandbox (`network.client`; tried with the store entitlements).
+- **Windows**: WebView2, InPrivate, in a never-shown window, on a thread of the helper's own (an STA with a message-only
+  window and its loop) for the life of the process; the loader linked in statically from the pinned SDK (NuGet, checked
+  by SHA-256; credited). Every request, frames' and workers' included, goes through `WebResourceRequested`: pictures
+  and media and anything off a public `https` host get a 403, as on Android. New windows, downloads, permissions, and
+  script dialogs are refused. Its browser processes' folder is `%TEMP%\Campfire WebView2`.
+- **Linux**: WebKitGTK through `dlopen` (`webkit2gtk-4.1`, else 4.0; the few functions declared by hand), an ephemeral
+  context, pictures off, in a `GtkOffscreenWindow`, on a GTK thread of the helper's own. It iterates the default main
+  context only while a view is open, since AWT's GTK file dialog runs a loop over the same context on another thread.
+  WebKitGTK does not tell a frame's navigation from the page's, so each is asked as a frame's (about:, data:, blob:
+  allowed, and an address off a public host never read). Subresources are the page's, as on iOS.

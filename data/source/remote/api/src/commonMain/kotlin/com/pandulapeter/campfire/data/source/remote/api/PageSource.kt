@@ -21,7 +21,10 @@ import com.pandulapeter.campfire.data.model.importing.LoadedPage
  */
 interface PageSource {
 
-    /** Whether this platform can read a page at all: Android and iOS can; the desktop's JVM and a browser tab cannot. */
+    /**
+     * Whether this platform can read a page at all: Android and iOS can, and so can a desktop whose system web view the
+     * app reaches (WebKit on macOS, WebView2 on Windows, WebKitGTK on Linux); a browser tab cannot.
+     */
     val canLoadPages: Boolean
 
     /**

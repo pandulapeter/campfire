@@ -101,9 +101,15 @@ only.
   a display (`xvfb-run` in CI).
 - Windows: ANGLE's DLLs are copied into `$APPDIR` from `angleRuntime` (its `skiko` version must equal Compose's), not
   the classpath, where ProGuard would join them into the jar. `SKIKO_RENDER_API=DIRECT3D` is the user's escape hatch.
-- QuickJS's library for the host is an app resource, loaded through `com.dokar.quickjs.library.path` (set in `main`),
-  and the release jar's `jni/` is stripped: otherwise the loader unpacks it into the temporary folder on every launch
-  (left behind on Windows, outside the signed bundle on the Mac App Store).
+- The app resources' `common/` folder holds the native libraries for the host (`collectNativeLibraries`), so each is
+  inside the image and signed with the bundle on macOS:
+  - QuickJS's, loaded through `com.dokar.quickjs.library.path` (set in `main`), and the release jar's `jni/` is
+    stripped: otherwise the loader unpacks it into the temporary folder on every launch (left behind on Windows,
+    outside the signed bundle on the Mac App Store).
+  - The web view helper pages are read in (`compileWebViewHelper`; how it works: `data/source/remote/implementation`),
+    compiled for the host: the Xcode Command Line Tools' clang (host architecture, macOS 12), MSVC found by vswhere
+    with the WebView2 SDK of `libs.versions.webview2` (x64 only), or `cc`. Without the toolchain it is left out with a
+    warning and that build cannot read pages; with `CI` set (every workflow) that fails the build instead.
 
 ### ProGuard (`proguard-rules.pro`)
 

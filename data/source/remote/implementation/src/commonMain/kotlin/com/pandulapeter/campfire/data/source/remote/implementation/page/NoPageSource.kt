@@ -13,8 +13,9 @@ import com.pandulapeter.campfire.data.model.importing.LoadedPage
 import com.pandulapeter.campfire.data.source.remote.api.PageSource
 
 /**
- * Where no page can be read: the desktop's JVM has no web view, and a browser tab may not read another site's page.
- * The platforms' definitions delegate to it.
+ * Where no page can be read: a browser tab may not read another site's page, and a desktop may have no web view the app
+ * reaches (a build without its helper, Windows without WebView2, Linux without WebKitGTK). The platforms' definitions
+ * delegate to it.
  */
 internal object NoPageSource : PageSource {
 

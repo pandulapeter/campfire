@@ -73,3 +73,9 @@
 -keep,allowoptimization class com.dokar.quickjs.binding.JsFunction { *; }
 -keep,allowoptimization class com.dokar.quickjs.binding.JsObject { *; }
 -keep,allowoptimization class kotlin.UByteArray
+
+# The web view helper the desktop reads pages in binds its native functions to these names and calls the events back by
+# name and signature from C; nothing in the JVM calls the callbacks, so ProGuard would otherwise remove them, and the
+# library would refuse to load (JNI_OnLoad looks every one of them up), leaving pages unread.
+-keep class com.pandulapeter.campfire.data.source.remote.implementation.page.NativeWebView { native <methods>; }
+-keep class com.pandulapeter.campfire.data.source.remote.implementation.page.NativeWebViewEvents { public <methods>; }

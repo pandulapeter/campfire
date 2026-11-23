@@ -8,6 +8,7 @@
  * https://mozilla.org/MPL/2.0/.
  */
 import com.pandulapeter.campfire.buildLogic.tasks.AddLaunchAfterInstallToMsi
+import com.pandulapeter.campfire.buildLogic.tasks.CompileWebViewHelper
 import com.pandulapeter.campfire.buildLogic.tasks.PackageAppImage
 import com.pandulapeter.campfire.buildLogic.tasks.PackageMsix
 import com.pandulapeter.campfire.buildLogic.tasks.RecordClassDataArchive
@@ -146,8 +147,8 @@ compose.desktop {
         // Package with the toolchain JDK rather than the JVM running Gradle, which may lack jpackage.
         javaHome = toolchainLauncher.get().metadata.installationPath.asFile.absolutePath
         nativeDistributions {
-            // Holds QuickJS's library for the host in its common/ folder (see extractQuickJsLibrary).
-            appResourcesRootDir.set(layout.buildDirectory.dir("quickjsLibrary"))
+            // Holds the native libraries for the host in its common/ folder (see collectNativeLibraries).
+            appResourcesRootDir.set(layout.buildDirectory.dir("nativeLibraries"))
             targetFormats(TargetFormat.Dmg, TargetFormat.Pkg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "Campfire"
             packageVersion = versionName
@@ -454,7 +455,7 @@ val extractQuickJsLibrary = tasks.register<Sync>("extractQuickJsLibrary") {
         componentFilter { it is ModuleComponentIdentifier && it.group == "io.github.dokar3" && it.module == "quickjs-kt-jvm" }
     }.files
     val hostFolder = quickJsHostFolder
-    val destination = layout.buildDirectory.dir("quickjsLibrary/common")
+    val destination = layout.buildDirectory.dir("quickjsLibrary")
     from({ quickJsJar.map { zipTree(it) } })
     if (hostFolder == null) exclude("**") else include("jni/$hostFolder/libquickjs.*")
     eachFile { path = name }
@@ -467,7 +468,38 @@ val extractQuickJsLibrary = tasks.register<Sync>("extractQuickJsLibrary") {
     }
 }
 
-tasks.matching { it.name == "prepareAppResources" }.configureEach { dependsOn(extractQuickJsLibrary) }
+/**
+ * The web view helper the desktop reads pages in (`NativeWebView.kt` in `:data:source:remote:implementation`, whose
+ * `src/desktopMain/native/` holds its sources), compiled for the host with its operating system's toolchain, or left
+ * out where there is none (`CompileWebViewHelper`). The JNI headers are the packaged runtime's.
+ */
+val compileWebViewHelper = tasks.register<CompileWebViewHelper>("compileWebViewHelper") {
+    sources = rootProject.layout.projectDirectory.dir("data/source/remote/implementation/src/desktopMain/native")
+    javaHome = toolchainLauncher.map { it.metadata.installationPath.asFile.absolutePath }
+    hostSystem = when {
+        isMacHost -> "macos"
+        isWindowsHost -> "windows"
+        isLinuxHost -> "linux"
+        else -> "other"
+    }
+    hostArchitecture = System.getProperty("os.arch").orEmpty()
+    // Every GitHub runner sets CI, and a release built without the helper would quietly lose reading pages.
+    isRequired = providers.environmentVariable("CI").map { it == "true" }.orElse(false)
+    webView2Version = libs.versions.webview2
+    // The SHA-256 of that version's NuGet package; a version bump takes it from the package, downloaded once by hand.
+    webView2Sha256 = "f492bbf547d0da329553b6727435b677579b1e9f91cc9e4a1ad029366d5f23d0"
+    downloadDirectory = layout.buildDirectory.dir("webView2Sdk")
+    outputDirectory = layout.buildDirectory.dir("webViewHelper")
+}
+
+/** The app resources' `common/` folder: QuickJS's library and the web view helper, each where the host has one. */
+val collectNativeLibraries = tasks.register<Sync>("collectNativeLibraries") {
+    from(extractQuickJsLibrary)
+    from(compileWebViewHelper)
+    into(layout.buildDirectory.dir("nativeLibraries/common"))
+}
+
+tasks.matching { it.name == "prepareAppResources" }.configureEach { dependsOn(collectNativeLibraries) }
 
 /**
  * Takes the native libraries no image loads out of the jar ProGuard joins everything into. On every host that is the
