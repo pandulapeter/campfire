@@ -86,6 +86,8 @@ internal object ChordSheetChordWords {
             } else if (word.text.startsWith('(') && !rowChord(word.text)) {
                 (index until minOf(start, index + 4)).firstOrNull { words[it].text.endsWith(')') }
                     ?.takeIf { end -> (index..end).none { rowChord(words[it].text) } }
+                    // A repeat count ending the row whose parenthesis was never closed, `Am F C (x2`, is the same note.
+                    ?: index.takeIf { it == start - 1 && ChordProRowMarks.repeatCount.matches(word.text) }
             } else null
             if (end == null) { row += word; index++; continue }
             notes += Token(text.substring(word.index, words[end].index + words[end].text.length), word.index)
@@ -96,7 +98,7 @@ internal object ChordSheetChordWords {
     }
 
     /** A note printed among a row's chords, written as the annotation ChordPro sets over a lyric the way it sets a chord. */
-    internal fun note(value: String) = "[$ANNOTATION_MARKER${value.removeSurrounding("(", ")").replace('[', '(').replace(']', ')').trim()}]"
+    internal fun note(value: String) = "[$ANNOTATION_MARKER${value.removePrefix("(").removeSuffix(")").replace('[', '(').replace(']', ')').trim()}]"
 
     /** A chord of a chord row, where a star marks the one a footnote under the song explains (`C*`). */
     internal fun rowChord(value: String) = chord(value.removeSuffix("*").removeSuffix("*"))

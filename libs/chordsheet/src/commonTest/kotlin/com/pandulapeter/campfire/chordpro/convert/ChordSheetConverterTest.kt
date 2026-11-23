@@ -556,6 +556,11 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `a repeat count whose parenthesis is never closed is a note of the row`() {
+        assertEquals("[Am] [Em] [F] [C] [*x2]\n[Am] [C] [*x2]\n", convert("Am Em F C (x2\nAm  C  (x2)"))
+    }
+
+    @Test
     fun `parenthesized chords need a majority`() {
         assertEquals("[Am] Today [C] the day (repeat)\n", convert("(Am) Today (C) the day (repeat)"))
         assertEquals("(Am) Today (repeat)\n", convert("(Am) Today (repeat)"))
