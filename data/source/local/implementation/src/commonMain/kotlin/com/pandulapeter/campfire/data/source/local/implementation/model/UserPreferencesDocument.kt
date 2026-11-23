@@ -48,6 +48,7 @@ internal data class UserPreferencesDocument(
     val isCoverArtEnabled: Boolean = true,
     val isSongDetailsLookupEnabled: Boolean = true,
     val isPictureLinkDownloadEnabled: Boolean = true,
+    val isPageLinkLoadingEnabled: Boolean = true,
     val isAttachmentsEnabled: Boolean = true,
     val shouldNumberSections: Boolean = true,
     val songLayout: String = "",

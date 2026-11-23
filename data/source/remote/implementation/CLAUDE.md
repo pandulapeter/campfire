@@ -134,3 +134,17 @@ cannot tell from no answer.
   `MusicBrainzRateLimiter` per app; a `Retry-After` over 32 s fails the search at once. iTunes allows ~20
   requests/minute and gets no pace of its own.
 - Candidates that would fill in the same values are merged (duration to the second).
+
+## Pages (`page/`)
+
+- `OffscreenPageSource` is the common loop over a platform's `OffscreenBrowser`: a look (`PAGE_SNAPSHOT_SCRIPT`:
+  `innerText`, title, address) every 500 ms, taken once loaded and unchanged for 1.5 s, else the last readable look at
+  20 s; a bot check (`PageSnapshot.isBotCheck`, short pages only) is waited past, never taken. The view is let go of
+  however the read ends.
+- Android: a `WebView` attached to no window, laid out at the screen's size, scripts on, no file or content access,
+  pictures not loaded, third-party cookies refused; navigations and every subresource refused off a public `https` host
+  (`data:` and `blob:` aside). A 404 or 410 fails the load; a 403 or 503 may be a bot check that clears.
+- iOS: a `WKWebView` in no window with a non-persistent data store; every navigation (frames too, which may also be
+  `about:`, `data:`, `blob:`) refused off a public `https` host. WebKit cannot refuse a subresource without a content
+  rule list, so those are the page's, as in Safari.
+- Desktop and web: `NoPageSource` (no web view; a tab may not read another site's page).

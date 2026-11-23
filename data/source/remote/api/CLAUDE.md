@@ -71,3 +71,9 @@ keys when it is built (`:data:source:remote:implementation`), and knows nothing 
   `CatalogueSearchException` only once they give up. A catalogue's pace is shared between both searches, so one object
   implements both per catalogue. `loadSongCredits` answers null without a request for a catalogue that never names
   songwriters.
+
+## Pages (`PageSource`)
+
+- A platform without a web view says so (`canLoadPages`), so the caller answers at once rather than after a wait. Only a
+  public `https` host is opened, never throws but cancellation, and keeps nothing; a bot check, an empty page, a failed
+  load, or a final address off a public host is `LoadedPage.NotRead`, never told apart.

@@ -13,6 +13,7 @@ import io.ktor.client.plugins.api.Send
 import io.ktor.client.plugins.api.createClientPlugin
 import io.ktor.http.URLProtocol
 import io.ktor.http.Url
+import io.ktor.http.parseUrl
 import io.ktor.util.AttributeKey
 
 /**
@@ -30,6 +31,9 @@ internal fun isPublicHttpsAddress(url: Url): Boolean {
     if (lastLabel.all { it.isDigit() } || lastLabel.startsWith("0x")) return false
     return LOCAL_SUFFIXES.none { host == it || host.endsWith(".$it") }
 }
+
+/** [isPublicHttpsAddress] for an address as text, as a web view hands each navigation over; one that does not parse is not. */
+internal fun isPublicHttpsAddress(address: String) = parseUrl(address)?.let(::isPublicHttpsAddress) == true
 
 /** Marks a request whose every hop must be [isPublicHttpsAddress]; a hop that is not ends it with [RefusedAddressException]. */
 internal val PublicHostsOnly = AttributeKey<Unit>("PublicHostsOnly")

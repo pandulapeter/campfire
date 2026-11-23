@@ -109,6 +109,12 @@ data class UserPreferences(
      */
     val isPictureLinkDownloadEnabled: Boolean = true,
     /**
+     * Whether a page shared or pasted as its address alone is read once on the device (an offscreen web view, on the
+     * platforms that have one) and its song taken from it. Off, such an address is answered with a sentence, as it is
+     * where no page can be read.
+     */
+    val isPageLinkLoadingEnabled: Boolean = true,
+    /**
      * Whether songs show and take attachments: the About the song sheet's Attachments group and the editor's Attach
      * button. Off only hides them; the files a song names are still kept, synced, exported, and imported.
      */

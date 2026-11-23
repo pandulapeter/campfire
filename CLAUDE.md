@@ -29,6 +29,10 @@ Only these, all in `:data:source:remote:implementation`, the only module that ma
   downloaded once and kept as a library file, never drawn from the web: the address the user gives the editor's From a
   link, a missing picture's Download, and an import's songs as its review opens (the "Pictures from links" switch in
   Settings → Features removes the import's). Sync never downloads one.
+- **Pages from links**: a page shared or pasted as its address alone (Android, iOS) is read once on the device in an
+  offscreen web view (`PageSource`: public `https` hosts only, never the local network, bounded in time) and only its
+  text kept for the import; nothing of it is shown or stored. The "Pages from links" switch in Settings → Features
+  removes it; the desktop and the web build have no web view and never read one.
 - **Shared links**: sharing a song or setlist publishes a copy (with the pictures and, within a budget of their own,
   the attachments its songs name) as a public link in the Dropbox connected for Sync, kept current by sync runs; opening
   one downloads that zip from `dl.dropboxusercontent.com`, needing no account and keeping nothing beyond the import.

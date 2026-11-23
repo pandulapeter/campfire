@@ -1,0 +1,34 @@
+{
+    "fontScale": 1.2,
+    "sortingMode": "by_artist",
+    "setlistSortingMode": "by_date",
+    "uiMode": "system_default",
+    "themeColor": "teal",
+    "isPictureLinkDownloadEnabled": false,
+    "isAttachmentsEnabled": false,
+    "songLayout": "pages",
+    "pageTurn": "page",
+    "language": "system_default",
+    "accidentals": "original",
+    "notation": "standard",
+    "chordNames": "shapes",
+    "instrument": "guitar",
+    "transpositions": {
+        "oasis-wonderwall.cho": 2
+    },
+    "tagMatchMode": "any",
+    "languageMatchMode": "any",
+    "tagSortingMode": "by_usage",
+    "languageSortingMode": "by_usage",
+    "printSettings": {
+        "showTabs": true,
+        "showSheetMusic": true,
+        "showKey": true,
+        "showTempo": true,
+        "showOverviewDetails": true
+    },
+    "seenWhatsNewVersions": [
+        "5.4.0",
+        "5.5.0"
+    ]
+}
