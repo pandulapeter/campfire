@@ -31,7 +31,7 @@ import androidx.compose.ui.layout.onPlaced
  * stadium of its height in [SharedTabChrome]'s color behind what it holds. While two tabs swap, the node is drawn over
  * both screens; matched, the container is drawn at the travelling rectangle by the copy being left, and what the node
  * holds is moved onto that rectangle's middle and clipped to it, so a circle turning into a pill keeps its icon centered
- * in it; alone, the whole node scales and fades around its middle. A no-op without [chrome].
+ * in it; alone, the whole node fades with its screen. A no-op without [chrome].
  *
  * @param zIndex Where it is drawn among the other parts over the screens: the search pill under the bar's content under
  *   the New button. The copy being opened is drawn over the one being left, whose container is the one drawn, so that
@@ -57,12 +57,7 @@ internal fun Modifier.sharedTabChrome(
         )
         .graphicsLayer {
             val counterpart = chrome.counterpart()
-            if (chrome.isAlone(counterpart)) {
-                val scale = chrome.aloneScale(counterpart)
-                scaleX = scale
-                scaleY = scale
-                alpha = chrome.aloneAlpha
-            }
+            if (chrome.isAlone(counterpart)) alpha = chrome.screenAlphaValue
         }
         .drawWithContent {
             val counterpart = chrome.counterpart()
@@ -92,7 +87,7 @@ internal fun Modifier.sharedTabChrome(
  * Makes this node, laid over the whole of a bar, the part [chrome] stands for where the part is only a stretch of the
  * bar drawn behind its buttons (the search pill, see [rememberSharedTabChrome]'s `localBounds`): it draws nothing outside
  * a swap of two tabs, when the bar draws the pill itself, and the pill over both screens during one, at the travelling
- * rectangle while matched (by the copy being left only) and scaled around its own middle while alone. A no-op
+ * rectangle while matched (by the copy being left only) and at its own, fading with its screen, while alone. A no-op
  * without [chrome].
  */
 @OptIn(ExperimentalSharedTransitionApi::class)
@@ -114,7 +109,7 @@ internal fun Modifier.sharedTabChromeSurface(
             } else {
                 val own = bounds()
                 if (own.isEmpty) return@drawBehind
-                scale(scale = chrome.aloneScale(counterpart), pivot = own.center) { drawPath(path = stadiumOf(own), color = color, alpha = chrome.aloneAlpha) }
+                drawPath(path = stadiumOf(own), color = color, alpha = chrome.screenAlphaValue)
             }
         }
 }

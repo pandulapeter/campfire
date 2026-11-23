@@ -32,8 +32,8 @@ The navigation chrome (bar, rail, transitions, and the Tools item).
   part, a reversed swap included. Only the left copy draws the container (the opened one reaches the overlay a frame
   late), its color going from its own to the other's; the icons ride it, clipped, the same one (`TabChromeContent`)
   never dimming, different ones scaling as they cross (`matchedContentScale`); the tools' search keeps its mark while
-  only its hint and query cross (`tabChromeDiffering`). A part the other tab lacks scales and
-  fades alone, since inside its screen it would blink out in 90 ms. A back gesture moves every part linearly.
+  only its hint and query cross (`tabChromeDiffering`). A part the other tab lacks only fades,
+  on its screen's curves (several scaling in at once pulled the eye to as many places). A back gesture moves every part linearly.
 - **A back gesture started mid-transition**: Android runs Google's newer NavDisplay (`androidx-navigation3-android`),
   which follows it. Elsewhere `MidTransitionBackHandler` (composed after `NavDisplay`) takes it and goes back on release,
   retargeting the running slide: the multiplatform 1.2.0 seeks the running transition to follow a finger, which replays

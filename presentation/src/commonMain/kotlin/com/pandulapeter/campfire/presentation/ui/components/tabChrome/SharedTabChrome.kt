@@ -49,9 +49,9 @@ import androidx.compose.ui.layout.positionInRoot
  *   ([matchedContentAlpha]), scaling as it does where the two hold different things ([matchedContentScale]), so a
  *   New button turning into a play button reads as its icon changing. The copy being left draws the container because it is already drawn over both screens on
  *   the swap's first frame, while the one being opened, attached on that frame, is drawn there only from the next.
- * - Where it has none (Settings; a list screen with its search open, a selection, or read only mode), the part scales
- *   and fades on its own, out of the screen being left or into the one being opened. Left inside its screen, which is
- *   gone in 90 ms, it would blink rather than scale.
+ * - Where it has none (Settings; a list screen with its search open, a selection, or read only mode), the part only
+ *   fades, on its screen's own curves, as the rest of its page does: several parts scaling in at once, each around its
+ *   own middle, would pull the eye to as many places on one swap.
  *
  * The rectangles are the parts' own, as laid out, in the root's coordinates, which a tab swap moves neither screen in.
  * They are read while drawing, so nothing is composed or laid out again on the swap's frames.
@@ -96,23 +96,17 @@ internal class SharedTabChrome(
         isEntering = { it.isEntering },
     )
 
-    /** Whether the part is drawn alone, scaling and fading, rather than sharing its rectangle with [counterpart]. */
+    /** Whether the part is drawn alone, fading with its screen, rather than sharing its rectangle with [counterpart]. */
     fun isAlone(counterpart: SharedTabChrome?) = isSwapping && counterpart == null
 
     /** Whether the screen holding the part is the one being opened. */
     val isEntering get() = scope.visibilityScope.transition.targetState == EnterExitState.Visible
 
-    /** How large the part is drawn while it is [isAlone], around its middle; whole otherwise. */
-    fun aloneScale(counterpart: SharedTabChrome?) = if (isAlone(counterpart)) scaleOnPresence() else 1f
-
-    /** How opaque the part is while it is [isAlone], on the effects spring, so it is gone before the spatial one settles. */
-    val aloneAlpha get() = fade.value.coerceIn(0f, 1f)
-
     /**
-     * How opaque what is drawn over the part but belongs to its screen, and stands off the part (see
-     * [tabChromeForeground]), has to be to fade as its screen fades: with the screen, or with the part while that is alone.
+     * How opaque the part is drawn while it is [isAlone], and what is drawn over it but belongs to its screen (see
+     * [tabChromeForeground]) always: as opaque as its screen, which it is drawn outside of while the tabs swap.
      */
-    fun foregroundAlpha(counterpart: SharedTabChrome?) = if (isAlone(counterpart)) aloneAlpha else screenAlpha.value
+    val screenAlphaValue get() = screenAlpha.value
 
     /** Whether the part and [counterpart] hold the same thing (New on either list), which then never changes. */
     private fun isContentShared(counterpart: SharedTabChrome?) = counterpart?.content == content
@@ -138,18 +132,18 @@ internal class SharedTabChrome(
     /**
      * How large what stands on the part is drawn while it shares its rectangle with [counterpart], around the travelling rectangle's middle:
      * whole where both copies hold the same, and otherwise growing in on the copy being opened and shrinking away on
-     * the one being left, on the spatial spring, as a part on its own does ([aloneScale]).
+     * the one being left, on the spatial spring.
      */
     fun matchedContentScale(counterpart: SharedTabChrome?) = if (isContentShared(counterpart)) 1f else scaleOnPresence()
 
     /**
      * How opaque what rides the part is while it shares its rectangle and the two copies hold different things (an open field
      * and a closed pill's buttons, which [matchedContentAlpha] would show whole on top of each other halfway): a plain
-     * crossfade, the one going as the other comes.
+     * crossfade, the one going as the other comes, on the effects spring, so it is done before the spatial one settles.
      */
-    val crossfadeAlpha get() = aloneAlpha
+    val crossfadeAlpha get() = fade.value.coerceIn(0f, 1f)
 
-    /** How large what scales in or out with the part is drawn: [TAB_CHROME_HIDDEN_SCALE] out of sight, whole once in. */
+    /** How large what scales in or out on the part is drawn: [TAB_CHROME_HIDDEN_SCALE] out of sight, whole once in. */
     private fun scaleOnPresence() = TAB_CHROME_HIDDEN_SCALE + (1f - TAB_CHROME_HIDDEN_SCALE) * presence.value
 
     /** The part's own rectangle in the root's coordinates, or null while it has none (not placed, or empty). */
@@ -265,8 +259,9 @@ private fun Transition<EnterExitState>.animateSwap(
 ) { if (it == EnterExitState.Visible) 1f else 0f }
 
 /**
- * How small a part is as it scales out of the screen being left or into the one being opened, see [SharedTabChrome], and
- * a detached action of the bar as it fades out of it and back in (`areClosedSearchActionsDetached`), so the two leave alike.
+ * How small what a matched part holds is as it scales out of the screen being left or into the one being opened, where the
+ * two copies hold different things (see [SharedTabChrome.matchedContentScale]), and a detached action of the bar as it
+ * fades out of it and back in (`areClosedSearchActionsDetached`), so the two leave alike.
  */
 internal const val TAB_CHROME_HIDDEN_SCALE = 0.6f
 

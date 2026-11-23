@@ -38,8 +38,8 @@
   same origin, is drawn over it then (`searchPillForeground`): what stands on the pill (closed buttons, the open field)
   **rides the travelling pill**, start edge on its start edge (`SharedTabChrome.travellingBounds`), clipped to it and
   crossfading with the other tab's (`crossfadeAlpha`, since an open field and closed buttons differ), so open ↔ closed
-  reads as one pill; the rest (an open search's close button and actions) fades in place, all of it with the pill while
-  that scales alone. New is a part of its own. `FloatingPill`'s node is the pill itself, buttons reaching past.
+  reads as one pill; the rest (an open search's close button and actions) fades in place, all of it with its screen while
+  the pill is alone. New is a part of its own. `FloatingPill`'s node is the pill itself, buttons reaching past.
 - `SearchBackHandler` uses `NavigationBackHandler` over a hoisted `NavigationEventState`, not `BackHandler` (which
   hears a gesture only on release), and previews the close via `SearchState.backProgress`. The offset is layout, not a
   drawn translation, so `animateBounds` carries on from where the gesture left.

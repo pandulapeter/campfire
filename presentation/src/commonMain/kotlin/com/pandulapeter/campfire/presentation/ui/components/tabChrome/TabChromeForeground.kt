@@ -17,7 +17,6 @@ import androidx.compose.ui.graphics.ClipOp
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.ContentDrawScope
 import androidx.compose.ui.graphics.drawscope.clipPath
-import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.unit.LayoutDirection
 
@@ -31,8 +30,9 @@ import androidx.compose.ui.unit.LayoutDirection
  * this one's origin), its start edge on the rectangle's start edge, the way the field's content rides its start edge as
  * the search opens and closes, and clipped to the rectangle's stadium, so the open field's text never hangs past a pill
  * narrowing into the closed one, nor a closed pill's buttons wait outside one still on its way to them; it crossfades
- * with the other tab's ([SharedTabChrome.crossfadeAlpha]). While the part is alone it scales and fades with it instead. What stands
- * off the part (an open search's close button and the actions beside the field) stays where it is laid out and only fades.
+ * with the other tab's ([SharedTabChrome.crossfadeAlpha]). While the part is alone it fades with its screen instead, as
+ * does what stands off the part (an open search's close button and the actions beside the field), which stays where it is
+ * laid out.
  */
 @OptIn(ExperimentalSharedTransitionApi::class)
 internal fun Modifier.tabChromeForeground(
@@ -49,17 +49,13 @@ internal fun Modifier.tabChromeForeground(
             } else {
                 val partOutline = stadiumOf(part)
                 val counterpart = chrome.counterpart()
-                withAlpha(chrome.foregroundAlpha(counterpart)) {
-                    clipPath(path = partOutline, clipOp = ClipOp.Difference) { this@drawWithContent.drawContent() }
-                }
                 val travelling = chrome.travellingBounds(counterpart)
                 if (travelling == null) {
-                    withAlpha(chrome.foregroundAlpha(counterpart)) {
-                        scale(scale = chrome.aloneScale(counterpart), pivot = part.center) {
-                            clipPath(path = partOutline) { this@drawWithContent.drawContent() }
-                        }
-                    }
+                    withAlpha(chrome.screenAlphaValue) { this@drawWithContent.drawContent() }
                 } else {
+                    withAlpha(chrome.screenAlphaValue) {
+                        clipPath(path = partOutline, clipOp = ClipOp.Difference) { this@drawWithContent.drawContent() }
+                    }
                     withAlpha(chrome.crossfadeAlpha) {
                         this@drawWithContent.drawRidingOn(part = part, partOutline = partOutline, travelling = travelling)
                     }
