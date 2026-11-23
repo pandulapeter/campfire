@@ -349,6 +349,7 @@ class ImportWork(
         } catch (exception: CancellationException) {
             throw exception
         } catch (exception: Exception) {
+            println("Could not crop the page: ${exception.message}")
             true
         }
         if (!holdsSong) return null
