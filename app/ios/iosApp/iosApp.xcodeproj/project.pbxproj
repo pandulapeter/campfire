@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		C4F2000A2E80000000000003 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4F2000A2E80000000000002 /* ShareViewController.swift */; };
 		C4F2000A2E80000000000005 /* ShareInboxWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4F2000A2E80000000000004 /* ShareInboxWriter.swift */; };
+		C4F2000A2E80000000000051 /* PageText.js in Resources */ = {isa = PBXBuildFile; fileRef = C4F2000A2E80000000000050 /* PageText.js */; };
 		C4F2000A2E80000000000007 /* ShareView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4F2000A2E80000000000006 /* ShareView.swift */; };
 		C4F2000A2E8000000000000B /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = C4F2000A2E8000000000000A /* PrivacyInfo.xcprivacy */; };
 		C4F2000A2E8000000000000D /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = C4F2000A2E8000000000000C /* Localizable.strings */; };
@@ -52,6 +53,7 @@
 		C4F2000A2E80000000000001 /* ShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		C4F2000A2E80000000000002 /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
 		C4F2000A2E80000000000004 /* ShareInboxWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareInboxWriter.swift; sourceTree = "<group>"; };
+		C4F2000A2E80000000000050 /* PageText.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = PageText.js; sourceTree = "<group>"; };
 		C4F2000A2E80000000000006 /* ShareView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareView.swift; sourceTree = "<group>"; };
 		C4F2000A2E80000000000008 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		C4F2000A2E80000000000009 /* ShareExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ShareExtension.entitlements; sourceTree = "<group>"; };
@@ -177,6 +179,7 @@
 				C4F2000A2E80000000000010 /* Assets.xcassets */,
 				C4F2000A2E80000000000008 /* Info.plist */,
 				C4F2000A2E8000000000000C /* Localizable.strings */,
+				C4F2000A2E80000000000050 /* PageText.js */,
 				C4F2000A2E8000000000000A /* PrivacyInfo.xcprivacy */,
 				C4F2000A2E80000000000009 /* ShareExtension.entitlements */,
 				C4F2000A2E80000000000004 /* ShareInboxWriter.swift */,
@@ -302,6 +305,7 @@
 				C4F2000A2E80000000000011 /* Assets.xcassets in Resources */,
 				C4F2000A2E8000000000000B /* PrivacyInfo.xcprivacy in Resources */,
 				C4F2000A2E8000000000000D /* Localizable.strings in Resources */,
+				C4F2000A2E80000000000051 /* PageText.js in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

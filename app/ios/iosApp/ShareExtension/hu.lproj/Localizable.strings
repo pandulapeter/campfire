@@ -12,8 +12,6 @@
 "share_saving" = "Mentés a Campfire számára…";
 "share_saved" = "Elmentve a Campfire számára";
 "share_saved_detail" = "Nyisd meg a Campfire-t, hogy a könyvtáradba kerüljön.";
-"share_link" = "A Campfire nem nyit meg weboldalakat.";
-"share_link_detail" = "Jelöld ki az akkordokat és a dalszöveget, és azt oszd meg.";
 "share_unsupported" = "Ezt a Campfire nem tudja importálni.";
 "share_unsupported_detail" = "Dalokat, egyszerű szöveget, PDF- és Word-dokumentumokat, valamint zip archívumokat importál.";
 "share_too_large" = "Ez túl nagy az importáláshoz.";

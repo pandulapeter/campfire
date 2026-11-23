@@ -10,8 +10,9 @@
 # Plan: a song from any page
 
 **Status:** step 0 passed (2026-11-23) with the review fallback below; steps 1 and 2 have their tooling
-(`tools/page-model`), step 3 is `:libs:pagesong`, and step 4 crops every paste, drop, and share that is one text, with
-**Use the whole page** in the editor; step 5 is next. Written against the code on 2026-11-22 (67d82f42a). `convert/` is
+(`tools/page-model`), step 3 is `:libs:pagesong`, step 4 crops every paste, drop, and share that is one text, with
+**Use the whole page** in the editor, and steps 5 and 6 read a page shared or pasted by its address on Android and iOS
+and take Safari's own page text; step 7 (optional) or 8 is next. Written against the code on 2026-11-22 (67d82f42a). `convert/` is
 `libs/chordsheet/src/commonMain/kotlin/com/pandulapeter/campfire/chordpro/convert/`.
 
 A user looking at a song with chords on any website shares it to Campfire (or pastes it, or presses an optional browser
@@ -175,6 +176,20 @@ bounds.
 - The rule "never a link followed, except a Campfire share link" becomes "a shared link is read once on the device
   when the switch allows it", in the root `CLAUDE.md` and `presentation`'s.
 
+**Done (2026-11-23).** `PageSource` (`:data:source:remote:api`) says whether the platform can read a page at all
+(`canLoadPages`) and answers `LoadedPage` (`:data:model`): `Read` (text, title, final address) or `NotRead`, never told
+apart. `OffscreenPageSource` is the common loop over an `OffscreenBrowser`: a look every 500 ms, taken once loaded and
+unchanged for 1.5 s, else the last readable look at 20 s; a bot check (`PageSnapshot.isBotCheck`, short pages only) is
+waited past and never taken. Android's `WebViewBrowser` refuses every navigation and subresource off a public `https`
+host (`isPublicHttpsAddress`, the covers' rule); iOS's `WebKitBrowser` every navigation, in a non-persistent data store;
+desktop and web are `NoPageSource`. Up through `PageRepository`, `LoadPageUseCase` (which asks the switch again) and
+`CanLoadPagesUseCase`. In the app a page's address is `ImportSource.Page`: read in `ImportWork` as the import screen's
+loading stage says "Reading the page…" (`ImportProgress.Phase.READING_PAGE`, the notification too), asked of the page
+model before conversion, and then the pasted page it is; its song's editor replaces the loading screen. Not read, or no
+song: the failure stage's sentence (`ImportFailure.PAGE_NOT_READ`), with Try again. **Pages from links**
+(`isPageLinkLoadingEnabled`, on by default, `upgrade-5.5.0`) sits under Pictures from links, only where pages can be
+read.
+
 ### 6. The share doors
 
 - **Android**: a share that is only an address (or an address with a site's call to action around it) loads it
@@ -184,6 +199,16 @@ bounds.
   address is written to the inbox as an address and loaded by the app on its next open (the extension's memory limit
   keeps the webview out of it).
 - **Desktop and web**: paste and drop already reach the pipeline; a pasted address alone gets the sentence from step 5.
+
+**Done (2026-11-23).** Every door ends in `PastedSongController`, where `pageAddressIn` decides that a text is a page's
+address: one address, alone or among at most three short lines (200 characters) of a call to action or a title,
+trailing punctuation dropped, never two different addresses and never Campfire's own site (`sharedLinkIn` is asked
+first). Android's share and every paste or drop take that path; a text with more in it goes to the crop as before.
+iOS's extension runs `PageText.js` in Safari (`NSExtensionJavaScriptPreprocessingFile`) and writes its `innerText` as
+the share's one text with the title as subject, nothing loaded again; a URL from any other app (one that is no file's,
+now in the activation rule) is written as a text of its address, read by the app on its next open. The extension's
+"does not open web pages" refusal and its strings are gone. Desktop and web answer an address with
+`Message.PageLinkNotReadHere`.
 
 ### 7. Optional: browser extensions
 

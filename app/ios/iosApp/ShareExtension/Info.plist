@@ -53,12 +53,15 @@
 	<dict>
 		<key>NSExtensionAttributes</key>
 		<dict>
+			<!-- Run by Safari in the page shared, so its text arrives as the reader sees it (PageText.js). -->
+			<key>NSExtensionJavaScriptPreprocessingFile</key>
+			<string>PageText</string>
 			<!--
-			     Selected text and the files the import reads. A predicate rather than the dictionary form, whose file
-			     key takes any file at all. Plain text covers .txt, the ChordPro family, and ABC tunes, whose types
-			     (declared by the app) conform to it; public.url conforms to none of these, so a page shared by its
-			     address alone does not list Campfire,
-			     a Campfire share link included (one sent as text, or as a URL beside a text, still reaches the app).
+			     Selected text, a web page, and the files the import reads. A predicate rather than the dictionary form,
+			     whose file key takes any file at all. Plain text covers .txt, the ChordPro family, and ABC tunes, whose
+			     types (declared by the app) conform to it. A page from Safari arrives as the property list PageText.js
+			     answers (its own text, title, and address); one from another browser, or any app sharing a link, as a
+			     URL that is no file's, which the app reads once by itself (a Campfire share link is opened as one).
 			     JSON conforms to public.text but not to public.plain-text, so it is named for the songs another
 			     app's export holds. Keep in step with LibraryFiles.IMPORTABLE_EXTENSIONS, as the app's document
 			     types are with SONG_EXTENSIONS: the legacy .doc (which the import only reports as unreadable) is
@@ -87,6 +90,12 @@
         || ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "org.webmproject.webp"
         || ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.heic"
         || ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.heif"
+        || ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "com.apple.property-list"
+        || SUBQUERY (
+            $attachment.registeredTypeIdentifiers,
+            $type,
+            $type UTI-CONFORMS-TO "public.url" AND NOT ($type UTI-CONFORMS-TO "public.file-url")
+        ).@count &gt;= 1
     ).@count &gt;= 1
 ).@count &gt;= 1</string>
 		</dict>

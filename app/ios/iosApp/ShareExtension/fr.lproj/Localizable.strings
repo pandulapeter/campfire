@@ -12,8 +12,6 @@
 "share_saving" = "Enregistrement dans Campfire…";
 "share_saved" = "Enregistré dans Campfire";
 "share_saved_detail" = "Ouvre Campfire pour l’ajouter à ta bibliothèque.";
-"share_link" = "Campfire n’ouvre pas les pages web.";
-"share_link_detail" = "Sélectionne plutôt le texte de la grille d’accords et partage-le.";
 "share_unsupported" = "Campfire ne peut pas importer ceci.";
 "share_unsupported_detail" = "Il importe les chansons, le texte brut, les documents PDF et Word ainsi que les archives zip.";
 "share_too_large" = "C’est trop volumineux pour être importé.";

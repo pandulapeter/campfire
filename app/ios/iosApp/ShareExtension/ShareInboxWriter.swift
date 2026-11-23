@@ -13,7 +13,6 @@ import UniformTypeIdentifiers
 /// What a share came to, which is the one thing the extension's sheet says.
 enum ShareOutcome {
     case saved
-    case link
     case unsupported
     case tooLarge
     case inboxFull
@@ -42,9 +41,21 @@ struct ShareInboxWriter {
         let attachments = items.flatMap { $0.attachments ?? [] }.compactMap(Attachment.init)
         let files = attachments.compactMap { if case let .file(provider, type) = $0 { return (provider, type) } else { return nil } }
         let links = attachments.compactMap { if case let .link(provider) = $0 { return provider } else { return nil } }
+        let pages = attachments.compactMap { if case let .page(provider) = $0 { return provider } else { return nil } }
         var texts: [String] = []
+        var subject = Self.subject(of: items)
         // A text next to a file is its caption - the file's name, a "sent from" line - as it is on Android.
-        if files.isEmpty {
+        if files.isEmpty, let page = await firstPage(pages) {
+            if Self.isCampfireLink(page.address) {
+                // Campfire's own landing page, whose link the app opens as the share it is, never as a page's text.
+                texts = [page.address]
+            } else {
+                // Safari's own text of the page (PageText.js): the app crops it as a pasted page, nothing loaded again.
+                if Int64(page.text.utf8.count) > ShareLimits.maxTextSize { return .tooLarge }
+                texts = [page.text]
+                subject = subject ?? page.title
+            }
+        } else if files.isEmpty {
             for case let .text(provider) in attachments {
                 switch await loadText(provider) {
                 case let .text(text): texts.append(text)
@@ -59,12 +70,16 @@ struct ShareInboxWriter {
             // is kept: the app opens one link per text, and would take a second one as a file of its own.
             if let link = texts.first(where: Self.isCampfireLink), texts.allSatisfy(isOneLine) {
                 texts = [link.trimmingCharacters(in: .whitespacesAndNewlines)]
-            } else if texts.allSatisfy(isOneLine), let link = await firstCampfireLink(links) {
+            } else if texts.allSatisfy(isOneLine), let link = await firstAddress(links, where: Self.isCampfireLink) {
                 texts = [link]
-            } else {
-                if texts.isEmpty { return links.isEmpty ? .unsupported : .link }
-                // Any other page shared by its address is never fetched.
-                if texts.allSatisfy(Self.isOnlyLinks) || !links.isEmpty && texts.allSatisfy(isOneLine) { return .link }
+            } else if texts.isEmpty || texts.allSatisfy(isOneLine) && !links.isEmpty {
+                // Any other page shared by its address (a title beside it is only that) goes as its address, which the app
+                // reads once by itself: a web view does not fit in an extension's memory. An address in a text goes as it is.
+                if let address = await firstAddress(links, where: Self.isWebAddress) {
+                    texts = [address]
+                } else if texts.isEmpty {
+                    return .unsupported
+                }
             }
         }
         guard let containerURL else { return .failed }
@@ -85,7 +100,7 @@ struct ShareInboxWriter {
         if waiting.count >= Self.maxWaitingShares { return .inboxFull }
         let name = "\(Self.timestamp())-\(UUID().uuidString)"
         let partial = inbox.appendingPathComponent(name + Self.partialSuffix, isDirectory: true)
-        let outcome = await writeShare(files: files, texts: texts, subject: Self.subject(of: items), into: partial, waitingBytes: waiting.bytes)
+        let outcome = await writeShare(files: files, texts: texts, subject: subject, into: partial, waitingBytes: waiting.bytes)
         guard outcome == .saved else {
             try? fileManager.removeItem(at: partial)
             return outcome
@@ -206,9 +221,35 @@ struct ShareInboxWriter {
         }
     }
 
-    /// The first address a URL attachment carries that `isCampfireLink` takes, read and never fetched. An app hands it
-    /// over as a URL, its text, or its data representation.
-    private func firstCampfireLink(_ providers: [NSItemProvider]) async -> String? {
+    private struct SharedPage {
+        let text: String
+        let title: String?
+        let address: String
+    }
+
+    /// The first page Safari read for the extension (`PageText.js`, under `NSExtensionJavaScriptPreprocessingResultsKey`)
+    /// that has any text; an empty one is shared by its address instead, which the app reads itself.
+    private func firstPage(_ providers: [NSItemProvider]) async -> SharedPage? {
+        for provider in providers {
+            let page: SharedPage? = await withCheckedContinuation { continuation in
+                provider.loadItem(forTypeIdentifier: UTType.propertyList.identifier) { item, _ in
+                    let results = (item as? NSDictionary)?[NSExtensionJavaScriptPreprocessingResultsKey] as? NSDictionary
+                    guard let text = results?["text"] as? String, !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                        return continuation.resume(returning: nil)
+                    }
+                    let title = (results?["title"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines)
+                    let address = (results?["address"] as? String) ?? ""
+                    continuation.resume(returning: SharedPage(text: text, title: title?.isEmpty == false ? title : nil, address: address))
+                }
+            }
+            if let page { return page }
+        }
+        return nil
+    }
+
+    /// The first address a URL attachment carries that [accepted] takes, read and never fetched. An app hands it over as
+    /// a URL, its text, or its data representation.
+    private func firstAddress(_ providers: [NSItemProvider], where accepted: (String) -> Bool) async -> String? {
         for provider in providers {
             let address: String? = await withCheckedContinuation { continuation in
                 provider.loadItem(forTypeIdentifier: UTType.url.identifier) { item, _ in
@@ -222,7 +263,7 @@ struct ShareInboxWriter {
                     }
                 }
             }
-            if let address, Self.isCampfireLink(address) { return address.trimmingCharacters(in: .whitespacesAndNewlines) }
+            if let address, accepted(address) { return address.trimmingCharacters(in: .whitespacesAndNewlines) }
         }
         return nil
     }
@@ -233,10 +274,13 @@ struct ShareInboxWriter {
         case file(NSItemProvider, typeIdentifier: String)
         case text(NSItemProvider)
         case link(NSItemProvider)
+        case page(NSItemProvider)
 
         init?(_ provider: NSItemProvider) {
             let types = provider.registeredTypeIdentifiers
-            if let type = types.first(where: { type in ShareLimits.fileTypes.contains { Self.conforms(type, to: $0) } }) {
+            if types.contains(where: { Self.conforms($0, to: UTType.propertyList.identifier) }) {
+                self = .page(provider)
+            } else if let type = types.first(where: { type in ShareLimits.fileTypes.contains { Self.conforms(type, to: $0) } }) {
                 self = .file(provider, typeIdentifier: type)
             } else if let type = types.first(where: { Self.conforms($0, to: UTType.plainText.identifier) }) {
                 self = provider.suggestedName.map(ShareLimits.isImportable) == true ? .file(provider, typeIdentifier: type) : .text(provider)
@@ -313,10 +357,9 @@ struct ShareInboxWriter {
         return formatter.string(from: Date())
     }
 
-    /// The same text as a link only is to `isOnlyLinks` in `:presentation`: every line that is not blank is an address.
-    static func isOnlyLinks(_ text: String) -> Bool {
-        let lines = text.components(separatedBy: .newlines).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
-        return !lines.isEmpty && lines.allSatisfy { $0.range(of: #"^https?://\S+$"#, options: [.regularExpression, .caseInsensitive]) != nil }
+    /// A web page's address and nothing else, which the app reads once by itself; any other kind of address is no page.
+    static func isWebAddress(_ text: String) -> Bool {
+        text.trimmingCharacters(in: .whitespacesAndNewlines).range(of: #"^https?://\S+$"#, options: [.regularExpression, .caseInsensitive]) != nil
     }
 
     /// `ShareLinks`' address regex in `:data:model`, copied by hand as the landing page's is (keep the three in step),

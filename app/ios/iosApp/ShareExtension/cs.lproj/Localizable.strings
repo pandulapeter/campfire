@@ -11,8 +11,6 @@
 "share_saving" = "Ukládání do Campfire…";
 "share_saved" = "Uloženo do Campfire";
 "share_saved_detail" = "Otevři Campfire a přidej to do knihovny.";
-"share_link" = "Campfire neotevírá webové stránky.";
-"share_link_detail" = "Označ text s akordy a sdílej místo stránky ten.";
 "share_unsupported" = "Tohle Campfire neumí importovat.";
 "share_unsupported_detail" = "Importuje písně, prostý text, dokumenty PDF a Word a archivy zip.";
 "share_too_large" = "Tohle je na import příliš velké.";

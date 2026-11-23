@@ -69,10 +69,10 @@ extension (`iosApp/ShareExtension/`, Swift only).
 
 ## Share extension
 
-- Share → Campfire for selected text and the files the import reads (`NSExtensionActivationRule`; `ShareLimits` lists
-  the same types; OnSong's `.onsong` has no system type to name, so it arrives only through the app's file picker or a
-  drop). It links no Kotlin: it copies what it was given into `ShareInbox/` in the App
-  Group container (`APP_GROUP_ID` in `Config.xcconfig`, both targets' entitlements, `CampfireAppGroup` in both
+- Share → Campfire for selected text, a web page, and the files the import reads (`NSExtensionActivationRule`;
+  `ShareLimits` lists the same types; OnSong's `.onsong` has no system type to name, so it arrives only through the
+  app's file picker or a drop). It links no Kotlin: it copies what it was given into `ShareInbox/` in the App Group
+  container (`APP_GROUP_ID` in `Config.xcconfig`, both targets' entitlements, `CampfireAppGroup` in both
   `Info.plist`s), says so, and is done.
 - **It never opens the app**: only a Today widget may, and the responder-chain way round is not API and is refused by
   review. The app drains the inbox on every `.active` scene phase and on the Darwin notification
@@ -85,8 +85,13 @@ extension (`iosApp/ShareExtension/`, Swift only).
   underscored, free of separators, control, invisible, and bidirectional characters and leading dots, and at most 200
   bytes.
 - Files beat text in one share. A Campfire share link (by `isCampfireLink`, a hand copy of `ShareLinks`' regex), as a
-  text or a URL attachment beside one-line texts, is written as the share's one text; any other page's address is
-  refused with a sentence. The extension mirrors `ImportLimits` before copying: a zip archive (by its extension) up to
+  text or a URL attachment beside one-line texts, is written as the share's one text. A page shared from Safari arrives
+  as `PageText.js`'s property list (`NSExtensionJavaScriptPreprocessingFile`: `innerText`, title, address) and is
+  written as the share's one text, its title the subject, nothing loaded again (a Campfire page's address excepted,
+  which is its link). Any other page's address (a URL attachment that is no file's, alone or beside one-line texts) is
+  written as a text of that address, which the app reads itself (`presentation/CLAUDE.md`): a web view does not fit in
+  the extension's memory, and the extension never opens the app.
+- The extension mirrors `ImportLimits` before copying: a zip archive (by its extension) up to
   `MAX_STAGED_ARCHIVE_SIZE` (16 GiB), copied only where the volume's free space holds it beside `minFreeSpaceFor`'s
   margin, else `share_no_space` (the disk space API, E174.1), and counted against neither a share's 40 MB nor the
   inbox's bound; everything else within its own limit and 40 MB a share, the inbox bounded at 20 shares and 64 MB.

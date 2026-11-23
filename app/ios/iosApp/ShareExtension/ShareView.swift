@@ -56,7 +56,6 @@ private extension ShareOutcome {
     var title: String {
         switch self {
         case .saved: return NSLocalizedString("share_saved", comment: "")
-        case .link: return NSLocalizedString("share_link", comment: "")
         case .unsupported: return NSLocalizedString("share_unsupported", comment: "")
         case .tooLarge: return NSLocalizedString("share_too_large", comment: "")
         case .inboxFull: return NSLocalizedString("share_inbox_full", comment: "")
@@ -68,7 +67,6 @@ private extension ShareOutcome {
     var detail: String? {
         switch self {
         case .saved: return NSLocalizedString("share_saved_detail", comment: "")
-        case .link: return NSLocalizedString("share_link_detail", comment: "")
         case .unsupported: return NSLocalizedString("share_unsupported_detail", comment: "")
         case .tooLarge: return NSLocalizedString("share_too_large_detail", comment: "")
         case .inboxFull: return NSLocalizedString("share_inbox_full_detail", comment: "")
