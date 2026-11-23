@@ -42,8 +42,8 @@ import androidx.compose.ui.layout.positionInRoot
  *
  * - Where the other screen has the same part, the two are one surface at one rectangle ([travellingBounds]), which
  *   goes from the rectangle of the copy being left to that of the one being opened as the latter's presence does, on
- *   the theme's spatial spring. Both copies work it out from the same two rectangles and the same progress,
- *   so they never part. Only the copy being left draws the container there, its color going from its own to the other
+ *   the theme's spatial spring without its bounce. Both copies work it out from the same two rectangles and the same
+ *   progress, so they never part. Only the copy being left draws the container there, its color going from its own to the other
  *   part's on the same progress, so a filled New button turns into the tonal Preferences pill rather than one fading
  *   out under the other. What each copy holds rides the rectangle, clipped to it, and crosses with the other's
  *   ([matchedContentAlpha]), scaling as it does where the two hold different things ([matchedContentScale]), so a
@@ -64,7 +64,6 @@ internal class SharedTabChrome(
     private val scope: TabChromeScope,
     private val element: TabChromeElement,
     private val presence: State<Float>,
-    private val settle: State<Float>,
     private val fade: State<Float>,
     private val screenAlpha: State<Float>,
     containerColor: Color,
@@ -128,14 +127,9 @@ internal class SharedTabChrome(
     /**
      * How large what stands on the part is drawn while it shares its rectangle with [counterpart], around the travelling rectangle's middle:
      * whole where both copies hold the same, and otherwise growing in on the copy being opened and shrinking away on
-     * the one being left, on the spatial spring without its bounce: an open field's icons turning into a closed pill's
-     * buttons would otherwise swell past their size inside a pill that is still travelling.
+     * the one being left, on the spatial spring, as a part on its own does ([aloneScale]).
      */
-    fun matchedContentScale(counterpart: SharedTabChrome?) = if (isContentShared(counterpart)) {
-        1f
-    } else {
-        TAB_CHROME_HIDDEN_SCALE + (1f - TAB_CHROME_HIDDEN_SCALE) * settle.value
-    }
+    fun matchedContentScale(counterpart: SharedTabChrome?) = if (isContentShared(counterpart)) 1f else scaleOnPresence()
 
     /**
      * How opaque what rides the part is while it shares its rectangle and the two copies hold different things (an open field
@@ -199,8 +193,9 @@ internal fun rememberSharedTabChrome(
     val scope = LocalTabChromeScope.current ?: return null
     val motionScheme = MaterialTheme.motionScheme
     val transition = scope.visibilityScope.transition
-    val presence = transition.animateSwap(scope) { motionScheme.defaultSpatialSpec() }
-    val settle = transition.animateSwap(scope) {
+    // The theme's spatial spring without its bounce: past 1 the travelling rectangle would carry what rides it beyond
+    // where the part lands, and the swap, ending before the spring settles, would snap it back.
+    val presence = transition.animateSwap(scope) {
         when (val spec = motionScheme.defaultSpatialSpec<Float>()) {
             is SpringSpec -> spring(stiffness = spec.stiffness)
             else -> spec
@@ -215,7 +210,6 @@ internal fun rememberSharedTabChrome(
             scope = scope,
             element = element,
             presence = presence,
-            settle = settle,
             fade = fade,
             screenAlpha = screenAlpha,
             containerColor = containerColor,
