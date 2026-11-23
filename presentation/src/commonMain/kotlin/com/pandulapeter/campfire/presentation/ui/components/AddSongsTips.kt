@@ -29,11 +29,14 @@ import com.pandulapeter.campfire.presentation.resources.add_songs_tip_import_hin
 import com.pandulapeter.campfire.presentation.resources.add_songs_tip_import_title
 import com.pandulapeter.campfire.presentation.resources.add_songs_tip_paste_hint
 import com.pandulapeter.campfire.presentation.resources.add_songs_tip_paste_hint_with_links
+import com.pandulapeter.campfire.presentation.resources.add_songs_tip_paste_hint_with_links_without_sharing
 import com.pandulapeter.campfire.presentation.resources.add_songs_tip_paste_title
 import com.pandulapeter.campfire.presentation.resources.ic_content_paste
 import com.pandulapeter.campfire.presentation.resources.ic_import
 import com.pandulapeter.campfire.presentation.resources.import_files
 import com.pandulapeter.campfire.presentation.resources.songs_paste_from_clipboard
+import com.pandulapeter.campfire.presentation.ui.platform.isDesktopPlatform
+import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -59,7 +62,7 @@ internal fun AddSongsTips(
     AddSongsTip(
         icon = painterResource(Res.drawable.ic_content_paste),
         title = stringResource(Res.string.add_songs_tip_paste_title),
-        hint = stringResource(if (canReadLinks) Res.string.add_songs_tip_paste_hint_with_links else Res.string.add_songs_tip_paste_hint),
+        hint = stringResource(pasteHint(canReadLinks = canReadLinks, canReceiveShares = !isDesktopPlatform)),
         actionText = stringResource(Res.string.songs_paste_from_clipboard),
         isEnabled = isEnabled,
         onClick = onPaste,
@@ -72,6 +75,20 @@ internal fun AddSongsTips(
         isEnabled = isEnabled,
         onClick = onImport,
     )
+}
+
+/**
+ * The paste tip's hint: whether a link alone will do, and whether sharing a page to the app is offered too. A desktop
+ * (the application, or a browser used with a pointer, which reads no links anyway) has no share sheet that names
+ * Campfire, so there the hint leaves sharing out.
+ */
+internal fun pasteHint(
+    canReadLinks: Boolean,
+    canReceiveShares: Boolean,
+): StringResource = when {
+    !canReadLinks -> Res.string.add_songs_tip_paste_hint
+    canReceiveShares -> Res.string.add_songs_tip_paste_hint_with_links
+    else -> Res.string.add_songs_tip_paste_hint_with_links_without_sharing
 }
 
 @Composable

@@ -55,7 +55,9 @@ The songs screen.
   any web page, and importing another app's export. It continues the onboarding, so it has no dismiss button; the third
   song takes it away. Not under a placeholder, a search, the selection, or performance mode.
 - The paste tip says the song is found on the page, its clutter left behind on the device; where a page's address is
-  read (`CanLoadPagesUseCase` and Pages from links on), a second string adds that the link alone will do.
+  read (`CanLoadPagesUseCase` and Pages from links on), a second string adds that the link alone will do and that the
+  page can be shared to Campfire, a third (`isDesktopPlatform`, which has no share sheet naming the app) only the link
+  (`pasteHint`).
 - It is the last grid item, never the first, so the item and section indices need not count it.
 
 ## Selecting songs

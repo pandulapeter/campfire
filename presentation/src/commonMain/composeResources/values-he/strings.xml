@@ -332,6 +332,7 @@
     <string name="add_songs_tip_paste_title">הוספת שיר מכל אתר</string>
     <string name="add_songs_tip_paste_hint">העתיקו את הדף של שיר והדביקו או גררו אותו לכאן. Campfire ימצא בו את השיר וישאיר בחוץ את התפריטים, הפרסומות והתגובות, ישירות במכשיר שלכם.</string>
     <string name="add_songs_tip_paste_hint_with_links">העתיקו את הדף של שיר, או רק את הקישור אליו, והדביקו או גררו אותו לכאן, או שתפו את הדף עם Campfire. הוא ימצא בו את השיר וישאיר בחוץ את התפריטים, הפרסומות והתגובות, ישירות במכשיר שלכם.</string>
+    <string name="add_songs_tip_paste_hint_with_links_without_sharing">העתיקו את הדף של שיר, או רק את הקישור אליו, והדביקו או גררו אותו לכאן. Campfire ימצא בו את השיר וישאיר בחוץ את התפריטים, הפרסומות והתגובות, ישירות במכשיר שלכם.</string>
     <string name="add_songs_tip_import_title">העברת השירים מאפליקציה אחרת</string>
     <string name="add_songs_tip_import_hint">ייצאו את השירים מאפליקציית שירים אחרת, רצוי כארכיון zip או כגיבוי, וייבאו אותם כאן. גם קובצי ChordPro, PDF, Word וטקסט עובדים.</string>
     <string name="songs_paste_converted">הומר מאקורדים שנכתבו מעל המילים. בדקו את השם ואת האמן, ואז שמרו.</string>

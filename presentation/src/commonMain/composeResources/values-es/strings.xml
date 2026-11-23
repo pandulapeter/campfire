@@ -298,6 +298,7 @@
     <string name="add_songs_tip_paste_title">Añade una canción de cualquier web</string>
     <string name="add_songs_tip_paste_hint">Copia la página de una canción y pégala o suéltala aquí. Campfire encuentra la canción y deja fuera los menús, los anuncios y los comentarios, en tu propio dispositivo.</string>
     <string name="add_songs_tip_paste_hint_with_links">Copia la página de una canción, o solo su enlace, y pégalo o suéltalo aquí, o comparte la página con Campfire. Encuentra la canción y deja fuera los menús, los anuncios y los comentarios, en tu propio dispositivo.</string>
+    <string name="add_songs_tip_paste_hint_with_links_without_sharing">Copia la página de una canción, o solo su enlace, y pégalo o suéltalo aquí. Campfire encuentra la canción y deja fuera los menús, los anuncios y los comentarios, en tu propio dispositivo.</string>
     <string name="add_songs_tip_import_title">Trae tus canciones de otra app</string>
     <string name="add_songs_tip_import_hint">Exporta tus canciones desde otra app de cancionero, idealmente como archivo zip o copia de seguridad, e impórtalas aquí. También sirven archivos ChordPro, PDF, Word y de texto.</string>
     <string name="songs_paste_converted">Convertida a partir de acordes escritos sobre la letra. Revisa el título y el artista, y guárdala.</string>
