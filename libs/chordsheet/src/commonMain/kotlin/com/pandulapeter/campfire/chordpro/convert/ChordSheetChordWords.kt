@@ -20,12 +20,24 @@ internal object ChordSheetChordWords {
     /**
      * The words of a row that may be one of chords, a chord held with a run of dashes (`Dm7-----`, `Am----Am7`) read as
      * the chords it holds, each where it stands: the dashes draw how long it rings, and no chord name holds two in a row.
+     * Two chords joined by one dash (`Em-G`), half a bar each, are read the same way, but only where every piece is a
+     * chord: a word such as `D-Day`, or a chord name that spells a flat fifth with one (`Cm7-5`), stays whole.
      */
     internal fun rowTokens(text: String): List<Token> = tokens(text).flatMap { word ->
-        if ("--" !in word.text) return@flatMap listOf(word)
-        val held = Regex("[^-]+(?:-(?!-)[^-]*)*").findAll(word.text).map { Token(it.value.trimEnd('-'), word.index + it.range.first) }.toList()
-        if (held.isNotEmpty() && held.all { rowChord(it.text) }) held else listOf(word)
+        if ('-' !in word.text || rowChord(word.text)) return@flatMap listOf(word)
+        val pieces = if ("--" in word.text) held.findAll(word.text).map { Token(it.value.trimEnd('-'), word.index + it.range.first) }.toList() else listOf(word)
+        val chords = pieces.flatMap(::joinedChords)
+        if (chords.isNotEmpty() && chords.all { rowChord(it.text) }) chords else listOf(word)
     }
+
+    /** The chords [piece] joins with single dashes, each where it stands; [piece] itself where it is no such pair. */
+    private fun joinedChords(piece: Token): List<Token> {
+        if (rowChord(piece.text) || '-' !in piece.text || piece.text.split('-').any(String::isEmpty)) return listOf(piece)
+        return joined.findAll(piece.text).map { Token(it.value, piece.index + it.range.first) }.toList()
+    }
+
+    private val held = Regex("[^-]+(?:-(?!-)[^-]*)*")
+    private val joined = Regex("[^-]+")
     internal fun ascii(value: String) = value.replace('\u266f', '#').replace('\u266d', 'b')
     internal fun chord(value: String): Boolean {
         val name = ascii(value).removeSurrounding("(", ")")

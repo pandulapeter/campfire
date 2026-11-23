@@ -575,6 +575,16 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `two chords joined by one dash are two chords each over its column - other dashed words stay whole`() {
+        assertEquals("[Em] [G] [D] [C] [Em] [G] [D] [C]\n", convert("Em-G  D-C  Em-G  D-C"))
+        assertEquals(
+            listOf(Token("Em", 0), Token("G", 3), Token("D", 6), Token("C", 8), Token("Am", 11), Token("C", 17)),
+            ChordSheetChordWords.rowTokens("Em-G  D-C  Am----C"),
+        )
+        for (row in listOf("Em-Day D-Day", "Cm7-5 F", "A- E-")) assertEquals(row.split(' ').first(), ChordSheetChordWords.rowTokens(row).first().text)
+    }
+
+    @Test
     fun `parenthesized chords need a majority`() {
         assertEquals("[Am] Today [C] the day (repeat)\n", convert("(Am) Today (C) the day (repeat)"))
         assertEquals("(Am) Today (repeat)\n", convert("(Am) Today (repeat)"))
