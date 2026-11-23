@@ -66,9 +66,9 @@ def rendered(cho, rng):
     """
     A `.cho` as a chord site shows it: (text, label) pairs. Its chords sit in a row over the lyric, or, as a page whose
     chords are spans above their syllables reads once its text is taken, inside the lyric: glued into the word, set apart
-    by spaces, or left in brackets.
+    by spaces, or left in brackets; or, as a lyrics site, a poem, or a hymn's words, it has no chords at all.
     """
-    style = rng.choice(["rows", "rows", "glued", "spaced", "bracketed"])
+    style = rng.choice(["rows", "rows", "glued", "spaced", "bracketed", "words"])
     lines = []
     for raw in cho.splitlines():
         line = raw.rstrip()
@@ -90,7 +90,11 @@ def rendered(cho, rng):
         if not line.strip():
             lines.append(("", "BLANK"))
             continue
-        if "[" in line and style != "rows":
+        if "[" in line and style == "words":
+            words = re.sub(r"\[[^\]]*\]", "", line)
+            if words.strip():
+                lines.append((words, "SONG"))
+        elif "[" in line and style != "rows":
             def inline(match):
                 chord = match.group(1)
                 return {"glued": chord, "spaced": f" {chord} ", "bracketed": f"[{chord}]"}[style]

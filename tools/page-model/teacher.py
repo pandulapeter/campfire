@@ -17,7 +17,8 @@ numbers and labels, never text.
 instructions the labeller follows into `teacher/INSTRUCTIONS.md`. The labeller writes `teacher/<id>.run1.json` and
 `teacher/<id>.run2.json`, each `{"TITLE": [n], "ARTIST": [n], "METADATA": [ranges], "SONG": [ranges], "noSong": bool}`,
 a range being `n` or `[first, last]`, every other line `JUNK`. `merge` keeps a page whose two runs agree on nearly every
-line (`labels/<id>.json`), the lines they disagree on left out of training (`IGNORE`), and drops the rest.
+line (`labels/<id>.json`), the lines they disagree on left out of training (`IGNORE`), and drops the rest; a chord
+diagram drawn as characters is `JUNK` whatever the runs said.
 """
 
 import glob
@@ -26,6 +27,8 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from lines import diagram_runs  # noqa: E402
 
 MAX_LINES = 1500
 MAX_WIDTH = 160
@@ -39,7 +42,7 @@ lines cut. Its first rows give the page's title and address. Label every line wi
 - `SONG`: the song itself, from its first section to its last: lyrics, chord rows, inline chords, section labels
   (Verse, Chorus, [Intro]…), tab staves, chord grids, ABC notation, repeat marks, and the blank lines inside it.
   A chord diagram's name list or a "Chords used" block that sits right above or below the song and only names the
-  song's chords is `SONG` too. Anything the site put inside the song that is not the song (an ad, "Report this",
+  song's chords is `SONG` too, but a chord diagram drawn as characters, one mark a line (`×`, `7fr`), is `JUNK`. Anything the site put inside the song that is not the song (an ad, "Report this",
   a "Transpose" control, a video placeholder, "continue reading", a print button) is not.
 - `TITLE`: the one line that best holds the song's title (it may also carry the artist, "X chords by Y": still TITLE).
 - `ARTIST`: the one line that best holds the artist's or performer's name on its own, where there is one apart from
@@ -121,10 +124,13 @@ def merge(corpus):
         if agreement < MIN_AGREEMENT or bool(runs[0].get("noSong")) != bool(runs[1].get("noSong")):
             dropped.append((page["id"], round(agreement, 3)))
             continue
+        diagrams = diagram_runs(page["lines"][:count])
         labels = []
         for index in range(count):
             if not page["lines"][index].strip():
                 labels.append("BLANK")
+            elif index in diagrams:
+                labels.append("JUNK")
             elif first[index] == second[index]:
                 labels.append(first[index])
             else:

@@ -62,6 +62,30 @@ def chord_tokens(text):
     return None
 
 
+DIAGRAM_PIECE = re.compile(r"^(?:[×xXoO○●]|[0-9]{1,2}\s*fr\.?|[0-9]{1,2})$")
+
+
+def diagram_runs(texts):
+    """
+    The lines of chord diagrams a page draws as characters, one mark a line (`×`, `7fr`, a finger number), with the chord
+    names among them: a run of at least six marks and two names (a run of numbers alone is a listing's line numbers or a
+    hymn's verses). The app draws its own diagrams, so these are clutter to a crop.
+    """
+    found, run, marks = set(), [], 0
+    for index, text in enumerate(list(texts) + [""]):
+        stripped = visible(text).strip()
+        if not stripped:
+            continue
+        if DIAGRAM_PIECE.match(stripped) or (CHORD.match(stripped) and run):
+            run.append(index)
+            marks += bool(DIAGRAM_PIECE.match(stripped))
+            continue
+        if marks >= 6 and len(run) - marks >= 2:
+            found.update(run)
+        run, marks = ([index], 0) if CHORD.match(stripped) else ([], 0)
+    return found
+
+
 def is_chord_row(text):
     return chord_tokens(text) is not None
 
