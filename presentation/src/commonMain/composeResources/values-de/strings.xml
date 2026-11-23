@@ -295,8 +295,9 @@
     <string name="songs_create_song">Song erstellen</string>
     <string name="songs_paste_from_clipboard">Song einfügen</string>
     <string name="add_songs_hint_title">Füge deine eigenen Songs hinzu</string>
-    <string name="add_songs_tip_paste_title">Kopiere einen Song von einer beliebigen Website</string>
-    <string name="add_songs_tip_paste_hint">Kopiere Text und Akkorde eines Songs von einer beliebigen Webseite, egal wie unordentlich, und füge sie hier ein. Campfire macht daraus einen sauberen Song, den du speichern kannst.</string>
+    <string name="add_songs_tip_paste_title">Füge einen Song von einer beliebigen Website hinzu</string>
+    <string name="add_songs_tip_paste_hint">Kopiere die Seite eines Songs und füge sie hier ein oder zieh sie hierher. Campfire findet den Song und lässt Menüs, Werbung und Kommentare weg, direkt auf deinem Gerät.</string>
+    <string name="add_songs_tip_paste_hint_with_links">Kopiere die Seite eines Songs oder nur ihren Link und füge ihn hier ein oder zieh ihn hierher, oder teile die Seite mit Campfire. Es findet den Song und lässt Menüs, Werbung und Kommentare weg, direkt auf deinem Gerät.</string>
     <string name="add_songs_tip_import_title">Hol deine Songs aus einer anderen App</string>
     <string name="add_songs_tip_import_hint">Exportiere deine Songs aus einer anderen Songbook-App, am besten als Zip-Archiv oder Backup, und importiere sie hier. ChordPro-, PDF-, Word- und Textdateien funktionieren auch.</string>
     <string name="songs_paste_converted">Aus Akkorden über dem Text umgewandelt. Prüfe Titel und Interpret und speichere dann.</string>

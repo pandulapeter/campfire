@@ -28,6 +28,7 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.add_songs_tip_import_hint
 import com.pandulapeter.campfire.presentation.resources.add_songs_tip_import_title
 import com.pandulapeter.campfire.presentation.resources.add_songs_tip_paste_hint
+import com.pandulapeter.campfire.presentation.resources.add_songs_tip_paste_hint_with_links
 import com.pandulapeter.campfire.presentation.resources.add_songs_tip_paste_title
 import com.pandulapeter.campfire.presentation.resources.ic_content_paste
 import com.pandulapeter.campfire.presentation.resources.ic_import
@@ -36,16 +37,19 @@ import com.pandulapeter.campfire.presentation.resources.songs_paste_from_clipboa
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * The two ways most people fill their library, each with a button that does it: pasting a song copied off any web page,
- * which the paste converter turns into ChordPro however it was laid out, and importing what another songbook app
- * exports. Shown as a card at the end of a library too small to be anybody's own yet.
+ * The two ways most people fill their library, each with a button that does it: bringing a song in from any web page,
+ * whose song the page model finds and the paste converter turns into ChordPro however it was laid out, and importing
+ * what another songbook app exports. Shown as a card at the end of a library too small to be anybody's own yet.
  *
  * @param isEnabled False disables both buttons, for while an import runs or performance mode is on.
+ * @param canReadLinks Whether a page's address alone is read here (the platform can, and Pages from links is on), so
+ *   the hint says that a link will do.
  */
 @Composable
 internal fun AddSongsTips(
     modifier: Modifier = Modifier,
     isEnabled: Boolean,
+    canReadLinks: Boolean,
     onPaste: () -> Unit,
     onImport: () -> Unit,
 ) = Column(
@@ -55,7 +59,7 @@ internal fun AddSongsTips(
     AddSongsTip(
         icon = painterResource(Res.drawable.ic_content_paste),
         title = stringResource(Res.string.add_songs_tip_paste_title),
-        hint = stringResource(Res.string.add_songs_tip_paste_hint),
+        hint = stringResource(if (canReadLinks) Res.string.add_songs_tip_paste_hint_with_links else Res.string.add_songs_tip_paste_hint),
         actionText = stringResource(Res.string.songs_paste_from_clipboard),
         isEnabled = isEnabled,
         onClick = onPaste,

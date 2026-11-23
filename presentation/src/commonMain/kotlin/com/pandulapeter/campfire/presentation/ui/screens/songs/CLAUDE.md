@@ -54,6 +54,8 @@ The songs screen.
 - Under three songs in the whole library (the demo library is two) the list ends in a hint: pasting a song copied off
   any web page, and importing another app's export. It continues the onboarding, so it has no dismiss button; the third
   song takes it away. Not under a placeholder, a search, the selection, or performance mode.
+- The paste tip says the song is found on the page, its clutter left behind on the device; where a page's address is
+  read (`CanLoadPagesUseCase` and Pages from links on), a second string adds that the link alone will do.
 - It is the last grid item, never the first, so the item and section indices need not count it.
 
 ## Selecting songs

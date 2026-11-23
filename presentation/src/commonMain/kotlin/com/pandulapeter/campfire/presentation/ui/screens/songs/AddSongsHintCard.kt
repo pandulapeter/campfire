@@ -12,6 +12,9 @@ package com.pandulapeter.campfire.presentation.ui.screens.songs
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyGridItemScope
+import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -36,6 +39,7 @@ import com.pandulapeter.campfire.presentation.ui.components.songCard.SONG_CARD_V
 internal fun AddSongsHintCard(
     modifier: Modifier = Modifier,
     isEnabled: Boolean,
+    canReadLinks: Boolean,
     onPaste: () -> Unit,
     onImport: () -> Unit,
 ) = Surface(
@@ -52,10 +56,31 @@ internal fun AddSongsHintCard(
         )
         AddSongsTips(
             isEnabled = isEnabled,
+            canReadLinks = canReadLinks,
             onPaste = onPaste,
             onImport = onImport,
         )
     }
+}
+
+/**
+ * [AddSongsHintCard] as the songs grid's last item, across every column. [itemModifier] is the list's item animation,
+ * which only the item's own scope can make.
+ */
+internal fun LazyGridScope.addSongsHintItem(
+    itemModifier: @Composable LazyGridItemScope.() -> Modifier,
+    isEnabled: Boolean,
+    canReadLinks: Boolean,
+    onPaste: () -> Unit,
+    onImport: () -> Unit,
+) = item(key = ADD_SONGS_HINT_KEY, span = { GridItemSpan(maxLineSpan) }, contentType = "add_songs_hint") {
+    AddSongsHintCard(
+        modifier = itemModifier(),
+        isEnabled = isEnabled,
+        canReadLinks = canReadLinks,
+        onPaste = onPaste,
+        onImport = onImport,
+    )
 }
 
 /**
@@ -79,3 +104,6 @@ internal fun isAddSongsHintShown(
 
 /** One more than the demo library's songs, so that the card greets everybody who kept them and added nothing yet. */
 private const val ADD_SONGS_HINT_LIMIT = 3
+
+/** The key of [AddSongsHintCard]'s item. */
+private const val ADD_SONGS_HINT_KEY = "add_songs_hint"

@@ -297,8 +297,9 @@
     <string name="songs_create_song">Criar uma música</string>
     <string name="songs_paste_from_clipboard">Colar música</string>
     <string name="add_songs_hint_title">Adicione suas próprias músicas</string>
-    <string name="add_songs_tip_paste_title">Copie uma música de qualquer site</string>
-    <string name="add_songs_tip_paste_hint">Copie a letra e os acordes de uma música de qualquer página da web, por mais bagunçados que estejam, e cole aqui. O Campfire os organiza em uma música que você pode salvar.</string>
+    <string name="add_songs_tip_paste_title">Adicione uma música de qualquer site</string>
+    <string name="add_songs_tip_paste_hint">Copie a página de uma música e cole ou solte aqui. O Campfire encontra a música e deixa de fora os menus, os anúncios e os comentários, no seu próprio dispositivo.</string>
+    <string name="add_songs_tip_paste_hint_with_links">Copie a página de uma música, ou só o link dela, e cole ou solte aqui, ou compartilhe a página com o Campfire. Ele encontra a música e deixa de fora os menus, os anúncios e os comentários, no seu próprio dispositivo.</string>
     <string name="add_songs_tip_import_title">Traga suas músicas de outro app</string>
     <string name="add_songs_tip_import_hint">Exporte suas músicas de outro app de cancioneiro, de preferência como arquivo zip ou backup, e importe aqui. Arquivos ChordPro, PDF, Word e de texto também funcionam.</string>
     <string name="songs_paste_converted">Convertida a partir de acordes escritos sobre a letra. Confira o título e o artista e depois salve.</string>

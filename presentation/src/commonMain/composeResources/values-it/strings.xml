@@ -295,8 +295,9 @@
     <string name="songs_create_song">Crea una canzone</string>
     <string name="songs_paste_from_clipboard">Incolla dagli appunti</string>
     <string name="add_songs_hint_title">Aggiungi le tue canzoni</string>
-    <string name="add_songs_tip_paste_title">Copia una canzone da qualsiasi sito</string>
-    <string name="add_songs_tip_paste_hint">Copia testo e accordi di una canzone da qualsiasi pagina web, anche disordinati, e incollali qui. Campfire li riordina in una canzone che puoi salvare.</string>
+    <string name="add_songs_tip_paste_title">Aggiungi una canzone da qualsiasi sito</string>
+    <string name="add_songs_tip_paste_hint">Copia la pagina di una canzone e incollala o trascinala qui. Campfire trova la canzone e lascia fuori menu, pubblicità e commenti, direttamente sul tuo dispositivo.</string>
+    <string name="add_songs_tip_paste_hint_with_links">Copia la pagina di una canzone, o solo il suo link, e incollalo o trascinalo qui, oppure condividi la pagina con Campfire. Trova la canzone e lascia fuori menu, pubblicità e commenti, direttamente sul tuo dispositivo.</string>
     <string name="add_songs_tip_import_title">Porta le tue canzoni da un\'altra app</string>
     <string name="add_songs_tip_import_hint">Esporta le tue canzoni da un\'altra app di canzonieri, meglio se come archivio zip o backup, e importale qui. Funzionano anche file ChordPro, PDF, Word e di testo.</string>
     <string name="songs_paste_converted">Convertita dagli accordi scritti sopra il testo. Controlla il titolo e l\'artista, poi salva.</string>

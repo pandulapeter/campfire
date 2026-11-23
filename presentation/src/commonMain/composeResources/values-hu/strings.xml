@@ -295,8 +295,9 @@
     <string name="songs_create_song">Dal létrehozása</string>
     <string name="songs_paste_from_clipboard">Beillesztés a vágólapról</string>
     <string name="add_songs_hint_title">Saját dalok hozzáadása</string>
-    <string name="add_songs_tip_paste_title">Másolj ki egy dalt bármelyik weboldalról</string>
-    <string name="add_songs_tip_paste_hint">Másold ki egy dal szövegét és akkordjait bármelyik weboldalról, akármilyen rendezetlen is, és illeszd be ide. A Campfire rendezett dalt készít belőle, amit elmenthetsz.</string>
+    <string name="add_songs_tip_paste_title">Adj hozzá egy dalt bármelyik weboldalról</string>
+    <string name="add_songs_tip_paste_hint">Másold ki egy dal oldalát, és illeszd be vagy húzd ide. A Campfire megtalálja rajta a dalt, a menüket, a hirdetéseket és a hozzászólásokat pedig elhagyja, mindezt az eszközödön.</string>
+    <string name="add_songs_tip_paste_hint_with_links">Másold ki egy dal oldalát vagy csak a linkjét, és illeszd be vagy húzd ide, vagy oszd meg az oldalt a Campfire-rel. Megtalálja rajta a dalt, a menüket, a hirdetéseket és a hozzászólásokat pedig elhagyja, mindezt az eszközödön.</string>
     <string name="add_songs_tip_import_title">Hozd át a dalaidat egy másik alkalmazásból</string>
     <string name="add_songs_tip_import_hint">Exportáld a dalaidat egy másik daloskönyv-alkalmazásból, lehetőleg zip archívumként vagy biztonsági mentésként, és importáld ide. ChordPro-, PDF-, Word- és szövegfájlok is használhatók.</string>
     <string name="songs_paste_converted">A dalszöveg fölé írt akkordokat a Campfire a szövegbe illesztette. Ellenőrizd a címet és az előadót, majd mentsd el.</string>

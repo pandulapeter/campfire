@@ -380,15 +380,13 @@ internal fun SongList(
                         isPerformanceModeEnabled = isPerformanceModeEnabled,
                     )
                 ) {
-                    item(key = ADD_SONGS_HINT_KEY, span = { GridItemSpan(maxLineSpan) }, contentType = "add_songs_hint") {
-                        AddSongsHintCard(
-                            modifier = listItemAnimation(listState, hasLoadedLibrary, placementSpec = itemPlacementSpec)
-                                .fadingUnderListTop(topFade),
-                            isEnabled = !isImporting,
-                            onPaste = { pastedSongController.newSongFromClipboard(clipboardReader) },
-                            onImport = { importController.importFiles(filePicker) },
-                        )
-                    }
+                    addSongsHintItem(
+                        itemModifier = { listItemAnimation(listState, hasLoadedLibrary, placementSpec = itemPlacementSpec).fadingUnderListTop(topFade) },
+                        isEnabled = !isImporting,
+                        canReadLinks = pastedSongController.isPageLoadingSupported && userPreferences?.isPageLinkLoadingEnabled != false,
+                        onPaste = { pastedSongController.newSongFromClipboard(clipboardReader) },
+                        onImport = { importController.importFiles(filePicker) },
+                    )
                 }
             }
             // The grid clips at its top edge. Draw the outgoing header here while it is pushed, so its fade can continue
@@ -450,9 +448,6 @@ private const val RANDOM_PICKS_DIVIDER_KEY = "random_picks_divider"
 
 /** The key of [RandomPicksQuestionCard]. */
 private const val RANDOM_PICKS_QUESTION_KEY = "random_picks_question"
-
-/** The key of [AddSongsHintCard]. */
-private const val ADD_SONGS_HINT_KEY = "add_songs_hint"
 
 /** The room above and below the divider under a leading group. */
 private val LEADING_GROUP_DIVIDER_PADDING = 8.dp
