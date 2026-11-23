@@ -17,6 +17,8 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             api(project(":libs:chordpro"))
+            // A document's songs are cropped by the page model's scores of its lines (ChordSheetPageLines).
+            api(project(":libs:pagesong"))
         }
         desktopTest {
             // The plain-text round trip reads the song corpus :libs:chordpro's own round trips run over.

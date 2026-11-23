@@ -10,9 +10,11 @@
 package com.pandulapeter.campfire.data.source.local.implementation.document.corpus
 
 import com.pandulapeter.campfire.chordpro.convert.ChordSheet
+import com.pandulapeter.campfire.chordpro.convert.ChordSheetPageLines
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.source.local.implementation.source.DocumentLocalSourceImpl
+import com.pandulapeter.campfire.pagesong.PageLine
 import java.io.File
 import kotlin.test.Test
 import kotlinx.coroutines.runBlocking
@@ -23,9 +25,9 @@ import kotlinx.serialization.json.JsonPrimitive
 
 /**
  * Writes the lines the app's own document reader finds in the page model's documents (`tools/page-model`): the import
- * corpus's PDFs and Word files, the web pages the collector printed to PDF, and the documents made up for training, each line with the layout the model reads
- * (its type's size against the document's body, bold, italic, monospace, its left edge, its column, its page). It is the
- * model's only view of a document, so the training sees exactly what the app would hand it. Skipped unless
+ * corpus's PDFs and Word files, the web pages the collector printed to PDF, and the documents made up for training, each
+ * line with the layout the model reads, through the import's own mapping (`ChordSheetPageLines`), so the training sees
+ * exactly what the app hands the model. Skipped unless
  * `campfire.pageCorpus` names the corpus folder; never in CI.
  */
 class PageCorpusDocumentsDump {
@@ -63,55 +65,32 @@ class PageCorpusDocumentsDump {
         println("Page corpus: dumped $written documents into ${output.absolutePath}")
     }
 
-    private fun document(name: String, file: File, sheet: ChordSheet): JsonObject {
-        val sizes = sheet.pages.flatMap { page -> page.lines.flatMap { line -> line.spans.filter { it.text.isNotBlank() }.map { it.size } } }.sorted()
-        val body = sizes.getOrNull(sizes.size / 2)?.takeIf { it > 0 } ?: 1.0
-        val lines = sheet.pages.flatMapIndexed { pageIndex, page ->
-            val left = page.lines.flatMap { it.spans }.minOfOrNull { it.start } ?: 0.0
-            val right = page.lines.flatMap { it.spans }.maxOfOrNull { it.end } ?: 1.0
-            page.lines.map { line -> line(line, pageIndex, body, left, (right - left).takeIf { it > 0 } ?: 1.0) }
-        }
-        return JsonObject(
-            mapOf(
-                "id" to JsonPrimitive(name),
-                "source" to JsonPrimitive(file.absolutePath),
-                "lines" to JsonArray(lines),
-            ),
-        )
-    }
+    private fun document(name: String, file: File, sheet: ChordSheet) = JsonObject(
+        mapOf(
+            "id" to JsonPrimitive(name),
+            "source" to JsonPrimitive(file.absolutePath),
+            "lines" to JsonArray(ChordSheetPageLines.of(sheet).map(::line)),
+        ),
+    )
 
-    /**
-     * One line as the model reads it. Its text joins the spans with a space wherever a gap of about a character's width
-     * stands between two, which is how a chord row keeps its chords apart; the layout is measured on the spans holding text.
-     */
-    private fun line(line: ChordSheet.Line, page: Int, body: Double, left: Double, width: Double): JsonObject {
-        val spans = line.spans.filter { it.text.isNotEmpty() }.sortedBy { it.start }
-        val text = buildString {
-            spans.forEachIndexed { index, span ->
-                val previous = spans.getOrNull(index - 1)
-                if (previous != null && span.start - previous.end > span.size * GAP && !endsWith(' ') && !span.text.startsWith(' ')) append(' ')
-                append(span.text)
-            }
-        }
-        val printed = spans.filter { it.text.isNotBlank() }
-        val size = printed.maxOfOrNull { it.size } ?: body
+    private fun line(line: PageLine): JsonObject {
+        val layout = line.layout!!
         return JsonObject(
             mapOf(
-                "text" to JsonPrimitive(text),
-                "page" to JsonPrimitive(page),
-                "column" to JsonPrimitive(line.column ?: -1),
-                "size" to JsonPrimitive(size / body),
-                "bold" to JsonPrimitive(printed.isNotEmpty() && printed.all { it.isBold }),
-                "italic" to JsonPrimitive(printed.isNotEmpty() && printed.all { it.isItalic }),
-                "monospace" to JsonPrimitive(printed.isNotEmpty() && printed.all { it.isMonospace }),
-                "indent" to JsonPrimitive(((printed.minOfOrNull { it.start } ?: left) - left) / width),
-                "heading" to JsonPrimitive(line.isHeading),
+                "text" to JsonPrimitive(line.text),
+                "page" to JsonPrimitive(layout.page),
+                "column" to JsonPrimitive(layout.column ?: -1),
+                "size" to JsonPrimitive(layout.size),
+                "bold" to JsonPrimitive(layout.isBold),
+                "italic" to JsonPrimitive(layout.isItalic),
+                "monospace" to JsonPrimitive(layout.isMonospace),
+                "indent" to JsonPrimitive(layout.indent),
+                "heading" to JsonPrimitive(layout.isHeading),
             ),
         )
     }
 
     private companion object {
         val EXTENSIONS = setOf("pdf", "docx")
-        const val GAP = 0.25
     }
 }
