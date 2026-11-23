@@ -22,10 +22,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_capo
+import com.pandulapeter.campfire.presentation.ui.components.tabChrome.TOOL_LINE_Z_INDEX
+import com.pandulapeter.campfire.presentation.ui.components.tabChrome.TabChromeElement
+import com.pandulapeter.campfire.presentation.ui.components.tabChrome.rememberSharedTabChrome
+import com.pandulapeter.campfire.presentation.ui.components.tabChrome.sharedTabChrome
 import com.pandulapeter.campfire.presentation.ui.playing.EffectiveCapo
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.CapoControls
 import com.pandulapeter.campfire.presentation.ui.songView.songControlHeight
@@ -52,7 +57,15 @@ internal fun ToolCapoControls(
         enter = fadeIn() + expandHorizontally(expandFrom = Alignment.Start),
         exit = fadeOut() + shrinkHorizontally(shrinkTowards = Alignment.Start),
     ) {
+        // The Chords and the Scales tabs' capo is the same on both, so a tab swap carries it over as one (see SharedTabChrome).
+        val chrome = rememberSharedTabChrome(element = TabChromeElement.CAPO, containerColor = Color.Transparent)
         Row(
+            modifier = Modifier.sharedTabChrome(
+                chrome = chrome,
+                zIndex = TOOL_LINE_Z_INDEX,
+                isContainerDrawnOutsideSwaps = false,
+                isRectangular = true,
+            ),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(LABEL_GAP),
         ) {

@@ -34,6 +34,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.MeasurePolicy
 import androidx.compose.ui.layout.Placeable
@@ -52,6 +53,10 @@ import com.pandulapeter.campfire.presentation.resources.instrument_choose
 import com.pandulapeter.campfire.presentation.resources.instrument_tuning_choose
 import com.pandulapeter.campfire.presentation.resources.instrument_tuning_standard
 import com.pandulapeter.campfire.presentation.ui.components.controls.StepperDivider
+import com.pandulapeter.campfire.presentation.ui.components.tabChrome.TOOL_LINE_Z_INDEX
+import com.pandulapeter.campfire.presentation.ui.components.tabChrome.TabChromeElement
+import com.pandulapeter.campfire.presentation.ui.components.tabChrome.rememberSharedTabChrome
+import com.pandulapeter.campfire.presentation.ui.components.tabChrome.sharedTabChrome
 import com.pandulapeter.campfire.presentation.ui.songView.songControlHeight
 import com.pandulapeter.campfire.presentation.ui.tuner.tuningLabel
 import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
@@ -67,6 +72,8 @@ import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
  * instrument's name (see [InstrumentPillMeasurePolicy]). The tuning half fades in and out with the instrument's
  * tunings and the pill resizes with it.
  *
+ * @param isTabChromePart Whether it is the instrument pill of a tool's tab, which a tab swap carries over to the other
+ *   tool's as one pill (see SharedTabChrome), drawing its container in its stead.
  * @param tuningVisibility Where the tuning half fades in and out, for a caller that measures the pill and so has to know
  * when a leaving half is no longer laid out; its target is kept by the caller at whether there is a tuning to show.
  */
@@ -78,14 +85,52 @@ internal fun InstrumentPill(
     notation: ChordNotation,
     style: TextStyle = MaterialTheme.typography.titleSmall,
     isEnabled: Boolean = true,
+    isTabChromePart: Boolean = false,
     tuningVisibility: MutableTransitionState<Boolean>? = null,
     onInstrumentClicked: () -> Unit,
     onTuningClicked: () -> Unit,
-) = Surface(
-    // Dimmed the way the list items of Settings are while their section is switched off.
-    modifier = modifier.height(songControlHeight(style)).alpha(if (isEnabled) 1f else 0.5f),
-    shape = CircleShape,
-    color = MaterialTheme.colorScheme.surfaceContainerHighest,
+) {
+    // Dimmed the way the list items of Settings are while their section is switched off. The container a tab swap draws
+    // is outside the dimmed layer, so it is given the dimmed color, which an opaque one drawn at half its alpha is.
+    val alpha = if (isEnabled) 1f else DISABLED_ALPHA
+    val containerColor = MaterialTheme.colorScheme.surfaceContainerHighest
+    val chrome = if (isTabChromePart) {
+        rememberSharedTabChrome(element = TabChromeElement.INSTRUMENT_PILL, containerColor = containerColor.copy(alpha = containerColor.alpha * alpha))
+    } else {
+        null
+    }
+    Surface(
+        modifier = modifier
+            .sharedTabChrome(chrome = chrome, zIndex = TOOL_LINE_Z_INDEX, isContainerDrawnOutsideSwaps = true)
+            .height(songControlHeight(style))
+            .alpha(alpha),
+        shape = CircleShape,
+        color = if (chrome == null) containerColor else Color.Transparent,
+    ) {
+        InstrumentPillHalves(
+            instrument = instrument,
+            tuning = tuning,
+            notation = notation,
+            style = style,
+            isEnabled = isEnabled,
+            tuningVisibility = tuningVisibility,
+            onInstrumentClicked = onInstrumentClicked,
+            onTuningClicked = onTuningClicked,
+        )
+    }
+}
+
+/** The halves of an [InstrumentPill], laid out by [InstrumentPillMeasurePolicy]. */
+@Composable
+private fun InstrumentPillHalves(
+    instrument: UserPreferences.Instrument,
+    tuning: InstrumentTuning?,
+    notation: ChordNotation,
+    style: TextStyle,
+    isEnabled: Boolean,
+    tuningVisibility: MutableTransitionState<Boolean>?,
+    onInstrumentClicked: () -> Unit,
+    onTuningClicked: () -> Unit,
 ) {
     // Only the tuning half coming and going and a name changing animate the pill's width, each by itself. Animating every
     // change of the row's size instead would have the pill trail behind its text while a pinch scales a song's page.
@@ -212,6 +257,9 @@ private fun InstrumentPillHalf(
         )
     }
 }
+
+/** How opaque a disabled [InstrumentPill] is. */
+private const val DISABLED_ALPHA = 0.5f
 
 /** What the tuning half of [InstrumentPill] last named. */
 private class LastTuning(var value: InstrumentTuning? = null)

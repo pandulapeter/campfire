@@ -38,12 +38,15 @@ import androidx.compose.ui.layout.onPlaced
  *   both icons stand on it.
  * @param isContainerDrawnOutsideSwaps Whether the node draws its container whenever it is shown, or only while the tabs
  *   swap, its screen drawing it otherwise (under the presses of a pill's buttons, which this node holds).
+ * @param isRectangular Whether the part is clipped to its rectangle rather than to a stadium: one with no container of
+ *   its own (the tools' capo, a label before a stepper), whose label a stadium's rounded ends would cut into.
  */
 @OptIn(ExperimentalSharedTransitionApi::class)
 internal fun Modifier.sharedTabChrome(
     chrome: SharedTabChrome?,
     zIndex: Float,
     isContainerDrawnOutsideSwaps: Boolean,
+    isRectangular: Boolean = false,
 ): Modifier = if (chrome == null) this else with(chrome.sharedTransitionScope) {
     this@sharedTabChrome
         // Outside the layer below, so that the rectangle is the part's as laid out, never as scaled.
@@ -68,12 +71,14 @@ internal fun Modifier.sharedTabChrome(
                 }
                 drawContent()
             } else {
-                val outline = stadiumOf(travelling)
+                val outline = if (isRectangular) Path().apply { addRect(travelling) } else stadiumOf(travelling)
                 chrome.currentContainerColor?.let { drawPath(path = outline, color = it) }
                 clipPath(path = outline) {
                     withAlpha(chrome.matchedContentAlpha) {
-                        translate(left = travelling.center.x - size.width / 2, top = travelling.center.y - size.height / 2) {
-                            this@drawWithContent.drawContent()
+                        scale(scale = chrome.matchedContentScale, pivot = travelling.center) {
+                            translate(left = travelling.center.x - size.width / 2, top = travelling.center.y - size.height / 2) {
+                                this@drawWithContent.drawContent()
+                            }
                         }
                     }
                 }
@@ -129,3 +134,4 @@ private const val ENTERING_Z_INDEX_OFFSET = 0.1f
 internal const val SEARCH_PILL_Z_INDEX = 1f
 internal const val SEARCH_PILL_CONTENT_Z_INDEX = 2f
 internal const val NEW_BUTTON_Z_INDEX = 3f
+internal const val TOOL_LINE_Z_INDEX = 4f

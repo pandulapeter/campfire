@@ -42,7 +42,8 @@ import androidx.compose.ui.layout.positionInRoot
  *   so they never part. Only the copy being left draws the container there, its color going from its own to the other
  *   part's on the same progress, so a filled New button turns into the tonal Preferences pill rather than one fading
  *   out under the other. What each copy holds rides the rectangle, clipped to it, and crosses with the other's
- *   ([matchedContentAlpha]). The copy being left draws the container because it is already drawn over both screens on
+ *   ([matchedContentAlpha]), scaling as it does where the two hold different things ([matchedContentScale]), so a
+ *   New button turning into a play button reads as its icon changing. The copy being left draws the container because it is already drawn over both screens on
  *   the swap's first frame, while the one being opened, attached on that frame, is drawn there only from the next.
  * - Where it has none (Settings; a list screen with its search open, a selection, or read only mode), the part scales
  *   and fades on its own, out of the screen being left or into the one being opened. Left inside its screen, which is
@@ -63,11 +64,15 @@ internal class SharedTabChrome(
     private val screenAlpha: State<Float>,
     private val crossfade: State<Float>,
     containerColor: Color,
+    content: TabChromeContent?,
 ) {
     val sharedTransitionScope get() = scope.tabChrome.sharedTransitionScope
 
     /** The color of the part's own container, which the other screen's copy sets out from while the two are matched. */
     var containerColor by mutableStateOf(containerColor)
+
+    /** What the part holds, see [rememberSharedTabChrome]. */
+    var content by mutableStateOf(content)
 
     /** The part's own rectangle in its node's coordinates, see [rememberSharedTabChrome]. */
     var localBounds: ((LayoutCoordinates) -> Rect)? = null
@@ -108,12 +113,22 @@ internal class SharedTabChrome(
      */
     val foregroundAlpha get() = if (isAlone) aloneAlpha else screenAlpha.value
 
+    /** Whether the part and its counterpart hold the same thing (New on either list), which then never changes. */
+    private val isContentShared get() = counterpart?.content == content
+
     /**
-     * How opaque what stands on the part is while it is [isMatched]: the copy being opened, drawn over the one being
-     * left, comes in whole during the first half of the crossfade, and the one being left only goes during the second,
-     * so an icon both tabs have (New on either list, the search mark) never dims, and two different ones still cross.
+     * How opaque what stands on the part is while it is [isMatched]. Where both copies hold the same, the copy being
+     * opened, drawn over the one being left, comes in whole during the first half of the crossfade, and the one being
+     * left only goes during the second, so it never dims; where they differ, the two cross as [crossfadeAlpha] does.
      */
-    val matchedContentAlpha get() = (crossfade.value * 2f).coerceIn(0f, 1f)
+    val matchedContentAlpha get() = if (isContentShared) (crossfade.value * 2f).coerceIn(0f, 1f) else crossfadeAlpha
+
+    /**
+     * How large what stands on the part is drawn while it is [isMatched], around the travelling rectangle's middle:
+     * whole where both copies hold the same, and otherwise growing in on the copy being opened and shrinking away on
+     * the one being left, on the spatial spring, as a part on its own does ([aloneScale]).
+     */
+    val matchedContentScale get() = if (isContentShared) 1f else TAB_CHROME_HIDDEN_SCALE + (1f - TAB_CHROME_HIDDEN_SCALE) * presence.value
 
     /**
      * How opaque what rides the part is while it is [isMatched] and the two copies hold different things (an open field
@@ -158,6 +173,8 @@ internal class SharedTabChrome(
  *
  * @param containerColor The color the part's container is drawn in, which a matched part on the other screen turns
  *   into or sets out from.
+ * @param content What the part holds, which crosses with a counterpart's as one where the two are the same, and
+ *   scaling and fading where they differ; null for a part that holds the same on every tab it is on.
  * @param localBounds The part's rectangle in the coordinates of the node it is drawn by, read while drawing; the whole
  *   node when null. The search pill is a stretch of its bar, measured from its neighbors' placement, and has none (an
  *   empty one) on its first frame, so it shares nothing until it has.
@@ -167,6 +184,7 @@ internal class SharedTabChrome(
 internal fun rememberSharedTabChrome(
     element: TabChromeElement,
     containerColor: Color,
+    content: TabChromeContent? = null,
     localBounds: ((LayoutCoordinates) -> Rect)? = null,
 ): SharedTabChrome? {
     val scope = LocalTabChromeScope.current ?: return null
@@ -219,10 +237,12 @@ internal fun rememberSharedTabChrome(
             screenAlpha = screenAlpha,
             crossfade = crossfade,
             containerColor = containerColor,
+            content = content,
         )
     }
     SideEffect {
         chrome.containerColor = containerColor
+        chrome.content = content
         chrome.localBounds = localBounds
     }
     DisposableEffect(chrome) {

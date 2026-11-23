@@ -20,6 +20,7 @@ tuning's strings directly (every stringed instrument, not only the five with sha
   the pill takes the line to itself wherever it does not fit whole beside them (`pillSharesLine`). Always exactly
   `songControlHeight`, matching the transposition stepper, touched 48 dp tall. On the song's first section (read only
   included, since it changes a device preference), Tuner, Chords, Scales, onboarding, and the Preferences' Chords page.
+  A swap between two tools carries the pill (and between Chords and Scales the capo) over as one (`ui/chrome`).
 - The Chords and Scales tabs end the line with the Preferences button (`endAction`), outside the line's own layout, so
   the pill and the capo share what it leaves and the button stays on the pill's line.
 - Other is what the tuner reads every note for, so the Tuner leaves its Strings / Chromatic toggle out for it.

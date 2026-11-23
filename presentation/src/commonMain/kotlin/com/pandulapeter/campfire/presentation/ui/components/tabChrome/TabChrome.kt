@@ -24,8 +24,8 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.navigation3.ui.LocalNavAnimatedContentScope
 
 /**
- * What carries the parts of a top level screen that stay on screen while two tabs are swapped (the New button and the
- * search pill, see [TabChromeElement]): the [SharedTransitionScope] laid around the screens, and which kind of transition
+ * What carries the parts of a top level screen that stay on screen while two tabs are swapped (the New button, the
+ * search pill, and the tools' instrument pill and capo, see [TabChromeElement]): the [SharedTransitionScope] laid around the screens, and which kind of transition
  * the navigation specs last decided on ([swap]), since only a swap of two tabs carries them over. Snapshot state, unlike
  * `PredictiveBackMark`, since the parts read it while they are laid out and drawn.
  */
@@ -53,7 +53,11 @@ internal enum class TabSwap {
     CROSS_FADE,
 }
 
-/** The parts of a tab that stay on screen while it is swapped for another, one key each, matched between the two. */
+/**
+ * The parts of a tab that stay on screen while it is swapped for another, one key each, matched between the two. A part
+ * a setting changes on every tab at once (the instrument, the tools' capo) is the same on each, so it stays still where
+ * two tabs show it at the same spot.
+ */
 internal enum class TabChromeElement {
     /**
      * The list screens' New button, and what stands on its spot on the tools: the one button pill on the Chords and the
@@ -63,6 +67,23 @@ internal enum class TabChromeElement {
 
     /** The list screens' search pill, open or closed. */
     SEARCH_PILL,
+
+    /** The instrument pill at the top of the Tuner, the Chords, and the Scales tabs. */
+    INSTRUMENT_PILL,
+
+    /** The capo beside the instrument pill on the Chords and the Scales tabs. */
+    CAPO,
+}
+
+/**
+ * What a part of a tab holds where it differs from tab to tab (the parts on the New button's spot), so that a matched
+ * pair holding the same thing crosses as one and a pair holding different things scales and fades, see [SharedTabChrome].
+ */
+internal enum class TabChromeContent {
+    NEW,
+    PREFERENCES,
+    PLAY,
+    STOP,
 }
 
 /**

@@ -23,6 +23,7 @@ import com.pandulapeter.campfire.presentation.ui.components.appBar.FloatingPill
 import com.pandulapeter.campfire.presentation.ui.components.appBar.PillIconButton
 import com.pandulapeter.campfire.presentation.ui.components.menu.NEW_ITEM_BUTTON_SIZE
 import com.pandulapeter.campfire.presentation.ui.components.menu.overlappingAction
+import com.pandulapeter.campfire.presentation.ui.components.tabChrome.TabChromeContent
 import com.pandulapeter.campfire.presentation.ui.components.tabChrome.TabChromeElement
 import com.pandulapeter.campfire.presentation.ui.components.tabChrome.rememberSharedTabChrome
 import org.jetbrains.compose.resources.painterResource
@@ -40,7 +41,11 @@ internal fun PreferencesPill(
 ) = FloatingPill(
     modifier = modifier,
     // It stands on the New button's spot, so a tab swap morphs one into the other.
-    sharedTabChrome = rememberSharedTabChrome(TabChromeElement.NEW_BUTTON, containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
+    sharedTabChrome = rememberSharedTabChrome(
+        element = TabChromeElement.NEW_BUTTON,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+        content = TabChromeContent.PREFERENCES,
+    ),
 ) {
     val label = stringResource(Res.string.settings_preferences)
     PillIconButton(

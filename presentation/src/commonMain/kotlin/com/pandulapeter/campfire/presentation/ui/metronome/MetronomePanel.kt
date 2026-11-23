@@ -53,6 +53,7 @@ import com.pandulapeter.campfire.presentation.ui.components.appBar.NEW_ITEM_BUTT
 import com.pandulapeter.campfire.presentation.ui.components.menu.NEW_ITEM_BUTTON_SIZE
 import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
 import com.pandulapeter.campfire.presentation.ui.components.tabChrome.NEW_BUTTON_Z_INDEX
+import com.pandulapeter.campfire.presentation.ui.components.tabChrome.TabChromeContent
 import com.pandulapeter.campfire.presentation.ui.components.tabChrome.TabChromeElement
 import com.pandulapeter.campfire.presentation.ui.components.tabChrome.rememberSharedTabChrome
 import com.pandulapeter.campfire.presentation.ui.components.tabChrome.sharedTabChrome
@@ -161,7 +162,15 @@ internal fun MetronomePanel(
             // The tab's button stands on the New button's spot, so a tab swap carries it over as that button: one
             // container, only the icon crossing (see SharedTabChrome), which draws the container in its stead.
             val colors = IconButtonDefaults.filledIconButtonColors()
-            val chrome = if (isProminent) rememberSharedTabChrome(TabChromeElement.NEW_BUTTON, containerColor = colors.containerColor) else null
+            val chrome = if (isProminent) {
+                rememberSharedTabChrome(
+                    element = TabChromeElement.NEW_BUTTON,
+                    containerColor = colors.containerColor,
+                    content = if (isPlaying) TabChromeContent.STOP else TabChromeContent.PLAY,
+                )
+            } else {
+                null
+            }
             FilledIconButton(
                 modifier = Modifier
                     .sharedTabChrome(chrome = chrome, zIndex = NEW_BUTTON_Z_INDEX, isContainerDrawnOutsideSwaps = true)

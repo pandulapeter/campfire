@@ -78,6 +78,8 @@ internal fun ToolInstrumentSetting(
             tuning = tuning,
             notation = notation,
             isEnabled = isEnabled,
+            // The same on all three tools, so a swap between two of them carries it over as one pill.
+            isTabChromePart = true,
             onInstrumentClicked = onInstrumentClicked,
             onTuningClicked = onTuningClicked,
         )

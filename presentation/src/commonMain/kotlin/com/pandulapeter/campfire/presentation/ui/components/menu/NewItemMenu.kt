@@ -32,6 +32,7 @@ import com.pandulapeter.campfire.presentation.resources.songs_paste_from_clipboa
 import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
 import com.pandulapeter.campfire.presentation.ui.components.shortcuts.menuShortcutHint
 import com.pandulapeter.campfire.presentation.ui.components.tabChrome.NEW_BUTTON_Z_INDEX
+import com.pandulapeter.campfire.presentation.ui.components.tabChrome.TabChromeContent
 import com.pandulapeter.campfire.presentation.ui.components.tabChrome.TabChromeElement
 import com.pandulapeter.campfire.presentation.ui.components.tabChrome.rememberSharedTabChrome
 import com.pandulapeter.campfire.presentation.ui.components.tabChrome.sharedTabChrome
@@ -84,6 +85,7 @@ internal fun NewItemMenu(
                 val colors = IconButtonDefaults.filledIconButtonColors()
                 val chrome = rememberSharedTabChrome(
                     element = TabChromeElement.NEW_BUTTON,
+                    content = TabChromeContent.NEW,
                     containerColor = if (isEnabled) colors.containerColor else colors.disabledContainerColor,
                 )
                 FilledIconButton(
