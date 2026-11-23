@@ -327,7 +327,7 @@ internal fun LoadedSongEditor(
                 }
             },
         )
-        WholePageBanner(offer = editorSession.wholePage, contentPadding = contentPadding)
+        WholePageBanner(offer = editorSession.wholePage, contentPadding = contentPadding, isCompact = isTypingInShortWindow)
         val abcProblems = rememberAbcProblems(text)
         val editor: @Composable (Modifier) -> Unit = { paneModifier ->
             ChordProTextField(

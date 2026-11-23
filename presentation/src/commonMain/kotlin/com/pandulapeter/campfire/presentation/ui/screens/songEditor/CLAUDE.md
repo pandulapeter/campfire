@@ -133,6 +133,7 @@ key leaves numbers nothing to count from.
 - Always unsaved, so Close asks; Discard leaves nothing behind. **Save needs a title** (a kept placeholder is one);
   Revert is off.
 - **Use the whole page** (`WholePageBanner`, `state/editor/WholePageOffer`): a page the import cropped opens with a
-  banner under the bar, there from the first frame, whose action puts the whole page's conversion in the field (one undo
+  card under the bar (`WarningCard`'s colors, edged like the field's text, one button row tall, its gaps gone while
+  typing in a short window), there from the first frame, whose action puts the whole page's conversion in the field (one undo
   step) and whose close button dismisses it; either, or any change of the text, takes it away for good, animated.
   Nothing of it is kept past the process.
