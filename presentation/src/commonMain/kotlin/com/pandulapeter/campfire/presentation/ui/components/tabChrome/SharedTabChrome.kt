@@ -125,6 +125,17 @@ internal class SharedTabChrome(
     fun matchedContentAlpha(counterpart: SharedTabChrome?) = if (isContentShared(counterpart)) (fade.value * 2f).coerceIn(0f, 1f) else crossfadeAlpha
 
     /**
+     * How opaque what stands on the part but differs between the two copies even where the rest is the same (a search
+     * field's hint and query, beside the search mark both share) is drawn within the part's own [matchedContentAlpha],
+     * so that it crosses as [crossfadeAlpha] does while the rest never dims; whole while the part is not matched.
+     */
+    fun differingContentAlpha(counterpart: SharedTabChrome?): Float {
+        if (counterpart == null) return 1f
+        val drawn = matchedContentAlpha(counterpart)
+        return if (drawn <= 0f) 0f else (crossfadeAlpha / drawn).coerceIn(0f, 1f)
+    }
+
+    /**
      * How large what stands on the part is drawn while it shares its rectangle with [counterpart], around the travelling rectangle's middle:
      * whole where both copies hold the same, and otherwise growing in on the copy being opened and shrinking away on
      * the one being left, on the spatial spring, as a part on its own does ([aloneScale]).

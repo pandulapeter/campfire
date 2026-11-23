@@ -38,6 +38,7 @@ import com.pandulapeter.campfire.presentation.ui.components.controls.StepperEntr
 import com.pandulapeter.campfire.presentation.ui.components.appBar.NEW_ITEM_BUTTON_GAP
 import com.pandulapeter.campfire.presentation.ui.components.menu.NEW_ITEM_BUTTON_SIZE
 import com.pandulapeter.campfire.presentation.ui.components.tabChrome.NEW_BUTTON_Z_INDEX
+import com.pandulapeter.campfire.presentation.ui.components.tabChrome.SEARCH_PILL_Z_INDEX
 import com.pandulapeter.campfire.presentation.ui.components.tabChrome.TabChromeContent
 import com.pandulapeter.campfire.presentation.ui.components.tabChrome.TabChromeElement
 import com.pandulapeter.campfire.presentation.ui.components.tabChrome.drawnContainerColor
@@ -55,7 +56,8 @@ import org.jetbrains.compose.resources.painterResource
  * where the line is too narrow for both, the pill as tall as the instrument's beside it, as on a song's page, and under the strings of song details' tuner sheet. There is no label to read; a
  * screen reader hears the note with the frequency.
  *
- * @param isTabChromePart Whether the circle is the Tuner tab's, which a tab swap carries over as the New button.
+ * @param isTabChromePart Whether these are the Tuner tab's, which a tab swap carries over as the list screens' search
+ *   pill (the reference pitch's pill) and New button (the circle), each drawing its container in its stead.
  */
 @Composable
 internal fun ReferencePitchControls(
@@ -71,7 +73,17 @@ internal fun ReferencePitchControls(
     verticalAlignment = Alignment.CenterVertically,
     horizontalArrangement = Arrangement.spacedBy(NEW_ITEM_BUTTON_GAP),
 ) {
+    // On the Tuner tab it stands where the list screens' search pill does, so a tab swap morphs one into the other, its
+    // value and buttons crossing with the closed pill's buttons or the open field (see SharedTabChrome).
+    val pillColor = MaterialTheme.colorScheme.surfaceContainerHighest
+    val pillChrome = if (isTabChromePart) {
+        rememberSharedTabChrome(element = TabChromeElement.SEARCH_PILL, containerColor = pillColor, content = TabChromeContent.REFERENCE_PITCH)
+    } else {
+        null
+    }
     Stepper(
+        modifier = Modifier.sharedTabChrome(chrome = pillChrome, zIndex = SEARCH_PILL_Z_INDEX, isContainerDrawnOutsideSwaps = true),
+        containerColor = pillChrome.drawnContainerColor(pillColor),
         // As tall as the instrument pill at the start of the line, as a song's steppers are as tall as its pill.
         height = songControlHeight(MaterialTheme.typography.titleSmall),
         value = stringResource(Res.string.tuner_reference_pitch_value, referencePitch),

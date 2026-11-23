@@ -59,6 +59,13 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_clear
 import com.pandulapeter.campfire.presentation.resources.ic_search
 import com.pandulapeter.campfire.presentation.resources.songs_clear
+import com.pandulapeter.campfire.presentation.ui.components.tabChrome.SharedTabChrome
+import com.pandulapeter.campfire.presentation.ui.components.tabChrome.TOOL_LINE_Z_INDEX
+import com.pandulapeter.campfire.presentation.ui.components.tabChrome.TabChromeElement
+import com.pandulapeter.campfire.presentation.ui.components.tabChrome.drawnContainerColor
+import com.pandulapeter.campfire.presentation.ui.components.tabChrome.rememberSharedTabChrome
+import com.pandulapeter.campfire.presentation.ui.components.tabChrome.sharedTabChrome
+import com.pandulapeter.campfire.presentation.ui.components.tabChrome.tabChromeDiffering
 import kotlinx.coroutines.flow.Flow
 import org.jetbrains.compose.resources.painterResource
 
@@ -73,6 +80,9 @@ import org.jetbrains.compose.resources.painterResource
  *
  * @param focusRequests Ctrl / Cmd + F's requests for the caret, each answered with the query selected, so that typing
  *   replaces it the way it does in the find bar of any other application.
+ * @param isTabChromePart Whether it is the search of the Chords or the Scales tab, which a tab swap carries over to the
+ *   other's as one field (see SharedTabChrome), drawing its container in its stead: the search mark stays, and only the
+ *   hint or the query and the clear button cross with the other tab's.
  */
 @Composable
 internal fun SearchField(
@@ -80,14 +90,39 @@ internal fun SearchField(
     query: String,
     placeholder: String,
     focusRequests: Flow<Unit>? = null,
+    isTabChromePart: Boolean = false,
     onQueryChange: (String) -> Unit,
-) = Surface(
-    modifier = modifier
-        .fillMaxWidth()
-        .padding(start = 16.dp, end = 16.dp, top = 8.dp)
-        .height(FIELD_HEIGHT),
-    shape = CircleShape,
-    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+) {
+    val containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+    val chrome = if (isTabChromePart) rememberSharedTabChrome(element = TabChromeElement.TOOL_SEARCH, containerColor = containerColor) else null
+    Surface(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(start = 16.dp, end = 16.dp, top = 8.dp)
+            .sharedTabChrome(chrome = chrome, zIndex = TOOL_LINE_Z_INDEX, isContainerDrawnOutsideSwaps = true)
+            .height(FIELD_HEIGHT),
+        shape = CircleShape,
+        color = chrome.drawnContainerColor(containerColor),
+        contentColor = MaterialTheme.colorScheme.onSurface,
+    ) {
+        SearchFieldContent(
+            query = query,
+            placeholder = placeholder,
+            focusRequests = focusRequests,
+            chrome = chrome,
+            onQueryChange = onQueryChange,
+        )
+    }
+}
+
+/** What the [SearchField]'s pill holds: the text field, decorated with the search mark, the hint, and the clear button. */
+@Composable
+private fun SearchFieldContent(
+    query: String,
+    placeholder: String,
+    focusRequests: Flow<Unit>?,
+    chrome: SharedTabChrome?,
+    onQueryChange: (String) -> Unit,
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusRequester = remember { FocusRequester() }
@@ -131,7 +166,7 @@ internal fun SearchField(
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Box(
-                    modifier = Modifier.weight(1f).padding(end = 8.dp),
+                    modifier = Modifier.weight(1f).padding(end = 8.dp).tabChromeDiffering(chrome),
                     contentAlignment = Alignment.CenterStart,
                 ) {
                     if (query.isEmpty()) {
@@ -146,6 +181,7 @@ internal fun SearchField(
                     innerTextField()
                 }
                 ClearButton(
+                    modifier = Modifier.tabChromeDiffering(chrome),
                     isVisible = query.isNotEmpty(),
                     onClear = { onQueryChange("") },
                 )
@@ -157,9 +193,11 @@ internal fun SearchField(
 /** The bar search's button that empties the field, offered only once there is something to clear. */
 @Composable
 private fun ClearButton(
+    modifier: Modifier = Modifier,
     isVisible: Boolean,
     onClear: () -> Unit,
 ) = AnimatedVisibility(
+    modifier = modifier,
     visible = isVisible,
     enter = fadeIn() + scaleIn(),
     exit = fadeOut() + scaleOut(),

@@ -25,7 +25,8 @@ import androidx.navigation3.ui.LocalNavAnimatedContentScope
 
 /**
  * What carries the parts of a top level screen that stay on screen while two tabs are swapped (the New button, the
- * search pill, and the tools' instrument pill and capo, see [TabChromeElement]): the [SharedTransitionScope] laid around the screens, and which kind of transition
+ * search pill, and the tools' instrument pill, capo, key, and search, see [TabChromeElement]): the [SharedTransitionScope]
+ * laid around the screens, and which kind of transition
  * the navigation specs last decided on ([swap]), since only a swap of two tabs carries them over. Snapshot state, unlike
  * `PredictiveBackMark`, since the parts read it while they are laid out and drawn.
  */
@@ -65,7 +66,10 @@ internal enum class TabChromeElement {
      */
     NEW_BUTTON,
 
-    /** The list screens' search pill, open or closed. */
+    /**
+     * The list screens' search pill, open or closed, and what stands on its spot on the Tuner tab: the reference pitch's
+     * pill (a row lower on a narrow line).
+     */
     SEARCH_PILL,
 
     /** The instrument pill at the top of the Tuner, the Chords, and the Scales tabs. */
@@ -73,10 +77,17 @@ internal enum class TabChromeElement {
 
     /** The capo beside the instrument pill on the Chords and the Scales tabs. */
     CAPO,
+
+    /** The key before the search on the Chords and the Scales tabs, which is one key shared by the two. */
+    TOOL_KEY,
+
+    /** The search field of the Chords and the Scales tabs, whose search mark stays while its hint and query cross. */
+    TOOL_SEARCH,
 }
 
 /**
- * What a part of a tab holds where it differs from tab to tab (the parts on the New button's spot), so that a matched
+ * What a part of a tab holds where it differs from tab to tab (the parts on the New button's spot, and the Tuner's
+ * reference pitch on the search pill's, whose pill holds none), so that a matched
  * pair holding the same thing crosses as one and a pair holding different things scales and fades, see [SharedTabChrome].
  */
 internal enum class TabChromeContent {
@@ -84,6 +95,7 @@ internal enum class TabChromeContent {
     PREFERENCES,
     PLAY,
     STOP,
+    REFERENCE_PITCH,
 }
 
 /**

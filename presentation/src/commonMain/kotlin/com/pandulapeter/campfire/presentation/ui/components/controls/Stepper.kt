@@ -44,6 +44,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -88,6 +89,8 @@ import kotlinx.coroutines.delay
  * divider: the tempo's Tap button, which sets the number the stepper steps rather than a value of its own, and so
  * belongs to this control instead of standing next to it.
  * @param shortcuts The keys that step the value too (decrease, then increase), shown in the buttons' tooltips.
+ * @param containerColor The pill's color, transparent where a tab swap carries the pill over and draws it instead
+ *   (`drawnContainerColor`); what the pill holds keeps the color it has on the tonal pill either way.
  */
 @Composable
 internal fun Stepper(
@@ -113,6 +116,7 @@ internal fun Stepper(
     entry: StepperEntry? = null,
     shortcuts: Pair<KeyShortcut, KeyShortcut>? = null,
     trailing: (@Composable () -> Unit)? = null,
+    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerHighest,
 ) {
     // Where the pill is, for the press outside it that ends typing into its value (StepperField).
     val entryBounds = remember { StepperBounds() }
@@ -121,7 +125,8 @@ internal fun Stepper(
             .height(height)
             .then(if (entry != null) Modifier.onPlaced { entryBounds.coordinates = it } else Modifier),
         shape = CircleShape,
-        color = MaterialTheme.colorScheme.surfaceContainerHighest,
+        color = containerColor,
+        contentColor = MaterialTheme.colorScheme.onSurface,
     ) {
         val buttonLength = stepperButtonLength(fontScale)
         val spokenValue = valueDescription ?: value

@@ -83,6 +83,7 @@ internal fun LazyGridScope.pinnedSearchField(
                 query = query,
                 placeholder = placeholder,
                 focusRequests = focusRequests,
+                isTabChromePart = true,
                 onQueryChange = onQueryChanged,
             )
         }

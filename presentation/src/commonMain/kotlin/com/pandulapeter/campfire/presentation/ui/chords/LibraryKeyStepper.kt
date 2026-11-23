@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.chords
 
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
@@ -19,12 +20,18 @@ import com.pandulapeter.campfire.presentation.resources.ic_subtract
 import com.pandulapeter.campfire.presentation.resources.library_key_down
 import com.pandulapeter.campfire.presentation.resources.library_key_up
 import com.pandulapeter.campfire.presentation.ui.components.controls.Stepper
+import com.pandulapeter.campfire.presentation.ui.components.tabChrome.TOOL_LINE_Z_INDEX
+import com.pandulapeter.campfire.presentation.ui.components.tabChrome.TabChromeElement
+import com.pandulapeter.campfire.presentation.ui.components.tabChrome.drawnContainerColor
+import com.pandulapeter.campfire.presentation.ui.components.tabChrome.rememberSharedTabChrome
+import com.pandulapeter.campfire.presentation.ui.components.tabChrome.sharedTabChrome
 import org.jetbrains.compose.resources.painterResource
 
 /**
  * The key of the Chords and the Scales tabs, stepped a semitone at a time in the pill the editor transposes a song with,
  * before the search. The twelve keys go round, B stepping up to C, so that no key is more than six taps away, and the pill
- * takes the room of the widest key in the reader's notation, so that it keeps one length while it is stepped.
+ * takes the room of the widest key in the reader's notation, so that it keeps one length while it is stepped. The key is
+ * the same on both tabs, so a tab swap carries the pill over as one (see SharedTabChrome), which draws its container.
  */
 @Composable
 internal fun LibraryKeyStepper(
@@ -35,8 +42,11 @@ internal fun LibraryKeyStepper(
     onSelected: (Int) -> Unit,
 ) {
     val index = selectedIndex.coerceIn(keys.indices)
+    val containerColor = MaterialTheme.colorScheme.surfaceContainerHighest
+    val chrome = rememberSharedTabChrome(element = TabChromeElement.TOOL_KEY, containerColor = containerColor)
     Stepper(
-        modifier = modifier,
+        modifier = modifier.sharedTabChrome(chrome = chrome, zIndex = TOOL_LINE_Z_INDEX, isContainerDrawnOutsideSwaps = true),
+        containerColor = chrome.drawnContainerColor(containerColor),
         value = shownChordName(keys[index], notation),
         widestValues = keys.map { shownChordName(it, notation) },
         isDefault = true,

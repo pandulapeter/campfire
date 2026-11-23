@@ -22,16 +22,17 @@ The navigation chrome (bar, rail, transitions, and the Tools item).
   Songs is a cross fade (a fade through held halfway would show neither screen). `navigationTransition` decides push vs.
   pop from scene depth itself, because Navigation 3's detection is wrong after an interrupted transition and leaves an
   invisible screen swallowing clicks. A finished onboarding is the one exception: zoomed away, no scrim.
-- **A tab swap carries the New button, the search pill, and the tools' instrument pill and capo over**
+- **A tab swap carries the New button, the search pill, and the tools' instrument pill, capo, key, and search over**
   (`components/tabChrome`): `NavDisplay` sits in a
   `SharedTransitionLayout` (`ScreenDeck`), each top level screen gets a `TabChromeScope` of its entry's visibility, and
   the specs mark the swap (`TabChrome.swap`, snapshot state: none for cards, so they move with their screen as before).
   The New button's spot is one part on every tab filling it: New, the Preferences pill, the Metronome's play button,
-  the Tuner's reference tone. Both copies draw in the overlay, never by Compose's shared bounds: their own rectangles (root
+  the Tuner's reference tone; the search pill's is the Tuner's reference pitch too. Both copies draw in the overlay, never by Compose's shared bounds: their own rectangles (root
   coordinates, read while drawing) and the opened copy's `presence` make **one travelling rectangle**, so they never
   part, a reversed swap included. Only the left copy draws the container (the opened one reaches the overlay a frame
   late), its color going from its own to the other's; the icons ride it, clipped, the same one (`TabChromeContent`)
-  never dimming, different ones scaling as they cross (`matchedContentScale`). A part the other tab lacks scales and
+  never dimming, different ones scaling as they cross (`matchedContentScale`); the tools' search keeps its mark while
+  only its hint and query cross (`tabChromeDiffering`). A part the other tab lacks scales and
   fades alone, since inside its screen it would blink out in 90 ms. A back gesture moves every part linearly.
 - **A back gesture started mid-transition**: Android runs Google's newer NavDisplay (`androidx-navigation3-android`),
   which follows it. Elsewhere `MidTransitionBackHandler` (composed after `NavDisplay`) takes it and goes back on release,

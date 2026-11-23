@@ -120,6 +120,15 @@ internal fun Modifier.sharedTabChromeSurface(
 }
 
 /**
+ * Makes this node, which stands on the part [chrome] stands for, cross with the other tab's copy of it while the two are
+ * matched, where the rest of the part holds the same on both and never dims (see [SharedTabChrome.differingContentAlpha]).
+ * A no-op without [chrome].
+ */
+internal fun Modifier.tabChromeDiffering(chrome: SharedTabChrome?): Modifier = if (chrome == null) this else graphicsLayer {
+    alpha = if (chrome.isSwapping) chrome.differingContentAlpha(chrome.counterpart()) else 1f
+}
+
+/**
  * Draws [block] as one layer [alpha] opaque, so that overlapping parts of it do not show through each other. Nothing of
  * [block] outside [bounds] is drawn, so content moved off the node (onto a travelling rectangle) passes that rectangle.
  */
