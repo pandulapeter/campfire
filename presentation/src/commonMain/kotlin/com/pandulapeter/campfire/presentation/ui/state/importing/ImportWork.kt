@@ -325,7 +325,8 @@ class ImportWork(
      * The page [source] names, read on the device, as the one text a paste of it would be ([ImportedFile.isPageText], so
      * its clutter is cropped), or null where it came to nothing worth converting: not read, or holding no song by the
      * page model's reading, which says so before the import makes a one-line song of a menu. A model that throws is no
-     * reason to refuse the page, which is then converted whole, as a paste is. A page that came with no title of its own
+     * reason to refuse the page, nor one that cannot run (no weights, which `PageCropper.songLinesOf` throws for): the page
+     * is then converted whole, as a paste is, with nothing offered back. A page that came with no title of its own
      * (a share's subject) is titled by the page's.
      */
     private suspend fun pageFiles(

@@ -120,8 +120,8 @@ class ImportControllerQueueTest {
     private var loadedPage: LoadedPage = LoadedPage.NotRead
     private val loadedPageAddresses = mutableListOf<String>()
 
-    /** What the page model keeps of a page read by its address: null where it finds no song. */
-    private var pageSongLines: List<Int>? = listOf(0)
+    /** What the page model keeps of a page read by its address: null where it finds no song; it throws where it cannot run. */
+    private var pageSongLines: () -> List<Int>? = { listOf(0) }
     private val preparedFiles = mutableListOf<List<ImportedFile>>()
     private var sharedLinkImports = mapOf<String, Set<String>>()
     private val rememberedSharedLinkImports = mutableListOf<Pair<String, List<String>>>()
@@ -224,7 +224,7 @@ class ImportControllerQueueTest {
                     override fun invoke() = true
                 },
                 pageCropper = object : PageCropper {
-                    override suspend fun songLinesOf(lines: List<String>) = pageSongLines
+                    override suspend fun songLinesOf(lines: List<String>) = pageSongLines()
 
                     override suspend fun documentScoresOf(lines: List<PageLine>): List<PageLineScores>? = null
                 },
@@ -988,7 +988,7 @@ class ImportControllerQueueTest {
     @Test
     fun `a page that holds no song fails with the sentence and Try again reads it again`() = runTest {
         loadedPage = LoadedPage.Read(text = "Home\nAbout\nContact", title = "Example", address = PAGE)
-        pageSongLines = null
+        pageSongLines = { null }
         startController()
         enqueuePage()
         settle()
@@ -996,11 +996,26 @@ class ImportControllerQueueTest {
         assertEquals(ImportFailure.PAGE_NOT_READ, failed.reason)
         assertEquals("example.com", failed.sourceName)
         assertEquals(0, prepareCount)
-        pageSongLines = listOf(0)
+        pageSongLines = { listOf(0) }
         controller.retryImport()
         settle()
         assertEquals(listOf(PAGE, PAGE), loadedPageAddresses)
         assertEquals(1, prepareCount)
+    }
+
+    @Test
+    fun `a page the page model cannot run on opens the editor on the whole page as a paste would`() = runTest {
+        plannedSongs = listOf(songEntry("new.cho", text = "[G]Hello"))
+        loadedPage = LoadedPage.Read(text = "Menu\nG\nHello", title = "Example", address = PAGE)
+        pageSongLines = { error("The page model is not there") }
+        startController()
+        enqueuePage()
+        settle()
+        val file = preparedFiles.single().single()
+        assertEquals("Menu\nG\nHello", file.bytes.decodeToString())
+        assertTrue(file.isPageText)
+        assertEquals(listOf("[G]Hello"), newSongTexts)
+        assertTrue(backStack.last().let { it is CampfireDestination.SongEditor && it.isNewSong })
     }
 
     @Test

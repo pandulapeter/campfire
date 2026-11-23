@@ -187,7 +187,9 @@ desktop and web are `NoPageSource`. Up through `PageRepository`, `LoadPageUseCas
 `CanLoadPagesUseCase`. In the app a page's address is `ImportSource.Page`: read in `ImportWork` as the import screen's
 loading stage says "Reading the page…" (`ImportProgress.Phase.READING_PAGE`, the notification too), asked of the page
 model before conversion, and then the pasted page it is; its song's editor replaces the loading screen. Not read, or no
-song: the failure stage's sentence (`ImportFailure.PAGE_NOT_READ`), with Try again. **Pages from links**
+song: the failure stage's sentence (`ImportFailure.PAGE_NOT_READ`), with Try again. A model that cannot run (its
+weights unread) throws rather than answering no song (`PageCropper.songLinesOf`), so the page opens whole in the
+editor, as a paste does, with no Use the whole page. **Pages from links**
 (`isPageLinkLoadingEnabled`, on by default, `upgrade-5.5.0`) sits under Pictures from links, only where pages can be
 read.
 

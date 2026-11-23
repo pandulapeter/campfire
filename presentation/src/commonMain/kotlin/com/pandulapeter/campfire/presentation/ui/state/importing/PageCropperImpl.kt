@@ -25,7 +25,8 @@ import org.koin.core.annotation.Single
 /**
  * The page model (`:libs:pagesong`) over the weights shipped in `composeResources/files`. They are a few megabytes, so
  * they are read and parsed on the first page cropped rather than at launch, once per process: a read that fails is not
- * tried again, and every page is then converted whole, as it was before the model.
+ * tried again, and every page is then converted whole, as it was before the model ([songLinesOf] throws, since its null
+ * means a page with no song).
  *
  * The title and artist lines are kept with the song even where the model does not think them part of it, so the
  * converter's own reading of a song's header still finds them. A document's lines are only scored here, as a whole;
@@ -39,7 +40,8 @@ internal class PageCropperImpl : PageCropper {
     private var isRead = false
 
     override suspend fun songLinesOf(lines: List<String>): List<Int>? {
-        val pageSong = pageSong() ?: return null
+        // No model is no reason to say a page holds no song, which would refuse a page read from its address.
+        val pageSong = pageSong() ?: throw IllegalStateException("The page model is not there")
         val crop = withContext(Dispatchers.Default) { pageSong.crop(lines.map(::PageLine), PageLineSource.PAGE) }
         return if (crop.holdsSong) (crop.keptLines + listOfNotNull(crop.titleLine, crop.artistLine)).distinct().sorted() else null
     }

@@ -40,7 +40,7 @@ which the script checks; everything else is handed the holders, state, and callb
 - A pasted, dropped, or shared text goes down the import as a `.txt` (`isNewSongFromText`), marked as a page's
   (`ImportedFile.isPageText`) where it is one text, so its page clutter is cropped on the device before it is converted
   (`PageCropperImpl`: the page model's weights, `files/page-model.bin`, read once on the first page, off the main thread;
-  any failure keeps the whole text; a PDF's or Word file's lines are scored there too, for the converter to crop each
+  any failure, unreadable weights included, keeps the whole text; a PDF's or Word file's lines are scored there too, for the converter to crop each
   song). Several shared texts are not cropped. One song the library does not hold (a taken name included) opens the editor on it, unwritten (`EditorSession.openNewSongEditor`), read only mode too when shared,
   with a snackbar saying how the text was read (chords over lyrics, ChordPro, lyrics only, or an ABC tune's or block's
   notation kept), and **Use the whole page** where the crop left lines out; one the library holds is opened; anything
@@ -63,7 +63,7 @@ which the script checks; everything else is handed the holders, state, and callb
   site) is `ImportSource.Page`, read by `LoadPageUseCase` (an offscreen web view, `PageSource`) with the import screen's
   loading stage up ("Reading the page…", Cancel), then cropped and converted as a pasted page, titled by the share's
   subject, else the page's title; its song's editor takes the loading screen's place. A page not read, or one the page
-  model finds no song on (asked before conversion), is the failure stage's `PAGE_NOT_READ` sentence with Try again,
+  model finds no song on (asked before conversion; a model that cannot run throws, and the page is converted whole), is the failure stage's `PAGE_NOT_READ` sentence with Try again,
   which reads it again. With Pages from links off it is the links-only snackbar as before; where the platform cannot
   read pages (desktop, web) it is `Message.PageLinkNotReadHere`: copy the page itself.
 - A text that is one Campfire link and nothing else (`sharedLinkIn`) is that link's import; a link beside other words
