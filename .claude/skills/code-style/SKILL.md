@@ -205,6 +205,14 @@ wrong or undo it".
   press a key"). Exempt: a feature named for its gesture (Tap tempo) and a named shortcut (Ctrl+V).
 - Exempt: file names, preference keys, serialization identifiers, ChordPro directive names.
 
+## Breadcrumbs
+
+- **Every user-facing feature leaves breadcrumbs in the process log, in the same change**: a `println` where each
+  action takes effect (not per button), its outcome, and the reason for every dead end the user is told about (a
+  refusal, a failure, a message instead of a result). The rules for what may be logged are `ui/platform/CLAUDE.md`'s
+  (kinds, counts, and names, never typed text, a song's content, or an address); check what `state/Breadcrumbs.kt`
+  already records (screens, dialogs, imports, settings) so nothing is logged twice.
+
 ## Clean up after changes
 
 - **Never leave anything unused behind.** When a change removes the last usage of a declaration, delete
