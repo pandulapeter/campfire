@@ -30,6 +30,8 @@ internal actual val isStartupScreenHeldUntilAppReady = true
 internal actual val isImportBoundToPage = true
 
 // The Origin Private File System is not reachable from outside the page.
+internal actual val isBackGestureFollowedMidTransition = false
+
 internal actual val isLibraryEditableOutsideApp = false
 
 // The page runs on every operating system and knows none of them well enough to pick a store, and it is served by

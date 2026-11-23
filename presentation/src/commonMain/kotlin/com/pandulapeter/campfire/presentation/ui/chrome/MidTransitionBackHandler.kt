@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
+import com.pandulapeter.campfire.presentation.ui.platform.isBackGestureFollowedMidTransition
 
 /**
  * Takes a back gesture started while a navigation transition is still running away from `NavDisplay`'s own handler,
@@ -24,7 +25,8 @@ import androidx.navigationevent.compose.rememberNavigationEventState
  * The back this goes is an ordinary one, which retargets the running slide from wherever it has got to, so going back
  * is as quick as ever; only following the finger waits until the screen has landed. It must be composed after
  * `NavDisplay`, so that it is heard before NavDisplay's handler while it is enabled. A gesture it has taken stays with it
- * until it is let go of or called off, even if the transition ends meanwhile.
+ * until it is let go of or called off, even if the transition ends meanwhile. Where Navigation 3 follows such a gesture
+ * itself ([isBackGestureFollowedMidTransition]), this stays out of its way.
  */
 @Composable
 internal fun MidTransitionBackHandler(
@@ -33,6 +35,6 @@ internal fun MidTransitionBackHandler(
     onBack: () -> Unit,
 ) = NavigationBackHandler(
     state = rememberNavigationEventState(currentInfo = NavigationEventInfo.None),
-    isBackEnabled = isTransitionRunning && canGoBack,
+    isBackEnabled = !isBackGestureFollowedMidTransition && isTransitionRunning && canGoBack,
     onBackCompleted = onBack,
 )

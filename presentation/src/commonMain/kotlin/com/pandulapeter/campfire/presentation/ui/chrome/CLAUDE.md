@@ -22,10 +22,11 @@ The navigation chrome (bar, rail, transitions, and the Tools item).
   Songs is a cross fade (a fade through held halfway would show neither screen). `navigationTransition` decides push vs.
   pop from scene depth itself, because Navigation 3's detection is wrong after an interrupted transition and leaves an
   invisible screen swallowing clicks. A finished onboarding is the one exception: zoomed away, no scrim.
-- **A back gesture started mid-transition is not followed** (`MidTransitionBackHandler`, composed after `NavDisplay`):
-  it goes back on release, retargeting the running slide. Navigation 3 1.2.0 seeks the running transition to follow a
-  finger, which replays the card's whole slide inside the strip uncovered and spoils the next transition; never
-  blocked, only not followed until the screen lands.
+- **A back gesture started mid-transition**: Android runs Google's newer NavDisplay (`androidx-navigation3-android`),
+  which follows it. Elsewhere `MidTransitionBackHandler` (composed after `NavDisplay`) takes it and goes back on release,
+  retargeting the running slide: the multiplatform 1.2.0 seeks the running transition to follow a finger, which replays
+  the card's whole slide inside the strip uncovered and spoils the next transition. Never blocked, only not followed
+  until the screen lands (`isBackGestureFollowedMidTransition`).
 - Cards covering the chrome take no touches while moving (lifecycle below `RESUMED` in a `RESUMED` host): a double tap
   on the editor's Close otherwise hit the song's Back.
 - **Chrome kind changes hand over rather than switch** (`NavigationChromeTransition`), the room interpolated so screens

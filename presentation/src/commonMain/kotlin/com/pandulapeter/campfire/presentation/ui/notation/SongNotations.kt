@@ -23,6 +23,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.text.intl.LocaleList
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.isSpecified
@@ -164,17 +165,18 @@ internal data class NotationRequest(
 }
 
 /**
- * What a tune's words are laid out with: the page's density, fonts, and the lyrics' unscaled style. Always from the
+ * What a tune's words are laid out with: the page's density, fonts, locales, and the lyrics' unscaled style. Always from the
  * left, as music is, whatever the song's or the app's direction.
  */
 internal data class NotationPainting(
     val density: Density,
     val fontResolver: FontFamily.Resolver,
+    val localeList: LocaleList,
     val textStyle: TextStyle,
 ) {
     /** A painter of its own, for one job on any thread: a painter keeps caches that are not thread safe. */
     fun newPainter() = NotationPainter(
-        textMeasurer = TextMeasurer(fontResolver, density, LayoutDirection.Ltr, cacheSize = 0),
+        textMeasurer = TextMeasurer(fontResolver, localeList, density, LayoutDirection.Ltr, cacheSize = 0),
         density = density,
         textStyle = textStyle,
     )

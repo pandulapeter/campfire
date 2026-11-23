@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.songView
 
+import com.pandulapeter.campfire.presentation.ui.registerComposeUiRuntime
+import androidx.compose.ui.text.intl.LocaleList
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -26,10 +28,14 @@ import kotlin.test.assertTrue
 
 internal class SongTextMeasurementsTest {
 
+    init {
+        registerComposeUiRuntime()
+    }
+
     private val style = TextStyle(fontSize = 14.sp)
     private val monospaceStyle = style.copy(fontFamily = FontFamily.Monospace)
     private val measurements = SongTextMeasurements(
-        textMeasurer = TextMeasurer(createFontFamilyResolver(), Density(1f), LayoutDirection.Ltr),
+        textMeasurer = TextMeasurer(createFontFamilyResolver(), LocaleList("en"), Density(1f), LayoutDirection.Ltr),
         lyricsStyle = style,
         chordStyle = style,
         annotationStyle = style,

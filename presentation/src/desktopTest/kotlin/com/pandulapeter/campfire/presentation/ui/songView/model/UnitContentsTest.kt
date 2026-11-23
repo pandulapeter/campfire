@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.songView.model
 
+import com.pandulapeter.campfire.presentation.ui.registerComposeUiRuntime
 import androidx.compose.ui.graphics.Path
 import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.presentation.ui.notation.AbcTune
@@ -27,6 +28,10 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class UnitContentsTest {
+
+    init {
+        registerComposeUiRuntime()
+    }
 
     private val labels = DefaultSectionLabels(
         verse = "Verse",

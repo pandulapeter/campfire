@@ -85,6 +85,8 @@ internal fun FilterSearchField(
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+        // The value based text field, deprecated in Compose 1.13 for the TextFieldState one, which this has not moved to yet.
+        @Suppress("DEPRECATION")
         BasicTextField(
             modifier = Modifier.weight(1f).padding(end = FIELD_START_PADDING),
             value = query,

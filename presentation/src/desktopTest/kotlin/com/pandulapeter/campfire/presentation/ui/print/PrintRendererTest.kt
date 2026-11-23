@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.print
 
+import com.pandulapeter.campfire.presentation.ui.registerComposeUiRuntime
+import androidx.compose.ui.text.intl.LocaleList
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.ImageBitmap
@@ -47,8 +49,13 @@ import kotlin.test.assertNotNull
 
 /** Exercises real shaping, canvas rasterization and PDF encoding, including Hungarian and musical symbols. */
 internal class PrintRendererTest {
+
+    init {
+        registerComposeUiRuntime()
+    }
+
     @Test fun `selectable rectangles come from the same shaping as the page image`() = runBlocking {
-        val measurer = TextMeasurer(createFontFamilyResolver(), Density(1f), LayoutDirection.Ltr)
+        val measurer = TextMeasurer(createFontFamilyResolver(), LocaleList("en"), Density(1f), LayoutDirection.Ltr)
         val renderer = PrintRenderer(measurer)
         val content = "Árvíztűrő e\u0301 \uD83D\uDE42 ♯ ♭ \u200Bpadding\u00A0"
         val page = PrintPage(listOf(PrintText(content, 23f, 31f, PrintStyle(14f)),
@@ -83,13 +90,13 @@ internal class PrintRendererTest {
     }
 
     @Test fun `the text layer writes a lyric's spaces as spaces and only its marked padding as no-break spaces`() = runBlocking {
-        val renderer = PrintRenderer(TextMeasurer(createFontFamilyResolver(), Density(1f), LayoutDirection.Ltr))
+        val renderer = PrintRenderer(TextMeasurer(createFontFamilyResolver(), LocaleList("en"), Density(1f), LayoutDirection.Ltr))
         val page = PrintPage(listOf(PrintText("is a\u00A0\u2060\u00A0\u00A0\u200Bhouse", 10f, 10f, PrintStyle(14f))))
         assertEquals("is a \u00A0\u00A0house", renderer.selectableText(page).joinToString("") { it.text })
     }
 
     @Test fun `exports a positioned song for the importer regression fixture`() = runBlocking {
-        val renderer = PrintRenderer(TextMeasurer(createFontFamilyResolver(), Density(1f), LayoutDirection.Ltr))
+        val renderer = PrintRenderer(TextMeasurer(createFontFamilyResolver(), LocaleList("en"), Density(1f), LayoutDirection.Ltr))
         val parsed = ChordProParser.parse("""
             {title: Árvíztűrő dal}
             {artist: Péter}
@@ -120,7 +127,7 @@ internal class PrintRendererTest {
     }
 
     @Test fun `exports both columns in song reading order`() = runBlocking {
-        val renderer = PrintRenderer(TextMeasurer(createFontFamilyResolver(), Density(1f), LayoutDirection.Ltr))
+        val renderer = PrintRenderer(TextMeasurer(createFontFamilyResolver(), LocaleList("en"), Density(1f), LayoutDirection.Ltr))
         val parsed = ChordProParser.parse("{title: Column song}\n{start_of_verse: Verse 1}\n" +
             (1..30).joinToString("\n") { "[Am]Line ${it.toString().padStart(2, '0')} singing [F]together." } + "\n{end_of_verse}")
         val document = layoutPrintDocument(PrintSource("Column song", songs = listOf(
@@ -143,7 +150,7 @@ internal class PrintRendererTest {
     }
 
     @Test fun `exports every column of a full page in song reading order`() = runBlocking {
-        val renderer = PrintRenderer(TextMeasurer(createFontFamilyResolver(), Density(1f), LayoutDirection.Ltr))
+        val renderer = PrintRenderer(TextMeasurer(createFontFamilyResolver(), LocaleList("en"), Density(1f), LayoutDirection.Ltr))
         // Short pairs that never wrap, as many as leave the last column with only a few of them (a single one in the
         // three columns), the way the page a song ends on does.
         listOf(Triple(3, true, 28), Triple(4, false, 68), Triple(4, true, 44)).forEach { (columns, isLandscape, lineCount) ->
@@ -165,7 +172,7 @@ internal class PrintRendererTest {
     }
 
     @Test fun `exports four columns of the largest text filled to their edges`() = runBlocking {
-        val renderer = PrintRenderer(TextMeasurer(createFontFamilyResolver(), Density(1f), LayoutDirection.Ltr))
+        val renderer = PrintRenderer(TextMeasurer(createFontFamilyResolver(), LocaleList("en"), Density(1f), LayoutDirection.Ltr))
         val parsed = ChordProParser.parse("{title: Dense}\n{start_of_verse: Verse 1}\n" +
             (1..40).joinToString("\n") { "[Am]Line ${it.toString().padStart(3, '0')} singing all the [F]words of a long line together" } + "\n{end_of_verse}")
         val document = layoutPrintDocument(PrintSource("Dense", songs = listOf(PrintSong("dense.cho", "Dense", null, song = parsed))),
@@ -182,7 +189,7 @@ internal class PrintRendererTest {
     }
 
     @Test fun `renders all pages of a multilingual setlist`() = runBlocking {
-        val renderer = PrintRenderer(TextMeasurer(createFontFamilyResolver(), Density(1f), LayoutDirection.Ltr))
+        val renderer = PrintRenderer(TextMeasurer(createFontFamilyResolver(), LocaleList("en"), Density(1f), LayoutDirection.Ltr))
         val parsed = ChordProParser.parse("""
             {title: Árvíztűrő tükörfúrógép}
             {artist: Péter}
@@ -232,7 +239,7 @@ internal class PrintRendererTest {
     }
 
     @Test fun `exports a song of cut sections for visual QA`() = runBlocking {
-        val renderer = PrintRenderer(TextMeasurer(createFontFamilyResolver(), Density(1f), LayoutDirection.Ltr))
+        val renderer = PrintRenderer(TextMeasurer(createFontFamilyResolver(), LocaleList("en"), Density(1f), LayoutDirection.Ltr))
         val parsed = ChordProParser.parse("""
             {title: Cut sections}
             {key: D}
@@ -270,7 +277,7 @@ internal class PrintRendererTest {
     }
 
     @Test fun `exports a right-to-left song from the right edge for the importer regression fixture`() = runBlocking {
-        val renderer = PrintRenderer(TextMeasurer(createFontFamilyResolver(), Density(1f), LayoutDirection.Ltr))
+        val renderer = PrintRenderer(TextMeasurer(createFontFamilyResolver(), LocaleList("en"), Density(1f), LayoutDirection.Ltr))
         val labels = PrintLabels("Key", "Transposition", "Capo", "Tempo", "$TEMPO_VALUE BPM", "Time", "Missing",
             DefaultSectionLabels(verse = "Verse", chorus = "Chorus", bridge = "Bridge", tab = "Tab", grid = "Grid",
                 intro = "Intro", preChorus = "Pre-chorus", solo = "Solo", outro = "Outro", abc = "ABC notation", lilyPond = "LilyPond", svg = "SVG"))
@@ -320,7 +327,7 @@ internal class PrintRendererTest {
     }
 
     @Test fun `reusing the page bitmap leaks nothing between pages`() = runBlocking {
-        val renderer = PrintRenderer(TextMeasurer(createFontFamilyResolver(), Density(1f), LayoutDirection.Ltr))
+        val renderer = PrintRenderer(TextMeasurer(createFontFamilyResolver(), LocaleList("en"), Density(1f), LayoutDirection.Ltr))
         val top = PrintPage(listOf(PrintText(text = "MMMMMMMM", x = 10f, y = 5f, style = PrintStyle(20f))))
         val bottom = PrintPage(listOf(PrintText(text = "MMMMMMMM", x = 10f, y = 70f, style = PrintStyle(20f))))
         val bytes = renderer.pdfBytes(PrintDocument(width = 100f, height = 100f, pages = listOf(top, bottom, top)), "Pages")
@@ -335,7 +342,7 @@ internal class PrintRendererTest {
     }
 
     @Test fun `each page draws its own system of a tune, the same every time it is drawn`() = runBlocking {
-        val renderer = PrintRenderer(TextMeasurer(createFontFamilyResolver(), Density(1f), LayoutDirection.Ltr))
+        val renderer = PrintRenderer(TextMeasurer(createFontFamilyResolver(), LocaleList("en"), Density(1f), LayoutDirection.Ltr))
         val low = NotationFixtures.system("""<path d="M0 80h360v12h-360z"/>""")
         val drawing = assertNotNull(parseNotationDrawing(listOf(NotationFixtures.HEADER, NotationFixtures.SYSTEM, low)))
         fun page(system: Int) = PrintPage(texts = emptyList(), notations = listOf(PrintNotation(drawing, system, x = 5f, y = 5f, scale = 0.25f)))
@@ -392,7 +399,7 @@ internal class PrintRendererTest {
     }
 
     @Test fun `details are printed gray and lyrics black`() = runBlocking {
-        val renderer = PrintRenderer(TextMeasurer(createFontFamilyResolver(), Density(1f), LayoutDirection.Ltr))
+        val renderer = PrintRenderer(TextMeasurer(createFontFamilyResolver(), LocaleList("en"), Density(1f), LayoutDirection.Ltr))
         val song = ChordProParser.parse("{title: Gray}\n{key: D}\n{tempo: 96}\nWords that are sung in black")
         val document = layoutPrintDocument(PrintSource("Gray", songs = listOf(PrintSong("gray.cho", "Gray", "Artist", song = song))),
             PrintSettings(), PrintLabels("Key", "Transposition", "Capo", "Tempo", "$TEMPO_VALUE BPM", "Time", "Missing", DefaultSectionLabels(verse = "Verse", chorus = "Chorus", bridge = "Bridge", tab = "Tab", grid = "Grid", intro = "Intro", preChorus = "Pre-chorus", solo = "Solo", outro = "Outro", abc = "ABC notation", lilyPond = "LilyPond", svg = "SVG")), renderer::width)
@@ -418,7 +425,7 @@ internal class PrintRendererTest {
     }
 
     @Test fun `chord diagrams are drawn in their boxes and left out of the selectable text`() = runBlocking {
-        val renderer = PrintRenderer(TextMeasurer(createFontFamilyResolver(), Density(1f), LayoutDirection.Ltr))
+        val renderer = PrintRenderer(TextMeasurer(createFontFamilyResolver(), LocaleList("en"), Density(1f), LayoutDirection.Ltr))
         val song = ChordProParser.parse("{title: Shapes}\n{define: F base-fret 1 frets 1 3 3 2 1 1 fingers 1 3 4 2 1 1}\n[G]Words [C]sung [D]over [F]chords and [Bm]a barre")
         val labels = PrintLabels("Key", "Transposition", "Capo", "Tempo", "$TEMPO_VALUE BPM", "Time", "Missing", DefaultSectionLabels(verse = "Verse", chorus = "Chorus", bridge = "Bridge", tab = "Tab", grid = "Grid", intro = "Intro", preChorus = "Pre-chorus", solo = "Solo", outro = "Outro", abc = "ABC notation", lilyPond = "LilyPond", svg = "SVG"))
         suspend fun page(chords: List<PrintChord>, settings: PrintSettings) = layoutPrintDocument(
@@ -458,7 +465,7 @@ internal class PrintRendererTest {
     @Test fun `a Hebrew text and a mixed Hebrew and Latin one measure as laid out in the bundled Hebrew face`() {
         val hebrew = scriptFaces.single { it.script == "Hebrew" }
         val hebrewFamily = FontFamily(Font("noto_sans_hebrew_regular", File("src/commonMain/composeResources/font/noto_sans_hebrew_regular.ttf").readBytes()))
-        val measurer = TextMeasurer(createFontFamilyResolver(), Density(1f), LayoutDirection.Ltr)
+        val measurer = TextMeasurer(createFontFamilyResolver(), LocaleList("en"), Density(1f), LayoutDirection.Ltr)
         val renderer = PrintRenderer(measurer, scriptFontFamilies = listOf(hebrew to hebrewFamily))
         val textStyle = TextStyle(fontFamily = FontFamily.Default, fontSize = 14.sp, fontFeatureSettings = "liga=0")
         listOf("הבה נגילה", "Hava נגילה now").forEach { text ->

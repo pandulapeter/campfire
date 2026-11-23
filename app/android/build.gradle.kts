@@ -32,7 +32,11 @@ dependencies {
 android {
     namespace = "com.pandulapeter.campfire"
     val targetSdkVersion = libs.versions.android.compileSdk.get().toInt()
-    compileSdk = targetSdkVersion
+    compileSdk {
+        version = release(targetSdkVersion) {
+            minorApiLevel = libs.versions.android.compileSdkMinor.get().toInt()
+        }
+    }
     defaultConfig {
         applicationId = "com.pandulapeter.campfire"
         minSdk = libs.versions.android.minSdk.get().toInt()

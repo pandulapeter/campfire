@@ -44,6 +44,9 @@ internal fun SongMetadataField(
     onDone: (() -> Unit)? = null,
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
+    // The value based text field, whose VisualTransformation Compose 1.13 deprecates for TextFieldState's
+    // OutputTransformation, which this has not moved to yet.
+    @Suppress("DEPRECATION")
     OutlinedTextField(
         modifier = modifier,
         value = value,

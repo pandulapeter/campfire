@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.print
 
+import com.pandulapeter.campfire.presentation.ui.registerComposeUiRuntime
+import androidx.compose.ui.text.intl.LocaleList
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.font.createFontFamilyResolver
 import androidx.compose.ui.unit.Density
@@ -31,6 +33,10 @@ import kotlin.test.assertTrue
 /** A PDF page holding a photo, and one holding a missing picture's sentence, rasterized and encoded for real. */
 internal class PrintPicturesTest {
 
+    init {
+        registerComposeUiRuntime()
+    }
+
     /** A gradient from black to white, left to right, whose shades sixteen grays would band. */
     private val photo = ByteArrayOutputStream().also { output ->
         val image = BufferedImage(256, 64, BufferedImage.TYPE_INT_RGB)
@@ -50,7 +56,7 @@ internal class PrintPicturesTest {
 
     @Test fun `a page holding a photo is written in 256 grays with the photo's shades, a page without one in sixteen`() = runBlocking {
         val pictures = PrintPictures(Library(mapOf("photo.png" to photo)), PlatformContext.INSTANCE, this)
-        val renderer = PrintRenderer(TextMeasurer(createFontFamilyResolver(), Density(1f), LayoutDirection.Ltr), pictures = pictures)
+        val renderer = PrintRenderer(TextMeasurer(createFontFamilyResolver(), LocaleList("en"), Density(1f), LayoutDirection.Ltr), pictures = pictures)
         val photoPage = PrintPage(texts = emptyList(), images = listOf(PrintImage("photo.png", x = 10f, y = 10f, width = 256f, height = 64f)))
         val textPage = PrintPage(texts = listOf(PrintText("Image not found: gone.jpg", 10f, 10f, PrintStyle(12f), isSelectable = false)))
         val bytes = renderer.pdfBytes(PrintDocument(width = 300f, height = 100f, pages = listOf(photoPage, textPage)), "Pictures")

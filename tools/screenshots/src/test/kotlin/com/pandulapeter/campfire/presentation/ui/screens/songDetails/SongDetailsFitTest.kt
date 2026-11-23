@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
+import androidx.compose.ui.text.intl.LocaleList
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsNode
@@ -167,7 +168,7 @@ private val TextLayoutResult.fitsItsRoom
         lettersHeight() <= size.height + TOLERANCE
 
 /** How tall this text's lines are without the leading their line height adds. */
-private fun TextLayoutResult.lettersHeight() = TextMeasurer(layoutInput.fontFamilyResolver, layoutInput.density, layoutInput.layoutDirection)
+private fun TextLayoutResult.lettersHeight() = TextMeasurer(layoutInput.fontFamilyResolver, LocaleList("en"), layoutInput.density, layoutInput.layoutDirection)
     .measure(
         text = layoutInput.text,
         style = layoutInput.style.copy(lineHeight = TextUnit.Unspecified),

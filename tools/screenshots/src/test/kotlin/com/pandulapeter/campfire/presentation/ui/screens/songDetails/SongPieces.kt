@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
+import androidx.compose.ui.text.intl.LocaleList
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.semantics.SemanticsActions
@@ -93,7 +94,7 @@ internal fun songPieces(viewport: SemanticsNode, songTop: Float): List<Piece> {
 
 /** How far the letters of this text's style can reach below their baseline, without the leading its line height adds. */
 private fun TextLayoutResult.descent() = descents.getOrPut(layoutInput.style) {
-    TextMeasurer(layoutInput.fontFamilyResolver, layoutInput.density, layoutInput.layoutDirection)
+    TextMeasurer(layoutInput.fontFamilyResolver, LocaleList("en"), layoutInput.density, layoutInput.layoutDirection)
         .measure(DESCENT_SAMPLE, layoutInput.style.copy(lineHeight = TextUnit.Unspecified))
         .let { it.size.height - it.firstBaseline }
 }

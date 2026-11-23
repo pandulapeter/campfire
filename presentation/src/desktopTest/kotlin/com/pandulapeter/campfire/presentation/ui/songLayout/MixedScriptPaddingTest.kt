@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.songLayout
 
+import com.pandulapeter.campfire.presentation.ui.registerComposeUiRuntime
+import androidx.compose.ui.text.intl.LocaleList
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
@@ -26,7 +28,12 @@ import kotlin.test.assertTrue
 
 /** Lays padded mixed-script lines out with the real bidirectional layout, to see which side each gap opens on. */
 internal class MixedScriptPaddingTest {
-    private val measurer = TextMeasurer(createFontFamilyResolver(), Density(1f), LayoutDirection.Ltr)
+
+    init {
+        registerComposeUiRuntime()
+    }
+
+    private val measurer = TextMeasurer(createFontFamilyResolver(), LocaleList("en"), Density(1f), LayoutDirection.Ltr)
 
     private fun layout(text: String, direction: TextDirection) =
         measurer.measure(text, TextStyle(fontSize = 16.sp, textDirection = direction), softWrap = false)

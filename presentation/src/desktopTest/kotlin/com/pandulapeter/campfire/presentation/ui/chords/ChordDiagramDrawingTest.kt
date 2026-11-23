@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.chords
 
+import com.pandulapeter.campfire.presentation.ui.registerComposeUiRuntime
+import androidx.compose.ui.text.intl.LocaleList
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Color
@@ -28,6 +30,10 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class ChordDiagramDrawingTest {
+
+    init {
+        registerComposeUiRuntime()
+    }
 
     @Test
     fun `under a capo an open string's ring leaves the bar and the string out, so whatever is behind shows through`() {
@@ -51,7 +57,7 @@ class ChordDiagramDrawingTest {
                 mutedColor = MUTED,
                 rootColor = ROOT,
                 backgroundColor = Color.White,
-                textMeasurer = TextMeasurer(createFontFamilyResolver(), Density(1f), LayoutDirection.Ltr),
+                textMeasurer = TextMeasurer(createFontFamilyResolver(), LocaleList("en"), Density(1f), LayoutDirection.Ltr),
                 fontFamily = null,
             )
         }

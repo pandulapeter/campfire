@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.songView
 
+import com.pandulapeter.campfire.presentation.ui.registerComposeUiRuntime
+import androidx.compose.ui.text.intl.LocaleList
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -25,10 +27,14 @@ import kotlin.test.assertTrue
 
 internal class TabStaffLinesTest {
 
+    init {
+        registerComposeUiRuntime()
+    }
+
     private val style = TextStyle(fontSize = 14.sp)
     private val monospaceStyle = style.copy(fontFamily = FontFamily.Monospace)
     private val styles = RunStyles(text = style, chord = style, monospaceText = monospaceStyle, monospaceChord = monospaceStyle)
-    private val textMeasurer = TextMeasurer(createFontFamilyResolver(), Density(1f), LayoutDirection.Ltr)
+    private val textMeasurer = TextMeasurer(createFontFamilyResolver(), LocaleList("en"), Density(1f), LayoutDirection.Ltr)
 
     @Test
     fun `two staff lines holding the same fret share its layout`() {

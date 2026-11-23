@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalFontFamilyResolver
+import androidx.compose.ui.platform.LocalLocaleList
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.Density
@@ -32,6 +33,7 @@ import com.pandulapeter.campfire.presentation.ui.theme.ScriptFace
 @Composable
 internal fun rememberPrintRendererFactory(scriptFontFamilies: List<Pair<ScriptFace, FontFamily>>): () -> PrintRenderer {
     val fontResolver = LocalFontFamilyResolver.current
+    val localeList = LocalLocaleList.current
     val monospaceFontFamily = LocalMonospaceFontFamily.current
     // The face the viewer sets lyrics in, Inter rather than FontFamily.Default.
     val textFontFamily = MaterialTheme.typography.bodyLarge.fontFamily ?: FontFamily.Default
@@ -40,10 +42,10 @@ internal fun rememberPrintRendererFactory(scriptFontFamilies: List<Pair<ScriptFa
     val context = LocalPlatformContext.current
     val scope = rememberCoroutineScope()
     val pictures = remember(imageLoader, context, scope) { PrintPictures(imageLoader, context, scope) }
-    return remember(fontResolver, monospaceFontFamily, textFontFamily, scriptFontFamilies, pictures) {
+    return remember(fontResolver, localeList, monospaceFontFamily, textFontFamily, scriptFontFamilies, pictures) {
         {
             PrintRenderer(
-                measurer = TextMeasurer(fontResolver, Density(1f), LayoutDirection.Ltr, cacheSize = 256),
+                measurer = TextMeasurer(fontResolver, localeList, Density(1f), LayoutDirection.Ltr, cacheSize = 256),
                 monospaceFontFamily = monospaceFontFamily,
                 textFontFamily = textFontFamily,
                 scriptFontFamilies = scriptFontFamilies,

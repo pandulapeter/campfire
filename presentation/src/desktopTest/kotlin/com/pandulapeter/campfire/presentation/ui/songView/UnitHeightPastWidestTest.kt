@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.songView
 
+import com.pandulapeter.campfire.presentation.ui.registerComposeUiRuntime
+import androidx.compose.ui.text.intl.LocaleList
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.CompositionLocalProvider
@@ -43,6 +45,10 @@ import kotlin.test.assertTrue
  * On the desktop, where text is laid out for real.
  */
 internal class UnitHeightPastWidestTest {
+
+    init {
+        registerComposeUiRuntime()
+    }
 
     private val labels = DefaultSectionLabels(
         verse = "Verse",
@@ -81,7 +87,7 @@ internal class UnitHeightPastWidestTest {
         val chordStyle = style.copy(fontWeight = FontWeight.Bold)
         val density = Density(2f)
         val textMeasurements = SongTextMeasurements(
-            textMeasurer = TextMeasurer(createFontFamilyResolver(), density, layoutDirection),
+            textMeasurer = TextMeasurer(createFontFamilyResolver(), LocaleList("en"), density, layoutDirection),
             lyricsStyle = style,
             chordStyle = chordStyle,
             annotationStyle = style,

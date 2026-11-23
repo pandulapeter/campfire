@@ -103,6 +103,8 @@ internal fun SearchField(
             keyboardController?.show()
         }
     }
+    // The value based text field, deprecated in Compose 1.13 for the TextFieldState one, which this has not moved to yet.
+    @Suppress("DEPRECATION")
     BasicTextField(
         modifier = Modifier.fillMaxSize().focusRequester(focusRequester),
         value = shownValue,

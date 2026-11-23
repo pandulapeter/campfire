@@ -27,6 +27,8 @@ internal actual val isStartupScreenHeldUntilAppReady = false
 internal actual val isImportBoundToPage = false
 
 // The library is in the platform's application data folder, which the user can open and edit files in.
+internal actual val isBackGestureFollowedMidTransition = false
+
 internal actual val isLibraryEditableOutsideApp get() = PlatformImpersonation.platform != ImpersonatedPlatform.ANDROID
 
 // Windows and macOS have none. The taskbar button of a packaged app (the Microsoft Store's) is drawn from the package's

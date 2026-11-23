@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.print
 
+import com.pandulapeter.campfire.presentation.ui.registerComposeUiRuntime
+import androidx.compose.ui.text.intl.LocaleList
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -41,8 +43,12 @@ import kotlin.test.assertEquals
  */
 class PdfRoundTripTest {
 
+    init {
+        registerComposeUiRuntime()
+    }
+
     private val renderer = PrintRenderer(
-        measurer = TextMeasurer(createFontFamilyResolver(), Density(1f), LayoutDirection.Ltr),
+        measurer = TextMeasurer(createFontFamilyResolver(), LocaleList("en"), Density(1f), LayoutDirection.Ltr),
         monospaceFontFamily = bundledFontFamily("jetbrains_mono_regular" to FontWeight.Normal, "jetbrains_mono_bold" to FontWeight.Bold),
         textFontFamily = bundledFontFamily("inter_regular" to FontWeight.Normal, "inter_medium" to FontWeight.Medium, "inter_bold" to FontWeight.Bold),
         scriptFontFamilies = scriptFaces.map { face ->

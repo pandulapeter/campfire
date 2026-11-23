@@ -96,6 +96,9 @@ kotlin {
             implementation(libs.google.playAppUpdate)
             // The shared link a first launch was installed from, see ui/platform/InstallReferrer.kt.
             implementation(libs.google.playInstallReferrer)
+            // Google's newer NavDisplay over the one the multiplatform Navigation 3 wraps, compiled against here as well
+            // as run, see ui/platform/Platform.kt's isBackGestureFollowedMidTransition.
+            implementation(libs.androidx.navigation3.ui.android)
         }
         wasmJsMain.dependencies {
             // Opening URLs in a new tab, done by the web shell in ui/CampfireWebApp.kt.

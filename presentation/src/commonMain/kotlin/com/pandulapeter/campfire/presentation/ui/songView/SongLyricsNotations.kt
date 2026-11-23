@@ -16,6 +16,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFontFamilyResolver
+import androidx.compose.ui.platform.LocalLocaleList
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.isSpecified
 import com.pandulapeter.campfire.abc.api.AbcSystem
@@ -47,8 +48,9 @@ internal fun rememberSongLyricsNotations(
     val typography = MaterialTheme.typography
     val notationTextStyle = remember(localTextStyle, typography) { localTextStyle.merge(typography.bodyLarge).copy(color = Color.Unspecified) }
     val fontResolver = LocalFontFamilyResolver.current
-    val notationPainting = remember(density, fontResolver, notationTextStyle) {
-        NotationPainting(density, fontResolver, notationTextStyle)
+    val localeList = LocalLocaleList.current
+    val notationPainting = remember(density, fontResolver, localeList, notationTextStyle) {
+        NotationPainting(density, fontResolver, localeList, notationTextStyle)
     }
     // A unit is the lyrics' text size over the renderer's, so the staff and its words grow with the lyrics: by the reader's
     // text size and by the system's font size alike (which Android scales nonlinearly, hence the text size converted).

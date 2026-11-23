@@ -73,8 +73,10 @@ internal fun Map<Field, String>.fromSongMetadataDraft() = this + (Field.DURATION
  * colon, which the number pads of most Android keyboards do not have, and a text keyboard for a number is worse than
  * either. The form keeps the digits as its draft ([toSongMetadataDraft]) and the song gets ChordProDuration's spelling
  * of them on Save. Every offset maps to the end, which is where a timer's digits are typed and deleted: a caret placed
- * between them would edit a mask whose colons move under it.
+ * between them would edit a mask whose colons move under it. A [VisualTransformation], deprecated in Compose 1.13 with
+ * the value based text fields, until the form's fields move to TextFieldState and an OutputTransformation.
  */
+@Suppress("DEPRECATION")
 internal object DurationDigitsTransformation : VisualTransformation {
 
     override fun filter(text: AnnotatedString): TransformedText {

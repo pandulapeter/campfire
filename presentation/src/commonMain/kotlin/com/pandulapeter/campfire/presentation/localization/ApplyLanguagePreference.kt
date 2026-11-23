@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.presentation.localization
 
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.text.intl.Locale
+import androidx.compose.ui.platform.LocalLocale
 import com.pandulapeter.campfire.chordpro.language.LanguageCodes
 import com.pandulapeter.campfire.data.model.preferences.AppLanguage
 
@@ -25,7 +25,7 @@ import com.pandulapeter.campfire.data.model.preferences.AppLanguage
  */
 @Composable
 internal fun ApplyLanguagePreference(language: AppLanguage?) {
-    val resolved = resolvedAppLocale(language = language, systemLanguage = Locale.current.language)
+    val resolved = resolvedAppLocale(language = language, systemLanguage = LocalLocale.current.language)
     if (currentLanguage.value != resolved) currentLanguage.value = resolved
 }
 

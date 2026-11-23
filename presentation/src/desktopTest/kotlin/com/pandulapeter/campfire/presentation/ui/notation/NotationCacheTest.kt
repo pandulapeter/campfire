@@ -9,7 +9,9 @@
  */
 package com.pandulapeter.campfire.presentation.ui.notation
 
+import com.pandulapeter.campfire.presentation.ui.registerComposeUiRuntime
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.text.intl.LocaleList
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.createFontFamilyResolver
 import androidx.compose.ui.unit.Density
@@ -30,7 +32,11 @@ import kotlin.test.assertTrue
 /** On the desktop, since the renderings it keeps are painted with a real measurer. */
 internal class NotationCacheTest {
 
-    private val painting = NotationPainting(Density(1f), createFontFamilyResolver(), TextStyle.Default)
+    init {
+        registerComposeUiRuntime()
+    }
+
+    private val painting = NotationPainting(Density(1f), createFontFamilyResolver(), LocaleList("en"), TextStyle.Default)
     private val drawing = assertNotNull(parseNotationDrawing(listOf(HEADER, SYSTEM)))
     private val rendering = NotationRendering(drawing, unitSize = 1f, systems = painting.newPainter().paint(drawing, unitSize = 1f), reading = NotationReading(emptyList(), emptyList(), null))
 

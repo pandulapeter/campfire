@@ -10,12 +10,17 @@
 #noinspection UnusedVersionCatalogEntry
 android-compileSdk = "37" # https://developer.android.com/tools/releases/platforms
 #noinspection UnusedVersionCatalogEntry
+android-compileSdkMinor = "1" # Compose 1.13 asks for 37.1
+#noinspection UnusedVersionCatalogEntry
 android-minSdk = "28"
 androidx-activity = "1.13.0" # https://developer.android.com/jetpack/androidx/releases/activity
 androidx-benchmark = "1.5.0" # https://developer.android.com/jetpack/androidx/releases/benchmark
 androidx-browser = "1.10.0" # https://developer.android.com/jetpack/androidx/releases/browser
 androidx-lifecycle = "2.11.0" # https://github.com/JetBrains/compose-multiplatform-core/releases (org.jetbrains.androidx.lifecycle)
 androidx-navigation3 = "1.2.0" # https://github.com/JetBrains/compose-multiplatform-core/releases (org.jetbrains.androidx.navigation3)
+# Android only, over the one androidx-navigation3 brings: Google's NavDisplay follows a back gesture started mid-transition
+# (DeferredTransitionState). Must ask for no Compose newer than jetbrains-compose maps to on Android (alpha05 asks 1.14).
+androidx-navigation3-android = "1.3.0-alpha04" # https://developer.android.com/jetpack/androidx/releases/navigation3
 androidx-profileinstaller = "1.4.1" # https://developer.android.com/jetpack/androidx/releases/profileinstaller
 androidx-test-junit = "1.3.0" # https://developer.android.com/jetpack/androidx/releases/test
 androidx-test-uiautomator = "2.4.1" # https://developer.android.com/jetpack/androidx/releases/test-uiautomator
@@ -26,7 +31,7 @@ google-playInstallReferrer = "2.2" # https://developer.android.com/google/play/i
 gradle = "9.5.2" # https://developer.android.com/studio/releases/gradle-plugin
 hyperether-localization = "2.0.1" # https://github.com/hyperether/compose-multiplatform-localize/releases
 jbr-api = "1.12.0" # https://github.com/JetBrains/JetBrainsRuntimeApi/releases
-jetbrains-compose = "1.12.2" # https://github.com/JetBrains/compose-multiplatform/releases
+jetbrains-compose = "1.13.0-rc01" # https://github.com/JetBrains/compose-multiplatform/releases
 jetbrains-compose-material3 = "1.12.0-alpha03" # https://github.com/JetBrains/compose-multiplatform-core/releases (org.jetbrains.compose.material3)
 #noinspection UnusedVersionCatalogEntry
 jvmTarget = "21" # https://kotlinlang.org/docs/gradle.html
@@ -43,7 +48,7 @@ ktlint = "1.8.0" # https://github.com/pinterest/ktlint/releases
 ktor = "3.6.1" # https://github.com/ktorio/ktor/releases
 quickjs = "1.0.18" # https://github.com/dokar3/quickjs-kt/releases
 #noinspection NewerVersionAvailable
-skiko = "0.150.2" # Must equal the skiko version Compose brings in: ./gradlew :app:desktop:dependencies --configuration runtimeClasspath | grep skiko
+skiko = "0.156.1" # Must equal the skiko version Compose brings in: ./gradlew :app:desktop:dependencies --configuration runtimeClasspath | grep skiko
 spotless = "8.11.0" # https://github.com/diffplug/spotless/blob/main/plugin-gradle/CHANGES.md
 zxing = "3.5.4" # https://github.com/zxing/zxing/releases
 
@@ -54,6 +59,7 @@ androidx-browser = { module = "androidx.browser:browser", version.ref = "android
 androidx-lifecycle-runtime-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
 androidx-lifecycle-viewmodel-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "androidx-lifecycle" }
 androidx-navigation3-ui = { module = "org.jetbrains.androidx.navigation3:navigation3-ui", version.ref = "androidx-navigation3" }
+androidx-navigation3-ui-android = { module = "androidx.navigation3:navigation3-ui", version.ref = "androidx-navigation3-android" }
 androidx-profileinstaller = { module = "androidx.profileinstaller:profileinstaller", version.ref = "androidx-profileinstaller" }
 androidx-test-junit = { module = "androidx.test.ext:junit", version.ref = "androidx-test-junit" }
 androidx-test-uiautomator = { module = "androidx.test.uiautomator:uiautomator", version.ref = "androidx-test-uiautomator" }

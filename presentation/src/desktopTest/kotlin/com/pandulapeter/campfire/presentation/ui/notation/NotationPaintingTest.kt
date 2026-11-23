@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.notation
 
+import com.pandulapeter.campfire.presentation.ui.registerComposeUiRuntime
+import androidx.compose.ui.text.intl.LocaleList
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.createFontFamilyResolver
 import androidx.compose.ui.unit.Density
@@ -29,6 +31,10 @@ import kotlin.test.assertTrue
 
 /** Painting with a real measurer, which needs the desktop's font resolver. */
 internal class NotationPaintingTest {
+
+    init {
+        registerComposeUiRuntime()
+    }
 
     @Test
     fun `a tune is painted off the main thread with a measurer of its own`() = runBlocking {
@@ -112,5 +118,5 @@ internal class NotationPaintingTest {
         assertEquals(80f, regularChord.x)
     }
 
-    private fun painting() = NotationPainting(Density(1f), createFontFamilyResolver(), TextStyle.Default)
+    private fun painting() = NotationPainting(Density(1f), createFontFamilyResolver(), LocaleList("en"), TextStyle.Default)
 }

@@ -49,6 +49,13 @@ internal expect val isStartupScreenHeldUntilAppReady: Boolean
  */
 internal expect val isImportBoundToPage: Boolean
 
+/**
+ * Whether Navigation 3 follows a back gesture started while a navigation transition is still running: true only on
+ * Android, whose app takes Google's newer NavDisplay. Everywhere else it seeks the running transition, which replays the
+ * card's slide inside the strip the finger uncovers, so `MidTransitionBackHandler` takes such a gesture instead.
+ */
+internal expect val isBackGestureFollowedMidTransition: Boolean
+
 /** Whether the library is a folder the user can reach from outside the app, and so edit behind its back. */
 internal expect val isLibraryEditableOutsideApp: Boolean
 

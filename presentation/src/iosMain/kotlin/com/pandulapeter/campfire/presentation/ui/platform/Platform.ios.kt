@@ -23,6 +23,8 @@ internal actual val isImportBoundToPage = false
 
 // Info.plist declares UIFileSharingEnabled and LSSupportsOpeningDocumentsInPlace, so the documents directory the
 // library lives in shows up under "On My iPhone".
+internal actual val isBackGestureFollowedMidTransition = false
+
 internal actual val isLibraryEditableOutsideApp = true
 
 internal actual val appIconSurface: AppIconSurface? = AppIconSurface.HOME_SCREEN

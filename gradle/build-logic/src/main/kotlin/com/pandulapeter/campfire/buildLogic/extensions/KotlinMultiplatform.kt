@@ -46,7 +46,11 @@ internal fun Project.configureKotlinMultiplatform(
         extension.configure<KotlinMultiplatformAndroidLibraryTarget> {
             namespace = "com.pandulapeter.campfire" + path.replace(":", ".").replace("-", "_")
             minSdk = libs.version("android-minSdk").toInt()
-            compileSdk = libs.version("android-compileSdk").toInt()
+            compileSdk {
+                version = release(libs.version("android-compileSdk").toInt()) {
+                    minorApiLevel = libs.version("android-compileSdkMinor").toInt()
+                }
+            }
             packaging {
                 resources {
                     excludes += "/META-INF/{AL2.0,LGPL2.1}"
