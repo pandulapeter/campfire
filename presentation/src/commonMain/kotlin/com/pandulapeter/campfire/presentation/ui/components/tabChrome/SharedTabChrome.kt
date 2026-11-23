@@ -12,9 +12,11 @@ package com.pandulapeter.campfire.presentation.ui.components.tabChrome
 import androidx.compose.animation.EnterExitState
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.core.FiniteAnimationSpec
+import androidx.compose.animation.core.SpringSpec
 import androidx.compose.animation.core.Transition
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.spring
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -62,6 +64,7 @@ internal class SharedTabChrome(
     private val scope: TabChromeScope,
     private val element: TabChromeElement,
     private val presence: State<Float>,
+    private val settle: State<Float>,
     private val fade: State<Float>,
     private val screenAlpha: State<Float>,
     containerColor: Color,
@@ -125,9 +128,14 @@ internal class SharedTabChrome(
     /**
      * How large what stands on the part is drawn while it shares its rectangle with [counterpart], around the travelling rectangle's middle:
      * whole where both copies hold the same, and otherwise growing in on the copy being opened and shrinking away on
-     * the one being left, on the spatial spring, as a part on its own does ([aloneScale]).
+     * the one being left, on the spatial spring without its bounce: an open field's icons turning into a closed pill's
+     * buttons would otherwise swell past their size inside a pill that is still travelling.
      */
-    fun matchedContentScale(counterpart: SharedTabChrome?) = if (isContentShared(counterpart)) 1f else scaleOnPresence()
+    fun matchedContentScale(counterpart: SharedTabChrome?) = if (isContentShared(counterpart)) {
+        1f
+    } else {
+        TAB_CHROME_HIDDEN_SCALE + (1f - TAB_CHROME_HIDDEN_SCALE) * settle.value
+    }
 
     /**
      * How opaque what rides the part is while it shares its rectangle and the two copies hold different things (an open field
@@ -192,6 +200,12 @@ internal fun rememberSharedTabChrome(
     val motionScheme = MaterialTheme.motionScheme
     val transition = scope.visibilityScope.transition
     val presence = transition.animateSwap(scope) { motionScheme.defaultSpatialSpec() }
+    val settle = transition.animateSwap(scope) {
+        when (val spec = motionScheme.defaultSpatialSpec<Float>()) {
+            is SpringSpec -> spring(stiffness = spec.stiffness)
+            else -> spec
+        }
+    }
     val fade = transition.animateSwap(scope) { motionScheme.defaultEffectsSpec() }
     val screenAlpha = transition.animateSwap(scope) {
         if (targetState == EnterExitState.Visible) tabFadeInSpec() else tabFadeOutSpec()
@@ -201,6 +215,7 @@ internal fun rememberSharedTabChrome(
             scope = scope,
             element = element,
             presence = presence,
+            settle = settle,
             fade = fade,
             screenAlpha = screenAlpha,
             containerColor = containerColor,
