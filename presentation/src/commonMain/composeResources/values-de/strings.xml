@@ -310,6 +310,8 @@
     <string name="paste_clipboard_empty">In der Zwischenablage ist kein Text zum Einfügen.</string>
     <string name="paste_only_links">Ein Link ist kein Song, und Campfire öffnet keine Seiten. Kopiere die Akkorde und den Text selbst.</string>
     <string name="paste_page_link">Campfire kann hier keine Seiten öffnen. Öffne sie in deinem Browser, kopiere dann die Seite selbst und füge sie ein.</string>
+    <string name="paste_page_link_web">Campfire kann im Browser keine Seiten öffnen. Öffne die Seite, kopiere dann die Seite selbst und füge sie ein, oder hol dir die App, die den Song schon aus dem Link allein liest.</string>
+    <string name="paste_page_link_get_app">App holen</string>
     <string name="paste_too_large">Der Text ist länger als die 8 MB, die ein Import aufnehmen kann.</string>
     <string name="shared_link_not_imported">Campfire öffnet keine Webseiten. Markiere den Text des Akkordblatts und teile stattdessen diesen.</string>
     <string name="page_not_read">Campfire hat auf dieser Seite keinen Song gefunden. Öffne sie in deinem Browser und teile oder kopiere dann die Seite selbst.</string>

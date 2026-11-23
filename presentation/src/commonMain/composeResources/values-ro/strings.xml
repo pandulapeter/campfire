@@ -345,6 +345,8 @@
     <string name="paste_clipboard_empty">Nu există text în clipboard de lipit.</string>
     <string name="paste_only_links">Un link nu este un cântec, iar Campfire nu deschide pagini. Copiază chiar acordurile și versurile.</string>
     <string name="paste_page_link">Campfire nu poate deschide pagini aici. Deschide-o în browser, apoi copiază chiar pagina și lipește-o.</string>
+    <string name="paste_page_link_web">Campfire nu poate deschide pagini într-un browser. Deschide pagina, apoi copiază chiar pagina și lipește-o, sau descarcă aplicația, care ia cântecul doar din link.</string>
+    <string name="paste_page_link_get_app">Descarcă aplicația</string>
     <string name="paste_too_large">Textul depășește cei 8 MB pe care îi poate prelua un import.</string>
     <string name="shared_link_not_imported">Campfire nu deschide pagini web. Selectează textul foii cu acorduri și partajează-l pe acela.</string>
     <string name="page_not_read">Campfire nu a găsit niciun cântec pe această pagină. Deschide-o în browser, apoi partajează sau copiază chiar pagina.</string>

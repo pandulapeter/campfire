@@ -310,6 +310,8 @@
     <string name="paste_clipboard_empty">Negli appunti non c\'è testo da incollare.</string>
     <string name="paste_only_links">Un link non è una canzone, e Campfire non apre pagine web. Copia direttamente gli accordi e il testo.</string>
     <string name="paste_page_link">Campfire non può aprire pagine qui. Aprila nel browser, poi copia la pagina stessa e incollala.</string>
+    <string name="paste_page_link_web">Campfire non può aprire pagine in un browser. Apri la pagina, poi copia la pagina stessa e incollala, oppure scarica l\'app, che prende la canzone dal solo link.</string>
+    <string name="paste_page_link_get_app">Scarica l\'app</string>
     <string name="paste_too_large">Il testo supera gli 8 MB che una singola importazione può accettare.</string>
     <string name="shared_link_not_imported">Campfire non apre pagine web. Seleziona il testo dello spartito e condividi quello.</string>
     <string name="page_not_read">Campfire non ha trovato nessuna canzone in questa pagina. Aprila nel browser, poi condividi o copia la pagina stessa.</string>

@@ -83,7 +83,10 @@ sealed interface Message {
     /** A share from another app that was nothing but a web page's address (and its title), which is never fetched. */
     data object SharedLinkNotImported : Message
 
-    /** A page's address pasted or dropped where no page can be read (the web, a desktop with no web view): copy the page. */
+    /**
+     * A page's address pasted or dropped where no page can be read (the web, a desktop with no web view): copy the page,
+     * and on the web, get the app, offered with an action that opens the website's downloads.
+     */
     data object PageLinkNotReadHere : Message
 
     /** A Campfire link in a format a later version made, which this one cannot open; updating can. */

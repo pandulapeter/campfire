@@ -312,6 +312,8 @@
     <string name="paste_clipboard_empty">Não há texto na área de transferência para colar.</string>
     <string name="paste_only_links">Um link não é uma música, e o Campfire não abre páginas. Copie os próprios acordes e a letra.</string>
     <string name="paste_page_link">O Campfire não consegue abrir páginas aqui. Abra-a no navegador e depois copie a própria página e cole-a.</string>
+    <string name="paste_page_link_web">O Campfire não consegue abrir páginas em um navegador. Abra a página e depois copie a própria página e cole-a, ou baixe o app, que tira a música só do link.</string>
+    <string name="paste_page_link_get_app">Baixar o app</string>
     <string name="paste_too_large">O texto passa dos 8 MB que uma importação aceita.</string>
     <string name="shared_link_not_imported">O Campfire não abre páginas da web. Selecione o texto da cifra e compartilhe-o.</string>
     <string name="page_not_read">O Campfire não encontrou nenhuma música nesta página. Abra-a no navegador e depois compartilhe ou copie a própria página.</string>
