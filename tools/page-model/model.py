@@ -22,16 +22,16 @@ BUCKETS = 4096
 MAX_CHARS = 160
 
 
-def hashed(text):
+def hashed(text, buckets=BUCKETS):
     """A line's visible characters as bucket numbers from 1, 0 padding; the same hash the app's library computes."""
-    codes = [((ord(c) * 2654435761) % 4294967296) % BUCKETS + 1 for c in visible(text)[:MAX_CHARS]]
+    codes = [((ord(c) * 2654435761) % 4294967296) % buckets + 1 for c in visible(text)[:MAX_CHARS]]
     return codes + [0] * (MAX_CHARS - len(codes))
 
 
 class PageModel(nn.Module):
-    def __init__(self, embedding=32, channels=96, line=128, hidden=96):
+    def __init__(self, embedding=32, channels=96, line=128, hidden=96, buckets=BUCKETS):
         super().__init__()
-        self.embedding = nn.Embedding(BUCKETS + 1, embedding, padding_idx=0)
+        self.embedding = nn.Embedding(buckets + 1, embedding, padding_idx=0)
         self.convolutions = nn.Sequential(
             nn.Conv1d(embedding, channels, 3, padding=1),
             nn.ReLU(),
