@@ -80,11 +80,12 @@ public object ChordSheetConverter {
     /**
      * The lines a lyrics site puts into a copy of its page, Genius's "You might also like" and the "12Embed" its
      * share count ends one with, glued to the last lyric where the copy lost the line break, and a chord site's chrome
-     * around the song ([ChordSheetSiteDetails.withoutChrome]). Only a song is read for them: a poem may well end in "Embed".
+     * around the song ([ChordSheetSiteDetails.withoutChrome]) with the list of the chords it plays ([ChordSheetChordList]).
+     * Only a song is read for them: a poem may well end in "Embed".
      */
     private fun withoutInjections(lines: List<Rendered>): List<Rendered> {
         if (!LineKinds.hasStructure(lines, chordCandidates(lines))) return lines
-        val kept = ChordSheetSiteDetails.withoutChrome(lines)
+        val kept = ChordSheetChordList.withoutList(ChordSheetSiteDetails.withoutChrome(lines))
         val last = kept.indexOfLast { it.text.isNotBlank() }
         return kept.mapIndexedNotNull { index, line ->
             when {

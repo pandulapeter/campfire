@@ -102,6 +102,18 @@ class ChordSheetSiteDetailsTest {
     }
 
     @Test
+    fun `a list of the chords the song plays one a line is left out of the song`() {
+        val song = "\n\n| Am Em | F C/H |\n\nAm      C\nHello world\nF       G\nHello again"
+        val result = convert("Am\nC\n2fr\nF\nC/B\nG$song")
+        assertTrue(result.startsWith("{start_of_grid}"), result)
+        // A run naming a chord twice, one the song never plays, or one under a heading is the song's own.
+        for (run in listOf("Am\nC\nAm", "Am\nC\nD", "Outro:\nAm\nC\nF")) {
+            assertTrue(convert("$song\n\n$run").contains("[C]"), run)
+            assertTrue(convert("$song\n\n$run").substringAfter("[G]").contains(run.lines().last()), run)
+        }
+    }
+
+    @Test
     fun `lyrics that only contain a details word are never eaten`() {
         for (line in listOf("Key to my heart", "Speed of sound", "Tuning in to you", "Simplify my life", "Author of my story", "Difficulty is my name")) {
             val result = convert("Verse 1\nG      C\nHello world\n$line\nG      C\nHello again")
