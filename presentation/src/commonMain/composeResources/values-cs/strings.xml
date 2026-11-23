@@ -341,7 +341,7 @@
     <string name="paste_clipboard_empty">Ve schránce není žádný text k vložení.</string>
     <string name="paste_only_links">Odkaz není píseň a Campfire neotevírá stránky. Zkopíruj přímo akordy a text.</string>
     <string name="paste_page_link">Campfire tu nemůže otevírat stránky. Otevři ji v prohlížeči a pak zkopíruj samotnou stránku a vlož ji.</string>
-    <string name="paste_page_link_web">Campfire v prohlížeči nemůže otevírat stránky. Otevři stránku a pak zkopíruj samotnou stránku a vlož ji, nebo si stáhni aplikaci, která si píseň vezme ze samotného odkazu.</string>
+    <string name="paste_page_link_web">Campfire v prohlížeči nemůže otevírat stránky, aplikace ano. Nebo zkopíruj samotnou stránku a vlož ji.</string>
     <string name="paste_page_link_get_app">Stáhnout aplikaci</string>
     <string name="paste_too_large">Text je delší než 8 MB, které jeden import zvládne.</string>
     <string name="shared_link_not_imported">Campfire neotevírá webové stránky. Označ text s akordy a nasdílej ten.</string>

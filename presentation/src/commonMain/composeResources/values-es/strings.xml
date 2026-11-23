@@ -310,7 +310,7 @@
     <string name="paste_clipboard_empty">No hay texto en el portapapeles para pegar.</string>
     <string name="paste_only_links">Un enlace no es una canción, y Campfire no abre páginas. Copia los acordes y la letra en sí.</string>
     <string name="paste_page_link">Campfire no puede abrir páginas aquí. Ábrela en tu navegador y luego copia la propia página y pégala.</string>
-    <string name="paste_page_link_web">Campfire no puede abrir páginas en un navegador. Abre la página y luego copia la propia página y pégala, o descarga la app, que toma la canción solo del enlace.</string>
+    <string name="paste_page_link_web">Campfire no puede abrir páginas en un navegador, pero la app sí. O copia la propia página y pégala.</string>
     <string name="paste_page_link_get_app">Descargar la app</string>
     <string name="paste_too_large">El texto supera los 8 MB que admite una importación.</string>
     <string name="shared_link_not_imported">Campfire no abre páginas web. Selecciona el texto de la hoja de acordes y comparte eso.</string>

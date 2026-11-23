@@ -344,7 +344,7 @@
     <string name="paste_clipboard_empty">אין בלוח טקסט להדבקה.</string>
     <string name="paste_only_links">קישור הוא לא שיר, ו־Campfire לא פותח דפים. העתיקו את האקורדים ואת המילים עצמם.</string>
     <string name="paste_page_link">Campfire לא יכול לפתוח כאן דפים. פתחו אותו בדפדפן, ואז העתיקו את הדף עצמו והדביקו אותו.</string>
-    <string name="paste_page_link_web">Campfire לא יכול לפתוח דפים בדפדפן. פתחו את הדף, ואז העתיקו את הדף עצמו והדביקו אותו, או הורידו את האפליקציה, שלוקחת את השיר מהקישור בלבד.</string>
+    <string name="paste_page_link_web">Campfire לא יכול לפתוח דפים בדפדפן, אבל האפליקציה יכולה. אפשר גם להעתיק את הדף עצמו ולהדביק אותו.</string>
     <string name="paste_page_link_get_app">להורדת האפליקציה</string>
     <string name="paste_too_large">הטקסט ארוך מ־8 MB, המגבלה של ייבוא אחד.</string>
     <string name="shared_link_not_imported">Campfire לא פותח דפי אינטרנט. סמנו את הטקסט של דף האקורדים ושתפו אותו במקום.</string>

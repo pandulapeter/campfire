@@ -310,7 +310,7 @@
     <string name="paste_clipboard_empty">There is no text on the clipboard to paste.</string>
     <string name="paste_only_links">A link is not a song, and Campfire does not open pages. Copy the chords and the lyrics themselves.</string>
     <string name="paste_page_link">Campfire cannot open pages here. Open the page in your browser, then copy the page itself and paste it.</string>
-    <string name="paste_page_link_web">Campfire cannot open pages in a browser. Open the page, then copy the page itself and paste it, or get the app, which takes the song from the link alone.</string>
+    <string name="paste_page_link_web">Campfire cannot open pages in a browser, but the app can. Or copy the page itself and paste it.</string>
     <string name="paste_page_link_get_app">Get the app</string>
     <string name="paste_too_large">The text is longer than the 8 MB one import can take.</string>
     <string name="shared_link_not_imported">Campfire does not open web pages. Select the chord sheet\'s text and share that instead.</string>

@@ -338,7 +338,7 @@
     <string name="paste_clipboard_empty">W schowku nie ma tekstu do wklejenia.</string>
     <string name="paste_only_links">Link to nie piosenka, a Campfire nie otwiera stron. Skopiuj same akordy i tekst.</string>
     <string name="paste_page_link">Campfire nie może tu otwierać stron. Otwórz ją w przeglądarce, a potem skopiuj samą stronę i ją wklej.</string>
-    <string name="paste_page_link_web">Campfire nie może otwierać stron w przeglądarce. Otwórz stronę, a potem skopiuj samą stronę i ją wklej albo pobierz aplikację, która weźmie piosenkę z samego linku.</string>
+    <string name="paste_page_link_web">Campfire nie może otwierać stron w przeglądarce, ale aplikacja tak. Możesz też skopiować samą stronę i ją wkleić.</string>
     <string name="paste_page_link_get_app">Pobierz aplikację</string>
     <string name="paste_too_large">Tekst jest dłuższy niż 8 MB, które mieści jeden import.</string>
     <string name="shared_link_not_imported">Campfire nie otwiera stron internetowych. Zaznacz tekst z akordami i udostępnij go zamiast linku.</string>
