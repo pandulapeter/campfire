@@ -83,6 +83,7 @@ import com.pandulapeter.campfire.presentation.ui.components.SearchState
 import com.pandulapeter.campfire.presentation.ui.components.appBar.TruncateSearchQuery
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.painterResource
+import com.pandulapeter.campfire.presentation.ui.components.list.pinnedOverList
 
 /**
  * One line on a tonal pill, as the list screens' search field is, with the magnifier in front of it and a button that
@@ -177,6 +178,7 @@ internal fun LazyListScope.searchField(
     val fadeHeight = with(LocalDensity.current) { EDGE_FADE_SIZE.toPx() }
     Box(
         modifier = ItemWidth
+            .pinnedOverList()
             .fadingBelowPinnedHeader(backgroundColor, fadeHeight) {
                 pinnedHeaderScrolledUnder(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset, index, fadeHeight)
             }

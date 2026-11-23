@@ -31,6 +31,7 @@ import com.pandulapeter.campfire.presentation.ui.components.appBar.NEW_ITEM_BUTT
 import com.pandulapeter.campfire.presentation.ui.components.menu.NEW_ITEM_BUTTON_SIZE
 import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.Flow
+import com.pandulapeter.campfire.presentation.ui.components.list.pinnedOverList
 
 /**
  * The search of a tool's page (the Chords and the Scales tabs), under the controls and pinned at the top of the page
@@ -57,6 +58,7 @@ internal fun LazyGridScope.pinnedSearchField(
     val fadeHeight = with(LocalDensity.current) { EDGE_FADE_SIZE.toPx() }
     Row(
         modifier = Modifier
+            .pinnedOverList()
             .stickingBelowContentPadding(gridState, PINNED_SEARCH_INDEX)
             .bleedHorizontally(TOOL_PAGE_PADDING)
             .fadingBelowPinnedHeader(backgroundColor, fadeHeight) {

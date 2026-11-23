@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.setlists
 import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import com.pandulapeter.campfire.presentation.localization.stringResource
@@ -28,6 +29,7 @@ import com.pandulapeter.campfire.presentation.ui.state.setlists.SetlistWithSongs
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
+import com.pandulapeter.campfire.presentation.ui.components.list.pinnedOverList
 
 /** The pinned header of a setlist in [SetlistList], with the setlist's menu outside performance mode. */
 internal fun LazyGridScope.setlistHeader(
@@ -52,7 +54,7 @@ internal fun LazyGridScope.setlistHeader(
         // Sticky placement belongs to the grid. Animating it as a regular item can briefly
         // pull an already-pinned header away when entering reorder mode changes the list.
         // Keep only its appearance fades.
-        modifier = listItemAnimation(listState, hasLoadedLibrary, placementSpec = null),
+        modifier = Modifier.pinnedOverList().then(listItemAnimation(listState, hasLoadedLibrary, placementSpec = null)),
         state = { headerState.value },
         // The card fade and animated placement can settle on different frames near the top.
         // Keep the pinned row opaque throughout reordering.

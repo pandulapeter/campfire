@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.foundation.lazy.grid.LazyGridState
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import com.pandulapeter.campfire.presentation.ui.components.Placeholder
@@ -37,6 +38,7 @@ import com.pandulapeter.campfire.presentation.ui.state.songs.SONG_HEADER_CONTENT
 import com.pandulapeter.campfire.presentation.ui.state.songs.SongGroupHeader
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import com.pandulapeter.campfire.presentation.ui.components.list.pinnedOverList
 
 /** [SongList]'s [placeholder], with the ways into a library it offers outside performance mode. */
 internal fun LazyGridScope.songListPlaceholder(
@@ -104,7 +106,8 @@ internal fun LazyGridScope.songGroupHeader(
         ) { headerIndex ->
             val headerState = rememberSectionHeaderState(listState, headerIndex)
             SectionHeader(
-                modifier = listItemAnimation(listState, hasLoadedLibrary, placementSpec = itemPlacementSpec)
+                modifier = Modifier.pinnedOverList()
+                    .then(listItemAnimation(listState, hasLoadedLibrary, placementSpec = itemPlacementSpec))
                     .anchoredTransition(filterAnchor, listState, header.itemKey),
                 state = { headerState.value },
                 endPadding = headerEndPadding,
