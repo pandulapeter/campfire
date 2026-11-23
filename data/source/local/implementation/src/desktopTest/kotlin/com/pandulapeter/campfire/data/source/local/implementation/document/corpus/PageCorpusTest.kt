@@ -68,8 +68,9 @@ class PageCorpusTest {
             """
             Page corpus: ${scores.size} labelled pages
             song pages: ${songs.size}; crop beats keeping everything on $wins, ties $ties, worse on ${songs.size - wins - ties}
-            mean line F1: keep everything ${"%.3f".format(songs.map { it.baseline }.average())}, crop ${"%.3f".format(songs.map { it.crop }.average())}
+            mean line F1: keep everything ${"%.4f".format(songs.map { it.baseline }.average())}, crop ${"%.4f".format(songs.map { it.crop }.average())}
             pages losing a song line: ${songs.count { it.lostSongLines > 0 }} ($lostLines of $songLines song lines lost)
+            title kept on ${songs.count { it.titleKept == true }} of ${songs.count { it.titleKept != null }} song pages labelling one, artist on ${songs.count { it.artistKept == true }} of ${songs.count { it.artistKept != null }}
             pages with no song: ${noSongs.size}, told as none ${noSongs.count { !it.holdsSong }}
             most song lines lost: ${songs.filter { it.lostSongLines > 0 }.sortedByDescending { it.lostSongLines }.take(8).joinToString { "${it.id} (${it.lostSongLines}/${it.songLines})" }}
             """.trimIndent(),
@@ -86,6 +87,9 @@ class PageCorpusTest {
         val printed = lines.indices.filter { lines[it].isNotBlank() && labels[it] != "IGNORE" }.toSet()
         val truth = printed.filter { labels[it] == "SONG" || labels[it] == "METADATA" }.toSet()
         val song = printed.filter { labels[it] == "SONG" }.toSet()
+
+        /** Whether a line labelled [label] is kept, or null where the page labels none. */
+        fun keptOf(label: String) = printed.filter { labels[it] == label }.takeIf { it.isNotEmpty() }?.any { it in kept }
         fun f1(chosen: Set<Int>): Double {
             if (truth.isEmpty()) return if (chosen.isEmpty()) 1.0 else 0.0
             val hits = (chosen intersect truth).size
@@ -102,6 +106,8 @@ class PageCorpusTest {
             crop = f1(printed intersect kept),
             songLines = song.size,
             lostSongLines = (song - kept).size,
+            titleKept = keptOf("TITLE"),
+            artistKept = keptOf("ARTIST"),
         )
     }
 
@@ -115,5 +121,7 @@ class PageCorpusTest {
         val crop: Double,
         val songLines: Int,
         val lostSongLines: Int,
+        val titleKept: Boolean?,
+        val artistKept: Boolean?,
     )
 }
