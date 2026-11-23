@@ -37,7 +37,7 @@ import javax.inject.Inject
  *
  * Where the host has no such compiler the task writes nothing and says so: a fresh clone still builds and runs every
  * platform, and that build only cannot read pages. A compiler that is there and fails fails the build, and so does a
- * missing one where [isRequired] (the workflows), so that no release goes out without the helper.
+ * missing one where [required] (the workflows), so that no release goes out without the helper.
  */
 abstract class CompileWebViewHelper : DefaultTask() {
 
@@ -61,7 +61,7 @@ abstract class CompileWebViewHelper : DefaultTask() {
     abstract val hostArchitecture: Property<String>
 
     @get:Input
-    abstract val isRequired: Property<Boolean>
+    abstract val required: Property<Boolean>
 
     @get:Input
     abstract val webView2Version: Property<String>
@@ -189,7 +189,7 @@ abstract class CompileWebViewHelper : DefaultTask() {
 
     private fun skip(reason: String) {
         val message = "No web view helper is built, so this build cannot read pages: $reason."
-        if (isRequired.get()) throw GradleException(message)
+        if (required.get()) throw GradleException(message)
         logger.warn(message)
     }
 

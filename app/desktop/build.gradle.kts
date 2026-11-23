@@ -484,7 +484,7 @@ val compileWebViewHelper = tasks.register<CompileWebViewHelper>("compileWebViewH
     }
     hostArchitecture = System.getProperty("os.arch").orEmpty()
     // Every GitHub runner sets CI, and a release built without the helper would quietly lose reading pages.
-    isRequired = providers.environmentVariable("CI").map { it == "true" }.orElse(false)
+    required = providers.environmentVariable("CI").map { it == "true" }.orElse(false)
     webView2Version = libs.versions.webview2
     // The SHA-256 of that version's NuGet package; a version bump takes it from the package, downloaded once by hand.
     webView2Sha256 = "f492bbf547d0da329553b6727435b677579b1e9f91cc9e4a1ad029366d5f23d0"
