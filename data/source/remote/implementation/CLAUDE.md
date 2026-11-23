@@ -178,4 +178,6 @@ cannot tell from no answer.
   context, pictures off, in a `GtkOffscreenWindow`, on a GTK thread of the helper's own. It iterates the default main
   context only while a view is open, since AWT's GTK file dialog runs a loop over the same context on another thread.
   WebKitGTK does not tell a frame's navigation from the page's, so each is asked as a frame's (about:, data:, blob:
-  allowed, and an address off a public host never read). Subresources are the page's, as on iOS.
+  allowed, and an address off a public host never read). Subresources are the page's, as on iOS. Downloads are
+  refused: a response that is an attachment or that the view cannot show is ignored, and any download started is
+  cancelled.

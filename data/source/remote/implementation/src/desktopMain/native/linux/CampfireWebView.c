@@ -26,6 +26,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 
 typedef struct {
     uint32_t domain;
@@ -36,7 +37,7 @@ typedef struct {
 typedef void (*GCallback)(void);
 
 enum { LOAD_STARTED = 0, LOAD_FINISHED = 3 };
-enum { NAVIGATION_ACTION = 0, NEW_WINDOW_ACTION = 1 };
+enum { NAVIGATION_ACTION = 0, NEW_WINDOW_ACTION = 1, RESPONSE_ACTION = 2 };
 
 static struct {
     int (*gtk_init_check)(int *, char ***);
@@ -70,6 +71,11 @@ static struct {
     const char *(*webkit_uri_request_get_uri)(void *);
     void (*webkit_policy_decision_ignore)(void *);
     void (*webkit_policy_decision_use)(void *);
+    int (*webkit_response_policy_decision_is_mime_type_supported)(void *);
+    void *(*webkit_response_policy_decision_get_response)(void *);
+    void *(*webkit_uri_response_get_http_headers)(void *);
+    const char *(*soup_message_headers_get_one)(void *, const char *);
+    void (*webkit_download_cancel)(void *);
 } gtk;
 
 static const char *const SYMBOLS[] = {
@@ -82,7 +88,9 @@ static const char *const SYMBOLS[] = {
     "webkit_javascript_result_get_js_value", "webkit_javascript_result_unref", "jsc_value_is_string",
     "jsc_value_to_string", "webkit_navigation_policy_decision_get_navigation_action",
     "webkit_navigation_action_get_request", "webkit_uri_request_get_uri", "webkit_policy_decision_ignore",
-    "webkit_policy_decision_use",
+    "webkit_policy_decision_use", "webkit_response_policy_decision_is_mime_type_supported",
+    "webkit_response_policy_decision_get_response", "webkit_uri_response_get_http_headers",
+    "soup_message_headers_get_one", "webkit_download_cancel",
 };
 
 // loadWebKit fills the table above slot by slot in this order.
@@ -202,11 +210,30 @@ static void releaseIfDone(Page *page) {
     if (page->isClosed && page->pendingScripts == 0) free(page);
 }
 
+/** Whether [response] asks to be saved as a file (`Content-Disposition: attachment`) rather than shown. */
+static int isAttachment(void *response) {
+    // A data: or about: response has no header table, and is shown.
+    void *headers = response != NULL ? gtk.webkit_uri_response_get_http_headers(response) : NULL;
+    const char *disposition = headers != NULL ? gtk.soup_message_headers_get_one(headers, "Content-Disposition") : NULL;
+    if (disposition == NULL) return 0;
+    while (*disposition == ' ' || *disposition == '\t') disposition++;
+    return strncasecmp(disposition, "attachment", 10) == 0;
+}
+
 static int decidePolicy(void *view, void *decision, int type, void *data) {
     Page *page = data;
     if (type == NEW_WINDOW_ACTION) {
         // A window the page opens would be drawn nowhere; it is refused.
         gtk.webkit_policy_decision_ignore(decision);
+        return 1;
+    }
+    if (type == RESPONSE_ACTION) {
+        // WebKitGTK's own answer downloads what the view cannot show, or what asks to be saved, into the user's Downloads
+        // folder; the reader keeps nothing, so it is ignored. An ignored page fails its load with a policy error, which
+        // reads as a page that could not be read.
+        int isShown = gtk.webkit_response_policy_decision_is_mime_type_supported(decision)
+            && !isAttachment(gtk.webkit_response_policy_decision_get_response(decision));
+        if (isShown) gtk.webkit_policy_decision_use(decision); else gtk.webkit_policy_decision_ignore(decision);
         return 1;
     }
     if (type != NAVIGATION_ACTION) return 0;
@@ -249,6 +276,11 @@ static int scriptDialog(void *view, void *dialog, void *data) {
     return 1;
 }
 
+/** A download started any other way (a script's `<a download>`) is cancelled before it picks a file to write. */
+static void downloadStarted(void *context, void *download, void *data) {
+    gtk.webkit_download_cancel(download);
+}
+
 static void connectSignal(void *instance, const char *signal, GCallback callback, Page *page) {
     gtk.g_signal_connect_data(instance, signal, callback, page, NULL, 0);
 }
@@ -259,6 +291,7 @@ static void build(Page *page, char *unused) {
         return;
     }
     void *context = gtk.webkit_web_context_new_ephemeral();
+    connectSignal(context, "download-started", (GCallback) downloadStarted, page);
     page->view = gtk.webkit_web_view_new_with_context(context);
     gtk.g_object_unref(context);
     void *settings = gtk.webkit_web_view_get_settings(page->view);
