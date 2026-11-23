@@ -85,9 +85,11 @@ internal class SharedTabChrome(
 
     /** The same part on the other screen of the swap, the one this shares its rectangle with, or null for none. */
     val counterpart: SharedTabChrome?
-        get() = if (!isSwapping || boundsInRoot() == null) null else scope.tabChrome.parts.firstOrNull {
-            it !== this && it.element == element && it.scope !== scope && it.isSwapping && it.boundsInRoot() != null
-        }
+        get() = if (!isSwapping || boundsInRoot() == null) null else counterpartAmong(
+            part = this,
+            parts = scope.tabChrome.parts.filter { it.element == element && it.isSwapping && it.boundsInRoot() != null },
+            isEntering = { it.isEntering },
+        )
 
     /** Whether the part shares its rectangle with the other screen's right now. */
     val isMatched get() = counterpart != null
@@ -254,3 +256,14 @@ internal fun rememberSharedTabChrome(
 
 /** How small a part is as it scales out of the screen being left or into the one being opened, see [SharedTabChrome]. */
 internal const val TAB_CHROME_HIDDEN_SCALE = 0.6f
+
+/**
+ * Which of [parts] (the copies of one part being swapped, [part] among them) [part] shares its rectangle with: a copy
+ * being opened with the first being left, and a copy being left with the one being opened only where that picks it in
+ * turn. A third tab opened during a swap leaves two copies on their way out, which must neither match each other nor
+ * both draw a container on the way to the one being opened; the one not picked goes alone.
+ */
+internal fun <T : Any> counterpartAmong(part: T, parts: List<T>, isEntering: (T) -> Boolean): T? {
+    val firstOpposite = parts.firstOrNull { it !== part && isEntering(it) != isEntering(part) } ?: return null
+    return if (isEntering(part)) firstOpposite else firstOpposite.takeIf { parts.firstOrNull { !isEntering(it) } === part }
+}
