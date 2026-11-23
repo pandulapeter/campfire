@@ -37,6 +37,7 @@ import platform.Foundation.create
 import platform.Foundation.stringWithContentsOfFile
 import platform.Foundation.timeIntervalSinceNow
 import platform.Foundation.writeToFile
+import platform.UserNotifications.UNNotification
 import platform.UserNotifications.UNUserNotificationCenter
 
 /**
@@ -88,11 +89,7 @@ private suspend fun drain() {
             fileManager.removeItemAtPath("$inboxPath/$name", error = null)
         }
     }
-    val shares = names.filterNot { it.endsWith(PARTIAL_SUFFIX) }
-    // The notification the extension posts for a share is named by its folder. Once the app is in front to take the
-    // shares, it has served its purpose, and left in Notification Center it would offer a share already imported.
-    if (shares.isNotEmpty()) UNUserNotificationCenter.currentNotificationCenter().removeDeliveredNotificationsWithIdentifiers(shares)
-    shares.forEach { name -> importShare("$inboxPath/$name") }
+    names.filterNot { it.endsWith(PARTIAL_SUFFIX) }.forEach { name -> importShare("$inboxPath/$name") }
 }
 
 @OptIn(ExperimentalForeignApi::class)
@@ -156,6 +153,23 @@ private fun forgetMovedFile(folderPath: String, path: String) {
 
 private val manifestLock = NSLock()
 
+/**
+ * Called from Swift whenever the app is in front: takes down the notifications the extension posted for its shares
+ * (`ShareNotification.swift`), which have served their purpose then, and left in Notification Center would offer shares
+ * already imported. Not from every drain: the Darwin notification also reaches an app left a moment ago and not
+ * suspended yet, where the notification is the way back to it. By their thread rather than by the folders in the inbox,
+ * since a share such a drain took has no folder left to name it.
+ */
+@Suppress("unused")
+fun removeShareNotifications() = UNUserNotificationCenter.currentNotificationCenter().let { center ->
+    center.getDeliveredNotificationsWithCompletionHandler { delivered ->
+        val identifiers = delivered.orEmpty().filterIsInstance<UNNotification>()
+            .filter { it.request.content.threadIdentifier == SHARE_NOTIFICATION_THREAD }
+            .map { it.request.identifier }
+        if (identifiers.isNotEmpty()) center.removeDeliveredNotificationsWithIdentifiers(identifiers)
+    }
+}
+
 /** A path of the manifest inside its share's folder, and nothing that climbs out of it. */
 private fun urlInShare(folderPath: String, path: String) = path.takeUnless { it.startsWith("/") || it.split('/').contains("..") }
     ?.let { NSURL.fileURLWithPath("$folderPath/$it") }
@@ -165,4 +179,6 @@ private const val APP_GROUP_KEY = "CampfireAppGroup"
 private const val INBOX_NAME = "ShareInbox"
 private const val PARTIAL_SUFFIX = ".partial"
 private const val MANIFEST_NAME = "share.json"
+/** `ShareNotification.threadIdentifier` in the extension. */
+private const val SHARE_NOTIFICATION_THREAD = "share-inbox"
 private const val ABANDONED_SHARE_SECONDS = 60.0 * 60.0

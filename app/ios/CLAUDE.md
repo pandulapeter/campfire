@@ -81,8 +81,9 @@ extension (`iosApp/ShareExtension/`, Swift only).
   (authorized or provisional; the app asks only when a sync run starts, the extension never asks), it posts one naming
   what waits (a title, a file's name, or "N files"), identified by the share's folder, threaded `share-inbox`, before
   the Darwin notification and awaited for at most a second before `completeRequest`. Opening it brings the app to the
-  front, which drains the inbox, so it routes nothing; a drain takes down the delivered notifications of the shares it
-  lists. The sheet's second line says whether one was posted.
+  front, which drains the inbox, so it routes nothing. The `.active` phase (and the Darwin notification, only while the
+  app is active) takes down every delivered one by its thread; the Darwin notification also reaches an app left a
+  moment ago and not yet suspended, where it stays the way back. The sheet's second line says whether one was posted.
 - One folder per share, written as `<time>-<UUID>.partial` and renamed when complete; the app ignores `.partial` ones
   and deletes them after an hour. Its `share.json` is decoded by `:presentation` (`ui/platform/CLAUDE.md`). A share is
   one batch (one `ImportBudget`), and its folder is deleted only once the app has taken it (its import settled, or a

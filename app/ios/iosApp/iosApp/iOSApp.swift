@@ -20,7 +20,11 @@ struct iOSApp: App {
         CFNotificationCenterAddObserver(
             CFNotificationCenterGetDarwinNotifyCenter(),
             nil,
-            { _, _, _, _, _ in IosShareInboxKt.drainShareInbox() },
+            { _, _, _, _, _ in
+                // An app left a moment ago hears it too, before it is suspended; there the share's notification stays.
+                if UIApplication.shared.applicationState == .active { IosShareInboxKt.removeShareNotifications() }
+                IosShareInboxKt.drainShareInbox()
+            },
             "com.pandulapeter.campfire.share-inbox" as CFString,
             nil,
             .deliverImmediately
@@ -44,6 +48,7 @@ struct iOSApp: App {
             if phase == .background {
                 IosFileImportKt.cleanImportInbox()
             } else if phase == .active {
+                IosShareInboxKt.removeShareNotifications()
                 IosShareInboxKt.drainShareInbox()
             }
         }

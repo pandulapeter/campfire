@@ -12,8 +12,8 @@ import UserNotifications
 
 /// A share written to the inbox: its folder's name and what the user would call what they shared.
 struct SavedShare {
-    /// The share's folder in the inbox, which is also its notification's identifier: the app takes the notification
-    /// down by it as it drains the share (`IosShareInbox.kt`).
+    /// The share's folder in the inbox, which is also its notification's identifier, so that a second share adds a
+    /// notification rather than replacing the first one's.
     let id: String
     let name: SharedName
 }
@@ -73,6 +73,7 @@ enum ShareNotification {
         }
     }
 
+    /// What the app takes the share notifications down by once it is in front (`IosShareInbox.kt`); keep the two in step.
     private static let threadIdentifier = "share-inbox"
     private static let timeoutSeconds = 1.0
 
