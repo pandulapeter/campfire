@@ -342,6 +342,7 @@
     <string name="paste_too_large">Text je delší než 8 MB, které jeden import zvládne.</string>
     <string name="shared_link_not_imported">Campfire neotevírá webové stránky. Označ text s akordy a nasdílej ten.</string>
     <string name="page_not_read">Campfire na této stránce nenašel žádnou píseň. Otevři ji v prohlížeči a pak sdílej nebo zkopíruj samotnou stránku.</string>
+    <string name="page_unreachable">Campfire se k této stránce nedokázal připojit. Zkontroluj připojení k internetu a zkus to znovu.</string>
     <string name="shared_link_from_newer_version">Tento odkaz vytvořila novější verze Campfire. Pokud ho chceš otevřít, aktualizuj Campfire.</string>
     <string name="clipboard_not_campfire_link">To není odkaz Campfire.</string>
     <string name="paste_refused_ios">Campfire nemá povolené vkládání. Rozhoduje o tom volba Vložit z jiných aplikací u Campfire v aplikaci Nastavení.</string>

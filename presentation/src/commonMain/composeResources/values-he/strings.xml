@@ -345,6 +345,7 @@
     <string name="paste_too_large">הטקסט ארוך מ־8 MB, המגבלה של ייבוא אחד.</string>
     <string name="shared_link_not_imported">Campfire לא פותח דפי אינטרנט. סמנו את הטקסט של דף האקורדים ושתפו אותו במקום.</string>
     <string name="page_not_read">Campfire לא מצא שיר בדף הזה. פתחו אותו בדפדפן, ואז שתפו או העתיקו את הדף עצמו.</string>
+    <string name="page_unreachable">Campfire לא הצליח לגשת לדף הזה. בדקו את החיבור לאינטרנט ונסו שוב.</string>
     <string name="shared_link_from_newer_version">הקישור הזה נוצר בגרסה חדשה יותר של Campfire. כדי לפתוח אותו, עדכנו את Campfire.</string>
     <string name="clipboard_not_campfire_link">זה לא קישור של Campfire.</string>
     <string name="paste_refused_ios">ל־Campfire אין הרשאה להדביק. ההגדרה “הדבקה מאפליקציות אחרות”, תחת Campfire באפליקציית ההגדרות, קובעת זאת.</string>

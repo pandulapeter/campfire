@@ -16,7 +16,8 @@ interface LoadPageUseCase {
     /**
      * Reads the page at [address] once on the device, for a song shared or pasted as its link, and answers its text, or
      * [LoadedPage.NotRead] where it cannot: the platform has no web view ([CanLoadPagesUseCase]), Pages from links is
-     * switched off (`UserPreferences.isPageLinkLoadingEnabled`), or the page did not come to anything worth converting.
+     * switched off (`UserPreferences.isPageLinkLoadingEnabled`), or the page did not come to anything worth converting;
+     * its reason tells a page that never arrived from one that is nothing to read.
      * Nothing of the page is kept. Only a cancellation is thrown.
      */
     suspend operator fun invoke(address: String): LoadedPage

@@ -117,7 +117,7 @@ class ImportControllerQueueTest {
     private val nextPlans = ArrayDeque<List<ImportPlan.SongEntry>>()
     private var download: ImportDownload = ImportDownload.Unreachable
     private val downloadedUrls = mutableListOf<String>()
-    private var loadedPage: LoadedPage = LoadedPage.NotRead
+    private var loadedPage: LoadedPage = LoadedPage.NotRead(LoadedPage.NotRead.Reason.UNREADABLE)
     private val loadedPageAddresses = mutableListOf<String>()
 
     /** What the page model keeps of a page read by its address: null where it finds no song; it throws where it cannot run. */
@@ -1025,6 +1025,21 @@ class ImportControllerQueueTest {
         settle()
         assertEquals(ImportFailure.PAGE_NOT_READ, assertIs<ImportReport.Failed>(reportState.importReport.value).reason)
         assertEquals(0, prepareCount)
+    }
+
+    @Test
+    fun `a page that never arrived fails saying so and Try again reads it again`() = runTest {
+        loadedPage = LoadedPage.NotRead(LoadedPage.NotRead.Reason.UNREACHABLE)
+        startController()
+        enqueuePage()
+        settle()
+        assertEquals(ImportFailure.PAGE_UNREACHABLE, assertIs<ImportReport.Failed>(reportState.importReport.value).reason)
+        assertEquals(0, prepareCount)
+        loadedPage = LoadedPage.Read(text = "G\nHello", title = "Example", address = PAGE)
+        controller.retryImport()
+        settle()
+        assertEquals(listOf(PAGE, PAGE), loadedPageAddresses)
+        assertEquals(1, prepareCount)
     }
 
     @Test

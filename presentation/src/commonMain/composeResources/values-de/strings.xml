@@ -311,6 +311,7 @@
     <string name="paste_too_large">Der Text ist länger als die 8 MB, die ein Import aufnehmen kann.</string>
     <string name="shared_link_not_imported">Campfire öffnet keine Webseiten. Markiere den Text des Akkordblatts und teile stattdessen diesen.</string>
     <string name="page_not_read">Campfire hat auf dieser Seite keinen Song gefunden. Öffne sie in deinem Browser und teile oder kopiere dann die Seite selbst.</string>
+    <string name="page_unreachable">Campfire konnte diese Seite nicht erreichen. Prüfe die Internetverbindung und versuche es erneut.</string>
     <string name="shared_link_from_newer_version">Dieser Link wurde mit einer neueren Version von Campfire erstellt. Aktualisiere Campfire, um ihn zu öffnen.</string>
     <string name="clipboard_not_campfire_link">Das ist kein Campfire-Link.</string>
     <string name="paste_refused_ios">Campfire durfte nicht einfügen. Das legt „Aus anderen Apps einsetzen“ unter Campfire in der Einstellungen-App fest.</string>

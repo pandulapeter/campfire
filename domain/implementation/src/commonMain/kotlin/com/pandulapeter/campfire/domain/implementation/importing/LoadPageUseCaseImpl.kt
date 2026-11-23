@@ -24,7 +24,7 @@ internal class LoadPageUseCaseImpl(
 
     override suspend operator fun invoke(address: String) =
         if (userPreferencesRepository.loadUserPreferencesIfNeeded()?.isPageLinkLoadingEnabled == false) {
-            LoadedPage.NotRead
+            LoadedPage.NotRead(LoadedPage.NotRead.Reason.UNREADABLE)
         } else {
             pageRepository.load(address)
         }

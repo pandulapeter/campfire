@@ -313,6 +313,7 @@
     <string name="paste_too_large">O texto passa dos 8 MB que uma importação aceita.</string>
     <string name="shared_link_not_imported">O Campfire não abre páginas da web. Selecione o texto da cifra e compartilhe-o.</string>
     <string name="page_not_read">O Campfire não encontrou nenhuma música nesta página. Abra-a no navegador e depois compartilhe ou copie a própria página.</string>
+    <string name="page_unreachable">O Campfire não conseguiu acessar esta página. Verifique a conexão com a internet e tente de novo.</string>
     <string name="shared_link_from_newer_version">Este link foi criado por uma versão mais nova do Campfire. Atualize o Campfire para abri-lo.</string>
     <string name="clipboard_not_campfire_link">Esse não é um link do Campfire.</string>
     <string name="paste_refused_ios">O Campfire não teve permissão para colar. Isso é definido em Colar de Outros Apps, no Campfire, dentro do app Ajustes.</string>

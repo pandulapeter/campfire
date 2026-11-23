@@ -62,9 +62,11 @@ which the script checks; everything else is handed the holders, state, and callb
   (`pageAddressIn`: alone, or among at most three short lines of a call to action or a title; never Campfire's own
   site) is `ImportSource.Page`, read by `LoadPageUseCase` (an offscreen web view, `PageSource`) with the import screen's
   loading stage up ("Reading the page…", Cancel), then cropped and converted as a pasted page, titled by the share's
-  subject, else the page's title; its song's editor takes the loading screen's place. A page not read, or one the page
-  model finds no song on (asked before conversion; a model that cannot run throws, and the page is converted whole), is the failure stage's `PAGE_NOT_READ` sentence with Try again,
-  which reads it again. With Pages from links off it is the links-only snackbar as before; where the platform cannot
+  subject, else the page's title; its song's editor takes the loading screen's place. A page that never arrived (no
+  network, a host not answering, nothing drawn in time) is the failure stage's `PAGE_UNREACHABLE` sentence (check the
+  connection); one not read otherwise (a bot check, an empty page), or one the page model finds no song on (asked before
+  conversion; a model that cannot run throws, and the page is converted whole), is `PAGE_NOT_READ`'s (open it in the
+  browser, bring the page itself); both with Try again, which reads it again. With Pages from links off it is the links-only snackbar as before; where the platform cannot
   read pages (desktop, web) it is `Message.PageLinkNotReadHere`: copy the page itself.
 - A text that is one Campfire link and nothing else (`sharedLinkIn`) is that link's import; a link beside other words
   stays text. Every way ends in `ImportController.importSharedLink`: a newer version's link is a snackbar, any other is

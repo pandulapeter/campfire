@@ -34,7 +34,7 @@ class PageSnapshotTest {
 
     @Test
     fun `an empty page is not read`() {
-        assertEquals(LoadedPage.NotRead, PageSnapshot(text = " \n\t", title = "Songs", address = "https://chords.example.com/a").toLoadedPage())
+        assertEquals(LoadedPage.NotRead(LoadedPage.NotRead.Reason.UNREADABLE), PageSnapshot(text = " \n\t", title = "Songs", address = "https://chords.example.com/a").toLoadedPage())
     }
 
     @Test
@@ -46,7 +46,7 @@ class PageSnapshotTest {
             PageSnapshot(text = "Access Denied\nYou don't have permission to access this server.", title = "Access Denied"),
         ).forEach { snapshot ->
             assertTrue(snapshot.isBotCheck(), snapshot.title)
-            assertEquals(LoadedPage.NotRead, snapshot.copy(address = "https://chords.example.com/a").toLoadedPage())
+            assertEquals(LoadedPage.NotRead(LoadedPage.NotRead.Reason.UNREADABLE), snapshot.copy(address = "https://chords.example.com/a").toLoadedPage())
         }
     }
 
@@ -61,7 +61,7 @@ class PageSnapshotTest {
     @Test
     fun `a page that ended up off a public https host is not read`() {
         listOf("http://chords.example.com/a", "https://192.168.1.1/a", "https://router.local/a", "").forEach { address ->
-            assertEquals(LoadedPage.NotRead, PageSnapshot(text = SONG, title = "Song", address = address).toLoadedPage(), address)
+            assertEquals(LoadedPage.NotRead(LoadedPage.NotRead.Reason.UNREADABLE), PageSnapshot(text = SONG, title = "Song", address = address).toLoadedPage(), address)
         }
     }
 

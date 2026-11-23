@@ -46,6 +46,9 @@ internal class WebViewBrowser private constructor(private val webView: WebView) 
     @Volatile
     private var hasFailed = false
 
+    @Volatile
+    private var isUnreachable = false
+
     init {
         webView.settings.apply {
             javaScriptEnabled = true
@@ -77,7 +80,10 @@ internal class WebViewBrowser private constructor(private val webView: WebView) 
             }
 
             override fun onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError) {
-                if (request.isForMainFrame) hasFailed = true
+                if (request.isForMainFrame) {
+                    hasFailed = true
+                    isUnreachable = error.errorCode in UNREACHABLE_ERROR_CODES
+                }
             }
 
             override fun onReceivedHttpError(view: WebView, request: WebResourceRequest, errorResponse: WebResourceResponse) {
@@ -97,7 +103,7 @@ internal class WebViewBrowser private constructor(private val webView: WebView) 
         }
         // The script's string comes back as a JSON literal of that string, "null" where it threw.
         val snapshot = json?.takeIf { it != "null" }?.let { literal -> runCatching { Json.decodeFromString<String>(literal) }.getOrNull() }
-        PageLook(snapshot = PageSnapshot.decode(snapshot), isLoaded = isLoaded, hasFailed = hasFailed)
+        PageLook(snapshot = PageSnapshot.decode(snapshot), isLoaded = isLoaded, hasFailed = hasFailed, isUnreachable = isUnreachable)
     }
 
     override suspend fun close() = withContext(Dispatchers.Main) {
@@ -110,6 +116,17 @@ internal class WebViewBrowser private constructor(private val webView: WebView) 
     companion object {
 
         private val GONE_STATUS_CODES = setOf(404, 410)
+
+        /**
+         * The errors the network causes rather than the page: no connection (which Chromium reports as a host it could
+         * not look up), a host not found, not answering, or dropping the connection, and a request that timed out.
+         */
+        private val UNREACHABLE_ERROR_CODES = setOf(
+            WebViewClient.ERROR_HOST_LOOKUP,
+            WebViewClient.ERROR_CONNECT,
+            WebViewClient.ERROR_TIMEOUT,
+            WebViewClient.ERROR_IO,
+        )
 
         /** Built on the main thread and laid out at the screen's size, which is what `innerText` and responsive pages measure. */
         suspend fun create(context: Context) = withContext(Dispatchers.Main) {

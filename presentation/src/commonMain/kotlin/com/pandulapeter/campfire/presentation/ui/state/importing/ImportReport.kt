@@ -145,11 +145,17 @@ enum class ImportFailure {
     INTERRUPTED,
 
     /**
-     * A page shared or pasted by its address was read on the device and held no song: a bot check, an empty page, one
-     * that did not load, or one the page model finds no song on. The user can open it in the browser and bring the page
-     * itself instead.
+     * A page shared or pasted by its address was read on the device and held no song: a bot check, an empty or error
+     * page, or one the page model finds no song on. Trying again changes nothing; the user can open it in the browser and
+     * bring the page itself instead.
      */
     PAGE_NOT_READ,
+
+    /**
+     * A page shared or pasted by its address never arrived: no network, its host not found or not answering, or nothing
+     * of it drawn in the time a read is given. Worth trying again once the connection is back.
+     */
+    PAGE_UNREACHABLE,
 }
 
 /**

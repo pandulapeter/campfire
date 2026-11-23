@@ -24,9 +24,9 @@ class OffscreenPageSourceTest {
     @Test
     fun `an address that is not a public https one is never opened`() = runTest {
         listOf("http://chords.example.com/a", "https://localhost/a", "https://10.0.0.1/a", "not an address").forEach { address ->
-            val browser = FakeBrowser { PageLook(snapshot = null, isLoaded = false, hasFailed = false) }
+            val browser = FakeBrowser { PageLook(snapshot = null, isLoaded = false, hasFailed = false, isUnreachable = false) }
 
-            assertEquals(LoadedPage.NotRead, source(browser).load(address), address)
+            assertEquals(UNREADABLE, source(browser).load(address), address)
             assertFalse(browser.isOpened, address)
         }
     }
@@ -42,7 +42,7 @@ class OffscreenPageSourceTest {
                 looks < 5 -> "Loading"
                 else -> SONG
             }
-            PageLook(snapshot = PageSnapshot(text = text, title = "Song", address = ADDRESS), isLoaded = looks > 1, hasFailed = false)
+            PageLook(snapshot = PageSnapshot(text = text, title = "Song", address = ADDRESS), isLoaded = looks > 1, hasFailed = false, isUnreachable = false)
         }
 
         val page = source(browser).load(" $ADDRESS ")
@@ -60,7 +60,7 @@ class OffscreenPageSourceTest {
         val browser = FakeBrowser {
             looks++
             val snapshot = if (looks < 6) PageSnapshot(text = "Verifying you are human", title = "Just a moment...", address = ADDRESS) else PageSnapshot(text = SONG, title = "Song", address = ADDRESS)
-            PageLook(snapshot = snapshot, isLoaded = true, hasFailed = false)
+            PageLook(snapshot = snapshot, isLoaded = true, hasFailed = false, isUnreachable = false)
         }
 
         assertIs<LoadedPage.Read>(source(browser).load(ADDRESS))
@@ -68,16 +68,16 @@ class OffscreenPageSourceTest {
 
     @Test
     fun `a bot check that stays is not read once the time is up`() = runTest {
-        val browser = FakeBrowser { PageLook(snapshot = PageSnapshot(text = "Verifying you are human", title = "Just a moment...", address = ADDRESS), isLoaded = true, hasFailed = false) }
+        val browser = FakeBrowser { PageLook(snapshot = PageSnapshot(text = "Verifying you are human", title = "Just a moment...", address = ADDRESS), isLoaded = true, hasFailed = false, isUnreachable = false) }
 
-        assertEquals(LoadedPage.NotRead, source(browser).load(ADDRESS))
+        assertEquals(UNREADABLE, source(browser).load(ADDRESS))
         assertEquals(OffscreenPageSource.TIME_LIMIT.inWholeMilliseconds, currentTime)
         assertTrue(browser.isClosed)
     }
 
     @Test
     fun `a page that never stops loading is taken as it is once the time is up`() = runTest {
-        val browser = FakeBrowser { PageLook(snapshot = PageSnapshot(text = SONG, title = "Song", address = ADDRESS), isLoaded = false, hasFailed = false) }
+        val browser = FakeBrowser { PageLook(snapshot = PageSnapshot(text = SONG, title = "Song", address = ADDRESS), isLoaded = false, hasFailed = false, isUnreachable = false) }
 
         assertIs<LoadedPage.Read>(source(browser).load(ADDRESS))
         assertEquals(OffscreenPageSource.TIME_LIMIT.inWholeMilliseconds, currentTime)
@@ -85,10 +85,33 @@ class OffscreenPageSourceTest {
 
     @Test
     fun `a page that failed to load is not read whatever its error page says`() = runTest {
-        val browser = FakeBrowser { PageLook(snapshot = PageSnapshot(text = "Webpage not available", title = "", address = ADDRESS), isLoaded = true, hasFailed = true) }
+        val browser = FakeBrowser { PageLook(snapshot = PageSnapshot(text = "Webpage not available", title = "", address = ADDRESS), isLoaded = true, hasFailed = true, isUnreachable = false) }
 
-        assertEquals(LoadedPage.NotRead, source(browser).load(ADDRESS))
+        assertEquals(UNREADABLE, source(browser).load(ADDRESS))
         assertTrue(browser.isClosed)
+    }
+
+    @Test
+    fun `a load the network failed is unreachable rather than nothing to read`() = runTest {
+        val browser = FakeBrowser { PageLook(snapshot = PageSnapshot(text = "No internet", title = "", address = ADDRESS), isLoaded = true, hasFailed = true, isUnreachable = true) }
+
+        assertEquals(UNREACHABLE, source(browser).load(ADDRESS))
+        assertTrue(browser.isClosed)
+    }
+
+    @Test
+    fun `a page still loading with nothing drawn once the time is up is unreachable`() = runTest {
+        val browser = FakeBrowser { PageLook(snapshot = PageSnapshot(text = "", title = "", address = ADDRESS), isLoaded = false, hasFailed = false, isUnreachable = false) }
+
+        assertEquals(UNREACHABLE, source(browser).load(ADDRESS))
+        assertEquals(OffscreenPageSource.TIME_LIMIT.inWholeMilliseconds, currentTime)
+    }
+
+    @Test
+    fun `a page that loaded with no text is nothing to read`() = runTest {
+        val browser = FakeBrowser { PageLook(snapshot = PageSnapshot(text = " ", title = "Songs", address = ADDRESS), isLoaded = true, hasFailed = false, isUnreachable = false) }
+
+        assertEquals(UNREADABLE, source(browser).load(ADDRESS))
     }
 
     @Test
@@ -96,7 +119,7 @@ class OffscreenPageSourceTest {
         val logged = mutableListOf<String>()
         val browser = FakeBrowser { error("The renderer is gone") }
 
-        assertEquals(LoadedPage.NotRead, OffscreenPageSource(newBrowser = { browser }, logger = { logged += it }).load(ADDRESS))
+        assertEquals(UNREADABLE, OffscreenPageSource(newBrowser = { browser }, logger = { logged += it }).load(ADDRESS))
         assertTrue(browser.isClosed)
         assertEquals(1, logged.size)
     }
@@ -120,6 +143,8 @@ class OffscreenPageSourceTest {
     }
 
     private companion object {
+        val UNREACHABLE = LoadedPage.NotRead(LoadedPage.NotRead.Reason.UNREACHABLE)
+        val UNREADABLE = LoadedPage.NotRead(LoadedPage.NotRead.Reason.UNREADABLE)
         const val ADDRESS = "https://chords.example.com/wonderwall"
         const val SONG = "[Verse 1]\nEm7       G\nToday is gonna be the day\n"
     }

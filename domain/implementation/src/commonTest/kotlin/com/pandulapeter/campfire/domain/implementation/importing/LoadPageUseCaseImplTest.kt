@@ -31,7 +31,7 @@ class LoadPageUseCaseImplTest {
     fun `nothing is asked of the page's host while Pages from links is off`() = runTest {
         val pages = RecordingPageRepository()
 
-        assertEquals(LoadedPage.NotRead, useCase(pages, isEnabled = false)(ADDRESS))
+        assertEquals(LoadedPage.NotRead(LoadedPage.NotRead.Reason.UNREADABLE), useCase(pages, isEnabled = false)(ADDRESS))
         assertEquals(emptyList(), pages.loaded)
     }
 

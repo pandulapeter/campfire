@@ -19,6 +19,15 @@ import platform.CoreGraphics.CGRectMake
 import platform.Foundation.NSError
 import platform.Foundation.NSURL
 import platform.Foundation.NSURLErrorCancelled
+import platform.Foundation.NSURLErrorCannotConnectToHost
+import platform.Foundation.NSURLErrorCannotFindHost
+import platform.Foundation.NSURLErrorDNSLookupFailed
+import platform.Foundation.NSURLErrorDataNotAllowed
+import platform.Foundation.NSURLErrorDomain
+import platform.Foundation.NSURLErrorInternationalRoamingOff
+import platform.Foundation.NSURLErrorNetworkConnectionLost
+import platform.Foundation.NSURLErrorNotConnectedToInternet
+import platform.Foundation.NSURLErrorTimedOut
 import platform.Foundation.NSURLRequest
 import platform.WebKit.WKNavigation
 import platform.WebKit.WKNavigationAction
@@ -59,7 +68,7 @@ internal class WebKitBrowser private constructor(
         val json = suspendCancellableCoroutine { continuation ->
             webView.evaluateJavaScript(PAGE_SNAPSHOT_SCRIPT) { result, _ -> continuation.resume(result as? String) }
         }
-        PageLook(snapshot = PageSnapshot.decode(json), isLoaded = navigation.isLoaded, hasFailed = navigation.hasFailed)
+        PageLook(snapshot = PageSnapshot.decode(json), isLoaded = navigation.isLoaded, hasFailed = navigation.hasFailed, isUnreachable = navigation.isUnreachable)
     }
 
     override suspend fun close() = withContext(Dispatchers.Main) {
@@ -89,6 +98,7 @@ private class WebKitNavigation : NSObject(), WKNavigationDelegateProtocol {
 
     var isLoaded = false
     var hasFailed = false
+    var isUnreachable = false
 
     override fun webView(
         webView: WKWebView,
@@ -120,9 +130,24 @@ private class WebKitNavigation : NSObject(), WKNavigationDelegateProtocol {
 
     /** A load cancelled because another took its place (a script's redirect) is no failure. */
     private fun failed(error: NSError) {
-        if (error.code != NSURLErrorCancelled) hasFailed = true
+        if (error.code != NSURLErrorCancelled) {
+            hasFailed = true
+            isUnreachable = error.domain == NSURLErrorDomain && error.code in UNREACHABLE_ERROR_CODES
+        }
     }
 }
+
+/** The errors the network causes rather than the page: no connection, a host not found or not answering, a timeout. */
+private val UNREACHABLE_ERROR_CODES = setOf(
+    NSURLErrorNotConnectedToInternet,
+    NSURLErrorCannotFindHost,
+    NSURLErrorCannotConnectToHost,
+    NSURLErrorDNSLookupFailed,
+    NSURLErrorNetworkConnectionLost,
+    NSURLErrorTimedOut,
+    NSURLErrorInternationalRoamingOff,
+    NSURLErrorDataNotAllowed,
+)
 
 /** What a frame inside the page may load besides a public `https` address: nothing that leaves the device. */
 private val FRAME_SCHEMES = setOf("about", "data", "blob")

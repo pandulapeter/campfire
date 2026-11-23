@@ -339,6 +339,7 @@
     <string name="paste_too_large">Tekst jest dłuższy niż 8 MB, które mieści jeden import.</string>
     <string name="shared_link_not_imported">Campfire nie otwiera stron internetowych. Zaznacz tekst z akordami i udostępnij go zamiast linku.</string>
     <string name="page_not_read">Campfire nie znalazł piosenki na tej stronie. Otwórz ją w przeglądarce, a potem udostępnij lub skopiuj samą stronę.</string>
+    <string name="page_unreachable">Campfire nie mógł połączyć się z tą stroną. Sprawdź połączenie z internetem i spróbuj ponownie.</string>
     <string name="shared_link_from_newer_version">Ten link utworzyła nowsza wersja Campfire. Zaktualizuj Campfire, aby go otworzyć.</string>
     <string name="clipboard_not_campfire_link">To nie jest link Campfire.</string>
     <string name="paste_refused_ios">Campfire nie ma zgody na wklejanie. Decyduje o tym opcja „Wklejanie z innych aplikacji” w sekcji Campfire w aplikacji Ustawienia.</string>

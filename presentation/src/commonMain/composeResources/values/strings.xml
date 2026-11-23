@@ -311,6 +311,7 @@
     <string name="paste_too_large">The text is longer than the 8 MB one import can take.</string>
     <string name="shared_link_not_imported">Campfire does not open web pages. Select the chord sheet\'s text and share that instead.</string>
     <string name="page_not_read">Campfire could not find a song on this page. Open it in your browser, then share or copy the page itself.</string>
+    <string name="page_unreachable">Campfire could not reach this page. Check the internet connection and try again.</string>
     <string name="shared_link_from_newer_version">This link was made by a newer version of Campfire. Update Campfire to open it.</string>
     <string name="clipboard_not_campfire_link">That isn\'t a Campfire link.</string>
     <string name="paste_refused_ios">Campfire was not allowed to paste. Paste from Other Apps, under Campfire in the Settings app, decides this.</string>

@@ -18,10 +18,23 @@ sealed interface LoadedPage {
      */
     data class Read(val text: String, val title: String?, val address: String) : LoadedPage
 
-    /**
-     * No page to convert: the address is not a public `https` one, the page did not load in time, failed, came back
-     * empty, or is a bot check standing in for the page. Which of these is not told apart, since the user is told the
-     * same for each: open it in the browser and share or copy the page itself.
-     */
-    data object NotRead : LoadedPage
+    /** No page to convert, for [reason], which decides what the user is told to do about it. */
+    data class NotRead(val reason: Reason) : LoadedPage {
+
+        enum class Reason {
+
+            /**
+             * The page never arrived: no network, its host not found or not answering, or nothing of it drawn before
+             * the time limit. Trying again once the connection is back may well read it.
+             */
+            UNREACHABLE,
+
+            /**
+             * The page arrived but is nothing to read: a bot check standing in for it, a page with no text, an error
+             * page, an address that is not a public `https` one, or a platform or setting that reads no page. Trying
+             * again changes nothing; opening it in the browser and sharing or copying the page itself does.
+             */
+            UNREADABLE,
+        }
+    }
 }

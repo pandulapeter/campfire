@@ -37,8 +37,9 @@ internal class OffscreenPageSource(
 
     override suspend fun load(address: String): LoadedPage {
         val trimmed = address.trim()
-        if (!isPublicHttpsAddress(trimmed)) return LoadedPage.NotRead
+        if (!isPublicHttpsAddress(trimmed)) return LoadedPage.NotRead(LoadedPage.NotRead.Reason.UNREADABLE)
         var latest: PageSnapshot? = null
+        var lastLook: PageLook? = null
         val browser = newBrowser()
         try {
             browser.open(trimmed)
@@ -47,6 +48,7 @@ internal class OffscreenPageSource(
                 while (true) {
                     delay(POLL_INTERVAL)
                     val look = browser.look()
+                    lastLook = look
                     if (look.hasFailed) {
                         // What a failed load shows is the web view's own error page, never the site's.
                         latest = null
@@ -62,11 +64,23 @@ internal class OffscreenPageSource(
             throw exception
         } catch (exception: Exception) {
             logger.log("Could not read the page: ${exception::class.simpleName}")
-            latest = null
+            return LoadedPage.NotRead(LoadedPage.NotRead.Reason.UNREADABLE)
         } finally {
             withContext(NonCancellable) { browser.close() }
         }
-        return latest?.toLoadedPage() ?: LoadedPage.NotRead
+        return latest?.takeIf { it.isReadable }?.toLoadedPage() ?: LoadedPage.NotRead(notReadReasonOf(lastLook, latest))
+    }
+
+    /**
+     * Why a page with nothing readable was not read, by what the user can do about it. A failure the network caused, and a
+     * page still loading with nothing of it drawn once the time is up (a connection too slow to bring it), are worth
+     * trying again; a bot check, an error page, or a page that loaded with no text are not, whatever the wait.
+     */
+    private fun notReadReasonOf(lastLook: PageLook?, latest: PageSnapshot?) = when {
+        lastLook == null -> LoadedPage.NotRead.Reason.UNREACHABLE
+        lastLook.hasFailed -> if (lastLook.isUnreachable) LoadedPage.NotRead.Reason.UNREACHABLE else LoadedPage.NotRead.Reason.UNREADABLE
+        latest?.isBotCheck() == true || lastLook.isLoaded -> LoadedPage.NotRead.Reason.UNREADABLE
+        else -> LoadedPage.NotRead.Reason.UNREACHABLE
     }
 
     internal companion object {

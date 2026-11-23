@@ -28,8 +28,10 @@ interface PageSource {
      * The page at [address] once it has settled, or [LoadedPage.NotRead]. Only a public `https` host is asked, on the
      * first address and on every page it is sent on to (never the local network, since the address comes from another
      * app); the whole read is bounded in time, and a page whose text stops changing for a moment once loaded is taken as
-     * it is then. A page that is a bot check, or has no text, is [LoadedPage.NotRead]. Never throws but cancellation;
-     * where [canLoadPages] is false, answers [LoadedPage.NotRead] without a request.
+     * it is then. A page that never arrived (no network, a host not found or not answering, nothing drawn in time) is
+     * [LoadedPage.NotRead.Reason.UNREACHABLE]; one that is a bot check, an error page, or has no text is
+     * [LoadedPage.NotRead.Reason.UNREADABLE]. Never throws but cancellation; where [canLoadPages] is false, answers
+     * [LoadedPage.NotRead.Reason.UNREADABLE] without a request.
      */
     suspend fun load(address: String): LoadedPage
 }

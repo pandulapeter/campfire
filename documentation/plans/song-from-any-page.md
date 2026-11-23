@@ -178,16 +178,21 @@ bounds.
   when the switch allows it", in the root `CLAUDE.md` and `presentation`'s.
 
 **Done (2026-11-23).** `PageSource` (`:data:source:remote:api`) says whether the platform can read a page at all
-(`canLoadPages`) and answers `LoadedPage` (`:data:model`): `Read` (text, title, final address) or `NotRead`, never told
-apart. `OffscreenPageSource` is the common loop over an `OffscreenBrowser`: a look every 500 ms, taken once loaded and
+(`canLoadPages`) and answers `LoadedPage` (`:data:model`): `Read` (text, title, final address) or `NotRead` with its
+reason: `UNREACHABLE` where the network failed the load (Android's host lookup, connect, timeout, and I/O errors,
+`NSURLErrorDomain`'s no connection, host not found or not answering, lost connection, and timeout) or the page was
+still loading with nothing readable at the time limit, else `UNREADABLE`. `OffscreenPageSource` is the common loop over an `OffscreenBrowser`: a look every 500 ms, taken once loaded and
 unchanged for 1.5 s, else the last readable look at 20 s; a bot check (`PageSnapshot.isBotCheck`, short pages only) is
 waited past and never taken. Android's `WebViewBrowser` refuses every navigation and subresource off a public `https`
 host (`isPublicHttpsAddress`, the covers' rule); iOS's `WebKitBrowser` every navigation, in a non-persistent data store;
 desktop and web are `NoPageSource`. Up through `PageRepository`, `LoadPageUseCase` (which asks the switch again) and
 `CanLoadPagesUseCase`. In the app a page's address is `ImportSource.Page`: read in `ImportWork` as the import screen's
 loading stage says "Reading the page…" (`ImportProgress.Phase.READING_PAGE`, the notification too), asked of the page
-model before conversion, and then the pasted page it is; its song's editor replaces the loading screen. Not read, or no
-song: the failure stage's sentence (`ImportFailure.PAGE_NOT_READ`), with Try again. A model that cannot run (its
+model before conversion, and then the pasted page it is; its song's editor replaces the loading screen. Unreachable:
+the failure stage says Campfire could not reach the page and to check the connection (`ImportFailure.PAGE_UNREACHABLE`);
+unreadable, or no song: open it in the browser and share or copy the page itself (`ImportFailure.PAGE_NOT_READ`); both
+with Try again. A timeout is told by what the user can do: nothing drawn is a connection to try again, a bot check
+that stays is the browser's sentence. A model that cannot run (its
 weights unread) throws rather than answering no song (`PageCropper.songLinesOf`), so the page opens whole in the
 editor, as a paste does, with no Use the whole page. **Pages from links**
 (`isPageLinkLoadingEnabled`, on by default, `upgrade-5.5.0`) sits under Pictures from links, only where pages can be

@@ -41,7 +41,7 @@ internal data class PageSnapshot(
     fun toLoadedPage(): LoadedPage = if (isReadable && isPublicHttpsAddress(address)) {
         LoadedPage.Read(text = text, title = title.trim().takeIf { it.isNotEmpty() }, address = address)
     } else {
-        LoadedPage.NotRead
+        LoadedPage.NotRead(LoadedPage.NotRead.Reason.UNREADABLE)
     }
 
     companion object {

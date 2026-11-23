@@ -31,9 +31,12 @@ internal interface OffscreenBrowser {
  * @param isLoaded Whether the page itself has finished loading; what its scripts draw after that is waited for apart.
  * @param hasFailed Whether the page could not be loaded at all (no answer, a refused address), so there is nothing to
  *   wait for.
+ * @param isUnreachable Whether that failure was the network's (no connection, a host not found or not answering, a
+ *   request timed out), which trying again later may get past, rather than the page's or the address's.
  */
 internal data class PageLook(
     val snapshot: PageSnapshot?,
     val isLoaded: Boolean,
     val hasFailed: Boolean,
+    val isUnreachable: Boolean,
 )

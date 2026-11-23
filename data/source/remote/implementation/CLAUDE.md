@@ -140,11 +140,15 @@ cannot tell from no answer.
 - `OffscreenPageSource` is the common loop over a platform's `OffscreenBrowser`: a look (`PAGE_SNAPSHOT_SCRIPT`:
   `innerText`, title, address) every 500 ms, taken once loaded and unchanged for 1.5 s, else the last readable look at
   20 s; a bot check (`PageSnapshot.isBotCheck`, short pages only) is waited past, never taken. The view is let go of
-  however the read ends.
+  however the read ends. Nothing read is `UNREACHABLE` where the load failed for the network (`PageLook.isUnreachable`)
+  or the page was still loading with nothing readable at 20 s, which trying again may get past; else `UNREADABLE` (a
+  bot check, an error page, a page loaded with no text).
 - Android: a `WebView` attached to no window, laid out at the screen's size, scripts on, no file or content access,
   pictures not loaded, third-party cookies refused; navigations and every subresource refused off a public `https` host
-  (`data:` and `blob:` aside). A 404 or 410 fails the load; a 403 or 503 may be a bot check that clears.
+  (`data:` and `blob:` aside). A 404 or 410 fails the load; a 403 or 503 may be a bot check that clears. A failed host
+  lookup (also what no connection reports), connection, timeout, or I/O error is the network's.
 - iOS: a `WKWebView` in no window with a non-persistent data store; every navigation (frames too, which may also be
   `about:`, `data:`, `blob:`) refused off a public `https` host. WebKit cannot refuse a subresource without a content
-  rule list, so those are the page's, as in Safari.
+  rule list, so those are the page's, as in Safari. An `NSURLErrorDomain` failure of no connection, a host not found,
+  not answering, or lost, or a timeout is the network's.
 - Desktop and web: `NoPageSource` (no web view; a tab may not read another site's page).

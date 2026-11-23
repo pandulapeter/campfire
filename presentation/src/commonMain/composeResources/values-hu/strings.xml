@@ -311,6 +311,7 @@
     <string name="paste_too_large">A szöveg hosszabb annál a 8 MB-nál, amennyit egy importálás feldolgoz.</string>
     <string name="shared_link_not_imported">A Campfire nem nyit meg weboldalakat. Jelöld ki az akkordokat és a dalszöveget, és azt oszd meg.</string>
     <string name="page_not_read">A Campfire nem talált dalt ezen az oldalon. Nyisd meg a böngésződben, majd magát az oldalt oszd meg vagy másold ki.</string>
+    <string name="page_unreachable">A Campfire nem érte el ezt az oldalt. Ellenőrizd az internetkapcsolatot, és próbáld újra.</string>
     <string name="shared_link_from_newer_version">Ezt a linket a Campfire egy újabb verziója készítette. Frissítsd a Campfire-t, hogy megnyithasd.</string>
     <string name="clipboard_not_campfire_link">Ez nem Campfire-link.</string>
     <string name="paste_refused_ios">A Campfire nem kapott engedélyt a beillesztésre. Ezt a Beállítások appban, a Campfire alatt a „Beillesztés más appokból” dönti el.</string>

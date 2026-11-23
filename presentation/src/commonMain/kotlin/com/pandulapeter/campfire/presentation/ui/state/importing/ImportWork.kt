@@ -294,8 +294,10 @@ class ImportWork(
                 }
 
                 // The source stays the address, so Try again reads the page again rather than the text it came to.
-                is ImportSource.Page -> pageFiles(request = request, source = source, enter = enter, throttle = throttle)
-                    ?: return Preparation.Failed(ImportFailure.PAGE_NOT_READ)
+                is ImportSource.Page -> when (val page = readPage(source = source, enter = enter, throttle = throttle)) {
+                    is LoadedPage.NotRead -> return Preparation.Failed(pageFailureOf(page.reason))
+                    is LoadedPage.Read -> pageFiles(request = request, page = page) ?: return Preparation.Failed(ImportFailure.PAGE_NOT_READ)
+                }
 
                 is ImportSource.SharedLink -> source.file?.let(::listOf) ?: run {
                     enter(ImportWorkState.DOWNLOADING)
@@ -321,24 +323,27 @@ class ImportWork(
         }
     }
 
+    /** The page [source] names, read on the device as the import screen says it is being read. */
+    private suspend fun readPage(
+        source: ImportSource.Page,
+        enter: (ImportWorkState) -> Unit,
+        throttle: ImportProgressThrottle,
+    ): LoadedPage {
+        enter(ImportWorkState.DOWNLOADING)
+        throttle.offer(ImportProgress(ImportProgress.Phase.READING_PAGE, fileName = source.name))
+        throttle.flush()
+        return useCases.loadPage(source.url)
+    }
+
     /**
-     * The page [source] names, read on the device, as the one text a paste of it would be ([ImportedFile.isPageText], so
-     * its clutter is cropped), or null where it came to nothing worth converting: not read, or holding no song by the
-     * page model's reading, which says so before the import makes a one-line song of a menu. A model that throws is no
+     * The [page] read, as the one text a paste of it would be ([ImportedFile.isPageText], so its clutter is cropped), or
+     * null where it holds no song by the page model's reading, which says so before the import makes a one-line song of a
+     * menu. A model that throws is no
      * reason to refuse the page, nor one that cannot run (no weights, which `PageCropper.songLinesOf` throws for): the page
      * is then converted whole, as a paste is, with nothing offered back. A page that came with no title of its own
      * (a share's subject) is titled by the page's.
      */
-    private suspend fun pageFiles(
-        request: ImportRequest,
-        source: ImportSource.Page,
-        enter: (ImportWorkState) -> Unit,
-        throttle: ImportProgressThrottle,
-    ): List<ImportedFile>? {
-        enter(ImportWorkState.DOWNLOADING)
-        throttle.offer(ImportProgress(ImportProgress.Phase.READING_PAGE, fileName = source.name))
-        throttle.flush()
-        val page = useCases.loadPage(source.url) as? LoadedPage.Read ?: return null
+    private suspend fun pageFiles(request: ImportRequest, page: LoadedPage.Read): List<ImportedFile>? {
         val holdsSong = try {
             useCases.pageCropper.songLinesOf(page.text.lines()) != null
         } catch (exception: CancellationException) {

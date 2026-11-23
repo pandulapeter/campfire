@@ -20,5 +20,5 @@ internal object NoPageSource : PageSource {
 
     override val canLoadPages = false
 
-    override suspend fun load(address: String) = LoadedPage.NotRead
+    override suspend fun load(address: String) = LoadedPage.NotRead(LoadedPage.NotRead.Reason.UNREADABLE)
 }

@@ -346,6 +346,7 @@
     <string name="paste_too_large">Textul depășește cei 8 MB pe care îi poate prelua un import.</string>
     <string name="shared_link_not_imported">Campfire nu deschide pagini web. Selectează textul foii cu acorduri și partajează-l pe acela.</string>
     <string name="page_not_read">Campfire nu a găsit niciun cântec pe această pagină. Deschide-o în browser, apoi partajează sau copiază chiar pagina.</string>
+    <string name="page_unreachable">Campfire nu a putut accesa această pagină. Verifică conexiunea la internet și încearcă din nou.</string>
     <string name="shared_link_from_newer_version">Acest link a fost creat de o versiune mai nouă de Campfire. Actualizează Campfire ca să-l deschizi.</string>
     <string name="clipboard_not_campfire_link">Acesta nu este un link Campfire.</string>
     <string name="paste_refused_ios">Campfire nu a avut voie să lipească. Asta decide opțiunea „Lipire din alte aplicații”, la Campfire în aplicația Configurări.</string>
