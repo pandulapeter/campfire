@@ -62,6 +62,33 @@ class ChordSheetSongCropTest {
     }
 
     @Test
+    fun `a chord diagram block under the song is left out with its chord names`() {
+        val song = listOf(
+            "G           C        G" to song,
+            "Amazing grace, how sweet the sound" to song,
+            "G                D" to song,
+            "That saved a wretch like me" to song,
+        )
+        val diagrams = listOf("Chords used", "G", "×", "3", "2", "o", "Am", "×", "o", "2", "D").map { it to junk }
+
+        assertEquals(converted(song), converted(song + diagrams, cropped = true))
+    }
+
+    @Test
+    fun `a chord row the model reads as clutter between two song lines is kept`() {
+        val lines = listOf(
+            "Verse" to song,
+            "Amazing grace, how sweet the sound" to song,
+            "G                D" to junk,
+            "That saved a wretch like me" to song,
+            "I once was lost but now am found" to song,
+            "Footer" to junk,
+        )
+
+        assertEquals(converted(lines.dropLast(1)), converted(lines, cropped = true))
+    }
+
+    @Test
     fun `a song the model sees no song in is converted whole`() {
         val lines = listOf(
             "Page 1" to junk,

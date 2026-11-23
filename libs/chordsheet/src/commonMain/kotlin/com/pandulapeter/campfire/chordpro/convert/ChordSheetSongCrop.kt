@@ -24,7 +24,10 @@ internal object ChordSheetSongCrop {
     /**
      * The lines of [song] whose sheet lines the model keeps, by [scores] of every line of the document (null keeps every
      * line): the song and its details, the lines it reads as the title and the artist (so the converter still reads the
-     * song's header from them), and a blank line between two kept ones. The whole song where the model sees none in it, or
+     * song's header from them), and a blank line between two kept ones. A chord row the model drops is kept too, since it
+     * reads a lone closing chord as a page number: inside the song, and after its last kept line only while nothing but
+     * blank lines and other such chord rows came between, so an outro's chords stay but a chord diagram block printed
+     * under the song ("Chords used", each name over its marks) goes. The whole song where the model sees none in it, or
      * where a line of it is past the lines the model read.
      */
     fun cropped(song: List<Rendered>, scores: List<PageLineScores>?): List<Rendered> {
@@ -39,9 +42,16 @@ internal object ChordSheetSongCrop {
         val kept = (crop.keptLines + header).map { origins[it] }.toSet()
         val span = kept.min()..kept.max()
         val body = origins[crop.scores.indices.first { it !in blankLines && crop.scores[it].label == PageLineLabel.SONG }]
+        var isClosing = true
         return song.filter { line ->
             val origin = line.origin ?: return@filter true
-            origin in kept || line.text.isBlank() && origin in span || origin >= body && ChordSheetConverter.isChordRow(line.text)
+            when {
+                origin in kept -> true
+                origin > span.last -> (isClosing && ChordSheetConverter.isChordRow(line.text)).also { isKept ->
+                    if (!isKept && line.text.isNotBlank()) isClosing = false
+                }
+                else -> line.text.isBlank() && origin in span || origin >= body && ChordSheetConverter.isChordRow(line.text)
+            }
         }
     }
 
