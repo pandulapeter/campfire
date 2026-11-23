@@ -51,6 +51,13 @@ class PageSongTest {
     }
 
     @Test
+    fun `a line of spaces is blank as the gate strips it but one of a zero-width space is printed`() {
+        val lines = listOf(PageLine(""), PageLine(" \t\u00A0 "), PageLine("\u200B"), PageLine("G"))
+
+        assertEquals(setOf(0, 1), pageSong.blankLinesOf(lines))
+    }
+
+    @Test
     fun `a document line without a layout reads as body text`() {
         val withoutLayout = lineFeaturesOf(PageLine("G  D"), PageLineSource.DOCUMENT)
         val bodyText = lineFeaturesOf(

@@ -33,10 +33,19 @@ public class PageSong(
      * Labels the first [MAX_LINES] of [lines] and crops them; lines past that are kept only in a crop holding no song, which
      * keeps every line, as a song is rarely that far down a page. An empty list answers a crop holding no song.
      */
-    public fun crop(lines: List<PageLine>, source: PageLineSource): PageCrop =
-        cropOf(scores = logitsOf(lines.take(MAX_LINES), source).map(::scoresOf), lineCount = lines.size)
+    public fun crop(lines: List<PageLine>, source: PageLineSource): PageCrop {
+        val read = lines.take(MAX_LINES)
+        return cropOf(scores = logitsOf(read, source).map(::scoresOf), lineCount = lines.size, blankLines = blankLinesOf(read))
+    }
 
     internal fun logitsOf(lines: List<PageLine>, source: PageLineSource) = model.logitsOf(lines, source)
+
+    /**
+     * The lines the gate does not score: those `strip()` empties, every character Python's `isspace` (read on the raw
+     * text, so a line of only format characters, which the model sees as empty, is still printed to the gate).
+     */
+    internal fun blankLinesOf(lines: List<PageLine>): Set<Int> =
+        lines.indices.filterTo(mutableSetOf()) { index -> lines[index].text.all { isSpace(it.code) } }
 
     private fun scoresOf(logits: FloatArray): PageLineScores {
         val largest = logits.max()

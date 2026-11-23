@@ -24,18 +24,22 @@ internal const val MIN_SONG_LINES = 4
 
 /**
  * The crop of a page of [lineCount] lines whose first lines the model scored as [scores] (the rest are kept only where
- * those hold no song, as every line then is), by the same rule the gate scored the model with.
+ * those hold no song, as every line then is), by the same rule the gate scored the model with. The [blankLines] (indices
+ * into [scores]) are never kept, counted, or named by the model's say: it was not trained on them and the gate scores
+ * only printed lines, so what it answers for one is noise. A caller puts back the blank lines between kept ones.
  */
-internal fun cropOf(scores: List<PageLineScores>, lineCount: Int): PageCrop {
+internal fun cropOf(scores: List<PageLineScores>, lineCount: Int, blankLines: Set<Int>): PageCrop {
     val labels = scores.map { it.label }
     val kept = scores.indices.filter { index ->
-        labels[index] == PageLineLabel.SONG ||
-            labels[index] == PageLineLabel.METADATA ||
-            round((scores[index][PageLineLabel.SONG] + scores[index][PageLineLabel.METADATA]).toDouble() * 10_000) / 10_000 >= UNSURE
+        index !in blankLines && (
+            labels[index] == PageLineLabel.SONG ||
+                labels[index] == PageLineLabel.METADATA ||
+                round((scores[index][PageLineLabel.SONG] + scores[index][PageLineLabel.METADATA]).toDouble() * 10_000) / 10_000 >= UNSURE
+            )
     }
     val holdsSong = kept.count { labels[it] == PageLineLabel.SONG } >= MIN_SONG_LINES
-    val titleLine = bestLineOf(scores, labels, PageLineLabel.TITLE)
-    val artistLine = bestLineOf(scores, labels, PageLineLabel.ARTIST)
+    val titleLine = bestLineOf(scores, labels, PageLineLabel.TITLE, blankLines)
+    val artistLine = bestLineOf(scores, labels, PageLineLabel.ARTIST, blankLines)
     return PageCrop(
         holdsSong = holdsSong,
         keptLines = if (holdsSong) kept else List(lineCount) { it },
@@ -46,8 +50,8 @@ internal fun cropOf(scores: List<PageLineScores>, lineCount: Int): PageCrop {
     )
 }
 
-private fun bestLineOf(scores: List<PageLineScores>, labels: List<PageLineLabel>, label: PageLineLabel) =
-    labels.indices.filter { labels[it] == label }.maxByOrNull { scores[it][label] }
+private fun bestLineOf(scores: List<PageLineScores>, labels: List<PageLineLabel>, label: PageLineLabel, blankLines: Set<Int>) =
+    labels.indices.filter { labels[it] == label && it !in blankLines }.maxByOrNull { scores[it][label] }
 
 /**
  * Those of [named] (the title and artist lines) that head a song starting at [firstSongLine]. A title or artist line inside

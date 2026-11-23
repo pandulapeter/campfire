@@ -89,6 +89,38 @@ class ChordSheetSongCropTest {
         assertEquals(converted(lines), ChordSheetConverter.convert(sheet, pageScores = lines.dropLast(1).map { it.second }))
     }
 
+    @Test
+    fun `blank lines the model calls the song do not make a song of too few printed ones`() {
+        val lines = listOf(
+            "Page 1" to junk,
+            "G           C        G" to song,
+            "" to song,
+            "Amazing grace, how sweet the sound" to song,
+            "" to song,
+            "That saved a wretch like me" to song,
+            "Footer" to junk,
+        )
+
+        assertEquals(converted(lines), converted(lines, cropped = true))
+    }
+
+    @Test
+    fun `no blank line after the song is kept for a small chance of being the title`() {
+        val lines = listOf(
+            "G           C        G" to song,
+            "Amazing grace, how sweet the sound" to song,
+            "G                D" to song,
+            "That saved a wretch like me" to song,
+            "" to song,
+            "Footer" to junk,
+            "" to junk,
+            "" to scores(junk = 0.95f, title = 0.05f),
+        )
+        val song = lines.mapIndexed { index, (text, _) -> Rendered(text, DoubleArray(0), ChordSheet.Line(emptyList()), origin = index) }
+
+        assertEquals(song.take(4), ChordSheetSongCrop.cropped(song, lines.map { it.second }))
+    }
+
     private fun converted(lines: List<Pair<String, PageLineScores>>, cropped: Boolean = false): List<String> {
         val sheet = ChordSheet(ChordSheet.ofPlainText(lines.joinToString("\n") { it.first }).pages)
         return ChordSheetConverter.convert(sheet, pageScores = if (cropped) lines.map { it.second } else null)

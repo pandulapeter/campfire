@@ -14,7 +14,8 @@ package com.pandulapeter.campfire.domain.api.importing
  * it was asked about.
  *
  * @param keptLines the song and its details, in ascending order, including every line the model is not sure is clutter;
- * the title and artist lines only where the model also gives them a chance of being the song.
+ * the title and artist lines only where the model also gives them a chance of being the song. Never a blank line: the
+ * caller keeps the blank lines between kept ones.
  * @param titleLine the line the model reads as the song's title, if any.
  * @param artistLine the line the model reads as the song's artist, if any.
  * @param headerLines those of [titleLine] and [artistLine] that head the song (`PageCrop.headerLines`), which the import

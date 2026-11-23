@@ -15,7 +15,10 @@ public enum class PageLineLabel {
     /** The page's clutter: menus, ads, comments, other songs, the site's calls to action. */
     JUNK,
 
-    /** A line of the song: lyrics, chords, tabs, section headings, the blank lines between them. */
+    /**
+     * A line of the song: lyrics, chords, tabs, section headings. Blank lines are never labelled: the model was not
+     * trained on them, so its label for one means nothing.
+     */
     SONG,
 
     /** The song's title. */

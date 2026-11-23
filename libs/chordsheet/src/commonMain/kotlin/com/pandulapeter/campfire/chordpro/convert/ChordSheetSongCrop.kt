@@ -31,12 +31,14 @@ internal object ChordSheetSongCrop {
         if (scores == null) return song
         val origins = song.mapNotNull { it.origin }.distinct().sorted()
         if (origins.isEmpty() || origins.any { it !in scores.indices }) return song
-        val crop = PageCrop.of(origins.map { scores[it] })
+        val printed = song.filter { it.origin != null && it.text.isNotBlank() }.mapTo(mutableSetOf()) { it.origin }
+        val blankLines = origins.indices.filterTo(mutableSetOf()) { origins[it] !in printed }
+        val crop = PageCrop.of(origins.map { scores[it] }, blankLines)
         if (!crop.holdsSong) return song
-        val header = crop.scores.indices.filter { isHeader(crop.scores[it]) }
+        val header = crop.scores.indices.filter { it !in blankLines && isHeader(crop.scores[it]) }
         val kept = (crop.keptLines + header).map { origins[it] }.toSet()
         val span = kept.min()..kept.max()
-        val body = origins[crop.scores.indexOfFirst { it.label == PageLineLabel.SONG }]
+        val body = origins[crop.scores.indices.first { it !in blankLines && crop.scores[it].label == PageLineLabel.SONG }]
         return song.filter { line ->
             val origin = line.origin ?: return@filter true
             origin in kept || line.text.isBlank() && origin in span || origin >= body && ChordSheetConverter.isChordRow(line.text)

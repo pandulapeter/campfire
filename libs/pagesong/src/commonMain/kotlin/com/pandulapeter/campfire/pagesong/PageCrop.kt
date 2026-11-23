@@ -15,8 +15,8 @@ package com.pandulapeter.campfire.pagesong
  * @param holdsSong whether the model sees a song in the lines. When it does not, [keptLines] is every line and the
  * caller converts the page as it would without the model.
  * @param keptLines the lines to convert, in order: the song and its details, including every line the model is not sure
- * is clutter. Where the model sees a song, never a line past [PageSong.MAX_LINES]; where it does not, every line, those
- * past it included.
+ * is clutter. Where the model sees a song, never a line past [PageSong.MAX_LINES], and never a blank line: the caller keeps
+ * the blank lines between kept ones. Where it does not, every line, those past it included.
  * @param titleLine the line the model reads as the song's title, if any; it is not among [keptLines] unless the model
  * also gives it a chance of being the song or its details.
  * @param artistLine the line the model reads as the song's artist, if any, kept on the same terms as [titleLine].
@@ -41,7 +41,8 @@ public data class PageCrop(
         /**
          * The crop of lines the model has already scored, by the same rule as [PageSong.crop]: for a part of a longer
          * page read whole, such as one song of a document, whose lines the model judged in the whole document's context.
+         * [blankLines] are the indices into [scores] of the lines printing nothing, which the crop leaves to the caller.
          */
-        public fun of(scores: List<PageLineScores>): PageCrop = cropOf(scores, scores.size)
+        public fun of(scores: List<PageLineScores>, blankLines: Set<Int>): PageCrop = cropOf(scores, scores.size, blankLines)
     }
 }
