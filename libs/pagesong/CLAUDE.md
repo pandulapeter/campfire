@@ -16,7 +16,8 @@ weights' bytes to `PageSong`, which only answers line indices and never changes 
 - **Labels**, in the model's output order: `JUNK`, `SONG`, `TITLE`, `ARTIST`, `METADATA` (`PageLineLabel`).
 - **Inputs**: each line's first 160 visible code points (format characters, category Cf, dropped), hashed into the
   weights' bucket count; 19 features (`LineFeatures.kt`, `LineRules.kt`); and the source, page or document. A page's
-  layout inputs are zero; a document line's come from its `PageLineLayout`, clamped as in training.
+  layout inputs are zero; a document line's come from its `PageLineLayout`, capped as in training (`page`, `size`,
+  `indent`; not `column`).
 - **Python is the definition.** `tools/page-model/lines.py` (`visible`, `features`, its patterns) and `model.py`
   (`hashed`, `PageModel`) are what the model was trained on; a change there is ported here in the same change and the
   fixtures regenerated (`export.py --fixtures`, then copied into `src/desktopTest/resources`). Lengths are code points

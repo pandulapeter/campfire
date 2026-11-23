@@ -10,11 +10,12 @@
 package com.pandulapeter.campfire.pagesong
 
 /**
- * How a document set one line, measured the way the trainer's documents were (`tools/page-model`); values outside the
- * ranges below are clamped, as they were in training.
+ * How a document set one line, measured the way the trainer's documents were (`tools/page-model`). The model reads each
+ * value as training did: [page] and [size] capped at the most named below, [indent] held between 0 and 1, and [column]
+ * as it is.
  *
  * @param page the line's page, from 0; read up to 20.
- * @param column the line's column, from 0, or null where the page has no columns; read up to 3.
+ * @param column the line's column, from 0, or null where the page has no columns.
  * @param size the line's text size over the document's body size; read up to 3.
  * @param indent the line's start over the width it could use, 0 to 1.
  * @param isHeading whether the document itself marks the line as a heading (a Word style, a PDF's outline).
