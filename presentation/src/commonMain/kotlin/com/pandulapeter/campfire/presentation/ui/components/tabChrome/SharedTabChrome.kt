@@ -39,10 +39,11 @@ import androidx.compose.ui.layout.positionInRoot
  * - Where the other screen has the same part, the two are one surface at one rectangle ([travellingBounds]), which
  *   goes from the rectangle of the copy being left to that of the one being opened as the latter's [presenceProgress]
  *   does, on the theme's spatial spring. Both copies work it out from the same two rectangles and the same progress,
- *   so they never part. Only the copy being opened draws the container there, its color going from the other part's
- *   to its own on the same progress, so a filled New button turns into the tonal Preferences pill rather than one
- *   fading out under the other. What each copy holds rides the rectangle, clipped to it, and crosses with the other's
- *   ([matchedContentAlpha]). The copy being opened draws the container because it is the one that stays.
+ *   so they never part. Only the copy being left draws the container there, its color going from its own to the other
+ *   part's on the same progress, so a filled New button turns into the tonal Preferences pill rather than one fading
+ *   out under the other. What each copy holds rides the rectangle, clipped to it, and crosses with the other's
+ *   ([matchedContentAlpha]). The copy being left draws the container because it is already drawn over both screens on
+ *   the swap's first frame, while the one being opened, attached on that frame, is drawn there only from the next.
  * - Where it has none (Settings; a list screen with its search open, a selection, or read only mode), the part scales
  *   and fades on its own, out of the screen being left or into the one being opened. Left inside its screen, which is
  *   gone in 90 ms, it would blink rather than scale.
@@ -108,7 +109,7 @@ internal class SharedTabChrome(
     val foregroundAlpha get() = if (isAlone) aloneAlpha else screenAlpha.value
 
     /**
-     * How opaque what stands on the part is while it is [isMatched]: the copy being opened, drawn under the one being
+     * How opaque what stands on the part is while it is [isMatched]: the copy being opened, drawn over the one being
      * left, comes in whole during the first half of the crossfade, and the one being left only goes during the second,
      * so an icon both tabs have (New on either list, the search mark) never dims, and two different ones still cross.
      */
@@ -142,13 +143,13 @@ internal class SharedTabChrome(
     }
 
     /**
-     * The color the part's container is drawn in on this frame, or null for none: the copy being left draws none while
-     * the two are matched, and the copy being opened sets out from the other's color, see [SharedTabChrome].
+     * The color the part's container is drawn in on this frame, or null for none: the copy being opened draws none while
+     * the two are matched, and the copy being left heads for the other's color, see [SharedTabChrome].
      */
     val currentContainerColor: Color?
         get() {
             val other = counterpart ?: return containerColor
-            return if (!isEntering) null else lerp(other.containerColor, containerColor, presence.value.coerceIn(0f, 1f))
+            return if (isEntering) null else lerp(containerColor, other.containerColor, other.presence.value.coerceIn(0f, 1f))
         }
 }
 

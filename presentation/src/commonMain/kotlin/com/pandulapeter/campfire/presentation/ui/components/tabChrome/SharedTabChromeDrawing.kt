@@ -29,13 +29,13 @@ import androidx.compose.ui.layout.onPlaced
 /**
  * Makes this node the part [chrome] stands for, see [SharedTabChrome]: a button whose container the node draws, the
  * stadium of its height in [SharedTabChrome]'s color behind what it holds. While two tabs swap, the node is drawn over
- * both screens; matched, the container is drawn at the travelling rectangle by the copy being opened, and what the node
+ * both screens; matched, the container is drawn at the travelling rectangle by the copy being left, and what the node
  * holds is moved onto that rectangle's middle and clipped to it, so a circle turning into a pill keeps its icon centered
  * in it; alone, the whole node scales and fades around its middle. A no-op without [chrome].
  *
  * @param zIndex Where it is drawn among the other parts over the screens: the search pill under the bar's content under
- *   the New button. The copy being left is drawn over the one being opened, whose container is the one drawn, so that
- *   the icon fading out stays on top of it rather than under it.
+ *   the New button. The copy being opened is drawn over the one being left, whose container is the one drawn, so that
+ *   both icons stand on it.
  * @param isContainerDrawnOutsideSwaps Whether the node draws its container whenever it is shown, or only while the tabs
  *   swap, its screen drawing it otherwise (under the presses of a pill's buttons, which this node holds).
  */
@@ -49,7 +49,7 @@ internal fun Modifier.sharedTabChrome(
         // Outside the layer below, so that the rectangle is the part's as laid out, never as scaled.
         .onPlaced { chrome.coordinates = it }
         .renderInSharedTransitionScopeOverlay(
-            zIndexInOverlay = zIndex + if (chrome.isEntering) 0f else LEAVING_Z_INDEX_OFFSET,
+            zIndexInOverlay = zIndex + if (chrome.isEntering) ENTERING_Z_INDEX_OFFSET else 0f,
             renderInOverlay = { chrome.isSwapping },
         )
         .graphicsLayer {
@@ -85,7 +85,7 @@ internal fun Modifier.sharedTabChrome(
  * Makes this node, laid over the whole of a bar, the part [chrome] stands for where the part is only a stretch of the
  * bar drawn behind its buttons (the search pill, see [rememberSharedTabChrome]'s `localBounds`): it draws nothing outside
  * a swap of two tabs, when the bar draws the pill itself, and the pill over both screens during one, at the travelling
- * rectangle while matched (by the copy being opened only) and scaled around its own middle while alone. A no-op
+ * rectangle while matched (by the copy being left only) and scaled around its own middle while alone. A no-op
  * without [chrome].
  */
 @OptIn(ExperimentalSharedTransitionApi::class)
@@ -122,8 +122,8 @@ internal fun DrawScope.withAlpha(alpha: Float, block: DrawScope.() -> Unit) {
 /** The outline of a part: a stadium as round as its height allows. */
 internal fun stadiumOf(bounds: Rect) = Path().apply { addRoundRect(RoundRect(rect = bounds, cornerRadius = CornerRadius(bounds.height / 2))) }
 
-/** What puts the screen being left's copy of a part over the one being opened's, both drawn in the same rectangle. */
-private const val LEAVING_Z_INDEX_OFFSET = 0.1f
+/** What puts the screen being opened's copy of a part over the one being left's, both drawn in the same rectangle. */
+private const val ENTERING_Z_INDEX_OFFSET = 0.1f
 
 /** The order the parts are drawn in over both screens, see [sharedTabChrome]. */
 internal const val SEARCH_PILL_Z_INDEX = 1f

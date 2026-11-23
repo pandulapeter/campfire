@@ -20,6 +20,7 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performTouchInput
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.setlists
 import com.pandulapeter.campfire.presentation.resources.songs_new_song
 import com.pandulapeter.campfire.presentation.resources.tools
 import com.pandulapeter.campfire.screenshots.runAppTest
@@ -48,12 +49,34 @@ internal class TabSwapNewButtonTest {
         }
     }
 
+    /** Both lists have the same New button at the same spot, so nothing of it may change on any frame of their swap. */
+    @Test
+    fun `the New button stays as it is while Songs is swapped for Setlists`() = runAppTest(setlists = listOf(TWO_SONGS_SETLIST)) {
+        val button = onNodeWithContentDescription(string(Res.string.songs_new_song)).fetchSemanticsNode().boundsInRoot
+        val probes = listOf(
+            Offset(button.left + button.width * PROBE_FRACTION, button.center.y),
+            button.center,
+        )
+        val before = captureWindow().let { window -> probes.map { window.colorAt(it) } }
+        mainClock.autoAdvance = false
+        onNode(hasText(string(Res.string.setlists)) and hasClickAction()).performTouchInput { click() }
+        repeat(SWAP_FRAMES) { frame ->
+            mainClock.advanceTimeBy(FRAME_MILLIS)
+            val window = captureWindow()
+            probes.forEachIndexed { index, probe ->
+                val color = window.colorAt(probe)
+                assertTrue(color.isCloseTo(before[index]), "The button was $color rather than ${before[index]} at $probe on frame $frame of the swap.")
+            }
+        }
+    }
+
     private fun ImageBitmap.colorAt(offset: Offset) = toPixelMap(startX = offset.x.roundToInt(), startY = offset.y.roundToInt(), width = 1, height = 1)[0, 0]
 
     private fun Color.isCloseTo(other: Color) =
         abs(red - other.red) < TOLERANCE && abs(green - other.green) < TOLERANCE && abs(blue - other.blue) < TOLERANCE
 }
 
+private const val TWO_SONGS_SETLIST = "campfire_tests-two_songs.setlist.json"
 private const val PROBE_FRACTION = 0.2f
 private const val FRAME_MILLIS = 16L
 private const val SWAP_FRAMES = 40

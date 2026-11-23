@@ -28,7 +28,8 @@ The navigation chrome (bar, rail, transitions, and the Tools item).
   The New button's spot is one part on every tab filling it: New, the Preferences pill, the Metronome's play button,
   the Tuner's reference tone. Both copies draw in the overlay, never by Compose's shared bounds: their own rectangles (root
   coordinates, read while drawing) and the opened copy's `presence` make **one travelling rectangle**, so they never
-  part, a reversed swap included. Only the opened copy draws the container, its color going from the other's to its own;
+  part, a reversed swap included. Only the left copy draws the container (the opened one reaches the overlay a frame
+  late), its color going from its own to the other's;
   the icons ride it, clipped, a shared one never dimming (`matchedContentAlpha`). A part the other tab lacks scales and
   fades alone, since inside its screen it would blink out in 90 ms. A back gesture moves every part linearly.
 - **A back gesture started mid-transition**: Android runs Google's newer NavDisplay (`androidx-navigation3-android`),
