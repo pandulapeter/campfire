@@ -40,11 +40,13 @@ internal class PageCropperImpl : PageCropper {
     private var pageSong: PageSong? = null
     private var isRead = false
 
-    override suspend fun songLinesOf(lines: List<String>): PageSongLines? {
+    private val memo = PageSongLinesMemo { lines ->
         // No model is no reason to say a page holds no song, which would refuse a page read from its address.
         val pageSong = pageSong() ?: throw IllegalStateException("The page model is not there")
-        return PageSongLines.of(withContext(Dispatchers.Default) { pageSong.crop(lines.map(::PageLine), PageLineSource.PAGE) })
+        PageSongLines.of(withContext(Dispatchers.Default) { pageSong.crop(lines.map(::PageLine), PageLineSource.PAGE) })
     }
+
+    override suspend fun songLinesOf(lines: List<String>): PageSongLines? = memo.songLinesOf(lines)
 
     override suspend fun documentScoresOf(lines: List<PageLine>): List<PageLineScores>? {
         val pageSong = pageSong() ?: return null
