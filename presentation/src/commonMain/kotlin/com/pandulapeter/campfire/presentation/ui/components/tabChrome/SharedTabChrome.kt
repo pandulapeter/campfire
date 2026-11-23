@@ -84,25 +84,24 @@ internal class SharedTabChrome(
     /** Whether the tabs are being swapped right now, which is when the part is drawn over both screens. */
     val isSwapping get() = scope.isSwapping
 
-    /** The same part on the other screen of the swap, the one this shares its rectangle with, or null for none. */
-    val counterpart: SharedTabChrome?
-        get() = if (!isSwapping || boundsInRoot() == null) null else counterpartAmong(
-            part = this,
-            parts = scope.tabChrome.parts.filter { it.element == element && it.isSwapping && it.boundsInRoot() != null },
-            isEntering = { it.isEntering },
-        )
+    /**
+     * The same part on the other screen of the swap, the one this shares its rectangle with, or null for none. It scans
+     * every part and measures each, so a draw looks it up once and hands it to the members below that take it.
+     */
+    fun counterpart(): SharedTabChrome? = if (!isSwapping || boundsInRoot() == null) null else counterpartAmong(
+        part = this,
+        parts = scope.tabChrome.parts.filter { it.element == element && it.isSwapping && it.boundsInRoot() != null },
+        isEntering = { it.isEntering },
+    )
 
-    /** Whether the part shares its rectangle with the other screen's right now. */
-    val isMatched get() = counterpart != null
-
-    /** Whether the part is drawn alone, scaling and fading, rather than sharing its rectangle. */
-    val isAlone get() = isSwapping && !isMatched
+    /** Whether the part is drawn alone, scaling and fading, rather than sharing its rectangle with [counterpart]. */
+    fun isAlone(counterpart: SharedTabChrome?) = isSwapping && counterpart == null
 
     /** Whether the screen holding the part is the one being opened. */
     val isEntering get() = scope.visibilityScope.transition.targetState == EnterExitState.Visible
 
     /** How large the part is drawn while it is [isAlone], around its middle; whole otherwise. */
-    val aloneScale get() = if (isAlone) TAB_CHROME_HIDDEN_SCALE + (1f - TAB_CHROME_HIDDEN_SCALE) * presence.value else 1f
+    fun aloneScale(counterpart: SharedTabChrome?) = if (isAlone(counterpart)) TAB_CHROME_HIDDEN_SCALE + (1f - TAB_CHROME_HIDDEN_SCALE) * presence.value else 1f
 
     /** How opaque the part is while it is [isAlone], on the effects spring, so it is gone before the spatial one settles. */
     val aloneAlpha get() = fade.value.coerceIn(0f, 1f)
@@ -111,27 +110,27 @@ internal class SharedTabChrome(
      * How opaque what is drawn over the part but belongs to its screen, and stands off the part (see
      * [tabChromeForeground]), has to be to fade as its screen fades: with the screen, or with the part while that is alone.
      */
-    val foregroundAlpha get() = if (isAlone) aloneAlpha else screenAlpha.value
+    fun foregroundAlpha(counterpart: SharedTabChrome?) = if (isAlone(counterpart)) aloneAlpha else screenAlpha.value
 
-    /** Whether the part and its counterpart hold the same thing (New on either list), which then never changes. */
-    private val isContentShared get() = counterpart?.content == content
+    /** Whether the part and [counterpart] hold the same thing (New on either list), which then never changes. */
+    private fun isContentShared(counterpart: SharedTabChrome?) = counterpart?.content == content
 
     /**
-     * How opaque what stands on the part is while it is [isMatched]. Where both copies hold the same, the copy being
+     * How opaque what stands on the part is while it shares its rectangle with [counterpart]. Where both copies hold the same, the copy being
      * opened, drawn over the one being left, comes in whole during the first half of the crossfade, and the one being
      * left only goes during the second, so it never dims; where they differ, the two cross as [crossfadeAlpha] does.
      */
-    val matchedContentAlpha get() = if (isContentShared) (fade.value * 2f).coerceIn(0f, 1f) else crossfadeAlpha
+    fun matchedContentAlpha(counterpart: SharedTabChrome?) = if (isContentShared(counterpart)) (fade.value * 2f).coerceIn(0f, 1f) else crossfadeAlpha
 
     /**
-     * How large what stands on the part is drawn while it is [isMatched], around the travelling rectangle's middle:
+     * How large what stands on the part is drawn while it shares its rectangle with [counterpart], around the travelling rectangle's middle:
      * whole where both copies hold the same, and otherwise growing in on the copy being opened and shrinking away on
      * the one being left, on the spatial spring, as a part on its own does ([aloneScale]).
      */
-    val matchedContentScale get() = if (isContentShared) 1f else TAB_CHROME_HIDDEN_SCALE + (1f - TAB_CHROME_HIDDEN_SCALE) * presence.value
+    fun matchedContentScale(counterpart: SharedTabChrome?) = if (isContentShared(counterpart)) 1f else TAB_CHROME_HIDDEN_SCALE + (1f - TAB_CHROME_HIDDEN_SCALE) * presence.value
 
     /**
-     * How opaque what rides the part is while it is [isMatched] and the two copies hold different things (an open field
+     * How opaque what rides the part is while it shares its rectangle and the two copies hold different things (an open field
      * and a closed pill's buttons, which [matchedContentAlpha] would show whole on top of each other halfway): a plain
      * crossfade, the one going as the other comes.
      */
@@ -145,10 +144,10 @@ internal class SharedTabChrome(
     }
 
     /**
-     * The rectangle the part and its counterpart share on this frame, in the coordinates of the node the part is measured
+     * The rectangle the part and [counterpart] share on this frame, in the coordinates of the node the part is measured
      * in ([coordinates]), or null while it is not matched.
      */
-    fun travellingBounds(): Rect? {
+    fun travellingBounds(counterpart: SharedTabChrome?): Rect? {
         val other = counterpart ?: return null
         val own = boundsInRoot() ?: return null
         val others = other.boundsInRoot() ?: return null
@@ -161,11 +160,10 @@ internal class SharedTabChrome(
      * The color the part's container is drawn in on this frame, or null for none: the copy being opened draws none while
      * the two are matched, and the copy being left heads for the other's color, see [SharedTabChrome].
      */
-    val currentContainerColor: Color?
-        get() {
-            val other = counterpart ?: return containerColor
-            return if (isEntering) null else lerp(containerColor, other.containerColor, other.presence.value.coerceIn(0f, 1f))
-        }
+    fun currentContainerColor(counterpart: SharedTabChrome?): Color? {
+        val other = counterpart ?: return containerColor
+        return if (isEntering) null else lerp(containerColor, other.containerColor, other.presence.value.coerceIn(0f, 1f))
+    }
 }
 
 /**

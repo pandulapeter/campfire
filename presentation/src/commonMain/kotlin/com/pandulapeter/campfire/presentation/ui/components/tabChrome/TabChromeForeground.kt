@@ -48,13 +48,14 @@ internal fun Modifier.tabChromeForeground(
                 drawContent()
             } else {
                 val partOutline = stadiumOf(part)
-                withAlpha(chrome.foregroundAlpha) {
+                val counterpart = chrome.counterpart()
+                withAlpha(chrome.foregroundAlpha(counterpart)) {
                     clipPath(path = partOutline, clipOp = ClipOp.Difference) { this@drawWithContent.drawContent() }
                 }
-                val travelling = chrome.travellingBounds()
+                val travelling = chrome.travellingBounds(counterpart)
                 if (travelling == null) {
-                    withAlpha(chrome.foregroundAlpha) {
-                        scale(scale = chrome.aloneScale, pivot = part.center) {
+                    withAlpha(chrome.foregroundAlpha(counterpart)) {
+                        scale(scale = chrome.aloneScale(counterpart), pivot = part.center) {
                             clipPath(path = partOutline) { this@drawWithContent.drawContent() }
                         }
                     }

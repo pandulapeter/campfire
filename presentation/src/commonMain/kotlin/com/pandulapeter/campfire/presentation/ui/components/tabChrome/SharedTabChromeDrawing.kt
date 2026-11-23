@@ -56,26 +56,28 @@ internal fun Modifier.sharedTabChrome(
             renderInOverlay = { chrome.isSwapping },
         )
         .graphicsLayer {
-            if (chrome.isAlone) {
-                val scale = chrome.aloneScale
+            val counterpart = chrome.counterpart()
+            if (chrome.isAlone(counterpart)) {
+                val scale = chrome.aloneScale(counterpart)
                 scaleX = scale
                 scaleY = scale
                 alpha = chrome.aloneAlpha
             }
         }
         .drawWithContent {
-            val travelling = chrome.travellingBounds()
+            val counterpart = chrome.counterpart()
+            val travelling = chrome.travellingBounds(counterpart)
             if (travelling == null) {
                 if (isContainerDrawnOutsideSwaps || chrome.isSwapping) {
-                    chrome.currentContainerColor?.let { drawRoundRect(color = it, cornerRadius = CornerRadius(size.height / 2)) }
+                    chrome.currentContainerColor(counterpart)?.let { drawRoundRect(color = it, cornerRadius = CornerRadius(size.height / 2)) }
                 }
                 drawContent()
             } else {
                 val outline = if (isRectangular) Path().apply { addRect(travelling) } else stadiumOf(travelling)
-                chrome.currentContainerColor?.let { drawPath(path = outline, color = it) }
+                chrome.currentContainerColor(counterpart)?.let { drawPath(path = outline, color = it) }
                 clipPath(path = outline) {
-                    withAlpha(chrome.matchedContentAlpha) {
-                        scale(scale = chrome.matchedContentScale, pivot = travelling.center) {
+                    withAlpha(chrome.matchedContentAlpha(counterpart)) {
+                        scale(scale = chrome.matchedContentScale(counterpart), pivot = travelling.center) {
                             translate(left = travelling.center.x - size.width / 2, top = travelling.center.y - size.height / 2) {
                                 this@drawWithContent.drawContent()
                             }
@@ -104,14 +106,15 @@ internal fun Modifier.sharedTabChromeSurface(
         .renderInSharedTransitionScopeOverlay(zIndexInOverlay = zIndex, renderInOverlay = { chrome.isSwapping })
         .drawBehind {
             if (!chrome.isSwapping) return@drawBehind
-            val color = chrome.currentContainerColor ?: return@drawBehind
-            val travelling = chrome.travellingBounds()
+            val counterpart = chrome.counterpart()
+            val color = chrome.currentContainerColor(counterpart) ?: return@drawBehind
+            val travelling = chrome.travellingBounds(counterpart)
             if (travelling != null) {
                 drawPath(path = stadiumOf(travelling), color = color)
             } else {
                 val own = bounds()
                 if (own.isEmpty) return@drawBehind
-                scale(scale = chrome.aloneScale, pivot = own.center) { drawPath(path = stadiumOf(own), color = color, alpha = chrome.aloneAlpha) }
+                scale(scale = chrome.aloneScale(counterpart), pivot = own.center) { drawPath(path = stadiumOf(own), color = color, alpha = chrome.aloneAlpha) }
             }
         }
 }
