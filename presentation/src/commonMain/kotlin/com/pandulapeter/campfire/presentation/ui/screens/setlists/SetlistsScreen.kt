@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
@@ -70,7 +71,7 @@ internal fun SetlistsScreen(
     val keyboardController = LocalSoftwareKeyboardController.current
     // Not saveable: returning to this screen always starts in browsing mode.
     val reorderingSetlistFileName = viewModel.setlistsController.reorderingSetlistFileName
-    val isScreenActive = viewModel.navigator.backStack.lastOrNull() == CampfireDestination.Setlists
+    val isScreenActive by remember(viewModel) { derivedStateOf { viewModel.navigator.backStack.lastOrNull() == CampfireDestination.Setlists } }
     val isReordering = reorderingSetlistFileName != null && isScreenActive && !isPerformanceModeEnabled
     val isSearchOpen by viewModel.setlistsController.setlistsSearch.isOpen.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
