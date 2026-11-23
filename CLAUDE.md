@@ -315,8 +315,9 @@ run on the simulator, and the web, whose storage tests run in headless Chrome), 
 `publish-all.yml` builds anything.
 
 The importer is scored against a private corpus of other programs' documents (`ImportCorpusTest`, outside git, named by
-`campfire.importCorpus` in `local.properties`; a worktree passes it with `-P`), never in CI. `PageCorpusTest` beside it
-scores the shipped page model's crop on the labelled web pages `campfire.pageCorpus` names, the same way.
+`campfire.importCorpus` in `local.properties`; a worktree passes it with `-P`), never in CI. `PageCorpusTest`
+(`:domain:implementation`) runs the import's own page crop over the labelled web pages `campfire.pageCorpus` names, the
+same way.
 
 ## Build
 

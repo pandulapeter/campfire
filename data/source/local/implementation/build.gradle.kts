@@ -43,7 +43,7 @@ kotlin {
             implementation(project(":data:source:remote:implementation"))
             implementation(project(":data:sync:implementation"))
             implementation(project(":domain:implementation"))
-            // PageCorpusTest scores the page model the app ships on the page corpus.
+            // ImportCorpusTest scores documents cropped by the page model the app ships.
             implementation(project(":libs:pagesong"))
         }
         wasmJsMain.dependencies {
@@ -59,11 +59,10 @@ tasks.named<Test>("desktopTest") {
     val pageCorpus = project.property("campfire.pageCorpus").toString()
     systemProperty("campfire.pageCorpus", pageCorpus)
     inputs.property("pageCorpus", pageCorpus)
-    // The weights :presentation ships, which PageCorpusTest runs over the corpus's labelled pages.
+    // The weights :presentation ships, which ImportCorpusTest crops the corpus's documents with.
     val pageModelWeights = rootProject.file("presentation/src/commonMain/composeResources/files/page-model.bin")
     systemProperty("pageModelWeights", pageModelWeights.absolutePath)
     inputs.files(pageModelWeights).withPropertyName("pageModelWeights")
-    if (pageCorpus.isNotBlank()) inputs.files(fileTree(pageCorpus) { include("pages/**", "labels/**") }).withPropertyName("pageCorpusPages")
     val sharedCopyParitySeeds = project.property("campfire.sharedCopyParitySeeds").toString()
     systemProperty("campfire.sharedCopyParitySeeds", sharedCopyParitySeeds)
     inputs.property("sharedCopyParitySeeds", sharedCopyParitySeeds)

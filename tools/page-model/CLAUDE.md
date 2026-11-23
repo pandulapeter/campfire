@@ -63,8 +63,9 @@ Two folders feed it, both named in `local.properties`:
    presentation/src/commonMain/composeResources/files/page-model.bin`): the gate's recipe trained once on every
    labelled page and document, its weights quantized and written where the app reads them (`PageCropperImpl`, read once
    on the first page cropped).
-8. **Check the shipped weights** (`PageCorpusTest`, beside the dump, also part of `desktopTest` while the property is
-   set): the crop as the import makes it, over the labelled pages, against keeping every line. `ImportCorpusTest` crops
+8. **Check the shipped weights** (`./gradlew :domain:implementation:desktopTest --tests '*PageCorpusTest'`, also part
+   of `desktopTest` while the property is set): the import's own crop (`PageTextCrop`), over the labelled pages, against
+   keeping every line. `ImportCorpusTest` crops
    documents with the same weights.
 
 ## How a model is judged
@@ -73,8 +74,8 @@ Two folders feed it, both named in `local.properties`:
   documents hold up against the last model's: how many song pages the crop beats keeping everything on, mean line F1,
   pages and lines of the song lost, pages with no song told as such, and title and artist hits. Its `unsure` crop is
   the rule the app runs (`CropRule.kt`). Each run overwrites `.runs/`, so keep the last report aside to compare.
-- `PageCorpusTest` shows what the shipped model does, held out only for pages added after it was trained, and fails
-  only on loose sanity bounds.
+- `PageCorpusTest` (`:domain:implementation`) shows what the shipped model does, held out only for pages added after
+  it was trained, and fails only on loose sanity bounds.
 - The golden tests in `:libs:pagesong` prove only that Kotlin computes what PyTorch does.
 
 ## Changing the model

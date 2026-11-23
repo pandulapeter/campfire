@@ -7,17 +7,16 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.data.source.local.implementation.document.corpus
+package com.pandulapeter.campfire.domain.implementation.importing
 
-import com.pandulapeter.campfire.chordpro.ChordProParser
-import com.pandulapeter.campfire.chordpro.ChordProSplitter
-import com.pandulapeter.campfire.chordpro.convert.ChordSheet
-import com.pandulapeter.campfire.chordpro.convert.ChordSheetConverter
 import com.pandulapeter.campfire.chordpro.convert.PageTitle
+import com.pandulapeter.campfire.data.model.Logger
+import com.pandulapeter.campfire.domain.api.importing.PageSongLines
 import com.pandulapeter.campfire.pagesong.PageLine
 import com.pandulapeter.campfire.pagesong.PageLineSource
 import com.pandulapeter.campfire.pagesong.PageSong
 import java.io.File
+import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertTrue
 import kotlin.test.fail
@@ -30,13 +29,14 @@ import kotlinx.serialization.json.jsonPrimitive
 
 /**
  * Scores the page model the app ships (`composeResources/files/page-model.bin`) on the labelled web pages of the private
- * corpus named by `campfire.pageCorpus` (`tools/page-model`): each page cropped as the import crops a paste
- * (`PageCropperImpl` and `PageTextCrop`: the kept lines with the title and artist lines, less those heading the song where
- * the converter reads no title from them, which title the song instead; the whole page where the model sees no song)
- * against keeping every line, as `gate.py` scores a held-out fold. Its numbers are only held-out ones for pages added
+ * corpus named by `campfire.pageCorpus` (`tools/page-model`): each page cropped by the import's own crop of a paste
+ * ([PageTextCrop] over [PageSongLines.of], as `PageCropperImpl` answers it: the kept lines with the title and artist lines,
+ * less those heading the song where the converter reads no title from them, which title the song instead; the whole page
+ * where the model sees no song) against keeping every line, as `gate.py` scores a held-out fold. Its numbers are only held-out ones for pages added
  * after the weights were trained; on the rest they show what the shipped model does, not how it generalizes. It prints
- * and asserts only loose sanity bounds, which a broken model or a broken crop would miss by far. Skipped where the
- * property is blank or the weights are not there; never in CI.
+ * and asserts only loose sanity bounds, which a broken model or a broken crop would miss by far. A page whose lines the
+ * import's split of its text would number differently (a lone carriage return in a line) is skipped, so no label shifts.
+ * Skipped where the property is blank or the weights are not there; never in CI.
  */
 class PageCorpusTest {
 
@@ -55,6 +55,7 @@ class PageCorpusTest {
         val corpus = File(path)
         if (!File(corpus, "labels").isDirectory) fail("The page corpus $path has no labels folder")
         val pageSong = PageSong(weights.readBytes())
+        var skipped = 0
         val scores = File(corpus, "labels").listFiles { file -> file.extension == "json" }.orEmpty().sortedBy { it.name }.mapNotNull { file ->
             val labelled = Json.parseToJsonElement(file.readText()).jsonObject
             val id = labelled.getValue("id").jsonPrimitive.content
@@ -62,6 +63,10 @@ class PageCorpusTest {
             val page = File(corpus, "pages/$id.json").takeIf { it.isFile } ?: return@mapNotNull null
             val labels = labelled.getValue("labels").jsonArray.map { it.jsonPrimitive.content }
             val lines = Json.parseToJsonElement(page.readText()).jsonObject.getValue("lines").jsonArray.map { it.jsonPrimitive.content }.take(labels.size)
+            if (lines.joinToString("\n").lines().size != lines.size) {
+                skipped++
+                return@mapNotNull null
+            }
             score(id, lines, labels, labelled.isNoSong(), pageSong)
         }
         val songs = scores.filter { !it.isNoSong }
@@ -72,7 +77,7 @@ class PageCorpusTest {
         val songLines = songs.sumOf { it.songLines }
         println(
             """
-            Page corpus: ${scores.size} labelled pages
+            Page corpus: ${scores.size} labelled pages ($skipped skipped for splitting into other lines)
             song pages: ${songs.size}; crop beats keeping everything on $wins, ties $ties, worse on ${songs.size - wins - ties}
             mean line F1: keep everything ${"%.4f".format(songs.map { it.baseline }.average())}, crop ${"%.4f".format(songs.map { it.crop }.average())}
             pages losing a song line: ${songs.count { it.lostSongLines > 0 }} ($lostLines of $songLines song lines lost)
@@ -90,19 +95,18 @@ class PageCorpusTest {
 
     private fun score(id: String, lines: List<String>, labels: List<String>, isNoSong: Boolean, pageSong: PageSong): PageScore {
         val crop = pageSong.crop(lines.map(::PageLine), PageLineSource.PAGE)
-        val withHeader = if (crop.holdsSong) (crop.keptLines + listOfNotNull(crop.titleLine, crop.artistLine)).toSet() else lines.indices.toSet()
-        val heading = crop.headerLines.toSet()
+        val found = PageSongLines.of(crop)
+        val cropped = found?.let { PageTextCrop.croppedLines(lines, it) }
+        val withHeader = cropped?.withHeader?.toSet() ?: lines.indices.toSet()
+        val heading = cropped?.heading.orEmpty()
+        val converted = runBlocking {
+            PageTextCrop.cropped(lines.joinToString("\n"), FakePageCropper(songLinesOf = { found }), Logger { })?.let(PageTextCrop::converted)
+        }
         // The header lines leave the song only where the converter reads no title from the crop with them, as the import does.
-        val isHeaderConverted = heading.isNotEmpty() && keptText(lines, withHeader).let { text ->
-            val songs = ChordSheetConverter.convert(ChordSheet.ofPlainText(text)).flatMap(ChordProSplitter::split)
-            songs.size != 1 || !ChordProParser.parseMetadata(songs.single()).title.isNullOrBlank()
-        }
-        val isHeaderRead = heading.isNotEmpty() && !isHeaderConverted
-        val kept = if (isHeaderRead) withHeader - heading else withHeader
-        val header = if (!isHeaderRead) null else {
-            val title = crop.titleLine?.takeIf { it in heading }?.let { PageTitle.of(lines[it]) }
-            PageTitle(title = title?.title.orEmpty(), artist = title?.artist ?: crop.artistLine?.takeIf { it in heading }?.let { PageTitle.artistOf(lines[it]) })
-        }
+        val isHeaderRead = heading.isNotEmpty() && converted != null && (converted.title != null || converted.artist != null)
+        val isHeaderConverted = heading.isNotEmpty() && !isHeaderRead
+        val kept = if (isHeaderRead) cropped?.body?.toSet().orEmpty() else withHeader
+        val header = if (!isHeaderRead) null else PageTitle(title = converted.title.orEmpty(), artist = converted.artist)
         // Lines with no text and lines the teacher's two runs disagreed on are left out, as the gate leaves them out.
         val printed = lines.indices.filter { lines[it].isNotBlank() && labels[it] != "IGNORE" }.toSet()
         val truth = printed.filter { labels[it] == "SONG" || labels[it] == "METADATA" }.toSet()
@@ -132,10 +136,6 @@ class PageCorpusTest {
             isHeaderConverted = isHeaderConverted,
         )
     }
-
-    /** The kept lines' text with the blank lines between the first and the last, as `PageTextCrop` hands it on. */
-    private fun keptText(lines: List<String>, kept: Set<Int>) =
-        lines.indices.filter { it in kept || (lines[it].isBlank() && it in kept.min()..kept.max()) }.joinToString("\n") { lines[it] }
 
     private fun JsonObject.isNoSong() = this["noSong"]?.jsonPrimitive?.boolean == true
 

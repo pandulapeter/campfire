@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.domain.api.importing
 
+import com.pandulapeter.campfire.pagesong.PageCrop
+
 /**
  * Where a page's song is among its lines, as [PageCropper.songLinesOf] found it. Every index is a position in the lines
  * it was asked about.
@@ -26,4 +28,15 @@ data class PageSongLines(
     val titleLine: Int?,
     val artistLine: Int?,
     val headerLines: List<Int>,
-)
+) {
+    companion object {
+
+        /** Where [crop] finds the song; null where it sees none. */
+        fun of(crop: PageCrop): PageSongLines? = if (!crop.holdsSong) null else PageSongLines(
+            keptLines = crop.keptLines,
+            titleLine = crop.titleLine,
+            artistLine = crop.artistLine,
+            headerLines = crop.headerLines,
+        )
+    }
+}

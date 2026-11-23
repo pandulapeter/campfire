@@ -21,5 +21,20 @@ kotlin {
             implementation(project(":libs:chordsheet"))
             implementation(libs.kotlin.coroutines)
         }
+        // PageCorpusTest reads the page corpus's labelled pages.
+        named("desktopTest").dependencies {
+            implementation(libs.kotlin.serialization.json)
+        }
     }
+}
+
+tasks.named<Test>("desktopTest") {
+    val pageCorpus = project.property("campfire.pageCorpus").toString()
+    systemProperty("campfire.pageCorpus", pageCorpus)
+    inputs.property("pageCorpus", pageCorpus)
+    if (pageCorpus.isNotBlank()) inputs.files(fileTree(pageCorpus) { include("pages/**", "labels/**") }).withPropertyName("pageCorpusPages")
+    // The weights :presentation ships, which PageCorpusTest runs over the corpus's labelled pages.
+    val pageModelWeights = rootProject.file("presentation/src/commonMain/composeResources/files/page-model.bin")
+    systemProperty("pageModelWeights", pageModelWeights.absolutePath)
+    inputs.files(pageModelWeights).withPropertyName("pageModelWeights")
 }

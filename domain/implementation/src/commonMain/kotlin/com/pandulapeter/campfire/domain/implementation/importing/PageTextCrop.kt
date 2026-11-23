@@ -17,6 +17,7 @@ import com.pandulapeter.campfire.chordpro.convert.PageTitle
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.library.normalizedToNfc
 import com.pandulapeter.campfire.domain.api.importing.PageCropper
+import com.pandulapeter.campfire.domain.api.importing.PageSongLines
 import kotlinx.coroutines.CancellationException
 
 /** A page's text cropped to its song by a [PageCropper], before the chord sheet converter reads it. */
@@ -31,6 +32,16 @@ internal object PageTextCrop {
         val body: String?,
         val title: String?,
         val artist: String?,
+    )
+
+    /**
+     * The lines [CroppedPage] is made of, as indices into the page's lines: [withHeader] for its text, [body] for its body,
+     * and [heading], the lines heading the song that the body leaves out.
+     */
+    data class CroppedLines(
+        val withHeader: List<Int>,
+        val body: List<Int>?,
+        val heading: Set<Int>,
     )
 
     /** What a cropped page converts to: its songs, and the title and artist its header lines name where the songs declare none. */
@@ -60,17 +71,30 @@ internal object PageTextCrop {
             logger.log("Could not crop the page: ${exception.message}")
             null
         } ?: return null
+        val cropped = croppedLines(lines, found) ?: return null
+        val title = found.titleLine?.takeIf { it in cropped.heading }?.let { PageTitle.of(lines[it]) }
+        return CroppedPage(
+            text = cropped.withHeader.joinToString("\n") { lines[it] },
+            body = cropped.body?.joinToString("\n") { lines[it] },
+            title = title?.title,
+            artist = title?.artist ?: found.artistLine?.takeIf { it in cropped.heading }?.let { PageTitle.artistOf(lines[it]) },
+        )
+    }
+
+    /**
+     * The indices of [lines] that [cropped] keeps of what [found] answers, by the same rules; null where it converts the
+     * page whole.
+     */
+    fun croppedLines(lines: List<String>, found: PageSongLines): CroppedLines? {
         val namedLines = listOfNotNull(found.titleLine, found.artistLine).filter { it in lines.indices }
         val songLines = (found.keptLines.filter { it in lines.indices } + namedLines).toSet()
         val heading = found.headerLines.filter { it in namedLines }.toSet()
         val withHeader = keptText(lines, songLines) ?: return null
         if (withHeader.size == lines.size) return null
-        val title = found.titleLine?.takeIf { it in heading }?.let { PageTitle.of(lines[it]) }
-        return CroppedPage(
-            text = withHeader.joinToString("\n") { lines[it] },
-            body = if (heading.isEmpty()) null else keptText(lines, songLines - heading)?.joinToString("\n") { lines[it] },
-            title = title?.title,
-            artist = title?.artist ?: found.artistLine?.takeIf { it in heading }?.let { PageTitle.artistOf(lines[it]) },
+        return CroppedLines(
+            withHeader = withHeader,
+            body = if (heading.isEmpty()) null else keptText(lines, songLines - heading),
+            heading = heading,
         )
     }
 

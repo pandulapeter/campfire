@@ -93,6 +93,13 @@ class PageTextCropTest {
         assertEquals("Wonderwall", ChordProParser.parseMetadata(converted?.songs?.single().orEmpty()).title)
     }
 
+    @Test
+    fun `the cropped lines keep the blank lines between kept ones and leave the heading out of the body`() {
+        val cropped = PageTextCrop.croppedLines(HEADED_PAGE.lines(), songLines(2, 4, 5, 7, 8, titleLine = 1, headerLines = listOf(1)))
+
+        assertEquals(PageTextCrop.CroppedLines(withHeader = (1..8).toList(), body = (2..8).toList(), heading = setOf(1)), cropped)
+    }
+
     private companion object {
         const val PAGE = "Menu\nSign in\nG   D\nDown by the river\n\nC   G\nWe sang\n\nComments"
         const val HEADED_PAGE = "Sign in\nWonderwall Chords by Oasis\nStrumming: down down up\n\nEm7      G\nToday is gonna be the day\n\n" +
