@@ -101,7 +101,7 @@ internal class SharedTabChrome(
     val isEntering get() = scope.visibilityScope.transition.targetState == EnterExitState.Visible
 
     /** How large the part is drawn while it is [isAlone], around its middle; whole otherwise. */
-    fun aloneScale(counterpart: SharedTabChrome?) = if (isAlone(counterpart)) TAB_CHROME_HIDDEN_SCALE + (1f - TAB_CHROME_HIDDEN_SCALE) * presence.value else 1f
+    fun aloneScale(counterpart: SharedTabChrome?) = if (isAlone(counterpart)) scaleOnPresence() else 1f
 
     /** How opaque the part is while it is [isAlone], on the effects spring, so it is gone before the spatial one settles. */
     val aloneAlpha get() = fade.value.coerceIn(0f, 1f)
@@ -127,7 +127,7 @@ internal class SharedTabChrome(
      * whole where both copies hold the same, and otherwise growing in on the copy being opened and shrinking away on
      * the one being left, on the spatial spring, as a part on its own does ([aloneScale]).
      */
-    fun matchedContentScale(counterpart: SharedTabChrome?) = if (isContentShared(counterpart)) 1f else TAB_CHROME_HIDDEN_SCALE + (1f - TAB_CHROME_HIDDEN_SCALE) * presence.value
+    fun matchedContentScale(counterpart: SharedTabChrome?) = if (isContentShared(counterpart)) 1f else scaleOnPresence()
 
     /**
      * How opaque what rides the part is while it shares its rectangle and the two copies hold different things (an open field
@@ -135,6 +135,9 @@ internal class SharedTabChrome(
      * crossfade, the one going as the other comes.
      */
     val crossfadeAlpha get() = aloneAlpha
+
+    /** How large what scales in or out with the part is drawn: [TAB_CHROME_HIDDEN_SCALE] out of sight, whole once in. */
+    private fun scaleOnPresence() = TAB_CHROME_HIDDEN_SCALE + (1f - TAB_CHROME_HIDDEN_SCALE) * presence.value
 
     /** The part's own rectangle in the root's coordinates, or null while it has none (not placed, or empty). */
     fun boundsInRoot(): Rect? {
@@ -241,7 +244,10 @@ private fun Transition<EnterExitState>.animateSwap(
     },
 ) { if (it == EnterExitState.Visible) 1f else 0f }
 
-/** How small a part is as it scales out of the screen being left or into the one being opened, see [SharedTabChrome]. */
+/**
+ * How small a part is as it scales out of the screen being left or into the one being opened, see [SharedTabChrome], and
+ * a detached action of the bar as it fades out of it and back in (`areClosedSearchActionsDetached`), so the two leave alike.
+ */
 internal const val TAB_CHROME_HIDDEN_SCALE = 0.6f
 
 /**

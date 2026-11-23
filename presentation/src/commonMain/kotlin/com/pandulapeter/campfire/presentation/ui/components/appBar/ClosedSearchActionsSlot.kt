@@ -35,6 +35,7 @@ import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.ui.components.menu.overlappingAction
+import com.pandulapeter.campfire.presentation.ui.components.tabChrome.TAB_CHROME_HIDDEN_SCALE
 import kotlin.math.roundToInt
 
 /**
@@ -81,7 +82,7 @@ internal fun RowScope.ClosedSearchActionsSlot(
             // A detached button is a filled circle, which a clipped shrink would slice into a half-moon on
             // its way out: it shrinks in place instead, while its room closes behind the field's edge.
             enter = fadeIn(closedSearchActionsFadeSpec) + if (isDetached) {
-                scaleIn(closedSearchActionsFadeSpec, initialScale = DETACHED_ACTION_HIDDEN_SCALE) +
+                scaleIn(closedSearchActionsFadeSpec, initialScale = TAB_CHROME_HIDDEN_SCALE) +
                     expandHorizontally(closedSearchActionsSizeSpec, clip = false)
             } else {
                 expandHorizontally(closedSearchActionsSizeSpec)
@@ -90,7 +91,7 @@ internal fun RowScope.ClosedSearchActionsSlot(
             // under what is left of the disc.
             exit = if (isDetached) {
                 fadeOut(tween(DETACHED_ACTION_FADE_OUT_MILLIS)) +
-                    scaleOut(closedSearchActionsFadeSpec, targetScale = DETACHED_ACTION_HIDDEN_SCALE) +
+                    scaleOut(closedSearchActionsFadeSpec, targetScale = TAB_CHROME_HIDDEN_SCALE) +
                     shrinkHorizontally(closedSearchActionsSizeSpec, clip = false)
             } else {
                 fadeOut(closedSearchActionsFadeSpec) + shrinkHorizontally(closedSearchActionsSizeSpec)
@@ -153,9 +154,6 @@ private val CLOSED_SEARCH_ACTIONS_DIVIDER_HEIGHT = 24.dp
  * buttons on either side off the line, and the button before it in line with the checkboxes of a selection.
  */
 private val CLOSED_SEARCH_ACTIONS_DIVIDER_ROOM = 4.dp
-
-/** How small a detached action is as it fades out of the bar and back in, see `areClosedSearchActionsDetached`. */
-private const val DETACHED_ACTION_HIDDEN_SCALE = 0.6f
 
 /** How long a detached action takes to fade out of the bar as the search opens. */
 private const val DETACHED_ACTION_FADE_OUT_MILLIS = 120
