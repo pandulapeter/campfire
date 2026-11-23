@@ -24,8 +24,6 @@ package com.pandulapeter.campfire.pagesong
  * reads as the song's title and artist and leaves out of the song: before the first line the model reads as the song, set
  * apart from it by at least one other line, and given no chance of being the song or its details (not in [keptLines]).
  * Empty where the model sees no song.
- * @param metadataLines the lines the model reads as the song's details (key, capo, tempo, time, credits), where the
- * converter's own rules look for them.
  * @param scores each read line's label probabilities, one for each of the first [PageSong.MAX_LINES] lines, for tools
  * and tests; a caller deciding what to keep reads the fields above.
  */
@@ -35,7 +33,6 @@ public data class PageCrop(
     val titleLine: Int?,
     val artistLine: Int?,
     val headerLines: List<Int>,
-    val metadataLines: List<Int>,
     val scores: List<PageLineScores>,
 ) {
 

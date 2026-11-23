@@ -23,7 +23,6 @@ class CropRuleTest {
 
         assertTrue(crop.holdsSong)
         assertEquals(listOf(1, 2, 3, 4, 5), crop.keptLines)
-        assertEquals(listOf(3), crop.metadataLines)
     }
 
     @Test

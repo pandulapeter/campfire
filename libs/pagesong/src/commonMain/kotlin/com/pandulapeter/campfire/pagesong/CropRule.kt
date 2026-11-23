@@ -42,7 +42,6 @@ internal fun cropOf(scores: List<PageLineScores>, lineCount: Int): PageCrop {
         titleLine = titleLine,
         artistLine = artistLine,
         headerLines = if (holdsSong) headerLinesOf(listOfNotNull(titleLine, artistLine), kept, kept.first { labels[it] == PageLineLabel.SONG }) else emptyList(),
-        metadataLines = labels.indices.filter { labels[it] == PageLineLabel.METADATA },
         scores = scores,
     )
 }
