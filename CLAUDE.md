@@ -71,6 +71,7 @@ app:android / desktop / ios / web     entry points, platform chrome, "open with"
     metronome:api / :implementation   the click engine
     tuner:api / :implementation       pitch detection, tones, mic input
   tools:screenshots                   store screenshots and UI tests: the desktop build rendered offscreen
+  tools/page-model                    trains the page model :libs:pagesong runs, over a private corpus (Python)
   tools/promo-video                   the promo video: Remotion over Promo.kt's footage, with the owner's recording
   tools/fonts                         draws ♭ ♮ ♯ into the bundled Inter and ♮ into JetBrains Mono, which lack them;
                                       extracts abc2svg's music glyphs for the notation drawing

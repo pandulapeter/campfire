@@ -26,7 +26,4 @@ in the code and its `CLAUDE.md` files (`libs/pagesong`, `presentation`, `data/so
 
 ## 2. Documentation
 
-- `tools/page-model/CLAUDE.md`: how to collect, label, train, gate, and export, in order, tying together the scripts'
-  own docstrings (`collect.py`, `teacher.py`, `align_documents.py`, `synthetic*.py`, `model.py`, `gate.py`,
-  `export.py`).
 - At release time: the website's import page, the store listings, the privacy policy, and what's new.
