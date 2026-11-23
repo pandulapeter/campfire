@@ -78,8 +78,13 @@ cannot say: the principles, the contracts, and the limits kept on purpose.
 - A page whose chords lose their places on copy, leaving each on a row of its own and its spoken name in the lyric
   (`(C sharp minor)These`), is set back into chord rows over the lyric by `ChordSheetSpelledChords`, only where every
   spoken name's root is the next chord's.
-- Genius's injected `You might also like` and closing `12Embed` are left out of a song (never of prose). Ultimate
-  Guitar's page furniture is many lines in no fixed shape and is deliberately not filtered.
+- Genius's injected `You might also like` and closing `12Embed` are left out of a song (never of prose).
+- **A chord site's details and chrome** (`ChordSheetSiteDetails`, by labels and words in every app language, never a
+  site's name): a details block whose labels the copy glued onto the values before them (`Tuning: E A D G B EKey: G`)
+  is cut back into a row; a tuning is `{meta: tuning …}` unless standard, a CCLI song number `{meta: ccli …}`, a capo of
+  none nothing. Values that are the site's (difficulty, a transcriber's credit that counts its contributors) and whole
+  lines that are its controls or calls to action (`Autoscroll`, `1,234 views`) are left out only before the first chord
+  row, after the last, or alone between blank lines: between two lyrics they are as likely sung. `Author:` alone stays.
 - **Documented limits**: `Artist - Title` is read artist first, since both orders are common on the web; a title
   ending in a page word with no credit after it (`Three Chords`) loses that word.
 

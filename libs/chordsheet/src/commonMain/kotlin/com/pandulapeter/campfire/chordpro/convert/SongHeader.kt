@@ -90,7 +90,10 @@ internal object SongHeader {
         kinds.forEachIndexed { index, kind -> if (kind == LineKind.METADATA) {
             (features[index].headerRow ?: listOf(features[index].metadata!!)).forEach { (name, value) ->
                 when {
-                    value.isBlank() || name == TRANSPOSITION || name == NO_CAPO -> Unit
+                    value.isBlank() || name == TRANSPOSITION || name == NO_CAPO || name == ChordSheetSiteDetails.DETAIL -> Unit
+                    // The standard tuning goes without saying; another is kept in the file, where the app has no field for it.
+                    name == ChordSheetSiteDetails.TUNING -> if (!ChordSheetSiteDetails.isStandardTuning(value)) header += "{meta: $name ${headerValue(value)}}"
+                    name == ChordSheetSiteDetails.CCLI -> header += "{meta: $name ${headerValue(value)}}"
                     name in timingNames && !declared.add(name) -> changes[index] = changes[index].orEmpty() + "{$name: ${headerValue(value)}}"
                     name == CREDIT || name == "artist" -> {
                         // An artist's name may end in a number (`The 1975`), so only a comma sets a year off it.

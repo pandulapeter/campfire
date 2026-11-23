@@ -151,7 +151,7 @@ internal object LineKinds {
         val features = context.features[index]
         return (
             ChordSheetProfile.isInHeader(index) && (features.metadata?.second?.isNotBlank() == true || features.headerRow != null) ||
-                features.metadata?.first == "copyright" ||
+                features.metadata?.first == "copyright" || features.metadata?.first == ChordSheetSiteDetails.CCLI ||
                 features.bodyRow != null
             ).gives(LineKind.METADATA)
     }
