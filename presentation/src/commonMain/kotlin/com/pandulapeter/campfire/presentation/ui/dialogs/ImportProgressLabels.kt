@@ -23,6 +23,7 @@ import com.pandulapeter.campfire.presentation.resources.import_progress_download
 import com.pandulapeter.campfire.presentation.resources.import_progress_finishing
 import com.pandulapeter.campfire.presentation.resources.import_progress_importing
 import com.pandulapeter.campfire.presentation.resources.import_progress_reading
+import com.pandulapeter.campfire.presentation.resources.import_progress_reading_page
 import com.pandulapeter.campfire.presentation.resources.import_progress_receiving
 import com.pandulapeter.campfire.presentation.resources.import_progress_unpacking
 
@@ -46,6 +47,7 @@ internal val ImportProgress.Phase.label
     get() = when (this) {
         ImportProgress.Phase.RECEIVING -> Res.string.import_progress_receiving
         ImportProgress.Phase.DOWNLOADING -> Res.string.import_progress_downloading
+        ImportProgress.Phase.READING_PAGE -> Res.string.import_progress_reading_page
         ImportProgress.Phase.UNPACKING -> Res.string.import_progress_unpacking
         ImportProgress.Phase.DOWNLOADING_PICTURES -> Res.string.import_progress_downloading_pictures
         ImportProgress.Phase.READING -> Res.string.import_progress_reading

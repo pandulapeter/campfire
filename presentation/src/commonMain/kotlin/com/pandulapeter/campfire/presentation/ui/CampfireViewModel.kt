@@ -128,7 +128,6 @@ import com.pandulapeter.campfire.presentation.ui.state.online.SongDetailsLookupC
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportController
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportReportState
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportWork
-import com.pandulapeter.campfire.presentation.ui.state.importing.ImportSource
 import com.pandulapeter.campfire.presentation.ui.state.importing.PastedSongController
 import com.pandulapeter.campfire.presentation.ui.state.LibraryState
 import com.pandulapeter.campfire.presentation.ui.state.ModeEndings
@@ -521,15 +520,12 @@ class CampfireViewModel(
         backStack = navigator.backStack,
         isImporting = importController.isImporting,
         isPerformanceModeEnabled = preferencesController.isPerformanceModeEnabled,
-        enqueueImport = { files, isNewSongFromText, suggestion ->
-            importController.enqueueImport(
-                source = ImportSource.Files(files),
-                shouldOpenSong = !isNewSongFromText,
-                isNewSongFromText = isNewSongFromText,
-                suggestion = suggestion,
-            )
+        enqueueImport = { source, isNewSong, suggestion ->
+            importController.enqueueImport(source = source, shouldOpenSong = !isNewSong, isNewSongFromText = isNewSong, suggestion = suggestion)
         },
         importSharedLink = { importController.importSharedLink(it) },
+        isPageLoadingSupported = importWork.useCases.canLoadPages(),
+        isPageLoadingEnabled = { preferencesController.userPreferences.value?.isPageLinkLoadingEnabled != false },
     )
 
     internal val songFilesController: SongFilesController = SongFilesController(

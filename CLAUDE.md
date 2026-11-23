@@ -256,7 +256,9 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
 - A pasted, dropped, or shared chord sheet that is one new song opens the editor on it, a drop or share in read only
   mode included, with a share's page title, else placeholders, for a missing title and artist; its page clutter is
   cropped on the device by the page model (`:libs:pagesong`), and **Use the whole page** brings it back; nothing is
-  written before Save, which needs a title; never a link followed, except a Campfire share link: `presentation`.
+  written before Save, which needs a title; a shared or pasted page's address alone (a call to action around it
+  included) is read once on the device where Pages from links allows it (Android, iOS; elsewhere a sentence), and a
+  Campfire share link is opened as its own import: `presentation`.
 - Files and text dragged onto the app are taken on every platform (Android and iOS from another app), read only mode
   included: `presentation`.
 - A share from another app (Android, the iOS share extension) is imported like a paste or an "Open with"; the

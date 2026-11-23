@@ -143,6 +143,13 @@ enum class ImportFailure {
      * nothing was imported, and trying again reads the same files again.
      */
     INTERRUPTED,
+
+    /**
+     * A page shared or pasted by its address was read on the device and held no song: a bot check, an empty page, one
+     * that did not load, or one the page model finds no song on. The user can open it in the browser and bring the page
+     * itself instead.
+     */
+    PAGE_NOT_READ,
 }
 
 /**

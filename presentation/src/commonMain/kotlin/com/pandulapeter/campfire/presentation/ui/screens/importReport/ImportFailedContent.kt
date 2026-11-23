@@ -33,6 +33,7 @@ import com.pandulapeter.campfire.presentation.resources.import_failed_too_large
 import com.pandulapeter.campfire.presentation.resources.import_failed_unreachable
 import com.pandulapeter.campfire.presentation.resources.import_failed_unreadable
 import com.pandulapeter.campfire.presentation.resources.import_failed_wrapped_archive
+import com.pandulapeter.campfire.presentation.resources.page_not_read
 import com.pandulapeter.campfire.presentation.localization.textResource
 import com.pandulapeter.campfire.presentation.ui.components.formattedSize
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportFailure
@@ -65,6 +66,7 @@ internal fun ImportFailedContent(
         }
         ImportFailure.WRAPPED_ARCHIVE -> stringResource(Res.string.import_failed_wrapped_archive)
         ImportFailure.INTERRUPTED -> stringResource(Res.string.import_failed_interrupted)
+        ImportFailure.PAGE_NOT_READ -> stringResource(Res.string.page_not_read)
     },
     style = MaterialTheme.typography.bodyLarge,
     textAlign = TextAlign.Center,

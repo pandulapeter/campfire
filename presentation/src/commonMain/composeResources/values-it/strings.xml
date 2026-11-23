@@ -164,6 +164,7 @@
     <string name="import_conflicts_mixed">Misto</string>
     <string name="import_loading_title">Lettura dei file</string>
     <string name="import_progress_downloading">Download del file</string>
+    <string name="import_progress_reading_page">Lettura della pagina…</string>
     <string name="import_progress_downloading_pictures">Download delle immagini a cui rimandano le canzoni</string>
     <string name="import_failed_unreachable">Impossibile raggiungere %1$s. Controlla la connessione a internet e riprova.</string>
     <string name="import_failed_not_found">A quell\'indirizzo non c\'è nulla da scaricare. Il link potrebbe essere scaduto o essere stato rimosso.</string>
@@ -306,8 +307,10 @@
     <string name="new_song_placeholder_artist">Artista sconosciuto</string>
     <string name="paste_clipboard_empty">Negli appunti non c\'è testo da incollare.</string>
     <string name="paste_only_links">Un link non è una canzone, e Campfire non apre pagine web. Copia direttamente gli accordi e il testo.</string>
+    <string name="paste_page_link">Campfire non può aprire pagine qui. Aprila nel browser, poi copia la pagina stessa e incollala.</string>
     <string name="paste_too_large">Il testo supera gli 8 MB che una singola importazione può accettare.</string>
     <string name="shared_link_not_imported">Campfire non apre pagine web. Seleziona il testo dello spartito e condividi quello.</string>
+    <string name="page_not_read">Campfire non ha trovato nessuna canzone in questa pagina. Aprila nel browser, poi condividi o copia la pagina stessa.</string>
     <string name="shared_link_from_newer_version">Questo link è stato creato da una versione più recente di Campfire. Aggiorna Campfire per aprirlo.</string>
     <string name="clipboard_not_campfire_link">Questo non è un link di Campfire.</string>
     <string name="paste_refused_ios">Campfire non ha il permesso di incollare. Lo decide l\'opzione «Incolla da altre app», sotto Campfire nell\'app Impostazioni.</string>
@@ -501,6 +504,8 @@
     <string name="settings_cover_art_description">Mostra accanto a una canzone la copertina dell\'album che indica, scaricandola una volta e tenendone una copia su questo dispositivo</string>
     <string name="settings_picture_links">Immagini dai link</string>
     <string name="settings_picture_links_description">Scarica le immagini che una canzone importata indica con un indirizzo web, tenendone una copia nella canzone</string>
+    <string name="settings_page_links">Pagine dai link</string>
+    <string name="settings_page_links_description">Legge su questo dispositivo la pagina a cui porta un link condiviso o incollato e ne prende la canzone</string>
     <string name="settings_attachments_description">Allega file alle canzoni, come un PDF dello spartito o una registrazione, e li apre dalla canzone</string>
     <string name="settings_group_song_page">Pagina della canzone</string>
     <string name="preferences_page_song">Canzone</string>

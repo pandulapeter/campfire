@@ -20,7 +20,7 @@ class ImportWorkStateTest {
     private val ImportProgress.Phase.workState
         get() = when (this) {
             ImportProgress.Phase.RECEIVING -> ImportWorkState.RECEIVING
-            ImportProgress.Phase.DOWNLOADING -> ImportWorkState.DOWNLOADING
+            ImportProgress.Phase.DOWNLOADING, ImportProgress.Phase.READING_PAGE -> ImportWorkState.DOWNLOADING
             ImportProgress.Phase.UNPACKING,
             ImportProgress.Phase.DOWNLOADING_PICTURES,
             ImportProgress.Phase.READING,

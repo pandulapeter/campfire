@@ -46,6 +46,11 @@ class ImportNotificationTextTest {
     }
 
     @Test
+    fun `a page being read says so rather than a download`() {
+        assertEquals("Reading the page…", WORDS.textOf(ImportWorkState.DOWNLOADING, ImportProgress(ImportProgress.Phase.READING_PAGE)))
+    }
+
+    @Test
     fun `counted bytes are written in the screen's sizes - with the separator handed over`() {
         val progress = ImportProgress(ImportProgress.Phase.UNPACKING, completedBytes = 1_250_000, totalBytes = 3_400_000_000)
         assertEquals("Unpacking 1,3 MB of 3,4 GB", WORDS.textOf(ImportWorkState.UNPACKING, progress))
@@ -121,6 +126,7 @@ class ImportNotificationTextTest {
             reading = "Reading files",
             comparing = "Comparing with the library",
             finishing = "Finishing",
+            readingPage = "Reading the page…",
             sizeUnits = listOf("{size} B", "{size} KB", "{size} MB", "{size} GB"),
             decimalSeparator = ",",
             cancelLabel = "Cancel",

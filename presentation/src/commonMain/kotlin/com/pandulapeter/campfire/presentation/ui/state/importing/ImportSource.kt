@@ -19,7 +19,7 @@ internal sealed interface ImportSource {
     val stagedPart: ImportSource?
         get() = when (this) {
             is Files -> files.filter { it.staged != null }.takeIf { it.isNotEmpty() }?.let(::Files)
-            is Address -> null
+            is Address, is Page -> null
             is SharedLink -> takeIf { file?.staged != null }
         }
 
@@ -47,6 +47,18 @@ internal sealed interface ImportSource {
         /** The host, which is what says whose the file is; the rest of an address is rarely worth reading. */
         override val name get() = url.substringAfter("://").substringBefore('/').substringBefore('?').substringBefore('#')
             .substringAfterLast('@').takeIf { it.isNotBlank() } ?: url
+
+        override val isEmpty get() = url.isBlank()
+    }
+
+    /**
+     * A web page shared or pasted by its address (`pageAddressIn`), read once on the device as the import starts
+     * (`LoadPageUseCase`), its text then cropped and converted as a pasted page's.
+     */
+    data class Page(val url: String) : ImportSource {
+
+        /** The host, as an [Address] is named. */
+        override val name get() = Address(url).name
 
         override val isEmpty get() = url.isBlank()
     }

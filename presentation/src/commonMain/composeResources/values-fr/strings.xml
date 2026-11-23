@@ -164,6 +164,7 @@
     <string name="import_conflicts_mixed">Mixte</string>
     <string name="import_loading_title">Lecture des fichiers</string>
     <string name="import_progress_downloading">Téléchargement du fichier</string>
+    <string name="import_progress_reading_page">Lecture de la page…</string>
     <string name="import_progress_downloading_pictures">Téléchargement des images liées par les chansons</string>
     <string name="import_failed_unreachable">Impossible de joindre %1$s. Vérifie la connexion Internet et réessaie.</string>
     <string name="import_failed_not_found">Il n\'y a rien à télécharger à cette adresse. Le lien a peut-être expiré ou été supprimé.</string>
@@ -309,8 +310,10 @@
     <string name="new_song_placeholder_artist">Artiste inconnu</string>
     <string name="paste_clipboard_empty">Le presse-papiers ne contient aucun texte à coller.</string>
     <string name="paste_only_links">Un lien n\'est pas une chanson, et Campfire n\'ouvre pas de pages. Copie directement les accords et les paroles.</string>
+    <string name="paste_page_link">Campfire ne peut pas ouvrir de pages ici. Ouvre-la dans ton navigateur, puis copie la page elle-même et colle-la.</string>
     <string name="paste_too_large">Le texte dépasse les 8 Mo qu\'une importation peut accepter.</string>
     <string name="shared_link_not_imported">Campfire n\'ouvre pas de pages web. Sélectionne le texte de la grille d\'accords et partage-le plutôt.</string>
+    <string name="page_not_read">Campfire n\'a trouvé aucune chanson sur cette page. Ouvre-la dans ton navigateur, puis partage ou copie la page elle-même.</string>
     <string name="shared_link_from_newer_version">Ce lien a été créé par une version plus récente de Campfire. Mets Campfire à jour pour l\'ouvrir.</string>
     <string name="clipboard_not_campfire_link">Ce n\'est pas un lien Campfire.</string>
     <string name="paste_refused_ios">Campfire n\'a pas été autorisé à coller. C\'est l\'option « Coller depuis d\'autres apps », sous Campfire dans l\'app Réglages, qui en décide.</string>
@@ -505,6 +508,8 @@
     <string name="settings_cover_art_description">Affiche à côté d\'une chanson la pochette d\'album qu\'elle indique, téléchargée une seule fois et conservée sur cet appareil</string>
     <string name="settings_picture_links">Images depuis des liens</string>
     <string name="settings_picture_links_description">Télécharge les images qu\'une chanson importée indique par une adresse web et en garde une copie dans la chanson</string>
+    <string name="settings_page_links">Pages depuis des liens</string>
+    <string name="settings_page_links_description">Lit sur cet appareil la page vers laquelle mène un lien partagé ou collé et en tire la chanson</string>
     <string name="settings_attachments_description">Joint des fichiers aux chansons, comme un PDF de la partition ou un enregistrement, et les ouvre depuis la chanson</string>
     <string name="settings_group_song_page">Page de chanson</string>
     <string name="preferences_page_song">Chanson</string>

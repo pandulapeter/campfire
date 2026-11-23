@@ -70,6 +70,22 @@ internal fun String.isLinkWithTitle() = withoutSourceLink(this).let { remaining 
 }
 
 /**
+ * The web page a pasted, dropped, or shared text stands for, or null where it is anything else: one address, alone or
+ * among a few short lines of a site's call to action or the page's title ("Check out this song on …: https://…"), the
+ * punctuation closing a sentence after it left off. Two different addresses, or more words than a call to action has,
+ * are a text of their own, as is anything on Campfire's own site: a Campfire link is its own import (`sharedLinkIn`),
+ * never a page to read.
+ */
+internal fun pageAddressIn(text: String): String? {
+    val address = PAGE_ADDRESS.findAll(text).map { it.value.trimEnd(*TRAILING_PUNCTUATION) }.distinct().singleOrNull() ?: return null
+    val words = PAGE_ADDRESS.replace(text, " ").lines().map { it.trim() }.filter { it.isNotEmpty() }
+    return address.takeIf {
+        words.size <= MAX_CALL_TO_ACTION_LINES && words.sumOf { it.length } <= MAX_CALL_TO_ACTION_LENGTH &&
+            !CAMPFIRE_ADDRESS.containsMatchIn(it)
+    }
+}
+
+/**
  * Whether the text is within what an import reads of one text file, counted in UTF-8 bytes as the file would be: a
  * text over it is refused before anything is prepared rather than reported as an oversized file.
  */
@@ -86,4 +102,11 @@ private val QUOTATION_MARKS = mapOf(
     '‘' to "’",
 )
 private val LINK = Regex("""https?://\S+""", RegexOption.IGNORE_CASE)
+private val PAGE_ADDRESS = Regex("""https?://[^\s<>"]+""", RegexOption.IGNORE_CASE)
+private val CAMPFIRE_ADDRESS = Regex("""^https?://(?:www\.)?campfire-songbook\.com(?:[/?#:]|$)""", RegexOption.IGNORE_CASE)
+private val TRAILING_PUNCTUATION = charArrayOf('.', ',', ';', ':', '!', '?', ')', ']', '}', '\'', '"', '»', '”', '’')
+
+/** A site's call to action and a page's title together take a few short lines; a chord sheet takes more. */
+private const val MAX_CALL_TO_ACTION_LINES = 3
+private const val MAX_CALL_TO_ACTION_LENGTH = 200
 private const val UNTITLED = "untitled"

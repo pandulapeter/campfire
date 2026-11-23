@@ -22,6 +22,7 @@ import com.pandulapeter.campfire.data.model.importing.ImportProgress
 import com.pandulapeter.campfire.data.model.importing.ImportResult
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.importing.IncomingContent
+import com.pandulapeter.campfire.data.model.importing.LoadedPage
 import com.pandulapeter.campfire.data.model.importing.ReceivedArchive
 import com.pandulapeter.campfire.data.model.importing.ReceivingArchive
 import com.pandulapeter.campfire.data.model.importing.StagedFile
@@ -38,6 +39,9 @@ import com.pandulapeter.campfire.data.model.song.SongContent
 import com.pandulapeter.campfire.domain.api.library.DeleteLibraryUseCase
 import com.pandulapeter.campfire.domain.api.importing.DownloadImportFileUseCase
 import com.pandulapeter.campfire.domain.api.importing.ApplyImportUseCase
+import com.pandulapeter.campfire.domain.api.importing.CanLoadPagesUseCase
+import com.pandulapeter.campfire.domain.api.importing.LoadPageUseCase
+import com.pandulapeter.campfire.domain.api.importing.PageCropper
 import com.pandulapeter.campfire.domain.api.importing.ClearImportStagingUseCase
 import com.pandulapeter.campfire.domain.api.importing.DeleteImportStagingUseCase
 import com.pandulapeter.campfire.domain.api.importing.PrepareImportUseCase
@@ -111,6 +115,11 @@ class ImportControllerQueueTest {
     private val nextPlans = ArrayDeque<List<ImportPlan.SongEntry>>()
     private var download: ImportDownload = ImportDownload.Unreachable
     private val downloadedUrls = mutableListOf<String>()
+    private var loadedPage: LoadedPage = LoadedPage.NotRead
+    private val loadedPageAddresses = mutableListOf<String>()
+
+    /** What the page model keeps of a page read by its address: null where it finds no song. */
+    private var pageSongLines: List<Int>? = listOf(0)
     private val preparedFiles = mutableListOf<List<ImportedFile>>()
     private var sharedLinkImports = mapOf<String, Set<String>>()
     private val rememberedSharedLinkImports = mutableListOf<Pair<String, List<String>>>()
@@ -205,6 +214,15 @@ class ImportControllerQueueTest {
 
                         override suspend fun abandon() = Unit
                     }
+                },
+                loadPage = object : LoadPageUseCase {
+                    override suspend fun invoke(address: String) = loadedPage.also { loadedPageAddresses += address }
+                },
+                canLoadPages = object : CanLoadPagesUseCase {
+                    override fun invoke() = true
+                },
+                pageCropper = object : PageCropper {
+                    override suspend fun songLinesOf(lines: List<String>) = pageSongLines
                 },
             ),
         )
@@ -945,6 +963,52 @@ class ImportControllerQueueTest {
     }
 
     @Test
+    fun `a page read by its address opens the editor on its song in place of the loading screen`() = runTest {
+        plannedSongs = listOf(songEntry("new.cho", text = "[G]Hello"))
+        loadedPage = LoadedPage.Read(text = "Menu\nG\nHello\nComments", title = "Riverlight Chords by The Invented Band", address = PAGE)
+        startController()
+        val settled = enqueuePage()
+        runCurrent()
+        assertEquals(listOf(PAGE), loadedPageAddresses)
+        val file = preparedFiles.single().single()
+        assertEquals("Menu\nG\nHello\nComments", file.bytes.decodeToString())
+        assertTrue(file.isPageText)
+        assertEquals(listOf("[G]Hello"), newSongTexts)
+        assertEquals(listOf<SharedTextTitle?>(SharedTextTitle(title = "Riverlight", artist = "The Invented Band")), newSongSuggestions)
+        assertTrue(backStack.last().let { it is CampfireDestination.SongEditor && it.isNewSong })
+        assertTrue(backStack.none { it == CampfireDestination.ImportReport })
+        assertTrue(settled.isCompleted)
+        assertEquals(0, importCount)
+    }
+
+    @Test
+    fun `a page that holds no song fails with the sentence and Try again reads it again`() = runTest {
+        loadedPage = LoadedPage.Read(text = "Home\nAbout\nContact", title = "Example", address = PAGE)
+        pageSongLines = null
+        startController()
+        enqueuePage()
+        settle()
+        val failed = assertIs<ImportReport.Failed>(reportState.importReport.value)
+        assertEquals(ImportFailure.PAGE_NOT_READ, failed.reason)
+        assertEquals("example.com", failed.sourceName)
+        assertEquals(0, prepareCount)
+        pageSongLines = listOf(0)
+        controller.retryImport()
+        settle()
+        assertEquals(listOf(PAGE, PAGE), loadedPageAddresses)
+        assertEquals(1, prepareCount)
+    }
+
+    @Test
+    fun `a page that could not be read fails with the same sentence and reads nothing`() = runTest {
+        startController()
+        enqueuePage()
+        settle()
+        assertEquals(ImportFailure.PAGE_NOT_READ, assertIs<ImportReport.Failed>(reportState.importReport.value).reason)
+        assertEquals(0, prepareCount)
+    }
+
+    @Test
     fun `a link from a newer version is answered with a sentence and queues nothing`() = runTest {
         startController()
         val settled = controller.importSharedLink(assertIs<SharedLink.FromNewerVersion>(ShareLinks.parse("campfire://s/2.something.new")))
@@ -1375,6 +1439,8 @@ class ImportControllerQueueTest {
         )
     }
 
+    private fun enqueuePage() = controller.enqueueImport(source = ImportSource.Page(PAGE), isNewSongFromText = true)
+
     private fun enqueuePaste(suggestion: SharedTextTitle? = null) = controller.enqueueImport(
         source = ImportSource.Files(listOf(ImportedFile(name = "Pasted.txt", bytes = "Pasted".encodeToByteArray()))),
         isNewSongFromText = true,
@@ -1444,5 +1510,7 @@ private fun setlistEntry(fileName: String, status: ImportPlan.Status) = ImportPl
     status = status,
     sourceFileName = fileName,
 )
+
+private const val PAGE = "https://example.com/riverlight"
 
 private val ZIP_BYTES = byteArrayOf(0x50, 0x4b, 3, 4, 20, 0)

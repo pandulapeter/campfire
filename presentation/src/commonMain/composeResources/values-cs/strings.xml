@@ -183,6 +183,7 @@
     <string name="import_conflicts_mixed">Různě</string>
     <string name="import_loading_title">Čtení souborů</string>
     <string name="import_progress_downloading">Stahování souboru</string>
+    <string name="import_progress_reading_page">Načítání stránky…</string>
     <string name="import_progress_downloading_pictures">Stahování obrázků, na které písně odkazují</string>
     <string name="import_failed_unreachable">Zdroj %1$s není dostupný. Zkontroluj připojení k internetu a zkus to znovu.</string>
     <string name="import_failed_not_found">Na této adrese není nic ke stažení. Platnost odkazu možná vypršela nebo byl odstraněn.</string>
@@ -337,8 +338,10 @@
     <string name="new_song_placeholder_artist">Neznámý interpret</string>
     <string name="paste_clipboard_empty">Ve schránce není žádný text k vložení.</string>
     <string name="paste_only_links">Odkaz není píseň a Campfire neotevírá stránky. Zkopíruj přímo akordy a text.</string>
+    <string name="paste_page_link">Campfire tu nemůže otevírat stránky. Otevři ji v prohlížeči a pak zkopíruj samotnou stránku a vlož ji.</string>
     <string name="paste_too_large">Text je delší než 8 MB, které jeden import zvládne.</string>
     <string name="shared_link_not_imported">Campfire neotevírá webové stránky. Označ text s akordy a nasdílej ten.</string>
+    <string name="page_not_read">Campfire na této stránce nenašel žádnou píseň. Otevři ji v prohlížeči a pak sdílej nebo zkopíruj samotnou stránku.</string>
     <string name="shared_link_from_newer_version">Tento odkaz vytvořila novější verze Campfire. Pokud ho chceš otevřít, aktualizuj Campfire.</string>
     <string name="clipboard_not_campfire_link">To není odkaz Campfire.</string>
     <string name="paste_refused_ios">Campfire nemá povolené vkládání. Rozhoduje o tom volba Vložit z jiných aplikací u Campfire v aplikaci Nastavení.</string>
@@ -537,6 +540,8 @@
     <string name="settings_cover_art_description">Zobrazovat vedle písně obal alba, který uvádí, jednou stažený a uložený v tomto zařízení</string>
     <string name="settings_picture_links">Obrázky z odkazů</string>
     <string name="settings_picture_links_description">Stahovat obrázky, které importovaná píseň uvádí webovou adresou, a ukládat jejich kopii v písni</string>
+    <string name="settings_page_links">Stránky z odkazů</string>
+    <string name="settings_page_links_description">Načítat na tomto zařízení stránku, na kterou vede sdílený nebo vložený odkaz, a brát z ní píseň</string>
     <string name="settings_attachments_description">Přikládat k písním soubory, například PDF s notami nebo nahrávku, a otevírat je přímo z písně</string>
     <string name="settings_group_song_page">Stránka písně</string>
     <string name="preferences_page_song">Píseň</string>

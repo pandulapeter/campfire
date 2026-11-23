@@ -54,6 +54,7 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.import_failed
 import com.pandulapeter.campfire.presentation.resources.import_loading_title
 import com.pandulapeter.campfire.presentation.resources.import_progress_downloading
+import com.pandulapeter.campfire.presentation.resources.import_progress_reading_page
 import com.pandulapeter.campfire.presentation.resources.import_progress_title
 import com.pandulapeter.campfire.presentation.resources.import_review_demo_library
 import com.pandulapeter.campfire.presentation.resources.import_review_from
@@ -237,7 +238,11 @@ internal fun ImportReportScreen(
 @Composable
 private fun ImportReport.title(progress: ImportProgress?) = stringResource(
     when (this) {
-        is ImportReport.Loading -> if (progress?.phase == ImportProgress.Phase.DOWNLOADING) Res.string.import_progress_downloading else Res.string.import_loading_title
+        is ImportReport.Loading -> when (progress?.phase) {
+            ImportProgress.Phase.DOWNLOADING -> Res.string.import_progress_downloading
+            ImportProgress.Phase.READING_PAGE -> Res.string.import_progress_reading_page
+            else -> Res.string.import_loading_title
+        }
         is ImportReport.Failed -> Res.string.import_failed
         is ImportReport.Review -> if (plan.hasEntriesToChoose) Res.string.import_review_title else Res.string.import_review_title_empty
         ImportReport.Importing -> Res.string.import_progress_title

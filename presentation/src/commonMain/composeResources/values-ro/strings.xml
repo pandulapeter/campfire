@@ -185,6 +185,7 @@
     <string name="import_conflicts_mixed">Mixt</string>
     <string name="import_loading_title">Se citesc fișierele</string>
     <string name="import_progress_downloading">Se descarcă fișierul</string>
+    <string name="import_progress_reading_page">Se citește pagina…</string>
     <string name="import_progress_downloading_pictures">Se descarcă imaginile la care trimit cântecele</string>
     <string name="import_failed_unreachable">%1$s nu a putut fi accesat. Verifică conexiunea la internet și încearcă din nou.</string>
     <string name="import_failed_not_found">Nu există nimic de descărcat la această adresă. Linkul poate să fi expirat sau să fi fost eliminat.</string>
@@ -341,8 +342,10 @@
     <string name="new_song_placeholder_artist">Artist necunoscut</string>
     <string name="paste_clipboard_empty">Nu există text în clipboard de lipit.</string>
     <string name="paste_only_links">Un link nu este un cântec, iar Campfire nu deschide pagini. Copiază chiar acordurile și versurile.</string>
+    <string name="paste_page_link">Campfire nu poate deschide pagini aici. Deschide-o în browser, apoi copiază chiar pagina și lipește-o.</string>
     <string name="paste_too_large">Textul depășește cei 8 MB pe care îi poate prelua un import.</string>
     <string name="shared_link_not_imported">Campfire nu deschide pagini web. Selectează textul foii cu acorduri și partajează-l pe acela.</string>
+    <string name="page_not_read">Campfire nu a găsit niciun cântec pe această pagină. Deschide-o în browser, apoi partajează sau copiază chiar pagina.</string>
     <string name="shared_link_from_newer_version">Acest link a fost creat de o versiune mai nouă de Campfire. Actualizează Campfire ca să-l deschizi.</string>
     <string name="clipboard_not_campfire_link">Acesta nu este un link Campfire.</string>
     <string name="paste_refused_ios">Campfire nu a avut voie să lipească. Asta decide opțiunea „Lipire din alte aplicații”, la Campfire în aplicația Configurări.</string>
@@ -542,6 +545,8 @@
     <string name="settings_cover_art_description">Arată lângă cântec coperta de album pe care o indică, descărcând-o o singură dată și păstrând o copie pe acest dispozitiv</string>
     <string name="settings_picture_links">Imagini din linkuri</string>
     <string name="settings_picture_links_description">Descarcă imaginile pe care un cântec importat le indică printr-o adresă web, păstrând o copie în cântec</string>
+    <string name="settings_page_links">Pagini din linkuri</string>
+    <string name="settings_page_links_description">Citește pe acest dispozitiv pagina spre care duce un link partajat sau lipit și preia cântecul din ea</string>
     <string name="settings_attachments_description">Atașează fișiere la cântece, de exemplu un PDF cu partitura sau o înregistrare, și le deschide din cântec</string>
     <string name="settings_group_song_page">Pagina cântecului</string>
     <string name="preferences_page_song">Cântec</string>

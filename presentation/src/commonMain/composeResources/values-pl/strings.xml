@@ -181,6 +181,7 @@
     <string name="import_conflicts_mixed">Mieszane</string>
     <string name="import_loading_title">Odczytywanie plików</string>
     <string name="import_progress_downloading">Pobieranie pliku</string>
+    <string name="import_progress_reading_page">Odczytywanie strony…</string>
     <string name="import_progress_downloading_pictures">Pobieranie obrazów, do których linkują piosenki</string>
     <string name="import_failed_unreachable">Nie udało się połączyć z %1$s. Sprawdź połączenie z internetem i spróbuj ponownie.</string>
     <string name="import_failed_not_found">Pod tym adresem nie ma nic do pobrania. Link mógł wygasnąć lub zostać usunięty.</string>
@@ -334,8 +335,10 @@
     <string name="new_song_placeholder_artist">Nieznany wykonawca</string>
     <string name="paste_clipboard_empty">W schowku nie ma tekstu do wklejenia.</string>
     <string name="paste_only_links">Link to nie piosenka, a Campfire nie otwiera stron. Skopiuj same akordy i tekst.</string>
+    <string name="paste_page_link">Campfire nie może tu otwierać stron. Otwórz ją w przeglądarce, a potem skopiuj samą stronę i ją wklej.</string>
     <string name="paste_too_large">Tekst jest dłuższy niż 8 MB, które mieści jeden import.</string>
     <string name="shared_link_not_imported">Campfire nie otwiera stron internetowych. Zaznacz tekst z akordami i udostępnij go zamiast linku.</string>
+    <string name="page_not_read">Campfire nie znalazł piosenki na tej stronie. Otwórz ją w przeglądarce, a potem udostępnij lub skopiuj samą stronę.</string>
     <string name="shared_link_from_newer_version">Ten link utworzyła nowsza wersja Campfire. Zaktualizuj Campfire, aby go otworzyć.</string>
     <string name="clipboard_not_campfire_link">To nie jest link Campfire.</string>
     <string name="paste_refused_ios">Campfire nie ma zgody na wklejanie. Decyduje o tym opcja „Wklejanie z innych aplikacji” w sekcji Campfire w aplikacji Ustawienia.</string>
@@ -532,6 +535,8 @@
     <string name="settings_cover_art_description">Pokazuj obok piosenki wskazaną w niej okładkę albumu, pobraną raz i przechowywaną na tym urządzeniu</string>
     <string name="settings_picture_links">Obrazy z linków</string>
     <string name="settings_picture_links_description">Pobieraj obrazy, które importowana piosenka wskazuje adresem internetowym, i przechowuj ich kopię w piosence</string>
+    <string name="settings_page_links">Strony z linków</string>
+    <string name="settings_page_links_description">Odczytuj na tym urządzeniu stronę, do której prowadzi udostępniony lub wklejony link, i bierz z niej piosenkę</string>
     <string name="settings_attachments_description">Załączaj pliki do piosenek, na przykład PDF z nutami lub nagranie, i otwieraj je z poziomu piosenki</string>
     <string name="settings_group_song_page">Strona piosenki</string>
     <string name="preferences_page_song">Piosenka</string>

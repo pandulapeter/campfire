@@ -21,10 +21,12 @@ import com.pandulapeter.campfire.data.model.library.LibraryFiles
  * [isPreviewed]) or the editor on it (see [pictureSong]) is what comes up then, and the import screen only for what they turn out to be otherwise. Nothing is written before an Import
  * either way. With the songs switched off nothing is previewed and no editor is started, so the import screen is up from
  * the start, with its warning that what is imported will not be seen; the demo library stays unreviewed whatever the
- * switch.
+ * switch. A page read by its address is the exception among the texts: reading it takes seconds, which the import
+ * screen's loading stage says ("Reading the page…", with Cancel), and the editor its song comes to takes its place.
  */
 internal fun ImportRequest.isReportedWhileRead(areSongsEnabled: Boolean) = shouldReview && (
-    !areSongsEnabled || !isNewSongFromText && (source as? ImportSource.Files)?.files?.let { it.isSingleSong() || it.arePicturesAlone() } != true
+    !areSongsEnabled || source is ImportSource.Page ||
+        !isNewSongFromText && (source as? ImportSource.Files)?.files?.let { it.isSingleSong() || it.arePicturesAlone() } != true
 )
 
 private fun List<ImportedFile>.isSingleSong() = singleOrNull()?.let { LibraryFiles.isSongFileName(it.name) && !LibraryFiles.isArchiveFileName(it.name) } == true

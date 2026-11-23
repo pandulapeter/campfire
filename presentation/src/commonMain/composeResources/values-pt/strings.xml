@@ -164,6 +164,7 @@
     <string name="import_conflicts_mixed">Misto</string>
     <string name="import_loading_title">Lendo os arquivos</string>
     <string name="import_progress_downloading">Baixando o arquivo</string>
+    <string name="import_progress_reading_page">Lendo a página…</string>
     <string name="import_progress_downloading_pictures">Baixando as imagens indicadas pelas músicas</string>
     <string name="import_failed_unreachable">Não foi possível acessar %1$s. Verifique a conexão com a internet e tente de novo.</string>
     <string name="import_failed_not_found">Não há nada para baixar nesse endereço. O link pode ter expirado ou sido removido.</string>
@@ -308,8 +309,10 @@
     <string name="new_song_placeholder_artist">Artista desconhecido</string>
     <string name="paste_clipboard_empty">Não há texto na área de transferência para colar.</string>
     <string name="paste_only_links">Um link não é uma música, e o Campfire não abre páginas. Copie os próprios acordes e a letra.</string>
+    <string name="paste_page_link">O Campfire não consegue abrir páginas aqui. Abra-a no navegador e depois copie a própria página e cole-a.</string>
     <string name="paste_too_large">O texto passa dos 8 MB que uma importação aceita.</string>
     <string name="shared_link_not_imported">O Campfire não abre páginas da web. Selecione o texto da cifra e compartilhe-o.</string>
+    <string name="page_not_read">O Campfire não encontrou nenhuma música nesta página. Abra-a no navegador e depois compartilhe ou copie a própria página.</string>
     <string name="shared_link_from_newer_version">Este link foi criado por uma versão mais nova do Campfire. Atualize o Campfire para abri-lo.</string>
     <string name="clipboard_not_campfire_link">Esse não é um link do Campfire.</string>
     <string name="paste_refused_ios">O Campfire não teve permissão para colar. Isso é definido em Colar de Outros Apps, no Campfire, dentro do app Ajustes.</string>
@@ -503,6 +506,8 @@
     <string name="settings_cover_art_description">Mostra a capa do álbum indicada pela música ao lado dela, baixando-a uma vez e guardando uma cópia neste dispositivo</string>
     <string name="settings_picture_links">Imagens de links</string>
     <string name="settings_picture_links_description">Baixa as imagens que uma música importada indica por um endereço da web, guardando uma cópia na música</string>
+    <string name="settings_page_links">Páginas de links</string>
+    <string name="settings_page_links_description">Lê neste dispositivo a página para a qual um link compartilhado ou colado aponta e tira a música dela</string>
     <string name="settings_attachments_description">Anexa ficheiros às músicas, como um PDF da partitura ou uma gravação, e abre-os a partir da música</string>
     <string name="settings_group_song_page">Página da música</string>
     <string name="preferences_page_song">Música</string>

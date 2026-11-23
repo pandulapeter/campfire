@@ -164,6 +164,7 @@
     <string name="import_conflicts_mixed">Mixed</string>
     <string name="import_loading_title">Reading the files</string>
     <string name="import_progress_downloading">Downloading the file</string>
+    <string name="import_progress_reading_page">Reading the page…</string>
     <string name="import_progress_downloading_pictures">Downloading the pictures the songs link to</string>
     <string name="import_failed_unreachable">%1$s could not be reached. Check the internet connection and try again.</string>
     <string name="import_failed_not_found">There is nothing to download at that address. The link may have expired or been removed.</string>
@@ -306,8 +307,10 @@
     <string name="new_song_placeholder_artist">Unknown artist</string>
     <string name="paste_clipboard_empty">There is no text on the clipboard to paste.</string>
     <string name="paste_only_links">A link is not a song, and Campfire does not open pages. Copy the chords and the lyrics themselves.</string>
+    <string name="paste_page_link">Campfire cannot open pages here. Open the page in your browser, then copy the page itself and paste it.</string>
     <string name="paste_too_large">The text is longer than the 8 MB one import can take.</string>
     <string name="shared_link_not_imported">Campfire does not open web pages. Select the chord sheet\'s text and share that instead.</string>
+    <string name="page_not_read">Campfire could not find a song on this page. Open it in your browser, then share or copy the page itself.</string>
     <string name="shared_link_from_newer_version">This link was made by a newer version of Campfire. Update Campfire to open it.</string>
     <string name="clipboard_not_campfire_link">That isn\'t a Campfire link.</string>
     <string name="paste_refused_ios">Campfire was not allowed to paste. Paste from Other Apps, under Campfire in the Settings app, decides this.</string>
@@ -501,6 +504,8 @@
     <string name="settings_cover_art_description">Show the album cover a song names next to it, downloading it once and keeping a copy on this device</string>
     <string name="settings_picture_links">Pictures from links</string>
     <string name="settings_picture_links_description">Download the pictures an imported song names by a web address, keeping a copy in the song</string>
+    <string name="settings_page_links">Pages from links</string>
+    <string name="settings_page_links_description">Read the page a shared or pasted link points to on this device, taking the song from it</string>
     <string name="settings_attachments_description">Attach files to songs, such as a PDF of the sheet music or a recording, and open them from the song</string>
     <string name="settings_group_song_page">Song page</string>
     <string name="preferences_page_song">Song</string>

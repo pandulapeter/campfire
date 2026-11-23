@@ -164,6 +164,7 @@
     <string name="import_conflicts_mixed">Vegyes</string>
     <string name="import_loading_title">Fájlok beolvasása</string>
     <string name="import_progress_downloading">A fájl letöltése</string>
+    <string name="import_progress_reading_page">Az oldal beolvasása…</string>
     <string name="import_progress_downloading_pictures">A dalokban linkelt képek letöltése</string>
     <string name="import_failed_unreachable">%1$s nem érhető el. Ellenőrizd az internetkapcsolatot, és próbáld újra.</string>
     <string name="import_failed_not_found">Ezen a címen nincs mit letölteni. Lehet, hogy a link lejárt, vagy törölték.</string>
@@ -306,8 +307,10 @@
     <string name="new_song_placeholder_artist">Ismeretlen előadó</string>
     <string name="paste_clipboard_empty">A vágólapon nincs beilleszthető szöveg.</string>
     <string name="paste_only_links">Egy link nem dal, és a Campfire nem nyit meg weboldalakat. Magukat az akkordokat és a dalszöveget másold ki.</string>
+    <string name="paste_page_link">A Campfire itt nem tud oldalakat megnyitni. Nyisd meg a böngésződben, majd magát az oldalt másold ki és illeszd be.</string>
     <string name="paste_too_large">A szöveg hosszabb annál a 8 MB-nál, amennyit egy importálás feldolgoz.</string>
     <string name="shared_link_not_imported">A Campfire nem nyit meg weboldalakat. Jelöld ki az akkordokat és a dalszöveget, és azt oszd meg.</string>
+    <string name="page_not_read">A Campfire nem talált dalt ezen az oldalon. Nyisd meg a böngésződben, majd magát az oldalt oszd meg vagy másold ki.</string>
     <string name="shared_link_from_newer_version">Ezt a linket a Campfire egy újabb verziója készítette. Frissítsd a Campfire-t, hogy megnyithasd.</string>
     <string name="clipboard_not_campfire_link">Ez nem Campfire-link.</string>
     <string name="paste_refused_ios">A Campfire nem kapott engedélyt a beillesztésre. Ezt a Beállítások appban, a Campfire alatt a „Beillesztés más appokból” dönti el.</string>
@@ -501,6 +504,8 @@
     <string name="settings_cover_art_description">A dalokban megadott albumborítók megjelenítése, amelyeket az alkalmazás egyszer letölt, majd ezen az eszközön tárol</string>
     <string name="settings_picture_links">Képek linkekről</string>
     <string name="settings_picture_links_description">Az importált dalokban webcímmel megadott képek letöltése, egy másolatukat a dalban tárolva</string>
+    <string name="settings_page_links">Oldalak linkekből</string>
+    <string name="settings_page_links_description">A megosztott vagy beillesztett link oldalának beolvasása ezen az eszközön, és a dal kiemelése belőle</string>
     <string name="settings_attachments_description">Fájlok csatolása a dalokhoz, például a kotta PDF-je vagy egy felvétel, és megnyitásuk a dalból</string>
     <string name="settings_group_song_page">Daloldal</string>
     <string name="preferences_page_song">Dal</string>

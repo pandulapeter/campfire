@@ -62,6 +62,7 @@ import com.pandulapeter.campfire.presentation.resources.onboarding_clipboard_lin
 import com.pandulapeter.campfire.presentation.resources.onboarding_clipboard_link_question
 import com.pandulapeter.campfire.presentation.resources.paste_clipboard_empty
 import com.pandulapeter.campfire.presentation.resources.paste_only_links
+import com.pandulapeter.campfire.presentation.resources.paste_page_link
 import com.pandulapeter.campfire.presentation.resources.paste_too_large
 import com.pandulapeter.campfire.presentation.resources.shared_link_from_newer_version
 import com.pandulapeter.campfire.presentation.resources.clipboard_not_campfire_link
@@ -241,6 +242,7 @@ private fun messageText(current: Message?): String? =
         Message.PastedOnlyLinks -> stringResource(Res.string.paste_only_links)
         Message.PastedTextTooLarge -> stringResource(Res.string.paste_too_large)
         Message.SharedLinkNotImported -> stringResource(Res.string.shared_link_not_imported)
+        Message.PageLinkNotReadHere -> stringResource(Res.string.paste_page_link)
         Message.SharedLinkFromNewerVersion -> stringResource(Res.string.shared_link_from_newer_version)
         Message.LinkCopied -> stringResource(Res.string.share_link_copied)
         Message.QrCodeSaved -> stringResource(Res.string.share_qr_code_saved)

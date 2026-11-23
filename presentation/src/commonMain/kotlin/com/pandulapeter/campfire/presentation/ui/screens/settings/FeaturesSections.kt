@@ -29,6 +29,8 @@ import com.pandulapeter.campfire.presentation.resources.song_details_info_attach
 import com.pandulapeter.campfire.presentation.resources.settings_group_online
 import com.pandulapeter.campfire.presentation.resources.settings_group_playing
 import com.pandulapeter.campfire.presentation.resources.settings_metronome_description
+import com.pandulapeter.campfire.presentation.resources.settings_page_links
+import com.pandulapeter.campfire.presentation.resources.settings_page_links_description
 import com.pandulapeter.campfire.presentation.resources.settings_picture_links
 import com.pandulapeter.campfire.presentation.resources.settings_picture_links_description
 import com.pandulapeter.campfire.presentation.resources.settings_random_picks_description
@@ -54,16 +56,20 @@ import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSection
  * The parts of the app a reader can do without, each a switch that takes it out of every screen it is on, so that a
  * singer is not handed a metronome and a band that plays from one list is not handed a setlist tab. They follow the
  * tabs of the navigation in their order - songs, setlists, metronome, tuner, chords, scales - and how a song is read is
- * none of theirs: that is the Song and the Chords tabs'. The two switches that let the app reach the network
- * are a group of their own, so that what can make a request is found in one place rather than among the rest.
+ * none of theirs: that is the Song and the Chords tabs'. The switches that let the app reach the network are a group
+ * of their own, so that what can make a request is found in one place rather than among the rest.
+ *
+ * @param isPageLoadingSupported Whether this platform can read a page by its address at all; where it cannot, Pages from
+ *   links would switch nothing, and is not offered.
  */
 @Composable
 internal fun FeaturesSections(
     preferencesController: PreferencesController,
     userPreferences: UserPreferences?,
+    isPageLoadingSupported: Boolean,
 ) {
     PlayingSection(preferencesController = preferencesController, userPreferences = userPreferences)
-    OnlineSection(preferencesController = preferencesController, userPreferences = userPreferences)
+    OnlineSection(preferencesController = preferencesController, userPreferences = userPreferences, isPageLoadingSupported = isPageLoadingSupported)
 }
 
 @Composable
@@ -150,8 +156,9 @@ private fun EverythingOffCard() = WarningCard(
 private fun OnlineSection(
     preferencesController: PreferencesController,
     userPreferences: UserPreferences?,
+    isPageLoadingSupported: Boolean,
 ) = SettingsSection(title = stringResource(Res.string.settings_group_online)) {
-    // All three are about songs, so they are disabled while the songs are off, the way the setlists are.
+    // All of them are about songs, so they are disabled while the songs are off, the way the setlists are.
     val areSongsEnabled = userPreferences?.areSongsEnabled != false
     // Off, nothing is asked of either catalogue for a song's details: the button in the Edit song details form is gone.
     SwitchListItem(
@@ -178,4 +185,15 @@ private fun OnlineSection(
         isEnabled = areSongsEnabled,
         onCheckedChange = preferencesController::setPictureLinkDownloadEnabled,
     )
+    // Off, a page shared or pasted by its address is answered with a sentence rather than read; a platform without a web
+    // view has nothing to switch. Whether it is offered never changes while the app runs, so it is no row that comes and goes.
+    if (isPageLoadingSupported) {
+        SwitchListItem(
+            title = stringResource(Res.string.settings_page_links),
+            description = stringResource(Res.string.settings_page_links_description),
+            isChecked = userPreferences?.isPageLinkLoadingEnabled == true,
+            isEnabled = areSongsEnabled,
+            onCheckedChange = preferencesController::setPageLinkLoadingEnabled,
+        )
+    }
 }

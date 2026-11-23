@@ -164,6 +164,7 @@
     <string name="import_conflicts_mixed">Gemischt</string>
     <string name="import_loading_title">Dateien werden gelesen</string>
     <string name="import_progress_downloading">Datei wird heruntergeladen</string>
+    <string name="import_progress_reading_page">Seite wird gelesen…</string>
     <string name="import_progress_downloading_pictures">Die verlinkten Bilder der Songs werden heruntergeladen</string>
     <string name="import_failed_unreachable">%1$s ist nicht erreichbar. Prüfe die Internetverbindung und versuche es erneut.</string>
     <string name="import_failed_not_found">Unter dieser Adresse gibt es nichts herunterzuladen. Der Link ist vielleicht abgelaufen oder wurde entfernt.</string>
@@ -306,8 +307,10 @@
     <string name="new_song_placeholder_artist">Unbekannter Interpret</string>
     <string name="paste_clipboard_empty">In der Zwischenablage ist kein Text zum Einfügen.</string>
     <string name="paste_only_links">Ein Link ist kein Song, und Campfire öffnet keine Seiten. Kopiere die Akkorde und den Text selbst.</string>
+    <string name="paste_page_link">Campfire kann hier keine Seiten öffnen. Öffne sie in deinem Browser, kopiere dann die Seite selbst und füge sie ein.</string>
     <string name="paste_too_large">Der Text ist länger als die 8 MB, die ein Import aufnehmen kann.</string>
     <string name="shared_link_not_imported">Campfire öffnet keine Webseiten. Markiere den Text des Akkordblatts und teile stattdessen diesen.</string>
+    <string name="page_not_read">Campfire hat auf dieser Seite keinen Song gefunden. Öffne sie in deinem Browser und teile oder kopiere dann die Seite selbst.</string>
     <string name="shared_link_from_newer_version">Dieser Link wurde mit einer neueren Version von Campfire erstellt. Aktualisiere Campfire, um ihn zu öffnen.</string>
     <string name="clipboard_not_campfire_link">Das ist kein Campfire-Link.</string>
     <string name="paste_refused_ios">Campfire durfte nicht einfügen. Das legt „Aus anderen Apps einsetzen“ unter Campfire in der Einstellungen-App fest.</string>
@@ -501,6 +504,8 @@
     <string name="settings_cover_art_description">Zeigt neben einem Song das Albumcover, das er nennt; es wird einmal heruntergeladen und als Kopie auf diesem Gerät behalten</string>
     <string name="settings_picture_links">Bilder aus Links</string>
     <string name="settings_picture_links_description">Lädt die Bilder herunter, die ein importierter Song mit einer Webadresse nennt, und behält eine Kopie im Song</string>
+    <string name="settings_page_links">Seiten aus Links</string>
+    <string name="settings_page_links_description">Liest die Seite, auf die ein geteilter oder eingefügter Link zeigt, auf diesem Gerät und übernimmt den Song daraus</string>
     <string name="settings_attachments_description">Hängt Dateien an Songs an, etwa ein PDF der Noten oder eine Aufnahme, und öffnet sie aus dem Song</string>
     <string name="settings_group_song_page">Song-Seite</string>
     <string name="preferences_page_song">Song</string>

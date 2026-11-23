@@ -35,6 +35,7 @@ fun interface ImportNotifier {
  * @param downloadingPictures What to say while the pictures an import's songs name by address are downloaded, which,
  *   like [reading] and [comparing], is part of the unpacking's work and named as the import screen names it.
  * @param finishing What to say once the write's files are in, as the import screen does.
+ * @param readingPage What to say while a page shared by its address is read, which is the download's work.
  * @param sizeUnits A size's number in bytes, kilobytes, megabytes, and gigabytes, in that order, as the screen writes them.
  * @param decimalSeparator What goes between a size's whole number and its tenths, in the app's language.
  * @param cancelLabel The label of the action that cancels an import still being read, where the platform can offer one.
@@ -50,6 +51,7 @@ data class ImportNotification(
     val reading: String,
     val comparing: String,
     val finishing: String,
+    val readingPage: String,
     val sizeUnits: List<String>,
     val decimalSeparator: String,
     val cancelLabel: String,
@@ -73,7 +75,7 @@ data class ImportNotification(
      */
     fun toWords(): List<String> = listOf(channelName, title) +
         listOf(receiving, downloading, unpacking).flatMap { listOf(it.line, it.bytesOfTotal, it.bytesSoFar) } +
-        listOf(writing, decimalSeparator, cancelLabel, downloadingPictures, reading, comparing, finishing) + sizeUnits
+        listOf(writing, decimalSeparator, cancelLabel, downloadingPictures, reading, comparing, finishing, readingPage) + sizeUnits
 
     companion object {
 
@@ -94,12 +96,13 @@ data class ImportNotification(
                 reading = words[15],
                 comparing = words[16],
                 finishing = words[17],
-                sizeUnits = words.subList(18, WORD_COUNT),
+                readingPage = words[18],
+                sizeUnits = words.subList(19, WORD_COUNT),
             )
         }
 
-        /** Eighteen words before the four size units. */
-        private const val WORD_COUNT = 22
+        /** Nineteen words before the four size units. */
+        private const val WORD_COUNT = 23
     }
 }
 

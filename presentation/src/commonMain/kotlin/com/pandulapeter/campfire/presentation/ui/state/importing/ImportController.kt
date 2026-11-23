@@ -142,13 +142,8 @@ internal class ImportController(
      */
     fun importFiles(files: List<ImportedFile>) = enqueueImport(ImportSource.Files(files), shouldOpenSong = true)
 
-    /**
-     * A file somebody shared as an address, downloaded once and reviewed like any other. A link to one song is previewed,
-     * as a file opened with the app is.
-     */
-    fun importFromAddress(url: String) {
-        enqueueImport(ImportSource.Address(url), shouldOpenSong = true)
-    }
+    /** A file shared as an address, downloaded once and reviewed like any other, previewed where it is one song. */
+    fun importFromAddress(url: String) = enqueueImport(ImportSource.Address(url), shouldOpenSong = true)
 
     /**
      * A song or setlist shared as a Campfire link, however it arrived: opened from the system, pasted, dropped, or shared
@@ -383,14 +378,18 @@ internal class ImportController(
                 // preview on a screen the switch removes, and sends the batch to the review.
                 val areSongsEnabled = areSongsEnabled()
                 val sharedLink = (request.source as? ImportSource.SharedLink)?.link
+                // A page's address is read with the import screen up (isReportedWhileRead), which its editor replaces.
+                val isPage = request.source is ImportSource.Page
                 request.forgetSource()
                 val plan = outcome.plan.withImageFilesSkipped()
-                val newSong = if (!isReviewed && areSongsEnabled) (if (request.isNewSongFromText) plan.newSongOf() else outcome.plan.pictureSong()) else null
+                val newSong = if ((!isReviewed || isPage) && areSongsEnabled) (if (request.isNewSongFromText) plan.newSongOf() else outcome.plan.pictureSong()) else null
                 val isPreviewed = request.shouldReview && areSongsEnabled && !request.isNewSongFromText && plan.isPreviewed
                 if (newSong != null) {
                     // The editor is not an import, and leaving it unsaved writes nothing: no progress bar runs under it,
                     // and it is the queue that opens it, since it may have to wait for whatever is on screen.
                     _isImporting.value = false
+                    if (isReviewed) reportState.closeLoading()
+                    activeRequest = null
                     return newSong
                 } else if (request.shouldReview && areSongsEnabled && (plan.librarySong != null || plan.librarySetlist != null)) {
                     // The library holds the song or the setlist as it is, so there is nothing to review and nothing to write: it is opened.

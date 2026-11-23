@@ -184,6 +184,7 @@
     <string name="import_conflicts_mixed">משולב</string>
     <string name="import_loading_title">קוראים את הקבצים</string>
     <string name="import_progress_downloading">מורידים את הקובץ</string>
+    <string name="import_progress_reading_page">קוראים את הדף…</string>
     <string name="import_progress_downloading_pictures">מורידים את התמונות שהשירים מקשרים אליהן</string>
     <string name="import_failed_unreachable">אין גישה אל %1$s. בדקו את החיבור לאינטרנט ונסו שוב.</string>
     <string name="import_failed_not_found">אין מה להוריד בכתובת הזו. ייתכן שהקישור פג או הוסר.</string>
@@ -340,8 +341,10 @@
     <string name="new_song_placeholder_artist">אמן לא ידוע</string>
     <string name="paste_clipboard_empty">אין בלוח טקסט להדבקה.</string>
     <string name="paste_only_links">קישור הוא לא שיר, ו־Campfire לא פותח דפים. העתיקו את האקורדים ואת המילים עצמם.</string>
+    <string name="paste_page_link">Campfire לא יכול לפתוח כאן דפים. פתחו אותו בדפדפן, ואז העתיקו את הדף עצמו והדביקו אותו.</string>
     <string name="paste_too_large">הטקסט ארוך מ־8 MB, המגבלה של ייבוא אחד.</string>
     <string name="shared_link_not_imported">Campfire לא פותח דפי אינטרנט. סמנו את הטקסט של דף האקורדים ושתפו אותו במקום.</string>
+    <string name="page_not_read">Campfire לא מצא שיר בדף הזה. פתחו אותו בדפדפן, ואז שתפו או העתיקו את הדף עצמו.</string>
     <string name="shared_link_from_newer_version">הקישור הזה נוצר בגרסה חדשה יותר של Campfire. כדי לפתוח אותו, עדכנו את Campfire.</string>
     <string name="clipboard_not_campfire_link">זה לא קישור של Campfire.</string>
     <string name="paste_refused_ios">ל־Campfire אין הרשאה להדביק. ההגדרה “הדבקה מאפליקציות אחרות”, תחת Campfire באפליקציית ההגדרות, קובעת זאת.</string>
@@ -541,6 +544,8 @@
     <string name="settings_cover_art_description">הצגת עטיפת האלבום ששיר מציין לצידו, בהורדה חד־פעמית ושמירת עותק במכשיר הזה</string>
     <string name="settings_picture_links">תמונות מקישורים</string>
     <string name="settings_picture_links_description">הורדת התמונות ששיר מיובא מציין בכתובת אינטרנט, ושמירת עותק שלהן בשיר</string>
+    <string name="settings_page_links">דפים מקישורים</string>
+    <string name="settings_page_links_description">קריאת הדף שאליו מוביל קישור ששותף או הודבק במכשיר הזה, ולקיחת השיר ממנו</string>
     <string name="settings_attachments_description">צירוף קבצים לשירים, כמו PDF של התווים או הקלטה, ופתיחתם מתוך השיר</string>
     <string name="settings_group_song_page">עמוד השיר</string>
     <string name="preferences_page_song">שיר</string>

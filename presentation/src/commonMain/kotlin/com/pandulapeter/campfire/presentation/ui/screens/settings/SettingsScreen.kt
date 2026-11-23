@@ -267,7 +267,11 @@ private fun SettingsTabContent(
                 selectedTab = { viewModel.navigator.settingsTab },
                 onConnectSyncProvider = viewModel::connectSyncProvider,
             )
-            SettingsTab.FEATURES -> FeaturesSections(preferencesController = viewModel.preferencesController, userPreferences = userPreferences)
+            SettingsTab.FEATURES -> FeaturesSections(
+                preferencesController = viewModel.preferencesController,
+                userPreferences = userPreferences,
+                isPageLoadingSupported = viewModel.pastedSongController.isPageLoadingSupported,
+            )
             SettingsTab.ABOUT -> AboutSections(
                 showDialog = viewModel.dialogHost::showDialog,
                 onOnboardingClicked = viewModel::openOnboarding,

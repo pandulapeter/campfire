@@ -23,6 +23,7 @@ class ImportProgressContentTest {
             val writes = when (phase) {
                 ImportProgress.Phase.RECEIVING,
                 ImportProgress.Phase.DOWNLOADING,
+                ImportProgress.Phase.READING_PAGE,
                 ImportProgress.Phase.UNPACKING,
                 ImportProgress.Phase.DOWNLOADING_PICTURES,
                 ImportProgress.Phase.READING,

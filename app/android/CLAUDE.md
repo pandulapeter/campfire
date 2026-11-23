@@ -50,7 +50,8 @@
   MIME type says (`pictureFileName`), since the import knows a lone picture by its name.
 - **Photo picker backport**: a disabled `ModuleDependencies` service asks Play services for its photo picker on Android
   9 and 10, which have none (`ui/platform/CLAUDE.md`).
-- **Share**: a stream wins over text in the same intent (the text is a caption).
+- **Share**: a stream wins over text in the same intent (the text is a caption). A text that is a page's address (a
+  browser's Share, a site's call to action) is read by the app itself in an offscreen `WebView` (`presentation/CLAUDE.md`).
 - **Shared links**: an `autoVerify` App Link for `https://campfire-songbook.com/s/` (never `/app/`, the web app) and
   `campfire://s/`. `handle` checks the OAuth redirect first; a link `ShareLinks.parse` reads goes to
   `shareLinksToImport`, one it doesn't only brings the app forward (never the file import). The `.debug` package is not

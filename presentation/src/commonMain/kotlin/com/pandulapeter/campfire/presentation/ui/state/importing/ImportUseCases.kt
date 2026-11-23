@@ -10,9 +10,12 @@
 package com.pandulapeter.campfire.presentation.ui.state.importing
 
 import com.pandulapeter.campfire.domain.api.importing.ApplyImportUseCase
+import com.pandulapeter.campfire.domain.api.importing.CanLoadPagesUseCase
 import com.pandulapeter.campfire.domain.api.importing.ClearImportStagingUseCase
 import com.pandulapeter.campfire.domain.api.importing.DeleteImportStagingUseCase
 import com.pandulapeter.campfire.domain.api.importing.DownloadImportFileUseCase
+import com.pandulapeter.campfire.domain.api.importing.LoadPageUseCase
+import com.pandulapeter.campfire.domain.api.importing.PageCropper
 import com.pandulapeter.campfire.domain.api.importing.PrepareImportUseCase
 import com.pandulapeter.campfire.domain.api.importing.ReceiveImportArchiveUseCase
 import com.pandulapeter.campfire.domain.api.library.GetSharedLinkImportUseCase
@@ -28,4 +31,7 @@ class ImportUseCases(
     internal val clearImportStaging: ClearImportStagingUseCase,
     internal val deleteImportStaging: DeleteImportStagingUseCase,
     internal val receiveImportArchive: ReceiveImportArchiveUseCase,
+    internal val loadPage: LoadPageUseCase,
+    internal val canLoadPages: CanLoadPagesUseCase,
+    internal val pageCropper: PageCropper,
 )

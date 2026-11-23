@@ -57,7 +57,15 @@ which the script checks; everything else is handed the holders, state, and callb
   `<title> Chords by <artist>` (`sharedTextTitle`): a bare " by " or a dash is never split.
 - A blank, links-only (an address, alone or beside a one-line title), or over-8 MB paste or share is a snackbar before
   anything is prepared, except that a blank share goes to the import, reported as skipped; several shared texts are one
-  import. Nothing is fetched.
+  import.
+- **A shared link is read once on the device when the switch allows it**: a text that is one page's address
+  (`pageAddressIn`: alone, or among at most three short lines of a call to action or a title; never Campfire's own
+  site) is `ImportSource.Page`, read by `LoadPageUseCase` (an offscreen web view, `PageSource`) with the import screen's
+  loading stage up ("Reading the page…", Cancel), then cropped and converted as a pasted page, titled by the share's
+  subject, else the page's title; its song's editor takes the loading screen's place. A page not read, or one the page
+  model finds no song on (asked before conversion), is the failure stage's `PAGE_NOT_READ` sentence with Try again,
+  which reads it again. With Pages from links off it is the links-only snackbar as before; where the platform cannot
+  read pages (desktop, web) it is `Message.PageLinkNotReadHere`: copy the page itself.
 - A text that is one Campfire link and nothing else (`sharedLinkIn`) is that link's import; a link beside other words
   stays text. Every way ends in `ImportController.importSharedLink`: a newer version's link is a snackbar, any other is
   downloaded from the address `SharedLink.Readable.downloadUrl` builds (never one the text names) and reviewed, unless

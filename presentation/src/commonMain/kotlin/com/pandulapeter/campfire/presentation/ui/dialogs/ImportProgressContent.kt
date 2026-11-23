@@ -92,5 +92,5 @@ private fun ImportProgressLine.text() = when (this) {
 
 /** The phases that only download, read and compare: the ones after them write, and an import is never left half written. */
 internal val ImportProgress.Phase.isCancellable
-    get() = this == ImportProgress.Phase.RECEIVING || this == ImportProgress.Phase.DOWNLOADING || this == ImportProgress.Phase.UNPACKING ||
-        this == ImportProgress.Phase.DOWNLOADING_PICTURES || this == ImportProgress.Phase.READING || this == ImportProgress.Phase.COMPARING
+    get() = this == ImportProgress.Phase.RECEIVING || this == ImportProgress.Phase.DOWNLOADING || this == ImportProgress.Phase.READING_PAGE ||
+        this == ImportProgress.Phase.UNPACKING || this == ImportProgress.Phase.DOWNLOADING_PICTURES || this == ImportProgress.Phase.READING || this == ImportProgress.Phase.COMPARING

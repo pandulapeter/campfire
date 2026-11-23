@@ -16,11 +16,14 @@ import com.pandulapeter.campfire.data.model.importing.ImportPlan
 import com.pandulapeter.campfire.data.model.importing.ImportProgress
 import com.pandulapeter.campfire.data.model.importing.ImportResult
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
+import com.pandulapeter.campfire.data.model.importing.LoadedPage
 import com.pandulapeter.campfire.data.model.importing.StagedFile
 import com.pandulapeter.campfire.data.model.importing.StagingRefusedException
 import com.pandulapeter.campfire.data.model.isOutOfSpace
 import com.pandulapeter.campfire.data.model.importing.IncomingContent
 import com.pandulapeter.campfire.presentation.ApplicationScope
+import com.pandulapeter.campfire.presentation.ui.platform.sharedTextTitle
+import com.pandulapeter.campfire.presentation.ui.platform.sharedTextsToImportedFiles
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
@@ -265,7 +268,10 @@ class ImportWork(
         }
     }
 
-    /** The download, where the batch is an address or a shared link, and the reading and comparing, as one cancellable piece of work. */
+    /**
+     * The download, where the batch is an address or a shared link, or the page read, where it is a page's address, and
+     * the reading and comparing, as one cancellable piece of work.
+     */
     private suspend fun prepared(request: ImportRequest, count: Int): Preparation {
         val enter = { state: ImportWorkState -> if (count == preparationCount && !isWriting) _state.value = state }
         val throttle = ImportProgressThrottle(TimeSource.Monotonic) { progress.value = it }
@@ -286,6 +292,10 @@ class ImportWork(
                         ImportDownload.Unreachable -> return Preparation.Failed(ImportFailure.UNREACHABLE)
                     }
                 }
+
+                // The source stays the address, so Try again reads the page again rather than the text it came to.
+                is ImportSource.Page -> pageFiles(request = request, source = source, enter = enter, throttle = throttle)
+                    ?: return Preparation.Failed(ImportFailure.PAGE_NOT_READ)
 
                 is ImportSource.SharedLink -> source.file?.let(::listOf) ?: run {
                     enter(ImportWorkState.DOWNLOADING)
@@ -309,6 +319,35 @@ class ImportWork(
         } finally {
             enter(ImportWorkState.IDLE)
         }
+    }
+
+    /**
+     * The page [source] names, read on the device, as the one text a paste of it would be ([ImportedFile.isPageText], so
+     * its clutter is cropped), or null where it came to nothing worth converting: not read, or holding no song by the
+     * page model's reading, which says so before the import makes a one-line song of a menu. A model that throws is no
+     * reason to refuse the page, which is then converted whole, as a paste is. A page that came with no title of its own
+     * (a share's subject) is titled by the page's.
+     */
+    private suspend fun pageFiles(
+        request: ImportRequest,
+        source: ImportSource.Page,
+        enter: (ImportWorkState) -> Unit,
+        throttle: ImportProgressThrottle,
+    ): List<ImportedFile>? {
+        enter(ImportWorkState.DOWNLOADING)
+        throttle.offer(ImportProgress(ImportProgress.Phase.READING_PAGE, fileName = source.name))
+        throttle.flush()
+        val page = useCases.loadPage(source.url) as? LoadedPage.Read ?: return null
+        val holdsSong = try {
+            useCases.pageCropper.songLinesOf(page.text.lines()) != null
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: Exception) {
+            true
+        }
+        if (!holdsSong) return null
+        if (request.suggestion == null) request.suggestion = sharedTextTitle(page.title)
+        return sharedTextsToImportedFiles(listOf(page.text), page.title).map { it.copy(isPageText = true) }
     }
 
     /**

@@ -48,6 +48,7 @@ internal fun ImportNotificationEffect() {
         reading = stringResource(ImportProgress.Phase.READING.label),
         comparing = stringResource(ImportProgress.Phase.COMPARING.label),
         finishing = stringResource(ImportProgress.Phase.FINISHING.label),
+        readingPage = stringResource(ImportProgress.Phase.READING_PAGE.label),
         sizeUnits = SIZE_UNITS.map { stringResource(it, SIZE) },
         decimalSeparator = stringResource(Res.string.settings_library_size_decimal_separator),
         cancelLabel = stringResource(Res.string.cancel),

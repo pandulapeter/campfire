@@ -40,6 +40,11 @@ class PastedSongControllerTest {
     private val isImporting = MutableStateFlow(false)
     private val isPerformanceModeEnabled = MutableStateFlow(false)
     private val queued = mutableListOf<Pair<List<ImportedFile>, Boolean>>()
+    private val pages = mutableListOf<String>()
+    private var isPageLoadingSupported = true
+
+    /** Off unless a test turns it on, so the tests of what a link is without it read as they did before pages were read. */
+    private var isPageLoadingEnabled = false
     private val suggestions = mutableListOf<SharedTextTitle?>()
     private val links = mutableListOf<SharedLink>()
     private val importSettled = CompletableDeferred<Unit>()
@@ -56,8 +61,12 @@ class PastedSongControllerTest {
             backStack = backStack,
             isImporting = isImporting,
             isPerformanceModeEnabled = isPerformanceModeEnabled,
-            enqueueImport = { files, isNewSongFromText, suggestion ->
-                queued += files to isNewSongFromText
+            enqueueImport = { source, isNewSongFromText, suggestion ->
+                when (source) {
+                    is ImportSource.Files -> queued += source.files to isNewSongFromText
+                    is ImportSource.Page -> pages += source.url
+                    else -> error("Not a source a text becomes: $source")
+                }
                 suggestions += suggestion
                 importSettled
             },
@@ -65,6 +74,8 @@ class PastedSongControllerTest {
                 links += it
                 importSettled
             },
+            isPageLoadingSupported = isPageLoadingSupported,
+            isPageLoadingEnabled = { isPageLoadingEnabled },
         )
     }
 
@@ -245,6 +256,48 @@ class PastedSongControllerTest {
         assertTrue(links.isEmpty())
         assertEquals(listOf(Message.SharedLinkNotImported), messages)
         assertEquals(1, queued.size)
+    }
+
+    @Test
+    fun `a pasted or shared page address is read where pages from links is on`() = runTest {
+        isPageLoadingEnabled = true
+        val controller = controller()
+        controller.newSongFromText("https://example.com/song")
+        controller.importSharedText(SharedTextPayload(texts = listOf("Check out Riverlight on Example Chords: https://example.com/riverlight."), subject = "Riverlight Chords by The Invented Band"))
+        assertEquals(listOf("https://example.com/song", "https://example.com/riverlight"), pages)
+        assertEquals(listOf(null, SharedTextTitle(title = "Riverlight", artist = "The Invented Band")), suggestions)
+        assertTrue(queued.isEmpty())
+        assertTrue(messages.isEmpty())
+    }
+
+    @Test
+    fun `a chord sheet with its source address after it is cropped as text rather than read as a page`() = runTest {
+        isPageLoadingEnabled = true
+        controller().importSharedText(SharedTextPayload(texts = listOf("Am  C\nHello\nG  F\nThere\nAm\nOnce more\nhttps://example.com/song"), subject = null))
+        assertTrue(pages.isEmpty())
+        assertTrue(queued.single().first.single().isPageText)
+    }
+
+    @Test
+    fun `a Campfire link is never read as a page`() = runTest {
+        isPageLoadingEnabled = true
+        val controller = controller()
+        controller.newSongFromText(LINK)
+        controller.newSongFromText("Listen to this: $LINK")
+        assertEquals(1, links.size)
+        assertTrue(pages.isEmpty())
+    }
+
+    @Test
+    fun `where no page can be read a page address says to copy the page itself`() = runTest {
+        isPageLoadingSupported = false
+        isPageLoadingEnabled = true
+        val controller = controller()
+        controller.newSongFromText("https://example.com/song")
+        controller.importSharedText(SharedTextPayload(texts = listOf("Check this out: https://example.com/song"), subject = null))
+        assertEquals(listOf(Message.PageLinkNotReadHere, Message.PageLinkNotReadHere), messages)
+        assertTrue(pages.isEmpty())
+        assertTrue(queued.isEmpty())
     }
 }
 

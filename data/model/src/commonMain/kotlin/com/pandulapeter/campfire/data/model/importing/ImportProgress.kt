@@ -30,6 +30,9 @@ data class ImportProgress(
         /** An archive that arrived being copied into the staging folder before it is read. */
         RECEIVING,
         DOWNLOADING,
+
+        /** A web page shared or pasted by its address being read on the device (`LoadPageUseCase`); it counts nothing. */
+        READING_PAGE,
         UNPACKING,
         DOWNLOADING_PICTURES,
         READING,

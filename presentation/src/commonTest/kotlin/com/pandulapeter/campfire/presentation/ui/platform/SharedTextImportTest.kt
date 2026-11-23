@@ -145,4 +145,35 @@ class SharedTextImportTest {
         // Two bytes each in UTF-8, so half as many characters already reach the limit.
         assertFalse("é".repeat(limit / 2 + 1).fitsImport())
     }
+
+    @Test
+    fun `an address alone is a page to read`() {
+        assertEquals("https://example.com/song", pageAddressIn("https://example.com/song"))
+        assertEquals("https://example.com/song", pageAddressIn("  https://example.com/song \n"))
+    }
+
+    @Test
+    fun `an address inside a site's call to action or beside its title is that page`() {
+        assertEquals("https://example.com/w?id=1", pageAddressIn("Check out Wonderwall on Example Chords: https://example.com/w?id=1."))
+        assertEquals("https://example.com/w", pageAddressIn("Wonderwall Chords by Oasis\nhttps://example.com/w"))
+        assertEquals("https://example.com/w", pageAddressIn("I'm learning this (https://example.com/w)!"))
+        assertEquals("https://example.com/w", pageAddressIn("https://example.com/w\nShared from Example Chords\nhttps://example.com/w"))
+    }
+
+    @Test
+    fun `two different addresses or a chord sheet are no page`() {
+        assertEquals(null, pageAddressIn("https://example.com/a\nhttps://example.com/b"))
+        assertEquals(null, pageAddressIn("Am  C\nHello\nG  F\nThere\nAm\nOnce more\nhttps://example.com/song"))
+        assertEquals(null, pageAddressIn("Wonderwall " + "word ".repeat(50) + "https://example.com/w"))
+        assertEquals(null, pageAddressIn("Am  C\nHello"))
+        assertEquals(null, pageAddressIn("ftp://example.com/song"))
+    }
+
+    @Test
+    fun `Campfire's own addresses are never a page to read`() {
+        assertEquals(null, pageAddressIn("https://campfire-songbook.com/s/#1.song.abcdefghijklmnop.fileid.rlkey.Riverlight"))
+        assertEquals(null, pageAddressIn("Open this in Campfire: https://campfire-songbook.com/app/#1.song.a.b.c.Title"))
+        assertEquals(null, pageAddressIn("https://www.campfire-songbook.com"))
+        assertEquals("https://campfire-songbook.com.example.com/x", pageAddressIn("https://campfire-songbook.com.example.com/x"))
+    }
 }

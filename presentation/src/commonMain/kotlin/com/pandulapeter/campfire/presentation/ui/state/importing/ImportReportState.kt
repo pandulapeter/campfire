@@ -216,6 +216,15 @@ internal class ImportReportState(
         if (index >= 0) updateBackStack { while (size > index) removeAt(lastIndex) }
     }
 
+    /**
+     * Takes the loading stage down for what the batch came to instead (a page's song, which opens in the editor): let go
+     * of first, so that the screen leaving cancels nothing.
+     */
+    fun closeLoading() {
+        report = null
+        close()
+    }
+
     /** A group's box, over the rows the screen shows, which is only the matching ones while a search narrows them. */
     fun setImportEntriesChosen(keys: Collection<ImportEntryKey>, isChosen: Boolean) = updateChoices { choices ->
         choices.copy(leftOut = if (isChosen) choices.leftOut - keys.toSet() else choices.leftOut + keys)
