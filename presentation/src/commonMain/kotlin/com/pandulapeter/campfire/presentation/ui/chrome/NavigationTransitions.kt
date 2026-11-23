@@ -25,9 +25,12 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.animation.unveilIn
+import androidx.compose.animation.veilOut
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MotionScheme
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.navigation3.scene.Scene
@@ -52,7 +55,10 @@ import kotlin.math.roundToInt
  * the outgoing screen invisible but still covering (and swallowing clicks on) the screen underneath until the
  * animation ends. The same specs are used on every platform (the desktop default would be no animation at all).
  *
- * The decision is also handed to [scrim], which darkens the screen underneath for as long as a card covers any of it.
+ * The screen underneath is darkened for as long as a card covers any of it, by a veil of [scrimColor] on its own enter or
+ * exit transition. A veil is one of the transition's own parts, so it moves with the slides wherever they go: along a
+ * spring, seeked by Navigation 3, or driven by a back gesture, which on Android moves only those parts with the finger.
+ * The decision whether a back gesture is followed is handed to [backMark].
  *
  * Nothing moves while the launch screen still covers the app ([isAppShown]), and a finished onboarding
  * ([isOnboardingFinishCelebrated]) is not taken off the deck but zoomed away, see [onboardingFinishTransition].
@@ -62,37 +68,33 @@ internal fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.navigati
     isAppShown: Boolean,
     isOnboardingFinishCelebrated: Boolean,
     motionScheme: MotionScheme,
-    scrim: NavigationScrim,
+    scrimColor: Color,
+    backMark: PredictiveBackMark,
 ): ContentTransform {
     val from = CampfireDestination.TopLevel.fromContentKey(initialState.entries.lastOrNull()?.contentKey)
     val to = CampfireDestination.TopLevel.fromContentKey(targetState.entries.lastOrNull()?.contentKey)
     val isOnboardingFinishing = isOnboardingFinishCelebrated &&
         initialState.entries.lastOrNull()?.contentKey == ONBOARDING_CONTENT_KEY &&
         targetState.entries.none { it.contentKey == ONBOARDING_CONTENT_KEY }
-    scrim.isPredictiveBack = false
-    scrim.motion = when {
-        !isAppShown || isOnboardingFinishing || (from != null && to != null) -> DeckMotion.None
-        targetState.zIndex < initialState.zIndex -> DeckMotion.Pop
-        else -> DeckMotion.Push
-    }
+    backMark.isPredictiveBack = false
     return when {
         !isAppShown -> ContentTransform(EnterTransition.None, ExitTransition.None)
         isOnboardingFinishing -> onboardingFinishTransition(motionScheme)
-        else -> when (scrim.motion) {
-            DeckMotion.None -> tabTransition()
-            DeckMotion.Pop, DeckMotion.PredictivePop -> popTransition(motionScheme)
-            DeckMotion.Push -> pushTransition(motionScheme)
-        }
+        from != null && to != null -> tabTransition()
+        targetState.zIndex < initialState.zIndex -> popTransition(motionScheme, scrimColor)
+        else -> pushTransition(motionScheme, scrimColor)
     }
 }
 
 /**
  * The card being dealt slides in over the deck. The screen underneath follows in the same direction over a much
- * shorter distance. [ExitTransition.KeepUntilTransitionsFinished] keeps it drawn until the card has landed.
+ * shorter distance, darkening as it is covered. [ExitTransition.KeepUntilTransitionsFinished] keeps it drawn until the
+ * card has landed.
  */
 @OptIn(ExperimentalAnimationApi::class, ExperimentalMaterial3ExpressiveApi::class)
 private fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.pushTransition(
     motionScheme: MotionScheme,
+    scrimColor: Color,
 ): ContentTransform {
     val direction = AnimatedContentTransitionScope.SlideDirection.Start
     val spec = motionScheme.slideSpec()
@@ -102,18 +104,19 @@ private fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.pushTrans
             towards = direction,
             animationSpec = spec,
             targetOffset = ::backgroundSlideOffset,
-        ) + ExitTransition.KeepUntilTransitionsFinished,
+        ) + veilOut(motionScheme.veilSpec(), scrimColor) + ExitTransition.KeepUntilTransitionsFinished,
         targetContentZIndex = targetState.zIndex,
     )
 }
 
 /**
- * The top card slides away while the screen underneath follows it from a shorter offset. The z indices keep the
- * card that is leaving above the screen it reveals.
+ * The top card slides away while the screen underneath follows it from a shorter offset, clearing as it is uncovered.
+ * The z indices keep the card that is leaving above the screen it reveals.
  */
 @OptIn(ExperimentalAnimationApi::class, ExperimentalMaterial3ExpressiveApi::class)
 private fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.popTransition(
     motionScheme: MotionScheme,
+    scrimColor: Color,
 ): ContentTransform {
     val direction = AnimatedContentTransitionScope.SlideDirection.End
     val spec = motionScheme.slideSpec()
@@ -122,7 +125,7 @@ private fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.popTransi
             towards = direction,
             animationSpec = spec,
             initialOffset = ::backgroundSlideOffset,
-        ),
+        ) + unveilIn(motionScheme.veilSpec(), scrimColor),
         initialContentExit = slideOutOfContainer(towards = direction, animationSpec = spec),
         targetContentZIndex = targetState.zIndex,
     )
@@ -171,6 +174,16 @@ private fun MotionScheme.slideSpec() = when (val spec = defaultSpatialSpec<IntOf
 }
 
 /**
+ * [slideSpec]'s spring for the veil darkening the screen underneath, critically damped: the slides may overshoot, but a
+ * scrim that darkened past its color and back would flicker.
+ */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+private fun MotionScheme.veilSpec() = when (val spec = defaultSpatialSpec<Color>()) {
+    is SpringSpec -> spring<Color>(stiffness = spec.stiffness)
+    else -> spec
+}
+
+/**
  * [slideSpec] for a slide animated as the fraction of the width it has covered rather than as an offset, which keeps
  * the two on the same curve. It settles within a thousandth of the width, a pixel or less on any window it is seen in.
  */
@@ -191,12 +204,14 @@ internal fun MotionScheme.slideFractionSpec() = when (val spec = defaultSpatialS
  * the middle of it.
  */
 @OptIn(ExperimentalAnimationApi::class)
-internal fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.predictivePopTransition(scrim: NavigationScrim): ContentTransform {
-    scrim.isPredictiveBack = true
+internal fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.predictivePopTransition(
+    scrimColor: Color,
+    backMark: PredictiveBackMark,
+): ContentTransform {
+    backMark.isPredictiveBack = true
     if (CampfireDestination.TopLevel.fromContentKey(initialState.entries.lastOrNull()?.contentKey) != null &&
         CampfireDestination.TopLevel.fromContentKey(targetState.entries.lastOrNull()?.contentKey) != null
     ) {
-        scrim.motion = DeckMotion.None
         val spec = tween<Float>(PREDICTIVE_BACK_DURATION, easing = LinearEasing)
         return ContentTransform(
             targetContentEnter = fadeIn(spec),
@@ -204,11 +219,11 @@ internal fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.predicti
             targetContentZIndex = targetState.zIndex,
         )
     }
-    scrim.motion = DeckMotion.PredictivePop
     val towards = AnimatedContentTransitionScope.SlideDirection.End
     val spec = tween<IntOffset>(PREDICTIVE_BACK_DURATION, easing = LinearEasing)
     return ContentTransform(
-        targetContentEnter = slideIntoContainer(towards, spec, initialOffset = ::backgroundSlideOffset),
+        targetContentEnter = slideIntoContainer(towards, spec, initialOffset = ::backgroundSlideOffset) +
+            unveilIn(tween(PREDICTIVE_BACK_DURATION, easing = LinearEasing), scrimColor),
         initialContentExit = slideOutOfContainer(towards, spec),
         targetContentZIndex = targetState.zIndex,
     )
@@ -235,7 +250,7 @@ private val Scene<CampfireDestination>.zIndex: Float
 
 private const val TAB_FADE_OUT_DURATION = 90
 private const val TAB_FADE_IN_DURATION = 210
-internal const val PREDICTIVE_BACK_DURATION = 350
+private const val PREDICTIVE_BACK_DURATION = 350
 private const val BACKGROUND_SLIDE_FRACTION = 0.12f
 private const val ONBOARDING_FINISH_APP_SCALE = 0.9f
 private const val ONBOARDING_FINISH_ONBOARDING_SCALE = 1.15f

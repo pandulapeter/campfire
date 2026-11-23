@@ -34,20 +34,15 @@ import com.pandulapeter.campfire.presentation.ui.components.WindowSize
  */
 @Composable
 internal fun TopLevelScreenSurface(
-    scrim: NavigationScrim,
     windowSize: WindowSize,
     railWidth: () -> Dp,
     navigationBarHeight: () -> Dp,
     chrome: (@Composable () -> Unit)?,
     content: @Composable () -> Unit,
 ) {
-    val scrimCoverage = rememberScrimCoverage(scrim)
     val chromeRoom = ChromeRoomPadding(start = railWidth, bottom = navigationBarHeight)
-    val scrimColor = MaterialTheme.colorScheme.scrim
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .coveredScreenScrim(scrimColor) { scrimCoverage.value },
+        modifier = Modifier.fillMaxSize(),
     ) {
         if (chrome != null) {
             Box(

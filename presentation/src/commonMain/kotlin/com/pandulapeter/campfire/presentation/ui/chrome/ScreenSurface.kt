@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
@@ -41,16 +40,12 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 @Composable
 internal fun ScreenSurface(
     hostLifecycle: Lifecycle,
-    scrim: NavigationScrim,
     content: @Composable () -> Unit,
 ) {
     val entryLifecycle = LocalLifecycleOwner.current.lifecycle
-    val scrimCoverage = rememberScrimCoverage(scrim)
-    val scrimColor = MaterialTheme.colorScheme.scrim
     Surface(
         modifier = Modifier
             .fillMaxSize()
-            .coveredScreenScrim(scrimColor) { scrimCoverage.value }
             .pointerInput(hostLifecycle, entryLifecycle) {
                 awaitEachGesture {
                     val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)

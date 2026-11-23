@@ -16,7 +16,7 @@ import com.pandulapeter.campfire.presentation.ui.chrome.NavigationChromeKind
 import com.pandulapeter.campfire.presentation.ui.chrome.NAVIGATION_RAIL_CONTENT_GAP
 import com.pandulapeter.campfire.presentation.ui.chrome.NavigationChromeScaffold
 import com.pandulapeter.campfire.presentation.ui.chrome.NavigationChromeSize
-import com.pandulapeter.campfire.presentation.ui.chrome.rememberNavigationScrim
+import com.pandulapeter.campfire.presentation.ui.chrome.rememberPredictiveBackMark
 import com.pandulapeter.campfire.presentation.ui.chrome.NoChromeRoom
 import com.pandulapeter.campfire.presentation.ui.chrome.ScreenSurface
 import com.pandulapeter.campfire.presentation.ui.chrome.ToolScreenFrame
@@ -27,6 +27,7 @@ import com.pandulapeter.campfire.presentation.ui.chrome.backgroundSlideOffset
 import com.pandulapeter.campfire.presentation.ui.chrome.contentEdges
 import com.pandulapeter.campfire.presentation.ui.chrome.withMinTopEdge
 import com.pandulapeter.campfire.presentation.ui.chrome.coveredScreenScrim
+import com.pandulapeter.campfire.presentation.ui.chrome.coveredScreenScrimColor
 import com.pandulapeter.campfire.presentation.ui.chrome.endwardTranslation
 import com.pandulapeter.campfire.presentation.ui.chrome.navigationTransition
 import com.pandulapeter.campfire.presentation.ui.chrome.predictivePopTransition
@@ -232,11 +233,10 @@ internal fun CampfireScreens(
     }
     // What the screens' own lifecycles are compared with, see ScreenSurface.
     val hostLifecycle = LocalLifecycleOwner.current.lifecycle
-    val navigationScrim = rememberNavigationScrim()
+    val backMark = rememberPredictiveBackMark()
     val topLevelScreen: @Composable (CampfireDestination.TopLevel, @Composable () -> Unit) -> Unit = { destination, content ->
         ReportNavigationTransition(viewModel, onNavigationTransitionRunningChanged)
         TopLevelScreenSurface(
-            scrim = navigationScrim,
             windowSize = windowSize,
             railWidth = railWidth,
             navigationBarHeight = navigationBarHeight,
@@ -246,7 +246,7 @@ internal fun CampfireScreens(
     }
     val cardScreen: @Composable (@Composable () -> Unit) -> Unit = { content ->
         ReportNavigationTransition(viewModel, onNavigationTransitionRunningChanged)
-        ScreenSurface(hostLifecycle = hostLifecycle, scrim = navigationScrim, content = content)
+        ScreenSurface(hostLifecycle = hostLifecycle, content = content)
     }
     val scrimColor = MaterialTheme.colorScheme.scrim
     // The export screen is drawn in this layout rather than in a window of its own, which a screen reader would take for
@@ -262,14 +262,14 @@ internal fun CampfireScreens(
             modifier = Modifier.fillMaxSize().underExportScreen(exportTransition, layoutDirection, scrimColor, isExportCovering),
             backStack = backStack,
             // NavDisplay's own back handler is the system's back, which completes a predictive gesture as often as not.
-            onBack = { viewModel.navigator.navigateBack(isPredictiveBackCompleted = navigationScrim.isPredictiveBack) },
+            onBack = { viewModel.navigator.navigateBack(isPredictiveBackCompleted = backMark.isPredictiveBack) },
             // The same spec decides the direction for both parameters, see navigationTransition. Nothing is animated
             // while the launch screen still covers the app: a place the app was asked to open on (the web build's
             // address, Settings after a consent page) is put on the stack behind it, and a screen still sliding in as
             // the launch screen fades would be the app arriving twice.
-            transitionSpec = { navigationTransition(viewModel.launchState.hasShownApp, viewModel.navigator.isOnboardingFinishCelebrated, motionScheme, navigationScrim) },
-            popTransitionSpec = { navigationTransition(viewModel.launchState.hasShownApp, viewModel.navigator.isOnboardingFinishCelebrated, motionScheme, navigationScrim) },
-            predictivePopTransitionSpec = { predictivePopTransition(navigationScrim) },
+            transitionSpec = { navigationTransition(viewModel.launchState.hasShownApp, viewModel.navigator.isOnboardingFinishCelebrated, motionScheme, coveredScreenScrimColor(scrimColor), backMark) },
+            popTransitionSpec = { navigationTransition(viewModel.launchState.hasShownApp, viewModel.navigator.isOnboardingFinishCelebrated, motionScheme, coveredScreenScrimColor(scrimColor), backMark) },
+            predictivePopTransitionSpec = { predictivePopTransition(coveredScreenScrimColor(scrimColor), backMark) },
             // Stable string content keys, so that the transitions can recognize the top level destinations.
             entryProvider = entryProvider {
                 entry<CampfireDestination.Songs>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->

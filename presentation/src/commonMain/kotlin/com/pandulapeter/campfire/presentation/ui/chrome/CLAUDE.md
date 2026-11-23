@@ -18,7 +18,7 @@ The navigation chrome (bar, rail, transitions, and the Tools item).
 - **Transitions** (`NavigationTransitions.kt`, every platform): tabs fade through in place, no slide; cards
   (`SongDetails`, `SongEditor`, and the export screen's hand-rolled slide) enter and leave at the end edge (the left in
   RTL) whatever the predictive gesture's edge, the screen beneath moving 12% under a scrim (theme `scrim` at 32%,
-  animated per entry so it follows the gesture). Predictive pops use linear specs; going back from Setlists/Settings to
+  a `veilOut` / `unveilIn` of the transition itself, the only kind Google's NavDisplay moves with the finger). Predictive pops use linear specs; going back from Setlists/Settings to
   Songs is a cross fade (a fade through held halfway would show neither screen). `navigationTransition` decides push vs.
   pop from scene depth itself, because Navigation 3's detection is wrong after an interrupted transition and leaves an
   invisible screen swallowing clicks. A finished onboarding is the one exception: zoomed away, no scrim.
