@@ -111,8 +111,8 @@ internal class WebViewBrowser private constructor(private val webView: WebView) 
         webView.stopLoading()
         webView.clearCache(true)
         webView.clearHistory()
-        CookieManager.getInstance().removeAllCookies(null)
-        CookieManager.getInstance().flush()
+        // The removal runs asynchronously, so the jar is written to disk once it has finished, not before.
+        CookieManager.getInstance().removeAllCookies { CookieManager.getInstance().flush() }
         WebStorage.getInstance().deleteAllData()
         webView.destroy()
     }
