@@ -26,6 +26,25 @@ internal object ChordSheetTitles {
         return if (parts.size == 2 && parts.all { it.isNotBlank() }) parts[1].trim() to parts[0].trim() else rest to null
     }
 
+    /**
+     * The lines before the song's first chord row, heading, tab, or grid that name nothing but its [title] and [artist], in
+     * either order with a dash or a colon between them (`Artist - Title`, `Artist: Title`): a page restating the header it
+     * opened with, which would otherwise open the song as its first lyric.
+     */
+    fun restated(lines: List<Rendered>, kinds: List<LineKind>, title: String, artist: String): Set<Int> {
+        val names = setOf(comparable(title), comparable(artist))
+        val song = kinds.indexOfFirst { it == LineKind.CHORD || it == LineKind.SECTION || it == LineKind.TAB || it == LineKind.GRID }
+        if (song < 0 || names.size < 2) return emptySet()
+        return (0 until song).filter { index ->
+            kinds[index] == LineKind.LYRIC && lines[index].text.trim().split(restatement).let { parts -> parts.size == 2 && parts.map(::comparable).toSet() == names }
+        }.toSet()
+    }
+
+    private fun comparable(text: String) = text.trim().lowercase().replace(spaces, " ")
+
+    private val restatement = Regex("\\s*:\\s+|\\s+[-\u2013\u2014]\\s+")
+    private val spaces = Regex("\\s+")
+
     private const val VERSION = "(?:\\(ver(?:sion)? *[0-9]+\\)|v[0-9]+)"
     private val pageKind = Regex(
         "^(.+?)(?: +$VERSION)? +(?:chords and lyrics|lyrics and chords|chords|tabs?|lyrics|akkordok|akkord|dalsz\u00f6vege|" +

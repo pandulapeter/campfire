@@ -75,6 +75,16 @@ class PageTextCropTest {
     }
 
     @Test
+    fun `a line before the song restating the header's title and artist is left out of the song`() = runTest {
+        val page = "Sign in\nWonderwall Chords by Oasis\nOasis - wonderwall\n\nEm7      G\nToday is gonna be the day"
+        val converted = PageTextCrop.cropped(page, FakePageCropper { songLines(2, 4, 5, titleLine = 1, headerLines = listOf(1)) }, Logger { })
+            ?.let(PageTextCrop::converted)
+
+        assertEquals("Wonderwall", converted?.title)
+        assertEquals("[Em7]Today is [G]gonna be the day\n", converted?.songs?.single())
+    }
+
+    @Test
     fun `a title line that does not head the song stays in it and titles nothing`() = runTest {
         val cropped = PageTextCrop.cropped(HEADED_PAGE, FakePageCropper { songLines(2, 4, 5, 7, 8, titleLine = 8) }, Logger { })
 

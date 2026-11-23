@@ -46,12 +46,15 @@ public object ChordSheetConverter {
      * lines are then read as the song's lines, the title and the credit under it included.
      * @param pageScores the page model's scores of the document's lines ([ChordSheetPageLines]), by which each song is
      * cropped to its lines before it is converted ([ChordSheetSongCrop]); null converts every line.
+     * @param knownTitle the title and artist a caller read from elsewhere (a page's header), which a line before the song
+     * restating them is left out by, as one restating the title the sheet's own first lines name is.
      */
     public fun convert(
         sheet: ChordSheet,
         normalize: (String) -> String = { it },
         guessesTitle: Boolean = true,
         pageScores: List<PageLineScores>? = null,
+        knownTitle: PageTitle? = null,
     ): List<String> {
         sheet.originalText?.takeIf(::isChordPro)?.let { return listOf(it) }
         val firstLines = sheet.pages.runningFold(0) { count, page -> count + page.lines.size }
@@ -74,7 +77,7 @@ public object ChordSheetConverter {
             }
         }
         return groups.map { ChordSheetSongCrop.cropped(it, pageScores) }
-            .map { normalize(convertSong(expandLabels(withoutInjections(singleSpaced(ChordSheetRomanChords.named(it)))), guessesTitle, profile)) }.filter { it.isNotBlank() }
+            .map { normalize(convertSong(expandLabels(withoutInjections(singleSpaced(ChordSheetRomanChords.named(it)))), guessesTitle, profile, knownTitle)) }.filter { it.isNotBlank() }
     }
 
     /**
@@ -277,7 +280,7 @@ public object ChordSheetConverter {
         }
     }
 
-    private fun convertSong(lines: List<Rendered>, guessesTitle: Boolean, profile: ChordSheetProfile): String {
+    private fun convertSong(lines: List<Rendered>, guessesTitle: Boolean, profile: ChordSheetProfile, knownTitle: PageTitle?): String {
         val candidates = chordCandidates(lines)
         val convertParentheses = convertsParentheses(lines)
         val features = LineFeatures.of(lines)
@@ -288,7 +291,11 @@ public object ChordSheetConverter {
         }
         val fields = SongHeader.fields(lines, features, kinds)
         val title = if (guessesTitle) SongHeader.title(lines, kinds, profile) else SongHeader.noTitle
-        val omitted = fields.omitted + title.omitted
+        val named = (title.leading + fields.entries + title.trailing).let { header ->
+            knownTitle ?: PageTitle(headerEntry(header, "title") ?: "", headerEntry(header, "artist"))
+        }
+        val restated = named.artist?.takeIf { named.title.isNotBlank() }?.let { artist -> ChordSheetTitles.restated(lines, kinds, named.title, artist) }.orEmpty()
+        val omitted = fields.omitted + title.omitted + restated
         val definitions = ChordSheetDefinitions.definitions(
             lines = lines.map { it.text },
             // A shape in parentheses after its chord reads as a chord row with a note, `D7 (x-x-0-2-1-2)`.
@@ -327,6 +334,9 @@ public object ChordSheetConverter {
                 }
         }
     }
+
+    /** The value of the first of [header]'s entries naming [name]. */
+    private fun headerEntry(header: List<String>, name: String) = header.firstOrNull { it.startsWith("{$name: ") }?.removePrefix("{$name: ")?.removeSuffix("}")
 
     /** Chords written in parentheses inside the lyrics, `(Am)`, are taken for chords only where most parentheses hold one. */
     private fun convertsParentheses(lines: List<Rendered>): Boolean {

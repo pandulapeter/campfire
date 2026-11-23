@@ -561,6 +561,20 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `a line before the song restating its title and artist is left out - a lyric naming them stays`() {
+        val song = "\nAm      C\nItt lakom, látod: ez az a ház\nTankcsapda: Ez az a ház"
+        val known = PageTitle("Ez az a ház", "Tankcsapda")
+        assertEquals(
+            "[Am]Itt lako[C]m, látod: ez az a ház\nTankcsapda: Ez az a ház\n",
+            ChordSheetConverter.convert(ChordSheet.ofPlainText("Tankcsapda – ez az a HÁZ$song"), guessesTitle = false, knownTitle = known).single(),
+        )
+        assertEquals(
+            "Another song - Tankcsapda\n[Am]Itt lako[C]m, látod: ez az a ház\nTankcsapda: Ez az a ház\n",
+            ChordSheetConverter.convert(ChordSheet.ofPlainText("Another song - Tankcsapda$song"), guessesTitle = false, knownTitle = known).single(),
+        )
+    }
+
+    @Test
     fun `parenthesized chords need a majority`() {
         assertEquals("[Am] Today [C] the day (repeat)\n", convert("(Am) Today (C) the day (repeat)"))
         assertEquals("(Am) Today (repeat)\n", convert("(Am) Today (repeat)"))

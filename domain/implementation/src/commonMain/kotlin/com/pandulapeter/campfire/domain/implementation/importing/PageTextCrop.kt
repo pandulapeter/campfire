@@ -103,7 +103,8 @@ internal object PageTextCrop {
      * song's title from them (or from any other line) itself, since the text's own header wins: only a page converted
      * into one song with no title is converted again without them, its [CroppedPage.title] and [CroppedPage.artist]
      * then suggested in their place. That second conversion guesses no title, which with the header gone could only be
-     * the song's first lyric. Null where the crop holds nothing the converter finds a song in.
+     * the song's first lyric, but a line before the song restating that title and artist is left out by them. Null where
+     * the crop holds nothing the converter finds a song in.
      */
     fun converted(page: CroppedPage): ConvertedPage? {
         val songs = convert(page.text, guessesTitle = true) ?: return null
@@ -111,7 +112,7 @@ internal object PageTextCrop {
         val body = page.body ?: return asItIs
         val song = songs.flatMap(ChordProSplitter::split).singleOrNull() ?: return asItIs
         if (!ChordProParser.parseMetadata(song).title.isNullOrBlank()) return asItIs
-        val bodySongs = convert(body, guessesTitle = false) ?: return asItIs
+        val bodySongs = convert(body, guessesTitle = false, knownTitle = page.title?.let { PageTitle(it, page.artist) }) ?: return asItIs
         return ConvertedPage(songs = bodySongs, title = page.title, artist = page.artist)
     }
 
@@ -123,6 +124,7 @@ internal object PageTextCrop {
         return lines.indices.filter { index -> index in kept || (lines[index].isBlank() && index in first..last) }
     }
 
-    private fun convert(text: String, guessesTitle: Boolean) =
-        ChordSheetConverter.convert(ChordSheet.ofPlainText(text), String::normalizedToNfc, guessesTitle = guessesTitle).takeIf { it.any(String::isNotBlank) }
+    private fun convert(text: String, guessesTitle: Boolean, knownTitle: PageTitle? = null) =
+        ChordSheetConverter.convert(ChordSheet.ofPlainText(text), String::normalizedToNfc, guessesTitle = guessesTitle, knownTitle = knownTitle)
+            .takeIf { it.any(String::isNotBlank) }
 }
