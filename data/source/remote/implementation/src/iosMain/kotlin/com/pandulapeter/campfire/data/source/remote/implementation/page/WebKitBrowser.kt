@@ -128,6 +128,11 @@ private class WebKitNavigation : NSObject(), WKNavigationDelegateProtocol {
     @ObjCSignatureOverride
     override fun webView(webView: WKWebView, didFailNavigation: WKNavigation?, withError: NSError) = failed(withError)
 
+    /** The page's process ended (out of memory, or crashed): what it drew is gone, so the load has failed. */
+    override fun webViewWebContentProcessDidTerminate(webView: WKWebView) {
+        hasFailed = true
+    }
+
     /** A load cancelled because another took its place (a script's redirect) is no failure. */
     private fun failed(error: NSError) {
         if (error.code != NSURLErrorCancelled) {
