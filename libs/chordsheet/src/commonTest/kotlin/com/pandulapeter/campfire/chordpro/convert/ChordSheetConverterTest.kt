@@ -515,6 +515,12 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `a rule drawn under the last section ends it - the notes under it stay outside`() {
+        val result = convert("[Chorus]\ne|---0---|\nB|---1---|\n\n*********\n\n|  h   Hammer-on\n|  p   Pull-off\n\n*********")
+        assertTrue("{end_of_tab}\n{end_of_chorus}\n\n*********\n" in result && result.trimEnd().endsWith("*********"), result)
+    }
+
+    @Test
     fun `a staff's harmonics and the playing marks under it stay in the tab`() {
         val result = convert("e|---0---|\nB|---3*--|\nG|--<12>-|\nPM-|   PM")
         assertEquals("{start_of_tab}\ne|---0---|\nB|---3*--|\nG|--<12>-|\nPM-|   PM\n{end_of_tab}\n", result)

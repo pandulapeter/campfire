@@ -34,6 +34,9 @@ internal object SongStructure {
     /** The repeat signs a sheet types with a double bar that ChordPro writes with a single one. */
     private val gridBarLines = mapOf("||:" to "|:", ":||" to ":|")
 
+    /** A rule a sheet draws across the page with one symbol (`*****`, `=====`), which parts what follows from the song. */
+    private val divider = Regex("^\\s*([*=_~#])\\1{4,}\\s*$")
+
     private val gridShape = Regex("(?:[0-9]+\\+)?[0-9]+[x\u00d7][0-9]+(?:\\+[0-9]+)?", RegexOption.IGNORE_CASE)
 
     sealed interface Part {
@@ -175,6 +178,7 @@ internal object SongStructure {
                     } else add(Line.Chords(bracketed(candidates[index]!!, chordRow(line))))
                 }
                 LineKind.LYRIC -> {
+                    if (divider.matches(line.text)) closeAtDivider()
                     closeInstrumental()
                     openUnlabelled(index)
                     follow(index)
@@ -318,6 +322,9 @@ internal object SongStructure {
             open(type, label)
             isInstrumental = true
         }
+
+        /** Ends the open section at a rule drawn under it: a sheet draws one to part a legend or notes from the song. */
+        fun closeAtDivider() { if (section != null) closeBeforeBlanks(isReturn = false) }
 
         /** Ends an instrumental section where the lyrics start, which no heading of their own opened. */
         fun closeInstrumental() { if (isInstrumental) closeBeforeBlanks(isReturn = false) }
