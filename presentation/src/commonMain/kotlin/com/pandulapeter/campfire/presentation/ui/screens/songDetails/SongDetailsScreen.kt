@@ -217,8 +217,8 @@ internal fun SongDetailsScreen(
         lastPage = songs.lastIndex,
         nextSongConfirmation = nextSongConfirmation,
     )
-    val stepBackAction: (from: Int?) -> Unit = stepActions::stepBack
-    val stepForwardAction: (from: Int?) -> Unit = stepActions::stepForward
+    val stepBackAction = rememberLatestStep(stepActions) { from -> stepBack(from) }
+    val stepForwardAction = rememberLatestStep(stepActions) { from -> stepForward(from) }
 
     val isCompactHeight = LocalWindowInfo.current.containerDpSize.height < SHORT_WINDOW_HEIGHT
     val appBarScrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(canScroll = { isCompactHeight })

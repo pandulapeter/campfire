@@ -14,6 +14,9 @@ import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.Pa
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.SongStepper
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.pager.PagerState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -68,4 +71,14 @@ internal class SongStepActions(
             pageStepper.step(1)
         }
     }
+}
+
+/**
+ * One of [actions]' steps as a callback that stays the same object while the screen recomposes, so that the pager and the
+ * step buttons it is handed to can skip; the actions are built afresh on every composition and read only at the press.
+ */
+@Composable
+internal fun rememberLatestStep(actions: SongStepActions, step: SongStepActions.(from: Int?) -> Unit): (from: Int?) -> Unit {
+    val latestActions = rememberUpdatedState(actions)
+    return remember(latestActions) { { from -> latestActions.value.step(from) } }
 }
