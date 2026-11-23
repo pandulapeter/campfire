@@ -50,7 +50,8 @@ internal fun CampfireContent(
     val topLevelDestinations by viewModel.preferencesController.topLevelDestinations.collectAsStateWithLifecycle()
     var isNavigationTransitionRunning by remember { mutableStateOf(false) }
     var isChromeInScreens by remember { mutableStateOf(false) }
-    val isTopLevelScreenCovered = backStack.lastOrNull() !is CampfireDestination.TopLevel
+    // Derived, so that a push or a pop between two cards does not compose the whole app again.
+    val isTopLevelScreenCovered by remember(backStack) { derivedStateOf { backStack.lastOrNull() !is CampfireDestination.TopLevel } }
     // The chrome moves into the top level screens as soon as a card covers them, which is the frame the push starts
     // in, and moves back out only once the pop has settled. NavDisplay starts animating a pop from an effect, so its
     // transition is only reported as running a frame after the back stack changed, and reading the report any sooner
