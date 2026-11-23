@@ -132,13 +132,16 @@ internal object ChordSheetSiteDetails {
         "check out the tab", "view official tab", "report bad tab", "autoscroll", "auto scroll", "transpose", "simplify",
         "add to playlist", "rate this tab", "please, rate this tab", "create and get +5 iq",
         "there is no strumming pattern for this song yet. create and get +5 iq", "ad loading…", "ad loading...",
-        "simplificar cifra", "auto rolagem", "exibir cifra", "www.ccli.com",
+        "simplificar cifra", "auto rolagem", "exibir cifra", "www.ccli.com", "interactive tab",
+        // A button saving the song to the visitor's account, in every language the app ships.
+        "save", "mentés", "salvează", "speichern", "guardar", "enregistrer", "salva", "שמור", "salvar", "zapisz", "uložit",
     )
     private val chromePatterns = listOf(
-        // A count of views, as many sites print one under the title: `1,234,567 views, added to favorites 3,210 times`.
+        // A count of views or saves, as many sites print one under the title: `1,234,567 views, added to favorites 3,210
+        // times`, the next count glued to it where the copy lost the space between them (`6,799 views201 saves`).
         Regex(
-            "^[0-9][0-9.,  ]*[km]?\\s+(?:views?|visualizações|exibições|acessos|visitas|aufrufe|vues|" +
-                "visualizzazioni|megtekintés|vizualizări|wyświetle\\p{L}*|zobrazení|צפיות)\\b.*$",
+            "^[0-9][0-9.,  ]*[km]?\\s+(?:views?|saves?|visualizações|exibições|acessos|visitas|aufrufe|vues|" +
+                "visualizzazioni|megtekintés|vizualizări|wyświetle\\p{L}*|zobrazení|צפיות)(?!\\p{L}).*$",
         ),
         // The song's length a site prints beside its controls, `4 min`.
         Regex("^[0-9]+\\s*min$"),

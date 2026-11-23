@@ -96,6 +96,12 @@ class ChordSheetSiteDetailsTest {
     }
 
     @Test
+    fun `glued counters and the save and interactive tab buttons over the song are left out`() {
+        val result = convert("6,799 views201 saves\nSave\nInteractive tab\n\nG      C\nHello world\nSave\nG      C\nHello again")
+        assertEquals("[G]Hello [C]world\nSave\n[G]Hello [C]again\n", result)
+    }
+
+    @Test
     fun `lyrics that only contain a details word are never eaten`() {
         for (line in listOf("Key to my heart", "Speed of sound", "Tuning in to you", "Simplify my life", "Author of my story", "Difficulty is my name")) {
             val result = convert("Verse 1\nG      C\nHello world\n$line\nG      C\nHello again")
