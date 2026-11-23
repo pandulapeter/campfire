@@ -22,7 +22,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -114,7 +113,6 @@ internal fun ReferencePitchControls(
             PlayStopMark(
                 modifier = Modifier.semantics { contentDescription = description },
                 isPlaying = isReferenceTonePlaying,
-                size = 20.dp,
                 color = LocalContentColor.current,
             )
         }
