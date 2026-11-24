@@ -11,8 +11,13 @@ package com.pandulapeter.campfire
 
 import com.pandulapeter.campfire.presentation.ui.shortcuts.LauncherShortcut
 import com.pandulapeter.campfire.presentation.ui.shortcuts.LauncherShortcuts
+import kotlinx.cinterop.BetaInteropApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
+import platform.Foundation.NSDictionary
+import platform.Foundation.NSString
+import platform.Foundation.create
+import platform.Foundation.dictionaryWithObject
 import platform.UIKit.UIApplication
 import platform.UIKit.UIApplicationShortcutIcon
 import platform.UIKit.UIApplicationShortcutItem
@@ -39,6 +44,7 @@ internal fun openAppLink(link: String) {
  * are: their labels and their set follow the language, the switches, and read only mode. iOS shows the first four,
  * each with an SF Symbol as near the app's own icon as there is.
  */
+@OptIn(BetaInteropApi::class)
 internal fun applyQuickActions(shortcuts: LauncherShortcuts) {
     UIApplication.sharedApplication.shortcutItems = shortcuts.offered.map { item ->
         UIApplicationShortcutItem(
@@ -46,7 +52,9 @@ internal fun applyQuickActions(shortcuts: LauncherShortcuts) {
             localizedTitle = item.label,
             localizedSubtitle = null,
             icon = UIApplicationShortcutIcon.iconWithSystemImageName(item.shortcut.systemImageName),
-            userInfo = mapOf(QUICK_ACTION_LINK_KEY to item.shortcut.link),
+            // A Foundation dictionary, not a Kotlin map: iOS archives the items, and drops the map Kotlin bridges as one of
+            // its own classes, leaving every item without its link.
+            userInfo = NSDictionary.dictionaryWithObject(item.shortcut.link, forKey = NSString.create(string = QUICK_ACTION_LINK_KEY)),
         )
     }
     println("Quick actions published: ${shortcuts.offered.size}")
