@@ -592,6 +592,11 @@
                 android:resource="@xml/widget_setlist" />
         </receiver>
 
+        <!-- Hears the widget a launcher added for the setlists screen's Add to home screen (widget/SetlistWidgetPinning). -->
+        <receiver
+            android:name=".widget.SetlistWidgetPinnedReceiver"
+            android:exported="false" />
+
         <!--
           Asks which setlist a setlist widget shows, as it is added and when it is reconfigured. A task of its own, kept
           out of Recents: in the app's task it would bring the app up behind it, and closing it would leave the user in

@@ -29,6 +29,7 @@ import com.pandulapeter.campfire.data.source.remote.implementation.auth.onSyncRe
 import com.pandulapeter.campfire.data.source.remote.implementation.isSyncRedirect
 import com.pandulapeter.campfire.importing.ImportServiceStarter
 import com.pandulapeter.campfire.presentation.ui.CampfireAndroidApp
+import com.pandulapeter.campfire.presentation.ui.platform.SetlistWidgetPinner
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportWork
 import com.pandulapeter.campfire.metronome.CampfireMetronomeService
 import com.pandulapeter.campfire.shortcuts.LauncherShortcutPublisher
@@ -36,6 +37,7 @@ import com.pandulapeter.campfire.shortcuts.appLinksToOpen
 import com.pandulapeter.campfire.shortcuts.isAppLink
 import com.pandulapeter.campfire.shortcuts.openAppLink
 import com.pandulapeter.campfire.sync.SyncServiceStarter
+import com.pandulapeter.campfire.widget.SetlistWidgetPinning
 import com.pandulapeter.campfire.widget.WidgetSnapshotPublisher
 import kotlinx.coroutines.launch
 import org.koin.mp.KoinPlatform
@@ -51,6 +53,11 @@ class CampfireMainActivity : ComponentActivity() {
 
     /** The theme color the launcher icon is to be in, known once the preferences have been read. */
     private var appIconColor: UserPreferences.ThemeColor? = null
+
+    /** Where the launcher lets the app ask to add a widget, the setlists' Add to home screen; null where it cannot. */
+    private val setlistWidgetPinner by lazy {
+        if (SetlistWidgetPinning.isSupported(this)) SetlistWidgetPinner { SetlistWidgetPinning.request(context = applicationContext, setlistFileName = it) } else null
+    }
 
     /** The app's shortcuts as the composition last wrote them, in its language, for the system's list. */
     private var keyboardShortcuts = emptyList<KeyboardShortcutGroup>()
@@ -104,6 +111,7 @@ class CampfireMainActivity : ComponentActivity() {
                 onKeyboardShortcutsChanged = { keyboardShortcuts = it },
                 onLauncherShortcutsChanged = { LauncherShortcutPublisher.publish(context = this, shortcuts = it) },
                 onWidgetSnapshotChanged = { WidgetSnapshotPublisher.publish(context = this, snapshot = it) },
+                setlistWidgetPinner = setlistWidgetPinner,
             )
         }
     }

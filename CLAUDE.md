@@ -276,8 +276,9 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
   order (never the home screen), as `campfire://` app links following the switches, read only mode, and the language:
   `ui/shortcuts`, `app/android`, `app/ios`.
 - Home screen widgets (Android, iOS): Random picks (a few songs drawn on their own, hourly or on Shuffle) and Setlist
-  (the next gig or a pinned one, opening its first song in setlist mode), reading only a snapshot the app writes in its
-  language, following the Songs and Setlists switches: `ui/widget`, `app/android`, `app/ios`.
+  (the next gig or a pinned one, opening its first song in setlist mode, each of its songs at that song), reading only a
+  snapshot the app writes in its language and theme, following the Songs and Setlists switches; on Android a setlist's
+  menu adds one pinned to it (Add to home screen, iOS having no such request): `ui/widget`, `app/android`, `app/ios`.
 - A song is named by its own header; renames happen only when asked or when lossless: `domain/implementation`,
   `data/source/local/implementation`.
 - A rename reaches sync as delete + create, and an edit beats a deletion: `data/sync/implementation`.

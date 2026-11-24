@@ -1,0 +1,19 @@
+<!--
+ This file is part of Campfire.
+ Copyright (c) Pandula Péter 2017-2026.
+ https://github.com/pandulapeter/campfire
+
+ This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ If a copy of the MPL was not distributed with this file, You can obtain one at
+ https://mozilla.org/MPL/2.0/.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FF000000"
+        android:fillType="evenOdd"
+        android:pathData="M3,3H11V11H3V3ZM5,5V9H9V5H5ZM3,13H11V21H3V13ZM5,15V19H9V15H5ZM13,13H21V21H13V13ZM15,15V19H19V15H15ZM16.66,2.34L21.32,7L16.66,11.66L12,7L16.66,2.34ZM16.66,5.17L14.83,7L16.66,8.83L18.49,7L16.66,5.17Z"/>
+</vector>

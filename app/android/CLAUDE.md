@@ -84,6 +84,9 @@
 - Random picks: `SizeMode.Responsive`, one layout per row count (up to five). The draw is a seed in the widget's own
   state, drawn again by Shuffle (`ShuffleAction`, public: Glance's R8 rules keep only public `ActionCallback`s) and by
   `provideGlance` once 55 minutes old (the hourly `updatePeriodMillis` alarm repeats from itself, not from the draw).
+- **Add to home screen** (a setlist's menu, `SetlistWidgetPinner` from `:presentation`'s `ui/platform`, offered where
+  `isRequestPinAppWidgetSupported`): `SetlistWidgetPinning` asks the launcher, whose popup places the widget without
+  the configuration screen, and `SetlistWidgetPinnedReceiver` (its mutable callback, given the new widget's id) pins it.
 - Setlist: `SetlistWidgetConfigurationActivity` (`android:configure`, `reconfigurable`; own task affinity, out of
   Recents, so it never raises the app) shows `SetlistWidgetChooser` from `:presentation` and keeps the file name (none
   for Next gig) in the widget's state. Today is `LocalDate.now()`; the receiver also hears `DATE_CHANGED`, `TIME_SET`, and

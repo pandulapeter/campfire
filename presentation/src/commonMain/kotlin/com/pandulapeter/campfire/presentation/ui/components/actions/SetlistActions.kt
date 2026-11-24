@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components.actions
 
+import com.pandulapeter.campfire.presentation.resources.ic_widgets
+import com.pandulapeter.campfire.presentation.resources.setlists_add_to_home_screen
 import com.pandulapeter.campfire.presentation.ui.components.menu.ActionsMenu
 import com.pandulapeter.campfire.presentation.ui.components.menu.ActionsMenuItem
 import com.pandulapeter.campfire.presentation.ui.components.list.SectionHeader
@@ -37,12 +39,14 @@ import com.pandulapeter.campfire.presentation.resources.setlists_delete_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_duplicate_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_edit_details
 import com.pandulapeter.campfire.presentation.resources.setlists_unarchive
+import com.pandulapeter.campfire.presentation.ui.platform.LocalSetlistWidgetPinner
 import org.jetbrains.compose.resources.painterResource
 
 /**
  * Everything that can be done to one setlist, at the end of its [SectionHeader]. Song assignments appear as a
  * button when the header has room, otherwise they stay in the overflow menu. Reordering stays in the menu and
- * becomes "Done reordering" while active. Editing, duplicating, archiving, exporting and deleting stay there too.
+ * becomes "Done reordering" while active. Editing, duplicating, archiving, exporting, adding a widget of it to the home
+ * screen (where the platform can ask, [LocalSetlistWidgetPinner]), and deleting stay there too.
  *
  * The whole of it is absent in performance mode, which the header decides: it is every way of changing a setlist in
  * one place, so there is nothing here to keep.
@@ -65,6 +69,7 @@ internal fun SetlistActions(
     isReordering: Boolean = false,
     isExportShortcut: Boolean = false,
 ) {
+    val widgetPinner = LocalSetlistWidgetPinner.current
     ActionsMenu(
         modifier = modifier,
         buttonModifier = buttonModifier,
@@ -116,6 +121,14 @@ internal fun SetlistActions(
                 shortcut = KeyShortcut.SAVE.takeIf { isExportShortcut },
                 onClick = { actions.export(setlist) },
             ),
+            widgetPinner?.let { pinner ->
+                ActionsMenuItem(
+                    title = stringResource(Res.string.setlists_add_to_home_screen),
+                    icon = painterResource(Res.drawable.ic_widgets),
+                    isAlwaysInMenu = true,
+                    onClick = { pinner.pin(setlist.fileName) },
+                )
+            },
             ActionsMenuItem(
                 title = stringResource(Res.string.setlists_delete_setlist),
                 icon = painterResource(Res.drawable.ic_delete),

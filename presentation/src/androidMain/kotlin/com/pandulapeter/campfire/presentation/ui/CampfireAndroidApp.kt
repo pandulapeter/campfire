@@ -35,10 +35,12 @@ import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.data.model.share.SharedLink
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.LocalMetronomeNotifier
+import com.pandulapeter.campfire.presentation.ui.platform.LocalSetlistWidgetPinner
 import com.pandulapeter.campfire.presentation.ui.platform.LocalSyncNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.ImportNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.LocalImportNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.MetronomeNotifier
+import com.pandulapeter.campfire.presentation.ui.platform.SetlistWidgetPinner
 import com.pandulapeter.campfire.presentation.ui.platform.SharedTextPayload
 import com.pandulapeter.campfire.presentation.ui.platform.SyncNotificationPermissionEffect
 import com.pandulapeter.campfire.presentation.ui.platform.SyncNotifier
@@ -102,6 +104,7 @@ fun CampfireAndroidApp(
     onKeyboardShortcutsChanged: (List<KeyboardShortcutGroup>) -> Unit = {},
     onLauncherShortcutsChanged: (LauncherShortcuts) -> Unit = {},
     onWidgetSnapshotChanged: (WidgetSnapshot) -> Unit = {},
+    setlistWidgetPinner: SetlistWidgetPinner? = null,
 ) {
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val isDarkTheme = userPreferences?.uiMode.isDarkTheme()
@@ -165,6 +168,7 @@ fun CampfireAndroidApp(
         LocalSyncNotifier provides syncNotifier,
         LocalImportNotifier provides importNotifier,
         LocalMetronomeNotifier provides metronomeNotifier,
+        LocalSetlistWidgetPinner provides setlistWidgetPinner,
     ) {
         Box(modifier = Modifier.fillMaxSize().libraryDropTarget(viewModel)) {
             CampfireApp(
