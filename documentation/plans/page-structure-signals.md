@@ -9,10 +9,11 @@
 -->
 # Plan: the page model sees the page's structure
 
-**Status:** not started; top priority. When the app reads a web page itself, it hands the page model each line's
-structure too: whether the line is a link or a button, whether it starts a new card or section, and how it is set. The
-crop can then drop calls to action and partner cards next to a song, which text alone cannot tell apart from the song's
-own notes.
+**Status:** steps 1 and 2 done on 2026-11-24, outside the repository (the script and the marked corpus are in the page
+corpus's `marked/`, see its `README.md`); step 3 is next. Not for the next release. When the app reads a web page
+itself, it hands the page model each line's structure too: whether the line is a link or a button, whether it starts
+a new card or section, and how it is set. The crop can then drop calls to action and partner cards next to a song,
+which text alone cannot tell apart from the song's own notes.
 
 ## Why
 
@@ -59,7 +60,19 @@ a Tankcsapda-riffeknek!", the first "Megnézem a Thomannál →", and the capo h
     `heading` (`h1`–`h6`). `page`, `column`, and `indent` stay zero for a page.
 - **Marks are found by aligning, not by rebuilding the text.** The script walks the page's visible text nodes in order,
   each with its marks, and finds each node's collapsed text in `innerText` from where the last one ended; a line takes
-  the marks of the characters on it. Where alignment fails, that line's marks are zero.
+  the marks of the characters on it. Where alignment fails, that line's marks are zero. What the spike's
+  (`marked/spike/page-marks.js`) misses cost, each now handled there:
+  - a node's words must follow one another with only whitespace between, within 400 *printed* characters of the cursor
+    (a page's run of hundreds of tabs pushed text past a raw-character window), falling back to 2,000 characters
+    behind it, so one node matched too far ahead cannot lose the rest of the page;
+  - visibility is `checkVisibility` with `contentVisibilityAuto` (GitHub's file lists are skipped by `innerText`), and a
+    `<select>`'s options, which `innerText` prints though the browser calls them invisible, are judged by the select's
+    and marked as controls (`link`);
+  - lowercasing keeps every position (Turkish `İ` lowercases to two characters), and the script uses plain loops and
+    `slice`, never `Array.from` or `startsWith`: it runs in the page's own context, and Prototype.js, still on some
+    sites, replaces both with versions that ignore their second argument.
+  What is left unaligned is text a page draws with CSS (Songsterr's string names, GitHub's line numbers): 0.3% of
+  printed lines. The script takes 9 ms a page on average.
 - **A page without marks must not get worse.** Training sees every marked page a second time with its marks zeroed, and
   the gate scores pages both ways. A paste is that second case, so the new model must hold up against today's on
   unmarked pages.
@@ -68,14 +81,33 @@ a Tankcsapda-riffeknek!", the first "Megnézem a Thomannál →", and the capo h
 
 ## Steps
 
-1. **Spike the script** in the scratchpad, over a few dozen corpus pages (gitartab.hu, Ultimate Guitar, a WordPress
-   blog, a page with a `<pre>` chord sheet, a table-laid one): the alignment's hit rate per line, and whether the marks
-   separate the agreed labels' `JUNK` from `SONG` (how often each mark is set on each label). Stop and rethink if
-   alignment misses more than a few lines a page or no mark separates them.
-2. **The corpus**: `collect.py` runs the script and writes each line's marks into `pages/<id>.json` (a new field;
-   `lines` unchanged). Recollect every page. Where a page's lines come back identical, its labels stand; where they
-   differ, labels move over by text as `align_documents.py` aligns documents, and a page aligned too poorly goes back
-   to the teacher (`teacher.py prepare` for those pages only).
+1. **Spike the script** (done): over 41 pages of 40 sites, then the whole corpus. Over the 634 labelled pages read
+   again, 0.3% of printed lines unaligned; how often each mark is set (`size` ≥ 1.2 as *big*, ≤ 0.85 as *small*), and
+   on how many of the 118 sites with 10 or more song and clutter lines it is set more often on clutter than on song
+   lines (for `monospace`, the reverse):
+
+   | Label | link | new block | landmark | bold | italic | monospace | heading | big | small | Lines |
+   |---|---|---|---|---|---|---|---|---|---|---|
+   | `SONG` | 4.7% | 3.4% | 0.1% | 26.5% | 0.8% | 64.8% | 0.1% | 5.8% | 10.3% | 28,598 |
+   | title, artist, details | 20.3% | 47.3% | 15.7% | 35.2% | 1.0% | 13.7% | 38.7% | 36.5% | 11.7% | 1,245 |
+   | `JUNK` | 56.6% | 55.7% | 27.8% | 23.9% | 3.4% | 3.9% | 6.3% | 6.9% | 29.9% | 77,639 |
+   | Sites it separates | 115 | 115 | 94 | 85 | 37 | 34 | 104 | | | |
+
+   *link* and *new block* separate on nearly every site, *landmark* and *heading* on most; *monospace* is a strong
+   song mark overall but set on few sites, *italic* and *bold* hardly separate: the gate decides, but those three are
+   the likeliest to be dropped. The gitartab.hu page's four lines: the partner card is *landmark* (its heading also
+   *heading*, its buttons *link*), the capo hint *new block*, all `JUNK`.
+2. **The corpus** (done, beside today's): every page read again with the script into the corpus's `marked/<id>.json`
+   (`lines` as read today, plus `marks`, one per line), the labels moved over into `marked/labels/`. `pages/` and
+   `labels/` are untouched, so today's gate, export, and `PageCorpusTest` run as before. 370 pages came back with
+   identical lines and keep their labels; 264 changed, mostly rotating related-song lists and ads, and their labels
+   moved over by text (a line matching no old one is `IGNORE`: 4,349 lines, 62 pages over 10%, their song labels
+   intact). Ten pages lost their song lines (chordie.com moved to a new site that week; two hudba.zoznam.sk pages
+   changed) and were labelled again by the teacher, both runs agreeing on 99.8–100%. Eleven pages could not be read
+   again (abcnotation.com answered 503, a Cloudflare page, one timeout) and stay unmarked. Still
+   to do with step 3: `collect.py` takes the script (`marked/spike/page-marks.js`) and
+   writes `marks` into `pages/<id>.json`, and `marked/` replaces `pages/` and `labels/` (the old ones kept aside to
+   compare). Corpus spread for the site-grouped folds: 174 sites, 85 with one page, 20 with ten or more.
 3. **The model**: `lines.py` reads the marks into the page's layout inputs and the new features, `synthetic.py`'s
    made-up pages get zero marks, and the gate trains on marked pages and their zeroed copies. Gate against today's
    report (`.runs/gate.txt`, kept aside first), adding the unmarked-pages score; drop any mark that does not earn its
