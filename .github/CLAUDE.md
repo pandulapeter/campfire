@@ -156,11 +156,12 @@ locales are filled in from the language), Play's `update-priority`, a `submit` a
   build only starts under TestFlight, so the start check runs on an ad-hoc-signed copy with the same entitlements minus
   the two naming the App ID. The `build_number` input re-uploads a release under a new number; `upload` off builds
   nothing and only writes the listing of the build already uploaded under that number (iOS too).
-- iOS: archived with the App Store profiles of the app and the share extension (`app_store_signing.py profile`, never
-  one Xcode made, which manual signing refuses), uploaded to TestFlight. Xcode starts Gradle without properties, so the
-  sync key goes into `local.properties`, which the version build phase also reads (last value wins) — how the
-  `build_number` input works without a commit. The share extension's App ID and the App Group were registered in the
-  developer portal by hand, once; a profile made through the API carries them.
+- iOS: archived with the App Store profiles of the app, the share extension, and the widgets (`app_store_signing.py
+  profile`, never one Xcode made, which manual signing refuses), uploaded to TestFlight. Xcode starts Gradle without
+  properties, so the sync key goes into `local.properties`, which the version build phase also reads (last value wins)
+  — how the `build_number` input works without a commit. The extensions' App IDs (`.ShareExtension`, `.widgets`), each
+  with the App Group, are registered in the developer portal by hand, once each; a profile made through the API
+  carries them, and the script stops on an App ID that is missing.
 - `.github/scripts/app_store_submission.py` puts the build and "What's New" (not on a platform's first version) on the
   version, writes the listing (on iOS also the app info's name and subtitle; the Mac shares the app record), and
   submits; `submit` off stops before submitting. A name another app holds fails the run before submitting; with no

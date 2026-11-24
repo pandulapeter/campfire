@@ -23,7 +23,7 @@
 #
 # Nothing it signs with can expire: the APPLE_SIGNING_KEY secret holds the team's signing key alone, and the run finds the
 # Apple Distribution certificate made for it through the App Store Connect API - creating it where there is none, or a
-# new one two months before it expires - and the App Store profiles of the app and its share extension for that
+# new one two months before it expires - and the App Store profiles of the app and its two extensions for that
 # certificate (.github/scripts/app_store_signing.py). Nothing is ever revoked, since a build whose certificate is revoked
 # before App Review approves it is refused. That takes an API key with the Admin role. xcodebuild signs with these by
 # hand and is never given the API key: with it, automatic signing made an Apple Development certificate on every runner,
@@ -216,8 +216,8 @@ jobs:
             exit 1
           fi
           # One profile for each target, installed where Xcode looks for them (the newer place and the older one), which
-          # then finds it by its name: APP_PROFILE and EXTENSION_PROFILE.
-          for TARGET in APP:com.pandulapeter.campfire EXTENSION:com.pandulapeter.campfire.ShareExtension; do
+          # then finds it by its name: APP_PROFILE, EXTENSION_PROFILE, and WIDGETS_PROFILE.
+          for TARGET in APP:com.pandulapeter.campfire EXTENSION:com.pandulapeter.campfire.ShareExtension WIDGETS:com.pandulapeter.campfire.widgets; do
             PROFILE="$RUNNER_TEMP/${TARGET%%:*}.mobileprovision"
             python3 .github/scripts/app_store_signing.py profile IOS_APP_STORE "${TARGET#*:}" DISTRIBUTION "$PROFILE"
             UUID=$(security cms -D -i "$PROFILE" | plutil -extract UUID raw -o - -)
@@ -243,15 +243,16 @@ jobs:
             'PROVISIONING_PROFILE_SPECIFIER=$(CI_PROFILE_$(PRODUCT_BUNDLE_IDENTIFIER:c99extidentifier))' \
             CI_PROFILE_com_pandulapeter_campfire="$APP_PROFILE" \
             CI_PROFILE_com_pandulapeter_campfire_ShareExtension="$EXTENSION_PROFILE" \
+            CI_PROFILE_com_pandulapeter_campfire_widgets="$WIDGETS_PROFILE" \
             OTHER_CODE_SIGN_FLAGS="--keychain $KEYCHAIN_PATH"
       # The version is written into the Info.plist by a build phase rather than by a build setting, so a phase that
-      # silently did not run would upload a build numbered 0, which App Store Connect takes for an old one. The share
+      # silently did not run would upload a build numbered 0, which App Store Connect takes for an old one. Each
       # extension has a phase of its own, and App Store Connect refuses an extension whose version differs from its app's.
       - name: Check the archived version
         if: github.event_name != 'workflow_dispatch' || inputs.upload
         run: |
           APP="$RUNNER_TEMP/Campfire.xcarchive/Products/Applications/Campfire.app"
-          for PLIST in "$APP/Info.plist" "$APP/PlugIns/ShareExtension.appex/Info.plist"; do
+          for PLIST in "$APP/Info.plist" "$APP/PlugIns/ShareExtension.appex/Info.plist" "$APP/PlugIns/CampfireWidgets.appex/Info.plist"; do
             ARCHIVED_NAME=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$PLIST")
             ARCHIVED_BUILD=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$PLIST")
             echo "Archived $ARCHIVED_NAME ($ARCHIVED_BUILD): $PLIST"
@@ -283,6 +284,8 @@ jobs:
               <string>$APP_PROFILE</string>
               <key>com.pandulapeter.campfire.ShareExtension</key>
               <string>$EXTENSION_PROFILE</string>
+              <key>com.pandulapeter.campfire.widgets</key>
+              <string>$WIDGETS_PROFILE</string>
             </dict>
             <key>destination</key>
             <string>export</string>
