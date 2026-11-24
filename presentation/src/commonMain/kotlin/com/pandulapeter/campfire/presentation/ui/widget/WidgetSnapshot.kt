@@ -14,9 +14,11 @@ import kotlinx.serialization.json.Json
 
 /**
  * What the home screen widgets show, written by the app as `snapshot.json` and read by the widgets alone: they never
- * read the library, parse ChordPro, or start Koin. Not a stored document: the widgets always ship with the app that
- * writes it, so it has no version and a reader ignores keys it does not know. The iOS widget extension decodes the same
- * JSON in Swift (`app/ios`'s `CampfireWidgets`), so a renamed or retyped key is renamed there too.
+ * read the library, parse ChordPro, or start Koin. Not a stored document: the widgets ship with the app that writes it,
+ * so it has no version and a reader ignores keys it does not know. But an updated app's widgets read the file the old
+ * one wrote until the app is next opened, so a key added later has a default here and is optional in the iOS widget
+ * extension, which decodes the same JSON in Swift (`app/ios`'s `CampfireWidgets`); a renamed or retyped key is renamed
+ * there too.
  *
  * @property songs Every song of the library, filters left out, in the songs screen's order.
  * @property setlists Every setlist, in the setlists screen's order, the archived ones last.

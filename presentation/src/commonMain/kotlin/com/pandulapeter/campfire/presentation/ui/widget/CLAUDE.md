@@ -16,7 +16,8 @@ shells' (`app/android`'s Glance widgets, `app/ios`'s `CampfireWidgets` extension
   every setlist (title, `yyyy-MM-dd` day and the app's own writing of it, archived, its songs the library holds, link),
   the Songs and Setlists switches, and every text already in the app's language, so a widget never reads the library,
   parses ChordPro, or starts Koin. Not a stored document: no version, unknown keys ignored, and the iOS extension
-  decodes the same keys in Swift. Never backed up, never synced.
+  decodes the same keys in Swift. An update's widgets read the old app's file until the app is opened, so a key added
+  later has a default (optional in Swift). Never backed up, never synced.
 - `WidgetSnapshotEffect` builds it from a library read whole (`DataState.Idle` and `isWholeLibrary`, never a first
   read's batches) and hands it to the shells once it has held for a second, again only when it changes.
 - A counted text is a `Plural` of the language's template for each count from 0 to 199 (a larger count reads as the
