@@ -24,6 +24,10 @@ on:
     # run that never comes.
     paths-ignore: [ 'documentation/**' ]
   workflow_call:
+    outputs:
+      passed:
+        description: "'true' when every test passed, a compile-ios that got no runner counted by its second try"
+        value: ${{ jobs.passed.outputs.passed }}
   workflow_dispatch:
 
 permissions:
@@ -166,9 +170,9 @@ jobs:
     # The runner and the Xcode publish-ios.yml builds the release with, so a retired label or an Xcode that is gone
     # fails here, on every push, rather than in a release.
     runs-on: xcode-27
-    env:
+    env: &compile-ios-env
       DEVELOPER_DIR: /Applications/Xcode_27.2.app/Contents/Developer
-    steps:
+    steps: &compile-ios
       - name: Check out repository
         uses: actions/checkout@v5
       - name: Set up JDK 21 and Gradle
@@ -186,6 +190,17 @@ jobs:
       # module's build file (testRuns["test"].deviceId), not here. Not in the pre-commit hook: the test link takes minutes.
       - name: Run the storage tests on the iOS simulator
         run: ./gradlew :data:source:local:implementation:iosSimulatorArm64Test
+
+  # GitHub cancels a job it finds no hosted runner for within a quarter of an hour, and macOS runners run short often
+  # enough that a release lost every store build to it: a compile-ios that never started (cancelled while the run was
+  # not) gets one more try, and `passed` counts the second.
+  compile-ios-again:
+    name: Compile the iOS app, again
+    needs: compile-ios
+    if: ${{ !cancelled() && needs.compile-ios.result == 'cancelled' }}
+    runs-on: xcode-27
+    env: *compile-ios-env
+    steps: *compile-ios
 
   test-windows:
     name: Run the unit tests on Windows
@@ -216,3 +231,28 @@ jobs:
             **/build/reports/tests/desktopTest/**
             **/build/test-results/desktopTest/*.xml
           retention-days: 7
+
+  # What publish-all.yml asks rather than the workflow's result, which the cancelled compile-ios fails for good even
+  # when its second try passed.
+  passed:
+    name: Every test passed
+    needs: [test, compile, compile-ios, compile-ios-again, test-windows]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    outputs:
+      passed: ${{ steps.passed.outputs.passed }}
+    steps:
+      - name: Check every job's result
+        id: passed
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: |
+          failed=$(jq --raw-output '
+            (if .["compile-ios-again"].result == "success" then del(.["compile-ios"], .["compile-ios-again"])
+             else del(.["compile-ios-again"]) end)
+            | to_entries[] | select(.value.result != "success") | "\(.key): \(.value.result)"' <<< "$RESULTS")
+          if [ -n "$failed" ]; then
+            echo "::error::Not every test passed: $failed" >&2
+            exit 1
+          fi
+          echo "passed=true" >> "$GITHUB_OUTPUT"

@@ -33,6 +33,12 @@ The workflows that test and publish Campfire. The `campfire.*` properties and `l
 - **A release carries only what no official channel offers**: just the Linux `.deb` and AppImage. The Mac App Store build is the Mac
   build (Apple silicon only), the Microsoft Store build the Windows one; `packageReleaseMsi` and `packageDmg` still build
   but nothing publishes them.
+- **A macOS job GitHub finds no runner for gets one more try**: GitHub cancels it after a quarter of an hour, without
+  a step run ("not acquired"), and macOS runners run short often enough to have cost one release its screenshots and
+  another every store build. `tests.yml`'s `compile-ios-again` reruns a `compile-ios` cancelled while the run was not,
+  and `screenshots.yml`'s `render-again` reruns only the legs `unacquired_jobs.py` finds never started (none when any
+  leg failed otherwise). The cancelled job fails its workflow for good, so `publish-all.yml` reads each one's output
+  (`passed`, `ready`) besides its result.
 - Every desktop leg starts the built app image before publishing (ProGuard breaks things only a start shows, see
   `app/desktop`) via `.github/scripts/start_release_build.sh`, in an empty data directory.
 
@@ -88,10 +94,10 @@ locales are filled in from the language), Play's `update-priority`, a `submit` a
   `contact-sheets/`), whose summary lists the images left to upload by hand and where they are in it. Dispatchable by
   hand on any ref; it publishes nothing and needs no secret.
 - **The store jobs wait for it, never on it**: `android`, `ios`, `macos`, and `windows` need `screenshots` but run on
-  `!cancelled()` with `prepare` and `test` succeeded, given `screenshots: true` only if it succeeded. A failed render
-  ships every build with the images the stores have, the run red. Each store script replaces a set by emptying and
-  refilling it (idempotent on a rerun); a set the run has no images for is left alone; a store whose `listings` are off
-  keeps its images.
+  `!cancelled()` with `prepare` and `test` succeeded, given `screenshots: true` only if it succeeded (or said `ready`).
+  A failed render ships every build with the images the stores have, the run red. Each store script replaces a set by
+  emptying and refilling it (idempotent on a rerun); a set the run has no images for is left alone; a store whose
+  `listings` are off keeps its images.
 - **By store**: Play replaces phone, 7" and 10" screenshots and the feature graphic in the release's edit. App Store
   Connect replaces the 6.9" iPhone, 13" iPad, and Mac sets of each localization and submits only once every image is
   `COMPLETE`. Partner Center replaces the desktop screenshots, the poster, and the box art in the submission it

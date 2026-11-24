@@ -193,6 +193,9 @@ jobs:
   website-screenshots:
     name: Website screenshots
     needs: [test, screenshots]
+    if: >-
+      ${{ !cancelled() && (needs.test.result == 'success' || needs.test.outputs.passed == 'true')
+      && (needs.screenshots.result == 'success' || needs.screenshots.outputs.ready == 'true') }}
     runs-on: ubuntu-latest
     concurrency:
       group: campfire-website
@@ -269,6 +272,9 @@ jobs:
   readme-screenshots:
     name: README screenshots
     needs: [test, screenshots]
+    if: >-
+      ${{ !cancelled() && (needs.test.result == 'success' || needs.test.outputs.passed == 'true')
+      && (needs.screenshots.result == 'success' || needs.screenshots.outputs.ready == 'true') }}
     runs-on: ubuntu-latest
     steps:
       - name: Check out main
@@ -304,7 +310,9 @@ jobs:
     needs: [prepare, test, screenshots]
     # Waits for the render, since each store takes the images in the submission it makes, but never fails because of
     # it: without the images the store keeps the ones it has.
-    if: ${{ !cancelled() && needs.prepare.result == 'success' && needs.test.result == 'success' }}
+    if: >-
+      ${{ !cancelled() && needs.prepare.result == 'success'
+      && (needs.test.result == 'success' || needs.test.outputs.passed == 'true') }}
     uses: ./.github/workflows/publish-android.yml
     with:
       update_priority: ${{ needs.prepare.outputs.update_priority }}
@@ -313,18 +321,24 @@ jobs:
       submit: ${{ needs.prepare.outputs.play_store_submit == 'true' }}
       release_notes_by_language: ${{ needs.prepare.outputs.release_notes_by_language }}
       listings: ${{ needs.prepare.outputs.play_store_listings == 'true' }}
-      screenshots: ${{ needs.screenshots.result == 'success' }}
+      screenshots: ${{ (needs.screenshots.result == 'success' || needs.screenshots.outputs.ready == 'true') }}
     secrets: inherit
 
   web:
     name: Web
     needs: [prepare, test]
+    if: >-
+      ${{ !cancelled() && needs.prepare.result == 'success'
+      && (needs.test.result == 'success' || needs.test.outputs.passed == 'true') }}
     uses: ./.github/workflows/publish-web.yml
     secrets: inherit
 
   linux:
     name: Linux
     needs: [prepare, test]
+    if: >-
+      ${{ !cancelled() && needs.prepare.result == 'success'
+      && (needs.test.result == 'success' || needs.test.outputs.passed == 'true') }}
     uses: ./.github/workflows/publish-linux.yml
     with:
       release_tag: ${{ github.event.release.tag_name }}
@@ -335,7 +349,9 @@ jobs:
     needs: [prepare, test, screenshots]
     # Waits for the render, since each store takes the images in the submission it makes, but never fails because of
     # it: without the images the store keeps the ones it has.
-    if: ${{ !cancelled() && needs.prepare.result == 'success' && needs.test.result == 'success' }}
+    if: >-
+      ${{ !cancelled() && needs.prepare.result == 'success'
+      && (needs.test.result == 'success' || needs.test.outputs.passed == 'true') }}
     uses: ./.github/workflows/publish-windows.yml
     # The Microsoft Store is signed into with the job's OIDC token (see publish-windows.yml), and a called workflow
     # gets no permission its caller does not grant.
@@ -348,7 +364,7 @@ jobs:
       release_notes: ${{ needs.prepare.outputs.release_notes }}
       release_notes_by_language: ${{ needs.prepare.outputs.release_notes_by_language }}
       listings: ${{ needs.prepare.outputs.microsoft_store_listings == 'true' }}
-      screenshots: ${{ needs.screenshots.result == 'success' }}
+      screenshots: ${{ (needs.screenshots.result == 'success' || needs.screenshots.outputs.ready == 'true') }}
     secrets: inherit
 
   ios:
@@ -356,7 +372,9 @@ jobs:
     needs: [prepare, test, screenshots]
     # Waits for the render, since each store takes the images in the submission it makes, but never fails because of
     # it: without the images the store keeps the ones it has.
-    if: ${{ !cancelled() && needs.prepare.result == 'success' && needs.test.result == 'success' }}
+    if: >-
+      ${{ !cancelled() && needs.prepare.result == 'success'
+      && (needs.test.result == 'success' || needs.test.outputs.passed == 'true') }}
     uses: ./.github/workflows/publish-ios.yml
     permissions:
       contents: read
@@ -367,7 +385,7 @@ jobs:
       submit: ${{ needs.prepare.outputs.app_store_submit == 'true' }}
       release_notes_by_language: ${{ needs.prepare.outputs.release_notes_by_language }}
       listings: ${{ needs.prepare.outputs.app_store_listings == 'true' }}
-      screenshots: ${{ needs.screenshots.result == 'success' }}
+      screenshots: ${{ (needs.screenshots.result == 'success' || needs.screenshots.outputs.ready == 'true') }}
     secrets: inherit
 
   macos:
@@ -375,7 +393,9 @@ jobs:
     needs: [prepare, test, screenshots]
     # Waits for the render, since each store takes the images in the submission it makes, but never fails because of
     # it: without the images the store keeps the ones it has.
-    if: ${{ !cancelled() && needs.prepare.result == 'success' && needs.test.result == 'success' }}
+    if: >-
+      ${{ !cancelled() && needs.prepare.result == 'success'
+      && (needs.test.result == 'success' || needs.test.outputs.passed == 'true') }}
     uses: ./.github/workflows/publish-macos.yml
     permissions:
       contents: read
@@ -386,5 +406,5 @@ jobs:
       submit: ${{ needs.prepare.outputs.mac_app_store_submit == 'true' }}
       release_notes_by_language: ${{ needs.prepare.outputs.release_notes_by_language }}
       listings: ${{ needs.prepare.outputs.mac_app_store_listings == 'true' }}
-      screenshots: ${{ needs.screenshots.result == 'success' }}
+      screenshots: ${{ (needs.screenshots.result == 'success' || needs.screenshots.outputs.ready == 'true') }}
     secrets: inherit

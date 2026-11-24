@@ -36,6 +36,10 @@ on:
       release_tag:
         type: string
         required: true
+    outputs:
+      ready:
+        description: "'true' once the screenshots artifact is uploaded"
+        value: ${{ jobs.frame.outputs.ready }}
   workflow_dispatch:
     inputs:
       ref:
@@ -52,24 +56,44 @@ defaults:
     shell: bash
 
 jobs:
+  # The matrix, written once for the render and for its second try. Each entry carries the title its job is named by,
+  # which is how the second try finds the legs that never ran.
+  plan:
+    name: Plan the render
+    runs-on: ubuntu-latest
+    outputs:
+      include: ${{ steps.plan.outputs.include }}
+    steps:
+      - name: Write the matrix
+        id: plan
+        run: |
+          include=$(jq --compact-output 'map(. + {title: "Render \(.name) (\(.shard)/\(.shards))"})' <<'JSON'
+          [
+            { "name": "Apple", "runner": "macos-latest", "chrome": true, "shard": 0, "shards": 3 },
+            { "name": "Apple", "runner": "macos-latest", "chrome": true, "shard": 1, "shards": 3 },
+            { "name": "Apple", "runner": "macos-latest", "chrome": true, "shard": 2, "shards": 3 },
+            { "name": "Others", "runner": "ubuntu-latest", "chrome": false, "shard": 0, "shards": 4 },
+            { "name": "Others", "runner": "ubuntu-latest", "chrome": false, "shard": 1, "shards": 4 },
+            { "name": "Others", "runner": "ubuntu-latest", "chrome": false, "shard": 2, "shards": 4 },
+            { "name": "Others", "runner": "ubuntu-latest", "chrome": false, "shard": 3, "shards": 4 }
+          ]
+          JSON
+          )
+          echo "include=$include" >> "$GITHUB_OUTPUT"
+
   render:
-    name: Render ${{ matrix.name }} (${{ matrix.shard }}/${{ matrix.shards }})
+    name: ${{ matrix.title }}
+    needs: plan
     runs-on: ${{ matrix.runner }}
     # A render that hangs would otherwise hold every store job of the release for GitHub's six hours.
     timeout-minutes: 120
     strategy:
-      # One failed part fails the run anyway; the others would only spend runners on images nothing frames.
+      # One failed part fails the run anyway; the others would only spend runners on images nothing frames. A leg that
+      # gets no runner is cancelled rather than failed, which stops nothing: it runs again in render-again.
       fail-fast: true
       matrix:
-        include:
-          - { name: Apple, runner: macos-latest, chrome: true, shard: 0, shards: 3 }
-          - { name: Apple, runner: macos-latest, chrome: true, shard: 1, shards: 3 }
-          - { name: Apple, runner: macos-latest, chrome: true, shard: 2, shards: 3 }
-          - { name: Others, runner: ubuntu-latest, chrome: false, shard: 0, shards: 4 }
-          - { name: Others, runner: ubuntu-latest, chrome: false, shard: 1, shards: 4 }
-          - { name: Others, runner: ubuntu-latest, chrome: false, shard: 2, shards: 4 }
-          - { name: Others, runner: ubuntu-latest, chrome: false, shard: 3, shards: 4 }
-    steps:
+        include: ${{ fromJSON(needs.plan.outputs.include) }}
+    steps: &render
       - name: Check out repository
         uses: actions/checkout@v5
         with:
@@ -102,10 +126,55 @@ jobs:
           path: renders
           retention-days: 1
 
+  # GitHub cancels a job it finds no hosted runner for within a quarter of an hour, which macOS runners have made a
+  # regular loss: the legs that never started (and only those, and only when no leg failed otherwise) get one more try.
+  unacquired:
+    name: Find the legs that got no runner
+    needs: [plan, render]
+    if: ${{ !cancelled() && needs.render.result != 'success' }}
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      include: ${{ steps.find.outputs.include }}
+    steps:
+      - name: Check out the scripts
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.workflow_sha }}
+          sparse-checkout: .github/scripts
+      - name: Find them
+        id: find
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PLAN: ${{ needs.plan.outputs.include }}
+        run: |
+          JOBS="$RUNNER_TEMP/jobs.jsonl"
+          gh api --paginate --jq '.jobs[]' \
+            "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/attempts/$GITHUB_RUN_ATTEMPT/jobs?per_page=100" > "$JOBS"
+          python3 -I .github/scripts/unacquired_jobs.py --plan "$PLAN" --jobs "$JOBS" >> "$GITHUB_OUTPUT"
+
+  render-again:
+    name: ${{ matrix.title }}, again
+    needs: unacquired
+    if: ${{ !cancelled() && needs.unacquired.outputs.include != '[]' && needs.unacquired.outputs.include != '' }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 120
+    strategy:
+      fail-fast: true
+      matrix:
+        include: ${{ fromJSON(needs.unacquired.outputs.include) }}
+    steps: *render
+
   frame:
     name: Frame, check, and upload
-    needs: render
+    needs: [render, render-again]
+    # Every leg rendered, the first time or the second; a leg the second try missed too fails render-again.
+    if: ${{ !cancelled() && (needs.render.result == 'success' || needs.render-again.result == 'success') }}
     runs-on: macos-latest
+    outputs:
+      ready: ${{ steps.ready.outputs.ready }}
     # Framing and checking take a quarter of an hour; the bound is for a runner that hangs, not for a slow one.
     timeout-minutes: 90
     steps:
@@ -165,3 +234,8 @@ jobs:
           path: screenshots
           # Long enough to upload the images no API takes by hand, after a release (store_images.py's MANUAL).
           retention-days: 90
+      # What publish-all.yml asks rather than the workflow's result, which a leg that got no runner fails for good even
+      # when its second try rendered everything.
+      - name: Say the screenshots are ready
+        id: ready
+        run: echo "ready=true" >> "$GITHUB_OUTPUT"
