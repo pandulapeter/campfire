@@ -134,14 +134,16 @@ internal fun Modifier.fadingVerticalEdges(
  *
  * @param topHeight How far down the top strip reaches, and so how far the content is scrolled before it is at full
  *   strength.
+ * @param bottomHeight The same for the bottom strip.
  */
 internal fun Modifier.fadingVerticalEdges(
     scrolledFromTop: () -> Int,
     scrolledFromBottom: () -> Int,
     backgroundColor: Color,
     topHeight: Dp = EDGE_FADE_SIZE,
+    bottomHeight: Dp = EDGE_FADE_SIZE,
 ) = drawWithCache {
-    val height = EDGE_FADE_SIZE.toPx()
+    val height = bottomHeight.toPx()
     val topHeightPx = topHeight.toPx()
     val topGradient = Brush.verticalGradient(
         colors = listOf(backgroundColor, backgroundColor.copy(alpha = 0f)),

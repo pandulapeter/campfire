@@ -360,17 +360,14 @@ internal fun SongDetailsPage(
             val startPadding = contentPadding.calculateStartPadding(layoutDirection) + PAGE_HORIZONTAL_PADDING
             val endPadding = contentPadding.calculateEndPadding(layoutDirection) + PAGE_HORIZONTAL_PADDING
             val settledPageWidth = maxOf(settledWidth, maxWidth)
+            // Only one column scrolls on through the bottom inset; in a setlist the pager bar stands over it instead.
+            val bottomInset = if (isContinuous) contentPadding.calculateBottomPadding() else 0.dp
             CompositionLocalProvider(LocalSongChange provides songChange, LocalSongImageAdder provides onAddImage) {
                 SongLyrics(
                     modifier = Modifier
                         .fillMaxSize()
-                        .songPageScroll(scrollState, flingBehavior, isAcross, model.textDirection, startPadding, endPadding)
-                        .padding(
-                            start = startPadding,
-                            end = endPadding,
-                            top = topPadding,
-                            bottom = bottomPadding,
-                        ),
+                        .songPageScroll(scrollState, flingBehavior, isAcross, model.textDirection, startPadding, endPadding, bottomInset)
+                        .padding(start = startPadding, end = endPadding, top = topPadding, bottom = bottomPadding),
                     model = model,
                     availableWidth = settledPageWidth - startPadding - endPadding,
                     availableHeight = if (isContinuous) Dp.Unspecified else settled.height - topPadding - bottomPadding,
