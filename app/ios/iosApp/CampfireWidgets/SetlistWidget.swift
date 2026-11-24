@@ -49,7 +49,7 @@ struct SetlistProvider: AppIntentTimelineProvider {
         let today = calendar.startOfDay(for: now)
         let midnights = (1...7).compactMap { calendar.date(byAdding: .day, value: $0, to: today) }
         let entries = ([now] + midnights).map { entry(at: $0, configuration: configuration, snapshot: snapshot) }
-        return Timeline(entries: entries, policy: .atEnd)
+        return Timeline(entries: entries, policy: snapshot == nil ? WidgetSnapshot.retryPolicy : .atEnd)
     }
 
     private func entry(at date: Date, configuration: SetlistConfigurationIntent, snapshot: WidgetSnapshot?) -> SetlistEntry {

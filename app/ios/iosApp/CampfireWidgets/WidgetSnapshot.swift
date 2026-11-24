@@ -8,6 +8,7 @@
  * https://mozilla.org/MPL/2.0/.
  */
 import Foundation
+import WidgetKit
 
 /// What the app writes for the widgets (`:presentation`'s `WidgetSnapshot`, the same keys), in the App Group's
 /// container: the extension links no Kotlin, and never reads the library itself. Keys it does not know are ignored, as
@@ -77,6 +78,10 @@ struct WidgetSnapshot: Decodable {
               let data = try? Data(contentsOf: url) else { return nil }
         return try? JSONDecoder().decode(WidgetSnapshot.self, from: data)
     }
+
+    /// A timeline's end when `load()` found nothing: soon, since the app reloads the widgets only when it writes a snapshot
+    /// that differs from the file, and a file the widget could not read would otherwise leave it saying so for a day.
+    static var retryPolicy: TimelineReloadPolicy { .after(Date().addingTimeInterval(15 * 60)) }
 }
 
 /// The App Group the app shares with its extensions, named by `CampfireAppGroup` in the `Info.plist`.

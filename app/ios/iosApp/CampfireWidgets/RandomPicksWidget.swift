@@ -52,7 +52,7 @@ struct RandomPicksProvider: TimelineProvider {
         let entries = [entry(at: now, snapshot: snapshot)] + (1...24).map { offset in
             entry(at: Date(timeIntervalSince1970: hour + Double(offset) * 3600), snapshot: snapshot)
         }
-        completion(Timeline(entries: entries, policy: .atEnd))
+        completion(Timeline(entries: entries, policy: snapshot == nil ? WidgetSnapshot.retryPolicy : .atEnd))
     }
 
     private func entry(at date: Date, snapshot: WidgetSnapshot?) -> RandomPicksEntry {
