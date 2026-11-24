@@ -1,0 +1,18 @@
+/*
+ * This file is part of Campfire.
+ * Copyright (c) Pandula Péter 2017-2026.
+ * https://github.com/pandulapeter/campfire
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * https://mozilla.org/MPL/2.0/.
+ */
+
+"Random picks" = "בחירות אקראיות";
+"A few random songs from your library, new ones every hour." = "כמה שירים אקראיים מהספרייה שלך, חדשים בכל שעה.";
+"Setlist" = "סט־ליסט";
+"Your next gig, or a setlist you choose, and how many days are left." = "ההופעה הבאה שלך, או סט־ליסט שבחרת, וכמה ימים נשארו.";
+"Next gig" = "ההופעה הבאה";
+"Choose which setlist the widget shows." = "בחירת הסט־ליסט שהווידג׳ט מציג.";
+"Draw new picks" = "בחירה חדשה";
+"Open Campfire to fill this widget." = "פתחו את Campfire כדי למלא את הווידג׳ט הזה.";

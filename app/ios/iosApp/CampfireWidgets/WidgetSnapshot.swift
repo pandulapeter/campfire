@@ -1,0 +1,96 @@
+/*
+ * This file is part of Campfire.
+ * Copyright (c) Pandula Péter 2017-2026.
+ * https://github.com/pandulapeter/campfire
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * https://mozilla.org/MPL/2.0/.
+ */
+import Foundation
+
+/// What the app writes for the widgets (`:presentation`'s `WidgetSnapshot`, the same keys), in the App Group's
+/// container: the extension links no Kotlin, and never reads the library itself. Keys it does not know are ignored, as
+/// the Kotlin side ignores them too.
+struct WidgetSnapshot: Decodable {
+    let songs: [Song]
+    let setlists: [Setlist]
+    let areSongsEnabled: Bool
+    let areSetlistsEnabled: Bool
+    let homeLink: String
+    let setlistsLink: String
+    let strings: Strings
+
+    struct Song: Decodable {
+        let fileName: String
+        let title: String
+        let artist: String
+        let link: String
+    }
+
+    struct Setlist: Decodable {
+        let fileName: String
+        /// Its day as `yyyy-MM-dd`.
+        let date: String
+        let title: String
+        /// The same day as the app writes it, in its language.
+        let formattedDate: String
+        let isArchived: Bool
+        let songFileNames: [String]
+        let link: String
+    }
+
+    /// Every text the widgets show, in the app's language rather than the system's.
+    struct Strings: Decodable {
+        let isRightToLeft: Bool
+        let randomPicks: String
+        let drawNewPicks: String
+        let emptyLibrary: String
+        let songsOff: String
+        let setlistsOff: String
+        let nextGig: String
+        let noUpcomingSetlist: String
+        let setlistMissing: String
+        let today: String
+        let tomorrow: String
+        let yesterday: String
+        let inDays: Plural
+        let daysAgo: Plural
+        let songCount: Plural
+    }
+
+    /// A counted text as the app's language reads each count, so that no plural rule is needed here: past the list, a
+    /// count reads as the one with the same last two digits past 100.
+    struct Plural: Decodable {
+        let byCount: [String]
+
+        func format(_ count: Int) -> String {
+            let index = count < byCount.count ? count : 100 + count % 100
+            let template = byCount.indices.contains(max(index, 0)) ? byCount[max(index, 0)] : (byCount.last ?? "")
+            return template.replacingOccurrences(of: "%1$d", with: String(count))
+        }
+    }
+
+    /// The snapshot the app last wrote, or nil before it ever has (or where the file is not one).
+    static func load() -> WidgetSnapshot? {
+        guard let url = AppGroup.containerURL?.appendingPathComponent("Widget/snapshot.json"),
+              let data = try? Data(contentsOf: url) else { return nil }
+        return try? JSONDecoder().decode(WidgetSnapshot.self, from: data)
+    }
+}
+
+/// The App Group the app shares with its extensions, named by `CampfireAppGroup` in the `Info.plist`.
+enum AppGroup {
+    static let identifier = Bundle.main.object(forInfoDictionaryKey: "CampfireAppGroup") as? String
+
+    static var containerURL: URL? {
+        identifier.flatMap { FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: $0) }
+    }
+
+    static var defaults: UserDefaults? { identifier.flatMap { UserDefaults(suiteName: $0) } }
+}
+
+/// The address a tap opens, or the app's own scheme alone where one is not a URL (which opens the home screen).
+func appLink(_ link: String) -> URL {
+    URL(string: link) ?? URL(string: "campfire://")!
+}

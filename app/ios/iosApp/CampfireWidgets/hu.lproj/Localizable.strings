@@ -1,0 +1,18 @@
+/*
+ * This file is part of Campfire.
+ * Copyright (c) Pandula Péter 2017-2026.
+ * https://github.com/pandulapeter/campfire
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * https://mozilla.org/MPL/2.0/.
+ */
+
+"Random picks" = "Véletlen válogatás";
+"A few random songs from your library, new ones every hour." = "Néhány véletlen dal a könyvtáradból, óránként újak.";
+"Setlist" = "Lista";
+"Your next gig, or a setlist you choose, and how many days are left." = "A következő fellépésed vagy egy általad választott lista, és hogy hány nap van még hátra.";
+"Next gig" = "Következő fellépés";
+"Choose which setlist the widget shows." = "Válaszd ki, melyik listát mutassa a widget.";
+"Draw new picks" = "Új válogatás";
+"Open Campfire to fill this widget." = "Nyisd meg a Campfire-t a widget kitöltéséhez.";

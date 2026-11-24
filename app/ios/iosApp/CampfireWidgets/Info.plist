@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ This file is part of Campfire.
+ Copyright (c) Pandula Péter 2017-2026.
+ https://github.com/pandulapeter/campfire
+
+ This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ If a copy of the MPL was not distributed with this file, You can obtain one at
+ https://mozilla.org/MPL/2.0/.
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleDisplayName</key>
+	<string>Campfire</string>
+	<!-- The gallery's names and descriptions and Edit Widget's words are the extension's own Localizable.strings, in
+	     the system's language: the system shows them before the app has ever run. What a widget shows is in the app's
+	     language, from the snapshot. -->
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>en</string>
+		<string>hu</string>
+		<string>ro</string>
+		<string>de</string>
+		<string>es</string>
+		<string>fr</string>
+		<string>it</string>
+		<string>he</string>
+		<string>pt</string>
+		<string>pl</string>
+		<string>cs</string>
+	</array>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundlePackageType</key>
+	<string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
+	<!-- Written during the build by the same script as the app's: App Store Connect refuses an extension whose
+	     version differs from its app's. -->
+	<key>CFBundleShortVersionString</key>
+	<string>0</string>
+	<key>CFBundleVersion</key>
+	<string>0</string>
+	<!-- Where the snapshot is, the app's Info.plist naming the same group. -->
+	<key>CampfireAppGroup</key>
+	<string>$(APP_GROUP_ID)</string>
+	<!-- The app's own Inter, the same files :presentation bundles. -->
+	<key>UIAppFonts</key>
+	<array>
+		<string>inter_regular.ttf</string>
+		<string>inter_medium.ttf</string>
+		<string>inter_bold.ttf</string>
+	</array>
+	<key>NSExtension</key>
+	<dict>
+		<key>NSExtensionPointIdentifier</key>
+		<string>com.apple.widgetkit-extension</string>
+	</dict>
+</dict>
+</plist>

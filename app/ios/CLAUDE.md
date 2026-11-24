@@ -10,7 +10,7 @@
 # :app:ios
 
 The static `ComposeApp` framework for the Xcode project in `iosApp/` (a SwiftUI wrapper), which also builds the share
-extension (`iosApp/ShareExtension/`, Swift only).
+extension (`iosApp/ShareExtension/`) and the widget extension (`iosApp/CampfireWidgets/`), both Swift only.
 
 ## `CampfireViewController.kt`
 
@@ -113,6 +113,28 @@ extension (`iosApp/ShareExtension/`, Swift only).
 - An extension cannot size or replace the sharing app's sheet, so a saved share closes it by itself after two seconds;
   a refusal waits for Done.
 
+## Widget extension
+
+- `CampfireWidgets` (iOS 17, the first with widget buttons and `AppIntentConfiguration`, so one code path; the app
+  stays on 15.3): Random picks and Setlist in one `WidgetBundle`, what they show being `ui/widget/CLAUDE.md`'s. It links
+  no Kotlin and reads only `Widget/snapshot.json` in the App Group's container (`WidgetSnapshot.swift`, the same keys);
+  the next gig and relative day rules are written again in `SetlistWidget.swift`.
+- `IosWidgetSnapshot.kt` writes it atomically on one IO thread, skipping a snapshot equal to the file (every launch
+  hands over one; WidgetKit budgets reloads), its folder excluded from backup. **The reload seam**: WidgetKit has no
+  Objective-C API, so `CampfireViewController` takes `reloadWidgetTimelines`, which `ContentView.swift` passes as
+  `WidgetCenter.shared.reloadAllTimelines()`, called after each write.
+- Random picks: 25 hourly entries, each drawn (SplitMix64) by the seed in the group's `UserDefaults` mixed with the
+  hour, so a timeline rebuilt within the hour draws the same; Shuffle (`ShuffleIntent`) stores a new seed, shared by
+  every such widget. Setlist: an entry now and at each of the week's midnights; the choice is a `SetlistEntity`
+  (`next-gig`, else a setlist's file name) listed from the snapshot, a missing one kept until changed.
+- What a widget shows comes from the snapshot, in the app's language and direction. The gallery's names and
+  descriptions, Edit Widget's words, and the line shown before the app has written a snapshot are the extension's
+  `Localizable.strings`, keyed by their English text, in every app language. Inter through `UIAppFonts`, referencing
+  `:presentation`'s font files, by PostScript name (`Inter Medium` is a family of its own); the app's purple as
+  `AccentColor`; the system's widget background.
+- Signed like the share extension: App ID `<bundle id>.widgets` with the App Group, its own App Store profile
+  (`.github/CLAUDE.md`).
+
 ## `Info.plist`
 
 - `CFBundleURLTypes` declares `campfire`: `ASWebAuthenticationSession` doesn't need it, but it is Dropbox's registered
@@ -166,8 +188,8 @@ and the Kotlin runtime's calls are the app's to declare. After updating any of t
 
 - Team id, bundle id, and app name are in `iosApp/Configuration/Config.xcconfig`; **change the team there, not in
   Xcode's Signing tab**, which writes a literal over `$(TEAM_ID)`.
-- Version and build number come from `campfire.versionName` / `campfire.buildNumber` via the last build phase of both
-  targets (`iosApp/Configuration/set-version.sh`; App Store Connect refuses an extension whose version differs from its
+- Version and build number come from `campfire.versionName` / `campfire.buildNumber` via the last build phase of every
+  target (`iosApp/Configuration/set-version.sh`; App Store Connect refuses an extension whose version differs from its
   app's); MARKETING_VERSION and CURRENT_PROJECT_VERSION are deliberately unset in `project.pbxproj`. The "Compile
   Kotlin Framework" phase is the app target's alone.
 - `.run/iOS.run.xml` makes the KMP plugin write a shared iOS.xcscheme, which is gitignored: a shared scheme removes the

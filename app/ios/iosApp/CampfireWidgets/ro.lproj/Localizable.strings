@@ -1,0 +1,18 @@
+/*
+ * This file is part of Campfire.
+ * Copyright (c) Pandula Péter 2017-2026.
+ * https://github.com/pandulapeter/campfire
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * https://mozilla.org/MPL/2.0/.
+ */
+
+"Random picks" = "Alegeri aleatorii";
+"A few random songs from your library, new ones every hour." = "Câteva cântece aleatorii din biblioteca ta, altele în fiecare oră.";
+"Setlist" = "Listă";
+"Your next gig, or a setlist you choose, and how many days are left." = "Următorul tău concert sau o listă aleasă de tine și câte zile au mai rămas.";
+"Next gig" = "Următorul concert";
+"Choose which setlist the widget shows." = "Alege ce listă arată widgetul.";
+"Draw new picks" = "Alege altele";
+"Open Campfire to fill this widget." = "Deschide Campfire ca să completezi acest widget.";
