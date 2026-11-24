@@ -102,6 +102,8 @@ tasks.test {
     timeout = Duration.ofMinutes(20)
     systemProperty("java.awt.headless", "true")
     systemProperty("campfire.screenshots.versionName", project.property("campfire.versionName").toString())
+    // The app keeps its data in %APPDATA% on Windows, outside the temporary home each start gets; empty, it falls back to the home.
+    environment("APPDATA", "")
 }
 
 tasks.named<JavaExec>("run") {
@@ -120,6 +122,8 @@ tasks.named<JavaExec>("run") {
     systemProperty("campfire.screenshots.fonts", fonts.get().asFile.absolutePath)
     systemProperty("campfire.screenshots.appIcon", rootProject.file("app/desktop/src/main/composeResources/drawable/app_icon.png").absolutePath)
     systemProperty("campfire.screenshots.versionName", project.property("campfire.versionName").toString())
+    // The app keeps its data in %APPDATA% on Windows, outside the temporary home each start gets; empty, it falls back to the home.
+    environment("APPDATA", "")
 }
 
 /**
@@ -136,4 +140,6 @@ tasks.register<JavaExec>("benchmark") {
     systemProperty("java.awt.headless", "true")
     systemProperty("campfire.screenshots.library", file("library").absolutePath)
     systemProperty("campfire.screenshots.versionName", project.property("campfire.versionName").toString())
+    // The app keeps its data in %APPDATA% on Windows, outside the temporary home each start gets; empty, it falls back to the home.
+    environment("APPDATA", "")
 }
