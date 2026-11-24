@@ -57,7 +57,9 @@ struct RandomPicksProvider: TimelineProvider {
 
     private func entry(at date: Date, snapshot: WidgetSnapshot?) -> RandomPicksEntry {
         let hour = UInt64(max(0, Int64(date.timeIntervalSince1970 / 3600)))
-        return RandomPicksEntry(date: date, snapshot: snapshot, seed: ShuffleSeed.current &+ hour &* 0x9E37_79B9_7F4A_7C15)
+        // Mixed, not added: a seed one increment of the generator's own on would start the same stream one value later,
+        // so each hour would show nearly the picks of the hour before it.
+        return RandomPicksEntry(date: date, snapshot: snapshot, seed: SeededGenerator.mix(ShuffleSeed.current ^ hour))
     }
 }
 
@@ -94,7 +96,12 @@ struct SeededGenerator: RandomNumberGenerator {
 
     mutating func next() -> UInt64 {
         state &+= 0x9E37_79B9_7F4A_7C15
-        var z = state
+        return Self.mix(state)
+    }
+
+    /// SplitMix64's finalizer: nearby inputs give unrelated outputs.
+    static func mix(_ value: UInt64) -> UInt64 {
+        var z = value
         z = (z ^ (z >> 30)) &* 0xBF58_476D_1CE4_E5B9
         z = (z ^ (z >> 27)) &* 0x94D0_49BB_1331_11EB
         return z ^ (z >> 31)
