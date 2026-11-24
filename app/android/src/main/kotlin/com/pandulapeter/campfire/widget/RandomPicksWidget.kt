@@ -39,6 +39,7 @@ internal class RandomPicksWidget : GlanceAppWidget() {
         if (drawnAt == null || now - drawnAt !in 0 until DRAW_LIFETIME) {
             updateAppWidgetState(context, id) { it.drawRandomPicks(now) }
         }
+        WidgetSnapshotFile.load(context)
         provideContent {
             WidgetTheme {
                 RandomPicksWidgetLayout(

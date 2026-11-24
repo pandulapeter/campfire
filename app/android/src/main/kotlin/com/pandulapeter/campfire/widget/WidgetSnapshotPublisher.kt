@@ -34,7 +34,7 @@ internal object WidgetSnapshotPublisher {
         scope.launch {
             mutex.withLock {
                 val isWritten = try {
-                    WidgetSnapshotFile.write(context = applicationContext, json = snapshot.encode())
+                    WidgetSnapshotFile.write(context = applicationContext, snapshot = snapshot)
                 } catch (exception: IOException) {
                     println("Could not write the widgets' snapshot: ${exception.message}")
                     return@withLock

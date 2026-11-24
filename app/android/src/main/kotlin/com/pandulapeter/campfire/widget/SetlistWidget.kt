@@ -29,13 +29,16 @@ internal class SetlistWidget : GlanceAppWidget() {
     /** One layout per number of song titles, so that the widget lists as many as its height has room for. */
     override val sizeMode = SizeMode.Responsive(SetlistWidgetMetrics.SONG_LINE_STEPS.map { DpSize(MIN_WIDTH.dp, SetlistWidgetMetrics.heightFor(it).dp) }.toSet())
 
-    override suspend fun provideGlance(context: Context, id: GlanceId) = provideContent {
-        WidgetTheme {
-            SetlistWidgetLayout(
-                snapshot = rememberWidgetSnapshot(),
-                pinnedFileName = currentState(WidgetState.PINNED_SETLIST),
-                todayEpochDay = LocalDate.now().toEpochDay(),
-            )
+    override suspend fun provideGlance(context: Context, id: GlanceId) {
+        WidgetSnapshotFile.load(context)
+        provideContent {
+            WidgetTheme {
+                SetlistWidgetLayout(
+                    snapshot = rememberWidgetSnapshot(),
+                    pinnedFileName = currentState(WidgetState.PINNED_SETLIST),
+                    todayEpochDay = LocalDate.now().toEpochDay(),
+                )
+            }
         }
     }
 

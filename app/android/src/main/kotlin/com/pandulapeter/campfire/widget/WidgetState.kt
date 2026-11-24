@@ -11,10 +11,9 @@ package com.pandulapeter.campfire.widget
 
 import android.content.Context
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.collectAsState
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
-import androidx.glance.LocalContext
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.state.updateAppWidgetState
@@ -41,8 +40,8 @@ internal object WidgetState {
  * Redraws every widget of this kind from the snapshot and the day as they are now.
  *
  * A widget's composition outlives one drawing for a while, and an update while it is alive only recomposes it, which a
- * state that has not changed does not even do: so each widget's [WidgetState.REFRESHED_AT] is moved on first, which is
- * what [rememberWidgetSnapshot] reads the file again for.
+ * state that has not changed does not even do: so each widget's [WidgetState.REFRESHED_AT] is moved on first, which
+ * [rememberWidgetSnapshot] reads, so that the day is read again too.
  */
 internal suspend fun GlanceAppWidget.refreshAll(context: Context) {
     GlanceAppWidgetManager(context).getGlanceIds(javaClass).forEach { glanceId ->
@@ -51,10 +50,12 @@ internal suspend fun GlanceAppWidget.refreshAll(context: Context) {
     }
 }
 
-/** The snapshot as the file holds it, read again whenever the widget is refreshed. */
+/**
+ * The snapshot as the file holds it, from [WidgetSnapshotFile.snapshot], which the provider has loaded before composing:
+ * Glance composes on the main thread, once for each of a widget's sizes.
+ */
 @Composable
 internal fun rememberWidgetSnapshot(): WidgetSnapshot? {
-    val context = LocalContext.current
-    val refreshedAt = currentState(WidgetState.REFRESHED_AT)
-    return remember(refreshedAt) { WidgetSnapshotFile.read(context) }
+    currentState(WidgetState.REFRESHED_AT)
+    return WidgetSnapshotFile.snapshot.collectAsState().value
 }

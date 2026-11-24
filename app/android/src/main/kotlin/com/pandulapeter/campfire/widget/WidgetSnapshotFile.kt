@@ -11,6 +11,13 @@ package com.pandulapeter.campfire.widget
 
 import android.content.Context
 import com.pandulapeter.campfire.presentation.ui.widget.WidgetSnapshot
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.IOException
 
@@ -21,6 +28,21 @@ import java.io.IOException
  */
 internal object WidgetSnapshotFile {
 
+    private val _snapshot = MutableStateFlow<WidgetSnapshot?>(null)
+    private var isLoaded = false
+    private val mutex = Mutex()
+
+    /** What the file holds, once [load]ed in this process, kept current by [write]. */
+    val snapshot: StateFlow<WidgetSnapshot?> = _snapshot.asStateFlow()
+
+    /** Reads the file into [snapshot] unless this process already has, off the main thread. */
+    suspend fun load(context: Context) = mutex.withLock {
+        if (!isLoaded) {
+            _snapshot.value = withContext(Dispatchers.IO) { read(context) }
+            isLoaded = true
+        }
+    }
+
     /** The snapshot, or null before the app has ever written one (or where it cannot be read). */
     fun read(context: Context): WidgetSnapshot? = try {
         file(context).takeIf { it.exists() }?.readText()?.let(WidgetSnapshot::decode)
@@ -30,11 +52,18 @@ internal object WidgetSnapshotFile {
     }
 
     /**
-     * Writes [json] unless the file already holds it, and says whether it did. Written beside the file and renamed over
-     * it, which replaces it in one step, so that a widget drawn meanwhile reads the old snapshot or the new one, never
-     * half of one.
+     * Writes [snapshot] unless the file already holds it, and says whether it did. Written beside the file and renamed
+     * over it, which replaces it in one step, so that a widget drawn meanwhile reads the old snapshot or the new one,
+     * never half of one.
      */
-    fun write(context: Context, json: String): Boolean {
+    suspend fun write(context: Context, snapshot: WidgetSnapshot): Boolean = mutex.withLock {
+        val isWritten = write(context = context, json = snapshot.encode())
+        _snapshot.value = snapshot
+        isLoaded = true
+        isWritten
+    }
+
+    private fun write(context: Context, json: String): Boolean {
         val file = file(context)
         if (file.exists() && file.readText() == json) return false
         val directory = file.parentFile ?: throw IOException("No directory for ${file.name}")

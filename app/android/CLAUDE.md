@@ -72,9 +72,11 @@
   `widget/snapshot.json` (files directory; skipped when unchanged, written beside it and renamed over it) on a process
   scope, then refreshes both widgets. The widgets read only that file (never Koin or the library) and call the common
   decisions (`randomPicksContent`, `setlistContent`); no snapshot yet (the app never ran) says to open the app.
+- **The file is read once per process, on IO** (`WidgetSnapshotFile.load` in `provideGlance`, then kept current by its
+  `write`): Glance composes on the main thread, once per responsive size.
 - **A refresh moves `REFRESHED_AT` in each widget's Glance state before `update`**: a composition still alive is only
-  recomposed by an update, and not at all for a state that did not change, so `rememberWidgetSnapshot` keys its read on
-  it.
+  recomposed by an update, and not at all for a state that did not change, so `rememberWidgetSnapshot` reads it, and
+  the day is read again.
 - **Glance draws only a container's first ten children**: the Setlist's titles go in columns of ten.
 - Random picks: `SizeMode.Responsive`, one layout per row count (up to five). The draw is a seed in the widget's own
   state, drawn again by Shuffle (`ShuffleAction`, public: Glance's R8 rules keep only public `ActionCallback`s) and by
