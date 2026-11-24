@@ -36,16 +36,19 @@ internal object LauncherShortcutPublisher {
             // is disabled, saying why, and enabled again once it is offered again: a disabled one is never updated.
             manager.enableShortcuts(offeredIds)
             manager.disableShortcuts(LauncherShortcut.entries.map { it.id } - offeredIds.toSet(), shortcuts.withdrawnMessage)
-            manager.dynamicShortcuts = offered.mapIndexed { rank, item ->
-                ShortcutInfo.Builder(context, item.shortcut.id)
-                    .setShortLabel(item.label)
-                    .setLongLabel(item.label)
-                    .setIcon(Icon.createWithResource(context, item.shortcut.icon))
-                    .setIntent(appLinkIntent(context = context, link = item.shortcut.link).putExtra(EXTRA_SHORTCUT_ID, item.shortcut.id))
-                    .setRank(rank)
-                    .build()
-            }
-            println("Launcher shortcuts published: ${offered.size}")
+            val isPublished = manager.setDynamicShortcuts(
+                offered.mapIndexed { rank, item ->
+                    ShortcutInfo.Builder(context, item.shortcut.id)
+                        .setShortLabel(item.label)
+                        .setLongLabel(item.label)
+                        .setIcon(Icon.createWithResource(context, item.shortcut.icon))
+                        .setIntent(appLinkIntent(context = context, link = item.shortcut.link).putExtra(EXTRA_SHORTCUT_ID, item.shortcut.id))
+                        .setRank(rank)
+                        .build()
+                },
+            )
+            // Refused when the app is publishing too often in the background, which the next change or launch answers again.
+            println(if (isPublished) "Launcher shortcuts published: ${offered.size}" else "Launcher shortcuts not published: rate limited")
         } catch (exception: IllegalStateException) {
             // Refused while the user is locked, which the next change or launch answers again.
             println("Could not publish the launcher shortcuts: ${exception.message}")
