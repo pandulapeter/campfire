@@ -11,9 +11,14 @@ package com.pandulapeter.campfire.presentation.ui.components.songFilters
 
 import com.pandulapeter.campfire.presentation.ui.components.only
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.LookaheadScope
+import androidx.compose.ui.layout.Measurable
+import androidx.compose.ui.layout.MeasureResult
+import androidx.compose.ui.layout.MeasureScope
 import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.unit.Constraints
@@ -63,10 +68,21 @@ internal fun FilterGroupsLayout(
     modifier: Modifier = Modifier,
     availableHeight: Dp,
     content: @Composable () -> Unit,
-) = Layout(
-    modifier = modifier,
-    content = content,
-) { measurables, constraints ->
+) {
+    val intrinsicsCache = remember { ChipIntrinsicsCache() }
+    Layout(
+        modifier = modifier,
+        content = { CompositionLocalProvider(LocalChipIntrinsicsCache provides intrinsicsCache, content) },
+        measurePolicy = { measurables, constraints -> measureFilterGroups(measurables, constraints, availableHeight, intrinsicsCache) },
+    )
+}
+
+private fun MeasureScope.measureFilterGroups(
+    measurables: List<Measurable>,
+    constraints: Constraints,
+    availableHeight: Dp,
+    intrinsicsCache: ChipIntrinsicsCache,
+): MeasureResult {
     val width = constraints.maxWidth
     val fixedConstraints = Constraints(maxWidth = width)
     val placeables = arrayOfNulls<Placeable>(measurables.size)
@@ -89,18 +105,20 @@ internal fun FilterGroupsLayout(
     val budgets = if (availableHeight == Dp.Infinity || !isLookingAhead) {
         null
     } else {
-        chipBudgets(
-            available = availableHeight.roundToPx() - fixedHeight,
-            natural = chipSlots.map { measurables[it].maxIntrinsicHeight(width) },
-            minimum = chipSlots.map { measurables[it].minIntrinsicHeight(width) },
-        )
+        intrinsicsCache.during {
+            chipBudgets(
+                available = availableHeight.roundToPx() - fixedHeight,
+                natural = chipSlots.map { measurables[it].maxIntrinsicHeight(width) },
+                minimum = chipSlots.map { measurables[it].minIntrinsicHeight(width) },
+            )
+        }
     }
     chipSlots.forEachIndexed { slot, index ->
         val measurable = measurables[index]
         val maxHeight = if (isLookingAhead && measurable.layoutId != FilterSlot.EXPANDED_CHIPS) budgets?.get(slot) else null
         placeables[index] = measurable.measure(Constraints(maxWidth = width, maxHeight = maxHeight ?: Constraints.Infinity))
     }
-    layout(width, placeables.sumOf { it?.height ?: 0 }) {
+    return layout(width, placeables.sumOf { it?.height ?: 0 }) {
         var y = 0
         placeables.forEach { placeable ->
             placeable?.placeRelative(0, y)

@@ -21,6 +21,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.NavigationEventTransitionState
 import androidx.navigationevent.compose.NavigationBackHandler
+import androidx.navigationevent.compose.NavigationEventState
 import androidx.navigationevent.compose.rememberNavigationEventState
 import kotlinx.coroutines.flow.collectLatest
 
@@ -36,7 +37,7 @@ import kotlinx.coroutines.flow.collectLatest
  */
 @Composable
 internal fun songFilterBackRecession(
-    isBackEnabled: Boolean,
+    isBackEnabled: () -> Boolean,
     isSongFilterActive: Boolean,
     onBackCompleted: () -> Unit,
 ): () -> Float {
@@ -46,8 +47,8 @@ internal fun songFilterBackRecession(
     var isCompleted by remember { mutableStateOf(false) }
     // Registered whether or not it is enabled, since a handler that comes and goes changes the order the dispatcher
     // picks between handlers in.
-    NavigationBackHandler(
-        state = gesture,
+    FilterBackHandler(
+        gesture = gesture,
         isBackEnabled = isBackEnabled,
         onBackCompleted = {
             isCompleted = true
@@ -77,3 +78,18 @@ internal fun songFilterBackRecession(
     }
     return remember(recession) { { recession.value } }
 }
+
+/**
+ * The handler on its own, so that what enables it ([isBackEnabled], a dialog among it) is read here rather than by the
+ * songs screen, which a sheet opening would otherwise compose again, its list with it.
+ */
+@Composable
+private fun FilterBackHandler(
+    gesture: NavigationEventState<NavigationEventInfo.None>,
+    isBackEnabled: () -> Boolean,
+    onBackCompleted: () -> Unit,
+) = NavigationBackHandler(
+    state = gesture,
+    isBackEnabled = isBackEnabled(),
+    onBackCompleted = onBackCompleted,
+)

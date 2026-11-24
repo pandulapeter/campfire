@@ -18,7 +18,9 @@
   `indication` outside the padding under a `clip`.
 - **The fold is decided by room, not a count**: groups report whole and collapsed heights as intrinsics, and
   `chipBudgets` shares the height like vessels. Selected chips are always visible; below the minimum the content
-  scrolls. Room is shared in the lookahead pass only; moving chips use `animateBounds` in one `LookaheadScope`.
+  scrolls. Room is shared in the lookahead pass only; moving chips use `animateBounds` in one `LookaheadScope`. A
+  group's chips are walked for those intrinsics once per `FilterGroupsLayout` measure (`ChipIntrinsicsCache`, never
+  longer: a count can widen a chip unseen).
 - In a sheet, the height offered is the sheet's tallest at every offset (`animateSheetContentHeight`), so the sharing
   never follows a drag.
 - Nothing under the finger moves on a selection: the "any / every" choice (only with two selected) is out of the

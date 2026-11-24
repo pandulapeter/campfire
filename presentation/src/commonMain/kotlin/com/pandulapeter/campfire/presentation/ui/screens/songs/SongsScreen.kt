@@ -29,9 +29,11 @@ import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
@@ -94,7 +96,7 @@ internal fun SongsScreen(
     val songGroups by viewModel.songListState.songGroups.collectAsStateWithLifecycle()
     val placeholder by viewModel.songListState.songsPlaceholder.collectAsStateWithLifecycle()
     val isPerformanceModeEnabled by viewModel.preferencesController.isPerformanceModeEnabled.collectAsStateWithLifecycle()
-    val visibleDialog by viewModel.dialogHost.visibleDialog.collectAsStateWithLifecycle()
+    val visibleDialog = viewModel.dialogHost.visibleDialog.collectAsStateWithLifecycle()
     val isSongFilterActive by viewModel.songListState.isSongFilterActive.collectAsStateWithLifecycle()
     val hasSongFilters by viewModel.songListState.hasSongFilters.collectAsStateWithLifecycle()
     val listState = rememberRetainedLazyGridState(viewModel.songListState.songsScrollPosition)
@@ -111,20 +113,21 @@ internal fun SongsScreen(
     val sortChangeReveal = remember { SortChangeReveal() }
     RevealSortChange(reveal = sortChangeReveal, listState = listState, songGroups = shownSongGroups)
     val clipboardReader = rememberClipboardTextReader()
+    val overlayState = LocalOverlayState.current
     val badgeRecession = songFilterBackRecession(
-        isBackEnabled = isSongFilterActive && !isSelecting && !isSearchOpen && visibleDialog == null &&
-            !LocalOverlayState.current.isAnyMenuOpen && viewModel.navigator.backStack.size == 1,
+        isBackEnabled = { isSongFilterActive && !isSelecting && !isSearchOpen && visibleDialog.value == null &&
+            !overlayState.isAnyMenuOpen && viewModel.navigator.backStack.size == 1 },
         isSongFilterActive = isSongFilterActive,
         onBackCompleted = viewModel.songListState::clearSongFilter,
     )
-    HideKeyboardWhenScrolledDown(listState, isEnabled = visibleDialog == null)
+    HideKeyboardUnderNoDialog(listState = listState, visibleDialog = visibleDialog)
     LaunchedEffect(viewModel, listState) {
         // Latest, for the reason the settings screen gives.
         viewModel.navigator.scrollToTopRequests.collectLatest { if (it.destination == CampfireDestination.Songs) listState.animateScrollToTop() }
     }
     // A sync run can take the last tag out of the library under an open sheet, which would leave it empty.
     LaunchedEffect(hasSongFilters) {
-        if (!hasSongFilters && visibleDialog == DialogType.SongFilters) viewModel.dialogHost.dismissDialog()
+        if (!hasSongFilters && visibleDialog.value == DialogType.SongFilters) viewModel.dialogHost.dismissDialog()
     }
     // The widest the app bar's buttons reach in over the list, which a pinned header keeps clear of - nothing once
     // the bar has filled in and moved the list down under itself.
@@ -240,13 +243,27 @@ internal fun SongsScreen(
             }
         }
     }
-    val backGesture = rememberNavigationEventState(currentInfo = NavigationEventInfo.None)
-    NavigationBackHandler(
-        state = backGesture,
-        isBackEnabled = isSelecting && !isSearchOpen && visibleDialog == null && !LocalOverlayState.current.isAnyMenuOpen,
+    SelectionBackHandler(
+        isBackEnabled = { isSelecting && !isSearchOpen && visibleDialog.value == null && !overlayState.isAnyMenuOpen },
         onBackCompleted = viewModel.songSelection::end,
     )
 }
+
+/**
+ * In a scope of its own, as are the back handlers: the open dialog is read only where it is needed, never by the screen,
+ * so that a sheet opening recomposes these alone rather than the screen and its list.
+ */
+@Composable
+private fun HideKeyboardUnderNoDialog(listState: LazyGridState, visibleDialog: State<DialogType?>) =
+    HideKeyboardWhenScrolledDown(listState, isEnabled = visibleDialog.value == null)
+
+/** Ends the selection mode on back, in a scope of its own for the same reason. */
+@Composable
+private fun SelectionBackHandler(isBackEnabled: () -> Boolean, onBackCompleted: () -> Unit) = NavigationBackHandler(
+    state = rememberNavigationEventState(currentInfo = NavigationEventInfo.None),
+    isBackEnabled = isBackEnabled(),
+    onBackCompleted = onBackCompleted,
+)
 
 /** The New button, or in the selection mode the selection's menu, which the bar's closed search shows. */
 @Composable

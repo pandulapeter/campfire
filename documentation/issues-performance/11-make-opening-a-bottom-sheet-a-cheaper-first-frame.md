@@ -11,6 +11,13 @@
 
 **Challenged:** amended — step 1's cache could serve stale widths (a count changing a chip's width keeps the chip count, and a group whose measure Compose skips never clears it), so it now lives for one `FilterGroupsLayout` measure only, and first checks text's own intrinsic cache; step 4's training run passes the onboarding first-run shows.
 
+**Landed:** steps 1 and 3 (`ChipIntrinsicsCache`; `SongsScreen` reads the open dialog only in the handlers that need
+it, so a sheet opening no longer recomposes the list): warm `sheet:open` 19.0 → 12.6 ms. **Left:** step 2, since no
+profile could name `animateBounds` as `boundingRectInRoot`'s caller (a JFR run of the benchmark caught too few samples in
+the sheet's frame); step 4 (a), since `app:desktop` reaches nothing of the view model it needs (`navigator` and
+`dialogHost` are internal to `:presentation`): it needs a public entry on `CampfireViewModel` or `app:desktop` made a
+friend of `:presentation`, as `tools/screenshots` is.
+
 **Kind:** performance  ·  **Severity:** medium  ·  **Platforms:** all (the archive part: Windows, Linux)  ·  **Run on:** any machine
 **Files:**
 - `presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/components/songFilters/CollapsibleChipFlow.kt`

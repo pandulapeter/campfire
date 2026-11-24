@@ -71,13 +71,15 @@ internal fun <T : Any> CollapsibleChipFlow(
     // Outside the policy, which is made again whenever the group is opened or closed: the target it decided last is
     // what the next one animates from.
     val target = remember { ChipFlowTarget() }
-    val measurePolicy = remember(isExpanded, isPinned, horizontalPadding, gap) {
+    val intrinsicsCache = LocalChipIntrinsicsCache.current
+    val measurePolicy = remember(isExpanded, isPinned, horizontalPadding, gap, intrinsicsCache) {
         CollapsibleChipFlowMeasurePolicy(
             isExpanded = isExpanded,
             isPinned = isPinned,
             horizontalPadding = horizontalPadding,
             gap = gap,
             target = target,
+            intrinsicsCache = intrinsicsCache,
         )
     }
     Layout(
@@ -120,6 +122,7 @@ private class CollapsibleChipFlowMeasurePolicy(
     private val horizontalPadding: Dp,
     private val gap: Dp,
     private val target: ChipFlowTarget,
+    private val intrinsicsCache: ChipIntrinsicsCache?,
 ) : MultiContentMeasurePolicy {
 
     override fun MeasureScope.measure(measurables: List<List<Measurable>>, constraints: Constraints): MeasureResult {
@@ -242,14 +245,24 @@ private class CollapsibleChipFlowMeasurePolicy(
         }
     }
 
+    /** The chips' widths and line height at [lineWidth], walked once for both intrinsic heights where a cache is open. */
+    private fun walk(chips: List<IntrinsicMeasurable>, lineWidth: Int) = intrinsicsCache?.walkOf(group = this, lineWidth = lineWidth) {
+        walkChips(chips, lineWidth)
+    } ?: walkChips(chips, lineWidth)
+
+    private fun walkChips(chips: List<IntrinsicMeasurable>, lineWidth: Int) = ChipWalk(
+        widths = chips.map { it.maxIntrinsicWidth(Constraints.Infinity).coerceAtMost(lineWidth) },
+        lineHeight = chips.maxOfOrNull { it.maxIntrinsicHeight(lineWidth) } ?: 0,
+    )
+
     override fun IntrinsicMeasureScope.maxIntrinsicHeight(measurables: List<List<IntrinsicMeasurable>>, width: Int): Int {
         val (chips, _) = measurables
         val gap = gap.roundToPx()
         val lineWidth = (width - 2 * horizontalPadding.roundToPx()).coerceAtLeast(0)
-        val widths = chips.map { it.maxIntrinsicWidth(Constraints.Infinity).coerceAtMost(lineWidth) }
+        val (widths, lineHeight) = walk(chips, lineWidth)
         return flowHeight(
             lineCount = chipLineCount(widths, lineWidth, gap),
-            lineHeight = chips.maxOfOrNull { it.maxIntrinsicHeight(lineWidth) } ?: 0,
+            lineHeight = lineHeight,
             gap = gap,
         )
     }
@@ -258,8 +271,7 @@ private class CollapsibleChipFlowMeasurePolicy(
         val (chips, toggle) = measurables
         val gap = gap.roundToPx()
         val lineWidth = (width - 2 * horizontalPadding.roundToPx()).coerceAtLeast(0)
-        val widths = chips.map { it.maxIntrinsicWidth(Constraints.Infinity).coerceAtMost(lineWidth) }
-        val lineHeight = chips.maxOfOrNull { it.maxIntrinsicHeight(lineWidth) } ?: 0
+        val (widths, lineHeight) = walk(chips, lineWidth)
         val lineCount = chipLineCount(widths, lineWidth, gap)
         val pinnedLineCount = chipLineCount(widths.filterIndexed { index, _ -> isPinned.getOrElse(index) { false } }, lineWidth, gap)
         val collapsedLineCount = maxOf(MIN_COLLAPSED_LINES, pinnedLineCount)
