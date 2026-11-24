@@ -97,8 +97,9 @@ only.
 - `-XX:-DontCompileHugeMethods`: a composable is one method, and HotSpot otherwise never compiles one past 8,000 bytes
   of bytecode (`SongDetailsScreen` and `CampfireDialog` were).
 - Windows/Linux: `recordClassDataArchive` trains `campfire.jsa` by starting the release image once
-  (`-Dcampfire.trainingRun=true` exits itself after the demo library draws; a killed JVM writes no archive). Linux needs
-  a display (`xvfb-run` in CI).
+  (`-Dcampfire.trainingRun=true` leaves the onboarding, opens and closes a demo song and the Preferences sheet, then
+  exits itself, all within 15 s, so the first song and sheet of a real process find their classes archived; a killed
+  JVM writes no archive). Linux needs a display (`xvfb-run` in CI).
 - Windows: ANGLE's DLLs are copied into `$APPDIR` from `angleRuntime` (its `skiko` version must equal Compose's), not
   the classpath, where ProGuard would join them into the jar. `SKIKO_RENDER_API=DIRECT3D` is the user's escape hatch.
 - The app resources' `common/` folder holds the native libraries for the host (`collectNativeLibraries`), so each is

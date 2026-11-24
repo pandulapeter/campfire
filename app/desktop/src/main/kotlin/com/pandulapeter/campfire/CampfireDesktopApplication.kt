@@ -138,7 +138,6 @@ fun main(args: Array<String>) {
         ) {
             WindowInputEffects(window = window, windowState = windowState, viewModel = viewModel)
             StartupLogEffect(window = window)
-            TrainingRunEffect(exit = exit)
             // Another process was asked to open Campfire and handed over to this one, so this is the window the
             // user is looking for.
             LaunchedEffect(Unit) {
@@ -153,6 +152,7 @@ fun main(args: Array<String>) {
             ) {
                 val currentViewModel = koinViewModel<CampfireViewModel>()
                 SideEffect { viewModel.value = currentViewModel }
+                TrainingRunEffect(viewModel = currentViewModel, exit = exit)
                 titleBar?.let { TitleBarAppearance(window = window, titleBar = it, viewModel = currentViewModel) }
                 CampfireDesktopApp(
                     viewModel = currentViewModel,

@@ -588,3 +588,10 @@ fun org.jetbrains.compose.desktop.application.dsl.AbstractPlatformSettings.chord
     listOf("cho", "chopro", "chordpro").forEach { extension ->
         fileAssociation(mimeType = "text/plain", extension = extension, description = "ChordPro song")
     }
+
+// The app is a friend of :presentation so that the training run (`TrainingRun.kt`) can drive the view model, opening a
+// song and a sheet, which the archive it records would otherwise lack.
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile>().configureEach {
+    val presentation = configurations.compileClasspath.map { classpath -> classpath.files.filter { it.invariantSeparatorsPath.contains("/presentation/build/") } }
+    compilerOptions.freeCompilerArgs.addAll(presentation.map { files -> files.map { "-Xfriend-paths=${it.absolutePath}" } })
+}
