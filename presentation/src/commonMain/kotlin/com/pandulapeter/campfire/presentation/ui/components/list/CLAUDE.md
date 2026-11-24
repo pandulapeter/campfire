@@ -49,6 +49,8 @@
   a section start only for that section's cards.
 - A grid with sticky headers goes to its top with `animateScrollToTop`, never `animateScrollToItem(0)`, whose guessed
   distance is corrected at every header, so the scroll stalls and restarts.
-- `ListTopFade` caches an inverse gradient and draws with `DstOut` in its existing layer, never a shader per card.
+- `ListTopFade` paints the screen's background over each card under it (a cached gradient, never a shader per card, no
+  layer), clipped to the card's own shape inside its cell, since cells overlap while cards travel; its strength is
+  worked out once per frame for the list (`derivedStateOf`).
 - **Every sticky item is `pinnedOverList()`** (z 0.5): Foundation gives a pinned item no drawing order, and its grids
   place it before rows that then draw over it, its background, and its fade below. Below a dragged setlist row (z 1).

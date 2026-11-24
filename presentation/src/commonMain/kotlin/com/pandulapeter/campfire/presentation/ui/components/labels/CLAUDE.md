@@ -12,7 +12,7 @@
 # :presentation — ui/components/labels
 
 - `TagFlowRow` / `TagPill` are the one place a tag is drawn. A song row's labels are one sideways-scrolling line whose
-  edge fades mask with `BlendMode.DstIn` in an offscreen layer (fading to the card, not punching through).
+  edge fades paint the card's color (`fadeColor`) over its ends, no layer and no mask.
 - Labels on **every song in the library** are omitted, counted over the whole library, not the filtered list, or a
   filter would hide the label it filters by.
 - Tapping a row's tag or language toggles its filter chip without scrolling; no row chip edits tags. Setlist rows show

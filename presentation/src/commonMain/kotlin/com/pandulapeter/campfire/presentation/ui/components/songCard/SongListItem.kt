@@ -253,12 +253,12 @@ internal fun SongListItem(
                     SongLabels(
                         tags = tags,
                         languages = languages,
+                        fadeColor = containerColor,
                         selectedTags = songFilter.selectedTags,
                         selectedLanguages = songFilter.selectedLanguages,
                         onTagClicked = onTagClicked,
                         onLanguageClicked = onLanguageClicked,
-                        tagIcon = painters?.tag,
-                        languageIcon = painters?.language,
+                        painters = painters,
                     )
                 }
             },

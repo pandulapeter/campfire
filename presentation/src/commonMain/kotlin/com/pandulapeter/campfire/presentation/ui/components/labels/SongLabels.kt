@@ -18,17 +18,17 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.CompositingStrategy
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.drawscope.scale
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.song.SongLanguage
@@ -39,6 +39,7 @@ import com.pandulapeter.campfire.presentation.resources.ic_label
 import com.pandulapeter.campfire.presentation.resources.ic_language
 import com.pandulapeter.campfire.presentation.resources.songs_languages_unknown
 import com.pandulapeter.campfire.presentation.ui.components.bounceHorizontalScroll
+import com.pandulapeter.campfire.presentation.ui.components.songCard.SongCardPainters
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -52,22 +53,24 @@ import org.jetbrains.compose.resources.painterResource
  *   filters, and [selectedTags] (compared without regard to case, as the filter compares them) are drawn selected so
  *   that a second tap reads as what it is, taking the filter off again.
  * @param onLanguageClicked The same for the languages, against [selectedLanguages].
- * @param tagIcon The tags' mark, which a list passes once for all its cards; null builds the row's own.
- * @param languageIcon The same for the languages.
+ * @param fadeColor The color the row stands on, the card's, which its ends fade into.
+ * @param painters The pills' marks, which a list passes once for all its cards ([SongCardPainters]); null builds the
+ *   row's own.
  */
 @Composable
 internal fun SongLabels(
     modifier: Modifier = Modifier,
     tags: List<String>,
     languages: List<String>,
+    fadeColor: Color,
     selectedTags: Set<String> = emptySet(),
     selectedLanguages: Set<String> = emptySet(),
     onTagClicked: ((String) -> Unit)? = null,
     onLanguageClicked: ((String) -> Unit)? = null,
-    tagIcon: Painter? = null,
-    languageIcon: Painter? = null,
+    painters: SongCardPainters? = null,
 ) {
     val scrollState = rememberScrollState()
+    val currentFadeColor by rememberUpdatedState(fadeColor)
     val sortedTags = remember(tags) { tags.sortedAlphabeticallyBy { it } }
     val appLanguageCode = currentLanguage.value.code
     val unknownLanguageLabel = stringResource(Res.string.songs_languages_unknown)
@@ -77,11 +80,11 @@ internal fun SongLabels(
         }.sortedAlphabeticallyBy { it.second }
     }
     // One painter for every pill of a kind, since each is a vector of its own to build and cache for every card scrolled in.
-    val tagPainter = tagIcon ?: painterResource(Res.drawable.ic_label)
-    val languagePainter = languageIcon ?: painterResource(Res.drawable.ic_language)
+    val tagPainter = painters?.tag ?: painterResource(Res.drawable.ic_label)
+    val languagePainter = painters?.language ?: painterResource(Res.drawable.ic_language)
     Row(
         modifier = modifier
-            .horizontalFadingEdges(scrollState)
+            .horizontalFadingEdges(scrollState) { currentFadeColor }
             .bounceHorizontalScroll(scrollState),
         horizontalArrangement = Arrangement.spacedBy(TAG_GAP),
     ) {
@@ -113,39 +116,39 @@ internal fun SongLabels(
  *
  * Each fade is as wide as the distance left to scroll in its direction, up to [HORIZONTAL_FADE_WIDTH], so it grows in
  * and shrinks away with the scroll itself instead of switching on as the row leaves its end. The scroll position is
- * only read while drawing, so scrolling redraws the row without recomposing or measuring it again. The mask is drawn
- * with [BlendMode.DstIn] over the row's own pixels, which needs the offscreen layer: drawn straight into the card, it
- * would erase the card behind the row as well, and the fade would be to a hole instead of to the card's color. The layer
- * is only taken while the row overflows, since a row that fits draws no fade, and a layer per row of a list is memory
- * and a pass of its own for every one of them.
- * It has to be applied outside [horizontalScroll], so that it masks the visible part of the row rather than the
+ * only read while drawing, so scrolling redraws the row without recomposing or measuring it again. The row stands on its
+ * card, an opaque surface of [fadeColor], so the fade is that color painted over the row's ends, the same picture as
+ * masking the pills away and with no offscreen layer per card; the gradients are built once for the full width and
+ * squeezed to the width a fade has. The color is read while drawing, so a theme changing redraws the fade without
+ * composing the row again.
+ * It has to be applied outside [horizontalScroll], so that it covers the visible part of the row rather than the
  * ends of the content.
  */
-private fun Modifier.horizontalFadingEdges(scrollState: ScrollState) = graphicsLayer {
-    compositingStrategy = if (scrollState.maxValue > 0) CompositingStrategy.Offscreen else CompositingStrategy.Auto
-}.drawWithContent {
-    drawContent()
+private fun Modifier.horizontalFadingEdges(scrollState: ScrollState, fadeColor: () -> Color) = drawWithCache {
     val fadeWidth = HORIZONTAL_FADE_WIDTH.toPx()
-    val startFade = scrollState.value.toFloat().coerceAtMost(fadeWidth)
-    val endFade = (scrollState.maxValue - scrollState.value).toFloat().coerceIn(0f, fadeWidth)
-    // The scroll offset counts from the start of the row, which is its right edge in a right to left layout.
-    val isRtl = layoutDirection == LayoutDirection.Rtl
-    val leftFade = if (isRtl) endFade else startFade
-    val rightFade = if (isRtl) startFade else endFade
-    if (leftFade > 0f) {
-        drawRect(
-            brush = Brush.horizontalGradient(0f to Color.Transparent, 1f to Color.Black, startX = 0f, endX = leftFade),
-            size = Size(leftFade, size.height),
-            blendMode = BlendMode.DstIn,
-        )
-    }
-    if (rightFade > 0f) {
-        drawRect(
-            brush = Brush.horizontalGradient(0f to Color.Black, 1f to Color.Transparent, startX = size.width - rightFade, endX = size.width),
-            topLeft = Offset(size.width - rightFade, 0f),
-            size = Size(rightFade, size.height),
-            blendMode = BlendMode.DstIn,
-        )
+    val color = fadeColor()
+    val intoLeft = Brush.horizontalGradient(0f to color, 1f to color.copy(alpha = 0f), startX = 0f, endX = fadeWidth)
+    val intoRight = Brush.horizontalGradient(0f to color.copy(alpha = 0f), 1f to color, startX = 0f, endX = fadeWidth)
+    onDrawWithContent {
+        drawContent()
+        val startFade = scrollState.value.toFloat().coerceAtMost(fadeWidth)
+        val endFade = (scrollState.maxValue - scrollState.value).toFloat().coerceIn(0f, fadeWidth)
+        // The scroll offset counts from the start of the row, which is its right edge in a right to left layout.
+        val isRtl = layoutDirection == LayoutDirection.Rtl
+        val leftFade = if (isRtl) endFade else startFade
+        val rightFade = if (isRtl) startFade else endFade
+        if (leftFade > 0f) {
+            scale(scaleX = leftFade / fadeWidth, scaleY = 1f, pivot = Offset.Zero) {
+                drawRect(brush = intoLeft, size = Size(fadeWidth, size.height))
+            }
+        }
+        if (rightFade > 0f) {
+            translate(left = size.width - rightFade) {
+                scale(scaleX = rightFade / fadeWidth, scaleY = 1f, pivot = Offset.Zero) {
+                    drawRect(brush = intoRight, size = Size(fadeWidth, size.height))
+                }
+            }
+        }
     }
 }
 

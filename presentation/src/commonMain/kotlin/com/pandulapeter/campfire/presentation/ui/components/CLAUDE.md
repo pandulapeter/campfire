@@ -55,7 +55,8 @@ The shared building blocks of the screens; subpackages with something to say hav
   always read before then; lists keep the plain indicator (the launch screen covers their first read).
 - **Edge fades** (`EdgeFade.kt`): over a **known opaque color**, `fadingTopEdge` paints that color (the one directly
   behind, `sheetContainerColor()` in sheets) rather than masking, since a mask costs a viewport-sized offscreen buffer
-  every frame; masks only for alert dialogs, `ListTopFade`, `fadingUnderStartOverlay`, and overscroll.
+  every frame; `ListTopFade` paints the screen's background over each card, a song card's labels the card's color;
+  masks only for alert dialogs, `fadingUnderStartOverlay`, and overscroll.
   `fadingVerticalEdges`: lists in a dialog; in a sheet only content above a pinned row, never content ending at the
   window's bottom.
 - **`ShrinkToFit`**, never `TextAutoSize.StepBased`, which never shrinks on Skiko (no ellipsized line reported).

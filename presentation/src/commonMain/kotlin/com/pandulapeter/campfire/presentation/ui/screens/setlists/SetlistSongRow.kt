@@ -153,7 +153,7 @@ internal fun LazyGridItemScope.SetlistSongRow(
     // draggedListItemContainerColor's own documentation says a list of this size cannot afford.
     val rowContent: @Composable (scope: ReorderableCollectionItemScope?, isBeingDragged: Boolean, itemModifier: Modifier) -> Unit = { scope, isBeingDragged, itemModifier ->
         SetlistRowContent(
-            modifier = itemModifier.then(moveActions).fadingUnderListTop(topFade),
+            modifier = itemModifier.then(moveActions).fadingUnderListTop(fade = topFade, cardShape = MaterialTheme.shapes.medium, cardPadding = songCardPadding(rowIndex, columnCount)),
             scope = scope,
             isBeingDragged = isBeingDragged,
             isReordering = isReordering,
