@@ -12,7 +12,7 @@
 
     <style name="Campfire" parent="android:Theme.Material.NoActionBar">
         <item name="android:colorPrimary">@color/campfire</item>
-        <!-- The starting window (the icon on the window color below Android 12) and the frame drawn before the
+        <!-- The starting window (the icon's flame on the window color below Android 12) and the frame drawn before the
              preferences are read: the Material 3 background, spelled out, since the platform theme's own is a gray. -->
         <item name="android:windowBackground">@drawable/campfire_starting_window</item>
         <item name="android:colorBackground">@color/campfire_window_background</item>
