@@ -52,7 +52,7 @@ internal class SongCardFadesTest {
             // The card's own room under its last line.
             val cardColor = window.colorAt(row.right - 1, row.bottom + CARD_ROOM_BELOW_LABELS)
             val edge = (row.top.roundToInt() + 1 until row.bottom.roundToInt() - 1).map { y -> window.colorAt(row.right - 1, y.toFloat()) }
-            assertTrue(edge.all { it.isCloseTo(cardColor) }, "${scheme.name}: the row's end is ${edge.distinct()} rather than the card's $cardColor.")
+            assertTrue(edge.all { it.isCloseTo(cardColor, tolerance = EDGE_TOLERANCE) }, "${scheme.name}: the row's end is ${edge.distinct()} rather than the card's $cardColor.")
         }
     }
 
@@ -77,8 +77,8 @@ internal class SongCardFadesTest {
 
     private fun ImageBitmap.colorAt(x: Float, y: Float) = toPixelMap(startX = x.roundToInt(), startY = y.roundToInt(), width = 1, height = 1)[0, 0]
 
-    private fun Color.isCloseTo(other: Color) =
-        abs(red - other.red) < TOLERANCE && abs(green - other.green) < TOLERANCE && abs(blue - other.blue) < TOLERANCE
+    private fun Color.isCloseTo(other: Color, tolerance: Float = TOLERANCE) =
+        abs(red - other.red) < tolerance && abs(green - other.green) < tolerance && abs(blue - other.blue) < tolerance
 
     private class Scheme(val name: String, val appearance: TestAppearance, val preferences: Map<String, JsonPrimitive> = emptyMap())
 
@@ -115,5 +115,11 @@ internal class SongCardFadesTest {
         const val GUTTER_X = 3f
         const val CARD_ROOM_BELOW_LABELS = 3f
         const val TOLERANCE = 0.015f
+
+        /**
+         * The row's last pixel column is half a pixel short of where the fade reaches the card's color, so a pill drawn
+         * under it still shows through by a few levels: on Linux, whose fonts end a pill there, up to 4 of 255.
+         */
+        const val EDGE_TOLERANCE = 0.025f
     }
 }
