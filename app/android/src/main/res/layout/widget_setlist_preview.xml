@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+ This file is part of Campfire.
+ Copyright (c) Pandula Péter 2017-2026.
+ https://github.com/pandulapeter/campfire
+
+ This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ If a copy of the MPL was not distributed with this file, You can obtain one at
+ https://mozilla.org/MPL/2.0/.
+-->
+<!--
+  The setlist widget in the widget gallery (Android 12 and later): its title, and placeholder lines where the date, the
+  song count, and the songs go. Only what RemoteViews can inflate.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_preview_background"
+    android:orientation="vertical"
+    android:padding="12dp">
+
+    <ImageView
+        android:layout_width="56dp"
+        android:layout_height="7dp"
+        android:layout_marginTop="4dp"
+        android:alpha="0.35"
+        android:importantForAccessibility="no"
+        android:scaleType="fitXY"
+        android:src="@drawable/widget_preview_line" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:maxLines="1"
+        android:text="@string/widget_setlist_name"
+        android:textColor="@color/campfire_widget_primary"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+
+    <ImageView
+        android:layout_width="104dp"
+        android:layout_height="9dp"
+        android:layout_marginTop="6dp"
+        android:alpha="0.6"
+        android:importantForAccessibility="no"
+        android:scaleType="fitXY"
+        android:src="@drawable/widget_preview_line" />
+    <ImageView
+        android:layout_width="48dp"
+        android:layout_height="7dp"
+        android:layout_marginTop="8dp"
+        android:alpha="0.35"
+        android:importantForAccessibility="no"
+        android:scaleType="fitXY"
+        android:src="@drawable/widget_preview_line" />
+    <ImageView
+        android:layout_width="112dp"
+        android:layout_height="8dp"
+        android:layout_marginTop="14dp"
+        android:alpha="0.6"
+        android:importantForAccessibility="no"
+        android:scaleType="fitXY"
+        android:src="@drawable/widget_preview_line" />
+    <ImageView
+        android:layout_width="88dp"
+        android:layout_height="8dp"
+        android:layout_marginTop="10dp"
+        android:alpha="0.6"
+        android:importantForAccessibility="no"
+        android:scaleType="fitXY"
+        android:src="@drawable/widget_preview_line" />
+    <ImageView
+        android:layout_width="120dp"
+        android:layout_height="8dp"
+        android:layout_marginTop="10dp"
+        android:alpha="0.6"
+        android:importantForAccessibility="no"
+        android:scaleType="fitXY"
+        android:src="@drawable/widget_preview_line" />
+
+</LinearLayout>

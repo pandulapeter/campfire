@@ -36,6 +36,7 @@ import com.pandulapeter.campfire.shortcuts.appLinksToOpen
 import com.pandulapeter.campfire.shortcuts.isAppLink
 import com.pandulapeter.campfire.shortcuts.openAppLink
 import com.pandulapeter.campfire.sync.SyncServiceStarter
+import com.pandulapeter.campfire.widget.WidgetSnapshotPublisher
 import kotlinx.coroutines.launch
 import org.koin.mp.KoinPlatform
 
@@ -102,6 +103,7 @@ class CampfireMainActivity : ComponentActivity() {
                 },
                 onKeyboardShortcutsChanged = { keyboardShortcuts = it },
                 onLauncherShortcutsChanged = { LauncherShortcutPublisher.publish(context = this, shortcuts = it) },
+                onWidgetSnapshotChanged = { WidgetSnapshotPublisher.publish(context = this, snapshot = it) },
             )
         }
     }

@@ -66,6 +66,27 @@
   and share links and reports a shortcut's use.
 - A pinned shortcut no longer offered is disabled with `app_shortcut_withdrawn`, enabled again once offered.
 
+## Home screen widgets (`widget/`)
+
+- Glance, over the snapshot the composition hands over (`ui/widget/CLAUDE.md`): `WidgetSnapshotPublisher` writes
+  `widget/snapshot.json` (files directory; skipped when unchanged, written beside it and renamed over it) on a process
+  scope, then refreshes both widgets. The widgets read only that file (never Koin or the library) and call the common
+  decisions (`randomPicksContent`, `setlistContent`); no snapshot yet (the app never ran) says to open the app.
+- **A refresh moves `REFRESHED_AT` in each widget's Glance state before `update`**: a composition still alive is only
+  recomposed by an update, and not at all for a state that did not change, so `rememberWidgetSnapshot` keys its read on
+  it.
+- Random picks: `SizeMode.Responsive`, one layout per row count (up to five). The draw is a seed in the widget's own
+  state, drawn again by Shuffle (`ShuffleAction`, public: Glance's R8 rules keep only public `ActionCallback`s) and by
+  `provideGlance` once an hour old, which the provider's hourly `updatePeriodMillis` brings.
+- Setlist: `SetlistWidgetConfigurationActivity` (`android:configure`, `reconfigurable`; own task affinity, out of
+  Recents, so it never raises the app) shows `SetlistWidgetChooser` from `:presentation` and keeps the file name (none
+  for Next gig) in the widget's state. Today is `LocalDate.now()`; the receiver also hears `DATE_CHANGED`, `TIME_SET`, and
+  `TIMEZONE_CHANGED` (the date's isn't exempt from the background limits everywhere; the hourly update covers it).
+- Every tap is `appLinkIntent` (the shortcuts' intent). Text is the system font (a launcher can't load Inter); colors
+  are Glance's dynamic ones from Android 12, the app's palette (`widgetLightColorScheme`) before. Gallery names,
+  descriptions, and the open-the-app sentence are `res/values*/strings.xml` in every app language (`values-iw` for
+  Hebrew); `previewLayout`s are plain RemoteViews layouts with placeholder lines.
+
 ## Permissions
 
 `RECORD_AUDIO` is asked only by a tap that opens a tuner; `android.hardware.microphone` is not required, so Play still
@@ -128,8 +149,9 @@ Play Store app only, read on a first launch (`presentation/src/androidMain/CLAUD
 
 `data_extraction_rules.xml` (API 31+) and `full_backup_content.xml` (API 28–30) **must say the same thing**: an
 allow-list of `library/songs/`, `library/setlists/`, and `preferences/preferences.json`. No `<exclude>`s (lint rejects
-one outside an included path). The 25 MB quota is all or nothing, which is why the songs' pictures (`library/files/`)
-stay out: a restored library shows their placeholders until sync or an import brings them back.
+one outside an included path), so the widgets' `widget/` stays out by not being listed. The 25 MB quota is all or
+nothing, which is why the songs' pictures (`library/files/`) stay out: a restored library shows their placeholders until
+sync or an import brings them back.
 
 ## Build and resources
 

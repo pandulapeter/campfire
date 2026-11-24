@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+ This file is part of Campfire.
+ Copyright (c) Pandula Péter 2017-2026.
+ https://github.com/pandulapeter/campfire
+
+ This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ If a copy of the MPL was not distributed with this file, You can obtain one at
+ https://mozilla.org/MPL/2.0/.
+-->
+<!--
+  The setlist widget (SetlistWidgetReceiver). Adding it asks which setlist it shows (SetlistWidgetConfigurationActivity,
+  named in full since a release build moves the classes out of their package, the manifest's names excepted), and so
+  does its reconfiguration from the launcher. The hourly update brings the day past midnight where the date's broadcast
+  does not arrive.
+-->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:description="@string/widget_setlist_description"
+    android:initialLayout="@layout/glance_default_loading_layout"
+    android:minWidth="180dp"
+    android:minHeight="110dp"
+    android:minResizeWidth="110dp"
+    android:minResizeHeight="110dp"
+    android:previewLayout="@layout/widget_setlist_preview"
+    android:resizeMode="horizontal|vertical"
+    android:targetCellWidth="2"
+    android:targetCellHeight="2"
+    android:updatePeriodMillis="3600000"
+    android:widgetCategory="home_screen"
+    android:configure="com.pandulapeter.campfire.widget.SetlistWidgetConfigurationActivity"
+    android:widgetFeatures="reconfigurable"
+    tools:ignore="UnusedAttribute" />

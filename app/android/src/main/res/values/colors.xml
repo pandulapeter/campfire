@@ -41,4 +41,11 @@
          option is only offered there, so the gray is never shown. -->
     <color name="campfire_system">@color/campfire_gray</color>
 
+    <!-- The widgets' gallery previews (layout/widget_*_preview), in the colors Glance draws the widgets in below Android 12:
+         the app's own palette's secondary container, primary, and onSurfaceVariant (see CampfireColorScheme.kt);
+         values-v31 has the wallpaper's. -->
+    <color name="campfire_widget_background">#E6DEFB</color>
+    <color name="campfire_widget_primary">#5A49CA</color>
+    <color name="campfire_widget_placeholder">#494456</color>
+
 </resources>

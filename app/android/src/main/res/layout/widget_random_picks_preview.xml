@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+ This file is part of Campfire.
+ Copyright (c) Pandula Péter 2017-2026.
+ https://github.com/pandulapeter/campfire
+
+ This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ If a copy of the MPL was not distributed with this file, You can obtain one at
+ https://mozilla.org/MPL/2.0/.
+-->
+<!--
+  The random picks widget in the widget gallery (Android 12 and later): its title and button, and placeholder lines where
+  the songs go. Only what RemoteViews can inflate.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_preview_background"
+    android:orientation="vertical"
+    android:padding="12dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:maxLines="1"
+            android:text="@string/widget_random_picks_name"
+            android:textColor="@color/campfire_widget_primary"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <ImageView
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:importantForAccessibility="no"
+            android:scaleType="center"
+            android:src="@drawable/ic_widget_shuffle" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:gravity="center_vertical"
+        android:orientation="vertical">
+        <ImageView
+            android:layout_width="120dp"
+            android:layout_height="9dp"
+            android:alpha="0.6"
+            android:importantForAccessibility="no"
+            android:scaleType="fitXY"
+            android:src="@drawable/widget_preview_line" />
+        <ImageView
+            android:layout_width="72dp"
+            android:layout_height="7dp"
+            android:layout_marginTop="6dp"
+            android:alpha="0.35"
+            android:importantForAccessibility="no"
+            android:scaleType="fitXY"
+            android:src="@drawable/widget_preview_line" />
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:gravity="center_vertical"
+        android:orientation="vertical">
+        <ImageView
+            android:layout_width="96dp"
+            android:layout_height="9dp"
+            android:alpha="0.6"
+            android:importantForAccessibility="no"
+            android:scaleType="fitXY"
+            android:src="@drawable/widget_preview_line" />
+        <ImageView
+            android:layout_width="84dp"
+            android:layout_height="7dp"
+            android:layout_marginTop="6dp"
+            android:alpha="0.35"
+            android:importantForAccessibility="no"
+            android:scaleType="fitXY"
+            android:src="@drawable/widget_preview_line" />
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:gravity="center_vertical"
+        android:orientation="vertical">
+        <ImageView
+            android:layout_width="132dp"
+            android:layout_height="9dp"
+            android:alpha="0.6"
+            android:importantForAccessibility="no"
+            android:scaleType="fitXY"
+            android:src="@drawable/widget_preview_line" />
+        <ImageView
+            android:layout_width="60dp"
+            android:layout_height="7dp"
+            android:layout_marginTop="6dp"
+            android:alpha="0.35"
+            android:importantForAccessibility="no"
+            android:scaleType="fitXY"
+            android:src="@drawable/widget_preview_line" />
+    </LinearLayout>
+
+</LinearLayout>

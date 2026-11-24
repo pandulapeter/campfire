@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+ This file is part of Campfire.
+ Copyright (c) Pandula Péter 2017-2026.
+ https://github.com/pandulapeter/campfire
+
+ This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ If a copy of the MPL was not distributed with this file, You can obtain one at
+ https://mozilla.org/MPL/2.0/.
+-->
+<!-- A line of text in the widgets' gallery previews, which show the widget's shape rather than somebody's songs. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/campfire_widget_placeholder" />
+    <corners android:radius="4dp" />
+</shape>

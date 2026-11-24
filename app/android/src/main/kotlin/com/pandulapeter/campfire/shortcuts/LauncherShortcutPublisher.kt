@@ -9,22 +9,17 @@
  */
 package com.pandulapeter.campfire.shortcuts
 
-import android.content.ComponentName
 import android.content.Context
-import android.content.Intent
 import android.content.pm.ShortcutInfo
 import android.content.pm.ShortcutManager
 import android.graphics.drawable.Icon
-import android.net.Uri
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.presentation.ui.shortcuts.LauncherShortcut
 import com.pandulapeter.campfire.presentation.ui.shortcuts.LauncherShortcuts
 
 /**
  * Hands the launcher the app's shortcuts as dynamic ones, the only kind whose labels and set can follow the app's
- * language, its Features switches, and read only mode. Each opens its app link through `.CampfireIntentActivity`, whose
- * filter it has to match: since Android 15 an explicit intent from another app, which the launcher is, must match one of
- * the target's filters. No flags are added, so the running app's task is kept and the link arrives in `onNewIntent`.
+ * language, its Features switches, and read only mode. Each opens its app link ([appLinkIntent]).
  */
 internal object LauncherShortcutPublisher {
 
@@ -46,11 +41,7 @@ internal object LauncherShortcutPublisher {
                     .setShortLabel(item.label)
                     .setLongLabel(item.label)
                     .setIcon(Icon.createWithResource(context, item.shortcut.icon))
-                    .setIntent(
-                        Intent(Intent.ACTION_VIEW, Uri.parse(item.shortcut.link))
-                            .setComponent(ComponentName(context.packageName, INTENT_ACTIVITY))
-                            .putExtra(EXTRA_SHORTCUT_ID, item.shortcut.id),
-                    )
+                    .setIntent(appLinkIntent(context = context, link = item.shortcut.link).putExtra(EXTRA_SHORTCUT_ID, item.shortcut.id))
                     .setRank(rank)
                     .build()
             }
@@ -76,10 +67,4 @@ internal object LauncherShortcutPublisher {
             LauncherShortcut.CHORDS -> R.drawable.ic_shortcut_chords
             LauncherShortcut.SCALES -> R.drawable.ic_shortcut_scales
         }
-
-    /**
-     * The alias's name under the namespace, spelled out for the reason `AppIconSwitcher` spells its own out: a release
-     * build's classes are moved out of this package.
-     */
-    private const val INTENT_ACTIVITY = "com.pandulapeter.campfire.CampfireIntentActivity"
 }

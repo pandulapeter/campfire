@@ -13,4 +13,8 @@
     <color name="campfire_window_background">#141218</color>
     <color name="campfire_window_mark">#C9C3D9</color>
 
+    <color name="campfire_widget_background">#4B4260</color>
+    <color name="campfire_widget_primary">#D0BCFF</color>
+    <color name="campfire_widget_placeholder">#C9C3D9</color>
+
 </resources>

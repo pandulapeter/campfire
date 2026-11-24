@@ -13,4 +13,12 @@
     <!-- General -->
     <string name="campfire" translatable="false">Campfire</string>
 
+    <!-- Home screen widgets: the gallery's names and descriptions, shown before the app has ever run, and the sentence a
+         widget shows until it has (every other text of theirs is the app's, in its own language) -->
+    <string name="widget_random_picks_name">Random picks</string>
+    <string name="widget_random_picks_description">Songs drawn at random from your library, again every hour or whenever you ask for new ones</string>
+    <string name="widget_setlist_name">Setlist</string>
+    <string name="widget_setlist_description">Your next gig, or a setlist you choose, with its date, how far away it is, and its first songs</string>
+    <string name="widget_open_app">Open Campfire to fill this widget</string>
+
 </resources>

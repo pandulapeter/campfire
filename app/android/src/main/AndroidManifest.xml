@@ -561,6 +561,52 @@
             android:foregroundServiceType="mediaPlayback"
             android:stopWithTask="false" />
 
+        <!--
+          The home screen widgets, drawn by Glance from the snapshot the app writes (widget/WidgetSnapshotPublisher):
+          random picks, and a setlist. The setlist widget also hears the date, the clock, and the time zone change, since
+          its relative day and its next gig follow today.
+        -->
+        <receiver
+            android:name=".widget.RandomPicksWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_random_picks_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_random_picks" />
+        </receiver>
+        <receiver
+            android:name=".widget.SetlistWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_setlist_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="android.intent.action.DATE_CHANGED" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_setlist" />
+        </receiver>
+
+        <!--
+          Asks which setlist a setlist widget shows, as it is added and when it is reconfigured. A task of its own, kept
+          out of Recents: in the app's task it would bring the app up behind it, and closing it would leave the user in
+          the app rather than on the home screen they were arranging.
+        -->
+        <activity
+            android:name=".widget.SetlistWidgetConfigurationActivity"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:taskAffinity="">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
+
         <!-- Lets a shared song or setlist leave the app's private storage as a content URI, see AndroidFilePicker.shareFile in :presentation. -->
         <provider
             android:name="androidx.core.content.FileProvider"

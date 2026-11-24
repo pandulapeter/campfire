@@ -20,7 +20,8 @@
   first run on the new device compares the two sides by content, which costs a listing and duplicates nothing.
   shared-links.json and shared-links-journal.json describe the same account's folder, and go with the index.
   editor-draft.json is a copy of unsaved text, which belongs to this device's session rather than to the library.
-  The covers/ copies are downloaded again from the address each song names. The songs' pictures (library/files/) stay
+  The covers/ copies are downloaded again from the address each song names, and the widgets' snapshot (widget/), which
+  names songs and setlists, is written again by the app from the restored library. The songs' pictures (library/files/) stay
   behind too: the backup stops altogether past 25 MB, which a few photos would cost the user's songs, and a restored
   library shows each missing picture's placeholder until sync or an import brings it back. There are no <exclude> rules for them
   because lint (FullBackupContent, fatal, so it fails a release build) rejects an exclude that is not inside an

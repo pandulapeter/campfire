@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+ This file is part of Campfire.
+ Copyright (c) Pandula Péter 2017-2026.
+ https://github.com/pandulapeter/campfire
+
+ This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ If a copy of the MPL was not distributed with this file, You can obtain one at
+ https://mozilla.org/MPL/2.0/.
+-->
+<resources>
+
+    <!-- Home screen widgets: the gallery's names and descriptions, shown before the app has ever run, and the sentence a
+         widget shows until it has (every other text of theirs is the app's, in its own language) -->
+    <string name="widget_random_picks_name">Náhodný výběr</string>
+    <string name="widget_random_picks_description">Náhodně vylosované písně z tvé knihovny, znovu každou hodinu nebo kdykoli si řekneš o nové</string>
+    <string name="widget_setlist_name">Setlist</string>
+    <string name="widget_setlist_description">Tvůj příští koncert nebo setlist, který si vybereš, s datem, časem, který zbývá, a prvními písněmi</string>
+    <string name="widget_open_app">Otevři Campfire, aby se tento widget naplnil</string>
+
+</resources>

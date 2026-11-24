@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.shortcuts
 
+import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import kotlinx.coroutines.channels.Channel
@@ -34,4 +36,19 @@ internal fun Intent.openAppLink(address: Uri, onShortcutUsed: (String) -> Unit) 
     pendingAppLinks.trySend(address.toString())
 }
 
+/**
+ * The intent that opens [link], one of the app's own, from the launcher (a shortcut, a widget): an `ACTION_VIEW` aimed at
+ * `.CampfireIntentActivity`, whose filter it has to match, since from Android 15 on an explicit intent from another app,
+ * which the launcher is, must match one of the target's filters. No flags are added, so the running app's task is kept
+ * and the link arrives in `onNewIntent`.
+ */
+internal fun appLinkIntent(context: Context, link: String): Intent = Intent(Intent.ACTION_VIEW, Uri.parse(link))
+    .setComponent(ComponentName(context.packageName, INTENT_ACTIVITY))
+
 private const val APP_LINK_SCHEME = "campfire"
+
+/**
+ * The alias's name under the namespace, spelled out for the reason `AppIconSwitcher` spells its own out: a release
+ * build's classes are moved out of this package.
+ */
+private const val INTENT_ACTIVITY = "com.pandulapeter.campfire.CampfireIntentActivity"

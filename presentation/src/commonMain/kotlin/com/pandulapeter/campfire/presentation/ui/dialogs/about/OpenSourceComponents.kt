@@ -112,7 +112,7 @@ internal val openSourceComponents = listOf(
     ),
     apache("Accompanist Drawable Painter", "Google LLC", "https://github.com/google/accompanist", ANDROID),
     apache(
-        name = "AndroidX libraries (Activity, AppCompat, Browser, Core, Fragment, ProfileInstaller, and what they need)",
+        name = "AndroidX libraries (Activity, AppCompat, Browser, Core, DataStore, Fragment, Glance, ProfileInstaller, Room, SQLite, WorkManager, and what they need)",
         holder = "The Android Open Source Project",
         url = "https://developer.android.com/jetpack/androidx",
         builds = ANDROID,
@@ -326,6 +326,15 @@ internal val openSourceComponents = listOf(
     apache("OkHttp", "Square, Inc.", "https://github.com/square/okhttp", ANDROID),
     apache("Okio", "Square, Inc.", "https://github.com/square/okio"),
     apache("piex", "Google Inc.", "https://github.com/google/piex", SKIA_RAW),
+    OpenSourceComponent(
+        name = "Protocol Buffers, inside Glance and DataStore",
+        holder = "Google Inc.",
+        url = "https://github.com/protocolbuffers/protobuf",
+        licenseName = BSD_3,
+        licenseFile = "$LICENSES/protobuf_bsd_3.txt",
+        licenseUrl = BSD_3_URL,
+        builds = ANDROID,
+    ),
     OpenSourceComponent(
         name = "Public Suffix List",
         holder = "Mozilla Foundation",

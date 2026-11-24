@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+ This file is part of Campfire.
+ Copyright (c) Pandula Péter 2017-2026.
+ https://github.com/pandulapeter/campfire
+
+ This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ If a copy of the MPL was not distributed with this file, You can obtain one at
+ https://mozilla.org/MPL/2.0/.
+-->
+<resources>
+
+    <!-- Home screen widgets: the gallery's names and descriptions, shown before the app has ever run, and the sentence a
+         widget shows until it has (every other text of theirs is the app's, in its own language) -->
+    <string name="widget_random_picks_name">Zufallsauswahl</string>
+    <string name="widget_random_picks_description">Zufällig gezogene Songs aus deiner Bibliothek, jede Stunde neu oder wann immer du neue willst</string>
+    <string name="widget_setlist_name">Setlist</string>
+    <string name="widget_setlist_description">Dein nächster Gig oder eine Setlist deiner Wahl, mit Datum, der Zeit bis dahin und den ersten Songs</string>
+    <string name="widget_open_app">Öffne Campfire, um dieses Widget zu füllen</string>
+
+</resources>

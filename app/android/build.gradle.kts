@@ -24,6 +24,11 @@ dependencies {
     implementation(project(":presentation"))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.browser)
+    // The home screen widgets, which RemoteViews draw: Glance writes them in Compose's terms, the colors in Material 3's.
+    implementation(libs.androidx.glance.appwidget)
+    implementation(libs.androidx.glance.material3)
+    // Only compiled against, for the widgets' colors: the Material 3 the shared UI already ships.
+    implementation(libs.compose.material3)
     implementation(libs.androidx.profileinstaller)
     implementation(libs.koin.android)
     baselineProfile(project(":app:baselineprofile"))
