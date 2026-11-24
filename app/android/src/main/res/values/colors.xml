@@ -19,6 +19,10 @@
     <color name="campfire_window_background">#FEF7FF</color>
     <color name="campfire_window_mark">#494456</color>
 
+    <!-- Behind the launcher shortcuts' glyphs, which are in the purple above: the window's light background, in either
+         mode, since a launcher draws the icons as they are. -->
+    <color name="campfire_shortcut_background">#FEF7FF</color>
+
     <!-- The launcher icons of the other theme colors, the seeds of their palettes (see MaterialColorSchemes.kt), with
          those more saturated than the orange brought down to its saturation the way generate_theme_icons.py brings
          down every other platform's icon: the red, the purple and the pink, whose seeds are #D32F2F, #7B1FA2 and

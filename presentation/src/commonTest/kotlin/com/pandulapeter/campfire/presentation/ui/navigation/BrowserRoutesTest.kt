@@ -187,6 +187,24 @@ class BrowserRoutesTest {
     }
 
     @Test
+    fun `the launcher shortcuts' new and paste addresses open the songs on the web`() = listOf("new", "paste", "/new/").forEach { path ->
+        assertEquals(home, BrowserRoutes.resolve(path = path, songs = songs, setlists = setlists, current = home, isPerformanceModeEnabled = false), path)
+    }
+
+    @Test
+    fun `only the new and paste addresses ask for anything besides a place`() {
+        assertEquals(BrowserRoutes.LinkAction.NEW_SONG, BrowserRoutes.LinkAction.of("new"))
+        assertEquals(BrowserRoutes.LinkAction.PASTE_SONG, BrowserRoutes.LinkAction.of("paste/"))
+        listOf("", "songs", "setlists", "song/new", "new/more").forEach { assertNull(BrowserRoutes.LinkAction.of(it), it) }
+    }
+
+    @Test
+    fun `every top level screen's address opens it`() = CampfireDestination.TopLevel.entries.forEach { destination ->
+        val resolved = BrowserRoutes.resolve(path = BrowserRoutes.pathOf(destination), songs = songs, setlists = setlists, current = home, isPerformanceModeEnabled = false)
+        assertEquals(destination, resolved?.backStack?.last(), destination.toString())
+    }
+
+    @Test
     fun `the addresses of settings tabs since split open the tabs they became`() {
         mapOf("settings/songs" to SettingsTab.SONG, "settings/preferences" to SettingsTab.GENERAL).forEach { (path, tab) ->
             assertEquals(

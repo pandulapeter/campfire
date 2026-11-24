@@ -36,6 +36,8 @@ import com.pandulapeter.campfire.presentation.ui.platform.MetronomeNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.SyncNotifier
 import com.pandulapeter.campfire.presentation.ui.theme.appIconColor
 import com.pandulapeter.campfire.presentation.ui.theme.appIconThemeColor
+import com.pandulapeter.campfire.presentation.ui.shortcuts.LauncherShortcuts
+import com.pandulapeter.campfire.presentation.ui.shortcuts.LauncherShortcutsEffect
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
@@ -51,6 +53,8 @@ import org.koin.compose.viewmodel.koinViewModel
  * @param filesToImport Files opened with Campfire, which reach the app module through `onOpenURL`.
  * @param shareLinks Campfire links the app was opened with (the Universal Link, `campfire://s/`), which reach the app
  *   module through `onOpenURL` like files.
+ * @param appLinks The app's own `campfire://` links, a quick action's among them ([AppLinksEffect]), which reach the app
+ *   module through `onOpenURL` too, and through its scene delegate.
  * @param inboxShares Shares the share extension left in its inbox, one at a time: each is completed as taken once its
  *   import has settled. Completed from the import rather than awaited here, since the queue lives in the view model
  *   and carries on when this composition goes.
@@ -72,6 +76,8 @@ import org.koin.compose.viewmodel.koinViewModel
  *   a restored backup brought a preference for, and is nothing at all where the icon already matches.
  * @param onKeyCommandsChanged Called with the shortcuts that work here whenever they change, for the app module to list
  *   as `UIKeyCommand`s in the Command-hold overlay ([IosKeyCommandsEffect]).
+ * @param onLauncherShortcutsChanged Called with the launcher shortcuts, in the app's language, whenever they change, for
+ *   the app module to set as the Home Screen quick actions ([LauncherShortcutsEffect]).
  */
 @Composable
 fun CampfireIosApp(
@@ -81,6 +87,7 @@ fun CampfireIosApp(
     fileOpener: FileOpener,
     filesToImport: Flow<List<ImportedFile>> = emptyFlow(),
     shareLinks: Flow<SharedLink> = emptyFlow(),
+    appLinks: Flow<String> = emptyFlow(),
     inboxShares: Flow<InboxShare> = emptyFlow(),
     syncNotifier: SyncNotifier = SyncNotifier { },
     importNotifier: ImportNotifier = ImportNotifier { },
@@ -88,6 +95,7 @@ fun CampfireIosApp(
     onUiModeChanged: (UserPreferences.UiMode?) -> Unit = {},
     onAppIconChanged: (UserPreferences.ThemeColor) -> Unit = {},
     onKeyCommandsChanged: (List<IosKeyCommand>) -> Unit = {},
+    onLauncherShortcutsChanged: (LauncherShortcuts) -> Unit = {},
 ) = CompositionLocalProvider(
     LocalFilePicker provides filePicker,
     LocalIosFileOpener provides fileOpener,
@@ -110,6 +118,8 @@ fun CampfireIosApp(
         }
     }
     IosKeyCommandsEffect(viewModel = viewModel, onChanged = onKeyCommandsChanged)
+    LauncherShortcutsEffect(preferencesController = viewModel.preferencesController, onChanged = onLauncherShortcutsChanged)
+    AppLinksEffect(viewModel = viewModel, appLinks = appLinks)
     // Asked as the app starts, without reading the pasteboard: the view model asks only once, and only on a first launch.
     LaunchedEffect(viewModel) { viewModel.firstRunController.offerClipboardLink(IosClipboardLinkReader) }
     LaunchedEffect(inboxShares) {

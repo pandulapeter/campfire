@@ -296,6 +296,19 @@
             </intent-filter>
 
             <!--
+              The app's own links, campfire:// followed by a web build address, which the launcher shortcuts open
+              (LauncherShortcutPublisher). Not BROWSABLE: no web page has a reason to open a screen or read the clipboard
+              through one. The hosts s and oauth are the two filters above, and handle tells them apart first.
+            -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:scheme="campfire" />
+            </intent-filter>
+
+            <!--
               Sharing a song or zip archive to Campfire. ChordPro files may be sent as text/plain, as one of the ChordPro
               types of the View filter above, or, because .cho has no registered MIME type, application/octet-stream. Archives are usually application/zip; some
               senders use application/x-zip-compressed. JSON is another app's export of songs, text/vnd.abc a file

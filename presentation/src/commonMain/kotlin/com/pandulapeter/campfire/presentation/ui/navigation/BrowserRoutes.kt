@@ -50,6 +50,10 @@ import com.pandulapeter.campfire.data.model.song.Song
  * A song is named by its file name without the `.cho` every song the app writes ends in, and a setlist without its
  * `.setlist.json`; a song file with one of the other extensions keeps it, since the name has to find the file again.
  *
+ * Two more are never written, since they name no place but something to do there: `new` and `paste`, the app links of
+ * the launcher shortcuts New song and Paste a song ([LinkAction]). Each opens the home screen, which is all a typed one
+ * does on the web.
+ *
  * A new first segment has to be added to `ROUTES` in `app/web`'s `service-worker.js` and `webpack.config.d/routes.js`
  * too, or its address does not open offline or on the development server; `app/web/tests/offline.test.cjs` fails until
  * it is, reading the segments from this file's constants.
@@ -157,6 +161,7 @@ internal object BrowserRoutes {
                 CHORDS -> home.copy(backStack = home.backStack + CampfireDestination.Chords)
                 SCALES -> home.copy(backStack = home.backStack + CampfireDestination.Scales)
                 SETTINGS -> home.copy(backStack = home.backStack + CampfireDestination.Settings)
+                NEW, PASTE -> home
                 else -> null
             }
 
@@ -276,6 +281,33 @@ internal object BrowserRoutes {
         return state.copy(backStack = backStack)
     }
 
+    /** The address of [destination], a top level screen: the settings' without a tab, which opens the one open last. */
+    fun pathOf(destination: CampfireDestination.TopLevel) = when (destination) {
+        CampfireDestination.Songs -> SONGS
+        CampfireDestination.Setlists -> SETLISTS
+        CampfireDestination.Metronome -> METRONOME
+        CampfireDestination.Tuner -> TUNER
+        CampfireDestination.Chords -> CHORDS
+        CampfireDestination.Scales -> SCALES
+        CampfireDestination.Settings -> SETTINGS
+    }
+
+    /**
+     * What an app link's address asks for besides the place it opens, which [resolve] reads as the home screen: what the
+     * songs screen's New button and its Paste from clipboard do, for the launcher shortcuts of the same names.
+     */
+    enum class LinkAction(val path: String) {
+        NEW_SONG(NEW),
+        PASTE_SONG(PASTE),
+        ;
+
+        companion object {
+
+            /** The action [path] names, or null for an address that is a place alone. */
+            fun of(path: String) = entries.firstOrNull { it.path == path.trim('/') }
+        }
+    }
+
     private fun songPathSegment(fileName: String) = encodePathSegment(fileName.removeSuffix(LibraryFiles.SONG_EXTENSION))
 
     private fun setlistPathSegment(fileName: String) = encodePathSegment(fileName.removeSuffix(LibraryFiles.SETLIST_EXTENSION))
@@ -311,4 +343,6 @@ internal object BrowserRoutes {
     private const val SETLIST = "setlist"
     private const val EDIT = "edit"
     private const val IMPORT = "import"
+    private const val NEW = "new"
+    private const val PASTE = "paste"
 }

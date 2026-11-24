@@ -49,6 +49,10 @@ extension (`iosApp/ShareExtension/`, Swift only).
   `ShareLinks.parse` doesn't read only brings the app forward, and no other non-file URL is read (NSData would download
   it). `iosApp.entitlements` names `applinks:campfire-songbook.com`, so the App ID needs the Associated Domains
   capability before a signed build.
+- **Quick actions** (`IosQuickActions.kt`): `shortcutItems` set from the composition's list (`ui/shortcuts`), each
+  item's `userInfo` holding its app link. `QuickActions.swift`'s scene delegate (from a `UIApplicationDelegateAdaptor`)
+  takes one from the connection options at launch and `performActionFor` while running, and hands it to `openUrl`, which
+  queues any other `campfire://` link as an app link.
 - Files from AirDrop, Mail, or Messages are copies in `Documents/Inbox`, deleted after reading — only there, since a
   file opened in place is the user's original. Originals are read through an `NSFileCoordinator`, which downloads an
   iCloud file and waits for a writer.

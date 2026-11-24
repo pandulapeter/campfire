@@ -55,8 +55,9 @@ internal val shareLinksToImport = pendingShareLinks.receiveAsFlow()
 internal val inboxScope = CoroutineScope(SupervisorJob() + Dispatchers.IO.limitedParallelism(1))
 
 /**
- * Called from Swift for every URL iOS hands the app: a file opened with Campfire, or a shared song or setlist's link,
- * either the Universal Link (which a SwiftUI app is handed here too) or the landing page's `campfire://s/` button.
+ * Called from Swift for every URL iOS hands the app: a file opened with Campfire, a shared song or setlist's link,
+ * either the Universal Link (which a SwiftUI app is handed here too) or the landing page's `campfire://s/` button, or
+ * one of the app's own `campfire://` links, which is what a quick action hands over (`QuickActions.swift`).
  *
  * An address in a link's form that does not read as one (the landing page without a payload, a link cut short by a
  * messenger) only brings the app to the front: it is no file, and reading it as one would report an unreadable file.
@@ -78,6 +79,7 @@ fun openUrl(url: NSURL) {
         ShareLinks.parse(address)?.let { link -> inboxScope.launch { pendingShareLinks.send(link) } }
         return
     }
+    if (url.scheme.equals(APP_LINK_SCHEME, ignoreCase = true)) return openAppLink(address)
     // Only a file is read as one: NSData would download any other address, on the queue every later import waits on,
     // and from outside the one module that may go online.
     if (!url.fileURL) return
@@ -179,3 +181,5 @@ private fun inboxPath() = NSFileManager.defaultManager
     ?.URLByAppendingPathComponent("Inbox")
     ?.URLByResolvingSymlinksInPath
     ?.path
+
+private const val APP_LINK_SCHEME = "campfire"

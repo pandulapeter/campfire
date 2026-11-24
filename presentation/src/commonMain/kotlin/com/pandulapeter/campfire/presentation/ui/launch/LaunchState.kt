@@ -148,20 +148,45 @@ internal class LaunchState(
         _isLaunchNavigationPending.value = true
         scope.launch {
             try {
-                val state = combine(screenData, isDemoLibraryPending) { state, isDemoLibraryPending -> state.takeUnless { isDemoLibraryPending } }
-                    .first { it != null && it !is DataState.Loading }
-                    ?.data
-                val isPerformanceModeEnabled = userPreferencesState.first { it !is DataState.Loading }.data.isReadOnlyInEffect
-                val destination = resolve(state?.unfilteredSongs.orEmpty(), state?.setlists.orEmpty(), isPerformanceModeEnabled)
-                // A draft reopened on launch is unsaved text on screen, which an address does not get to replace.
-                editorDraftRecovery.await()
-                // Its home screen alone, whichever that is: the Songs switch may move it while the launch is waiting.
-                if (destination != null && backStack.size == 1) {
-                    restoreNavigationState(destination)
-                }
+                navigate(resolve = resolve, isLaunch = true)
             } finally {
                 _isLaunchNavigationPending.value = false
             }
         }
+    }
+
+    /**
+     * Opens the place [resolve] picks for an app link (`AppLinks`), and answers whether the app is there now. One that
+     * started the app is [navigateOnLaunch]'s, the launch screen held for it, unless an address already was; one arriving
+     * later replaces whatever stack the app is on, as a browser's typed address does. Refused only where
+     * `Navigator.restoreNavigationState` refuses: over the editor's unsaved text.
+     */
+    suspend fun navigateToLink(resolve: (songs: List<Song>, setlists: List<Setlist>, isPerformanceModeEnabled: Boolean) -> NavigationState?): Boolean {
+        val isLaunch = !hasShownApp && !hasNavigatedOnLaunch
+        if (isLaunch) {
+            hasNavigatedOnLaunch = true
+            _isLaunchNavigationPending.value = true
+        }
+        return try {
+            navigate(resolve = resolve, isLaunch = isLaunch)
+        } finally {
+            if (isLaunch) _isLaunchNavigationPending.value = false
+        }
+    }
+
+    /** Waits for the library and opens what [resolve] picks from it; a launch's only from its home screen alone. */
+    private suspend fun navigate(
+        resolve: (songs: List<Song>, setlists: List<Setlist>, isPerformanceModeEnabled: Boolean) -> NavigationState?,
+        isLaunch: Boolean,
+    ): Boolean {
+        val state = combine(screenData, isDemoLibraryPending) { state, isDemoLibraryPending -> state.takeUnless { isDemoLibraryPending } }
+            .first { it != null && it !is DataState.Loading }
+            ?.data
+        val isPerformanceModeEnabled = userPreferencesState.first { it !is DataState.Loading }.data.isReadOnlyInEffect
+        val destination = resolve(state?.unfilteredSongs.orEmpty(), state?.setlists.orEmpty(), isPerformanceModeEnabled)
+        // A draft reopened on launch is unsaved text on screen, which an address does not get to replace.
+        editorDraftRecovery.await()
+        // Its home screen alone, whichever that is: the Songs switch may move it while the launch is waiting.
+        return destination != null && (!isLaunch || backStack.size == 1) && restoreNavigationState(destination)
     }
 }

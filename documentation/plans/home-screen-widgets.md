@@ -15,7 +15,7 @@
 - **Setlist:** the next gig, or a setlist the user pinned, with a tap opening its first song in setlist mode.
 
 `ui/` is `presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/`, as in the root `CLAUDE.md`.
-The app's own links are shared with [app-shortcuts.md](app-shortcuts.md) (step 2 here).
+The app's own links landed with the app shortcuts (step 2 here says what is left of them).
 
 ## Decisions
 
@@ -117,15 +117,12 @@ The app's own links are shared with [app-shortcuts.md](app-shortcuts.md) (step 2
 
 ### 2. App links
 
-- `campfire://<web address>` opens what the web build's address opens, parsed by `BrowserRoutes`: the widgets use
-  `song/{song}`, `setlist/{setlist}/{song}`, and `setlists`. A song or setlist that's no longer in the library opens
-  the songs or setlists screen, and an address naming a switched-off feature opens the home screen, as a typed web
-  address does.
-- `campfire://s/` stays the share link and `campfire://oauth` the sign-in redirect; both are checked first.
-- Android: an intent filter on `.CampfireIntentActivity` and a branch in `handle`, before the file import. iOS: a
-  branch in `openUrl`, beside the share links.
-- Tests: links built and parsed for each address, a name with spaces and non-ASCII characters, a missing song or
-  setlist, and a share link still read as one.
+- Landed with the app shortcuts: `campfire://<web address>` opens what the web build's address opens (`AppLinks`,
+  `AppLinkOpening.kt`, `LaunchState.navigateToLink`), on Android (`.CampfireIntentActivity`'s scheme-only filter,
+  `handle`) and iOS (`openUrl`, after the share links); an address naming nothing opens the home screen.
+- Left: a song or setlist that's no longer in the library opens the songs or setlists screen rather than the home
+  screen, with tests for `song/{song}` and `setlist/{setlist}/{song}` links, a name with spaces and non-ASCII
+  characters, and a missing song or setlist.
 
 ### 3. The Android widgets
 

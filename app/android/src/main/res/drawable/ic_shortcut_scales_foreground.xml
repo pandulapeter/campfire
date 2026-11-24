@@ -1,0 +1,28 @@
+<!--
+ This file is part of Campfire.
+ Copyright (c) Pandula Péter 2017-2026.
+ https://github.com/pandulapeter/campfire
+
+ This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ If a copy of the MPL was not distributed with this file, You can obtain one at
+ https://mozilla.org/MPL/2.0/.
+-->
+<!-- The scales shortcut's glyph: the app's own, at a shortcut icon's size. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group
+        android:scaleX="1.5"
+        android:scaleY="1.5"
+        android:translateX="36"
+        android:translateY="36">
+        <path
+            android:fillColor="@color/campfire"
+            android:pathData="M2,6.25H22V7.75H2ZM2,11.25H22V12.75H2ZM2,16.25H22V17.75H2Z"/>
+        <path
+            android:fillColor="@color/campfire"
+            android:pathData="M6,17m-3,0a3,3 0,1 1,6 0a3,3 0,1 1,-6 0M12,12m-3,0a3,3 0,1 1,6 0a3,3 0,1 1,-6 0M18,7m-3,0a3,3 0,1 1,6 0a3,3 0,1 1,-6 0"/>
+    </group>
+</vector>

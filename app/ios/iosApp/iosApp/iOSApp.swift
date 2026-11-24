@@ -13,6 +13,7 @@ import ComposeApp
 @main
 struct iOSApp: App {
     @Environment(\.scenePhase) private var scenePhase
+    @UIApplicationDelegateAdaptor(QuickActionsAppDelegate.self) private var quickActionsAppDelegate
 
     init() {
         // The share extension's word that a share is waiting, for an app that stays active while it is made: the other

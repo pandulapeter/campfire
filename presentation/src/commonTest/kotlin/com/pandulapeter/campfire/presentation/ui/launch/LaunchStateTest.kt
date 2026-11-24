@@ -16,16 +16,20 @@ import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.domain.api.library.ScreenData
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
+import com.pandulapeter.campfire.presentation.ui.navigation.NavigationState
+import com.pandulapeter.campfire.presentation.ui.navigation.SettingsTab
 import com.pandulapeter.campfire.presentation.ui.playing.testPreferences
 import com.pandulapeter.campfire.presentation.ui.state.setlists.ListedSetlists
 import com.pandulapeter.campfire.presentation.ui.state.songs.SongGroup
 import com.pandulapeter.campfire.presentation.ui.state.songs.SongGroups
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
@@ -74,6 +78,51 @@ class LaunchStateTest {
         assertTrue(state.hasLibraryToShow.value)
     }
 
+    @Test
+    fun `a link the app was started with holds the launch screen until the library is read`() = runTest {
+        val restored = mutableListOf<NavigationState>()
+        val state = launchState(MutableStateFlow(songGroups(isLibraryRead = true, areRandomPicksAwaited = false))) { restored.add(it) }
+        val opened = async { state.navigateToLink { _, _, _ -> metronome } }
+        runCurrent()
+        assertTrue(state.isLaunchNavigationPending.value)
+        assertFalse(state.hasLibraryToShow.value)
+
+        screenData.value = DataState.Idle(screenData.value.data!!)
+        runCurrent()
+        assertTrue(opened.await())
+        assertEquals(listOf(metronome), restored)
+        assertFalse(state.isLaunchNavigationPending.value)
+    }
+
+    @Test
+    fun `a link arriving while the app is in use replaces whatever stack it is on`() = runTest {
+        screenData.value = DataState.Idle(screenData.value.data!!)
+        val restored = mutableListOf<NavigationState>()
+        val state = launchState(MutableStateFlow(songGroups(isLibraryRead = true, areRandomPicksAwaited = false))) { restored.add(it) }
+        state.hasShownApp = true
+        backStack.add(CampfireDestination.Settings)
+
+        assertTrue(state.navigateToLink { _, _, _ -> metronome })
+        assertEquals(listOf(metronome), restored)
+        assertFalse(state.isLaunchNavigationPending.value)
+    }
+
+    @Test
+    fun `a link refused over unsaved editor text says so`() = runTest {
+        screenData.value = DataState.Idle(screenData.value.data!!)
+        val state = launchState(MutableStateFlow(songGroups(isLibraryRead = true, areRandomPicksAwaited = false))) { false }
+        state.hasShownApp = true
+
+        assertFalse(state.navigateToLink { _, _, _ -> metronome })
+    }
+
+    private val metronome = NavigationState(
+        backStack = listOf(CampfireDestination.Songs, CampfireDestination.Metronome),
+        isSongsSearchOpen = false,
+        isSetlistsSearchOpen = false,
+        settingsTab = SettingsTab.HOME,
+    )
+
     private fun songGroups(isLibraryRead: Boolean, areRandomPicksAwaited: Boolean) = SongGroups(
         filterKey = "",
         orderKey = "",
@@ -84,7 +133,10 @@ class LaunchStateTest {
         filteredSongCount = 1,
     )
 
-    private fun TestScope.launchState(songGroups: MutableStateFlow<SongGroups>) = LaunchState(
+    private fun TestScope.launchState(
+        songGroups: MutableStateFlow<SongGroups>,
+        restoreNavigationState: (NavigationState) -> Boolean = { false },
+    ) = LaunchState(
         scope = backgroundScope,
         screenData = screenData,
         songGroups = songGroups,
@@ -94,6 +146,6 @@ class LaunchStateTest {
         editorDraftRecovery = CompletableDeferred(false),
         userPreferencesState = MutableStateFlow<DataState<UserPreferences>>(DataState.Idle(testPreferences())),
         backStack = backStack,
-        restoreNavigationState = { false },
+        restoreNavigationState = restoreNavigationState,
     )
 }

@@ -97,6 +97,7 @@ fun CampfireViewController(
             fileOpener = fileOpener,
             filesToImport = filesToImport,
             shareLinks = shareLinksToImport,
+            appLinks = appLinksToOpen,
             inboxShares = inboxSharesToImport,
             syncNotifier = syncNotifier,
             importNotifier = importKeeper,
@@ -104,6 +105,7 @@ fun CampfireViewController(
             onUiModeChanged = ::applyInterfaceStyle,
             onAppIconChanged = ::applyAppIcon,
             onKeyCommandsChanged = { onKeyCommandsChanged(listedKeyCommands(it)) },
+            onLauncherShortcutsChanged = ::applyQuickActions,
         )
     }.also { controller = it }
 }

@@ -65,3 +65,8 @@
   rewritten to its address, so `/` and the old `search` keep working whichever screen the app opens on.
 - Song = file name without `.cho` (other extensions kept), setlist without `.setlist.json`, percent-encoded as
   `encodeURIComponent` with `~` escaped too, since the site's 404 page carries `&` as `~and~`.
+- **App links** (`AppLinks`): `campfire://` + an address, which Android and iOS open (the launcher shortcuts,
+  `ui/shortcuts`); `s/` and `oauth` are the shells' own. `new` and `paste` (`BrowserRoutes.LinkAction`) are never
+  written: the web reads them as the home screen, a link opens the home screen and then New song or the clipboard paste
+  (`AppLinkOpening.kt`, only where the songs screen offers it). A link that starts the app is the launch's navigation
+  (`LaunchState.navigateToLink`, launch screen held); a later one replaces the stack, refused over unsaved editor text.

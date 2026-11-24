@@ -31,6 +31,10 @@ import com.pandulapeter.campfire.importing.ImportServiceStarter
 import com.pandulapeter.campfire.presentation.ui.CampfireAndroidApp
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportWork
 import com.pandulapeter.campfire.metronome.CampfireMetronomeService
+import com.pandulapeter.campfire.shortcuts.LauncherShortcutPublisher
+import com.pandulapeter.campfire.shortcuts.appLinksToOpen
+import com.pandulapeter.campfire.shortcuts.isAppLink
+import com.pandulapeter.campfire.shortcuts.openAppLink
 import com.pandulapeter.campfire.sync.SyncServiceStarter
 import kotlinx.coroutines.launch
 import org.koin.mp.KoinPlatform
@@ -83,6 +87,7 @@ class CampfireMainActivity : ComponentActivity() {
                 filesToImport = filesToImport,
                 sharedTexts = sharedTextsToImport,
                 shareLinks = shareLinksToImport,
+                appLinks = appLinksToOpen,
                 syncNotifier = syncServiceStarter::onSyncNotificationChanged,
                 importNotifier = importServiceStarter::onImportNotificationChanged,
                 metronomeNotifier = { notification ->
@@ -96,6 +101,7 @@ class CampfireMainActivity : ComponentActivity() {
                     AppIconSwitcher.apply(context = this, themeColor = themeColor, isLeaving = false)
                 },
                 onKeyboardShortcutsChanged = { keyboardShortcuts = it },
+                onLauncherShortcutsChanged = { LauncherShortcutPublisher.publish(context = this, shortcuts = it) },
             )
         }
     }
@@ -159,8 +165,9 @@ class CampfireMainActivity : ComponentActivity() {
     }
 
     /**
-     * The three things the system can hand this activity: a file to open, a shared song or setlist's link, and the
-     * answer to a sync authorization the app sent the user to the browser for.
+     * The four things the system can hand this activity: a file to open, a shared song or setlist's link, the answer to a
+     * sync authorization the app sent the user to the browser for, and one of the app's own links, which the launcher
+     * shortcuts are.
      *
      * An address in a link's form that does not read as one (the landing page without a payload, a link cut short by a
      * messenger) only brings the app to the front: it is no file, and handing it to the file import would report an
@@ -172,6 +179,7 @@ class CampfireMainActivity : ComponentActivity() {
             address == null -> importFrom(intent)
             isSyncRedirect(address.toString()) -> onSyncRedirectReceived(address.toString())
             ShareLinks.isLinkAddress(address.toString()) -> ShareLinks.parse(address.toString())?.let(::importShareLink)
+            isAppLink(address) -> intent.openAppLink(address) { id -> LauncherShortcutPublisher.reportUsed(context = this, id = id) }
             else -> importFrom(intent)
         }
     }

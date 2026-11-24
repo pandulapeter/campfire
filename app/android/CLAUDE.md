@@ -58,6 +58,14 @@
   in the website's `assetlinks.json` (the debug key is public), so it is given links with
   `adb shell am start -a android.intent.action.VIEW -d '<link>'`.
 
+## Launcher shortcuts (`shortcuts/`)
+
+- Dynamic shortcuts set by `LauncherShortcutPublisher` from what the composition hands over (`ui/shortcuts`), each an
+  `ACTION_VIEW` of its `campfire://` link aimed at `.CampfireIntentActivity`, whose scheme-only filter (not BROWSABLE)
+  it must match; no flags, so the running task is kept (`onNewIntent`). `handle` takes the app links after the OAuth
+  and share links and reports a shortcut's use.
+- A pinned shortcut no longer offered is disabled with `app_shortcut_withdrawn`, enabled again once offered.
+
 ## Permissions
 
 `RECORD_AUDIO` is asked only by a tap that opens a tuner; `android.hardware.microphone` is not required, so Play still
