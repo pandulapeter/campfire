@@ -13,9 +13,6 @@ What's planned for Campfire, grouped by area.
 
 ## In progress
 
-- **Top priority: smooth transitions on Windows.** The release drops frames on a high-end Windows laptop, worst when a
-  song opens: measured there (GPU, renderer, garbage collection, on-screen frames), fixed, and every open performance
-  question closed, by an agent on that laptop. Plan: [performance.md](plans/performance.md)
 - **The page model sees the page's structure.** A page the app reads itself (a link, a Safari share)
   hands the model which lines are links, buttons, new cards, or headings, so a song's crop leaves out the calls to
   action and partner cards around it. Plan: [page-structure-signals.md](plans/page-structure-signals.md)
