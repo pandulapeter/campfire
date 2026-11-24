@@ -56,12 +56,15 @@ import kotlin.math.roundToInt
  * than fading in from nothing, which would blink the tune out for a moment; the slot takes its new height at once, and
  * the sections around it glide to their new places ([SectionMotion]). In a right-to-left song ([isAtEnd]) a page
  * narrower than the line is drawn at the line's end, as the PDF draws it ([runShiftAtLineEnd]).
+ *
+ * @param description What a screen reader is told the whole tune says, by its first slot alone; null for any other slot,
+ * so that only the chunk holding the first slot works it out.
  */
 @Composable
 internal fun SongNotationBlock(
     modifier: Modifier = Modifier,
     run: NotationRun,
-    description: String,
+    description: String?,
     slot: Int,
     isLastSlot: Boolean,
     isAtEnd: Boolean,
@@ -74,7 +77,7 @@ internal fun SongNotationBlock(
     Layout(
         // The notation is drawn, so a screen reader is told what it says instead, by the run's first piece.
         modifier = modifier
-            .then(if (slot == 0) Modifier.semantics { contentDescription = description }.onSizeChanged { run.onPlaced(it.width) } else Modifier)
+            .then(if (slot == 0) Modifier.semantics { description?.let { contentDescription = it } }.onSizeChanged { run.onPlaced(it.width) } else Modifier)
             .drawBehind {
                 val progress = crossfade.progress
                 crossfade.leaving?.let { leaving ->

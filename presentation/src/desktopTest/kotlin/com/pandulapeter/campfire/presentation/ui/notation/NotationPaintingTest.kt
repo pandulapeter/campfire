@@ -68,7 +68,8 @@ internal class NotationPaintingTest {
         )
         tunes.forEach { tune ->
             val text = tune.lines().map { ChordProLine.Verbatim(text = it, environment = "abc") }.abcTune()
-            assertSame(assertNotNull(notations.of(text, 0)).systems, assertNotNull(notations.of(text, 0)).systems)
+            val abcTune = text?.let { AbcTune(it, 0) }
+            assertSame(assertNotNull(notations.of(abcTune)).systems, assertNotNull(notations.of(abcTune)).systems)
         }
     }
 

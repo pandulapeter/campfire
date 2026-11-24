@@ -31,6 +31,7 @@ import com.pandulapeter.campfire.presentation.ui.pictures.SongImageSize
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
@@ -314,8 +315,33 @@ class RenderSectionsTest {
         .filterIsInstance<RenderSection.Lines>()
         .flatMap { it.sectionItems }
         .filterIsInstance<SectionItem.RunSlot>()
-        .mapNotNull { slot -> slot.run.abcTune()?.let { AbcTune(it, slot.tuneOffset) } }
+        .mapNotNull { it.tune }
         .distinct()
+
+    private fun runSlotsOf(text: String) = prepareSongLyrics(song = ChordProParser.parse(text), shouldShowChords = true, labels = labels, showsTiming = true)
+        .sections
+        .filterIsInstance<RenderSection.Lines>()
+        .flatMap { it.sectionItems }
+        .filterIsInstance<SectionItem.RunSlot>()
+
+    @Test
+    fun `every slot of a long tune carries the one tune it was built with`() {
+        val notes = List(60) { "GABc dedc|" }.joinToString("\n")
+        val slots = runSlotsOf("[C]la\n{transpose: 2}\n{start_of_abc}\nX:1\nK:G\n$notes\n{end_of_abc}")
+
+        assertTrue(slots.size > 60)
+        val tune = assertNotNull(slots.first().tune)
+        slots.forEach { assertSame(tune, it.tune) }
+        assertEquals(AbcTune(assertNotNull(slots.first().run.abcTune()), 2), tune)
+    }
+
+    @Test
+    fun `the slots of a run that is no tune carry none`() {
+        val slots = runSlotsOf("{start_of_tab}\ne|--0--|\nB|--1--|\n{end_of_tab}\n{start_of_grid}\n| C . . . |\n{end_of_grid}")
+
+        assertTrue(slots.isNotEmpty())
+        assertTrue(slots.all { it.tune == null })
+    }
 
     @Test
     fun `a section the file leaves unnamed is still headed - a paragraph by its fold toggle alone`() {

@@ -65,12 +65,9 @@ internal class SongNotations(
      */
     val systemLines: Map<AbcTune, List<Int>> = rendered.systemLines
 
-    /**
-     * What the run of [tune]'s text ([abcTune], null for a run that is no tune), standing after a key change of
-     * [tuneOffset] semitones, is drawn as, or null where it is drawn as text.
-     */
-    fun of(tune: String?, tuneOffset: Int): NotationRun? {
-        val abcTune = AbcTune(tune ?: return null, tuneOffset)
+    /** What the run of [tune] (null for a run that is no tune) is drawn as, or null where it is drawn as text. */
+    fun of(tune: AbcTune?): NotationRun? {
+        val abcTune = tune ?: return null
         val rendering = renderingOf(abcTune) ?: return null
         return NotationRun(
             systems = rendering.systems,
@@ -91,18 +88,18 @@ internal class SongNotations(
      * only the unit) hands the same token, so it is never a second arrival.
      */
     /**
-     * Where the layout placed the first slot of the run of [tune]'s text, standing after a key change of [tuneOffset]
-     * semitones, while it is drawn as its text: the column its first rendering is then engraved for ([NotationPlacement]),
-     * so that the staff replaces the text in one step rather than first in the narrowest column's engraving.
+     * Where the layout placed the first slot of the run of [tune] while it is drawn as its text: the column its first
+     * rendering is then engraved for ([NotationPlacement]), so that the staff replaces the text in one step rather than
+     * first in the narrowest column's engraving.
      */
-    fun placeText(tune: String?, tuneOffset: Int, widthPx: Int) {
-        placement?.place(AbcTune(tune ?: return, tuneOffset), widthPx)
+    fun placeText(tune: AbcTune?, widthPx: Int) {
+        placement?.place(tune ?: return, widthPx)
     }
 
-    /** What the picker beside the heading of the run of [tune]'s text offers, null where it has none, or where the run is drawn as text. */
-    fun partPickerOf(tune: String?, tuneOffset: Int): NotationPartPicker? {
-        if (tune == null || renderingOf(AbcTune(tune, tuneOffset)) == null) return null
-        return partChoices?.pickerOf(tune, instrument)
+    /** What the picker beside the heading of the run of [tune] offers, null where it has none, or where the run is drawn as text. */
+    fun partPickerOf(tune: AbcTune?): NotationPartPicker? {
+        if (tune == null || renderingOf(tune) == null) return null
+        return partChoices?.pickerOf(tune.text, instrument)
     }
 
     private fun renderingOf(tune: AbcTune) = rendered.renderings[tune] ?: standIns[tune]?.let { rendered.renderings[it] }

@@ -48,8 +48,6 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.LookaheadScope
-import com.pandulapeter.campfire.presentation.ui.notation.AbcTune
-import com.pandulapeter.campfire.presentation.ui.notation.abcTune
 import com.pandulapeter.campfire.presentation.ui.notation.notationSlotLines
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.platform.LocalDensity
@@ -297,7 +295,7 @@ internal fun SongLyrics(
             sections = sections,
             isFolded = { section -> section is RenderSection.Lines && section.foldKey in foldedSections },
             runSlotLines = { slot ->
-                slot.run.abcTune()?.let { systemLines[AbcTune(it, slot.tuneOffset)] }
+                slot.tune?.let { systemLines[it] }
                     ?.let { notationSlotLines(it, slot.slot, isLastSlot = slot.slot == slot.slotCount - 1) } ?: 1
             },
         ) { section ->

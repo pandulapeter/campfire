@@ -23,6 +23,8 @@ import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
 import com.pandulapeter.campfire.chordpro.model.CommentStyle
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.chords.ChordCell
+import com.pandulapeter.campfire.presentation.ui.notation.AbcTune
+import com.pandulapeter.campfire.presentation.ui.notation.abcTune
 import com.pandulapeter.campfire.presentation.ui.songLayout.FoldableKind
 import com.pandulapeter.campfire.presentation.ui.songLayout.chordSlotCount
 import com.pandulapeter.campfire.presentation.ui.songLayout.environmentLabel
@@ -269,8 +271,11 @@ internal sealed interface SectionItem {
     data class Line(val line: ChordProLine) : SectionItem
 
     /**
-     * The [slot]-th of the [slotCount] pieces of a run of tablature or grid lines, folded under [runFoldKey]; an ABC tune
-     * among them stands after a key change of [tuneOffset] semitones.
+     * The [slot]-th of the [slotCount] pieces of a run of tablature or grid lines, folded under [runFoldKey].
+     *
+     * @param tune The run's ABC tune under the key change it stands after, null for a run that is no tune: one instance
+     * shared by every slot of the run, worked out once when the model is built, since a long tune is cut into hundreds of
+     * slots and each would otherwise join its whole text again, and hash it afresh, on every pass that asks for it.
      */
     @Immutable
     data class RunSlot(
@@ -279,7 +284,7 @@ internal sealed interface SectionItem {
         val slot: Int,
         val slotCount: Int,
         val runFoldKey: String,
-        val tuneOffset: Int,
+        val tune: AbcTune?,
     ) : SectionItem {
 
         /**
@@ -307,7 +312,8 @@ private fun buildSectionItems(parts: List<SectionPart>, sectionFold: String): Li
                 } else {
                     val runFoldKey = runNameCounts.nextRunFoldKey(sectionFold = sectionFold, label = run.first().environmentLabel, kind = kind)
                     val slotCount = run.runSlotCount(kind)
-                    List(slotCount) { slot -> SectionItem.RunSlot(run = run, kind = kind, slot = slot, slotCount = slotCount, runFoldKey = runFoldKey, tuneOffset = part.tuneOffset) }
+                    val tune = run.abcTune()?.let { AbcTune(it, part.tuneOffset) }
+                    List(slotCount) { slot -> SectionItem.RunSlot(run = run, kind = kind, slot = slot, slotCount = slotCount, runFoldKey = runFoldKey, tune = tune) }
                 }
             }
         }

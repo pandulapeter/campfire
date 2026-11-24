@@ -11,7 +11,6 @@ package com.pandulapeter.campfire.presentation.ui.songView.model
 
 import com.pandulapeter.campfire.presentation.ui.notation.NotationSystemPaint
 import com.pandulapeter.campfire.presentation.ui.notation.SongNotations
-import com.pandulapeter.campfire.presentation.ui.notation.abcTune
 import com.pandulapeter.campfire.presentation.ui.songLayout.FoldableKind
 
 /**
@@ -45,16 +44,16 @@ internal fun unitContentsOf(units: SongUnits, sections: List<RenderSection>, fol
 private fun notationOf(section: RenderSection, items: IntRange, notations: SongNotations): List<NotationMeasureToken?>? {
     if (section !is RenderSection.Lines) return null
     val slots = items.mapNotNull { section.sectionItems.getOrNull(it) as? SectionItem.RunSlot }.filter { it.kind == FoldableKind.VERBATIM }
-    val tunes = slots.mapNotNull { slot -> slot.run.abcTune()?.let { it to slot.tuneOffset } }
+    val tunes = slots.mapNotNull { it.tune }
     if (tunes.isEmpty()) return null
-    return tunes.map { (tune, tuneOffset) ->
-        notations.of(tune, tuneOffset)?.let { run ->
+    return tunes.map { tune ->
+        notations.of(tune)?.let { run ->
             NotationMeasureToken(
                 systems = run.systems,
                 unitSize = run.unitSize,
                 maxWidth = run.maxWidth,
                 minWidth = run.minWidth,
-                hasPartPicker = notations.partPickerOf(tune, tuneOffset) != null,
+                hasPartPicker = notations.partPickerOf(tune) != null,
             )
         }
     }

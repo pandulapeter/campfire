@@ -55,7 +55,7 @@ import com.pandulapeter.campfire.presentation.ui.songLayout.labelOf
 import com.pandulapeter.campfire.presentation.ui.songLayout.monospaceText
 import com.pandulapeter.campfire.presentation.ui.notation.NotationPartPicker
 import com.pandulapeter.campfire.presentation.ui.notation.SongNotations
-import com.pandulapeter.campfire.presentation.ui.notation.abcTune
+import com.pandulapeter.campfire.presentation.ui.notation.AbcTune
 import com.pandulapeter.campfire.presentation.ui.notation.describedAs
 import com.pandulapeter.campfire.presentation.ui.theme.LocalMonospaceFontFamily
 import kotlin.math.ceil
@@ -144,7 +144,7 @@ internal fun SongSectionContent(
         // A section that is one engraved score is headed by its picker too.
         partPicker = (section.sectionItems.firstOrNull { it is SectionItem.RunSlot } as? SectionItem.RunSlot)
             ?.takeIf { wholeSectionKind == FoldableKind.VERBATIM }
-            ?.let { notations.partPickerOf(it.run.abcTune(), it.tuneOffset) },
+            ?.let { notations.partPickerOf(it.tune) },
     )
     // The body leaves the composition while it is folded, so that unfolding it composes it afresh to fade in.
     if (!hasBody) return@Column
@@ -228,7 +228,7 @@ internal fun SongSectionContent(
                         run = sectionItem.run,
                         kind = sectionItem.kind,
                         runFoldKey = sectionItem.runFoldKey,
-                        tuneOffset = sectionItem.tuneOffset,
+                        tune = sectionItem.tune,
                         slotCount = sectionItem.slotCount,
                         shownSlots = sectionItem.slot..sectionItem.slot + lastSlotItem - item,
                         hasToggle = wholeSectionKind == null && sectionItem.isFoldable,
@@ -323,7 +323,7 @@ private fun SectionRun(
     run: List<ChordProLine>,
     kind: FoldableKind,
     runFoldKey: String,
-    tuneOffset: Int,
+    tune: AbcTune?,
     slotCount: Int,
     shownSlots: IntRange,
     hasToggle: Boolean,
@@ -335,11 +335,10 @@ private fun SectionRun(
     textMeasurements: SongTextMeasurements,
     notations: SongNotations,
 ) {
-    val tune = remember(run) { run.abcTune() }
     val runModifier = if (!hasToggle || foldedRuns == null) {
         Modifier
     } else {
-        if (0 in shownSlots) HeadingWithPartPicker(picker = notations.partPickerOf(tune, tuneOffset), style = headerStyle) {
+        if (0 in shownSlots) HeadingWithPartPicker(picker = notations.partPickerOf(tune), style = headerStyle) {
             FoldToggleRow(
                 kind = kind,
                 label = run.first().environmentLabel ?: defaultLabels.labelOf(kind, run),
@@ -351,7 +350,7 @@ private fun SectionRun(
         if (foldedRuns.isCollapsed(runFoldKey)) return
         Modifier.fadingIn(isFadingIn = foldedRuns.hasBeenToggled(runFoldKey), keepsLayer = true)
     }
-    val notationRun = if (kind == FoldableKind.VERBATIM) notations.of(tune, tuneOffset) else null
+    val notationRun = if (kind == FoldableKind.VERBATIM) notations.of(tune) else null
     // Music is laid out from the left whatever the song's direction: a grid's bars, a staff, a tune. Its toggle above is
     // the song's, and so is the edge it is drawn at, read here before the direction is left to right.
     val isAtEnd = LocalLayoutDirection.current == LayoutDirection.Rtl
@@ -359,12 +358,13 @@ private fun SectionRun(
         when {
             // An ABC tune once it has been engraved, which until then (and where it cannot be) is the text below.
             notationRun != null -> {
-                // The templates unfilled, filled by withTexts: the chord names and the words are the file's, never the formatter's.
-                val heading = run.first().environmentLabel ?: defaultLabels.labelOf(kind, run)
-                val chordsTemplate = textResource(Res.string.song_details_sheet_music_chords)
-                val wordsTemplate = textResource(Res.string.song_details_sheet_music_words)
-                val description = remember(notationRun.reading, heading, chordsTemplate, wordsTemplate) {
-                    notationRun.reading.describedAs(heading, chordsTemplate, wordsTemplate)
+                // Only the run's first piece tells a screen reader what it says, so only the chunk holding it describes it.
+                val description = if (0 !in shownSlots) null else {
+                    // The templates unfilled, filled by withTexts: the chord names and the words are the file's, never the formatter's.
+                    val heading = run.first().environmentLabel ?: defaultLabels.labelOf(kind, run)
+                    val chordsTemplate = textResource(Res.string.song_details_sheet_music_chords)
+                    val wordsTemplate = textResource(Res.string.song_details_sheet_music_words)
+                    remember(notationRun.reading, heading, chordsTemplate, wordsTemplate) { notationRun.reading.describedAs(heading, chordsTemplate, wordsTemplate) }
                 }
                 shownSlots.forEach { slot ->
                     SongNotationBlock(
@@ -389,7 +389,7 @@ private fun SectionRun(
                     SongTabBlock(
                         // A tune's text tells where it was placed, which its first engraving is then made for.
                         modifier = runModifier.fillMaxWidth().then(
-                            if (slot == 0 && kind == FoldableKind.VERBATIM) Modifier.onSizeChanged { notations.placeText(tune, tuneOffset, it.width) } else Modifier,
+                            if (slot == 0 && kind == FoldableKind.VERBATIM) Modifier.onSizeChanged { notations.placeText(tune, it.width) } else Modifier,
                         ),
                         lines = lines,
                         rows = rows,
