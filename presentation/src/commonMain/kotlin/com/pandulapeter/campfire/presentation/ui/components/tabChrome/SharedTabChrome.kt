@@ -141,6 +141,13 @@ internal class SharedTabChrome(
      */
     val crossfadeAlpha get() = fade.value.coerceIn(0f, 1f)
 
+    /**
+     * How opaque what rides the part is where it stands past the travelling rectangle (a button only this copy's pill
+     * holds): coming in as the rectangle travels to the part rather than ahead of it, and going as [crossfadeAlpha] does,
+     * with what rides the rest of the part.
+     */
+    val pastTravellingAlpha get() = minOf(crossfadeAlpha, presence.value.coerceIn(0f, 1f))
+
     /** How large what scales in or out on the part is drawn: [TAB_CHROME_HIDDEN_SCALE] out of sight, whole once in. */
     private fun scaleOnPresence() = TAB_CHROME_HIDDEN_SCALE + (1f - TAB_CHROME_HIDDEN_SCALE) * presence.value
 

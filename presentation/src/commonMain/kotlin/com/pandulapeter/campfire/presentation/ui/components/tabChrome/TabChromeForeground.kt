@@ -29,14 +29,17 @@ import androidx.compose.ui.unit.LayoutDirection
  * this one's origin), its start edge on the rectangle's start edge, the way the field's content rides its start edge as
  * the search opens and closes, and clipped to the rectangle's stadium, so the open field's text never hangs past a pill
  * narrowing into the closed one, nor a closed pill's buttons wait outside one still on its way to them; it crossfades
- * with the other tab's ([SharedTabChrome.crossfadeAlpha]). While the part is alone it fades with its screen instead, as
- * does what stands off the part (an open search's close button and the actions beside the field), which stays where it is
- * laid out.
+ * with the other tab's ([SharedTabChrome.crossfadeAlpha]). Where [isFadedPastTravelling] (a closed pill's buttons), what
+ * stands past the travelling rectangle is not cut off by its edge but fades there ([SharedTabChrome.pastTravellingAlpha]),
+ * so a button only one tab's pill holds comes and goes as the pill travels, rather than being wiped by it. While the part
+ * is alone it fades with its screen instead, as does what stands off the part (an open search's close button and the
+ * actions beside the field), which stays where it is laid out.
  */
 internal fun Modifier.tabChromeForeground(
     chrome: SharedTabChrome?,
     zIndex: Float,
     partBounds: () -> Rect,
+    isFadedPastTravelling: () -> Boolean,
 ): Modifier = if (chrome == null) this else this@tabChromeForeground
         .drawnInTabChromeOverlay(tabChrome = chrome.tabChrome, zIndex = { zIndex }, isInOverlay = { chrome.isSwapping })
         .drawWithContent {
@@ -53,19 +56,27 @@ internal fun Modifier.tabChromeForeground(
                     withAlpha(chrome.screenAlphaValue) {
                         clipPath(path = partOutline, clipOp = ClipOp.Difference) { this@drawWithContent.drawContent() }
                     }
+                    val travellingOutline = stadiumOf(travelling)
                     withAlpha(chrome.crossfadeAlpha) {
-                        this@drawWithContent.drawRidingOn(part = part, partOutline = partOutline, travelling = travelling)
+                        clipPath(path = travellingOutline) {
+                            this@drawWithContent.drawRidingOn(part = part, partOutline = partOutline, travelling = travelling)
+                        }
+                    }
+                    if (isFadedPastTravelling()) {
+                        withAlpha(chrome.pastTravellingAlpha) {
+                            clipPath(path = travellingOutline, clipOp = ClipOp.Difference) {
+                                this@drawWithContent.drawRidingOn(part = part, partOutline = partOutline, travelling = travelling)
+                            }
+                        }
                     }
                 }
             }
         }
 
-/** Draws what stands on [part] moved onto [travelling], its start edge on the other's, and clipped to both. */
+/** Draws what stands on [part] moved onto [travelling], its start edge on the other's, and clipped to the part. */
 private fun ContentDrawScope.drawRidingOn(part: Rect, partOutline: Path, travelling: Rect) {
     val left = if (layoutDirection == LayoutDirection.Rtl) travelling.right - part.right else travelling.left - part.left
-    clipPath(path = stadiumOf(travelling)) {
-        translate(left = left, top = travelling.center.y - part.center.y) {
-            clipPath(path = partOutline) { this@drawRidingOn.drawContent() }
-        }
+    translate(left = left, top = travelling.center.y - part.center.y) {
+        clipPath(path = partOutline) { this@drawRidingOn.drawContent() }
     }
 }

@@ -35,14 +35,18 @@ internal fun SearchPillSurface(
 
 /**
  * The bar's row drawn over the pill while two tabs swap ([tabChromeForeground]): the buttons or the field standing on
- * the pill ([bounds]) ride it to the other tab's and are clipped to it, the rest only fades. The row is laid out at the
- * bar's origin, as [SearchPillSurface] is.
+ * the pill ([bounds]) ride it to the other tab's and are clipped to it, the rest only fades. A closed pill's buttons
+ * ([isClosed]) are faded rather than cut off where they stand past it, since the two tabs' pills hold different buttons
+ * (the song filters); an open field's text is cut off, never left hanging past a pill narrowing into a closed one. The
+ * row is laid out at the bar's origin, as [SearchPillSurface] is.
  */
 internal fun Modifier.searchPillForeground(
     chrome: SharedTabChrome?,
     bounds: () -> Rect,
+    isClosed: () -> Boolean,
 ) = tabChromeForeground(
     chrome = chrome,
     zIndex = SEARCH_PILL_CONTENT_Z_INDEX,
     partBounds = bounds,
+    isFadedPastTravelling = isClosed,
 )

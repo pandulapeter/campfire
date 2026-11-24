@@ -274,7 +274,7 @@ internal fun SearchableTopAppBar(
                 Row(
                     modifier = Modifier
                         // Over the pill while two tabs swap, which it would otherwise cover, what stands on it riding it.
-                        .searchPillForeground(chrome = sharedPill, bounds = pillBounds)
+                        .searchPillForeground(chrome = sharedPill, bounds = pillBounds, isClosed = { isClosedAndSettled })
                         .fillMaxWidth()
                         .padding(
                             start = contentPadding.calculateStartPadding(layoutDirection) + APP_BAR_HORIZONTAL_PADDING,
