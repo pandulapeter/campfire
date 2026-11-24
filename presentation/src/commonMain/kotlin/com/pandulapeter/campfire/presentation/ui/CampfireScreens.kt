@@ -299,7 +299,6 @@ internal fun CampfireScreens(
                             toolScreen {
                                 ChordsScreen(
                                     viewModel = viewModel,
-                                    layout = settingsLayout,
                                     contentPadding = shellContentPadding,
                                 )
                             }
@@ -310,7 +309,6 @@ internal fun CampfireScreens(
                             toolScreen {
                                 ScalesScreen(
                                     viewModel = viewModel,
-                                    layout = settingsLayout,
                                     contentPadding = shellContentPadding,
                                 )
                             }

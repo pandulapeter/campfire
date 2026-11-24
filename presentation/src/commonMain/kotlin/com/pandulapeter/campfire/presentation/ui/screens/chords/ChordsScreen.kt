@@ -77,7 +77,6 @@ import com.pandulapeter.campfire.presentation.ui.instrument.instrumentTuning
 import com.pandulapeter.campfire.presentation.ui.instrument.storedChordShapes
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.components.bounceScrollableContent
-import com.pandulapeter.campfire.presentation.ui.settingsPage.PageWidthLayout
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -100,7 +99,6 @@ import kotlinx.coroutines.withContext
 internal fun ChordsScreen(
     modifier: Modifier = Modifier,
     viewModel: CampfireViewModel,
-    layout: PageWidthLayout,
     contentPadding: PaddingValues,
 ) {
     val state = viewModel.chordLibrary
@@ -147,7 +145,7 @@ internal fun ChordsScreen(
     )
     val searchFocus = rememberPinnedSearchFocus(gridState)
     val searchPlaceholder = stringResource(Res.string.chords_search)
-    ChordToolPage(modifier = modifier, layout = layout, contentPadding = contentPadding, showDialog = viewModel.dialogHost::showDialog) {
+    ChordToolPage(modifier = modifier, contentPadding = contentPadding, showDialog = viewModel.dialogHost::showDialog) {
         LazyVerticalGrid(
             modifier = Modifier
                 .fillMaxSize()

@@ -80,7 +80,6 @@ import com.pandulapeter.campfire.presentation.ui.scales.label
 import com.pandulapeter.campfire.presentation.ui.scales.scaleAliases
 import com.pandulapeter.campfire.presentation.ui.scales.scaleDiagramDescription
 import com.pandulapeter.campfire.presentation.ui.scales.scaleDiagramGeometryOf
-import com.pandulapeter.campfire.presentation.ui.settingsPage.PageWidthLayout
 import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
 
 /**
@@ -101,7 +100,6 @@ import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
 internal fun ScalesScreen(
     modifier: Modifier = Modifier,
     viewModel: CampfireViewModel,
-    layout: PageWidthLayout,
     contentPadding: PaddingValues,
 ) {
     val state = viewModel.scaleLibrary
@@ -129,7 +127,7 @@ internal fun ScalesScreen(
     )
     val searchFocus = rememberPinnedSearchFocus(gridState)
     val searchPlaceholder = stringResource(Res.string.scales_search)
-    ChordToolPage(modifier = modifier, layout = layout, contentPadding = contentPadding, showDialog = viewModel.dialogHost::showDialog) {
+    ChordToolPage(modifier = modifier, contentPadding = contentPadding, showDialog = viewModel.dialogHost::showDialog) {
         LazyVerticalGrid(
             modifier = Modifier
                 .fillMaxSize()
