@@ -143,10 +143,15 @@ internal class SharedTabChrome(
 
     /**
      * How opaque what rides the part is where it stands past the travelling rectangle (a button only this copy's pill
-     * holds): coming in as the rectangle travels to the part rather than ahead of it, and going as [crossfadeAlpha] does,
-     * with what rides the rest of the part.
+     * holds): coming in over the second half of the rectangle's travel to the part, so that it never shows ahead of the
+     * pill reaching it, and going as [crossfadeAlpha] does, with what rides the rest of the part.
      */
-    val pastTravellingAlpha get() = minOf(crossfadeAlpha, presence.value.coerceIn(0f, 1f))
+    val pastTravellingAlpha
+        get() = if (isEntering) {
+            ((presence.value - PAST_TRAVELLING_FADE_IN_START) / (1f - PAST_TRAVELLING_FADE_IN_START)).coerceIn(0f, 1f)
+        } else {
+            minOf(crossfadeAlpha, presence.value.coerceIn(0f, 1f))
+        }
 
     /** How large what scales in or out on the part is drawn: [TAB_CHROME_HIDDEN_SCALE] out of sight, whole once in. */
     private fun scaleOnPresence() = TAB_CHROME_HIDDEN_SCALE + (1f - TAB_CHROME_HIDDEN_SCALE) * presence.value
@@ -269,6 +274,9 @@ private fun Transition<EnterExitState>.animateSwap(
  * fades out of it and back in (`areClosedSearchActionsDetached`), so the two leave alike.
  */
 internal const val TAB_CHROME_HIDDEN_SCALE = 0.6f
+
+/** How far the travelling rectangle has come before what stands past it starts fading in, see [SharedTabChrome.pastTravellingAlpha]. */
+private const val PAST_TRAVELLING_FADE_IN_START = 0.5f
 
 /**
  * Which of [parts] (the copies of one part being swapped, [part] among them) [part] shares its rectangle with: a copy
