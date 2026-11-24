@@ -75,6 +75,7 @@
 - **A refresh moves `REFRESHED_AT` in each widget's Glance state before `update`**: a composition still alive is only
   recomposed by an update, and not at all for a state that did not change, so `rememberWidgetSnapshot` keys its read on
   it.
+- **Glance draws only a container's first ten children**: the Setlist's titles go in columns of ten.
 - Random picks: `SizeMode.Responsive`, one layout per row count (up to five). The draw is a seed in the widget's own
   state, drawn again by Shuffle (`ShuffleAction`, public: Glance's R8 rules keep only public `ActionCallback`s) and by
   `provideGlance` once an hour old, which the provider's hourly `updatePeriodMillis` brings.

@@ -81,12 +81,19 @@ private fun Setlist(
     val songLines = SetlistWidgetMetrics.songLinesFitting(LocalSize.current.height.value)
     if (songLines > 0 && content.songTitles.isNotEmpty()) {
         Spacer(modifier = GlanceModifier.height(4.dp))
-        content.songTitles.take(songLines).forEach { title ->
-            Text(
-                text = title,
-                maxLines = 1,
-                style = TextStyle(color = GlanceTheme.colors.onSurface, fontSize = 13.sp),
-            )
+        // Glance draws only the first ten children of a container, so the titles go in columns of their own, ten at most.
+        content.songTitles.take(songLines).chunked(MAX_CONTAINER_CHILDREN).forEach { titles ->
+            Column {
+                titles.forEach { title ->
+                    Text(
+                        text = title,
+                        maxLines = 1,
+                        style = TextStyle(color = GlanceTheme.colors.onSurface, fontSize = 13.sp),
+                    )
+                }
+            }
         }
     }
 }
+
+private const val MAX_CONTAINER_CHILDREN = 10
