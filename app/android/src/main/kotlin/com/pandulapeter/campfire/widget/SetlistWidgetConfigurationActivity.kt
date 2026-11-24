@@ -57,7 +57,15 @@ class SetlistWidgetConfigurationActivity : ComponentActivity() {
         }
         enableEdgeToEdge(statusBarStyle = barStyle, navigationBarStyle = barStyle)
         lifecycleScope.launch {
-            val glanceId = GlanceAppWidgetManager(this@SetlistWidgetConfigurationActivity).getGlanceIdBy(appWidgetId)
+            // Throws for an id no widget of the app has: one removed while this was open, or a stranger's, since the
+            // launcher has to be able to start this.
+            val glanceId = try {
+                GlanceAppWidgetManager(this@SetlistWidgetConfigurationActivity).getGlanceIdBy(appWidgetId)
+            } catch (_: IllegalArgumentException) {
+                println("Setlist widget configuration opened for a widget that does not exist")
+                finish()
+                return@launch
+            }
             val snapshot = withContext(Dispatchers.IO) { WidgetSnapshotFile.read(this@SetlistWidgetConfigurationActivity) }
             if (snapshot == null) {
                 println("Setlist widget configured before the app wrote a snapshot")
