@@ -22,7 +22,7 @@ import org.jetbrains.compose.resources.painterResource
  * [TunerButton]: with both the chords and the metronome switched off there is nothing played left to put it next to.
  *
  * @param isAlwaysInMenu Read only mode's, whose bar leaves the title room only for the text size and the overflow
- *   button (`showsFontScaleInPerformanceBar`), so a tuner button let out beside them would squeeze the title.
+ *   button (`appBarButtons`), so a tuner button let out beside them would squeeze the title.
  */
 @Composable
 internal fun tunerAction(isAlwaysInMenu: Boolean, onClick: () -> Unit) = ActionsMenuItem(

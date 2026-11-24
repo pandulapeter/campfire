@@ -108,10 +108,14 @@ internal fun SongDetailsAppBar(
     // cover and the steppers do not come and go during a navigation transition or a page change. The cover's room is
     // reserved for every song of the pager, so that paging to a song without one does not move the star in and out of
     // the menu.
-    val appBarButtons = appBarButtons(appBarWidth = appBarWidth, hasCover = isCoverArtEnabled && songs.any { it.coverArtUrl != null })
-    val showsCoverInBar = isCoverArtEnabled && if (isReadOnly) showsCoverInPerformanceMode(appBarWidth) else appBarButtons.isCoverShown
-    val showsFontScaleInBar = if (isReadOnly) showsFontScaleInPerformanceBar(appBarWidth) else appBarButtons.isFontScaleShown
-    val showsSetlistAssignmentsInBar = !isReadOnly && areSetlistsEnabled && appBarButtons.isSetlistAssignmentsShown
+    val appBarButtons = appBarButtons(
+        appBarWidth = appBarWidth,
+        hasCover = isCoverArtEnabled && songs.any { it.coverArtUrl != null },
+        isReadOnly = isReadOnly,
+    )
+    val showsCoverInBar = isCoverArtEnabled && appBarButtons.isCoverShown
+    val showsFontScaleInBar = appBarButtons.isFontScaleShown
+    val showsSetlistAssignmentsInBar = areSetlistsEnabled && appBarButtons.isSetlistAssignmentsShown
     // The metronome and the tuner are buttons of the song's first section (SongPlayingTools), which is there wherever
     // the chords or the metronome are switched on; with both off there is nothing to put the tuner next to, so the menu
     // holds it then.

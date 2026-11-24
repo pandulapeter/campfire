@@ -16,24 +16,7 @@ import com.pandulapeter.campfire.presentation.ui.components.menu.ACTION_BUTTON_O
 import com.pandulapeter.campfire.presentation.ui.components.coverArt.APP_BAR_COVER_GAP
 import com.pandulapeter.campfire.presentation.ui.components.coverArt.APP_BAR_COVER_SIZE
 
-/**
- * Whether the app bar of a screen [appBarWidth] wide has room for the text size stepper in performance mode, beside the
- * back button, the read only mark, and the overflow button it always holds then ([PERFORMANCE_FIXED_CONTENT_WIDTH]):
- * wherever it leaves the title
- * [MIN_TITLE_WIDTH], since the title is what tells the player which song is up. Where it does not, the stepper is at the
- * end of the menu. The cover is not counted, since it is the first to leave ([showsCoverInPerformanceMode]).
- */
-internal fun showsFontScaleInPerformanceBar(appBarWidth: Dp) = appBarWidth - PERFORMANCE_FIXED_CONTENT_WIDTH - FONT_SCALE_STEPPER_WIDTH >= MIN_TITLE_WIDTH
-
-/**
- * Whether the app bar of a screen [appBarWidth] wide still has room for the cover in performance mode. The cover is
- * decoration there, so it is only shown next to the text size stepper ([showsFontScaleInPerformanceBar]) and only where
- * the title is still left [MIN_TITLE_WIDTH] beside both.
- */
-internal fun showsCoverInPerformanceMode(appBarWidth: Dp) = showsFontScaleInPerformanceBar(appBarWidth) &&
-    appBarWidth - PERFORMANCE_FIXED_CONTENT_WIDTH - FONT_SCALE_STEPPER_WIDTH - APP_BAR_COVER_SIZE - APP_BAR_COVER_GAP >= MIN_TITLE_WIDTH
-
-/** What the song details app bar has the room for outside read only mode, see [appBarButtons]. */
+/** What the song details app bar has the room for, see [appBarButtons]. */
 internal data class AppBarButtons(
     val isCoverShown: Boolean,
     val isSetlistAssignmentsShown: Boolean,
@@ -43,17 +26,22 @@ internal data class AppBarButtons(
 /**
  * What the app bar of a screen [appBarWidth] wide has the room for besides what it always holds: the back button and the
  * overflow button ([APP_BAR_FIXED_CONTENT_WIDTH]), which holds the way into the editor whatever the width (the metronome
- * and the tuner are the song's own first section's, see `SongPlayingTools`). The rest comes out of that menu one at a
- * time as the bar widens, each needing the title left [MIN_TITLE_WIDTH] beside it and everything before it: the cover in
- * front of the title, which only decorates it - where [hasCover] says no song of the pager has one, it takes no room -
- * then the setlist assignments, then the text size stepper, the widest of them and the one only adjusted now and then.
+ * and the tuner are the song's own first section's, see `SongPlayingTools`), and in read only mode ([isReadOnly]) the
+ * read only mark too ([PERFORMANCE_FIXED_CONTENT_WIDTH]). The rest comes out of that menu one at a time as the bar
+ * widens, each needing the title left [MIN_TITLE_WIDTH] beside it and everything before it: the cover in front of the
+ * title, which only decorates it - where [hasCover] says no song of the pager has one, it takes no room - then the
+ * setlist assignments (never in read only mode), then the text size stepper. The stepper is the widest of them, only
+ * adjusted now and then, and the menu and a pinch reach it anyway, so it waits for a title with room to spare
+ * ([COMFORTABLE_TITLE_WIDTH]) beside the cover rather than squeezing either.
  */
-internal fun appBarButtons(appBarWidth: Dp, hasCover: Boolean): AppBarButtons {
-    val room = appBarWidth - APP_BAR_FIXED_CONTENT_WIDTH - if (hasCover) APP_BAR_COVER_SIZE + APP_BAR_COVER_GAP else 0.dp
+internal fun appBarButtons(appBarWidth: Dp, hasCover: Boolean, isReadOnly: Boolean): AppBarButtons {
+    val fixedContentWidth = if (isReadOnly) PERFORMANCE_FIXED_CONTENT_WIDTH else APP_BAR_FIXED_CONTENT_WIDTH
+    val room = appBarWidth - fixedContentWidth - if (hasCover) APP_BAR_COVER_SIZE + APP_BAR_COVER_GAP else 0.dp
+    val setlistAssignmentsWidth = if (isReadOnly) 0.dp else APP_BAR_OVERLAPPING_ACTION_WIDTH
     return AppBarButtons(
         isCoverShown = room >= MIN_TITLE_WIDTH,
-        isSetlistAssignmentsShown = room - APP_BAR_OVERLAPPING_ACTION_WIDTH >= MIN_TITLE_WIDTH,
-        isFontScaleShown = room - APP_BAR_OVERLAPPING_ACTION_WIDTH - FONT_SCALE_STEPPER_WIDTH >= MIN_TITLE_WIDTH,
+        isSetlistAssignmentsShown = !isReadOnly && room - setlistAssignmentsWidth >= MIN_TITLE_WIDTH,
+        isFontScaleShown = room - setlistAssignmentsWidth - FONT_SCALE_STEPPER_WIDTH >= COMFORTABLE_TITLE_WIDTH,
     )
 }
 
@@ -71,3 +59,4 @@ private val APP_BAR_FIXED_CONTENT_WIDTH = APP_BAR_NAVIGATION_WIDTH + APP_BAR_END
 private val PERFORMANCE_FIXED_CONTENT_WIDTH = APP_BAR_FIXED_CONTENT_WIDTH + APP_BAR_OVERLAPPING_ACTION_WIDTH
 
 private val MIN_TITLE_WIDTH = 160.dp // Enough of a title to tell which song is up.
+private val COMFORTABLE_TITLE_WIDTH = 200.dp // Most titles whole, and the key beside the artist.

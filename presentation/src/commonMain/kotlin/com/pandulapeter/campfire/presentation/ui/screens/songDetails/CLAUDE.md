@@ -74,12 +74,13 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
   all the bar's free space but reports only the title's room. No ripple: a press dims the title, cover, and chevron.
   The scroll is read inside the title slot, so passing the top recomposes only it.
 - As the bar narrows the text size stepper goes into the menu (at its end, the menu staying open while pressed), then
-  Choose setlists, then the cover, each while the title keeps 160dp, decided from the settled width for every page at
-  once. Performance mode: the read only mark (`ReadOnlyMark`, a lock opening the Preferences, so a mode switched on by
-  accident is noticed and undone here) always before the overflow button. An import preview has read only mode's menu
-  and never the mark, the mode or not: only Import makes it editable, and the mark comes with its song's screen. The
-  stepper where the title keeps 160dp beside all three (about 434dp), the cover only where it keeps 160dp beside all
-  four. **The overflow button is always the bar's last.**
+  Choose setlists, then the cover, decided from the settled width for every page at once: the cover and Choose setlists
+  each while the title keeps 160dp, the stepper only while the title keeps a comfortable 200dp beside the cover (about
+  528dp with a cover, 476dp without, in both modes), since the menu and a pinch reach it anyway. Performance mode: the
+  read only mark (`ReadOnlyMark`, a lock opening the Preferences, so a mode switched on by accident is noticed and undone
+  here) always before the overflow button, no Choose setlists. An import preview has read only mode's menu and never the
+  mark, the mode or not: only Import makes it editable, and the mark comes with its song's screen. **The overflow button
+  is always the bar's last.**
 - Both menus (read only mode's too) hold About the song (never in a preview) and Preferences (the sheet with every page,
   opening on Song, the read only mark's on General; written at once, so the song changes behind it), never let out as buttons.
 
