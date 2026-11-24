@@ -48,7 +48,7 @@ kotlin {
 // The tool is a friend of :presentation, so a shot can reach the state the screens keep internal (a list's scroll
 // position, the filter's codes) rather than the app's API being widened for a tool no build ships.
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile>().configureEach {
-    val presentation = configurations.compileClasspath.map { classpath -> classpath.files.filter { it.absolutePath.contains("/presentation/build/") } }
+    val presentation = configurations.compileClasspath.map { classpath -> classpath.files.filter { it.invariantSeparatorsPath.contains("/presentation/build/") } }
     compilerOptions.freeCompilerArgs.addAll(presentation.map { files -> files.map { "-Xfriend-paths=${it.absolutePath}" } })
 }
 
