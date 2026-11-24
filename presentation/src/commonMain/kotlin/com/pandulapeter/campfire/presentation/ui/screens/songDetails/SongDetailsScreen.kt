@@ -52,6 +52,7 @@ import com.pandulapeter.campfire.data.model.preferences.SongLayout
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.metronome.api.model.MetronomePlayback
+import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeController
 import com.pandulapeter.campfire.presentation.mapper.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.instrument.chordTuning
@@ -164,13 +165,8 @@ internal fun SongDetailsScreen(
     )
     val chordSpelling = userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default
     val layoutDirection = LocalLayoutDirection.current
-    val metronomePlayback by viewModel.metronomeController.metronomePlayback.collectAsStateWithLifecycle()
     val metronomeSettings by viewModel.metronomeController.metronomeSettings.collectAsStateWithLifecycle()
-    val isMetronomePlaying = metronomePlayback is MetronomePlayback.Playing
-    // A click can only play here while the panel is up, which is what starts and stops it; the preference is read
-    // beside it anyway, since a click stopped from the panel leaves it where it was, see
-    // MetronomeController.toggleMetronomePanel.
-    val isMetronomePanelShown = metronomeSettings.isSongPanelShown || isMetronomePlaying
+    val isMetronomePanelShown = isMetronomePanelShown(viewModel.metronomeController, metronomeSettings.isSongPanelShown)
     val coroutineScope = rememberCoroutineScope()
     val pageStepper = remember(pagerState, coroutineScope) { PageStepper(pagerState, coroutineScope) }
     // The arrow keys scroll the song the reader is looking at, and the pages each scroll on their own, so the one
@@ -192,6 +188,7 @@ internal fun SongDetailsScreen(
     val autoScrolling = rememberSongAutoScrolling(
         userPreferences = userPreferences,
         isUncovered = isUncovered,
+        playback = viewModel.navigator.autoScrollPlayback,
         currentPage = pagerState.currentPage,
         songFileName = currentSong?.fileName,
         writeSpeed = viewModel.preferencesController::setAutoScrollSpeed,
@@ -459,6 +456,17 @@ private fun rememberChordDiagrams(
             notation = notation,
         )
     }
+}
+
+/**
+ * Whether the metronome panel is up over the song. A click can only play here while the panel is up, which is what starts
+ * and stops it; the preference ([isSongPanelShown]) is read beside it anyway, since a click stopped from the panel leaves
+ * it where it was, see [MetronomeController.toggleMetronomePanel].
+ */
+@Composable
+private fun isMetronomePanelShown(metronomeController: MetronomeController, isSongPanelShown: Boolean): Boolean {
+    val metronomePlayback by metronomeController.metronomePlayback.collectAsStateWithLifecycle()
+    return isSongPanelShown || metronomePlayback is MetronomePlayback.Playing
 }
 
 /**

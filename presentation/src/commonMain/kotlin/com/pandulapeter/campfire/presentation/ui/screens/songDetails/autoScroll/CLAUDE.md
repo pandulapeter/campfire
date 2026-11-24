@@ -51,4 +51,8 @@ the next share a height, so any motion takes away what is still to be read.
 - It stops only when asked, at the song's end, on another page, with the layout back to pages, under anything drawn over
   the screen, or on `ON_STOP` (another app, a minimised window, a hidden tab); it never starts by itself, nor again once
   what covered it has gone.
+- **The first step back while it plays stops it**; only the next leaves the screen. The back gesture is the screen's own
+  `NavigationBackHandler`, so a predictive one turns the button to play while dragged (and back if cancelled); Escape and
+  the app bar's arrow reach it through `Navigator.navigateBack` (`AutoScrollPlayback`), the web's Back through a history
+  entry of its own (`BrowserRoutes`).
 - The layout is asked over the first song opened (never by the onboarding), as the song details notes say.

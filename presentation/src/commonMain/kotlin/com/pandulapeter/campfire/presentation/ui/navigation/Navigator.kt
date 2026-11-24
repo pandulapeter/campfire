@@ -135,6 +135,8 @@ internal class Navigator(
     val isOnboardingBackToPreviousStep
         get() = backStack.lastOrNull() is CampfireDestination.Onboarding && previousOnboardingStep(onboardingStep, onboardingSteps()) != null
 
+    val autoScrollPlayback = AutoScrollPlayback()
+
     /** Whether the onboarding is on its last page, or was left from it: closing it leaves [onboardingStep] as it was. */
     val isOnboardingOnLastStep get() = nextOnboardingStep(onboardingStep, onboardingSteps()) == null
 
@@ -453,7 +455,7 @@ internal class Navigator(
      * Every way out of a screen ends up here - the app bar's button, the system's back gesture and the desktop
      * window's Escape key - which is why this is where the editor's unsaved text is caught: nothing the user typed
      * is thrown away without being asked about it first, and why a settings tab other than the first goes back to that
-     * one before the screen is left ([isSettingsBackToHome]).
+     * one before the screen is left ([isSettingsBackToHome]), and why a song scrolling by itself is stopped first.
      *
      * @param isPredictiveBackCompleted Whether this is the pop a predictive back gesture ends in, see
      *   [navigationGeneration].
@@ -477,6 +479,7 @@ internal class Navigator(
             hasUnsavedEditorChanges() && backStack.lastOrNull() is CampfireDestination.SongEditor -> {
                 dialogHost.showDialog(DialogType.UnsavedChanges)
             }
+            autoScrollPlayback.isPlaying -> autoScrollPlayback.stop()
             isSettingsBackToHome -> settingsTab = SettingsTab.HOME
             isOnboardingBackToPreviousStep -> previousOnboardingStep(onboardingStep, onboardingSteps())?.let { showOnboardingStep(it) }
             else -> popBackStack(isPredictiveBackCompleted)

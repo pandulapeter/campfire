@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails.autoScroll
 import androidx.compose.runtime.Composable
 import com.pandulapeter.campfire.data.model.preferences.SongLayout
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -20,6 +21,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
+import androidx.navigationevent.NavigationEventInfo
+import androidx.navigationevent.NavigationEventTransitionState
+import androidx.navigationevent.compose.NavigationBackHandler
+import androidx.navigationevent.compose.rememberNavigationEventState
+import com.pandulapeter.campfire.presentation.ui.navigation.AutoScrollPlayback
 import com.pandulapeter.campfire.presentation.ui.state.importing.isImportPreviewFileName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -36,6 +42,12 @@ internal class SongAutoScrolling(private val coroutineScope: CoroutineScope) {
 
     var isPlaying by mutableStateOf(false)
         private set
+
+    /**
+     * Whether a back gesture that would stop playing is being dragged, written by [rememberSongAutoScrolling]: the play
+     * button already shows what letting go does, and shows playing again if the gesture is cancelled.
+     */
+    internal var isStopPreviewed: () -> Boolean = { false }
 
     /** The current page's scroller, null before it has handed one up. */
     var scroller by mutableStateOf<SongAutoScroller?>(null)
@@ -112,12 +124,15 @@ internal class SongAutoScrolling(private val coroutineScope: CoroutineScope) {
  * are laid out in one column. The page being changed ([currentPage]), anything drawn over the screen ([isUncovered]
  * false: a sheet, a dialog, another screen), and the app leaving it (`ON_STOP`, which a window minimised or a tab hidden
  * also is) stop it, as the song being laid out in pages again does: nobody reads a song moving under something else.
+ * So does the first step back while it plays, before a second one leaves the screen: the back gesture, which it answers
+ * itself, and the ways back [playback] hands it (the desktop's Escape, the app bar's arrow, the browser's Back).
  * [writeSpeed] stores a song's speed once a drag of the slider ends.
  */
 @Composable
 internal fun rememberSongAutoScrolling(
     userPreferences: UserPreferences?,
     isUncovered: Boolean,
+    playback: AutoScrollPlayback,
     currentPage: Int,
     songFileName: String?,
     writeSpeed: (songFileName: String, speed: Int) -> Unit,
@@ -136,6 +151,23 @@ internal fun rememberSongAutoScrolling(
     LaunchedEffect(isUncovered) { if (!isUncovered) autoScrolling.pause() }
     LifecycleEventEffect(Lifecycle.Event.ON_STOP) { autoScrolling.pause() }
     LaunchedEffect(songFileName, storedSpeed) { autoScrolling.settleDraggedSpeed() }
+    DisposableEffect(playback, autoScrolling.isPlaying) {
+        val stop = autoScrolling::pause
+        if (autoScrolling.isPlaying) playback.register(stop)
+        onDispose { playback.unregister(stop) }
+    }
+    // Claims the gesture rather than leaving it to the back stack's handler, which would preview the screen leaving while
+    // the finger is still down. Registered whether or not it is enabled, since a handler that comes and goes changes the
+    // order the dispatcher picks between handlers in.
+    val backGesture = rememberNavigationEventState(currentInfo = NavigationEventInfo.None)
+    NavigationBackHandler(
+        state = backGesture,
+        isBackEnabled = autoScrolling.isPlaying,
+        onBackCompleted = autoScrolling::pause,
+    )
+    autoScrolling.isStopPreviewed = {
+        (backGesture.transitionState as? NavigationEventTransitionState.InProgress)?.direction == NavigationEventTransitionState.TRANSITIONING_BACK
+    }
     val scroller = autoScrolling.scroller
     LaunchedEffect(autoScrolling.isPlaying, scroller) {
         if (!autoScrolling.isPlaying || scroller == null) return@LaunchedEffect
