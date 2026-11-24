@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+ This file is part of Campfire.
+ Copyright (c) Pandula Péter 2017-2026.
+ https://github.com/pandulapeter/campfire
+
+ This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ If a copy of the MPL was not distributed with this file, You can obtain one at
+ https://mozilla.org/MPL/2.0/.
+-->
+<!--
+  The starting window below Android 12, which has no splash screen of its own: the launcher icon on the window color, at
+  the size Android 12 draws it, held until the app is ready (see CampfireMainActivity). It is the default icon, since
+  the window is drawn before anything can tell which theme color's alias was launched.
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@color/campfire_window_background" />
+    <item
+        android:width="160dp"
+        android:height="160dp"
+        android:drawable="@mipmap/ic_launcher"
+        android:gravity="center" />
+</layer-list>

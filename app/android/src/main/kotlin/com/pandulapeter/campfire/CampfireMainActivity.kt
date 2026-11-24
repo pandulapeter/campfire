@@ -97,7 +97,7 @@ class CampfireMainActivity : ComponentActivity() {
 
     /**
      * Holds whatever the system is showing while the app starts - the splash screen on Android 12 and above, the
-     * window background below it - until there is an app behind it to uncover.
+     * launcher icon on the window background below it - until there is an app behind it to uncover.
      *
      * The system takes it away as soon as the first frame is drawn, and that frame is not the app: the preferences
      * that decide the palette and the language have not been read yet, so it is Campfire's own launch screen. Left
@@ -110,6 +110,9 @@ class CampfireMainActivity : ComponentActivity() {
             override fun onPreDraw(): Boolean {
                 if (!isAppReady) return false
                 content.viewTreeObserver.removeOnPreDrawListener(this)
+                // The starting window shows the icon below Android 12, and the window background stays behind the app for
+                // as long as it runs: a resize or the keyboard uncovering a strip of it must show the color alone.
+                window.setBackgroundDrawableResource(R.color.campfire_window_background)
                 return true
             }
         })
