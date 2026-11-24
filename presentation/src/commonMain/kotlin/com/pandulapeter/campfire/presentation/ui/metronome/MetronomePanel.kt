@@ -17,17 +17,13 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.runtime.Composable
@@ -57,6 +53,8 @@ import com.pandulapeter.campfire.presentation.ui.components.tabChrome.TabChromeE
 import com.pandulapeter.campfire.presentation.ui.components.tabChrome.drawnContainerColor
 import com.pandulapeter.campfire.presentation.ui.components.tabChrome.rememberSharedTabChrome
 import com.pandulapeter.campfire.presentation.ui.components.tabChrome.sharedTabChrome
+import com.pandulapeter.campfire.presentation.ui.settingsPage.MAX_COLUMN_WIDTH
+import com.pandulapeter.campfire.presentation.ui.settingsPage.SECTION_GAP
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -79,8 +77,9 @@ import kotlinx.coroutines.flow.Flow
  * @param isProminent Draws the accents as tall as the button rather than inside a bar's own row, starting at a settings
  * page's margin and the button where the list screens keep their New button: the tab's, where the panel is what the
  * screen is for and heads the rows under it.
- * @param pageMaxWidth How wide the page a prominent panel heads grows at most, its insets left out: the accents end
- *   where its rows end, while the button keeps to the end of the window, as the New button does.
+ * @param pageMaxWidth How wide the page a prominent panel heads grows at most, its insets left out: the accents are as
+ *   wide as its rows and centered over them, while the button keeps to the end of the window, as the New button does.
+ *   A song's panel, which heads no page, keeps its accents as wide as the Metronome tab's widest.
  * @param visibleState Where the panel's showing and hiding is followed, for a caller that has to know when it has
  *   come to rest: the song details screen, whose pages decide their grid only once the room the panel leaves them has
  *   stopped changing. Its target is kept at [isVisible] here.
@@ -97,7 +96,7 @@ internal fun MetronomePanel(
     playShortcut: KeyShortcut,
     isVisible: Boolean,
     isProminent: Boolean = false,
-    pageMaxWidth: Dp = Dp.Infinity,
+    pageMaxWidth: Dp = MAX_COLUMN_WIDTH * 2 + SECTION_GAP,
     contentPadding: PaddingValues,
     visibleState: MutableTransitionState<Boolean>? = null,
 ) = AnimatedVisibility(
@@ -124,7 +123,7 @@ internal fun MetronomePanel(
     val startPadding = if (isProminent) PROMINENT_PANEL_HORIZONTAL_PADDING else PANEL_START_PADDING
     val endPadding = if (isProminent) NEW_ITEM_BUTTON_END_INSET else PANEL_END_PADDING
     val height = if (isProminent) PROMINENT_PANEL_HEIGHT else PANEL_HEIGHT
-    Row(
+    MetronomePanelRow(
         modifier = Modifier
             .graphicsLayer {
                 alpha = contentProgress.value
@@ -139,15 +138,13 @@ internal fun MetronomePanel(
                 bottom = if (isProminent) 0.dp else PANEL_BOTTOM_PADDING,
             )
             .height(height),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(PANEL_PADDING),
-    ) {
-        Box(modifier = Modifier.weight(1f)) {
+        // As wide as the rows of the page under a prominent panel, inside the page's margins on both sides.
+        beatsMaxWidth = pageMaxWidth - PROMINENT_PANEL_HORIZONTAL_PADDING * 2,
+        gap = PANEL_PADDING,
+        startPadding = startPadding,
+        endPadding = endPadding,
+        beats = {
             BeatRow(
-                // Ending where the rows under a prominent panel end, on the keyline their ends keep.
-                modifier = Modifier
-                    .widthIn(max = pageMaxWidth - startPadding - PROMINENT_PANEL_HORIZONTAL_PADDING)
-                    .fillMaxWidth(),
                 beatLevels = beatLevels,
                 beats = beats,
                 isPlaying = isPlaying,
@@ -156,7 +153,8 @@ internal fun MetronomePanel(
                 blockGap = if (isProminent) PROMINENT_PANEL_BEAT_GAP else PANEL_BEAT_GAP,
                 onBeatLevelsChanged = onBeatLevelsChanged,
             )
-        }
+        },
+    ) {
         val label = stringResource(if (isPlaying) Res.string.metronome_stop else Res.string.metronome_start)
         CampfireTooltip(label = label, shortcut = playShortcut) {
             // The tab's button stands on the New button's spot, so a tab swap carries it over as that button: one

@@ -19,6 +19,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
@@ -26,6 +27,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -37,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.preferences.TunerSettings
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
+import com.pandulapeter.campfire.tuner.api.model.TunerState
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.mapper.toChordNotation
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
@@ -120,7 +123,6 @@ internal fun TunerScreen(
         consumeOpenedByTap = viewModel.tunerController::consumeOpenedByTap,
         ask = permission.request ?: viewModel.tunerController::requestMicrophone,
     )
-    val layoutDirection = LocalLayoutDirection.current
     val scrollState = rememberRetainedScrollState(scrollPosition)
     ScrollToTopOnRequest(
         requests = viewModel.navigator.scrollToTopRequests,
@@ -155,33 +157,22 @@ internal fun TunerScreen(
             isEnabled = notice?.isMissingPermission != true,
             onModeSelected = { value -> viewModel.tunerController.updateTunerSettings { copy(mode = value) } },
         )
-        AnimatedVisibility(
-            visible = notice == null,
-            enter = fadeIn() + expandVertically(),
-            exit = fadeOut() + shrinkVertically(),
-        ) {
-            TunerDisplay(
-                // As wide as the page under it, so that the meter ends where the rows it heads end.
-                modifier = Modifier
-                    .padding(top = TOOL_GROUP_GAP)
-                    .padding(contentPadding.only(start = true, end = true))
-                    .widthIn(
-                        max = layout.animatedPageMaxWidth(sections = 2) + contentPadding.calculateStartPadding(layoutDirection) +
-                            contentPadding.calculateEndPadding(layoutDirection),
-                    ),
-                state = state,
-                notation = notation,
-                referencePitch = config.referencePitch,
-                isCompact = LocalWindowInfo.current.containerDpSize.height < SHORT_WINDOW_HEIGHT,
-            )
-        }
+        CenteredTunerDisplay(
+            isShown = notice == null,
+            layout = layout,
+            contentPadding = contentPadding,
+            state = state,
+            notation = notation,
+            referencePitch = config.referencePitch,
+        )
         SettingsPage(
             modifier = Modifier.weight(1f),
             sectionColumns = layout.sectionColumns,
             scrollState = scrollState,
             contentPadding = contentPadding.only(start = true, end = true, bottom = true),
-            // As wide as the display above it, which the strings are centered under.
+            // As wide as the display above it, which the strings are centered under, and centered on the window as it is.
             headerColumns = 2,
+            isCentered = true,
             // What stands in for the display, or says why it hears nothing, stands above the sections as the display does.
             header = {
                 AnimatedSettingsRow(value = notice) { shownNotice ->
@@ -205,6 +196,40 @@ internal fun TunerScreen(
             },
         )
     }
+}
+
+/**
+ * The [TunerDisplay], shown while nothing stands in for it, as wide as the page under it and centered as it is, so that
+ * the meter starts and ends where the rows it heads do.
+ */
+@Composable
+private fun ColumnScope.CenteredTunerDisplay(
+    isShown: Boolean,
+    layout: PageWidthLayout,
+    contentPadding: PaddingValues,
+    state: State<TunerState>,
+    notation: ChordNotation,
+    referencePitch: Int,
+) = AnimatedVisibility(
+    modifier = Modifier.align(Alignment.CenterHorizontally),
+    visible = isShown,
+    enter = fadeIn() + expandVertically(),
+    exit = fadeOut() + shrinkVertically(),
+) {
+    val layoutDirection = LocalLayoutDirection.current
+    TunerDisplay(
+        modifier = Modifier
+            .padding(top = TOOL_GROUP_GAP)
+            .padding(contentPadding.only(start = true, end = true))
+            .widthIn(
+                max = layout.animatedPageMaxWidth(sections = 2) + contentPadding.calculateStartPadding(layoutDirection) +
+                    contentPadding.calculateEndPadding(layoutDirection),
+            ),
+        state = state,
+        notation = notation,
+        referencePitch = referencePitch,
+        isCompact = LocalWindowInfo.current.containerDpSize.height < SHORT_WINDOW_HEIGHT,
+    )
 }
 
 /** The instrument pill, dimmed while the tuner reads every note, with the reference pitch at the end of its line. */

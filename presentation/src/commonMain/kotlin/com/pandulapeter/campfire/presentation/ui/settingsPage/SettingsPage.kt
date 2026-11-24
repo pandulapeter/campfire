@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.unit.Constraints
@@ -61,6 +62,8 @@ import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
  * @param section Left out by a page that is all header (the Tuner tab).
  * @param headerColumns How many columns the header spans where the window has room for them, for a page whose header
  *   lines up with something wider than its sections (the Tuner tab's display); as many as the sections take otherwise.
+ * @param isCentered Centers the header and the columns in a window wider than them, for a page under something centered
+ *   (the Metronome's beats, the Tuner's display) rather than beside a category pane, as the settings tabs are.
  */
 @Composable
 internal fun SettingsPage(
@@ -70,6 +73,7 @@ internal fun SettingsPage(
     contentPadding: PaddingValues,
     header: (@Composable ColumnScope.() -> Unit)? = null,
     headerColumns: Int = 1,
+    isCentered: Boolean = false,
     section: (@Composable () -> Unit)? = null,
     secondSection: (@Composable () -> Unit)? = null,
 ) {
@@ -82,6 +86,7 @@ internal fun SettingsPage(
             .bounceVerticalScroll(scrollState)
             // Asked while measuring rather than while composing, since the bottom follows the keyboard of a sheet's field.
             .padding(contentPadding.only(start = true, top = true, end = true, bottom = true, extraTop = PAGE_TOP_PADDING, extraBottom = 16.dp)),
+        horizontalAlignment = if (isCentered) Alignment.CenterHorizontally else Alignment.Start,
     ) {
         if (header != null) {
             val headerSpan = maxOf(columnCount, minOf(headerColumns, sectionColumns), 1)
@@ -95,7 +100,7 @@ internal fun SettingsPage(
                 content = header,
             )
         }
-        SectionColumns(sections = sections, isSideBySide = columnCount > 1)
+        SectionColumns(sections = sections, isSideBySide = columnCount > 1, isCentered = isCentered)
     }
 }
 
@@ -113,6 +118,7 @@ internal fun SettingsPage(
 private fun SectionColumns(
     sections: List<@Composable () -> Unit>,
     isSideBySide: Boolean,
+    isCentered: Boolean,
 ) {
     val sideBySide = animateFloatAsState(
         targetValue = if (isSideBySide) 1f else 0f,
@@ -134,9 +140,11 @@ private fun SectionColumns(
         val sideBySideWidth = minOf(maxColumnWidth, (constraints.maxWidth - gap * (measurables.size - 1)) / measurables.size)
         val columnWidth = lerp(stackedWidth, sideBySideWidth, progress).coerceAtLeast(0)
         val placeables = measurables.map { it.measure(Constraints(maxWidth = columnWidth)) }
+        val contentWidth = lerp(stackedWidth, sideBySideWidth * measurables.size + gap * (measurables.size - 1), progress)
+        val startX = if (isCentered) ((constraints.maxWidth - contentWidth) / 2).coerceAtLeast(0) else 0
         var stackedY = 0
         val positions = placeables.mapIndexed { index, placeable ->
-            IntOffset(x = lerp(0, index * (sideBySideWidth + gap), progress), y = lerp(stackedY, 0, progress))
+            IntOffset(x = startX + lerp(0, index * (sideBySideWidth + gap), progress), y = lerp(stackedY, 0, progress))
                 .also { stackedY += placeable.height + gap }
         }
         val height = placeables.indices.maxOf { positions[it].y + placeables[it].height }

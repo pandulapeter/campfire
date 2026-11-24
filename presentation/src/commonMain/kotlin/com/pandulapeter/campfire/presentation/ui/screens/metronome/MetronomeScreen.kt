@@ -96,7 +96,7 @@ internal fun MetronomeScreen(
             playShortcut = KeyShortcut.METRONOME,
             isVisible = true,
             isProminent = true,
-            // As wide as the page under it, so that the bar ends where the rows it heads end.
+            // As wide as the page under it and centered as it is, so that the bar starts and ends where the rows it heads do.
             pageMaxWidth = layout.animatedPageMaxWidth(sections = 2),
             contentPadding = contentPadding.only(start = true, end = true),
         )
@@ -105,6 +105,8 @@ internal fun MetronomeScreen(
             sectionColumns = layout.sectionColumns,
             scrollState = scrollState,
             contentPadding = contentPadding.only(start = true, end = true, bottom = true),
+            // Under the beats, which are centered on the window.
+            isCentered = true,
             section = {
                 MetronomeBarOptions(
                     viewModel = viewModel,

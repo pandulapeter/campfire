@@ -13,6 +13,8 @@ What's planned for Campfire, grouped by area.
 
 ## In progress
 
+- **Very large screens**: check how every screen behaves on a very wide or tall window (a 4K or ultrawide monitor, a TV),
+  now that the Chords and Scales tabs fill the whole width and the Metronome and Tuner are centered under a width cap
 - **The page model sees the page's structure.** A page the app reads itself (a link, a Safari share)
   hands the model which lines are links, buttons, new cards, or headings, so a song's crop leaves out the calls to
   action and partner cards around it. Plan: [page-structure-signals.md](plans/page-structure-signals.md)
