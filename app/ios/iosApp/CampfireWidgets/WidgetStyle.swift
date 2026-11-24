@@ -32,9 +32,12 @@ extension Color {
 }
 
 extension View {
-    /// The system's widget background, and the layout direction of the app's language rather than the system's.
+    /// The system's widget background, and the layout direction of the app's language rather than the system's. The text
+    /// grows with the reader's size only up to the largest a widget's fixed height has room for: its rows are counted by
+    /// its family, not by its text.
     func campfireWidget(isRightToLeft: Bool) -> some View {
         environment(\.layoutDirection, isRightToLeft ? .rightToLeft : .leftToRight)
+            .dynamicTypeSize(...DynamicTypeSize.large)
             .containerBackground(.background, for: .widget)
     }
 }
