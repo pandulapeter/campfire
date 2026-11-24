@@ -486,6 +486,7 @@
     <string name="setlists_share">Udostępnij setlistę</string>
     <string name="setlists_missing_song">Nie znaleziono pliku</string>
     <string name="setlists_delete_setlist">Usuń setlistę</string>
+    <string name="setlists_add_to_home_screen">Dodaj do ekranu głównego</string>
     <string name="setlists_delete_setlist_confirmation">Usunąć setlistę „%1$s”? Piosenki zostaną w bibliotece.</string>
     <string name="setlists_delete_setlist_confirmation_shared">Usunąć setlistę „%1$s”? Piosenki zostaną w bibliotece. Jej udostępniony link przestanie działać.</string>
     <string name="setlists_search">Szukaj w setlistach</string>
@@ -575,7 +576,8 @@
     <string name="settings_instrument_description">Instrument, na którym grasz, i jego strój, do których dostosowują się diagramy, tabulatury i tuner</string>
     <string name="read_only_mark">Tryb tylko do odczytu: otwórz Preferencje</string>
     <string name="settings_group_appearance">Wygląd</string>
-    <string name="settings_group_playing">Granie</string>
+    <string name="settings_group_screens">Ekrany</string>
+    <string name="settings_group_extras">Dodatki</string>
     <string name="settings_group_online">Online</string>
     <string name="settings_group_sync">Synchronizacja</string>
     <string name="settings_group_import_export">Import i eksport</string>

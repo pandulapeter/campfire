@@ -453,6 +453,7 @@
     <string name="setlists_share">Setlist teilen</string>
     <string name="setlists_missing_song">Datei nicht gefunden</string>
     <string name="setlists_delete_setlist">Setlist löschen</string>
+    <string name="setlists_add_to_home_screen">Zum Startbildschirm hinzufügen</string>
     <string name="setlists_delete_setlist_confirmation">Setlist „%1$s“ löschen? Die Songs bleiben in deiner Bibliothek.</string>
     <string name="setlists_delete_setlist_confirmation_shared">Setlist „%1$s“ löschen? Die Songs bleiben in deiner Bibliothek. Ihr geteilter Link funktioniert dann nicht mehr.</string>
     <string name="setlists_search">In Setlists suchen</string>
@@ -542,7 +543,8 @@
     <string name="settings_instrument_description">Das Instrument in deinen Händen und seine Stimmung, nach denen sich die Diagramme, die Tabs und das Stimmgerät richten</string>
     <string name="read_only_mark">Nur lesen ist an: Vorlieben öffnen</string>
     <string name="settings_group_appearance">Darstellung</string>
-    <string name="settings_group_playing">Spielen</string>
+    <string name="settings_group_screens">Bildschirme</string>
+    <string name="settings_group_extras">Extras</string>
     <string name="settings_group_online">Online</string>
     <string name="settings_group_sync">Sync</string>
     <string name="settings_group_import_export">Import und Export</string>

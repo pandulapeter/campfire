@@ -494,6 +494,7 @@
     <string name="setlists_share">שיתוף הסט־ליסט</string>
     <string name="setlists_missing_song">הקובץ לא נמצא</string>
     <string name="setlists_delete_setlist">מחיקת הסט־ליסט</string>
+    <string name="setlists_add_to_home_screen">הוספה למסך הבית</string>
     <string name="setlists_delete_setlist_confirmation">למחוק את הסט־ליסט “%1$s”? השירים יישארו בספרייה.</string>
     <string name="setlists_delete_setlist_confirmation_shared">למחוק את הסט־ליסט “%1$s”? השירים יישארו בספרייה. קישור השיתוף שלו יפסיק לעבוד.</string>
     <string name="setlists_search">חיפוש בסט־ליסטים</string>
@@ -583,7 +584,8 @@
     <string name="settings_instrument_description">הכלי שבידיך והכיוון שלו, שלפיהם מוצגים הדיאגרמות, הטאבים והטיונר</string>
     <string name="read_only_mark">קריאה בלבד מופעלת: פתיחת העדפות</string>
     <string name="settings_group_appearance">מראה</string>
-    <string name="settings_group_playing">נגינה</string>
+    <string name="settings_group_screens">מסכים</string>
+    <string name="settings_group_extras">תוספות</string>
     <string name="settings_group_online">ברשת</string>
     <string name="settings_group_sync">סנכרון</string>
     <string name="settings_group_import_export">ייבוא וייצוא</string>

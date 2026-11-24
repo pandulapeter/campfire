@@ -31,8 +31,9 @@ do the wide layout's pages. A build without sync leaves Sharing out.
   where the stop fails. Stop sharing everything is alone in the last section. A working share's line adds how many
   attachments its copy left out for their size (`leftOutAttachmentsText`, as the export screen says it).
 - **About**: Help starts with Keyboard shortcuts on a desktop or web build, elsewhere only while a keyboard is attached.
-- **Features**: one switch per tab in the navigation's order (Attachments after Setlists, being part of a song), then
-  an Online group, so the switches that make requests are found together (`ui/CLAUDE.md`); Pages from links is left out
+- **Features**: a Screens group with one switch per tab in the navigation's order, an Extras group for the parts of the
+  songs that are no screen (Random picks, Attachments), then an Online group, so the switches that make requests are
+  found together (`ui/CLAUDE.md`); Pages from links is left out
   where the platform cannot read a page (the web, a desktop without WebView2 or WebKitGTK).
 
 ## Layout invariants

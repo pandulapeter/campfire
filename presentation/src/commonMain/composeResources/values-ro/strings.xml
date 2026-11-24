@@ -495,6 +495,7 @@
     <string name="setlists_share">Partajează lista</string>
     <string name="setlists_missing_song">Fișier negăsit</string>
     <string name="setlists_delete_setlist">Șterge lista</string>
+    <string name="setlists_add_to_home_screen">Adaugă pe ecranul de pornire</string>
     <string name="setlists_delete_setlist_confirmation">Ștergi lista „%1$s”? Cântecele rămân în bibliotecă.</string>
     <string name="setlists_delete_setlist_confirmation_shared">Ștergi lista „%1$s”? Cântecele rămân în bibliotecă. Linkul ei partajat nu va mai funcționa.</string>
     <string name="setlists_search">Caută în liste</string>
@@ -584,7 +585,8 @@
     <string name="settings_instrument_description">Instrumentul din mâinile tale și acordajul lui, după care se iau diagramele, tabulaturile și acordorul</string>
     <string name="read_only_mark">Doar citire este activat: deschide Preferințe</string>
     <string name="settings_group_appearance">Aspect</string>
-    <string name="settings_group_playing">Cântat</string>
+    <string name="settings_group_screens">Ecrane</string>
+    <string name="settings_group_extras">Extra</string>
     <string name="settings_group_online">Online</string>
     <string name="settings_group_sync">Sincronizare</string>
     <string name="settings_group_import_export">Import și export</string>

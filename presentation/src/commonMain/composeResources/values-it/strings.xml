@@ -453,6 +453,7 @@
     <string name="setlists_share">Condividi scaletta</string>
     <string name="setlists_missing_song">File non trovato</string>
     <string name="setlists_delete_setlist">Elimina scaletta</string>
+    <string name="setlists_add_to_home_screen">Aggiungi alla schermata Home</string>
     <string name="setlists_delete_setlist_confirmation">Eliminare la scaletta «%1$s»? Le canzoni restano nella tua libreria.</string>
     <string name="setlists_delete_setlist_confirmation_shared">Eliminare la scaletta «%1$s»? Le canzoni restano nella tua libreria. Il suo link condiviso smetterà di funzionare.</string>
     <string name="setlists_search">Cerca nelle scalette</string>
@@ -542,7 +543,8 @@
     <string name="settings_instrument_description">Lo strumento che hai in mano e la sua accordatura, che seguono i diagrammi, le intavolature e l\'accordatore</string>
     <string name="read_only_mark">Sola lettura attiva: apri Preferenze</string>
     <string name="settings_group_appearance">Aspetto</string>
-    <string name="settings_group_playing">Suonare</string>
+    <string name="settings_group_screens">Schermate</string>
+    <string name="settings_group_extras">Extra</string>
     <string name="settings_group_online">Online</string>
     <string name="settings_group_sync">Sincronizzazione</string>
     <string name="settings_group_import_export">Importazione ed esportazione</string>

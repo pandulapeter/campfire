@@ -453,6 +453,7 @@
     <string name="setlists_share">Share setlist</string>
     <string name="setlists_missing_song">File not found</string>
     <string name="setlists_delete_setlist">Delete setlist</string>
+    <string name="setlists_add_to_home_screen">Add to home screen</string>
     <string name="setlists_delete_setlist_confirmation">Delete the \"%1$s\" setlist? The songs stay in your library.</string>
     <string name="setlists_delete_setlist_confirmation_shared">Delete the \"%1$s\" setlist? The songs stay in your library. Its shared link stops working.</string>
     <string name="setlists_search">Search in setlists</string>
@@ -542,7 +543,8 @@
     <string name="settings_instrument_description">The instrument in your hands and its tuning, which the diagrams, the tabs, and the tuner follow</string>
     <string name="read_only_mark">Read only is on: open Preferences</string>
     <string name="settings_group_appearance">Appearance</string>
-    <string name="settings_group_playing">Playing</string>
+    <string name="settings_group_screens">Screens</string>
+    <string name="settings_group_extras">Extras</string>
     <string name="settings_group_online">Online</string>
     <string name="settings_group_sync">Sync</string>
     <string name="settings_group_import_export">Import and export</string>

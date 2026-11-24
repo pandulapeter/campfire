@@ -26,8 +26,9 @@ import com.pandulapeter.campfire.presentation.resources.settings_cover_art_descr
 import com.pandulapeter.campfire.presentation.resources.settings_attachments_description
 import com.pandulapeter.campfire.presentation.resources.settings_everything_off
 import com.pandulapeter.campfire.presentation.resources.song_details_info_attachments
+import com.pandulapeter.campfire.presentation.resources.settings_group_extras
 import com.pandulapeter.campfire.presentation.resources.settings_group_online
-import com.pandulapeter.campfire.presentation.resources.settings_group_playing
+import com.pandulapeter.campfire.presentation.resources.settings_group_screens
 import com.pandulapeter.campfire.presentation.resources.settings_metronome_description
 import com.pandulapeter.campfire.presentation.resources.settings_page_links
 import com.pandulapeter.campfire.presentation.resources.settings_page_links_description
@@ -54,10 +55,11 @@ import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSection
 
 /**
  * The parts of the app a reader can do without, each a switch that takes it out of every screen it is on, so that a
- * singer is not handed a metronome and a band that plays from one list is not handed a setlist tab. They follow the
- * tabs of the navigation in their order - songs, setlists, metronome, tuner, chords, scales - and how a song is read is
- * none of theirs: that is the Song and the Chords tabs'. The switches that let the app reach the network are a group
- * of their own, so that what can make a request is found in one place rather than among the rest.
+ * singer is not handed a metronome and a band that plays from one list is not handed a setlist tab. The Screens group is
+ * the navigation's items in their order - songs, setlists, metronome, tuner, chords, scales - and the Extras group the
+ * parts of the songs that are no screen of their own; how a song is read is none of theirs: that is the Song and the
+ * Chords tabs'. The switches that let the app reach the network are a group of their own, so that what can make a
+ * request is found in one place rather than among the rest.
  *
  * @param isPageLoadingSupported Whether this platform can read a page by its address at all; where it cannot, Pages from
  *   links would switch nothing, and is not offered.
@@ -68,15 +70,16 @@ internal fun FeaturesSections(
     userPreferences: UserPreferences?,
     isPageLoadingSupported: Boolean,
 ) {
-    PlayingSection(preferencesController = preferencesController, userPreferences = userPreferences)
+    ScreensSection(preferencesController = preferencesController, userPreferences = userPreferences)
+    ExtrasSection(preferencesController = preferencesController, userPreferences = userPreferences)
     OnlineSection(preferencesController = preferencesController, userPreferences = userPreferences, isPageLoadingSupported = isPageLoadingSupported)
 }
 
 @Composable
-private fun PlayingSection(
+private fun ScreensSection(
     preferencesController: PreferencesController,
     userPreferences: UserPreferences?,
-) = SettingsSection(title = stringResource(Res.string.settings_group_playing)) {
+) = SettingsSection(title = stringResource(Res.string.settings_group_screens)) {
     // With every screen switched off Settings is the only one left, and the app opens on it (TopLevel.home).
     AnimatedSettingsRow(isVisible = CampfireDestination.TopLevel.home(FeatureSwitches.of(userPreferences)) == CampfireDestination.Settings) {
         EverythingOffCard()
@@ -90,14 +93,6 @@ private fun PlayingSection(
         isChecked = userPreferences?.areSongsEnabled != false,
         onCheckedChange = preferencesController::setSongsEnabled,
     )
-    // Disabled with the songs off, as the setlists are: the picks are a part of the songs list.
-    SwitchListItem(
-        title = stringResource(Res.string.songs_random_picks),
-        description = stringResource(Res.string.settings_random_picks_description),
-        isChecked = userPreferences?.isRandomPicksEnabled != false,
-        isEnabled = userPreferences?.areSongsEnabled != false,
-        onCheckedChange = preferencesController::setRandomPicksEnabled,
-    )
     // Disabled rather than hidden with the songs off: a setlist is a list of songs, so without them there is nothing it
     // could hold, and what it is set to is still what the app has once the songs are back.
     SwitchListItem(
@@ -106,14 +101,6 @@ private fun PlayingSection(
         isChecked = userPreferences?.areSetlistsEnabled != false,
         isEnabled = userPreferences?.areSongsEnabled != false,
         onCheckedChange = preferencesController::setSetlistsEnabled,
-    )
-    // Off, only the sheet's group and the editor's button go: the files songs name still travel with them.
-    SwitchListItem(
-        title = stringResource(Res.string.song_details_info_attachments),
-        description = stringResource(Res.string.settings_attachments_description),
-        isChecked = userPreferences?.isAttachmentsEnabled != false,
-        isEnabled = userPreferences?.areSongsEnabled != false,
-        onCheckedChange = preferencesController::setAttachmentsEnabled,
     )
     SwitchListItem(
         title = stringResource(Res.string.metronome),
@@ -141,6 +128,30 @@ private fun PlayingSection(
         description = stringResource(Res.string.settings_scales_description),
         isChecked = userPreferences?.areScalesEnabled != false,
         onCheckedChange = preferencesController::setScalesEnabled,
+    )
+}
+
+/** The parts of the songs that are no screen of their own, disabled with the songs off, as the setlists are. */
+@Composable
+private fun ExtrasSection(
+    preferencesController: PreferencesController,
+    userPreferences: UserPreferences?,
+) = SettingsSection(title = stringResource(Res.string.settings_group_extras)) {
+    val areSongsEnabled = userPreferences?.areSongsEnabled != false
+    SwitchListItem(
+        title = stringResource(Res.string.songs_random_picks),
+        description = stringResource(Res.string.settings_random_picks_description),
+        isChecked = userPreferences?.isRandomPicksEnabled != false,
+        isEnabled = areSongsEnabled,
+        onCheckedChange = preferencesController::setRandomPicksEnabled,
+    )
+    // Off, only the sheet's group and the editor's button go: the files songs name still travel with them.
+    SwitchListItem(
+        title = stringResource(Res.string.song_details_info_attachments),
+        description = stringResource(Res.string.settings_attachments_description),
+        isChecked = userPreferences?.isAttachmentsEnabled != false,
+        isEnabled = areSongsEnabled,
+        onCheckedChange = preferencesController::setAttachmentsEnabled,
     )
 }
 

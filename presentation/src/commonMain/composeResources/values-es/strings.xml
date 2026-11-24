@@ -453,6 +453,7 @@
     <string name="setlists_share">Compartir repertorio</string>
     <string name="setlists_missing_song">Archivo no encontrado</string>
     <string name="setlists_delete_setlist">Eliminar repertorio</string>
+    <string name="setlists_add_to_home_screen">Añadir a la pantalla de inicio</string>
     <string name="setlists_delete_setlist_confirmation">¿Eliminar el repertorio «%1$s»? Las canciones siguen en tu biblioteca.</string>
     <string name="setlists_delete_setlist_confirmation_shared">¿Eliminar el repertorio «%1$s»? Las canciones siguen en tu biblioteca. Su enlace compartido dejará de funcionar.</string>
     <string name="setlists_search">Buscar en repertorios</string>
@@ -542,7 +543,8 @@
     <string name="settings_instrument_description">El instrumento que tienes en las manos y su afinación, que siguen los diagramas, las tablaturas y el afinador</string>
     <string name="read_only_mark">Solo lectura activado: abrir Preferencias</string>
     <string name="settings_group_appearance">Apariencia</string>
-    <string name="settings_group_playing">Para tocar</string>
+    <string name="settings_group_screens">Pantallas</string>
+    <string name="settings_group_extras">Extras</string>
     <string name="settings_group_online">En línea</string>
     <string name="settings_group_sync">Sincronización</string>
     <string name="settings_group_import_export">Importar y exportar</string>

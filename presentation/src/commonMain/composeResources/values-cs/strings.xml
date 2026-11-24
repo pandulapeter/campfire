@@ -490,6 +490,7 @@
     <string name="setlists_share">Sdílet setlist</string>
     <string name="setlists_missing_song">Soubor nenalezen</string>
     <string name="setlists_delete_setlist">Smazat setlist</string>
+    <string name="setlists_add_to_home_screen">Přidat na plochu</string>
     <string name="setlists_delete_setlist_confirmation">Smazat setlist „%1$s“? Písně zůstanou v knihovně.</string>
     <string name="setlists_delete_setlist_confirmation_shared">Smazat setlist „%1$s“? Písně zůstanou v knihovně. Jeho sdílený odkaz přestane fungovat.</string>
     <string name="setlists_search">Hledat v setlistech</string>
@@ -579,7 +580,8 @@
     <string name="settings_instrument_description">Nástroj, na který hraješ, a jeho ladění, podle kterých se řídí diagramy, tabulatury a ladička</string>
     <string name="read_only_mark">Režim jen pro čtení: otevřít Předvolby</string>
     <string name="settings_group_appearance">Vzhled</string>
-    <string name="settings_group_playing">Hraní</string>
+    <string name="settings_group_screens">Obrazovky</string>
+    <string name="settings_group_extras">Doplňky</string>
     <string name="settings_group_online">Online</string>
     <string name="settings_group_sync">Synchronizace</string>
     <string name="settings_group_import_export">Import a export</string>
