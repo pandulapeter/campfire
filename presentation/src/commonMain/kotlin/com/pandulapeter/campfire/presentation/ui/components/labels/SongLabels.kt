@@ -28,11 +28,16 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import com.pandulapeter.campfire.data.model.song.SongLanguage
+import com.pandulapeter.campfire.presentation.localization.currentLanguage
+import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_label
 import com.pandulapeter.campfire.presentation.resources.ic_language
+import com.pandulapeter.campfire.presentation.resources.songs_languages_unknown
 import com.pandulapeter.campfire.presentation.ui.components.bounceHorizontalScroll
 import org.jetbrains.compose.resources.painterResource
 
@@ -47,6 +52,8 @@ import org.jetbrains.compose.resources.painterResource
  *   filters, and [selectedTags] (compared without regard to case, as the filter compares them) are drawn selected so
  *   that a second tap reads as what it is, taking the filter off again.
  * @param onLanguageClicked The same for the languages, against [selectedLanguages].
+ * @param tagIcon The tags' mark, which a list passes once for all its cards; null builds the row's own.
+ * @param languageIcon The same for the languages.
  */
 @Composable
 internal fun SongLabels(
@@ -57,13 +64,21 @@ internal fun SongLabels(
     selectedLanguages: Set<String> = emptySet(),
     onTagClicked: ((String) -> Unit)? = null,
     onLanguageClicked: ((String) -> Unit)? = null,
+    tagIcon: Painter? = null,
+    languageIcon: Painter? = null,
 ) {
     val scrollState = rememberScrollState()
     val sortedTags = remember(tags) { tags.sortedAlphabeticallyBy { it } }
-    val sortedLanguages = languages.map { code -> code to languageLabel(code) }.sortedAlphabeticallyBy { it.second }
+    val appLanguageCode = currentLanguage.value.code
+    val unknownLanguageLabel = stringResource(Res.string.songs_languages_unknown)
+    val sortedLanguages = remember(languages, appLanguageCode, unknownLanguageLabel) {
+        languages.map { code ->
+            code to if (code == SongLanguage.UNKNOWN) unknownLanguageLabel else namedLanguageLabel(code = code, appLanguageCode = appLanguageCode)
+        }.sortedAlphabeticallyBy { it.second }
+    }
     // One painter for every pill of a kind, since each is a vector of its own to build and cache for every card scrolled in.
-    val tagIcon = painterResource(Res.drawable.ic_label)
-    val languageIcon = painterResource(Res.drawable.ic_language)
+    val tagPainter = tagIcon ?: painterResource(Res.drawable.ic_label)
+    val languagePainter = languageIcon ?: painterResource(Res.drawable.ic_language)
     Row(
         modifier = modifier
             .horizontalFadingEdges(scrollState)
@@ -75,7 +90,7 @@ internal fun SongLabels(
                 text = tag,
                 isSelected = onTagClicked != null && selectedTags.any { tagKey(it) == tagKey(tag) },
                 onClick = onTagClicked?.let { { it(tag) } },
-                leadingIcon = tagIcon,
+                leadingIcon = tagPainter,
                 leadingIconFill = tagColor(tag)?.color() ?: Color.Unspecified,
             )
         }
@@ -86,7 +101,7 @@ internal fun SongLabels(
                 text = label,
                 isSelected = onLanguageClicked != null && code in selectedLanguages,
                 onClick = onLanguageClicked?.let { { it(code) } },
-                leadingIcon = languageIcon,
+                leadingIcon = languagePainter,
             )
         }
     }

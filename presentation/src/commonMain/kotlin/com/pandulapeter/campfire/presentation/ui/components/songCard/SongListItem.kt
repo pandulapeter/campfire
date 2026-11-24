@@ -17,9 +17,9 @@ import com.pandulapeter.campfire.presentation.ui.components.labels.SongLabels
 import com.pandulapeter.campfire.presentation.ui.components.appBar.searchTravelSpec
 import com.pandulapeter.campfire.presentation.ui.components.list.onContextClick
 import com.pandulapeter.campfire.presentation.ui.components.only
+import com.pandulapeter.campfire.presentation.ui.components.AnimatedContentOnChange
+import com.pandulapeter.campfire.presentation.ui.components.AnimatedVisibilityOnChange
 import com.pandulapeter.campfire.presentation.localization.textResource
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -101,6 +101,7 @@ import kotlin.time.Duration
  * @param shouldShowLabels False inside a setlist, which lists the songs somebody wrote down rather than a view of the
  *   library that a tag or a language could narrow, so neither says anything there about why the song is in it.
  * @param songFilter What the song list is filtered by, whose pills are drawn selected.
+ * @param painters The labels' icons, shared by every card of the list ([SongCardPainters]); null builds the card's own.
  * @param onTagClicked Toggles a tag in the song list's filter, exactly as its chip in the filters does. Null, together
  *   with [onLanguageClicked], leaves the pills to be read only.
  * @param onLanguageClicked The same for a language.
@@ -131,6 +132,7 @@ internal fun SongListItem(
     isArtistShown: Boolean = true,
     shouldShowLabels: Boolean = true,
     songFilter: SongFilter = SongFilter(),
+    painters: SongCardPainters? = null,
     onTagClicked: ((String) -> Unit)? = null,
     onLanguageClicked: ((String) -> Unit)? = null,
     cardPadding: PaddingValues = PaddingValues(horizontal = SONG_CARD_OUTER_PADDING, vertical = SONG_CARD_VERTICAL_PADDING),
@@ -162,24 +164,7 @@ internal fun SongListItem(
 
         else -> null
     }
-    // A number of its own rather than a second emphasized value next to the key: the key is the one thing a player
-    // has to find on a card at a glance, and a second accent colored item beside it halves that. It keeps the
-    // duration's muted color, since the two are what a set is timed by.
-    // The time signature comes with it, since the metronome the mark draws is set by both, and is the file's own, which
-    // no listing overrides. Common time is left off: it is what most songs are in, and on every card it would only take
-    // letters off the artist.
-    val timeSignature = song.timeSignatureOrDefault.takeUnless { it == TimeSignature.COMMON_TIME }
-    val tempoNote = tempo?.let {
-        SongListItemNote(
-            text = if (timeSignature == null) {
-                stringResource(Res.string.song_details_tempo, it.toString())
-            } else {
-                stringResource(Res.string.songs_tempo_and_time, it.toString(), timeSignature.toString())
-            },
-            isEmphasized = false,
-            mark = IconLabelMark.TEMPO,
-        )
-    }
+    val tempoNote = tempo?.let { tempoNoteOf(song = song, tempo = it) }
     val hasArtist = song.artist.isNotBlank()
     val isArtistDrawn = hasArtist && (isArtistShown || (note == null && tempoNote == null && displayedDuration == null))
     // Remembered, so that a row composed again with the same song hands the same lists on and the labels under it skip.
@@ -218,7 +203,7 @@ internal fun SongListItem(
                     // the headers away, is what hides and shows it. The fade trails the room opening and leads the room
                     // closing, so the text is never squeezed while it is still visible. The room moves on the search's
                     // spring, as the rest of the card's height does ([CenteredSongCardContent]).
-                    AnimatedVisibility(
+                    AnimatedVisibilityOnChange(
                         visible = isArtistDrawn,
                         enter = fadeIn(tween(durationMillis = 220, delayMillis = 100)) +
                             expandVertically(searchTravelSpec(visibilityThreshold = IntSize.VisibilityThreshold)),
@@ -248,7 +233,7 @@ internal fun SongListItem(
                         if (displayedDuration != null) {
                             // Follows the notes, which fade and close up where they stand rather than leaving the line
                             // in one frame, so the duration slides once instead of jumping and then sliding.
-                            AnimatedVisibility(
+                            AnimatedVisibilityOnChange(
                                 visible = note != null || tempoNote != null,
                                 enter = fadeIn() + expandHorizontally(),
                                 exit = fadeOut() + shrinkHorizontally(),
@@ -272,11 +257,35 @@ internal fun SongListItem(
                         selectedLanguages = songFilter.selectedLanguages,
                         onTagClicked = onTagClicked,
                         onLanguageClicked = onLanguageClicked,
+                        tagIcon = painters?.tag,
+                        languageIcon = painters?.language,
                     )
                 }
             },
         )
     }
+}
+
+/**
+ * The tempo a song is played at, as a number of its own rather than a second emphasized value next to the key: the key
+ * is the one thing a player has to find on a card at a glance, and a second accent colored item beside it halves that.
+ * It keeps the duration's muted color, since the two are what a set is timed by.
+ * The time signature comes with it, since the metronome the mark draws is set by both, and is the file's own, which
+ * no listing overrides. Common time is left off: it is what most songs are in, and on every card it would only take
+ * letters off the artist.
+ */
+@Composable
+private fun tempoNoteOf(song: Song, tempo: Int): SongListItemNote {
+    val timeSignature = song.timeSignatureOrDefault.takeUnless { it == TimeSignature.COMMON_TIME }
+    return SongListItemNote(
+        text = if (timeSignature == null) {
+            stringResource(Res.string.song_details_tempo, tempo.toString())
+        } else {
+            stringResource(Res.string.songs_tempo_and_time, tempo.toString(), timeSignature.toString())
+        },
+        isEmphasized = false,
+        mark = IconLabelMark.TEMPO,
+    )
 }
 
 /**
@@ -346,7 +355,7 @@ private data class SongListItemNote(
 private fun SongCardNote(
     note: SongListItemNote?,
     hasGapBefore: Boolean,
-) = AnimatedContent(
+) = AnimatedContentOnChange(
     targetState = note,
     transitionSpec = { fadeIn() togetherWith fadeOut() },
 ) { currentNote ->
@@ -355,7 +364,7 @@ private fun SongCardNote(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             // The tempo's gap comes and goes with the key in front of it, so it closes up the way the duration's does.
-            AnimatedVisibility(
+            AnimatedVisibilityOnChange(
                 visible = hasGapBefore,
                 enter = fadeIn() + expandHorizontally(),
                 exit = fadeOut() + shrinkHorizontally(),

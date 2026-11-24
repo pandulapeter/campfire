@@ -32,8 +32,11 @@ internal fun languageLabel(code: String): String = if (code == SongLanguage.UNKN
     stringResource(Res.string.songs_languages_unknown)
 } else {
     val appLanguageCode = currentLanguage.value.code
-    remember(code, appLanguageCode) { languageName(code = code, appLanguageCode = appLanguageCode) ?: code.uppercase() }
+    remember(code, appLanguageCode) { namedLanguageLabel(code = code, appLanguageCode = appLanguageCode) }
 }
+
+/** [languageLabel] of a code other than [SongLanguage.UNKNOWN], outside a composition, for a list remembered whole. */
+internal fun namedLanguageLabel(code: String, appLanguageCode: String) = languageName(code = code, appLanguageCode = appLanguageCode) ?: code.uppercase()
 
 /**
  * [languageLabel] outside a composition, and null rather than a fallback where the platform cannot name the language

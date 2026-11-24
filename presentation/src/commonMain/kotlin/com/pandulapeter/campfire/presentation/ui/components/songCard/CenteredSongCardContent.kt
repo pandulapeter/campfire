@@ -75,13 +75,6 @@ internal fun CenteredSongCardContent(
     isThreeLine: Boolean = false,
 ) {
     val headlineStyle = MaterialTheme.typography.bodyLarge.copy(lineHeight = SONG_CARD_TITLE_LINE_HEIGHT)
-    // On the spring the artist line folds out on and the search moves the list on, since the card's height follows it:
-    // the song list keeps the card at its top left still and slides the rest by that same spring, and a card that grew on
-    // a faster one would push the cards under it ahead of the slide and let them drift back.
-    val coverSize by animateDpAsState(
-        targetValue = if (isThreeLine) SONG_CARD_THREE_LINE_COVER_SIZE else SONG_CARD_TWO_LINE_COVER_SIZE,
-        animationSpec = searchTravelSpec(visibilityThreshold = Dp.VisibilityThreshold),
-    )
     val trailingKeylineAdjustment = LocalListItemTrailingKeylineAdjustment.current
     Layout(
         modifier = modifier.fillMaxWidth(),
@@ -104,10 +97,9 @@ internal fun CenteredSongCardContent(
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             if (coverArtUrl != null) {
-                                CoverArtImage(
-                                    modifier = Modifier.padding(end = SONG_CARD_COVER_GAP).size(coverSize),
+                                SongCardCover(
                                     url = coverArtUrl,
-                                    shape = MaterialTheme.shapes.small,
+                                    isThreeLine = isThreeLine,
                                 )
                             }
                             Column {
@@ -161,6 +153,29 @@ internal fun CenteredSongCardContent(
             actionPlaceable?.placeRelative(constraints.maxWidth - LIST_ITEM_KEYLINE.roundToPx() - actionWidth, (height - actionPlaceable.height) / 2)
         }
     }
+}
+
+/**
+ * A card's cover, in its own composable so that only a card that has one holds the animation of its size, which a list
+ * composing every card at once would otherwise pay for on every card.
+ */
+@Composable
+private fun SongCardCover(
+    url: String,
+    isThreeLine: Boolean,
+) {
+    // On the spring the artist line folds out on and the search moves the list on, since the card's height follows it:
+    // the song list keeps the card at its top left still and slides the rest by that same spring, and a card that grew on
+    // a faster one would push the cards under it ahead of the slide and let them drift back.
+    val coverSize by animateDpAsState(
+        targetValue = if (isThreeLine) SONG_CARD_THREE_LINE_COVER_SIZE else SONG_CARD_TWO_LINE_COVER_SIZE,
+        animationSpec = searchTravelSpec(visibilityThreshold = Dp.VisibilityThreshold),
+    )
+    CoverArtImage(
+        modifier = Modifier.padding(end = SONG_CARD_COVER_GAP).size(coverSize),
+        url = url,
+        shape = MaterialTheme.shapes.small,
+    )
 }
 
 /**

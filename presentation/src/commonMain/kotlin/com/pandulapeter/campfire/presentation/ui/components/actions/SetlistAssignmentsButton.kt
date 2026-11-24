@@ -10,11 +10,11 @@
 package com.pandulapeter.campfire.presentation.ui.components.actions
 
 import com.pandulapeter.campfire.presentation.ui.components.CampfireIconButton
+import com.pandulapeter.campfire.presentation.ui.components.ChangeGate
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.menu.ActionsMenuItem
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Easing
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.Icon
@@ -26,12 +26,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.painter.Painter
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.songs_choose_setlists
 import com.pandulapeter.campfire.presentation.resources.ic_setlists
 import com.pandulapeter.campfire.presentation.resources.ic_setlists_outline
+import com.pandulapeter.campfire.presentation.ui.components.songCard.SongCardPainters
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -45,6 +48,8 @@ import org.jetbrains.compose.resources.painterResource
  *   here, since the button is in every row of the song list and one collection per screen answers them all.
  * @param setlistFileName The setlist the song is being read through, whose box the sheet shows but does not let go
  *   of: taking the song out of the setlist it is being read in would pull the screen out from under the reader.
+ * @param painters The star's two icons, shared by every card of the song list ([SongCardPainters]); null builds the
+ *   button's own.
  */
 @Composable
 internal fun SetlistAssignmentsButton(
@@ -53,10 +58,45 @@ internal fun SetlistAssignmentsButton(
     song: Song,
     isInSetlist: Boolean,
     setlistFileName: String? = null,
+    painters: SongCardPainters? = null,
 ) = CampfireIconButton(
     modifier = modifier,
     label = stringResource(Res.string.songs_choose_setlists),
     onClick = { actions.chooseSetlists(song, setlistFileName) },
+) {
+    val filled = painters?.setlistStar ?: painterResource(Res.drawable.ic_setlists)
+    val outline = painters?.setlistStarOutline ?: painterResource(Res.drawable.ic_setlists_outline)
+    val label = stringResource(Res.string.songs_choose_setlists)
+    // A star that has not changed since it was composed is the one icon it rests on, with no layer and no animation: the
+    // song list composes a star on every card at once, and nearly none of them is filed while it is on screen.
+    val gate = remember { ChangeGate(isInSetlist) }
+    if (!gate.hasChangedTo(isInSetlist)) {
+        Icon(
+            painter = if (isInSetlist) filled else outline,
+            contentDescription = label,
+        )
+    } else {
+        TurningStar(
+            isInSetlist = isInSetlist,
+            restedOn = gate.resting,
+            filled = filled,
+            outline = outline,
+            label = label,
+        )
+    }
+}
+
+/**
+ * [SetlistAssignmentsButton]'s star once it has changed, starting from the state it [restedOn] before the change, so the
+ * first turn and fade play as every later one does.
+ */
+@Composable
+private fun TurningStar(
+    isInSetlist: Boolean,
+    restedOn: Boolean,
+    filled: Painter,
+    outline: Painter,
+    label: String,
 ) {
     // Both stars are drawn on top of each other and the one being left fades out as the other fades in, the pair turning
     // clockwise by two fifths of a turn meanwhile, whichever way the star is going: a star has five points, so the turn
@@ -66,10 +106,20 @@ internal fun SetlistAssignmentsButton(
     // outline and the fill change places in the middle of the turn rather than before it has started; it is a plain
     // tween, since the overshoot belongs to the turn alone.
     val rotation = remember { Animatable(0f) }
-    var rotatedFor by remember { mutableStateOf(isInSetlist) }
+    val filledAlpha = remember { Animatable(if (restedOn) 1f else 0f) }
+    var rotatedFor by remember { mutableStateOf(restedOn) }
     LaunchedEffect(isInSetlist) {
         if (rotatedFor != isInSetlist) {
             rotatedFor = isInSetlist
+            launch {
+                filledAlpha.animateTo(
+                    targetValue = if (isInSetlist) 1f else 0f,
+                    animationSpec = tween(
+                        durationMillis = SETLIST_ASSIGNMENTS_ICON_TURN_DURATION * 2 / 5,
+                        delayMillis = SETLIST_ASSIGNMENTS_ICON_TURN_DURATION * 3 / 10,
+                    ),
+                )
+            }
             rotation.animateTo(
                 targetValue = rotation.targetValue + SETLIST_ASSIGNMENTS_ICON_TURN,
                 animationSpec = tween(
@@ -79,24 +129,17 @@ internal fun SetlistAssignmentsButton(
             )
         }
     }
-    val filledAlpha by animateFloatAsState(
-        targetValue = if (isInSetlist) 1f else 0f,
-        animationSpec = tween(
-            durationMillis = SETLIST_ASSIGNMENTS_ICON_TURN_DURATION * 2 / 5,
-            delayMillis = SETLIST_ASSIGNMENTS_ICON_TURN_DURATION * 3 / 10,
-        ),
-    )
     Box(
         modifier = Modifier.graphicsLayer { rotationZ = rotation.value },
     ) {
         Icon(
-            modifier = Modifier.graphicsLayer { alpha = 1f - filledAlpha },
-            painter = painterResource(Res.drawable.ic_setlists_outline),
-            contentDescription = stringResource(Res.string.songs_choose_setlists),
+            modifier = Modifier.graphicsLayer { alpha = 1f - filledAlpha.value },
+            painter = outline,
+            contentDescription = label,
         )
         Icon(
-            modifier = Modifier.graphicsLayer { alpha = filledAlpha },
-            painter = painterResource(Res.drawable.ic_setlists),
+            modifier = Modifier.graphicsLayer { alpha = filledAlpha.value },
+            painter = filled,
             contentDescription = null,
         )
     }

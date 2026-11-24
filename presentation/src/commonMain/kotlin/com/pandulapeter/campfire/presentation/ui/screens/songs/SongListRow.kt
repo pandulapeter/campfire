@@ -9,7 +9,6 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songs
 
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
@@ -22,7 +21,6 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.unit.dp
@@ -36,7 +34,9 @@ import com.pandulapeter.campfire.presentation.ui.components.menu.OverflowMenuSta
 import com.pandulapeter.campfire.presentation.ui.components.actions.SetlistAssignmentsButton
 import com.pandulapeter.campfire.presentation.ui.components.actions.SongActionHandler
 import com.pandulapeter.campfire.presentation.ui.components.actions.SongActions
+import com.pandulapeter.campfire.presentation.ui.components.AnimatedContentOnChange
 import com.pandulapeter.campfire.presentation.ui.components.songCard.SongCardOptions
+import com.pandulapeter.campfire.presentation.ui.components.songCard.SongCardPainters
 import com.pandulapeter.campfire.presentation.ui.components.songCard.SongListItem
 import com.pandulapeter.campfire.presentation.ui.components.list.fadingUnderListTop
 import com.pandulapeter.campfire.presentation.ui.components.menu.rememberOverflowMenuState
@@ -78,7 +78,7 @@ internal fun SongListRow(
     isPerformanceModeEnabled: Boolean,
     areSetlistsEnabled: Boolean,
     selectMultipleTitle: String,
-    selectSongsIcon: Painter,
+    painters: SongCardPainters,
     onTagClicked: (itemKey: String, String) -> Unit,
     onLanguageClicked: (itemKey: String, String) -> Unit,
 ) {
@@ -108,6 +108,7 @@ internal fun SongListRow(
         labelsOnEverySong = labelsOnEverySong,
         isArtistShown = isArtistShown,
         songFilter = songFilter,
+        painters = painters,
         onTagClicked = { onTagClicked(itemKey, it) },
         onLanguageClicked = { onLanguageClicked(itemKey, it) },
         onClick = if (isSelecting) {
@@ -146,7 +147,7 @@ internal fun SongListRow(
                     isInSetlist = isInSetlist,
                     areSetlistsEnabled = areSetlistsEnabled,
                     selectMultipleTitle = selectMultipleTitle,
-                    selectSongsIcon = selectSongsIcon,
+                    painters = painters,
                 )
             }
         },
@@ -166,8 +167,8 @@ private fun SongRowActions(
     isInSetlist: Boolean,
     areSetlistsEnabled: Boolean,
     selectMultipleTitle: String,
-    selectSongsIcon: Painter,
-) = AnimatedContent(
+    painters: SongCardPainters,
+) = AnimatedContentOnChange(
     targetState = isSelecting,
     transitionSpec = { fadeIn() togetherWith fadeOut() },
     contentAlignment = Alignment.CenterEnd,
@@ -191,6 +192,7 @@ private fun SongRowActions(
                     actions = songActions,
                     song = song,
                     isInSetlist = isInSetlist,
+                    painters = painters,
                 )
             }
             SongActions(
@@ -209,7 +211,7 @@ private fun SongRowActions(
                         target = SongEditTarget.File(song.fileName),
                     ) + ActionsMenuItem(
                         title = selectMultipleTitle,
-                        icon = selectSongsIcon,
+                        icon = painters.selectSongs,
                         isAlwaysInMenu = true,
                         onClick = { songSelection.start(song.fileName) },
                     )

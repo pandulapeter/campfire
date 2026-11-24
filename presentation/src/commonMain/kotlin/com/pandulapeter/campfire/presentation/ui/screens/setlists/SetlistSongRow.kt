@@ -41,6 +41,7 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.setlists_move_down
 import com.pandulapeter.campfire.presentation.resources.setlists_move_up
 import com.pandulapeter.campfire.presentation.ui.screens.setlists.DragHandle
+import com.pandulapeter.campfire.presentation.ui.components.AnimatedVisibilityOnChange
 import com.pandulapeter.campfire.presentation.ui.components.labels.LabelsOnEverySong
 import com.pandulapeter.campfire.presentation.ui.components.list.ListTopFade
 import com.pandulapeter.campfire.presentation.ui.screens.setlists.MissingSongListItem
@@ -295,7 +296,7 @@ private fun SetlistRowActions(
     actionsMenuState: OverflowMenuState,
     onMoveUp: (() -> Unit)?,
     onMoveDown: (() -> Unit)?,
-) = AnimatedVisibility(
+) = AnimatedVisibilityOnChange(
     visible = hasActions,
     enter = fadeIn() + expandHorizontally(),
     exit = fadeOut() + shrinkHorizontally(),
@@ -304,13 +305,16 @@ private fun SetlistRowActions(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         // The grip goes in front of the overflow button rather than after it, so that
-        // the button lands exactly where the songs screen has its own.
-        AnimatedVisibility(
-            visibleState = handleVisibility,
-            enter = fadeIn() + expandHorizontally(),
-            exit = fadeOut() + shrinkHorizontally(),
-        ) {
-            DragHandle(modifier = handleModifier)
+        // the button lands exactly where the songs screen has its own. Composed only while
+        // there is a grip to show or to fade, since it is hidden on nearly every row.
+        if (handleVisibility.currentState || handleVisibility.targetState) {
+            AnimatedVisibility(
+                visibleState = handleVisibility,
+                enter = fadeIn() + expandHorizontally(),
+                exit = fadeOut() + shrinkHorizontally(),
+            ) {
+                DragHandle(modifier = handleModifier)
+            }
         }
         SetlistEntryActions(
             state = actionsMenuState,

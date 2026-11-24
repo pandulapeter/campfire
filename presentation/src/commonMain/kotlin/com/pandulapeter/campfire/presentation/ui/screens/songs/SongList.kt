@@ -18,16 +18,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.HorizontalDivider
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.ic_select
 import com.pandulapeter.campfire.presentation.resources.songs_select_multiple
 import com.pandulapeter.campfire.presentation.ui.components.songCard.SONG_CARD_OUTER_PADDING
 import com.pandulapeter.campfire.presentation.ui.components.songCard.SongCardOptions
+import com.pandulapeter.campfire.presentation.ui.components.songCard.rememberSongCardPainters
 import com.pandulapeter.campfire.presentation.ui.state.songs.SONG_CONTENT_TYPE
 import com.pandulapeter.campfire.presentation.ui.state.songs.SONG_HEADER_CONTENT_TYPE
 import com.pandulapeter.campfire.presentation.ui.state.songs.SongGroup
 import com.pandulapeter.campfire.presentation.ui.state.songs.SongGroupHeader
 import com.pandulapeter.campfire.presentation.ui.state.songs.SongGroups
-import org.jetbrains.compose.resources.painterResource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
@@ -125,7 +124,7 @@ internal fun SongList(
 ) {
     val songActions = rememberSongActionHandler(editorSession, songFilesController, dialogHost)
     val selectMultipleTitle = stringResource(Res.string.songs_select_multiple)
-    val selectSongsIcon = painterResource(Res.drawable.ic_select)
+    val songCardPainters = rememberSongCardPainters()
     // An open search runs the sections together, so no section ends in a short row, keeping the card at the top left of
     // the list in its column; KeepCardsInPlaceAcrossSearch keeps its row.
     val searchOpening = rememberSearchOpening(listState, songGroups, isSearchOpen, columnCount)
@@ -333,7 +332,7 @@ internal fun SongList(
                                 isPerformanceModeEnabled = isPerformanceModeEnabled,
                                 areSetlistsEnabled = userPreferences?.areSetlistsEnabled != false,
                                 selectMultipleTitle = selectMultipleTitle,
-                                selectSongsIcon = selectSongsIcon,
+                                painters = songCardPainters,
                                 onTagClicked = onTagClicked,
                                 onLanguageClicked = onLanguageClicked,
                             )
