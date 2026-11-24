@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui
 
 import androidx.lifecycle.viewModelScope
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
+import com.pandulapeter.campfire.presentation.ui.launch.LinkRefusal
 import com.pandulapeter.campfire.presentation.ui.navigation.AppLinks
 import com.pandulapeter.campfire.presentation.ui.navigation.BrowserRoutes
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
@@ -25,7 +26,8 @@ import kotlinx.coroutines.launch
  * on the setlists screen ([BrowserRoutes.setlistToRevealOf]). New song and Paste a song
  * ([BrowserRoutes.LinkAction]) then do what the songs screen's New button and Paste from clipboard do, once the app is on
  * screen, and only where those are offered; a paste reads the clipboard with [clipboard], which asks the system as the
- * button does. Over the editor's unsaved text nothing happens, since only the editor's own ways out may take it away.
+ * button does. Over what leaving would lose nothing happens ([LinkRefusal]); anywhere else the dialogs open go, as the
+ * screens they were opened over do.
  */
 internal fun CampfireViewModel.openAppLink(link: String, clipboard: ClipboardTextReader) {
     val path = AppLinks.pathOf(link) ?: return
@@ -34,7 +36,7 @@ internal fun CampfireViewModel.openAppLink(link: String, clipboard: ClipboardTex
     println("App link opened: ${action?.name ?: path.substringBefore('/').ifEmpty { "home" }}")
     viewModelScope.launch {
         var revealedSetlist: String? = null
-        val isOpened = launchState.navigateToLink { songs, setlists, isPerformanceModeEnabled ->
+        val refusal = launchState.navigateToLink { songs, setlists, isPerformanceModeEnabled ->
             val current = navigator.navigationState
             revealedSetlist = BrowserRoutes.setlistToRevealOf(path = path, setlists = setlists)
             BrowserRoutes.resolve(path = path, songs = songs, setlists = setlists, current = current, isPerformanceModeEnabled = isPerformanceModeEnabled)
@@ -44,7 +46,8 @@ internal fun CampfireViewModel.openAppLink(link: String, clipboard: ClipboardTex
                     BrowserRoutes.resolve(path = fallback, songs = songs, setlists = setlists, current = current, isPerformanceModeEnabled = isPerformanceModeEnabled)
                 }
         }
-        if (!isOpened) return@launch println("App link not followed: unsaved editor text")
+        if (refusal != null) return@launch println("App link not followed: ${refusal.name.lowercase()}")
+        if (dialogHost.visibleDialog.value != null) dialogHost.setVisibleDialog(null)
         revealedSetlist?.let { fileName ->
             if (navigator.backStack.lastOrNull() == CampfireDestination.Setlists) setlistsController.revealSetlist(fileName, isAnimated = false)
         }

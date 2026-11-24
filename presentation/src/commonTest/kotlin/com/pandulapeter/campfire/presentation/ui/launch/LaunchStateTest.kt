@@ -31,6 +31,7 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class LaunchStateTest {
@@ -89,9 +90,34 @@ class LaunchStateTest {
 
         screenData.value = DataState.Idle(screenData.value.data!!)
         runCurrent()
-        assertTrue(opened.await())
+        assertNull(opened.await())
         assertEquals(listOf(metronome), restored)
         assertFalse(state.isLaunchNavigationPending.value)
+    }
+
+    @Test
+    fun `a link that starts the app on a restored stack replaces it`() = runTest {
+        screenData.value = DataState.Idle(screenData.value.data!!)
+        val restored = mutableListOf<NavigationState>()
+        val state = launchState(MutableStateFlow(songGroups(isLibraryRead = true, areRandomPicksAwaited = false))) { restored.add(it) }
+        backStack.add(CampfireDestination.SongDetails(songFileNames = listOf(song.fileName), setlistFileName = null, initialIndex = 0))
+
+        assertNull(state.navigateToLink { _, _, _ -> metronome })
+        assertEquals(listOf(metronome), restored)
+    }
+
+    @Test
+    fun `a link is refused over the onboarding and over an import under review`() = runTest {
+        screenData.value = DataState.Idle(screenData.value.data!!)
+        val restored = mutableListOf<NavigationState>()
+        val state = launchState(MutableStateFlow(songGroups(isLibraryRead = true, areRandomPicksAwaited = false))) { restored.add(it) }
+        state.hasShownApp = true
+
+        backStack.add(CampfireDestination.Onboarding(isOpenedFromSettings = false))
+        assertEquals(LinkRefusal.ONBOARDING, state.navigateToLink { _, _, _ -> metronome })
+        backStack[1] = CampfireDestination.ImportReport
+        assertEquals(LinkRefusal.IMPORT, state.navigateToLink { _, _, _ -> metronome })
+        assertEquals(emptyList(), restored)
     }
 
     @Test
@@ -102,7 +128,7 @@ class LaunchStateTest {
         state.hasShownApp = true
         backStack.add(CampfireDestination.Settings)
 
-        assertTrue(state.navigateToLink { _, _, _ -> metronome })
+        assertNull(state.navigateToLink { _, _, _ -> metronome })
         assertEquals(listOf(metronome), restored)
         assertFalse(state.isLaunchNavigationPending.value)
     }
@@ -113,7 +139,7 @@ class LaunchStateTest {
         val state = launchState(MutableStateFlow(songGroups(isLibraryRead = true, areRandomPicksAwaited = false))) { false }
         state.hasShownApp = true
 
-        assertFalse(state.navigateToLink { _, _, _ -> metronome })
+        assertEquals(LinkRefusal.UNSAVED_EDITOR_TEXT, state.navigateToLink { _, _, _ -> metronome })
     }
 
     private val metronome = NavigationState(

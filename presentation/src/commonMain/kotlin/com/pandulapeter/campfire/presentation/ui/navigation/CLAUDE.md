@@ -71,4 +71,5 @@
   is the setlists screen with that setlist brought into sight (`setlistToRevealOf`), a widget's setlist with no songs. `new` and `paste` (`BrowserRoutes.LinkAction`) are never
   written: the web reads them as the home screen, a link opens the home screen and then New song or the clipboard paste
   (`AppLinkOpening.kt`, only where the songs screen offers it). A link that starts the app is the launch's navigation
-  (`LaunchState.navigateToLink`, launch screen held); a later one replaces the stack, refused over unsaved editor text.
+  (`LaunchState.navigateToLink`, launch screen held); any replaces the stack (a restored one too), refused over unsaved editor text, the onboarding, or an
+  import under review (`LinkRefusal`), and closes the dialogs open.
