@@ -11,7 +11,7 @@ package com.pandulapeter.campfire.presentation.ui
 
 import com.pandulapeter.campfire.presentation.ui.chrome.KeyboardAwarePadding
 import com.pandulapeter.campfire.presentation.ui.chrome.MidTransitionBackHandler
-import com.pandulapeter.campfire.presentation.ui.chrome.NavigationChrome
+import com.pandulapeter.campfire.presentation.ui.chrome.ChromeLayers
 import com.pandulapeter.campfire.presentation.ui.chrome.NavigationChromeKind
 import com.pandulapeter.campfire.presentation.ui.chrome.NAVIGATION_RAIL_CONTENT_GAP
 import com.pandulapeter.campfire.presentation.ui.chrome.NavigationChromeScaffold
@@ -92,9 +92,9 @@ import kotlin.math.roundToInt
 /**
  * The [NavDisplay] and everything laid out over it, sized for the window [NavigationChromeScaffold] measured.
  *
- * While [chromeInScreens] is set, every top level screen draws a navigation chrome of its own, under itself and
- * selected on its own destination, so that the bar or the rail moves with the screen when a card is dealt over it or
- * taken off it, the predictive back gesture included, instead of standing still while the screen slides past it. The
+ * While [chromeInScreens] is set, every top level screen draws the navigation chrome's last recording under itself
+ * ([chromeLayers]), so that the bar or the rail moves with the screen when a card is dealt over it or taken off it, the
+ * predictive back gesture included, instead of standing still while the screen slides past it. The
  * export screen moves the deck by [exportTransition], which the caller holds for the same decision.
  */
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -108,7 +108,8 @@ internal fun CampfireScreens(
     chromeSize: NavigationChromeSize,
     railCapacity: RailCapacity,
     songColumnWidth: Dp,
-    chromeInScreens: Boolean,
+    chromeInScreens: () -> Boolean,
+    chromeLayers: ChromeLayers,
     exportTransition: ExportTransition,
     metronomeBeat: MetronomeIconBeat,
     isNavigationTransitionRunning: () -> Boolean,
@@ -198,39 +199,16 @@ internal fun CampfireScreens(
         songColumnWidth = songColumnWidth,
     )
     val settingsLayout = PageWidthLayout.of(settledWidth = settledListWidth, contentPadding = shellContentPadding, layoutDirection = layoutDirection)
-    val screenChrome: (CampfireDestination.TopLevel) -> (@Composable () -> Unit)? = { destination ->
-        if (chromeInScreens) {
-            {
-                NavigationChrome(
-                    kind = chromeKind,
-                    destinations = topLevelDestinations,
-                    railCapacity = railCapacity,
-                    currentTopLevelDestination = destination,
-                    metronomeBeat = metronomeBeat,
-                    lastTool = viewModel.navigator.lastTool,
-                    isKeyboard = isKeyboard,
-                    onDestinationSelected = viewModel::selectTopLevelDestination,
-                    onToolsItemSelected = viewModel::selectToolsItem,
-                )
-            }
-        } else {
-            null
-        }
-    }
     // The tools the chrome offers behind its Tools item, and so the buttons their screens are switched by; none where every
     // screen has an item of its own. Decided by the kind the window has rather than by the chrome on screen, which hands
     // over between the two, so that the buttons come and go once as a window crosses from the bar to a taller rail.
     val groupedTools = rememberGroupedTools(chromeKind, topLevelDestinations, railCapacity.of(chromeKind))
-    val toolScreen: @Composable (CampfireDestination.TopLevel, @Composable () -> Unit) -> Unit = { destination, content ->
+    val toolScreen: @Composable (@Composable () -> Unit) -> Unit = { content ->
         ToolScreenFrame(
-            destination = destination,
             tools = groupedTools,
-            destinations = topLevelDestinations,
+            buttonGroup = chromeLayers.toolsButtonGroup,
             isButtonGroupDrawn = chromeInScreens,
             contentPadding = shellContentPadding,
-            metronomeBeat = metronomeBeat,
-            isKeyboard = isKeyboard,
-            onToolSelected = viewModel::selectTopLevelDestination,
             content = content,
         )
     }
@@ -238,14 +216,14 @@ internal fun CampfireScreens(
     val hostLifecycle = LocalLifecycleOwner.current.lifecycle
     val backMark = rememberPredictiveBackMark()
     val tabChrome = remember { TabChrome() }
-    val topLevelScreen: @Composable (CampfireDestination.TopLevel, @Composable () -> Unit) -> Unit = { destination, content ->
+    val topLevelScreen: @Composable (@Composable () -> Unit) -> Unit = { content ->
         ReportNavigationTransition(viewModel, onNavigationTransitionRunningChanged)
         ProvideTabChromeScope(tabChrome) {
             TopLevelScreenSurface(
-                windowSize = windowSize,
                 railWidth = railWidth,
                 navigationBarHeight = navigationBarHeight,
-                chrome = screenChrome(destination),
+                chromeLayers = chromeLayers,
+                isChromeDrawn = chromeInScreens,
                 content = content,
             )
         }
@@ -274,8 +252,8 @@ internal fun CampfireScreens(
                 predictivePopTransitionSpec = { predictivePopTransition(coveredScreenScrimColor(scrimColor), backMark, tabChrome) },
                 // Stable string content keys, so that the transitions can recognize the top level destinations.
                 entryProvider = entryProvider {
-                    entry<CampfireDestination.Songs>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
-                        topLevelScreen(destination) {
+                    entry<CampfireDestination.Songs>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) {
+                        topLevelScreen {
                             SongsScreen(
                                 viewModel = viewModel,
                                 layout = listLayout,
@@ -283,8 +261,8 @@ internal fun CampfireScreens(
                             )
                         }
                     }
-                    entry<CampfireDestination.Setlists>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
-                        topLevelScreen(destination) {
+                    entry<CampfireDestination.Setlists>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) {
+                        topLevelScreen {
                             SetlistsScreen(
                                 viewModel = viewModel,
                                 layout = listLayout,
@@ -292,9 +270,9 @@ internal fun CampfireScreens(
                             )
                         }
                     }
-                    entry<CampfireDestination.Metronome>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
-                        topLevelScreen(destination) {
-                            toolScreen(destination) {
+                    entry<CampfireDestination.Metronome>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) {
+                        topLevelScreen {
+                            toolScreen {
                                 MetronomeScreen(
                                     viewModel = viewModel,
                                     layout = settingsLayout,
@@ -304,9 +282,9 @@ internal fun CampfireScreens(
                             }
                         }
                     }
-                    entry<CampfireDestination.Tuner>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
-                        topLevelScreen(destination) {
-                            toolScreen(destination) {
+                    entry<CampfireDestination.Tuner>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) {
+                        topLevelScreen {
+                            toolScreen {
                                 TunerScreen(
                                     viewModel = viewModel,
                                     layout = settingsLayout,
@@ -316,9 +294,9 @@ internal fun CampfireScreens(
                             }
                         }
                     }
-                    entry<CampfireDestination.Chords>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
-                        topLevelScreen(destination) {
-                            toolScreen(destination) {
+                    entry<CampfireDestination.Chords>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) {
+                        topLevelScreen {
+                            toolScreen {
                                 ChordsScreen(
                                     viewModel = viewModel,
                                     layout = settingsLayout,
@@ -327,9 +305,9 @@ internal fun CampfireScreens(
                             }
                         }
                     }
-                    entry<CampfireDestination.Scales>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
-                        topLevelScreen(destination) {
-                            toolScreen(destination) {
+                    entry<CampfireDestination.Scales>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) {
+                        topLevelScreen {
+                            toolScreen {
                                 ScalesScreen(
                                     viewModel = viewModel,
                                     layout = settingsLayout,
@@ -338,8 +316,8 @@ internal fun CampfireScreens(
                             }
                         }
                     }
-                    entry<CampfireDestination.Settings>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
-                        topLevelScreen(destination) {
+                    entry<CampfireDestination.Settings>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) {
+                        topLevelScreen {
                             SettingsScreen(
                                 viewModel = viewModel,
                                 layout = settingsLayout,
@@ -403,6 +381,7 @@ internal fun CampfireScreens(
             viewModel = viewModel,
             urlOpener = urlOpener,
             chromeInScreens = chromeInScreens,
+            chromeLayers = chromeLayers,
             groupedTools = groupedTools,
             railWidth = railWidth,
             shellContentPadding = shellContentPadding,

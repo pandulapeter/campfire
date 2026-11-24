@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui
 import com.pandulapeter.campfire.presentation.ui.chrome.NavigationChrome
 import com.pandulapeter.campfire.presentation.ui.chrome.NavigationChromeScaffold
 import com.pandulapeter.campfire.presentation.ui.chrome.railCapacityIn
+import com.pandulapeter.campfire.presentation.ui.chrome.rememberChromeLayers
 import com.pandulapeter.campfire.presentation.ui.chrome.withMinTopEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -35,6 +36,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.components.list.minSongColumnWidth
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
+import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeController
+import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeIconBeat
 import com.pandulapeter.campfire.presentation.ui.metronome.rememberMetronomeIconBeat
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.screens.export.ExportTransition
@@ -67,22 +70,17 @@ internal fun CampfireContent(
             isChromeInScreens = false
         }
     }
-    // The export screen is not a destination: it slides the whole deck aside instead, the chrome placed under it
-    // included, so the screens draw their own copy of it from the frame it is asked for until it has slid all the way
-    // off again, the way they do under a card. The copy swaps for the shared one only where both sit still.
     val exportTransition = remember { ExportTransition() }
-    // Derived, so that opening any other sheet or changing the metronome's tempo does not compose the app's root again.
+    // Derived, so that opening any other sheet does not compose the app's root again.
     val visibleDialog = viewModel.dialogHost.visibleDialog.collectAsStateWithLifecycle()
     val isExportDialogVisible by remember(visibleDialog) { derivedStateOf { visibleDialog.value is DialogType.Export } }
     val isExportMovingDeck by remember { derivedStateOf { exportTransition.progress.value > 0f } }
-    val chromeInScreens = isChromeInScreens || isTopLevelScreenCovered || isExportDialogVisible || isExportMovingDeck
-    val metronomeSettings = viewModel.metronomeController.metronomeSettings.collectAsStateWithLifecycle()
-    val isVisualBeatEnabled by remember(metronomeSettings) { derivedStateOf { metronomeSettings.value.isVisualBeatEnabled } }
-    val metronomeBeat = rememberMetronomeIconBeat(
-        playback = viewModel.metronomeController.metronomePlayback,
-        beats = viewModel.metronomeController.metronomeBeats,
-        isEnabled = isVisualBeatEnabled,
-    )
+    // The export screen is not a destination: it slides the whole deck aside, the chrome under it included, so the screens
+    // draw the chrome as their own from the frame it is asked for until it has slid all the way off again, as under a card.
+    // Read only while placing and drawing, so that a card dealt or taken off composes neither the chrome nor the screens.
+    val chromeInScreens = remember { derivedStateOf { isChromeInScreens || isTopLevelScreenCovered || isExportDialogVisible || isExportMovingDeck } }
+    val chromeLayers = rememberChromeLayers()
+    val metronomeBeat = rememberChromeMetronomeBeat(viewModel.metronomeController)
 
     // Worked out once for both the expanded rail and the Songs screen's columns, so that the two are never decided
     // from different widths, see minSongColumnWidth.
@@ -122,7 +120,8 @@ internal fun CampfireContent(
         // Painted here as well as on every screen, so that the two screens of a cross fading tab transition blend
         // into the same color they are painted in and the fade stays invisible.
         modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
-        isChromePlaced = !chromeInScreens,
+        isChromePlaced = { !chromeInScreens.value },
+        chromeLayers = chromeLayers,
         songColumnWidth = songColumnWidth,
         chrome = { chromeKind ->
             NavigationChrome(
@@ -148,7 +147,8 @@ internal fun CampfireContent(
                 chromeSize = chromeSize,
                 railCapacity = railCapacity,
                 songColumnWidth = songColumnWidth,
-                chromeInScreens = chromeInScreens,
+                chromeInScreens = { chromeInScreens.value },
+                chromeLayers = chromeLayers,
                 exportTransition = exportTransition,
                 metronomeBeat = metronomeBeat,
                 isNavigationTransitionRunning = { isNavigationTransitionRunning.value },
@@ -160,4 +160,16 @@ internal fun CampfireContent(
             )
         }
     }
+}
+
+/** The beat the chrome's metronome icon shows, the setting derived so that a change of the tempo composes nothing here. */
+@Composable
+private fun rememberChromeMetronomeBeat(metronomeController: MetronomeController): MetronomeIconBeat {
+    val metronomeSettings = metronomeController.metronomeSettings.collectAsStateWithLifecycle()
+    val isVisualBeatEnabled by remember(metronomeSettings) { derivedStateOf { metronomeSettings.value.isVisualBeatEnabled } }
+    return rememberMetronomeIconBeat(
+        playback = metronomeController.metronomePlayback,
+        beats = metronomeController.metronomeBeats,
+        isEnabled = isVisualBeatEnabled,
+    )
 }

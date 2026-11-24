@@ -52,8 +52,10 @@ The navigation chrome (bar, rail, transitions, and the Tools item).
 - `NavigationChromeScaffold` measures the chrome before composing the screens: reporting its size back as state is one
   pass late, and the first frame would be laid out without chrome.
 - **The chrome moves with the screen under a card**: while a card is dealt (until its pop has settled, two frames on),
-  each top level screen draws its own chrome copy so it rides the 12% parallax; tabs share the one chrome so its
-  selection animates. The export screen does the same until its `ExportTransition` is back at zero.
+  the covered top level screen draws the one chrome from its recorded layer (`ChromeLayers`), riding the 12% parallax
+  and scrim, nothing composed on push or pop; the chrome records a window's width away, out of semantics and focus (in
+  place it would be hovered into the recording and pressed through a card). The export screen does the same until its
+  `ExportTransition` is back at zero. Tabs share the one chrome so its selection animates.
 - **Each item's tooltip is its keys alone** (the label is on the item): Ctrl / Cmd + 1 to 7 number the screens switched
   on, Settings included, in the chrome's order (`screenShortcutOf`), and only while a main screen is on top (no own key
   for Settings, which would close a song to reach it); desktop and web only, so elsewhere items have none. The Tools item has no key; its tools keep their numbers, which their buttons name.
@@ -76,4 +78,5 @@ The navigation chrome (bar, rail, transitions, and the Tools item).
   screen keeps room under itself (`ToolScreenFrame`) and fades out at its bottom edge above it (`fadingBottomEdge`).
   It leaves while the keyboard is up (`rememberIsKeyboardUp`), the search and its results needing the room.
 - One `SharedToolsButtonGroup` is laid over all tool screens so its selection morphs; under a card or the export screen
-  each draws its own copy, like the chrome copies.
+  it records out of the window and the tool screen's room draws it, like the chrome (in place it would take a song's
+  bottom taps).

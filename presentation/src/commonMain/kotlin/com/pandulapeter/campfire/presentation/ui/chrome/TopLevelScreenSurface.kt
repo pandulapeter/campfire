@@ -9,7 +9,6 @@
  */
 package com.pandulapeter.campfire.presentation.ui.chrome
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,15 +16,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.unit.Dp
-import com.pandulapeter.campfire.presentation.ui.components.WindowSize
 
 /**
  * One card of the deck next to the navigation chrome, inset from the navigation rail or bar rather than clipped, so
- * that the chrome stays visible beside it. Given a [chrome], it draws that under itself where
- * [NavigationChromeScaffold] places the shared one, so that nothing moves as the one hands over to the other.
+ * that the chrome stays visible beside it. While [isChromeDrawn], it draws the chrome's last recording under itself
+ * where [NavigationChromeScaffold] rests it ([ChromeLayers]), so that the chrome rides this screen's parallax and scrim
+ * under a card, and nothing moves as the one hands over to the other.
  *
  * A [Surface], so that it blocks touches from reaching the screen it covers during a transition. It reaches the window's
  * top, under the status bar: none of the top level screens has a top app bar, so each places itself against the top
@@ -34,23 +33,23 @@ import com.pandulapeter.campfire.presentation.ui.components.WindowSize
  */
 @Composable
 internal fun TopLevelScreenSurface(
-    windowSize: WindowSize,
     railWidth: () -> Dp,
     navigationBarHeight: () -> Dp,
-    chrome: (@Composable () -> Unit)?,
+    chromeLayers: ChromeLayers,
+    isChromeDrawn: () -> Boolean,
     content: @Composable () -> Unit,
 ) {
     val chromeRoom = ChromeRoomPadding(start = railWidth, bottom = navigationBarHeight)
     Box(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .drawBehind {
+                if (isChromeDrawn()) {
+                    chromeLayers.outgoingChrome.draw(this)
+                    chromeLayers.chrome.draw(this)
+                }
+            },
     ) {
-        if (chrome != null) {
-            Box(
-                modifier = Modifier.align(if (windowSize.usesNavigationRail) Alignment.TopStart else Alignment.BottomStart),
-            ) {
-                chrome()
-            }
-        }
         Surface(
             modifier = Modifier
                 .fillMaxSize()

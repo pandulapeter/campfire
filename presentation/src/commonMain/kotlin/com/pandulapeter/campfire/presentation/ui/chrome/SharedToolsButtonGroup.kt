@@ -30,14 +30,17 @@ import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeIconBeat
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 
 /**
- * The one [ToolsButtonGroup] the tool screens share while none of them carries a chrome of its own (see [ToolScreenFrame]),
- * laid over the room each of them keeps for it at its bottom, next to the rail's room ([railWidth]) and above the
+ * The one [ToolsButtonGroup] the tool screens share, laid over the room each of them keeps for it at its bottom, next to the rail's room ([railWidth]) and above the
  * navigation bar ([bottomPadding]). It fades in and out as the stack arrives at a tool or leaves for another screen, as
  * a resized window groups the tools behind the Tools item ([tools] not empty) or lets them go, and as the keyboard comes
  * and goes, while the screens fade through under it or move into the room they keep for it; it keeps the tools and the
  * tool it was on through its exit so that the selection does not move away nor the buttons go blank first. The
  * background is painted across the whole width behind the group, so that nothing of the screens fading through shows
  * beside it; the screens fade out above it themselves.
+ *
+ * While a card or the export screen covers the screens ([isCovered]), it stays composed and on the last top level
+ * screen, records what it draws for the tool screen's room to draw as its own ([ToolScreenFrame], [ChromeLayers]), and
+ * is put out of the window and out of reach.
  *
  * It reads the back stack itself rather than being handed what is on top, so that a change of screens recomposes the
  * group rather than everything [CampfireScreens] lays out.
@@ -53,9 +56,11 @@ internal fun SharedToolsButtonGroup(
     bottomPadding: PaddingValues,
     metronomeBeat: MetronomeIconBeat,
     isKeyboard: Boolean,
+    isCovered: () -> Boolean,
+    recorded: RecordedLayer,
     onSelected: (CampfireDestination.TopLevel) -> Unit,
 ) {
-    val current = backStack.lastOrNull() as? CampfireDestination.TopLevel
+    val current = backStack.lastOrNull { it is CampfireDestination.TopLevel } as? CampfireDestination.TopLevel
     val lastShownTool = remember { mutableStateOf(current?.takeIf { it in tools }) }
     val lastShownTools = remember { mutableStateOf(tools) }
     SideEffect {
@@ -64,7 +69,7 @@ internal fun SharedToolsButtonGroup(
     }
     val isKeyboardUp by rememberIsKeyboardUp()
     AnimatedVisibility(
-        modifier = modifier,
+        modifier = modifier.coveredChrome(isCovered = isCovered()).awayFromWindow(isCovered),
         visible = current in tools && !isKeyboardUp,
         enter = fadeIn(MaterialTheme.motionScheme.defaultEffectsSpec()),
         exit = fadeOut(MaterialTheme.motionScheme.defaultEffectsSpec()),
@@ -74,6 +79,7 @@ internal fun SharedToolsButtonGroup(
                 .padding(ChromeRoomPadding(start = railWidth, bottom = NoChromeRoom))
                 .padding(bottomPadding.only(bottom = true))
                 .fillMaxWidth()
+                .recordedInto(recorded)
                 .background(MaterialTheme.colorScheme.background)
                 .padding(contentPadding.only(start = true, end = true)),
             tools = tools.ifEmpty { lastShownTools.value },

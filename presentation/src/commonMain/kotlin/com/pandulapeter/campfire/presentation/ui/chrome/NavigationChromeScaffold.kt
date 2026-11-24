@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.chrome
 
 import androidx.compose.animation.core.animate
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -23,10 +24,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.util.lerp
 import com.pandulapeter.campfire.presentation.ui.components.WindowSize
 import kotlin.math.roundToInt
@@ -47,9 +51,9 @@ import kotlin.math.roundToInt
  * through a `BoxWithConstraints`, which is a [SubcomposeLayout] of exactly this kind.
  *
  * The chrome is placed *under* [content]: the song details screen is dealt over the whole window and covers it,
- * rather than the two of them animating side by side. While the top level screens draw a chrome of their own
- * ([isChromePlaced] off), this one is still measured, for its thickness, but not placed, so it is neither drawn nor
- * touched; it stays composed, so the state of its items carries on once it is placed again.
+ * rather than the two of them animating side by side. While the top level screens draw it as their own ([isChromePlaced]
+ * off, see [ChromeLayers]), it is placed a window's width away, where it still draws, so records, what the screens show,
+ * and writes where it would rest into [chromeLayers] for them; it stays composed, so the state of its items carries on.
  *
  * A window that crosses from one kind of chrome to another (see [NavigationChromeKind]) does not switch between them
  * in one frame: the chrome it is leaving fades out towards its edge while the one it is getting fades in from its own,
@@ -62,7 +66,8 @@ import kotlin.math.roundToInt
 @Composable
 internal fun NavigationChromeScaffold(
     modifier: Modifier = Modifier,
-    isChromePlaced: Boolean,
+    isChromePlaced: () -> Boolean,
+    chromeLayers: ChromeLayers,
     songColumnWidth: Dp,
     chrome: @Composable (kind: NavigationChromeKind) -> Unit,
     content: @Composable (windowWidth: Dp, windowSize: WindowSize, kind: NavigationChromeKind, size: NavigationChromeSize) -> Unit,
@@ -88,10 +93,16 @@ internal fun NavigationChromeScaffold(
         val kind = navigationChromeKind(windowWidth, songColumnWidth)
         // Loose constraints, so that the rail and the bar each take only the one dimension they want.
         val looseConstraints = constraints.copy(minWidth = 0, minHeight = 0)
-        val chromePlaceable = subcompose(ChromeSlot.CHROME) { chrome(kind) }.single().measure(looseConstraints)
+        val chromePlaceable = subcompose(ChromeSlot.CHROME) {
+            RecordedChrome(recorded = chromeLayers.chrome, isChromePlaced = isChromePlaced) { chrome(kind) }
+        }.single().measure(looseConstraints)
         transition.update(kind = kind, railWidth = if (kind.isRail) chromePlaceable.width else 0, barHeight = if (kind.isRail) 0 else chromePlaceable.height)
         val outgoingKind = transition.outgoingKind
-        val outgoingPlaceable = outgoingKind?.let { subcompose(ChromeSlot.OUTGOING_CHROME) { chrome(it) }.single().measure(looseConstraints) }
+        val outgoingPlaceable = outgoingKind?.let {
+            subcompose(ChromeSlot.OUTGOING_CHROME) {
+                RecordedChrome(recorded = chromeLayers.outgoingChrome, isChromePlaced = isChromePlaced) { chrome(it) }
+            }.single().measure(looseConstraints)
+        }
         // Equal from one frame of a handover to the next, so that the content is not composed again for it: what moves
         // is read by the layouts that use it.
         val chromeSize = NavigationChromeSize(
@@ -107,42 +118,71 @@ internal fun NavigationChromeScaffold(
             val progress = transition.progress
             // Placed relatively, so that the rail sits on the start edge the screens are inset from rather than always
             // on the left one.
-            if (isChromePlaced) {
-                if (outgoingPlaceable != null) {
-                    placeChrome(outgoingPlaceable, outgoingKind, otherKind = kind, visibility = 1f - progress, windowHeight = constraints.maxHeight)
-                }
+            val away = if (isChromePlaced()) 0 else constraints.maxWidth
+            val windowPixels = IntSize(constraints.maxWidth, constraints.maxHeight)
+            if (outgoingPlaceable != null) {
                 placeChrome(
-                    chromePlaceable,
-                    kind,
-                    otherKind = outgoingKind,
-                    visibility = if (outgoingKind == null) 1f else progress,
-                    windowHeight = constraints.maxHeight
+                    outgoingPlaceable,
+                    outgoingKind,
+                    otherKind = kind,
+                    visibility = 1f - progress,
+                    away = away,
+                    recorded = chromeLayers.outgoingChrome,
+                    windowPixels = windowPixels,
+                    layoutDirection = layoutDirection,
                 )
+            } else {
+                chromeLayers.outgoingChrome.alpha = 0f
             }
+            placeChrome(
+                chromePlaceable,
+                kind,
+                otherKind = outgoingKind,
+                visibility = if (outgoingKind == null) 1f else progress,
+                away = away,
+                recorded = chromeLayers.chrome,
+                windowPixels = windowPixels,
+                layoutDirection = layoutDirection,
+            )
             contentPlaceable.placeRelative(x = 0, y = 0)
         }
     }
 }
 
 /**
- * Puts one of the two chromes of [NavigationChromeScaffold] on its edge, [visibility] of the way faded in. A chrome
- * that is handing over to or from one on the other edge also slides in from that edge as it fades - a bar and a rail
- * come from different directions - while two rails share an edge and only fade into each other.
+ * Puts one of the two chromes of [NavigationChromeScaffold] on its edge, [visibility] of the way faded in, or [away]
+ * past the end edge while the screens draw it, writing where it rests into [recorded] for them. A chrome that is
+ * handing over to or from one on the other edge also slides in from that edge as it fades - a bar and a rail come from
+ * different directions - while two rails share an edge and only fade into each other.
  */
 private fun Placeable.PlacementScope.placeChrome(
     placeable: Placeable,
     kind: NavigationChromeKind,
     otherKind: NavigationChromeKind?,
     visibility: Float,
-    windowHeight: Int,
+    away: Int,
+    recorded: RecordedLayer,
+    windowPixels: IntSize,
+    layoutDirection: LayoutDirection,
 ) {
     val slide = if (otherKind != null && otherKind.isRail != kind.isRail) 1f - visibility else 0f
-    if (kind.isRail) {
-        placeable.placeRelativeWithLayer(x = -(placeable.width * slide).roundToInt(), y = 0) { alpha = visibility }
-    } else {
-        placeable.placeRelativeWithLayer(x = 0, y = windowHeight - placeable.height + (placeable.height * slide).roundToInt()) { alpha = visibility }
-    }
+    val x = if (kind.isRail) -(placeable.width * slide).roundToInt() else 0
+    val y = if (kind.isRail) 0 else windowPixels.height - placeable.height + (placeable.height * slide).roundToInt()
+    placeable.placeRelativeWithLayer(x = x + away, y = y) { alpha = visibility }
+    // The screens draw it in their own coordinates, which are the window's, so a right-to-left window's mirroring is
+    // applied here.
+    val restingX = if (layoutDirection == LayoutDirection.Rtl) windowPixels.width - x - placeable.width else x
+    recorded.position = Offset(restingX.toFloat(), y.toFloat())
+    recorded.alpha = visibility
 }
+
+/** One chrome of the scaffold, recording what it draws for the screens, and out of reach while they draw it. */
+@Composable
+private fun RecordedChrome(
+    recorded: RecordedLayer,
+    isChromePlaced: () -> Boolean,
+    content: @Composable () -> Unit,
+) = Box(modifier = Modifier.coveredChrome(isCovered = !isChromePlaced()).recordedInto(recorded)) { content() }
 
 private enum class ChromeSlot { CHROME, OUTGOING_CHROME, CONTENT }
 

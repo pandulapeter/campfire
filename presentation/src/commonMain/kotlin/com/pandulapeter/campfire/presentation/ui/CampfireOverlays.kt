@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.pandulapeter.campfire.presentation.ui.chrome.ChromeLayers
 import com.pandulapeter.campfire.presentation.ui.chrome.SharedToolsButtonGroup
 import com.pandulapeter.campfire.presentation.ui.components.menu.LocalIsCoveredByRequiredUpdate
 import com.pandulapeter.campfire.presentation.ui.messages.LocalMessagePlaces
@@ -36,7 +37,8 @@ import com.pandulapeter.campfire.presentation.ui.screens.export.ExportTransition
 internal fun BoxScope.CampfireOverlays(
     viewModel: CampfireViewModel,
     urlOpener: (String) -> Unit,
-    chromeInScreens: Boolean,
+    chromeInScreens: () -> Boolean,
+    chromeLayers: ChromeLayers,
     groupedTools: List<CampfireDestination.TopLevel>,
     railWidth: () -> Dp,
     shellContentPadding: PaddingValues,
@@ -45,24 +47,23 @@ internal fun BoxScope.CampfireOverlays(
     exportTransition: ExportTransition,
     messagesPadding: PaddingValues,
 ) {
-    // Not while the screens draw a chrome of their own, each tool screen a row of its own with it (ToolScreenFrame).
     // Composed while the tools have items of their own too, so that it fades in and out as a resized window groups
-    // them and lets them go.
-    if (!chromeInScreens) {
-        SharedToolsButtonGroup(
-            modifier = Modifier.align(Alignment.BottomStart),
-            backStack = viewModel.navigator.backStack,
-            tools = groupedTools,
-            destinations = viewModel.preferencesController.topLevelDestinations.collectAsStateWithLifecycle().value,
-            railWidth = railWidth,
-            contentPadding = shellContentPadding,
-            // Above the navigation bar, or the window's bottom inset where there is none, as the messages are.
-            bottomPadding = messagesPadding,
-            metronomeBeat = metronomeBeat,
-            isKeyboard = isKeyboard,
-            onSelected = viewModel::selectTopLevelDestination,
-        )
-    }
+    // them and lets them go, and while a card covers the screens, which draw it as their own then (ToolScreenFrame).
+    SharedToolsButtonGroup(
+        modifier = Modifier.align(Alignment.BottomStart),
+        backStack = viewModel.navigator.backStack,
+        tools = groupedTools,
+        destinations = viewModel.preferencesController.topLevelDestinations.collectAsStateWithLifecycle().value,
+        railWidth = railWidth,
+        contentPadding = shellContentPadding,
+        // Above the navigation bar, or the window's bottom inset where there is none, as the messages are.
+        bottomPadding = messagesPadding,
+        metronomeBeat = metronomeBeat,
+        isKeyboard = isKeyboard,
+        isCovered = chromeInScreens,
+        recorded = chromeLayers.toolsButtonGroup,
+        onSelected = viewModel::selectTopLevelDestination,
+    )
     ExportHost(
         viewModel = viewModel,
         transition = exportTransition,
