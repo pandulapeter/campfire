@@ -9,7 +9,8 @@
 -->
 # Plan: the page model sees the page's structure
 
-**Status:** the script and the marked corpus are ready, outside the repository; the gate is next, after the release.
+**Status:** the first gate runs are in (below); the corpus is growing on Ultimate Guitar and the sites a search for a
+song's chords turns up, and the gate runs again over it.
 When the app reads a web page itself, it hands the page model each line's structure too: whether the line is a link or
 a button, whether it starts a new card or section, and how it is set. The crop can then drop calls to action and
 partner cards next to a song, which text alone cannot tell apart from the song's own notes.
@@ -74,6 +75,33 @@ both it is set more often on clutter than on song lines (for `monospace`, the re
 
 *italic*, *bold*, and *monospace* (strong overall, but on few sites) are the likeliest to be dropped. On the
 gitartab.hu page, the partner card is *landmark*, its buttons *link*, and the capo hint *new block*.
+
+## Which pages count most
+
+Ultimate Guitar first: most people who bring a song from the web bring it from there, so its pages are judged on their
+own before anything else, and with page-grouped folds (the shipped model trains on its pages). Then the sites a search
+for a song's chords puts in its first results, by how often they come up; then every other site, scored with
+site-grouped folds. A change that helps the first two is not held back because unseen sites gain less, as long as
+they do not lose.
+
+## First gate runs
+
+Pages only, the `unsure` crop, the 492 song pages every run scores; *paste* is the marks model given the same pages
+without marks:
+
+| Folds | Model | Mean line F1 | Pages losing a song line | Song lines lost | Clutter kept |
+|---|---|---|---|---|---|
+| page | today | 0.896 | 46 | 341 | 5,502 |
+| page | marks | 0.925 | 36 | 173 | 3,372 |
+| page | marks, paste | 0.913 | 44 | 213 | 4,397 |
+| site | today | 0.857 | 59 | 425 | 8,055 |
+| site | marks | 0.873 | 69 | 443 | 6,649 |
+| site | marks, paste | 0.864 | 87 | 419 | 7,566 |
+
+On Ultimate Guitar's 25 song pages no run loses a song line, and the marks take the clutter kept from 69 lines to 55
+(36 site-grouped): its toolbar ("Download PDF", "Simplify", "Transpose") goes, its subscription offer ("Welcome
+Offer", "80% Off", "Try now", a close button "X" that is not a button) stays. The corpus held only 26 of its pages,
+all chord sheets, and none of Cifra Club's or e-chords' (the headless browser was turned away).
 
 ## Steps
 
