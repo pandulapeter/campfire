@@ -106,6 +106,10 @@ class ChordSheetSiteDetailsTest {
         val song = "\n\n| Am Em | F C/H |\n\nAm      C\nHello world\nF       G\nHello again"
         val result = convert("Am\nC\n2fr\nF\nC/B\nG$song")
         assertTrue(result.startsWith("{start_of_grid}"), result)
+        // Its label goes with it, in any language of the app.
+        for (label in listOf("Chords in the song", "Akkordok a dalban", "Acordes:")) {
+            assertTrue(convert("$label\nAm\nC\nF\nG$song").startsWith("{start_of_grid}"), label)
+        }
         // A run naming a chord twice, one the song never plays, or one under a heading is the song's own.
         for (run in listOf("Am\nC\nAm", "Am\nC\nD", "Outro:\nAm\nC\nF")) {
             assertTrue(convert("$song\n\n$run").contains("[C]"), run)

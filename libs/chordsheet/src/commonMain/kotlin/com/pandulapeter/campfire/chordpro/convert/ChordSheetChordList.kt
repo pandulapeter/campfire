@@ -19,7 +19,8 @@ import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordWords.rowChordN
  * is corroborated: three chords or more, none named twice, every one played elsewhere in the song, standing before the
  * song's first row of chords or after its last, under no heading (an `Outro:` played one chord a line), and before a
  * blank line or the song's end where it heads the song, since a chord over a lyric is that lyric's. The fret a diagram
- * starts at, printed between the names (`2fr`), goes with the list.
+ * starts at, printed between the names (`2fr`), goes with the list, and so does a short line right above it naming
+ * chords in a language of the app ([chordWords], `Chords in the song`, `Akkordok a dalban`), the list's label.
  */
 internal object ChordSheetChordList {
 
@@ -45,6 +46,7 @@ internal object ChordSheetChordList {
                 above?.let { ChordSheetHeadings.parse(lines[it].text) } == null
             ) {
                 dropped += run
+                above?.takeIf { it == start - 1 && isLabel(lines[it].text) }?.let { dropped += it }
             }
             start = end + 1
         }
@@ -54,6 +56,15 @@ internal object ChordSheetChordList {
     /** A chord's name as it is compared, a German `H` read as the `B` a list beside the song may name it by. */
     private fun name(value: String) = rowChordName(value).replace('H', 'B')
 
+    private fun isLabel(text: String): Boolean {
+        val words = text.trim().removeSuffix(":").lowercase().split(' ').filter { it.isNotEmpty() }
+        return words.size <= MAX_LABEL_WORDS && words.any { it in chordWords }
+    }
+
+    /** The word for chords in each language of the app, as its strings name the Chords screen. */
+    private val chordWords = setOf("chords", "akordy", "akkorde", "acordes", "accords", "\u05d0\u05e7\u05d5\u05e8\u05d3\u05d9\u05dd", "akkordok", "accordi", "acorduri")
+
+    private const val MAX_LABEL_WORDS = 5
     private const val MIN_CHORDS = 3
     private val fret = Regex("^[0-9]{1,2}\\s*fr\\.?$", RegexOption.IGNORE_CASE)
 }
