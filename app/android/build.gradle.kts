@@ -121,6 +121,16 @@ tasks.matching { it.name == "generateBaselineProfile" }.configureEach {
                     missingScreens.joinToString("\n") { "  $it" },
             )
         }
+        // ART compiles ahead of time only the methods a profile marks hot (H); startup (S) and post-startup (P) only
+        // order the DEX. The recording marks hot just what grew hot during the walk, so most of the app's own code came
+        // out SP and ran interpreted on every device until the JIT caught up, which a screen composed once per visit
+        // rarely lets it. Every method the walk ran is compiled instead.
+        profile.asFile.writeText(
+            rules.lineSequence().joinToString("\n") { rule ->
+                val flags = rule.takeWhile { it in "HSP" }
+                if (flags.isEmpty() || 'H' in flags) rule else "H$rule"
+            },
+        )
     }
 }
 

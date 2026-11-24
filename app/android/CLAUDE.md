@@ -127,6 +127,9 @@ stay out: a restored library shows their placeholders until sync or an import br
 
 - The release packages the committed `src/main/generated/baselineProfiles` and never generates them
   (`automaticGenerationDuringBuild = false`); `profileinstaller` installs the profile for non-Play installs.
+  `generateBaselineProfile` marks every method rule hot (`H`), which is all ART compiles ahead of time: the recording
+  leaves most of the app's own code startup-only (`SP`), which ran interpreted, the first frame of a screen ~20% slower
+  on a Galaxy S9.
 - The theme is the platform's `Theme.Material` with the window background pinned to Material 3's
   (`campfire_window_background`), painting the starting window, splash, and pre-preferences frame. A splash icon
   background color is named only so Android 12+ draws the whole adaptive icon.
