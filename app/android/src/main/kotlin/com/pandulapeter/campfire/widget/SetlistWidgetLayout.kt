@@ -18,9 +18,11 @@ import androidx.glance.LocalContext
 import androidx.glance.LocalSize
 import androidx.glance.action.clickable
 import androidx.glance.layout.Column
+import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.Spacer
 import androidx.glance.layout.height
 import androidx.glance.text.FontWeight
+import androidx.glance.text.TextAlign
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import com.pandulapeter.campfire.R
@@ -45,6 +47,7 @@ internal fun SetlistWidgetLayout(
             is SetlistWidgetContent.Shown -> Setlist(
                 content = content,
                 label = snapshot.strings.nextGig.takeIf { pinnedFileName == null },
+                textAlign = textAlignOf(snapshot.isMirrored()),
             )
             is SetlistWidgetContent.Message -> WidgetMessage(text = content.text)
             null -> WidgetMessage(text = LocalContext.current.getString(R.string.widget_open_app))
@@ -57,38 +60,44 @@ internal fun SetlistWidgetLayout(
 private fun Setlist(
     content: SetlistWidgetContent.Shown,
     label: String?,
+    textAlign: TextAlign,
 ) {
     Text(
+        modifier = GlanceModifier.fillMaxWidth(),
         text = label.orEmpty(),
         maxLines = 1,
-        style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 12.sp, fontWeight = FontWeight.Medium),
+        style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 12.sp, fontWeight = FontWeight.Medium, textAlign = textAlign),
     )
     Text(
+        modifier = GlanceModifier.fillMaxWidth(),
         text = content.title,
         maxLines = 1,
-        style = TextStyle(color = GlanceTheme.colors.primary, fontSize = 16.sp, fontWeight = FontWeight.Bold),
+        style = TextStyle(color = GlanceTheme.colors.primary, fontSize = 16.sp, fontWeight = FontWeight.Bold, textAlign = textAlign),
     )
     Text(
+        modifier = GlanceModifier.fillMaxWidth(),
         text = listOf(content.relativeDay, content.date).filter { it.isNotBlank() }.joinToString(" · "),
         maxLines = 1,
-        style = TextStyle(color = GlanceTheme.colors.onSurface, fontSize = 14.sp),
+        style = TextStyle(color = GlanceTheme.colors.onSurface, fontSize = 14.sp, textAlign = textAlign),
     )
     Text(
+        modifier = GlanceModifier.fillMaxWidth(),
         text = content.songCount,
         maxLines = 1,
-        style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 12.sp),
+        style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 12.sp, textAlign = textAlign),
     )
     val songLines = SetlistWidgetMetrics.songLinesFitting(LocalSize.current.height.value)
     if (songLines > 0 && content.songTitles.isNotEmpty()) {
         Spacer(modifier = GlanceModifier.height(4.dp))
         // Glance draws only the first ten children of a container, so the titles go in columns of their own, ten at most.
         content.songTitles.take(songLines).chunked(MAX_CONTAINER_CHILDREN).forEach { titles ->
-            Column {
+            Column(modifier = GlanceModifier.fillMaxWidth()) {
                 titles.forEach { title ->
                     Text(
+                        modifier = GlanceModifier.fillMaxWidth(),
                         text = title,
                         maxLines = 1,
-                        style = TextStyle(color = GlanceTheme.colors.onSurface, fontSize = 13.sp),
+                        style = TextStyle(color = GlanceTheme.colors.onSurface, fontSize = 13.sp, textAlign = textAlign),
                     )
                 }
             }

@@ -87,6 +87,8 @@
   Recents, so it never raises the app) shows `SetlistWidgetChooser` from `:presentation` and keeps the file name (none
   for Next gig) in the widget's state. Today is `LocalDate.now()`; the receiver also hears `DATE_CHANGED`, `TIME_SET`, and
   `TIMEZONE_CHANGED` (the date's isn't exempt from the background limits everywhere; the hourly update covers it).
+- A launcher lays a widget out in the system's direction, so one in an app language written the other way is mirrored
+  by hand (`isMirrored`: lines aligned to their end, the header's button first).
 - Every tap is `appLinkIntent` (the shortcuts' intent). Text is the system font (a launcher can't load Inter); colors
   are Glance's dynamic ones from Android 12, the app's palette (`widgetLightColorScheme`) before. Gallery names,
   descriptions, and the open-the-app sentence are `res/values*/strings.xml` in every app language (`values-iw` for

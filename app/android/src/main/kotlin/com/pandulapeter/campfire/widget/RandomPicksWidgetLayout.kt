@@ -27,6 +27,7 @@ import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
 import androidx.glance.layout.size
 import androidx.glance.text.FontWeight
+import androidx.glance.text.TextAlign
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import com.pandulapeter.campfire.R
@@ -45,39 +46,51 @@ internal fun RandomPicksWidgetLayout(
 ) {
     val rows = RandomPicksWidgetMetrics.rowsFitting(LocalSize.current.height.value)
     val content = snapshot?.randomPicksContent(count = rows, seed = seed)
+    val textAlign = textAlignOf(snapshot.isMirrored())
     Column(modifier = GlanceModifier.widgetBackground().clickable(openLinkAction(snapshot?.homeLink))) {
         Header(
             title = snapshot?.strings?.randomPicks ?: LocalContext.current.getString(R.string.widget_random_picks_name),
             shuffleDescription = snapshot?.strings?.drawNewPicks.takeIf { content is RandomPicksContent.Picks },
+            isMirrored = snapshot.isMirrored(),
         )
         when (content) {
-            is RandomPicksContent.Picks -> content.songs.forEach { SongRow(song = it) }
+            is RandomPicksContent.Picks -> content.songs.forEach { SongRow(song = it, textAlign = textAlign) }
             is RandomPicksContent.Message -> WidgetMessage(text = content.text)
             null -> WidgetMessage(text = LocalContext.current.getString(R.string.widget_open_app))
         }
     }
 }
 
-/** The widget's title, and the button that draws again where [shuffleDescription], its label, is given. */
+/**
+ * The widget's title, and the button that draws again where [shuffleDescription], its label, is given: after the title,
+ * or before it where the widget [isMirrored].
+ */
 @Composable
 private fun Header(
     title: String,
     shuffleDescription: String?,
+    isMirrored: Boolean,
 ) = Row(
     modifier = GlanceModifier.fillMaxWidth().height(RandomPicksWidgetMetrics.HEADER_HEIGHT.dp),
     verticalAlignment = Alignment.CenterVertically,
 ) {
+    if (isMirrored) ShuffleButton(shuffleDescription)
     Text(
         modifier = GlanceModifier.defaultWeight(),
         text = title,
         maxLines = 1,
-        style = TextStyle(color = GlanceTheme.colors.primary, fontSize = 16.sp, fontWeight = FontWeight.Bold),
+        style = TextStyle(color = GlanceTheme.colors.primary, fontSize = 16.sp, fontWeight = FontWeight.Bold, textAlign = textAlignOf(isMirrored)),
     )
-    if (shuffleDescription != null) {
+    if (!isMirrored) ShuffleButton(shuffleDescription)
+}
+
+@Composable
+private fun ShuffleButton(description: String?) {
+    if (description != null) {
         CircleIconButton(
             modifier = GlanceModifier.size(RandomPicksWidgetMetrics.HEADER_HEIGHT.dp),
             imageProvider = ImageProvider(R.drawable.ic_widget_shuffle),
-            contentDescription = shuffleDescription,
+            contentDescription = description,
             onClick = actionRunCallback<ShuffleAction>(),
             backgroundColor = null,
             contentColor = GlanceTheme.colors.primary,
@@ -86,7 +99,10 @@ private fun Header(
 }
 
 @Composable
-private fun SongRow(song: WidgetSnapshot.Song) = Column(
+private fun SongRow(
+    song: WidgetSnapshot.Song,
+    textAlign: TextAlign,
+) = Column(
     modifier = GlanceModifier
         .fillMaxWidth()
         .height(RandomPicksWidgetMetrics.ROW_HEIGHT.dp)
@@ -94,15 +110,17 @@ private fun SongRow(song: WidgetSnapshot.Song) = Column(
     verticalAlignment = Alignment.CenterVertically,
 ) {
     Text(
+        modifier = GlanceModifier.fillMaxWidth(),
         text = song.title,
         maxLines = 1,
-        style = TextStyle(color = GlanceTheme.colors.onSurface, fontSize = 14.sp, fontWeight = FontWeight.Medium),
+        style = TextStyle(color = GlanceTheme.colors.onSurface, fontSize = 14.sp, fontWeight = FontWeight.Medium, textAlign = textAlign),
     )
     if (song.artist.isNotBlank()) {
         Text(
+            modifier = GlanceModifier.fillMaxWidth(),
             text = song.artist,
             maxLines = 1,
-            style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 12.sp),
+            style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 12.sp, textAlign = textAlign),
         )
     }
 }
