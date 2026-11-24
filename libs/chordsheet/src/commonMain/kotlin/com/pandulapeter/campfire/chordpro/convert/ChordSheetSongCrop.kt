@@ -28,7 +28,11 @@ internal object ChordSheetSongCrop {
      * two kept ones. A chord row the model drops is kept too, since it reads a lone closing chord as a page number: inside
      * the song, and after its last kept line only while nothing but blank lines and other such chord rows came between,
      * so an outro's chords stay but a chord diagram block printed under the song ("Chords used", each name over its
-     * marks) goes. The whole song where the model sees none in it, or
+     * marks) goes. A row of numerals in a song written in them ([ChordSheetRomanChords.numeralRows]) is such a chord row,
+     * which the model, reading the numerals as it reads a page's number, drops as readily, and is kept above the song's
+     * first line too, down from its header: no header holds one, and an intro played in them stands there. The whole
+     * song where the model
+     * sees none in it, or
      * where a line of it is past the lines the model read.
      */
     fun cropped(song: List<Rendered>, scores: List<PageLineScores>?): List<Rendered> {
@@ -44,15 +48,17 @@ internal object ChordSheetSongCrop {
         val kept = (crop.keptLines + header).map { origins[it] }.toSet()
         val span = kept.min()..kept.max()
         val body = origins[firstSongLine]
+        val numeralRows = ChordSheetRomanChords.numeralRows(song)
+        fun isChordRow(index: Int) = index in numeralRows || ChordSheetConverter.isChordRow(song[index].text)
         var isClosing = true
-        return song.filter { line ->
-            val origin = line.origin ?: return@filter true
+        return song.filterIndexed { index, line ->
+            val origin = line.origin ?: return@filterIndexed true
             when {
                 origin in kept -> true
-                origin > span.last -> (isClosing && ChordSheetConverter.isChordRow(line.text)).also { isKept ->
+                origin > span.last -> (isClosing && isChordRow(index)).also { isKept ->
                     if (!isKept && line.text.isNotBlank()) isClosing = false
                 }
-                else -> line.text.isBlank() && origin in span || origin >= body && ChordSheetConverter.isChordRow(line.text)
+                else -> (line.text.isBlank() || index in numeralRows) && origin in span || origin >= body && isChordRow(index)
             }
         }
     }

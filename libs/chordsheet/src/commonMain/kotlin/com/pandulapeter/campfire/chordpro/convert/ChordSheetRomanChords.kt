@@ -51,26 +51,47 @@ internal object ChordSheetRomanChords {
     private val pronouns = setOf("I", "i")
 
     fun named(lines: List<Rendered>): List<Rendered> {
-        val rows = lines.map { line -> line.takeUnless { it.isMarginLabel || ChordSheetHeadings.parse(it.text) != null }?.let { numeralRow(it.text) } }
-        val strong = rows.filterNotNull().filter { row -> row.count(::isNumeral) >= 2 && row.any { isNumeral(it) && it.text !in pronouns } }
-        if (strong.size < MIN_ROWS) return lines
-        if (lines.any { line -> (chordTokens(line)?.count { rowChord(it.text) } ?: 0) >= 2 }) return lines
-        val numerals = strong.flatten().filter(::isNumeral).map { it.text }
-        val hasSmall = numerals.any { letters(it).first().isLowerCase() }
-        val hasCapital = numerals.any { letters(it).first().isUpperCase() }
-        if (hasSmall && !hasCapital && numerals.none { isWrittenMinor(it) }) return lines
-        val playsSmallI = "i" in numerals
-        val isOnKeyScale = numerals.none { it.first() in "b#\u266d\u266f" }
-        val keys = keys(lines)
+        val plan = plan(lines) ?: return lines
         return lines.mapIndexed { index, line ->
-            val row = rows[index]?.takeIf { row -> row.any { isNumeral(it) && it.text !in pronouns } || playsSmallI && row.none { it.text == "I" } }
-            val key = keys[index]
+            val row = plan.rows[index]
+            val key = plan.keys[index]
             if (row == null || key == null) {
                 line
             } else {
-                renamed(line, row) { ChordProNotation.romanNumeralChord(it, key, isOnKeyScale, isCaseQuality = hasSmall && hasCapital) } ?: line
+                renamed(line, row) { ChordProNotation.romanNumeralChord(it, key, plan.isOnKeyScale, isCaseQuality = plan.isCaseQuality) } ?: line
             }
         }
+    }
+
+    /**
+     * The indices of the [lines] [named] writes as chords: the rows of numerals of a song written in them, under a key.
+     * Empty for any other song.
+     */
+    fun numeralRows(lines: List<Rendered>): Set<Int> {
+        val plan = plan(lines) ?: return emptySet()
+        return lines.indices.filterTo(mutableSetOf()) { plan.rows[it] != null && plan.keys[it] != null }
+    }
+
+    /** The rows of numerals a song is written in, by line, each where it is one, and how they are read. */
+    private class Plan(val rows: List<List<Token>?>, val keys: List<String?>, val isOnKeyScale: Boolean, val isCaseQuality: Boolean)
+
+    /** How [lines] are read as a song written in numerals, or null where they are not one. */
+    private fun plan(lines: List<Rendered>): Plan? {
+        val rows = lines.map { line -> line.takeUnless { it.isMarginLabel || ChordSheetHeadings.parse(it.text) != null }?.let { numeralRow(it.text) } }
+        val strong = rows.filterNotNull().filter { row -> row.count(::isNumeral) >= 2 && row.any { isNumeral(it) && it.text !in pronouns } }
+        if (strong.size < MIN_ROWS) return null
+        if (lines.any { line -> (chordTokens(line)?.count { rowChord(it.text) } ?: 0) >= 2 }) return null
+        val numerals = strong.flatten().filter(::isNumeral).map { it.text }
+        val hasSmall = numerals.any { letters(it).first().isLowerCase() }
+        val hasCapital = numerals.any { letters(it).first().isUpperCase() }
+        if (hasSmall && !hasCapital && numerals.none { isWrittenMinor(it) }) return null
+        val playsSmallI = "i" in numerals
+        return Plan(
+            rows = rows.map { row -> row?.takeIf { it.any { word -> isNumeral(word) && word.text !in pronouns } || playsSmallI && it.none { word -> word.text == "I" } } },
+            keys = keys(lines),
+            isOnKeyScale = numerals.none { it.first() in "b#\u266d\u266f" },
+            isCaseQuality = hasSmall && hasCapital,
+        )
     }
 
     /** Whether [text] is a row of numerals and the marks a chord row holds, whatever the song around it. */

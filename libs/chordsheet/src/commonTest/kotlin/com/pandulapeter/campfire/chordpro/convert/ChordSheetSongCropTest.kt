@@ -62,6 +62,24 @@ class ChordSheetSongCropTest {
     }
 
     @Test
+    fun `a row of numerals in a song written in them is kept as a chord row is - a page number is not`() {
+        val lines = listOf(
+            "Gimme" to title,
+            "Key: Dm" to song,
+            "INTRO" to song,
+            "i i#5 i4 i" to junk,
+            "VERSE" to song,
+            "i         VII    V" to junk,
+            "Half-past twelve" to song,
+            "III             IV" to junk,
+            "And I'm watching the late show" to song,
+            "2" to junk,
+        )
+
+        assertEquals(converted(lines.dropLast(1)), converted(lines, cropped = true))
+    }
+
+    @Test
     fun `a chord diagram block under the song is left out with its chord names`() {
         val song = listOf(
             "G           C        G" to song,
