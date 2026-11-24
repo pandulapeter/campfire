@@ -121,6 +121,27 @@ paint is the card's own shape, not its cell), 14 (overlay coordinates, the expor
   (`dropped-app.md`).
 - Fading cards under the list's top in the card colour: they fade to the screen's background (`dropped-app.md`).
 
+## Execution (2026-11-24)
+
+Landed from `b5a80fe33`: 01 (`6dea075b4`); S: 06, 04, 03, 05; L: 07, 08, 12, and 11 in part; N: 10, 09, 14; and
+`2c6fee29c` (the fade test's edge tolerance on Linux), `5b5dd4c84` (a leftover opt-in). Left in this folder:
+
+- **02**, rewritten for an agent on the owner's Windows laptop (`c721eeb54`).
+- **11**, its step 2 (no profile showed `animateBounds` reaching `boundingRectInRoot`) and step 4 (a) (`app:desktop`
+  cannot open a sheet: it needs a public view-model entry or to be a friend of `:presentation`).
+- **13**, reverted by its lane: composing during the `push:setlist` slide grew (10.5 → 14–17 ms) with no fewer
+  recompositions.
+
+D1's figures (after 07 and 08, Mac): `pop:plain` warm 1.1–2.9 / 26.6–38.0 ms, `pop:long` 1.2–3.9 / 25.6–39.2 ms,
+layout still 19–30 ms of it, against 2.3 / 38.9 and 2.9 / 41.8 at `6dea075b4`; allocation 15.1 → 11.9 MB.
+
+After every lane, `5b5dd4c84` against `6dea075b4`, back to back on a loaded Mac (both slower than the baseline above):
+warm frame 1 of every push fell from 14–25 ms to 4–7 ms and `sheet:close` from 17 to 7 ms; pops' worst frame fell
+3–17 ms; allocation per transition roughly halved (pops 15.1 → 9.5 MB, `push:long` 34 → 14 MB, `push:fresh` unchanged).
+The pushes' **frame 2 grew** 5–9 ms (`push:plain` 29 → 34, `push:long` 47 → 56, `push:tabs` 30 → 41), part of
+frame 1's work arriving a frame later; lane N saw the same on `push:long` and `push:setlist` after 09. Worth one
+quiet-machine A/B of 09 before the next performance work.
+
 ## Measurements
 
 The probe that produced the numbers above stays out of the repo; 01 makes it the benchmark's transition suite. Its
