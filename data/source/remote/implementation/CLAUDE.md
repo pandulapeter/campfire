@@ -138,8 +138,9 @@ cannot tell from no answer.
 ## Pages (`page/`)
 
 - `OffscreenPageSource` is the common loop over a platform's `OffscreenBrowser`: a look (`PAGE_SNAPSHOT_SCRIPT`:
-  `innerText`, title, address) every 500 ms, taken once loaded and unchanged for 1.5 s, else the last readable look at
-  20 s; a bot check (`PageSnapshot.isBotCheck`, short pages only) is waited past, never taken. The view is let go of
+  `innerText` with `content-visibility` forced visible for the read, since a page never scrolled would leave out what it
+  skips; title, address) every 500 ms, taken once loaded and unchanged for 1.5 s, else the last readable look at 20 s;
+  a bot check (`PageSnapshot.isBotCheck`, short pages only) is waited past, never taken. The view is let go of
   however the read ends. Nothing read is `UNREACHABLE` where the load failed for the network (`PageLook.isUnreachable`)
   or the page was still loading with nothing readable at 20 s, which trying again may get past; else `UNREADABLE` (a
   bot check, an error page, a page loaded with no text). An `http` address is read by its `https` form.

@@ -12,10 +12,22 @@
 // the extension, so a page shared from Safari arrives as the text the reader sees, with nothing loaded again. innerText
 // is the page as it is drawn: what is hidden is left out, and a table's or a <pre>'s lines keep their breaks, which is
 // how a chord sheet's columns survive. The same three fields as PAGE_SNAPSHOT_SCRIPT in :data:source:remote:implementation.
+// Every element is drawn for the moment of the read, even one content-visibility: auto skips until it scrolls into view:
+// innerText leaves such an element out, so a song set in blocks like that (Cifra Club's) would arrive only as far as the
+// reader had scrolled.
 var ExtensionPreprocessingJS = {
     run: function (parameters) {
+        var shown = document.createElement("style");
+        shown.textContent = "*, ::before, ::after { content-visibility: visible !important; }";
+        (document.head || document.documentElement).appendChild(shown);
+        var text;
+        try {
+            text = document.body ? document.body.innerText : "";
+        } finally {
+            shown.remove();
+        }
         parameters.completionFunction({
-            text: document.body ? document.body.innerText : "",
+            text: text,
             title: document.title || "",
             address: document.location.href,
         });

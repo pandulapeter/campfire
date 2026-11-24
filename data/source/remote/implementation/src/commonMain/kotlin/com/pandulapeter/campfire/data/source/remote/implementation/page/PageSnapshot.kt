@@ -61,9 +61,16 @@ internal data class PageSnapshot(
  * The script both web views run to look at a page, answering [PageSnapshot] as a JSON text (a string rather than an
  * object, which each platform would hand over in a shape of its own). `innerText` is the text as it is drawn: what is
  * hidden is left out, and a table's or a `<pre>`'s lines keep their breaks, which is how a chord sheet's columns survive.
+ * Only for the moment of the read, every element is drawn even where `content-visibility: auto` would skip it until it
+ * scrolls into view: `innerText` leaves such an element out, and a page the web view never scrolls (Cifra Club sets its
+ * song in blocks like that) would otherwise arrive without its song.
  */
 internal const val PAGE_SNAPSHOT_SCRIPT =
-    "JSON.stringify({text: document.body ? document.body.innerText : '', title: document.title || '', address: location.href})"
+    "(() => { const shown = document.createElement('style');" +
+        " shown.textContent = '*, ::before, ::after { content-visibility: visible !important; }';" +
+        " (document.head || document.documentElement).appendChild(shown);" +
+        " try { return JSON.stringify({text: document.body ? document.body.innerText : '', title: document.title || ''," +
+        " address: location.href}); } finally { shown.remove(); } })()"
 
 /** A bot check is a page of a few sentences; past this many characters it is the site's own page. */
 private const val BOT_CHECK_MAX_LENGTH = 3_000
