@@ -9,7 +9,6 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components.tabChrome
 
-import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
@@ -41,19 +40,18 @@ import androidx.compose.ui.layout.onPlaced
  * @param isRectangular Whether the part is clipped to its rectangle rather than to a stadium: one with no container of
  *   its own (the tools' capo, a label before a stepper), whose label a stadium's rounded ends would cut into.
  */
-@OptIn(ExperimentalSharedTransitionApi::class)
 internal fun Modifier.sharedTabChrome(
     chrome: SharedTabChrome?,
     zIndex: Float,
     isContainerDrawnOutsideSwaps: Boolean,
     isRectangular: Boolean = false,
-): Modifier = if (chrome == null) this else with(chrome.sharedTransitionScope) {
-    this@sharedTabChrome
+): Modifier = if (chrome == null) this else this@sharedTabChrome
         // Outside the layer below, so that the rectangle is the part's as laid out, never as scaled.
         .onPlaced { chrome.coordinates = it }
-        .renderInSharedTransitionScopeOverlay(
-            zIndexInOverlay = zIndex + if (chrome.isEntering) ENTERING_Z_INDEX_OFFSET else 0f,
-            renderInOverlay = { chrome.isSwapping },
+        .drawnInTabChromeOverlay(
+            tabChrome = chrome.tabChrome,
+            zIndex = { zIndex + if (chrome.isEntering) ENTERING_Z_INDEX_OFFSET else 0f },
+            isInOverlay = { chrome.isSwapping },
         )
         .graphicsLayer {
             val counterpart = chrome.counterpart()
@@ -81,7 +79,6 @@ internal fun Modifier.sharedTabChrome(
                 }
             }
         }
-}
 
 /**
  * Makes this node, laid over the whole of a bar, the part [chrome] stands for where the part is only a stretch of the
@@ -90,15 +87,13 @@ internal fun Modifier.sharedTabChrome(
  * rectangle while matched (by the copy being left only) and at its own, fading with its screen, while alone. A no-op
  * without [chrome].
  */
-@OptIn(ExperimentalSharedTransitionApi::class)
 internal fun Modifier.sharedTabChromeSurface(
     chrome: SharedTabChrome?,
     zIndex: Float,
     bounds: () -> Rect,
-): Modifier = if (chrome == null) this else with(chrome.sharedTransitionScope) {
-    this@sharedTabChromeSurface
+): Modifier = if (chrome == null) this else this@sharedTabChromeSurface
         .onPlaced { chrome.coordinates = it }
-        .renderInSharedTransitionScopeOverlay(zIndexInOverlay = zIndex, renderInOverlay = { chrome.isSwapping })
+        .drawnInTabChromeOverlay(tabChrome = chrome.tabChrome, zIndex = { zIndex }, isInOverlay = { chrome.isSwapping })
         .drawBehind {
             if (!chrome.isSwapping) return@drawBehind
             val counterpart = chrome.counterpart()
@@ -112,7 +107,6 @@ internal fun Modifier.sharedTabChromeSurface(
                 drawPath(path = stadiumOf(own), color = color, alpha = chrome.screenAlphaValue)
             }
         }
-}
 
 /**
  * Makes this node, which stands on the part [chrome] stands for, cross with the other tab's copy of it while the two are

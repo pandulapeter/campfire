@@ -10,7 +10,6 @@
 package com.pandulapeter.campfire.presentation.ui.components.tabChrome
 
 import androidx.compose.animation.EnterExitState
-import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.animation.core.SpringSpec
 import androidx.compose.animation.core.Transition
@@ -58,7 +57,6 @@ import androidx.compose.ui.layout.positionInRoot
  *
  * Neither happens outside a swap of two tabs: under a card being dealt or taken off, the part moves with its screen.
  */
-@OptIn(ExperimentalSharedTransitionApi::class)
 @Stable
 internal class SharedTabChrome(
     private val scope: TabChromeScope,
@@ -69,7 +67,7 @@ internal class SharedTabChrome(
     containerColor: Color,
     content: TabChromeContent?,
 ) {
-    val sharedTransitionScope get() = scope.tabChrome.sharedTransitionScope
+    val tabChrome get() = scope.tabChrome
 
     /** The color of the part's own container, which the other screen's copy sets out from while the two are matched. */
     var containerColor by mutableStateOf(containerColor)

@@ -70,6 +70,27 @@ internal class TabSwapNewButtonTest {
         }
     }
 
+    /**
+     * The button's edge is drawn partly over the list's background, so a button drawn twice, in the overlay and again on
+     * its fading screen, would be more opaque there than the one drawn once before the swap.
+     */
+    @Test
+    fun `mid swap the New button is drawn once, over both screens`() = runAppTest(setlists = listOf(TWO_SONGS_SETLIST)) {
+        val button = onNodeWithContentDescription(string(Res.string.songs_new_song)).fetchSemanticsNode().boundsInRoot
+        val probes = (-EDGE_PROBES..EDGE_PROBES).map { Offset(button.left + it, button.center.y) }
+        val before = captureWindow().let { window -> probes.map { window.colorAt(it) } }
+        mainClock.autoAdvance = false
+        onNode(hasText(string(Res.string.setlists)) and hasClickAction()).performTouchInput { click() }
+        repeat(SWAP_FRAMES) { frame ->
+            mainClock.advanceTimeBy(FRAME_MILLIS)
+            val window = captureWindow()
+            probes.forEachIndexed { index, probe ->
+                val color = window.colorAt(probe)
+                assertTrue(color.isCloseTo(before[index]), "The button's edge was $color rather than ${before[index]} at $probe on frame $frame of the swap.")
+            }
+        }
+    }
+
     private fun ImageBitmap.colorAt(offset: Offset) = toPixelMap(startX = offset.x.roundToInt(), startY = offset.y.roundToInt(), width = 1, height = 1)[0, 0]
 
     private fun Color.isCloseTo(other: Color) =
@@ -81,3 +102,4 @@ private const val PROBE_FRACTION = 0.2f
 private const val FRAME_MILLIS = 16L
 private const val SWAP_FRAMES = 40
 private const val TOLERANCE = 0.03f
+private const val EDGE_PROBES = 2

@@ -10,8 +10,6 @@
 package com.pandulapeter.campfire.presentation.ui.components.tabChrome
 
 import androidx.compose.animation.AnimatedVisibilityScope
-import androidx.compose.animation.ExperimentalSharedTransitionApi
-import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Stable
@@ -25,18 +23,17 @@ import androidx.navigation3.ui.LocalNavAnimatedContentScope
 
 /**
  * What carries the parts of a top level screen that stay on screen while two tabs are swapped (the New button, the
- * search pill, and the tools' instrument pill, capo, key, and search, see [TabChromeElement]): the [SharedTransitionScope]
- * laid around the screens, and which kind of transition
+ * search pill, and the tools' instrument pill, capo, key, and search, see [TabChromeElement]): what [TabChromeOverlay]
+ * draws over the screens ([overlayParts]), and which kind of transition
  * the navigation specs last decided on ([swap]), since only a swap of two tabs carries them over. Snapshot state, unlike
  * `PredictiveBackMark`, since the parts read it while they are laid out and drawn.
  */
-@OptIn(ExperimentalSharedTransitionApi::class)
 @Stable
 internal class TabChrome {
-    /** Set by the layout around the screens before any of them is composed, which is the only one there is. */
-    lateinit var sharedTransitionScope: SharedTransitionScope
-
     var swap by mutableStateOf(TabSwap.NONE)
+
+    /** Every node that draws through [TabChromeOverlay] while the tabs swap, see [drawnInTabChromeOverlay]. */
+    val overlayParts = mutableStateListOf<TabChromeOverlayNode>()
 
     /** Every part composed on a top level screen, for a matched one to read the container color of the other's. */
     val parts = mutableStateListOf<SharedTabChrome>()

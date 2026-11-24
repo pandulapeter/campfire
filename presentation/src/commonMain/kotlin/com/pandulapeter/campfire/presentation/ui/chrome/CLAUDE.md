@@ -23,8 +23,9 @@ The navigation chrome (bar, rail, transitions, and the Tools item).
   pop from scene depth itself, because Navigation 3's detection is wrong after an interrupted transition and leaves an
   invisible screen swallowing clicks. A finished onboarding is the one exception: zoomed away, no scrim.
 - **A tab swap carries the New button, the search pill, and the tools' instrument pill, capo, key, and search over**
-  (`components/tabChrome`): `NavDisplay` sits in a
-  `SharedTransitionLayout` (`ScreenDeck`), each top level screen gets a `TabChromeScope` of its entry's visibility, and
+  (`components/tabChrome`): the parts record their drawing while they swap and one `TabChromeOverlay`, after `NavDisplay`
+  in `ScreenDeck`, draws them in z order (no shared transition layout, whose lookahead measured every screen twice), each
+  top level screen gets a `TabChromeScope` of its entry's visibility, and
   the specs mark the swap (`TabChrome.swap`, snapshot state: none for cards, so they move with their screen as before).
   The New button's spot is one part on every tab filling it: New, the Preferences pill, the Metronome's play button,
   the Tuner's reference tone; the search pill's is the Tuner's reference pitch too. Both copies draw in the overlay, never by Compose's shared bounds: their own rectangles (root

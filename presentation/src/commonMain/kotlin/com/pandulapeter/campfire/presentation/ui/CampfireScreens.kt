@@ -31,7 +31,6 @@ import com.pandulapeter.campfire.presentation.ui.chrome.coveredScreenScrimColor
 import com.pandulapeter.campfire.presentation.ui.chrome.endwardTranslation
 import com.pandulapeter.campfire.presentation.ui.chrome.navigationTransition
 import com.pandulapeter.campfire.presentation.ui.chrome.predictivePopTransition
-import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.PaddingValues
@@ -77,6 +76,7 @@ import com.pandulapeter.campfire.presentation.ui.components.list.ListLayout
 import com.pandulapeter.campfire.presentation.ui.components.WindowSize
 import com.pandulapeter.campfire.presentation.ui.components.tabChrome.ProvideTabChromeScope
 import com.pandulapeter.campfire.presentation.ui.components.tabChrome.TabChrome
+import com.pandulapeter.campfire.presentation.ui.components.tabChrome.TabChromeOverlay
 import com.pandulapeter.campfire.presentation.ui.screens.export.ExportTransition
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.screens.setlists.SetlistsScreen
@@ -394,8 +394,8 @@ internal fun CampfireScreens(
 }
 
 /**
- * The deck of screens, laid out in a [SharedTransitionLayout] so that the parts two tabs share are drawn over both while
- * they swap (see [TabChrome]), and moved with the deck under the export screen, that overlay included.
+ * The deck of screens, with the overlay the parts two tabs share are drawn over both from while they swap after them
+ * ([TabChromeOverlay]), moved with the deck under the export screen, that overlay included.
  */
 @Composable
 private fun ScreenDeck(
@@ -410,11 +410,11 @@ private fun ScreenDeck(
     // screen a back gesture is revealing is not empty to an accessibility service halfway through the swipe. Derived,
     // so that the app is not recomposed on every frame of the slide.
     val isExportCovering by remember { derivedStateOf { exportTransition.progress.value >= 1f } }
-    SharedTransitionLayout(
+    Box(
         modifier = Modifier.fillMaxSize().underExportScreen(exportTransition, layoutDirection, scrimColor, isExportCovering),
     ) {
-        tabChrome.sharedTransitionScope = this
         content()
+        TabChromeOverlay(modifier = Modifier.matchParentSize(), tabChrome = tabChrome)
     }
 }
 

@@ -9,7 +9,6 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components.tabChrome
 
-import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Rect
@@ -34,14 +33,12 @@ import androidx.compose.ui.unit.LayoutDirection
  * does what stands off the part (an open search's close button and the actions beside the field), which stays where it is
  * laid out.
  */
-@OptIn(ExperimentalSharedTransitionApi::class)
 internal fun Modifier.tabChromeForeground(
     chrome: SharedTabChrome?,
     zIndex: Float,
     partBounds: () -> Rect,
-): Modifier = if (chrome == null) this else with(chrome.sharedTransitionScope) {
-    this@tabChromeForeground
-        .renderInSharedTransitionScopeOverlay(zIndexInOverlay = zIndex, renderInOverlay = { chrome.isSwapping })
+): Modifier = if (chrome == null) this else this@tabChromeForeground
+        .drawnInTabChromeOverlay(tabChrome = chrome.tabChrome, zIndex = { zIndex }, isInOverlay = { chrome.isSwapping })
         .drawWithContent {
             val part = partBounds()
             if (!chrome.isSwapping || part.isEmpty) {
@@ -62,7 +59,6 @@ internal fun Modifier.tabChromeForeground(
                 }
             }
         }
-}
 
 /** Draws what stands on [part] moved onto [travelling], its start edge on the other's, and clipped to both. */
 private fun ContentDrawScope.drawRidingOn(part: Rect, partOutline: Path, travelling: Rect) {
