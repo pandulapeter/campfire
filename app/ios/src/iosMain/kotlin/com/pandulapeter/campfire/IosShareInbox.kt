@@ -175,7 +175,7 @@ private fun urlInShare(folderPath: String, path: String) = path.takeUnless { it.
     ?.let { NSURL.fileURLWithPath("$folderPath/$it") }
 
 /** The key of both `Info.plist`s that names the group, set from `APP_GROUP_ID` in `Config.xcconfig`. */
-private const val APP_GROUP_KEY = "CampfireAppGroup"
+internal const val APP_GROUP_KEY = "CampfireAppGroup"
 private const val INBOX_NAME = "ShareInbox"
 private const val PARTIAL_SUFFIX = ".partial"
 private const val MANIFEST_NAME = "share.json"

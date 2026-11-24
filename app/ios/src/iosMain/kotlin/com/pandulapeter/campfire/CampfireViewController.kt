@@ -77,11 +77,14 @@ private val metronomeNotifier by lazy { IosMetronomeNotifier(KoinPlatform.getKoi
  *   that may be as old as 15.3; null before 26, where an import falls back on background time ([IosImportKeeper]).
  * @param onKeyCommandsChanged Told the app's shortcuts for the Command-hold overlay whenever they change
  *   ([listedKeyCommands]), for the Swift controller around this one to list.
+ * @param reloadWidgetTimelines Runs `WidgetCenter.shared.reloadAllTimelines()`, which only Swift can call, once a new
+ *   widget snapshot has been written ([publishWidgetSnapshot]).
  */
 @Suppress("unused", "FunctionName")
 fun CampfireViewController(
     continuedImportTasks: ContinuedImportTasks?,
     onKeyCommandsChanged: (List<UIKeyCommand>) -> Unit,
+    reloadWidgetTimelines: () -> Unit,
 ): UIViewController {
     startProcess()
     if (processContinuedImportTasks == null) processContinuedImportTasks = continuedImportTasks
@@ -106,6 +109,7 @@ fun CampfireViewController(
             onAppIconChanged = ::applyAppIcon,
             onKeyCommandsChanged = { onKeyCommandsChanged(listedKeyCommands(it)) },
             onLauncherShortcutsChanged = ::applyQuickActions,
+            onWidgetSnapshotChanged = { publishWidgetSnapshot(snapshot = it, reloadTimelines = reloadWidgetTimelines) },
         )
     }.also { controller = it }
 }

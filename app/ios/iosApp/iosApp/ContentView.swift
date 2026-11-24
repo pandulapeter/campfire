@@ -9,6 +9,7 @@
  */
 import UIKit
 import SwiftUI
+import WidgetKit
 import ComposeApp
 
 struct ComposeView: UIViewControllerRepresentable {
@@ -39,9 +40,12 @@ final class ShortcutListingController: UIViewController {
         } else {
             continuedImportTasks = nil
         }
-        let content = CampfireViewControllerKt.CampfireViewController(continuedImportTasks: continuedImportTasks) { [weak self] commands in
-            self?.listedCommands = commands
-        }
+        let content = CampfireViewControllerKt.CampfireViewController(
+            continuedImportTasks: continuedImportTasks,
+            onKeyCommandsChanged: { [weak self] commands in self?.listedCommands = commands },
+            // WidgetKit has no Objective-C API, so the Kotlin side that writes the widgets' snapshot asks through this.
+            reloadWidgetTimelines: { WidgetCenter.shared.reloadAllTimelines() }
+        )
         addChild(content)
         content.view.frame = view.bounds
         content.view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
