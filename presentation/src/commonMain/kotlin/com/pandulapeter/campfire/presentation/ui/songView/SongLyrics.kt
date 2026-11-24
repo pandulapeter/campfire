@@ -58,7 +58,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.LayoutDirection
 import com.pandulapeter.campfire.chordpro.language.WritingDirection
@@ -270,9 +269,9 @@ internal fun SongLyrics(
     val chordStyle = remember(lyricsStyle) { lyricsStyle.copy(fontWeight = FontWeight.Bold, textDirection = TextDirection.Ltr) }
     // Annotations ([*text]) sit in the chord row but are not chords, so they are drawn in the lyrics' colour.
     val annotationStyle = remember(lyricsStyle) { lyricsStyle.copy(fontStyle = FontStyle.Italic, textDirection = TextDirection.Ltr) }
-    // One measurer for the whole page. Everything measured through it is kept by whoever asked for it (see
-    // [SongTextMeasurements] and [TabRows]), so a cache of its own would only hold every layout a second time.
-    val textMeasurer = rememberTextMeasurer(cacheSize = 0)
+    // App-wide per style set, so a song opened after another at this size finds what that one measured; read here, under
+    // the screen's direction rather than the song's, as the measurer always was.
+    val textMeasurements = rememberSongTextMeasurements(lyricsStyle, chordStyle, annotationStyle)
     val notations = rememberSongLyricsNotations(
         model = model,
         availableWidth = availableWidth,
@@ -314,19 +313,11 @@ internal fun SongLyrics(
     val sectionKeys = remember(sections) { sectionKeysOf(sections) }
     val unitKeys = remember(units, sectionKeys) { unitKeysOf(units, sectionKeys) }
     val cardKeys = remember(units, sectionKeys) { cardKeysOf(units, sectionKeys) }
-    val textMeasurements = remember(textMeasurer, lyricsStyle, chordStyle, annotationStyle) {
-        SongTextMeasurements(
-            textMeasurer = textMeasurer,
-            lyricsStyle = lyricsStyle,
-            chordStyle = chordStyle,
-            annotationStyle = annotationStyle,
-        )
-    }
     val chordsSection = sections.firstNotNullOfOrNull { it as? RenderSection.Chords }
     // The template rather than a sentence per key, which the layouts fill in only for the keys the cells are in.
     val keyHeading = textResource(Res.string.song_details_key_change)
-    val chordLayouts = remember(chordsSection?.cells, chordStyle, keyHeading, textMeasurer, density, fontScale) {
-        chordsSection?.let { ChordCellLayouts(it.cells, chordStyle, keyHeading, textMeasurer, density, fontScale) }
+    val chordLayouts = remember(chordsSection?.cells, chordStyle, keyHeading, textMeasurements, density, fontScale) {
+        chordsSection?.let { ChordCellLayouts(it.cells, chordStyle, keyHeading, textMeasurements.textMeasurer, density, fontScale) }
     }
     // Only where a fold can be toggled, which the editor's preview cannot.
     val centeringHold = if (onFoldToggled == null && chordDiagrams?.onFoldToggled == null) {

@@ -22,14 +22,15 @@ import com.pandulapeter.campfire.presentation.ui.songLayout.PADDING
 import com.pandulapeter.campfire.presentation.ui.songLayout.gridBarLinesOf
 
 /**
- * What the chorded lines of one page have had measured, shared between them because they keep asking for the
+ * What the chorded lines of the song pages have had measured, shared between them because they keep asking for the
  * same things: a song has a handful of chord names and hundreds of lines carrying them, a repeated verse or a
  * recalled chorus is the same fragments again, and the height of a line and the width of the padding are the
  * same for all of them.
  *
  * It lives for as long as the measurer and the three styles do - which is everything a width depends on: the
- * styles carry the text size, the measurer is rebuilt with the density, the layout direction and the font
- * resolver - and deliberately not for as long as the song does. A transposition renames the chords and leaves
+ * styles carry the text size, the measurer is built with the density, the layout direction, the locales, and the font
+ * resolver - and deliberately not for as long as the song, or even the page, does: [SongTextMeasurementsHolder] keeps
+ * it app-wide by those, so every song opened at one text size shares it. A transposition renames the chords and leaves
  * the lyrics alone, so the fragment widths it measured before are the ones it needs after.
  *
  * The runs of tablature and grids are kept here too: a run is drawn as several chunks the section may be cut

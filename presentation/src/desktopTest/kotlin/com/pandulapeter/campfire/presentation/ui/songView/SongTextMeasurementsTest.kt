@@ -80,4 +80,43 @@ internal class SongTextMeasurementsTest {
         )
         assertSame(measurements.gridLayout(run, styles), measurements.gridLayout(run.toList(), styles))
     }
+
+    /** A key of its own font resolver, compared by identity, so that no other test's measurements are handed back. */
+    private val resolver = createFontFamilyResolver()
+
+    private fun keyOf(fontSize: Float = 14f, density: Float = 1f, layoutDirection: LayoutDirection = LayoutDirection.Ltr) = SongTextMeasurementsKey(
+        fontFamilyResolver = resolver,
+        localeList = LocaleList("en"),
+        density = Density(density),
+        layoutDirection = layoutDirection,
+        lyricsStyle = TextStyle(fontSize = fontSize.sp),
+        chordStyle = TextStyle(fontSize = fontSize.sp),
+        annotationStyle = TextStyle(fontSize = fontSize.sp),
+    )
+
+    @Test
+    fun `equal keys made of separately built styles are handed the same measurements`() {
+        val measurements = SongTextMeasurementsHolder.of(keyOf())
+
+        assertSame(measurements, SongTextMeasurementsHolder.of(keyOf()))
+        assertNotSame(measurements, SongTextMeasurementsHolder.of(keyOf(fontSize = 20f)))
+        assertNotSame(measurements, SongTextMeasurementsHolder.of(keyOf(density = 2f)))
+        assertNotSame(measurements, SongTextMeasurementsHolder.of(keyOf(layoutDirection = LayoutDirection.Rtl)))
+    }
+
+    @Test
+    fun `the least recently asked for measurements leave once more are kept`() {
+        val first = SongTextMeasurementsHolder.of(keyOf())
+        repeat(MAX_KEPT_STYLE_SETS) { SongTextMeasurementsHolder.of(keyOf(fontSize = 15f + it)) }
+
+        assertNotSame(first, SongTextMeasurementsHolder.of(keyOf()))
+    }
+
+    @Test
+    fun `a chord measured on one page is not measured again on the next`() {
+        val chord = ChordProLine.Lyrics.Chord(position = 0, name = "F#m7", isAnnotation = false)
+        val layout = SongTextMeasurementsHolder.of(keyOf()).chordLayout(chord)
+
+        assertSame(layout, SongTextMeasurementsHolder.of(keyOf()).chordLayout(chord))
+    }
 }

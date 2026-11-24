@@ -99,6 +99,8 @@ The song renderer, drawn by song details and the editor's preview; `model/` buil
 - **A strip** (turned by column, `grid/`) is laid out as wide as its columns and scrolls sideways: the scroll gives it
   no width, so it is handed the viewport's (`viewportWidth`). Its rows are its column starts from the song's start edge
   (`SongRows.isAcross`).
+- **Text measurements are app-wide per style set** (`SongTextMeasurementsHolder`: the last three, main thread only), so a
+  song opened after another at one size finds its fragments and chord names measured.
 - A continuation piece shows no header. Chorus cards are drawn behind the chunks, one per piece; page dividers are drawn
   by the layout, not composed.
 - **Motion**: a single change glides every section, card, and divider from its old place to its new (`SectionGlides`);
@@ -111,5 +113,5 @@ The song renderer, drawn by song details and the editor's preview; `model/` buil
   afresh; it is followed by its first baseline, so words a chord row grows over glide from where they were. A chunk or
   control coming with any other single change fades in where it lands.
 - **A change of how the song is shown is staged** (`SongChange`, `songDetails/StagedSongFrame.kt`): what it takes away
-  fades out while the page is held, then the new page glides, then what it brings fades in. All at once reads as chaos.
+  fades out while the page is held, then the new page glides, then what it brings fades in.
 - Each section is a traversal group indexed in song order, or screen readers read across the columns.
