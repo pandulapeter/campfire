@@ -103,6 +103,33 @@ On Ultimate Guitar's 25 song pages no run loses a song line, and the marks take 
 Offer", "80% Off", "Try now", a close button "X" that is not a button) stays. The corpus held only 26 of its pages,
 all chord sheets, and none of Cifra Club's or e-chords' (the headless browser was turned away).
 
+## Second gate runs and the corpus they led to
+
+Site-grouped, with a second seed for today's model, whose runs differ by 7 pages losing a song line and 175 lines:
+
+| Model | Seed | Mean line F1 | Pages losing a song line | Song lines lost | Clutter kept |
+|---|---|---|---|---|---|
+| today | 7 | 0.854 | 60 | 427 | 8,234 |
+| today | 11 | 0.854 | 53 | 252 | 9,076 |
+| every mark | 7 | 0.870 | 70 | 447 | 6,809 |
+| every mark | 11 | 0.882 | 91 | 669 | 6,592 |
+| link, new block, landmark | 7 | 0.878 | 69 | 397 | 7,101 |
+| those, size, heading | 7 | 0.863 | 79 | 366 | 8,036 |
+
+On a site never seen, every set of marks keeps less clutter but loses a song line on more pages: the marks ship only once
+that gap closes, on a corpus with more sites. So the corpus grew on 2026-11-25:
+
+- 60 more Ultimate Guitar pages (40 chord sheets, 20 tabs), from its most-viewed and trending lists.
+- The sites a search for a song's chords and the chords word in each app language puts in its first five: 26 Google
+  searches in local Google, 90 more through a US search engine. Ultimate Guitar leads everywhere but Spanish and
+  Portuguese, where Cifra Club is first; GuitarTuna, Songsterr, Chordify, Hooktheory, PraiseCharts, e-chords, and
+  local sites (tabulaturi.ro, gitarkotta.com, boiteachansons.net, pisnicky-akordy.cz, mychords.net) follow. 182 of their
+  pages, Cifra Club's and e-chords' read in a visible browser where the headless one is turned away.
+- Cifra Club, e-chords, and ukutabs.com set their song in blocks with `content-visibility: auto`, which `innerText`
+  leaves out until they scroll into view: the app's link read and Safari's share read them without the song. Both now
+  draw every element for the moment of the read, and so does `page-marks.js`; the corpus pages of the ten hosts that
+  hide text this way were read again and labelled again.
+
 ## Steps
 
 1. **The model**, first as an experiment on copies of the scripts, outside the repository: `lines.py` reads the marks
