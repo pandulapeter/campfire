@@ -125,12 +125,8 @@ internal fun SongList(
     val songActions = rememberSongActionHandler(editorSession, songFilesController, dialogHost)
     val selectMultipleTitle = stringResource(Res.string.songs_select_multiple)
     val songCardPainters = rememberSongCardPainters()
-    // An open search runs the sections together, so no section ends in a short row, keeping the card at the top left of
-    // the list in its column; KeepCardsInPlaceAcrossSearch keeps its row.
-    val searchOpening = rememberSearchOpening(listState, songGroups, isSearchOpen, columnCount)
-    val groups = remember(songGroups, isSearchOpen, searchOpening, columnCount) {
-        if (isSearchOpen) songGroups.groups.withoutSectionHeaders(anchor = searchOpening?.slotFor(songGroups, columnCount)) else songGroups.groups
-    }
+    val searchOpening = rememberSearchOpening(listState, songGroups, isSearchOpen, columnCount, songListState.songsSearchOpening)
+    val groups = rememberShownSongGroups(songGroups, isSearchOpen, searchOpening, columnCount)
     val coroutineScope = rememberCoroutineScope()
     val filterAnchor = remember { ListAnchor() }
     val itemPlacementSpec = searchTravelSpec(visibilityThreshold = IntOffset.VisibilityThreshold)
@@ -209,6 +205,7 @@ internal fun SongList(
         songGroups = songGroups,
         groups = groups,
         opening = searchOpening,
+        retained = songListState.songsSearchOpening,
         hasPlaceholder = placeholder != null,
         appBarOverlap = appBarOverlap,
         anchor = filterAnchor,

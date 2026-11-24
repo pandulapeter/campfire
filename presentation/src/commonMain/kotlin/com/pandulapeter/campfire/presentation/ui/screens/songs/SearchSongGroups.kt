@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songs
 
+import com.pandulapeter.campfire.presentation.ui.state.songs.SongCardSlot
 import com.pandulapeter.campfire.presentation.ui.state.songs.SongGroup
 
 /**
@@ -36,9 +37,6 @@ internal fun List<SongGroup>.withoutSectionHeaders(anchor: SongCardSlot? = null)
         if (position < 0) group else group.copy(leadingGap = (anchor.column - position).mod(anchor.columnCount))
     }
 }
-
-/** The card with [key], in [column] of a grid of [columnCount] columns. */
-internal data class SongCardSlot(val key: Any, val column: Int, val columnCount: Int)
 
 /** Where the card with [key] is in a grid of [columnCount] columns showing these groups, or null if none shows it. */
 internal fun List<SongGroup>.slotOf(key: Any, columnCount: Int): SongCardSlot? = firstNotNullOfOrNull { group ->

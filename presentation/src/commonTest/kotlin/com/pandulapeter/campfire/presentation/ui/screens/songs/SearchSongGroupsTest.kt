@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.songs
 
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.domain.api.library.SongSection
+import com.pandulapeter.campfire.presentation.ui.state.songs.SongCardSlot
 import com.pandulapeter.campfire.presentation.ui.state.songs.SongGroup
 import com.pandulapeter.campfire.presentation.ui.state.songs.SongGroupHeader
 import com.pandulapeter.campfire.presentation.ui.state.songs.songItemKey

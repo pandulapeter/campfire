@@ -25,7 +25,9 @@ import com.pandulapeter.campfire.presentation.ui.components.appBar.searchTravelS
 import com.pandulapeter.campfire.presentation.ui.components.list.ListAnchor
 import com.pandulapeter.campfire.presentation.ui.components.list.SECTION_START_ROOM
 import com.pandulapeter.campfire.presentation.ui.components.list.SECTION_HEADER_ROW_HEIGHT
+import com.pandulapeter.campfire.presentation.ui.state.songs.RetainedSearchOpening
 import com.pandulapeter.campfire.presentation.ui.state.songs.SONG_CONTENT_TYPE
+import com.pandulapeter.campfire.presentation.ui.state.songs.SearchOpening
 import com.pandulapeter.campfire.presentation.ui.state.songs.SongGroup
 import com.pandulapeter.campfire.presentation.ui.state.songs.SongGroups
 import kotlinx.coroutines.flow.filter
@@ -35,7 +37,8 @@ import kotlin.math.roundToInt
  * What the song list looked like in the composition that opened the search: the card at the top left of what could be
  * read, and where it was. Read off the layout the search opens over, while composing, because the groups that keep
  * that card in its column ([withoutSectionHeaders]) are built in that same composition. Null while the search is closed,
- * and when it opens over no card.
+ * and when it opens over no card. A search already open as the screen comes back from another tab has the opening it
+ * was given before ([retained]), the layout now being the search's own.
  */
 @Composable
 internal fun rememberSearchOpening(
@@ -43,10 +46,12 @@ internal fun rememberSearchOpening(
     songGroups: SongGroups,
     isSearchOpen: Boolean,
     columnCount: Int,
+    retained: RetainedSearchOpening,
 ): SearchOpening? {
     val headerRowHeightPx = with(LocalDensity.current) { SECTION_HEADER_ROW_HEIGHT.roundToPx() }
     return remember(isSearchOpen) {
         if (!isSearchOpen) return@remember null
+        retained.opening?.let { return@remember it }
         // Not observed: the opening is a picture of one moment, and the list scrolling on must not compose it again.
         Snapshot.withoutReadObservation {
             val layoutInfo = listState.layoutInfo
@@ -70,6 +75,17 @@ internal fun rememberSearchOpening(
 }
 
 /**
+ * The groups the song list shows: [songGroups] as they are, or an open search's, which runs the sections together so that
+ * no section ends in a short row, keeping the card at the top left of the list in its column ([opening]);
+ * [KeepCardsInPlaceAcrossSearch] keeps its row.
+ */
+@Composable
+internal fun rememberShownSongGroups(songGroups: SongGroups, isSearchOpen: Boolean, opening: SearchOpening?, columnCount: Int) =
+    remember(songGroups, isSearchOpen, opening, columnCount) {
+        if (isSearchOpen) songGroups.groups.withoutSectionHeaders(anchor = opening?.slotFor(songGroups, columnCount)) else songGroups.groups
+    }
+
+/**
  * Keeps the card at the top left of the song list where it is on screen as the search opens and closes, while the
  * headers leave or come back and the cards around it close up on it or move back into their sections.
  *
@@ -91,6 +107,9 @@ internal fun rememberSearchOpening(
  * keeps the first row it shows rather than the card, so the position is asked for again as long as the jump is narrated
  * ([hold]), and followed into a list that arrives meanwhile ([SearchCardHold.follow]).
  *
+ * The opening is kept in [retained] until the search closes, so that a trip to another tab and back meanwhile still
+ * closes onto it.
+ *
  * Called after [KeepCardsInPlaceUnderTick], so that its request is the one the grid measures with.
  */
 @Composable
@@ -100,6 +119,7 @@ internal fun KeepCardsInPlaceAcrossSearch(
     songGroups: SongGroups,
     groups: List<SongGroup>,
     opening: SearchOpening?,
+    retained: RetainedSearchOpening,
     hasPlaceholder: Boolean,
     appBarOverlap: () -> AppBarOverlap,
     anchor: ListAnchor,
@@ -117,8 +137,12 @@ internal fun KeepCardsInPlaceAcrossSearch(
             indexOf = { key -> groups.itemIndexOf(key, hasPlaceholder) },
         )
         // A search that has shown other songs since it opened has sent the list to the top, and its gap with it.
-        if (state.opening?.songGroups?.filterKey != songGroups.filterKey) state.opening?.hasShownOtherSongs = true
-        if (isSearchOpen == state.wasOpen) return@SideEffect
+        if (retained.opening?.songGroups?.filterKey != songGroups.filterKey) retained.opening?.hasShownOtherSongs = true
+        if (isSearchOpen == state.wasOpen) {
+            // A search closed while the screen was away (the web's Back) leaves an opening that no closing here takes.
+            if (!isSearchOpen) retained.opening = null
+            return@SideEffect
+        }
         state.wasOpen = isSearchOpen
         val layoutInfo = listState.layoutInfo
         val visibleOffsets = layoutInfo.visibleItemsInfo.associate { it.key to it.offset }
@@ -152,13 +176,13 @@ internal fun KeepCardsInPlaceAcrossSearch(
             }
         }
         if (isSearchOpen) {
-            state.opening = opening
+            retained.opening = opening
             if (opening == null || listState.isScrollInProgress) return@SideEffect
             groups.itemIndexOf(opening.slot.key, hasPlaceholder)?.let { index -> keep(opening.slot.key, index, listShift - opening.cardOffset) }
             return@SideEffect
         }
-        val last = state.opening
-        state.opening = null
+        val last = retained.opening
+        retained.opening = null
         if (listState.isScrollInProgress) return@SideEffect
         if (last != null && !last.hasBeenScrolled && !last.hasShownOtherSongs && last.songGroups == songGroups) {
             groups.itemIndexOf(last.returnKey, hasPlaceholder)?.let { index -> keep(last.returnKey, index, -last.returnOffset) }
@@ -168,7 +192,7 @@ internal fun KeepCardsInPlaceAcrossSearch(
         }
     }
     LaunchedEffect(listState) {
-        snapshotFlow { listState.isScrollInProgress }.filter { it }.collect { state.opening?.hasBeenScrolled = true }
+        snapshotFlow { listState.isScrollInProgress }.filter { it }.collect { retained.opening?.hasBeenScrolled = true }
     }
 }
 
@@ -178,38 +202,7 @@ internal fun KeepCardsInPlaceAcrossSearch(
  */
 private val SEARCH_LIST_SHIFT = LIST_APP_BAR_HEIGHT - SECTION_START_ROOM
 
-/**
- * The songs the search opened over, and the card at the top left of them and where it was ([rememberSearchOpening]).
- *
- * The card kept is the top left one unless that is one of the random picks, which an open search does not show
- * ([cardKeptAcrossSearch]); closing goes back to the top left one ([returnKey]) all the same.
- *
- * @property cardOffset Where the card was laid out, in the grid's content coordinates.
- * @property returnKey The card at the top left as the search opened, which closing puts back at [returnOffset].
- * @property hasBeenScrolled Whether the list has been scrolled since, which leaves the card's old place nobody's.
- * @property hasShownOtherSongs Whether the search has shown other songs since, which sent the list to the top: neither
- *   the gap that kept the card in its column ([slotFor]) nor the card's old place is brought back by a query cleared
- *   again, and closing keeps whichever card is at the top left then.
- */
-internal class SearchOpening(
-    val songGroups: SongGroups,
-    val slot: SongCardSlot,
-    val cardOffset: Int,
-    val returnKey: Any,
-    val returnOffset: Int,
-) {
-    var hasBeenScrolled = false
-    var hasShownOtherSongs = false
-
-    /** The card the results of [current] keep in its column, if they are still the ones it was picked for. */
-    fun slotFor(current: SongGroups, columnCount: Int) = slot.takeIf {
-        !hasShownOtherSongs && current.filterKey == songGroups.filterKey && it.columnCount == columnCount
-    }
-}
-
-private class SearchTransitionState(var wasOpen: Boolean) {
-    var opening: SearchOpening? = null
-}
+private class SearchTransitionState(var wasOpen: Boolean)
 
 /** The cards more than half of which are below [visibleTop], in the grid's content coordinates, in item order. */
 private fun List<LazyGridItemInfo>.cardsInSight(visibleTop: Int) =

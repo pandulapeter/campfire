@@ -67,6 +67,8 @@ internal class SongListState(
 
     val songsScrollPosition = ScrollPosition()
 
+    val songsSearchOpening = RetainedSearchOpening()
+
     /**
      * The search of each of the two list screens, held here for the same reason their scroll positions are, see
      * [SearchState]. They are separate because the two lists are searched for different things.
