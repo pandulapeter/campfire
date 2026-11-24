@@ -572,6 +572,11 @@ class ChordSheetConverterTest {
             "Another song - Tankcsapda\n[Am]Itt lako[C]m, látod: ez az a ház\nTankcsapda: Ez az a ház\n",
             ChordSheetConverter.convert(ChordSheet.ofPlainText("Another song - Tankcsapda$song"), guessesTitle = false, knownTitle = known).single(),
         )
+        // A header naming both with nothing to tell which is which is restated by them in either order.
+        assertEquals(
+            "[Am]Itt lako[C]m, látod: ez az a ház\nTankcsapda: Ez az a ház\n",
+            ChordSheetConverter.convert(ChordSheet.ofPlainText("Tankcsapda - Ez az a ház$song"), guessesTitle = false, knownTitle = PageTitle("Tankcsapda: Ez az a ház", null)).single(),
+        )
     }
 
     @Test

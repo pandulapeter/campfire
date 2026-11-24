@@ -294,7 +294,7 @@ public object ChordSheetConverter {
         val named = (title.leading + fields.entries + title.trailing).let { header ->
             knownTitle ?: PageTitle(headerEntry(header, "title") ?: "", headerEntry(header, "artist"))
         }
-        val restated = named.artist?.takeIf { named.title.isNotBlank() }?.let { artist -> ChordSheetTitles.restated(lines, kinds, named.title, artist) }.orEmpty()
+        val restated = if (named.title.isBlank()) emptySet() else ChordSheetTitles.restated(lines, kinds, named.title, named.artist)
         val omitted = fields.omitted + title.omitted + restated
         val definitions = ChordSheetDefinitions.definitions(
             lines = lines.map { it.text },

@@ -29,10 +29,11 @@ internal object ChordSheetTitles {
     /**
      * The lines before the song's first chord row, heading, tab, or grid that name nothing but its [title] and [artist], in
      * either order with a dash or a colon between them (`Artist - Title`, `Artist: Title`): a page restating the header it
-     * opened with, which would otherwise open the song as its first lyric.
+     * opened with, which would otherwise open the song as its first lyric. With no [artist], a [title] that is itself two
+     * names joined so (`Artist: Title`, a header nothing tells the order of) is restated by its two names either way.
      */
-    fun restated(lines: List<Rendered>, kinds: List<LineKind>, title: String, artist: String): Set<Int> {
-        val names = setOf(comparable(title), comparable(artist))
+    fun restated(lines: List<Rendered>, kinds: List<LineKind>, title: String, artist: String?): Set<Int> {
+        val names = (if (artist != null) listOf(title, artist) else title.trim().split(restatement).takeIf { it.size == 2 }.orEmpty()).map(::comparable).toSet()
         val song = kinds.indexOfFirst { it == LineKind.CHORD || it == LineKind.SECTION || it == LineKind.TAB || it == LineKind.GRID }
         if (song < 0 || names.size < 2) return emptySet()
         return (0 until song).filter { index ->
