@@ -382,9 +382,9 @@ private fun lineKindInsertions(
         EditorInsertion.menu(
             label = stringResource(Res.string.song_editor_insert_comment),
             choices = listOf(
-                EditorInsertion.directive(stringResource(Res.string.song_editor_insert_comment), name = "comment"),
-                EditorInsertion.directive(stringResource(Res.string.song_editor_insert_comment_italic), name = "comment_italic"),
-                EditorInsertion.directive(stringResource(Res.string.song_editor_insert_comment_box), name = "comment_box"),
+                EditorInsertion.comment(stringResource(Res.string.song_editor_insert_comment), name = "comment"),
+                EditorInsertion.comment(stringResource(Res.string.song_editor_insert_comment_italic), name = "comment_italic"),
+                EditorInsertion.comment(stringResource(Res.string.song_editor_insert_comment_box), name = "comment_box"),
             ),
         ),
     ),

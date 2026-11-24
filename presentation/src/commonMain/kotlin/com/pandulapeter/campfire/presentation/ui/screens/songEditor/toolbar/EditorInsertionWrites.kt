@@ -109,7 +109,8 @@ internal fun TextFieldState.insertChordShape(chordShapes: EditorChordShapes, ins
  * A directive only counts as one when nothing shares its line, so the halves grow a line break of their own where
  * the text on either side would otherwise run into them. Selected whole lines usually end in their last line break
  * (and a selection dragged up from below starts with the one before them), which a half that brings a line break of
- * its own would turn into a blank line inside the section, so such a break is moved out to the other side of it.
+ * its own would turn into a blank line inside the section, so such a break is moved out to the other side of it. An
+ * insertion that [EditorInsertion.wrapsEachLine] writes its halves around each selected line instead.
  */
 private fun TextFieldState.insertAtSelection(insertion: EditorInsertion) = edit {
     val start = minOf(selection.start, selection.end)
@@ -120,7 +121,13 @@ private fun TextFieldState.insertAtSelection(insertion: EditorInsertion) = edit 
     val hasTrailingBreak = insertion.isOwnLine && suffix.startsWith('\n') && text.endsWith('\n')
     val withoutTrailingBreak = if (hasTrailingBreak) text.dropLast(1) else text
     val hasLeadingBreak = insertion.isOwnLine && prefix.endsWith('\n') && withoutTrailingBreak.startsWith('\n')
-    val selected = if (hasLeadingBreak) withoutTrailingBreak.drop(1) else withoutTrailingBreak
+    val selectedLines = if (hasLeadingBreak) withoutTrailingBreak.drop(1) else withoutTrailingBreak
+    // A comment ends at its line's end, so several lines become one comment each; blank ones would only be empty ones.
+    val selected = if (insertion.wrapsEachLine && '\n' in selectedLines) {
+        selectedLines.split('\n').map(String::trim).filter(String::isNotEmpty).joinToString("$suffix\n$prefix")
+    } else {
+        selectedLines
+    }
     val opening = when {
         hasLeadingBreak -> "\n$prefix"
         insertion.isOwnLine && start > 0 && originalText[start - 1] != '\n' -> "\n$prefix"

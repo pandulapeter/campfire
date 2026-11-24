@@ -37,6 +37,27 @@ class EditorInsertionWritesTest {
     }
 
     @Test
+    fun `a comment around several selected lines writes each of them as a comment of its own`() {
+        val text = "Intro\nPlay softly\n\n  let the bass ring\nOutro"
+        val state = TextFieldState(text, TextRange(6, text.length - 5))
+
+        state.insert(EditorInsertion.comment(label = "Comment", name = "comment_italic"))
+
+        val written = "Intro\n{comment_italic: Play softly}\n{comment_italic: let the bass ring}\nOutro"
+        assertEquals(written, state.text.toString())
+        assertEquals(TextRange("Intro\n{comment_italic: ".length, written.length - "}\nOutro".length), state.selection)
+    }
+
+    @Test
+    fun `a comment around a part of one line keeps it as it is`() {
+        val state = TextFieldState("Play softly", TextRange(5, 11))
+
+        state.insert(EditorInsertion.comment(label = "Comment", name = "comment"))
+
+        assertEquals("Play \n{comment: softly}", state.text.toString())
+    }
+
+    @Test
     fun `a section is written around what is selected`() {
         val state = TextFieldState("La la", TextRange(0, 5))
 

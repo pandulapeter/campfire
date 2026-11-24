@@ -34,6 +34,8 @@ import org.jetbrains.compose.resources.DrawableResource
  *   caret later (`EditorImageButton`). Null for every other button.
  * @param action What a button that writes nothing itself does instead (the Attach button, whose line arrives once the
  *   file picked is kept); null for every button that writes.
+ * @param wrapsEachLine True for a directive whose value is one line of text (a comment), which puts each selected line
+ *   into a directive of its own, since ChordPro reads a directive from one line only.
  */
 internal data class EditorInsertion(
     val label: String,
@@ -49,6 +51,7 @@ internal data class EditorInsertion(
     val chordShapeInstrument: ChordInstrument? = null,
     val imagePick: EditorImagePick? = null,
     val action: (() -> Unit)? = null,
+    val wrapsEachLine: Boolean = false,
 ) {
 
     companion object {
@@ -163,6 +166,9 @@ internal data class EditorInsertion(
             suffix = if (hasValue) "}" else "",
             isOwnLine = true,
         )
+
+        /** A comment directive ([name] being `comment`, `comment_italic`, or `comment_box`), one per selected line. */
+        fun comment(label: String, name: String) = directive(label = label, name = name).copy(wrapsEachLine = true)
 
         /** A directive that says what the song *is*, and so belongs in its header rather than at the caret. */
         fun metadata(label: String, name: String) = EditorInsertion(

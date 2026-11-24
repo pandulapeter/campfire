@@ -23,7 +23,8 @@ The editor's Shortcuts rows and its control row.
 - A write that leaves a value to type (a new selection, or the caret inside braces or brackets) brings the keyboard up
   and scrolls to it, even if the user had put it away; sections, tabs, Repeat chorus, wrapping a selection, and the
   formatting buttons never do.
-- Everything in braces goes on a line of its own (the only way ChordPro reads a directive). Image is a menu on every
+- Everything in braces goes on a line of its own (the only way ChordPro reads a directive); a comment around several
+  selected lines makes each one a comment of its own, blank lines dropped. Image is a menu on every
   platform (Photos where there is a photo library, Files, From a link); its pictures' directives go after the line the
   caret is on (above it at a line's start) once they are kept, never splitting a line. From a link asks for an `https`
   address in a sheet (`PictureLinkSheet`) and downloads it under the progress bar, kept as a picked picture is.
