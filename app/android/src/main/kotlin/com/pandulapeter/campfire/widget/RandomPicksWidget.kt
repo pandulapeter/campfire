@@ -26,7 +26,7 @@ import kotlin.random.Random
 /**
  * Songs drawn at random from the library, each opening its details screen, with a button that draws again. Every widget
  * keeps its own draw as a seed in its Glance state ([WidgetState.RANDOM_PICKS_SEED]), drawn again by the button
- * ([ShuffleAction]) and by the first drawing an hour after the last draw, which the provider's hourly update brings.
+ * ([ShuffleAction]) and by the first drawing about an hour after the last draw, which the provider's hourly update brings.
  */
 internal class RandomPicksWidget : GlanceAppWidget() {
 
@@ -52,7 +52,11 @@ internal class RandomPicksWidget : GlanceAppWidget() {
 
     private companion object {
         const val MIN_WIDTH = 100
-        const val DRAW_LIFETIME = 60 * 60 * 1000L
+        /**
+         * Short of an hour: the hourly update is an alarm repeating an hour after the last one, not after the draw, which
+         * comes a moment later, so a draw living a whole hour would be found a moment too young and kept for two.
+         */
+        const val DRAW_LIFETIME = 55 * 60 * 1000L
     }
 }
 

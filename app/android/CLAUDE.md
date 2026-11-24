@@ -80,7 +80,7 @@
 - **Glance draws only a container's first ten children**: the Setlist's titles go in columns of ten.
 - Random picks: `SizeMode.Responsive`, one layout per row count (up to five). The draw is a seed in the widget's own
   state, drawn again by Shuffle (`ShuffleAction`, public: Glance's R8 rules keep only public `ActionCallback`s) and by
-  `provideGlance` once an hour old, which the provider's hourly `updatePeriodMillis` brings.
+  `provideGlance` once 55 minutes old (the hourly `updatePeriodMillis` alarm repeats from itself, not from the draw).
 - Setlist: `SetlistWidgetConfigurationActivity` (`android:configure`, `reconfigurable`; own task affinity, out of
   Recents, so it never raises the app) shows `SetlistWidgetChooser` from `:presentation` and keeps the file name (none
   for Next gig) in the widget's state. Today is `LocalDate.now()`; the receiver also hears `DATE_CHANGED`, `TIME_SET`, and
