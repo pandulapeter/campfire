@@ -18,6 +18,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.snapshotFlow
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
@@ -29,6 +30,7 @@ import com.pandulapeter.campfire.presentation.ui.chords.withSearchedShapes
 import com.pandulapeter.campfire.presentation.ui.songLayout.DefaultSectionLabels
 import com.pandulapeter.campfire.presentation.ui.tabs.TabReading
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 
 /**
@@ -42,6 +44,10 @@ import kotlinx.coroutines.withContext
  * searched shapes the in-place one went without. Every later model is built on [Dispatchers.Default] whole, with the
  * one before it staying on screen until it is ready. A change that arrives meanwhile cancels the wait, although not the
  * parse or the search itself, which are not cooperative: that one finishes in the background and its result is dropped.
+ *
+ * The background result is applied once the screen is quiet ([SongModelBuild.isQuiet]): built early, it stays off the main
+ * thread, and applied late, its layout stays off the frames of the push and of a swipe. Held meanwhile, it is what a
+ * page that turns into one building in place takes, rather than building the song again on the main thread.
  *
  * Every model built is kept in [build]'s cache by its inputs, the in-place one as soon as it is built, so a song opened
  * again takes it from there wherever it would be built in place, shapes searched included where the search had finished.
@@ -64,7 +70,7 @@ internal fun rememberSongLyricsModel(
     if (state.value != null) {
         inPlace.built = null
     } else if (buildsInPlace && inPlace.built?.first != inputs) {
-        inPlace.built = inPlaceModelOf(inputs)
+        inPlace.built = inPlace.held?.takeIf { it.first == inputs } ?: inPlaceModelOf(inputs)
     }
     LaunchedEffect(inputs) {
         val built = state.value
@@ -74,14 +80,21 @@ internal fun rememberSongLyricsModel(
             built.second.hasPendingShapes -> withContext(Dispatchers.Default) { built.second.withSearchedShapes() }
             else -> return@LaunchedEffect
         }
-        state.value = inputs to model
         cache?.keep(inputs, model)
+        inPlace.held = inputs to model
+        snapshotFlow { build.isQuiet() }.first { it }
+        state.value = inputs to model
+        inPlace.held = null
     }
     return state.value ?: inPlace.built
 }
 
-/** The model a page built in place while its first one was still being built in the background. */
+/**
+ * The model a page built in place while its first one was still being built in the background, and the background
+ * result [held] until the screen is quiet.
+ */
 private class InPlaceSongLyricsModel {
 
     var built: Pair<SongLyricsInputs, SongLyricsModel>? = null
+    var held: Pair<SongLyricsInputs, SongLyricsModel>? = null
 }

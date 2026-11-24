@@ -28,7 +28,8 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
   not ask.
 - The first page's text and its neighbours' are read ahead as the screen is pushed, so a song read before opens with its
   lyrics in the first frame and its model is built before the transition moves, not during it; a song opened before
-  takes its model from `SongTextStore.lyricsModels` instead.
+  takes its model from `SongTextStore.lyricsModels` instead. A neighbour's model, and the open page's searched shapes,
+  wait for the push and the pager to settle before they are laid out.
 
 ## The import preview
 

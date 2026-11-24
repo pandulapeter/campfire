@@ -51,7 +51,9 @@
 
 ### Building the model, and the budget
 
-- Built off the main thread except the first page on screen and those before it, so a page never opens empty.
+- Built off the main thread except the first page on screen and those before it, so a page never opens empty, and
+  applied once the push and the pager have settled (`rememberIsSongScreenQuiet`), so no song is laid out mid-slide; a
+  page turning into one built in place meanwhile takes the held result rather than building again.
 - **Models are kept by their inputs** (`SongLyricsModelCache`, eight, never a cut one; held by `SongTextStore`, none for
   an import preview), so a song opened again takes its model, shapes searched, on its push frame. A page building in
   the background still gets its model only after its first frame. `TabReading` compares by value for this

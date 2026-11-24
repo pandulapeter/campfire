@@ -124,7 +124,8 @@ internal fun SongPages(
     // only so that nothing writes to a song file that is not there yet, so its diagrams open their sheets.
     val canPickChordShapes = !isPerformanceModeEnabled && (importPreview != null || !isReadOnly)
     val tabs = rememberTabReading(userPreferences)
-    val modelBuild = remember(songTextStore, importPreview == null) { SongModelBuild(songTextStore.lyricsModels.takeIf { importPreview == null }) }
+    val isQuiet = rememberIsSongScreenQuiet(pagerState)
+    val modelBuild = remember(songTextStore, importPreview == null, isQuiet) { SongModelBuild(songTextStore.lyricsModels.takeIf { importPreview == null }, isQuiet) }
     val showsDegrees = SongSections.of(userPreferences).areDegreesShown
     val scaleSuggestions = rememberScaleSuggestions(dialogHost = dialogHost, userPreferences = userPreferences)
     val isContinuous = userPreferences?.songLayout == SongLayout.CONTINUOUS
@@ -136,10 +137,7 @@ internal fun SongPages(
     HorizontalPager(
         modifier = Modifier.bounceScrollableContent(pagerState, Orientation.Horizontal)
             .fillMaxSize()
-            .fontScaleGestures(
-                fontScale = { fontScaleController.fontScale },
-                onFontScaleChanged = fontScaleController::setFontScale,
-            ),
+            .fontScaleGestures(fontScale = { fontScaleController.fontScale }, onFontScaleChanged = fontScaleController::setFontScale),
         state = pagerState,
         key = { pageKey(songs[it]) },
         beyondViewportPageCount = 1,
