@@ -79,7 +79,11 @@ a Tankcsapda-riffeknek!", the first "Megnézem a Thomannál →", and the capo h
 3. **The model**: `lines.py` reads the marks into the page's layout inputs and the new features, `synthetic.py`'s
    made-up pages get zero marks, and the gate trains on marked pages and their zeroed copies. Gate against today's
    report (`.runs/gate.txt`, kept aside first), adding the unmarked-pages score; drop any mark that does not earn its
-   place. The gitartab.hu page above is the example to look at, not the measure.
+   place. The gate also scores with folds grouped by site, since `teacher.py` makes each page its own group and a
+   held-out page's siblings from the same site (27 for gitartab.hu) are otherwise trained on: marks are mostly a site's
+   template, so only the site-grouped score says how they carry to a site never seen. Where it falls well below the
+   page-grouped one, the corpus needs more sites (a page or two each) before the marks ship, not more pages of the
+   same ones. The gitartab.hu page above is the example to look at, not the measure.
 4. **The port**: `LineFeatures.kt` and `LineRules.kt` follow `lines.py`, `PageModelWeights` accepts the new feature
    count with `export.py`'s `VERSION` bumped, the fixtures are regenerated (`export.py --fixtures`), and the weights
    are exported.
