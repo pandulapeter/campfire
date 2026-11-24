@@ -13,6 +13,9 @@ What's planned for Campfire, grouped by area.
 
 ## In progress
 
+- **Top priority: the page model sees the page's structure.** A page the app reads itself (a link, a Safari share)
+  hands the model which lines are links, buttons, new cards, or headings, so a song's crop leaves out the calls to
+  action and partner cards around it. Plan: [page-structure-signals.md](plans/page-structure-signals.md)
 - **App shortcuts** on Android and iOS: a long press on the app icon offers New song, Paste a song, and the main
   screens that are switched on. Plan: [app-shortcuts.md](plans/app-shortcuts.md)
 - **Home screen widgets** on Android and iOS: random picks (a few songs, a tap opening one, and a shuffle button, drawn
