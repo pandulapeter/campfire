@@ -233,6 +233,41 @@ class BrowserRoutesTest {
         assertNull(BrowserRoutes.resolve(path = path, songs = songs, setlists = setlists, current = home, isPerformanceModeEnabled = false), path)
     }
 
+    /** The screens of [backStack] as what they show, without the ids every new one gets. */
+    private fun shown(backStack: List<CampfireDestination>?) = backStack?.map { destination ->
+        if (destination is CampfireDestination.SongDetails) "${destination.setlistFileName}:${destination.songFileNames}@${destination.initialIndex}" else destination
+    }
+
+    @Test
+    fun `a song's and a setlist's address open what they name - spaces and other scripts included`() {
+        val named = song("dé jà vu.cho")
+        val namedSetlist = setlist.copy(fileName = "ünnep és más.setlist.json", entries = listOf(Setlist.Entry(songFileName = named.fileName)))
+        val library = songs + named
+        fun open(path: String) = shown(BrowserRoutes.resolve(path = path, songs = library, setlists = listOf(namedSetlist), current = home, isPerformanceModeEnabled = false)?.backStack)
+        assertEquals(shown(listOf(CampfireDestination.Songs, songDetails(named.fileName))), open(BrowserRoutes.songPathOf(named.fileName)))
+        assertEquals(
+            shown(listOf(CampfireDestination.Songs, CampfireDestination.Setlists, songDetails(named.fileName, setlistFileName = namedSetlist.fileName))),
+            open(BrowserRoutes.setlistPathOf(namedSetlist.fileName, named.fileName)),
+        )
+        assertEquals(listOf<Any>(CampfireDestination.Songs, CampfireDestination.Setlists), open(BrowserRoutes.setlistPathOf(namedSetlist.fileName, null)))
+    }
+
+    @Test
+    fun `a setlist's own address brings it into sight only where the library holds it`() {
+        assertEquals("set.setlist.json", BrowserRoutes.setlistToRevealOf(BrowserRoutes.setlistPathOf("set.setlist.json", null), setlists))
+        assertNull(BrowserRoutes.setlistToRevealOf("setlist/gone", setlists))
+        assertNull(BrowserRoutes.setlistToRevealOf("setlist/set/a", setlists))
+        assertNull(BrowserRoutes.resolve(path = "setlist/gone", songs = songs, setlists = setlists, current = home, isPerformanceModeEnabled = false))
+    }
+
+    @Test
+    fun `an address naming a song or a setlist that is gone falls back to its list`() {
+        assertEquals("songs", BrowserRoutes.fallbackPathOf("song/unknown"))
+        assertEquals("setlists", BrowserRoutes.fallbackPathOf("setlist/unknown/a"))
+        assertEquals("setlists", BrowserRoutes.fallbackPathOf("/setlist/set/gone/"))
+        assertEquals("", BrowserRoutes.fallbackPathOf("nope"))
+    }
+
     @Test
     fun `a stack is cut at the first song the library no longer holds`() = assertEquals(
         listOf(CampfireDestination.Songs),

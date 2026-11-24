@@ -19,8 +19,10 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 /**
- * Opens what an app link names ([AppLinks]), a launcher shortcut's among them: the place its web address opens
- * ([BrowserRoutes.resolve]), else the home screen, as a typed address does on the web. New song and Paste a song
+ * Opens what an app link names ([AppLinks]), a launcher shortcut's or a home screen widget's among them: the place its
+ * web address opens ([BrowserRoutes.resolve]), else the songs or the setlists screen for a song or a setlist the library
+ * no longer holds, else the home screen ([BrowserRoutes.fallbackPathOf]). A setlist's own address brings it into sight
+ * on the setlists screen ([BrowserRoutes.setlistToRevealOf]). New song and Paste a song
  * ([BrowserRoutes.LinkAction]) then do what the songs screen's New button and Paste from clipboard do, once the app is on
  * screen, and only where those are offered; a paste reads the clipboard with [clipboard], which asks the system as the
  * button does. Over the editor's unsaved text nothing happens, since only the editor's own ways out may take it away.
@@ -31,12 +33,21 @@ internal fun CampfireViewModel.openAppLink(link: String, clipboard: ClipboardTex
     // The first segment alone, which names a screen: the rest may name a song.
     println("App link opened: ${action?.name ?: path.substringBefore('/').ifEmpty { "home" }}")
     viewModelScope.launch {
+        var revealedSetlist: String? = null
         val isOpened = launchState.navigateToLink { songs, setlists, isPerformanceModeEnabled ->
             val current = navigator.navigationState
+            revealedSetlist = BrowserRoutes.setlistToRevealOf(path = path, setlists = setlists)
             BrowserRoutes.resolve(path = path, songs = songs, setlists = setlists, current = current, isPerformanceModeEnabled = isPerformanceModeEnabled)
-                ?: BrowserRoutes.resolve(path = "", songs = songs, setlists = setlists, current = current, isPerformanceModeEnabled = isPerformanceModeEnabled)
+                ?: run {
+                    println("App link names nothing in the library")
+                    val fallback = BrowserRoutes.fallbackPathOf(path)
+                    BrowserRoutes.resolve(path = fallback, songs = songs, setlists = setlists, current = current, isPerformanceModeEnabled = isPerformanceModeEnabled)
+                }
         }
         if (!isOpened) return@launch println("App link not followed: unsaved editor text")
+        revealedSetlist?.let { fileName ->
+            if (navigator.backStack.lastOrNull() == CampfireDestination.Setlists) setlistsController.revealSetlist(fileName, isAnimated = false)
+        }
         if (action == null) return@launch
         launchState.isAppOnScreen.first { it }
         when (action) {

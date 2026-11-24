@@ -66,7 +66,9 @@
 - Song = file name without `.cho` (other extensions kept), setlist without `.setlist.json`, percent-encoded as
   `encodeURIComponent` with `~` escaped too, since the site's 404 page carries `&` as `~and~`.
 - **App links** (`AppLinks`): `campfire://` + an address, which Android and iOS open (the launcher shortcuts,
-  `ui/shortcuts`); `s/` and `oauth` are the shells' own. `new` and `paste` (`BrowserRoutes.LinkAction`) are never
+  `ui/shortcuts`, and the home screen widgets, `ui/widget`); `s/` and `oauth` are the shells' own. A song or setlist the
+  library no longer holds opens the songs or setlists screen (`fallbackPathOf`); `setlist/{setlist}`, never written,
+  is the setlists screen with that setlist brought into sight (`setlistToRevealOf`), a widget's setlist with no songs. `new` and `paste` (`BrowserRoutes.LinkAction`) are never
   written: the web reads them as the home screen, a link opens the home screen and then New song or the clipboard paste
   (`AppLinkOpening.kt`, only where the songs screen offers it). A link that starts the app is the launch's navigation
   (`LaunchState.navigateToLink`, launch screen held); a later one replaces the stack, refused over unsaved editor text.

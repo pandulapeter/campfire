@@ -27,6 +27,8 @@ import com.pandulapeter.campfire.data.model.song.Song
  *   than adding one (`settings` alone opens the tab that was open last);
  * - `song/{song}`, and `song/{song}/edit` for its editor;
  * - `setlist/{setlist}/{song}` — a song read from a setlist, which follows the pager from song to song;
+ * - `setlist/{setlist}`, never written: the setlists screen with that setlist brought into sight
+ *   ([setlistToRevealOf]), which a home screen widget opens for a setlist with no songs to read;
  * - `import` — the import screen, which an address opened on its own names nothing for, since what it shows is an
  *   import running in the page that is gone;
  * - the address of the screen under it again for the editor of a song that has no file yet, which a reload reopens from
@@ -176,6 +178,7 @@ internal object BrowserRoutes {
                     home.copy(backStack = home.backStack + CampfireDestination.SongDetails(songFileNames = listOf(fileName), setlistFileName = null, initialIndex = 0))
                 }
 
+                SETLIST -> setlistFileName(segments[1], setlists)?.let { home.copy(backStack = home.backStack + CampfireDestination.Setlists) }
                 else -> null
             }
 
@@ -191,7 +194,7 @@ internal object BrowserRoutes {
                 }
 
                 SETLIST -> {
-                    val setlist = candidates(segments[1], LibraryFiles.SETLIST_EXTENSION).firstNotNullOfOrNull { name -> setlists.firstOrNull { it.fileName == name } }
+                    val setlist = setlistFileName(segments[1], setlists)?.let { name -> setlists.first { it.fileName == name } }
                     // The songs the pager of a setlist pages through are the ones that can be opened, as when the
                     // setlist's row is tapped (SetlistWithSongs.songs).
                     val pages = setlist?.entries?.map { it.songFileName }?.filter { it in songFileNames }.orEmpty()
@@ -281,6 +284,30 @@ internal object BrowserRoutes {
         return state.copy(backStack = backStack)
     }
 
+    /**
+     * Where an address [resolve] finds nothing for is opened instead: the songs screen for a song that is gone, the
+     * setlists screen for a setlist, else the home screen.
+     */
+    fun fallbackPathOf(path: String) = when (path.trim('/').substringBefore('/')) {
+        SONG -> SONGS
+        SETLIST -> SETLISTS
+        else -> ROOT
+    }
+
+    /** The setlist a `setlist/{setlist}` address brings into sight, where [setlists] holds it. */
+    fun setlistToRevealOf(path: String, setlists: List<Setlist>): String? {
+        val segments = path.split('/').filter { it.isNotEmpty() }
+        if (segments.size != 2 || segments[0] != SETLIST) return null
+        return setlistFileName(decodePathSegment(segments[1]) ?: return null, setlists)
+    }
+
+    /** The address of the song [fileName], which opens its details screen. */
+    fun songPathOf(fileName: String) = "$SONG/${songPathSegment(fileName)}"
+
+    /** The address of the setlist [setlistFileName] read from its song [songFileName], or brought into sight without one. */
+    fun setlistPathOf(setlistFileName: String, songFileName: String?) =
+        "$SETLIST/${setlistPathSegment(setlistFileName)}" + songFileName?.let { "/${songPathSegment(it)}" }.orEmpty()
+
     /** The address of [destination], a top level screen: the settings' without a tab, which opens the one open last. */
     fun pathOf(destination: CampfireDestination.TopLevel) = when (destination) {
         CampfireDestination.Songs -> SONGS
@@ -311,6 +338,9 @@ internal object BrowserRoutes {
     private fun songPathSegment(fileName: String) = encodePathSegment(fileName.removeSuffix(LibraryFiles.SONG_EXTENSION))
 
     private fun setlistPathSegment(fileName: String) = encodePathSegment(fileName.removeSuffix(LibraryFiles.SETLIST_EXTENSION))
+
+    private fun setlistFileName(segment: String, setlists: List<Setlist>) =
+        candidates(segment, LibraryFiles.SETLIST_EXTENSION).firstOrNull { name -> setlists.any { it.fileName == name } }
 
     private fun songFileName(segment: String, fileNames: Set<String>) = candidates(segment, LibraryFiles.SONG_EXTENSION).firstOrNull { it in fileNames }
 
