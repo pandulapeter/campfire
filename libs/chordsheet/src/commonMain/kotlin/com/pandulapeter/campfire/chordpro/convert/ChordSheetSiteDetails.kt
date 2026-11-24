@@ -62,6 +62,14 @@ internal object ChordSheetSiteDetails {
         }
     }
 
+    /**
+     * The [DETAIL] a part of a details row names where it is an author's credit (`Author: someone [pro] 52`): beside a
+     * value that is the site's, such as a difficulty, it credits the site's transcriber rather than the song's author.
+     * Null for any other part.
+     */
+    fun transcriber(part: String): Pair<String, String>? =
+        labelled.matchEntire(part.trim())?.takeIf { it.groupValues[1].lowercase() in authorLabels }?.let { DETAIL to it.groupValues[2].trim() }
+
     /** Whether a tuning [value] names the standard one (`E A D G B E`, `Standard`, `Padrão (E A D G B E)`), written as nothing. */
     fun isStandardTuning(value: String): Boolean {
         val words = value.lowercase().replace('(', ' ').replace(')', ' ').split(' ', ',').filter { it.isNotEmpty() }
@@ -114,7 +122,8 @@ internal object ChordSheetSiteDetails {
         "Tonalité", "Tonalità", "Tonacja", "Tonalitate", "Hangnem", "Tónina", "Capotraste", "Cejilla", "Kapodaster",
         "Kapodastr", "Capodastre", "Capodastru", "Capotasto", "Afinação", "Afinación", "Stimmung", "Accordage",
         "Accordatura", "Hangolás", "Acordaj", "Strój", "Ladění", "Dificuldade", "Dificultad", "Schwierigkeit",
-        "Difficulté", "Difficoltà", "Nehézség", "Dificultate", "Trudność", "Obtížnost",
+        "Difficulté", "Difficoltà", "Nehézség", "Dificultate", "Trudność", "Obtížnost", "Author", "Autor", "Auteur", "Autore",
+        "Szerző",
         "קאפו", "טונליות", "טמפו", "משקל",
         "כיוונון",
     ).sortedByDescending { it.length }.joinToString("|")

@@ -86,13 +86,16 @@ internal object ChordSheetMetadata {
      * than credited. A transposition is among them for the caller to leave out rather than write: the chords it is
      * printed over are already in the key it took them to. A chord site's details block, read with its elements'
      * boundaries lost, is such a row with its labels glued onto the values before them ([ChordSheetSiteDetails.parts]);
-     * its tuning, the capo it says there is none of, and the values that are the site's are read in the song's header.
+     * its tuning, the capo it says there is none of, and the values that are the site's (an author's credit beside them
+     * among them, [ChordSheetSiteDetails.transcriber]) are read in the song's header.
      */
     internal fun labelledRow(text: String, isHeader: Boolean): List<Pair<String, String>>? {
         val parts = text.trim().split(labelGap).flatMap(ChordSheetSiteDetails::parts)
+        val hasSiteValue = parts.any { ChordSheetSiteDetails.detail(it)?.first == ChordSheetSiteDetails.DETAIL }
         return parts.mapNotNull { part ->
             transposition.matchEntire(part)?.let { TRANSPOSITION to it.groupValues[2] }
                 ?: metadata(part)?.takeIf { metadata.matchEntire(part) != null || it.first in siteNames }
+                ?: ChordSheetSiteDetails.transcriber(part)?.takeIf { hasSiteValue }
         }.takeIf { entries ->
             entries.size == parts.size && entries.all { (name, value) ->
                 when (name) {

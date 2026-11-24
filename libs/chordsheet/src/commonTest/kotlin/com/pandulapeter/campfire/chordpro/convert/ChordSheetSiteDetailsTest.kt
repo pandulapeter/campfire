@@ -114,6 +114,13 @@ class ChordSheetSiteDetailsTest {
     }
 
     @Test
+    fun `an author's credit glued to the site's difficulty is the transcriber's and goes with it`() {
+        assertEquals("[G]Hello [C]world\n", convert("Author: someone [pro] 52Difficulty: Intermediate\n\nG      C\nHello world"))
+        // Beside a detail of the song's own, the credit is as likely the song's author, so the line stays.
+        assertTrue(convert("Author: John Newton Key: G\n\nG      C\nHello world").contains("John Newton"))
+    }
+
+    @Test
     fun `lyrics that only contain a details word are never eaten`() {
         for (line in listOf("Key to my heart", "Speed of sound", "Tuning in to you", "Simplify my life", "Author of my story", "Difficulty is my name")) {
             val result = convert("Verse 1\nG      C\nHello world\n$line\nG      C\nHello again")
