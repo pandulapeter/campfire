@@ -24,6 +24,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -118,7 +119,11 @@ fun CampfireAndroidApp(
         activity?.lifecycle?.addObserver(observer)
         onDispose { activity?.lifecycle?.removeObserver(observer) }
     }
-    LaunchedEffect(activity, isDarkTheme) {
+    // enableEdgeToEdge replays the styles of its first call (the activity's, made before the theme is known) on every
+    // configuration change, so the app's own are applied again after each one, or a rotation would bring back the
+    // system's contrast scrim under a three-button navigation bar and the icon colors of the system's theme.
+    val configuration = LocalConfiguration.current
+    LaunchedEffect(activity, isDarkTheme, configuration) {
         activity?.enableEdgeToEdge(
             statusBarStyle = if (isDarkTheme) SystemBarStyle.dark(Color.TRANSPARENT) else SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
             navigationBarStyle = if (isDarkTheme) SystemBarStyle.dark(Color.TRANSPARENT) else SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),

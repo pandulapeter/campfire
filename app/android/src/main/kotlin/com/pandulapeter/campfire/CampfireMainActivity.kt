@@ -11,12 +11,15 @@ package com.pandulapeter.campfire
 
 import android.app.ActivityManager
 import android.content.Intent
+import android.content.res.Configuration
+import android.graphics.Color
 import android.os.Bundle
 import android.view.KeyboardShortcutGroup
 import android.view.Menu
 import android.view.View
 import android.view.ViewTreeObserver
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.lifecycle.lifecycleScope
@@ -49,7 +52,15 @@ class CampfireMainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        // Never the default automatic styles: on Android 10 and later they ask the system to keep the navigation bar
+        // readable, which draws a scrim under a three-button bar, and this first call's styles are the ones replayed on
+        // every configuration change. The system's theme decides until the app's own is known (CampfireAndroidApp).
+        val barStyle = if (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES) {
+            SystemBarStyle.dark(Color.TRANSPARENT)
+        } else {
+            SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
+        }
+        enableEdgeToEdge(statusBarStyle = barStyle, navigationBarStyle = barStyle)
         keepStartupScreenUntilAppIsReady()
         // An intent is acted on once. A recreated activity is handed the intent of the instance before it - on a
         // rotation, and when the system brings the app back after killing it - and one reopened from Recents the
