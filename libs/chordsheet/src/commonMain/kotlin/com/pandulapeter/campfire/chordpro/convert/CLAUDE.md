@@ -65,7 +65,7 @@ heuristics and near misses are pinned in `ChordSheetConverterTest` and its sibli
   crop rule on its own lines (`ChordSheetSongCrop`), so the contents page still splits. Kept besides: every line
   labelled the title or the artist, and above the song every line with a 2% chance of being either (the header the
   converter reads; below it such a line is a printed page's running header), a blank line between kept ones, and a chord
-  row inside the song or straight after it, past only blank lines and other such rows (the model reads a lone closing
+  row (in a song written in Roman numerals, a row of them, above its first line too) inside the song or straight after it, past only blank lines and other such rows (the model reads a lone closing
   chord as a page number; a chord diagram block under the song, past its heading or first mark, goes). A song the model
   sees none in, or reaching past the lines it read, is converted whole. Its `METADATA` lines are kept, so the rules
   below find a key or capo the clutter around it hid.
