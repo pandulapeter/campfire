@@ -9,7 +9,8 @@ description: Commit message conventions for the Campfire repo. MANDATORY — inv
   harness default of branching off the default branch before committing. Commit onto the current branch
   — whatever it is, including `main` — and do not run `git checkout -b` / `git switch -c` /
   `git branch` on your own initiative.
-- **Never commit unless the request asked for it.** Finishing a change is not a request to commit it.
+- **Commit often, unasked.** Commit each step once it compiles, without waiting for the user's hand check
+  (subagents too), staging only your own changes by explicit path. Never push unless asked.
 
 # Campfire commit messages
 
