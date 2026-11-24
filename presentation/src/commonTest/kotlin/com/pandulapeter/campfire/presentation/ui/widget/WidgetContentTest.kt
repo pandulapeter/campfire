@@ -127,8 +127,19 @@ class WidgetContentTest {
         val content = assertIs<SetlistWidgetContent.Shown>(library.setlistContent(pinnedFileName = null, todayEpochDay = today.toEpochDays()))
         assertEquals("In 3 days", content.relativeDay)
         assertEquals("2 songs", content.songCount)
-        assertEquals(listOf("B", "A"), content.songTitles)
+        assertEquals(listOf("B", "A"), content.songs.map { it.title })
         assertEquals("campfire://setlist/gig", content.link)
+    }
+
+    @Test
+    fun `each song opens the setlist at it or at its first in a snapshot from before songs had links`() {
+        val gig = setlist("gig", today, songs = listOf("a", "b"))
+        val linked = gig.copy(songLinks = listOf("campfire://setlist/gig/a", "campfire://setlist/gig/b"))
+        fun links(setlist: WidgetSnapshot.Setlist) = assertIs<SetlistWidgetContent.Shown>(
+            snapshot(songs = listOf(song("a"), song("b")), setlists = listOf(setlist)).setlistContent(pinnedFileName = null, todayEpochDay = today.toEpochDays()),
+        ).songs.map { it.link }
+        assertEquals(listOf("campfire://setlist/gig/a", "campfire://setlist/gig/b"), links(linked))
+        assertEquals(listOf("campfire://setlist/gig", "campfire://setlist/gig"), links(gig))
     }
 
     @Test
