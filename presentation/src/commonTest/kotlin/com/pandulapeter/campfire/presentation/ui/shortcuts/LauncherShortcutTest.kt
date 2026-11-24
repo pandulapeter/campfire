@@ -30,34 +30,32 @@ class LauncherShortcutTest {
     )
 
     @Test
-    fun `everything switched on offers the songs' two actions first and then every screen but the home screen`() = assertEquals(
+    fun `everything switched on offers paste then metronome then tuner then setlists then new song`() = assertEquals(
         listOf(
-            LauncherShortcut.NEW_SONG,
             LauncherShortcut.PASTE_SONG,
-            LauncherShortcut.SETLISTS,
             LauncherShortcut.METRONOME,
             LauncherShortcut.TUNER,
-            LauncherShortcut.CHORDS,
-            LauncherShortcut.SCALES,
+            LauncherShortcut.SETLISTS,
+            LauncherShortcut.NEW_SONG,
         ),
         LauncherShortcut.offered(features = everything, isReadOnly = false),
     )
 
     @Test
     fun `read only mode takes the two actions and leaves the screens`() = assertEquals(
-        listOf(LauncherShortcut.SETLISTS, LauncherShortcut.METRONOME, LauncherShortcut.TUNER, LauncherShortcut.CHORDS, LauncherShortcut.SCALES),
+        listOf(LauncherShortcut.METRONOME, LauncherShortcut.TUNER, LauncherShortcut.SETLISTS),
         LauncherShortcut.offered(features = everything, isReadOnly = true),
     )
 
     @Test
     fun `a screen switched off is no shortcut`() = assertEquals(
-        listOf(LauncherShortcut.NEW_SONG, LauncherShortcut.PASTE_SONG, LauncherShortcut.SETLISTS, LauncherShortcut.CHORDS),
-        LauncherShortcut.offered(features = everything.copy(isMetronomeEnabled = false, isTunerEnabled = false, areScalesEnabled = false), isReadOnly = false),
+        listOf(LauncherShortcut.PASTE_SONG, LauncherShortcut.SETLISTS, LauncherShortcut.NEW_SONG),
+        LauncherShortcut.offered(features = everything.copy(isMetronomeEnabled = false, isTunerEnabled = false), isReadOnly = false),
     )
 
     @Test
     fun `with the songs off the first tool is the home screen and nothing of the songs is offered`() = assertEquals(
-        listOf(LauncherShortcut.TUNER, LauncherShortcut.CHORDS, LauncherShortcut.SCALES),
+        listOf(LauncherShortcut.TUNER),
         LauncherShortcut.offered(features = everything.copy(areSongsEnabled = false, areSetlistsEnabled = false), isReadOnly = false),
     )
 

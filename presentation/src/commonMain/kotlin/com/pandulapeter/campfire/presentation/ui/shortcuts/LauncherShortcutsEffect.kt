@@ -19,9 +19,7 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.app_shortcut_paste_song
 import com.pandulapeter.campfire.presentation.resources.app_shortcut_withdrawn
-import com.pandulapeter.campfire.presentation.resources.chords
 import com.pandulapeter.campfire.presentation.resources.metronome
-import com.pandulapeter.campfire.presentation.resources.scales
 import com.pandulapeter.campfire.presentation.resources.setlists
 import com.pandulapeter.campfire.presentation.resources.songs_new_song
 import com.pandulapeter.campfire.presentation.resources.tuner
@@ -59,7 +57,5 @@ private fun LauncherShortcut.label() = stringResource(
         LauncherShortcut.SETLISTS -> Res.string.setlists
         LauncherShortcut.METRONOME -> Res.string.metronome
         LauncherShortcut.TUNER -> Res.string.tuner
-        LauncherShortcut.CHORDS -> Res.string.chords
-        LauncherShortcut.SCALES -> Res.string.scales
     },
 )

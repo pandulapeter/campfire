@@ -59,6 +59,4 @@ private val LauncherShortcut.systemImageName
         LauncherShortcut.SETLISTS -> "list.bullet"
         LauncherShortcut.METRONOME -> "metronome"
         LauncherShortcut.TUNER -> "tuningfork"
-        LauncherShortcut.CHORDS -> "guitars"
-        LauncherShortcut.SCALES -> "pianokeys"
     }

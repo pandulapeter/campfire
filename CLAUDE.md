@@ -272,9 +272,9 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
 - A share from another app (Android, the iOS share extension) is imported like a paste or an "Open with"; the
   extension never opens the app, but posts a notification that does where Campfire's notifications are allowed:
   `presentation`, `app/ios`.
-- A long press on the app icon (Android, iOS) offers New song, Paste a song, and the main screens switched on but the
-  home screen, as `campfire://` app links following the switches, read only mode, and the language: `ui/shortcuts`,
-  `app/android`, `app/ios`.
+- A long press on the app icon (Android, iOS) offers Paste a song, Metronome, Tuner, Setlists, and New song, in that
+  order (never the home screen), as `campfire://` app links following the switches, read only mode, and the language:
+  `ui/shortcuts`, `app/android`, `app/ios`.
 - Home screen widgets (Android, iOS): Random picks (a few songs drawn on their own, hourly or on Shuffle) and Setlist
   (the next gig or a pinned one, opening its first song in setlist mode), reading only a snapshot the app writes in its
   language, following the Songs and Setlists switches: `ui/widget`, `app/android`, `app/ios`.

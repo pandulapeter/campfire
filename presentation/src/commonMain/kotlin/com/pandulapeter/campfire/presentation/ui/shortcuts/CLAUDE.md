@@ -11,9 +11,10 @@
 
 The launcher shortcuts: Android's dynamic shortcuts and iOS's Home Screen quick actions, a long press on the app icon.
 
-- `LauncherShortcut.offered` decides the list and its order: New song and Paste a song (songs on, read only mode off,
-  as their buttons), then the main screens switched on in the navigation's order, never the home screen (the icon opens
-  it) nor Settings. Systems show the first four or so, so the screens fill what is left.
+- `LauncherShortcut.offered` decides the list, in the owner's order: Paste a song, Metronome, Tuner, Setlists, and New
+  song, each only where it is offered (the two song actions with the songs on and read only mode off, as their buttons;
+  a screen while switched on and not the home screen, which the icon opens). Nothing else is one: not Chords, Scales,
+  or Settings. iOS and most launchers show four, so New song is the one cut there.
 - Dynamic on both platforms, never static: the set follows the switches and read only mode, the labels the in-app
   language. `LauncherShortcutsEffect` hands the shells the list once the preferences are read and on every change; the
   shells publish it (`app/android`'s `LauncherShortcutPublisher`, `app/ios`'s `IosQuickActions.kt`). Desktop and web

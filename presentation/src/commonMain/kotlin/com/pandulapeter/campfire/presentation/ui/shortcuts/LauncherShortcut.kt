@@ -20,13 +20,11 @@ import com.pandulapeter.campfire.presentation.ui.navigation.FeatureSwitches
  * is how a shortcut pinned on Android is found again.
  */
 enum class LauncherShortcut {
-    NEW_SONG,
     PASTE_SONG,
-    SETLISTS,
     METRONOME,
     TUNER,
-    CHORDS,
-    SCALES,
+    SETLISTS,
+    NEW_SONG,
     ;
 
     /** The app link this opens. */
@@ -38,8 +36,6 @@ enum class LauncherShortcut {
             SETLISTS -> CampfireDestination.Setlists
             METRONOME -> CampfireDestination.Metronome
             TUNER -> CampfireDestination.Tuner
-            CHORDS -> CampfireDestination.Chords
-            SCALES -> CampfireDestination.Scales
         }
 
     private val action
@@ -52,16 +48,16 @@ enum class LauncherShortcut {
     companion object {
 
         /**
-         * The shortcuts offered, in the order the systems show them, which is the order they are cut short in (iOS shows
-         * four, and most launchers too): New song and Paste a song where their buttons are offered (the songs on, read
-         * only mode off), then the main screens switched on, in the navigation's order. Neither the home screen, which the
-         * icon itself opens, nor Settings is one.
+         * The shortcuts offered, in the entries' order, which is the order the systems show them and cut them short in
+         * (iOS shows four, and most launchers too, so New song comes last): New song and Paste a song where their buttons
+         * are offered (the songs on, read only mode off), and the screens among Metronome, Tuner, and Setlists switched on.
+         * The home screen, which the icon itself opens, is never one.
          */
         internal fun offered(features: FeatureSwitches, isReadOnly: Boolean): List<LauncherShortcut> {
             val home = CampfireDestination.TopLevel.home(features)
             val screens = CampfireDestination.TopLevel.entries(features).filter { it != home }
-            return listOf(NEW_SONG, PASTE_SONG).takeIf { features.areSongsEnabled && !isReadOnly }.orEmpty() +
-                LauncherShortcut.entries.filter { it.screen != null && it.screen in screens }
+            val areSongActionsOffered = features.areSongsEnabled && !isReadOnly
+            return entries.filter { shortcut -> shortcut.screen?.let { it in screens } ?: areSongActionsOffered }
         }
     }
 }

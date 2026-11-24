@@ -64,7 +64,5 @@ internal object LauncherShortcutPublisher {
             LauncherShortcut.SETLISTS -> R.drawable.ic_shortcut_setlists
             LauncherShortcut.METRONOME -> R.drawable.ic_shortcut_metronome
             LauncherShortcut.TUNER -> R.drawable.ic_shortcut_tuner
-            LauncherShortcut.CHORDS -> R.drawable.ic_shortcut_chords
-            LauncherShortcut.SCALES -> R.drawable.ic_shortcut_scales
         }
 }
