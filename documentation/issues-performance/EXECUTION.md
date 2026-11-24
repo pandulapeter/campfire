@@ -12,7 +12,8 @@
 
 The brief for the orchestrating agent, started with *"Follow `documentation/issues-performance/EXECUTION.md`."* It is
 section 4 of `.claude/skills/codebase-review/SKILL.md` made concrete; read that section first. Plan 02 is not part of
-it: the owner runs it on the Windows laptop once everything else has landed.
+it: an agent runs it on the owner's Windows laptop once everything else has landed, started with *"Follow
+`documentation/issues-performance/02-find-why-the-windows-release-drops-frames.md`."*
 
 ## Preconditions
 
@@ -99,6 +100,6 @@ landed ones. `git worktree remove ../Campfire-lane-<x>` for each.
 Final checks: `git log --format=%B $START..HEAD | grep -ciE 'co-authored|generated with|claude code|anthropic\.com'`
 prints 0, one commit per plan, `git status` clean, `git worktree list` only the checkout. Report the commit count, each
 plan's before → after, and the skipped plans with reasons. Update the memory (`59th-review.md`). Leave 02 and this
-folder: the owner runs 02 on Windows next (`02-find-why-the-windows-release-drops-frames.md`, its results table filled
-in on that machine). Once 02 is done too and no plan file is left, delete the folder and commit
+folder: an agent on the owner's Windows laptop runs 02 next (`02-find-why-the-windows-release-drops-frames.md` is
+written for it, its results table filled in on that machine). Once 02 is done too and no plan file is left, delete the folder and commit
 `Remove the review plans.` **Do not push.**

@@ -7,26 +7,59 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
 -->
+
 # Find out on the owner's laptop why the Windows release drops frames (GPU choice, renderer, garbage collection, or the app's own frame cost), and fix what that shows
 
-**Challenged:** amended — what ships on Windows is the Store MSIX alone (no MSI is published; one built by hand needs WiX and installs per user under `%LOCALAPPDATA%`, not Program Files), so steps 1 and 3b use the Store build and the rest the release image built and trained on the laptop; options go in `JAVA_TOOL_OPTIONS` (read by the JVM itself) rather than `JDK_JAVA_OPTIONS` (expanded by the `java` command's argument handling, which jpackage's launcher need not run); the Store build's log path; skiko property names re-checked in the 0.156.1 jar (all present).
+**Challenged:** amended — the Store MSIX is all that ships (no MSI); options go in `JAVA_TOOL_OPTIONS`; skiko property
+names re-checked in the 0.156.1 jar. **Rewritten** (2026-11-24) to be carried out by an agent alone, in Claude Code on
+the Windows laptop (Android Studio's terminal): every manual step is now a script, a driven run, or a registry value
+the agent sets and puts back.
 
-**Kind:** performance  ·  **Severity:** high  ·  **Platforms:** Windows  ·  **Run on:** Windows
+**Kind:** performance  ·  **Severity:** high  ·  **Platforms:** Windows  ·  **Run on:** the owner's Windows laptop
 **Files:**
-- this plan (the numbers are recorded in it)
+- this plan (its Results table is filled in and committed)
+- `tools/screenshots/build.gradle.kts` (step 0)
 - depending on the branch taken: `app/desktop/src/main/kotlin/com/pandulapeter/campfire/CampfireDesktopApplication.kt`,
-  `app/desktop/build.gradle.kts` (`compose.desktop.application.jvmArgs`), `app/desktop/CLAUDE.md` (Packaging, Log),
-  `app/desktop/src/main/kotlin/com/pandulapeter/campfire/StartupLog.kt`
-- nothing else is committed by the investigation itself (init scripts and recordings stay outside the repo)
+  `app/desktop/src/main/kotlin/com/pandulapeter/campfire/StartupLog.kt`,
+  `app/desktop/build.gradle.kts` (`compose.desktop.application.jvmArgs`), `app/desktop/CLAUDE.md` (Packaging, Log)
+- never committed: the driver of step 2 and its build change, the scripts, logs, recordings, and CSVs (all under
+  `%USERPROFILE%\campfire-perf`, called `PERF` below)
+
+## How to work on this machine
+
+- **Shell.** Claude Code's Bash tool on Windows is Git Bash. Run PowerShell as
+  `powershell.exe -NoProfile -Command "…"` (or write a `.ps1` into `PERF` and run it with `-File`), the build as
+  `./gradlew …` from the checkout. Paths handed to Java use forward slashes or doubled backslashes.
+- **JetBrains Runtime 21.** Release tasks refuse any other JDK (`app/desktop/build.gradle.kts`, `toolchainLauncher`).
+  Use Android Studio's own: `export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"` (check the folder; it may
+  be under `%LOCALAPPDATA%\Programs` or JetBrains Toolbox). If a release task then fails for missing `jmods` or
+  `jpackage`, stop and ask the owner to install the JBR 21 **SDK** (`jbrsdk-21…-windows-x64`, what `setup-java` with
+  `distribution: jetbrains` installs in `publish-windows.yml`); never download a runtime without asking.
+- **Never touch the owner's own Campfire.** The Store build keeps its library in
+  `%LOCALAPPDATA%\Packages\<family>\LocalState`: read its `campfire.log` (step 1), nothing else, and never start or
+  stop it. Every driven run starts the release image with `APPDATA="$PERF/appdata/<run>"`, so its data, its log, and
+  its single-instance lock live there (`desktopDataDirectory()` reads `APPDATA`; the image is not the Store build, so
+  the package family property is unset).
+- **What only the owner can do**, asked once at the start with `AskUserQuestion`: keep the laptop plugged in, unlocked,
+  and with nothing heavy running for the session (about 2 hours), and confirm which display is the laptop's panel if
+  more than one is connected. If a driven run produces no frames (the screen locked, the window minimized, or the
+  display asleep), stop and ask rather than retry blindly.
+- **Keep the display awake** for the session without changing a setting: start once, in the background,
+  `powershell.exe -NoProfile -Command "Add-Type -Name P -Namespace W -MemberDefinition '[DllImport(\"kernel32.dll\")] public static extern uint SetThreadExecutionState(uint f);'; [W.P]::SetThreadExecutionState(0x80000003); Start-Sleep -Seconds 10800"`
+  (display and system required until that process ends; kill it when done).
+- **Put everything back**: the GPU preference value of step 3 (restore what was there, or delete the one you added),
+  the driver patch (`git checkout -- app/desktop` and delete `PerfRoutine.kt`), the background process above.
+  `git status` must show only this plan and the committed changes at the end.
 
 ## Problem
 
 The owner sees dropped frames in 5.5.0's Windows release on a high-end laptop, worst when a song's details open, and
-skipped frames in debug transitions too. The offscreen measurement (an M-series Mac, warm JIT) found one long frame
-per transition (push 25–45 ms, pop 33–39 ms, tab switch 29–37 ms): on a 120–165 Hz panel (6–8 ms a frame) that is three
-to six frames lost on the CPU alone, before the GPU. What the offscreen run cannot see is the laptop's own part:
+skipped frames in debug transitions too. The offscreen benchmark (plan 01, an M-series Mac) found one long frame per
+transition, 25–50 ms at the 59th review's start; lanes S, L, and N have since cut it (see `README.md` and the
+commits after `6dea075b4`). On a 120–165 Hz panel (6–8 ms a frame) a 25 ms frame is still three or four lost frames
+on the CPU alone. What the offscreen run cannot see is the laptop's own part:
 
-- **Which GPU ANGLE draws on.** `CampfireDesktopApplication.kt:84-86` turns ANGLE on unless a renderer was chosen:
+- **Which GPU ANGLE draws on.** `CampfireDesktopApplication.kt` turns ANGLE on unless a renderer was chosen:
 
   ```kotlin
   if (isWindows && System.getenv("SKIKO_RENDER_API") == null && System.getProperty("skiko.renderApi") == null &&
@@ -34,148 +67,276 @@ to six frames lost on the CPU alone, before the GPU. What the offscreen run cann
   ) System.setProperty("skiko.rendering.angle.enabled", "true")
   ```
 
-  So `SKIKO_RENDER_API` (or `-Dskiko.renderApi`) does override it: ANGLE stays off and skiko uses what was named.
   ANGLE's Direct3D 11 device is created on the default adapter, which on a hybrid laptop is whatever Windows' per-app
-  graphics preference says (by default "Let Windows decide", often the integrated GPU). skiko 0.156.1
-  (`gradle/libs.versions.toml:51`) has `skiko.gpu.priority` / `skiko.directx.gpu.priority` (`auto`, `integrated`,
-  `discrete`), but only its Direct3D 12 renderer reads them (`Direct3DRenderer.chooseAdapter`); `AngleRenderer` names no
-  priority at all (checked in the 0.156.1 jar).
-- **Garbage collection.** A transition allocates 9–37 MB on the main thread; the release runs the default collector
-  (G1 on a machine like this one), whose young pauses can land in the long frame.
-- **The renderer and the log.** `main` sets `skiko.hardwareInfo.enabled`, so `campfire.log` carries skiko's
-  `Renderer info` block (API and adapter, the GL_RENDERER string under ANGLE), and `StartupLog.kt` prints one line:
-  `"Started in … ms: $renderApi rendering, Java …, ${GC names}, N processors, M MB heap at most"`.
-- **No profiler in the release.** The image holds only the modules `app/desktop/build.gradle.kts:166` lists:
-  `modules("java.instrument", "java.management", "jdk.accessibility", "jdk.localedata", "jdk.unsupported")` (plus
-  `java.base` and what Compose adds), so no `jdk.jfr`: `-XX:StartFlightRecording` cannot run in the installed app.
+  graphics preference says (by default "Let Windows decide", often the integrated GPU). skiko 0.156.1 has
+  `skiko.gpu.priority` / `skiko.directx.gpu.priority` (`auto`, `integrated`, `discrete`), but only its Direct3D 12
+  renderer reads them; `AngleRenderer` names no priority.
+- **Garbage collection.** A transition allocates 9–37 MB on the main thread; the release runs G1, whose young pauses
+  can land in the long frame.
+- **The log.** `main` sets `skiko.hardwareInfo.enabled`, so `campfire.log` carries skiko's `Renderer info` block (API
+  and adapter; under ANGLE the GL_RENDERER string, like `ANGLE (NVIDIA, NVIDIA GeForce RTX … Direct3D11 …)`), and
+  `StartupLog.kt` one `Started in … ms: <api> rendering, Java …, <GC names>, N processors, M MB heap at most` line.
+- **No profiler in the release.** The image leaves out `jdk.jfr` (`modules(...)` in `app/desktop/build.gradle.kts`),
+  and must keep leaving it out; step 6 profiles the same jar on the build's full runtime instead.
 
 ## Fix
 
-First the investigation, step by step on the laptop, each result written into the table at the end; then the branch
-it points to. Close Campfire before each run: a second instance hands its arguments to the first and exits.
+The investigation first, step by step, each result in the Results table at the end; then the branch it points to.
+Keep every raw output in `PERF`. Measure on the checkout's `HEAD` (after lanes S, L, and N), and note the commit.
 
-What ships on Windows is the Store's MSIX alone (`publish-windows.yml`); no MSI is published, and one built by hand
-needs the WiX toolset and installs per user (`%LOCALAPPDATA%\Campfire`). So:
+### 0. Let the benchmark compile on Windows
 
-- **Steps 1 and 3b on the Store build as installed**: its log is
-  `%LOCALAPPDATA%\Packages\<package family>\LocalState\campfire.log` (`app/desktop/CLAUDE.md`), and the Graphics page
-  can add a Store app (Add an app → Microsoft Store app).
-- **Everything that sets options, on the release image built on the laptop**, which is what the MSIX holds:
-  `gradlew.bat :app:desktop:recordClassDataArchive` (it runs `createReleaseDistributable`, copies ANGLE's DLLs in, and
-  trains `campfire.jsa`, as the package build does; it needs the JetBrains Runtime 21 installed, as every release task
-  does). The image is `app\desktop\build\compose\binaries\main-release\app\Campfire\Campfire.exe`; it keeps its data in
-  `%APPDATA%\Campfire`, so copy the Store build's `LocalState\library` there first to test on the same songs.
-- Options go in **`JAVA_TOOL_OPTIONS`**, which the JVM reads itself whatever launched it (the output then starts with
-  `Picked up JAVA_TOOL_OPTIONS`); `JDK_JAVA_OPTIONS` is expanded by the `java` command's own
-  argument handling, which jpackage's `Campfire.exe` need not go through. Where that line is missing, put the options on `java-options=` lines of the image's
-  `app\Campfire.cfg` instead.
+`tools/screenshots/build.gradle.kts` finds `:presentation`'s output for `-Xfriend-paths` with
+`it.absolutePath.contains("/presentation/build/")`, which a Windows path (backslashes) never matches, so the tool cannot
+reach `app.navigator` and the benchmark does not compile there. Change the filter to
+`it.invariantSeparatorsPath.contains("/presentation/build/")`, run `./gradlew :tools:screenshots:compileKotlin`, and
+commit it on its own (`Let the screenshot tool reach the app's internals when it is built on Windows.`). Drop this step
+if the compile already passes without it.
 
-Everything below is typed into one `cmd` window, from which `Campfire.exe` is started so it inherits the variables.
+### 1. The machine and the shipped build, read only
 
-1. **Read the log.** Open `%APPDATA%\Campfire\campfire.log` after a normal start. Note the `Started in` line (render
-   API, GC names, heap) and skiko's `Renderer info` block: the adapter (ANGLE's GL_RENDERER reads like
-   `ANGLE (Intel, Intel(R) Iris(R) Xe Graphics Direct3D11 …)` or `ANGLE (NVIDIA, NVIDIA GeForce RTX …)`). Note in Task
-   Manager → Performance which GPU shows load while scrolling a song, and the panel's refresh rate (Settings → System
-   → Display → Advanced display).
-2. **Frame counter.** `set JAVA_TOOL_OPTIONS=-Dskiko.fps.enabled=true -Dskiko.fps.periodSeconds=2
-   -Dskiko.fps.longFrames.show=true -Dskiko.fps.longFrames.millis=10` (property names checked in skiko 0.156.1's
-   `SkikoProperties`), start `Campfire.exe`, open and close a long song five times, switch tabs five times. skiko prints
-   FPS and long frames to standard output, which the process log keeps. If nothing appears, use `app\Campfire.cfg` as
-   said above.
-3. **GPU A/B.** With the same open/close/tab routine and the frame counter on each time:
-   - (a) as installed (ANGLE, default adapter);
-   - (b) Settings → System → Display → Graphics → add Campfire (the Store app, and the image's `Campfire.exe` for the
-     later steps) → **High performance**; restart the app, check the `Renderer info` adapter changed;
-   - (c) `set SKIKO_RENDER_API=DIRECT3D` (skiko's Direct3D 12) with `-Dskiko.directx.gpu.priority=discrete` in
-     `JAVA_TOOL_OPTIONS`, then with `integrated`;
-   - (d) `set SKIKO_RENDER_API=OPENGL`;
-   - (e) the panel set to 60 Hz, renderer as in (a).
-   Clear the variables (`set SKIKO_RENDER_API=`) and the Graphics entry afterwards.
-4. **Garbage collection.** `set JAVA_TOOL_OPTIONS=-Xlog:gc*:file=%TEMP%\campfire-gc.log:uptime,level,tags` (unified
-   logging is in `java.base`, so it works in the release), the same routine, then look for pauses over 4 ms and how
-   often they fall inside a transition (the uptime stamps against when you clicked). Then the same with
-   `-XX:+UseZGC -XX:+ZGenerational` added, and with `-XX:MaxGCPauseMillis=5` instead (G1 kept).
-5. **The app's own frame cost on this CPU.** In a checkout on the laptop: `gradlew.bat :tools:screenshots:benchmark
-   --args="--suite transitions --hz 144"` (plan 01), then again with
-   `-Pcampfire.benchmark.jvmArgs="-XX:+UseZGC -XX:+ZGenerational"`. Note each scenario's warm worst frame and frames over
-   budget.
-6. **A profile, only if steps 1–5 leave the cause open.** JFR needs `jdk.jfr`, which the image leaves out and must keep
-   leaving out. Two ways that ship nothing:
-   - (A) Compose's `runRelease` (the ProGuarded jar on the build's own full JetBrains Runtime, which has `jdk.jfr`;
-     check the name with `gradlew.bat :app:desktop:tasks --all`) with an init script kept outside the repo, e.g.
-     `C:\perf\jfr.init.gradle`:
+Record into the table's notes:
 
-     ```groovy
-     allprojects {
-         if (path == ":app:desktop") afterEvaluate {
-             tasks.matching { it.name == "runRelease" }.configureEach {
-                 jvmArgs("-XX:StartFlightRecording=filename=C:/perf/campfire.jfr,settings=profile,dumponexit=true")
-             }
-         }
-     }
-     ```
+- `Get-CimInstance Win32_VideoController | Select Name, AdapterCompatibility, DriverVersion, CurrentRefreshRate, MaxRefreshRate, CurrentHorizontalResolution, CurrentVerticalResolution`
+  (one row per GPU: integrated and discrete names, the panel's refresh rate);
+- `Get-CimInstance Win32_Processor | Select Name, NumberOfLogicalProcessors`, the RAM
+  (`Win32_ComputerSystem.TotalPhysicalMemory`), `Get-CimInstance Win32_Battery | Select BatteryStatus`
+  (2 = on AC; stop and ask if not), and `powercfg /getactivescheme`;
+- the existing per-app GPU preferences:
+  `reg query "HKCU\Software\Microsoft\DirectX\UserGpuPreferences"` (an entry for the Store Campfire says the owner
+  already chose one);
+- the Store build's log, read only: the newest
+  `%LOCALAPPDATA%\Packages\*Campfire*\LocalState\campfire.log` (and `.log.1`): its `Started in` lines and the last
+  `Renderer info` block — which adapter the shipped app draws on today.
 
-     `gradlew.bat -I C:\perf\jfr.init.gradle :app:desktop:runRelease`, the routine, then close the window. (If the
-     task is not a `JavaExec`, use B.)
-   - (B) The installed jar on a full JBR 21 of the bundled runtime's version (`runtime\release` names it; JetBrains'
-     GitHub releases): from `app\Campfire.cfg` take `app.mainclass`, the jar, and every `java-options` line with
-     `$APPDIR` replaced by the `app` folder, drop `-XX:SharedArchiveFile` (recorded against the bundled runtime), and run
-     `<jbr>\bin\java.exe <options> -XX:StartFlightRecording=filename=C:\perf\campfire.jfr,settings=profile,dumponexit=true -cp <jar> <mainclass>`.
+### 2. The release image with an on-screen driver
 
-   Open the recording in JDK Mission Control: GC pauses (`jdk.GCPhasePause`), compilations over 10 ms
-   (`jdk.Compilation`), and the hot methods of the Swing event thread during the clicks.
+The offscreen benchmark times the app's work; only the real window shows what reaches the panel. A driver inside the
+app replays the benchmark's scenarios on screen and records every frame's arrival, so no click is needed and the
+numbers are comparable run to run. It is **never committed**.
+
+1. In `app/desktop/build.gradle.kts`, add the friend-path block `tools/screenshots/build.gradle.kts` has (with the
+   step 0 filter), so `app/desktop` may call `navigator` and `dialogHost`.
+2. Add `app/desktop/src/main/kotlin/com/pandulapeter/campfire/PerfRoutine.kt` (license header as every file):
+
+   ```kotlin
+   package com.pandulapeter.campfire
+
+   import androidx.compose.runtime.Composable
+   import androidx.compose.runtime.LaunchedEffect
+   import androidx.compose.runtime.withFrameNanos
+   import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+   import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
+   import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
+   import java.io.File
+   import java.lang.management.ManagementFactory
+import java.util.Locale
+   import kotlinx.coroutines.delay
+   import kotlinx.coroutines.launch
+
+   /** Replays the benchmark's scenarios on screen and writes each frame's interval to the file the property names. */
+   @Composable
+   internal fun PerfRoutineEffect(viewModel: CampfireViewModel, exit: () -> Unit) {
+       val output = System.getProperty("campfire.perfRoutine") ?: return
+       LaunchedEffect(viewModel) {
+           val app = viewModel
+           while (app.libraryState.isLoading.value != false || app.songListState.songGroups.value.groups.isEmpty()) delay(100)
+           delay(3_000)
+           val stamps = ArrayList<Long>(100_000)
+           val ticker = launch { while (true) withFrameNanos { stamps += System.nanoTime() } }
+           val gc = ManagementFactory.getGarbageCollectorMXBeans()
+           fun gcTotals() = gc.sumOf { it.collectionCount } to gc.sumOf { it.collectionTime }
+           val rows = StringBuilder("pass,scenario,frame,intervalMs,gcCount,gcMs\n")
+           suspend fun window(pass: Int, name: String, millis: Long) {
+               val from = stamps.size
+               val (count0, time0) = gcTotals()
+               delay(millis)
+               val (count1, time1) = gcTotals()
+               val slice = stamps.subList(maxOf(from - 1, 0), stamps.size).toList()
+               slice.zipWithNext { a, b -> (b - a) / 1e6 }.forEachIndexed { index, interval ->
+                   rows.append("$pass,$name,${index + 1},${String.format(Locale.ROOT, "%.3f", interval)},${count1 - count0},${time1 - time0}\n")
+               }
+           }
+           window(0, "idle", 3_000)
+           val songs = app.libraryState.songsByFileName.value
+           repeat(PASSES) { pass ->
+               suspend fun scenario(name: String, trigger: () -> Unit) {
+                   trigger()
+                   window(pass + 1, name, 1_500)
+               }
+               SONGS.forEach { (name, fileName) ->
+                   val song = checkNotNull(songs[fileName]) { "No $fileName in the library." }
+                   scenario("push:$name") { app.navigator.openSong(song) }
+                   delay(1_000)
+                   scenario("pop:$name") { app.navigator.popBackStack() }
+               }
+               scenario("tab:songs>setlists") { app.selectTopLevelDestination(CampfireDestination.Setlists) }
+               scenario("tab:setlists>songs") { app.selectTopLevelDestination(CampfireDestination.Songs) }
+               scenario("sheet:open") { app.dialogHost.showDialog(DialogType.SongFilters) }
+               scenario("sheet:close") { app.dialogHost.dismissDialog() }
+           }
+           ticker.cancel()
+           File(output).writeText(rows.toString())
+           exit()
+       }
+   }
+
+   private const val PASSES = 10
+   private val SONGS = linkedMapOf(
+       "plain" to "ed_sheeran-thinking_out_loud.cho",
+       "long" to "tina_turner-proud_mary.cho",
+       "tabs" to "traditional_american-house_of_the_rising_sun.cho",
+       "abc" to "john_newton-amazing_grace.cho",
+   )
+   ```
+
+   Re-check the names it uses against `tools/screenshots/.../TransitionBenchmark.kt` at `HEAD` (it triggers the same
+   scenarios the same way) and adapt them if they moved. In `CampfireDesktopApplication.kt`, right after
+   `SideEffect { viewModel.value = currentViewModel }`, call `PerfRoutineEffect(viewModel = currentViewModel, exit = exit)`.
+3. Build the image as the Store package is built: `./gradlew :app:desktop:recordClassDataArchive` (it runs
+   `createReleaseDistributable`, copies ANGLE's DLLs in, and trains `campfire.jsa`). The image is
+   `app/desktop/build/compose/binaries/main-release/app/Campfire/Campfire.exe`. Build it once; every variant below
+   only changes the environment.
+4. A **run** is: a fresh `PERF/appdata/<run>/Campfire` holding the benchmark's library — `tools/screenshots/library`'s
+   `library` and `covers` folders, and its `preferences/preferences.json` with `language` set to `"en"`,
+   `isSongLayoutChosen` and `isChordNamesChosen` to `true`, and `campfire.versionName` (from `gradle.properties`) added
+   to `seenWhatsNewVersions`, as `prepareTransitionLibrary` does (a PowerShell `ConvertFrom-Json` / `ConvertTo-Json
+   -Depth 20` script in `PERF`) — then
+
+   ```bash
+   APPDATA="$PERF/appdata/<run>" JAVA_TOOL_OPTIONS="-Dcampfire.perfRoutine=$PERF/out/<run>.csv <variant options>" \
+     timeout 600 "app/desktop/build/compose/binaries/main-release/app/Campfire/Campfire.exe"
+   ```
+
+   The window has to stay visible and unminimized (do nothing else on screen meanwhile). Afterwards keep
+   `PERF/appdata/<run>/Campfire/campfire.log` (its `Started in` line and `Renderer info` name the API, the adapter,
+   and the collector actually used) beside the CSV.
+5. **Read a run** with a small script (PowerShell, or a Kotlin script run with the JBR) over the CSV: the panel's
+   frame period is the median `idle` interval. For each scenario, over passes 3–10: the worst interval (median over
+   passes), the **dropped frames** (the sum over the window of `round(interval / period) - 1`, median over passes), and
+   how many passes had a GC (`gcCount > 0`) and their `gcMs`. Run each variant twice and keep the second if the first
+   was disturbed (a dropped count far above the other variants' everywhere).
+
+### 3. Which GPU and renderer
+
+Runs, each its own `<run>` name, all with the frame counter of step 2:
+
+- **3a** as shipped: no variant options (ANGLE on the default adapter).
+- **3b** ANGLE on the discrete GPU: first `reg query` the value named after the image's full `Campfire.exe` path under
+  `HKCU\Software\Microsoft\DirectX\UserGpuPreferences` and keep what is there; then
+  `reg add "HKCU\Software\Microsoft\DirectX\UserGpuPreferences" /v "<full path of the image's Campfire.exe>" /t REG_SZ /d "GpuPreference=2;" /f`
+  (what Settings → Graphics → High performance writes), run, check that `Renderer info` now names the discrete
+  adapter, then restore the old value or `reg delete … /v "<path>" /f`. If the adapter did not change, note it and go on.
+- **3c** skiko's Direct3D 12: `SKIKO_RENDER_API=DIRECT3D` in the environment with
+  `-Dskiko.directx.gpu.priority=discrete` in `JAVA_TOOL_OPTIONS`; then again with `integrated`.
+- **3d** OpenGL: `SKIKO_RENDER_API=OPENGL`.
+
+(The old step 3e, the panel at 60 Hz, is left out: changing the display mode by script is not worth the risk on the
+owner's machine. The idle period and the dropped-frame counts at the panel's own rate say the same.)
+
+### 4. Garbage collection
+
+On the renderer as shipped (3a), runs with `JAVA_TOOL_OPTIONS` adding:
+
+- **4a** `-Xlog:gc*:file=$PERF/out/4a-gc.log:uptime,level,tags` (G1 as shipped, with the log);
+- **4b** that and `-XX:+UseZGC -XX:+ZGenerational`;
+- **4c** that and `-XX:MaxGCPauseMillis=5` (G1 kept).
+
+Read from the GC logs the pauses over 4 ms and from the CSV the transitions with a GC inside their window. The class
+archive is recorded with G1, so 4b starts without it (a warning in the log): only the start time is affected, which is
+not what is measured here.
+
+### 5. The app's own frame cost on this CPU
+
+`./gradlew :tools:screenshots:benchmark --args="--suite transitions --hz <the panel's rate>"`, then again with
+`-Pcampfire.benchmark.jvmArgs="-XX:+UseZGC -XX:+ZGenerational"`. No other build may run beside it. Note each scenario's
+warm frame 1, warm worst, and over-budget count, beside the Mac's numbers in `README.md` (or in lane reports quoted
+there).
+
+### 6. A profile, only if steps 1–5 leave the cause open
+
+The release jar on the build's full JetBrains Runtime, which has `jdk.jfr`, through an init script kept in `PERF`
+(`PERF/jfr.init.gradle`):
+
+```groovy
+allprojects {
+    if (path == ":app:desktop") afterEvaluate {
+        tasks.matching { it.name == "runRelease" }.configureEach {
+            jvmArgs(
+                "-XX:StartFlightRecording=filename=<PERF>/out/campfire.jfr,settings=profile,dumponexit=true",
+                "-Dcampfire.perfRoutine=<PERF>/out/6.csv",
+            )
+            environment("APPDATA", "<PERF>/appdata/6")
+        }
+    }
+}
+```
+
+(with the driver patch of step 2 still in the tree, and `<PERF>` written out), then
+`./gradlew -I "$PERF/jfr.init.gradle" :app:desktop:runRelease`; the driver ends the run itself. If `runRelease` is not
+a `JavaExec` and refuses `jvmArgs`, say so in the report and skip this step. Read the recording with the JBR's own
+`jfr` tool: `jfr view gc-pauses`, `jfr view hot-methods`, `jfr view compiler-statistics`, and
+`jfr print --events jdk.ExecutionSample --stack-depth 30` filtered to the `AWT-EventQueue` thread, aggregated by its
+top Campfire frame. No GUI is needed.
 
 ### Then, by what the table shows
 
-- **(a) The integrated GPU draws, and High performance (step 3b) removes the drops.** Options:
-  1. *A per-app GPU preference written by the app*: `HKCU\Software\Microsoft\DirectX\UserGpuPreferences`, value named
-     after the full path of `Campfire.exe`, data `GpuPreference=2;` (what the Graphics page writes), set from `main`
-     before the window exists, only where no value is there yet. It overrides a user's choice silently and the Store
-     build's path changes with every version; the MSI cannot write it either (a per-machine package writing a per-user
-     key, and the Compose plugin gives no hook into jpackage's WiX template).
-  2. *Skiko's Direct3D 12 renderer with `skiko.directx.gpu.priority=discrete`* where a discrete adapter exists: gives
-     back ANGLE's driver robustness, the reason ANGLE was chosen (4.7.0).
+Revert the driver patch before any commit (`git checkout -- app/desktop/build.gradle.kts app/desktop/src/main/kotlin/com/pandulapeter/campfire/CampfireDesktopApplication.kt`,
+delete `PerfRoutine.kt`), then fill in the Results table and commit it with the plan on its own
+(`Record the Windows laptop's frame measurements in the review plan.`).
+
+- **(a) The integrated GPU draws as shipped, and 3b (or 3c discrete) clearly drops fewer frames.** The ways to prefer
+  the discrete GPU:
+  1. *The app writes the per-app GPU preference* (the 3b registry value) from `main` before the window exists, only
+     where no value is there yet: overrides a user's choice silently, and the Store build's path changes with every
+     version.
+  2. *Skiko's Direct3D 12 with `skiko.directx.gpu.priority=discrete`* where a discrete adapter exists: gives up ANGLE's
+     driver robustness, the reason ANGLE was chosen (4.7.0).
   3. *`NvOptimusEnablement` / `AmdPowerXpressRequestHighPerformance`*: exported symbols of the `.exe`; jpackage's
      launcher is prebuilt, so impossible without a launcher of the app's own.
-  4. *ANGLE's `EGL_ANGLE_power_preference` (`EGL_HIGH_POWER_ANGLE`)*: needs skiko's native `createAngleDevice` to pass
-     it; an upstream skiko request.
+  4. *ANGLE's `EGL_ANGLE_power_preference`*: needs skiko's native `createAngleDevice` to pass it; an upstream request.
 
-  **Recommended:** no silent override. File the skiko request (4), and say it where a slow Windows machine looks:
-  `StartupLog.kt` already prints the adapter; add the adapter's kind to that line if skiko exposes it. Option 1 only if
-  the owner decides the gain is worth overriding the user's setting, with an opt-out.
-- **(b) GC pauses land in transition frames, and ZGC (step 4/5) removes them** without a start or memory cost the
-  owner minds: add `-XX:+UseZGC`, `-XX:+ZGenerational` to `compose.desktop.application.jvmArgs` beside
-  `-XX:-DontCompileHugeMethods` (every platform's package, since the cost is the same JVM's), note why in a comment and
-  in `app/desktop/CLAUDE.md`'s Packaging, and compare `Started in` and the resident set before and after (the CDS
-  archive is recorded per collector: `recordClassDataArchive` must train with the same flags, which it does by running
-  the image's own launcher). If `-XX:MaxGCPauseMillis=5` on G1 does as well, prefer it (smaller change).
-- **(c) Neither**: the long frame is the app's own work, and plans 07–14 are the fix; the step 5 table says how far
-  this laptop is from the Mac's numbers and which scenario to start with.
+  Do on your own only the recommended part: name the adapter's kind in `StartupLog.kt`'s line if skiko exposes it (so
+  a slow machine's log says it), and write the text of the skiko request (4) into the report for the owner to file;
+  filing it is outward-facing, so do not. Options 1 and 2 are decision D2 in `README.md`: ask the owner with the
+  measured numbers, recommending no silent override.
+- **(b) GC pauses land in transition windows, and 4b or 4c removes them.** Prefer 4c (G1 kept) if it does as well.
+  Add the flags to `compose.desktop.application.jvmArgs` beside `-XX:-DontCompileHugeMethods` with a comment saying
+  why, and a line in `app/desktop/CLAUDE.md`'s Packaging; rebuild with `recordClassDataArchive` (the archive is
+  recorded per collector and its training run uses the image's own launcher, so the flags reach it); rerun 3a with the
+  driver patch back in to show the gain and that the first start's log has no archive mismatch warning; revert the
+  patch again; commit (`Collect garbage with … so a transition's frame is not held up by a pause, on every desktop.`),
+  with `git rm` of this plan.
+- **(c) Neither**: the long frames are the app's own work. Write which scenarios still drop frames and by how much,
+  beside the step 5 numbers, `git rm` this plan with the Results committed in `README.md`'s Measurements instead, and
+  stop: the next performance work starts from those scenarios.
+
+A branch that changes code follows the repository's rules: the `code-style` skill before the edit, the
+`commit-messages` skill before the commit, one fix one commit, `desktopTest` and `spotlessCheck` (the pre-commit
+hook runs them), and `:app:desktop:createReleaseDistributable` for a build change. Never push.
 
 ### Results (fill in)
 
-| Step | Setting | Adapter / GC | Long frames per 10 actions | Worst frame | Notes |
-|---|---|---|---|---|---|
-| 1 | as installed | | | | panel Hz: |
-| 3a | ANGLE, default | | | | |
-| 3b | High performance | | | | |
-| 3c | DIRECT3D discrete / integrated | | | | |
-| 3d | OPENGL | | | | |
-| 3e | 60 Hz | | | | |
-| 4 | G1 / ZGC / G1 5 ms | | | | pauses > 4 ms: |
-| 5 | benchmark --hz 144 | | | | |
+Commit measured: · Panel: · GPUs: · CPU / RAM: · Power: · Store build's adapter today:
+
+| Run | Renderer / adapter (from `Renderer info`) | GC | Dropped frames, worst scenario | Worst interval (ms) | Transitions with a GC | Notes |
+|---|---|---|---|---|---|---|
+| 3a | ANGLE, default | G1 | | | | |
+| 3b | ANGLE, high performance | G1 | | | | |
+| 3c | Direct3D 12, discrete / integrated | G1 | | | | |
+| 3d | OpenGL | G1 | | | | |
+| 4a | as 3a | G1, logged | | | | pauses > 4 ms: |
+| 4b | as 3a | ZGC | | | | |
+| 4c | as 3a | G1, 5 ms | | | | |
+| 5 | offscreen benchmark | G1 / ZGC | | | | warm worst per scenario: |
 
 ## Tests
 
-None for the investigation. A branch (b) change is a build flag: verify with the step 4 log that the collector is
-ZGC (`StartupLog`'s GC names) and that `recordClassDataArchive` still writes `campfire.jsa` (no "archive mismatch"
-warning in the log of the first start).
+None for the investigation. Step 0 is checked by the benchmark compiling on Windows. A branch (b) change is a build
+flag, checked by the rerun with the driver (the collector named in `Started in`, no archive warning).
 
-**Measure:** plan 01's transitions suite on the laptop before and after: for (b), the warm worst frame of every
-`push:*`, `pop:*`, and `tab:*` scenario should not grow and `warm GC ms` (pause beans only, plan 01) should drop toward zero.
+## Report
 
-## Manual check
-
-Everything in this plan is the manual check, on the owner's laptop; after a branch (a) or (b) change, the same routine
-on the installed MSI of the next build, and one start on a Windows machine with only an integrated GPU, to see nothing
-regressed there.
+Back to the owner: the filled table, which branch it pointed to and what was committed (hashes), the skiko request
+text if (a), the open decision D2 if (a), and confirmation that the registry, the tree, and the background process
+are as they were.
