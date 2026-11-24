@@ -160,7 +160,7 @@ internal class LaunchState(
      * One that started the app holds the launch screen as [navigateOnLaunch] does, unless an address already did; any
      * replaces whatever stack the app is on, as a browser's typed address does, a stack restored after the process was
      * killed included, since the link is what the user has just asked for. Refused over what leaving would lose: the
-     * editor's unsaved text (`Navigator.restoreNavigationState`), the onboarding, and an import under review.
+     * editor's unsaved text (`Navigator.restoreNavigationState`), a first run's onboarding, and an import under review.
      */
     suspend fun navigateToLink(resolve: (songs: List<Song>, setlists: List<Setlist>, isPerformanceModeEnabled: Boolean) -> NavigationState?): LinkRefusal? {
         val isLaunch = !hasShownApp && !hasNavigatedOnLaunch
@@ -171,7 +171,7 @@ internal class LaunchState(
         return try {
             val destination = awaitDestination(resolve)
             when {
-                backStack.any { it is CampfireDestination.Onboarding } -> LinkRefusal.ONBOARDING
+                backStack.any { it is CampfireDestination.Onboarding && !it.isOpenedFromSettings } -> LinkRefusal.ONBOARDING
                 backStack.any { it == CampfireDestination.ImportReport || (it as? CampfireDestination.SongDetails)?.importPreview != null } -> LinkRefusal.IMPORT
                 destination == null -> LinkRefusal.NOWHERE
                 !restoreNavigationState(destination) -> LinkRefusal.UNSAVED_EDITOR_TEXT

@@ -15,7 +15,7 @@ internal enum class LinkRefusal {
     /** An editor holds unsaved text, which only its own ways out may take away. */
     UNSAVED_EDITOR_TEXT,
 
-    /** The onboarding is open, which a first run finishes before anything else. */
+    /** A first run's onboarding is open, which it finishes before anything else (one replayed from Settings is not). */
     ONBOARDING,
 
     /** An import is being reviewed or previewed: leaving it throws the import away, and its files may not be readable again. */

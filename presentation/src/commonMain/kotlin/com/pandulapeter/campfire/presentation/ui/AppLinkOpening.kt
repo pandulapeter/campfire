@@ -26,8 +26,8 @@ import kotlinx.coroutines.launch
  * on the setlists screen ([BrowserRoutes.setlistToRevealOf]). New song and Paste a song
  * ([BrowserRoutes.LinkAction]) then do what the songs screen's New button and Paste from clipboard do, once the app is on
  * screen, and only where those are offered; a paste reads the clipboard with [clipboard], which asks the system as the
- * button does. Over what leaving would lose nothing happens ([LinkRefusal]); anywhere else the dialogs open go, as the
- * screens they were opened over do.
+ * button does. Over what leaving would lose nothing happens ([LinkRefusal]). A dialog open stays, since it may hold
+ * typed text, and New song and Paste a song are then not offered.
  */
 internal fun CampfireViewModel.openAppLink(link: String, clipboard: ClipboardTextReader) {
     val path = AppLinks.pathOf(link) ?: return
@@ -47,7 +47,6 @@ internal fun CampfireViewModel.openAppLink(link: String, clipboard: ClipboardTex
                 }
         }
         if (refusal != null) return@launch println("App link not followed: ${refusal.name.lowercase()}")
-        if (dialogHost.visibleDialog.value != null) dialogHost.setVisibleDialog(null)
         revealedSetlist?.let { fileName ->
             if (navigator.backStack.lastOrNull() == CampfireDestination.Setlists) setlistsController.revealSetlist(fileName, isAnimated = false)
         }

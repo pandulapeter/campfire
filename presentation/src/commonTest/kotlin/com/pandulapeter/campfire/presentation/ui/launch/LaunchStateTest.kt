@@ -121,6 +121,18 @@ class LaunchStateTest {
     }
 
     @Test
+    fun `a link is followed over the onboarding replayed from settings`() = runTest {
+        screenData.value = DataState.Idle(screenData.value.data!!)
+        val restored = mutableListOf<NavigationState>()
+        val state = launchState(MutableStateFlow(songGroups(isLibraryRead = true, areRandomPicksAwaited = false))) { restored.add(it) }
+        state.hasShownApp = true
+        backStack.add(CampfireDestination.Onboarding(isOpenedFromSettings = true))
+
+        assertNull(state.navigateToLink { _, _, _ -> metronome })
+        assertEquals(listOf(metronome), restored)
+    }
+
+    @Test
     fun `a link arriving while the app is in use replaces whatever stack it is on`() = runTest {
         screenData.value = DataState.Idle(screenData.value.data!!)
         val restored = mutableListOf<NavigationState>()
