@@ -73,10 +73,13 @@ internal fun WidgetSnapshotEffect(
     val languageCode = currentLanguage.value.code
     val locale = remember(languageCode) { calendarLocale(languageCode) }
     val dateFormatter = remember { DatePickerDefaults.dateFormatter() }
-    val snapshot = remember(library, preferences, strings, locale) {
+    // The switches alone, not every preference: a transposition or a counted song open would rebuild the whole library's
+    // snapshot otherwise.
+    val features = FeatureSwitches.of(preferences)
+    val snapshot = remember(library, features, strings, locale) {
         widgetSnapshot(
             screenData = library,
-            features = FeatureSwitches.of(preferences),
+            features = features,
             strings = strings,
             formatDate = { day ->
                 // The formatter counts in UTC midnights, as the setlist dialog's does: any other zone would print the day
