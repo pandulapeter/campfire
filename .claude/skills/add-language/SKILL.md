@@ -72,14 +72,18 @@ Each item is checked by `wiring` in step 7.
 5. `tools/screenshots/src/main/kotlin/.../screenshots/Shot.kt`: import `…presentation.localization.<StringsXx>` and add
    `AppLanguage.<ENUM> -> <StringsXx>.strings[key]` to `string(key)`. It compiles only after step 6's regeneration.
 6. iOS (`app/ios/iosApp`), so system UI speaks the language and Settings offers it:
-   - `iosApp/Info.plist` and `ShareExtension/Info.plist`: `<string><code></string>` at the end of
-     `CFBundleLocalizations`.
+   - `iosApp/Info.plist`, `ShareExtension/Info.plist`, and `CampfireWidgets/Info.plist`: `<string><code></string>` at
+     the end of `CFBundleLocalizations`.
    - `iosApp/<code>.lproj/InfoPlist.strings`: copy `hu.lproj/InfoPlist.strings` (license header and comment kept) and
      translate the `NSMicrophoneUsageDescription` English text from `iosApp/Info.plist`.
    - `ShareExtension/<code>.lproj/Localizable.strings`: copy `en.lproj/Localizable.strings`, change its comment to
      "The share extension's <Language> strings. Keep in step with en.lproj.", translate every value. Add `<code>.lproj`
      to the "Keep … in step" sentence of `en.lproj`'s comment. Beside it `Localizable.stringsdict`: copy `hu.lproj`'s and
      give `share_waiting_files` an item for every plural category the language's rule names.
+   - `CampfireWidgets/<code>.lproj/Localizable.strings`: the home screen widgets' gallery names and descriptions and
+     their Edit Widget texts; copy `en.lproj`'s (keyed by the English text) and translate every value. Its
+     `PBXFileReference` goes into the CampfireWidgets target's `Localizable.strings` `PBXVariantGroup` like the share
+     extension's. Everything a widget shows comes from the snapshot, which step 3's strings already cover.
    - `iosApp.xcodeproj/project.pbxproj`, four places; copy each `hu` line and change `hu` to the code:
      three `PBXFileReference` lines (`path = <code>.lproj/Localizable.strings`, `…/Localizable.stringsdict`, and
      `path = <code>.lproj/InfoPlist.strings`), their IDs added to the `Localizable.strings`, `Localizable.stringsdict`,
@@ -94,6 +98,11 @@ Each item is checked by `wiring` in step 7.
 9. Windows, `app/desktop/AppxManifest.xml`: add `<Resource Language="<code>" />` (the bare language, never a region, so
    its one listing reaches every country) after the last one. Partner Center then asks for a listing in it, which step
    5's store listings provide.
+
+10. Android, `app/android/src/main/res/values-<code>/strings.xml`: the home screen widgets' gallery texts, which the
+   launcher shows before the app has run: copy `values/strings.xml` (`widget_random_picks_name`, `…_description`,
+   `widget_setlist_name`, `…_description`, `widget_open_app`) and translate them. Hebrew is `values-iw`, the code every
+   Android version reads; a language with an old and a new code (Indonesian `in`/`id`) takes the old one too.
 
 Nothing else per platform: Android needs no locale config (the language is chosen in the app), the desktop runtime
 already carries every locale (`jdk.localedata`). The release notes in the language come from its own `whats-new <code>`

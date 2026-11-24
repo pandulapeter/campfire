@@ -16,9 +16,6 @@ What's planned for Campfire, grouped by area.
 - **The page model sees the page's structure.** A page the app reads itself (a link, a Safari share)
   hands the model which lines are links, buttons, new cards, or headings, so a song's crop leaves out the calls to
   action and partner cards around it. Plan: [page-structure-signals.md](plans/page-structure-signals.md)
-- **Home screen widgets** on Android and iOS: random picks (a few songs, a tap opening one, and a shuffle button, drawn
-  on its own rather than mirroring the songs list's picks), and a setlist (the next gig or a pinned one, a tap opening
-  its first song in setlist mode). Plan: [home-screen-widgets.md](plans/home-screen-widgets.md)
 - **A more readable sync folder**: consider organizing it in a more user-readable way (subfolders for artists), as an
   option
 

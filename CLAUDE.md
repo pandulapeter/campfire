@@ -41,7 +41,7 @@ Only these, all in `:data:source:remote:implementation`, the only module that ma
   and, on a first launch, the install referrer over IPC (Play Store app); Android/iOS system backup copies `library/`
   (Android without `library/files/`, whose photos would pass its 25 MB cap; iOS without the attachments there) and
   `preferences.json` — never the sync credentials, the sync index, the shared links mirror and journal, the editor
-  draft and its pictures, the iOS share inbox, `covers/`, `exports/`, or `imports/` (`app/android/src/main/res/xml`; on
+  draft and its pictures, the iOS share inbox, the widgets' snapshot, `covers/`, `exports/`, or `imports/` (`app/android/src/main/res/xml`; on
   iOS a device-bound Keychain item, the iOS storage's allow-list (`DeviceBackup.kt`), and the share inbox's own
   exclusion). A launch with no preferences document forgets any credentials it finds, since the iOS Keychain outlives an
   uninstall.
@@ -104,6 +104,8 @@ exports/<name>                         an archive or PDF written before it is sa
 imports/<name>                         an archive being imported and the pictures and attachments it unpacks to, named by
                                        session and content, never backed up; another session's emptied on launch (iOS:
                                        Library/Application Support)
+widget/snapshot.json                   Android: what the home screen widgets show, rewritten on every change, never
+                                       backed up (iOS: Widget/ in the App Group's container)
 instance.lock / instance.endpoint      desktop only: single-instance guard
 campfire.log / campfire.log.1          desktop only, here (the other platforms keep it elsewhere, ui/platform)
 ```
@@ -234,7 +236,8 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
   About, and the launch after a crash, mail it to the developer (or share or save it) after a dialog saying it names
   songs: `ui/platform`.
 - App icon follows the theme color where possible; brand colors are purple and orange: `ui/theme`.
-- The app is set in its bundled Inter and JetBrains Mono on every platform, never the system's fonts: `ui/theme`.
+- The app is set in its bundled Inter and JetBrains Mono on every platform, never the system's fonts (but the Android
+  widgets, which Glance cannot give a bundled font): `ui/theme`.
 - Settings links only to the website, GitHub, the author's site, donations, and its own store's rating page:
   `ui/screens/settings`.
 - Printing and export: `ui/screens/export`, `ui/print`.
@@ -272,6 +275,9 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
 - A long press on the app icon (Android, iOS) offers New song, Paste a song, and the main screens switched on but the
   home screen, as `campfire://` app links following the switches, read only mode, and the language: `ui/shortcuts`,
   `app/android`, `app/ios`.
+- Home screen widgets (Android, iOS): Random picks (a few songs drawn on their own, hourly or on Shuffle) and Setlist
+  (the next gig or a pinned one, opening its first song in setlist mode), reading only a snapshot the app writes in its
+  language, following the Songs and Setlists switches: `ui/widget`, `app/android`, `app/ios`.
 - A song is named by its own header; renames happen only when asked or when lossless: `domain/implementation`,
   `data/source/local/implementation`.
 - A rename reaches sync as delete + create, and an edit beats a deletion: `data/sync/implementation`.
