@@ -98,7 +98,7 @@ jobs:
           DROPBOX_APP_KEY: ${{ secrets.DROPBOX_APP_KEY }}
         run: |
           python3 .github/scripts/write_local_properties.py campfire.dropbox.appKey=DROPBOX_APP_KEY
-          SKIKO_RENDER_API=SOFTWARE_FAST xvfb-run --auto-servernum ./gradlew :app:desktop:createReleaseDistributable \
+          SKIKO_RENDER_API=SOFTWARE_FAST xvfb-run --auto-servernum bash .github/scripts/gradlew_retrying.sh :app:desktop:createReleaseDistributable \
             :app:desktop:packageReleaseDeb
           ./gradlew --stop
       # ProGuard breaks an application in ways that only starting it shows, so the app image is started once before
@@ -159,7 +159,7 @@ jobs:
       - name: Build the AppImage
         run: |
           TOOLS="$RUNNER_TEMP/appimage-tools"
-          ./gradlew :app:desktop:packageReleaseAppImage -x :app:desktop:recordClassDataArchive \
+          bash .github/scripts/gradlew_retrying.sh :app:desktop:packageReleaseAppImage -x :app:desktop:recordClassDataArchive \
             "-Pcampfire.linux.appImageTool=$TOOLS/appimagetool" "-Pcampfire.linux.appImageRuntime=$TOOLS/runtime"
           ./gradlew --stop
       # The AppImage is started as a user starts it, runtime and AppRun included. Its tools are downloaded, and it is

@@ -101,7 +101,7 @@ jobs:
       - name: Set up JDK 21 and Gradle
         uses: ./.github/actions/setup-jdk
       - name: Build the screenshot tool
-        run: ./gradlew :tools:screenshots:classes :tools:screenshots:downloadFonts
+        run: bash .github/scripts/gradlew_retrying.sh :tools:screenshots:classes :tools:screenshots:downloadFonts
       # A hosted macOS runner has 7 GB, and the Gradle and Kotlin daemons the build left behind may each hold 4 GB
       # (gradle.properties): with them alive beside the render, the system kills its processes mid-image. So they are
       # stopped, and the run is started by a Gradle of its own with a small heap, which compiles nothing.
@@ -111,7 +111,7 @@ jobs:
         run: |
           ./gradlew --stop
           pkill -f KotlinCompileDaemon || true
-          ./gradlew --no-daemon -Dorg.gradle.jvmargs=-Xmx768m -Pkotlin.compiler.execution.strategy=in-process \
+          bash .github/scripts/gradlew_retrying.sh --no-daemon -Dorg.gradle.jvmargs=-Xmx768m -Pkotlin.compiler.execution.strategy=in-process \
             :tools:screenshots:run --args="$ARGUMENTS --out $GITHUB_WORKSPACE/renders" 2>&1 \
             | tee "$RUNNER_TEMP/render.log"
           # A broken class fails a shot that the run may still count as written.
@@ -204,11 +204,11 @@ jobs:
           merge-multiple: true
           path: renders
       - name: Frame the store images
-        run: ./gradlew :tools:screenshots:run --args="--frame store --renders $GITHUB_WORKSPACE/renders --out $GITHUB_WORKSPACE/screenshots/store"
+        run: bash .github/scripts/gradlew_retrying.sh :tools:screenshots:run --args="--frame store --renders $GITHUB_WORKSPACE/renders --out $GITHUB_WORKSPACE/screenshots/store"
       # The banners go into documentation/screenshots of the checkout, the link preview beside the renders.
       - name: Compose the README banners and the link preview
         run: |
-          ./gradlew :tools:screenshots:run --args="--frame readme --renders $GITHUB_WORKSPACE/renders"
+          bash .github/scripts/gradlew_retrying.sh :tools:screenshots:run --args="--frame readme --renders $GITHUB_WORKSPACE/renders"
           mkdir -p screenshots/readme
           cp documentation/screenshots/*.webp screenshots/readme/
       - name: Scale the website's screenshots

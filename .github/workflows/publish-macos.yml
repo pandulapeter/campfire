@@ -222,7 +222,7 @@ jobs:
       - name: Build the package
         if: github.event_name != 'workflow_dispatch' || inputs.upload
         run: |
-          ./gradlew :app:desktop:packageReleasePkg
+          bash .github/scripts/gradlew_retrying.sh :app:desktop:packageReleasePkg
           ./gradlew --stop
       # A version that did not reach the Info.plist would be uploaded under whatever the plugin defaults to, which App
       # Store Connect takes for an old build.

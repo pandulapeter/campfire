@@ -112,14 +112,14 @@ jobs:
       # (spotlessCheck) together with them. The UI tests drive the whole desktop app offscreen from the screenshot tool's
       # module, a plain JVM one with no desktopTest of its own.
       - name: Run the unit tests
-        run: ./gradlew spotlessCheck desktopTest :tools:screenshots:test --continue
+        run: bash .github/scripts/gradlew_retrying.sh spotlessCheck desktopTest :tools:screenshots:test --continue
       # Archives far larger than the heap imported under a 128 MiB one, kept out of desktopTest (and so out of the
       # pre-commit hook) for the gigabytes it writes.
       - name: Run the large-archive import test
-        run: ./gradlew :data:source:local:implementation:largeArchiveImportTest
+        run: bash .github/scripts/gradlew_retrying.sh :data:source:local:implementation:largeArchiveImportTest
       # The build logic is a build of its own (gradle/), whose tests the unqualified task above does not reach.
       - name: Run the build logic's tests
-        run: ./gradlew -p gradle :build-logic:test
+        run: bash .github/scripts/gradlew_retrying.sh -p gradle :build-logic:test
       - name: Upload failed unit test reports
         if: ${{ failure() }}
         uses: actions/upload-artifact@v7
@@ -153,7 +153,7 @@ jobs:
       # class it writes verified, since bytecode its optimizer breaks only fails once the class is used.
       - name: Compile the Android, desktop and web apps, the Baseline Profile generator and the screenshot tool
         run: >-
-          ./gradlew --continue
+          bash .github/scripts/gradlew_retrying.sh --continue
           :app:android:assembleDebug
           :app:baselineprofile:compileNonMinifiedReleaseKotlin
           :app:desktop:proguardReleaseJars
@@ -163,7 +163,7 @@ jobs:
       # The web's file storage is the origin private file system, which only a browser has: the contract every
       # platform's storage keeps runs over it in headless Chrome, as it runs on the desktop and the iOS simulator.
       - name: Run the storage tests in headless Chrome
-        run: ./gradlew :data:source:local:implementation:wasmJsBrowserTest
+        run: bash .github/scripts/gradlew_retrying.sh :data:source:local:implementation:wasmJsBrowserTest
 
   compile-ios:
     name: Compile the iOS app
@@ -179,17 +179,17 @@ jobs:
         uses: ./.github/actions/setup-jdk
       # Every library's iosMain and the framework the Xcode project embeds.
       - name: Compile the iOS framework
-        run: ./gradlew :app:ios:linkDebugFrameworkIosSimulatorArm64
+        run: bash .github/scripts/gradlew_retrying.sh :app:ios:linkDebugFrameworkIosSimulatorArm64
       # The desktop's web view helper is compiled for the machine Gradle runs on, so each operating system's is compiled
       # on a runner of its own: here macOS's, on Linux in the compile job, and Windows' in test-windows. A runner without
       # the toolchain fails it (CI is set), as the release would.
       - name: Compile the macOS web view helper
-        run: ./gradlew :app:desktop:compileWebViewHelper
+        run: bash .github/scripts/gradlew_retrying.sh :app:desktop:compileWebViewHelper
       # The file storage contract (FileStorageContractTest) over the Foundation calls the app makes, on the simulator
       # Kotlin boots by default; only this module's tests run here. A runner without that simulator is answered in the
       # module's build file (testRuns["test"].deviceId), not here. Not in the pre-commit hook: the test link takes minutes.
       - name: Run the storage tests on the iOS simulator
-        run: ./gradlew :data:source:local:implementation:iosSimulatorArm64Test
+        run: bash .github/scripts/gradlew_retrying.sh :data:source:local:implementation:iosSimulatorArm64Test
 
   # GitHub cancels a job it finds no hosted runner for within a quarter of an hour, and macOS runners run short often
   # enough that a release lost every store build to it: a compile-ios that never started (cancelled while the run was
@@ -217,11 +217,11 @@ jobs:
       # Windows; the UI tests stay on Linux, since what they draw does not depend on the file system.
       - name: Run the unit tests
         shell: bash
-        run: ./gradlew desktopTest --continue
+        run: bash .github/scripts/gradlew_retrying.sh desktopTest --continue
       # The web view helper over WebView2, with MSVC and the pinned WebView2 SDK, as the Microsoft Store build makes it.
       - name: Compile the Windows web view helper
         shell: bash
-        run: ./gradlew :app:desktop:compileWebViewHelper
+        run: bash .github/scripts/gradlew_retrying.sh :app:desktop:compileWebViewHelper
       - name: Upload failed unit test reports
         if: ${{ failure() }}
         uses: actions/upload-artifact@v7

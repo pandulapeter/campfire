@@ -172,7 +172,7 @@ jobs:
             campfire.android.keyPassword=ANDROID_KEY_PASSWORD \
             campfire.android.keystoreFile=:release.keystore \
             campfire.android.keystorePassword=ANDROID_KEYSTORE_PASSWORD
-          ./gradlew :app:android:assembleRelease
+          bash .github/scripts/gradlew_retrying.sh :app:android:assembleRelease
       # The release's images (publish-all.yml, after screenshots.yml rendered them), or a run's named by hand.
       - name: Download the screenshots
         if: inputs.screenshots || inputs.screenshots_run != ''

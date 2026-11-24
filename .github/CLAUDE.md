@@ -115,6 +115,9 @@ locales are filled in from the language), Play's `update-priority`, a `submit` a
 
 ## The workflows
 
+- **Every Gradle build goes through `.github/scripts/gradlew_retrying.sh`**, which runs it again (up to three times,
+  a minute apart, then two) when its output names a failed download: Maven Central answers the runners' shared
+  addresses with 429 now and then, which Gradle does not retry. Any other failure ends the step at once.
 - `fix-issues.yml` (by hand): Claude Code lands the plans in `documentation/issues/`, one commit each in the README's
   merge order (or by `EXECUTION.md`), skipping a plan that needs iOS or changes `.github/workflows/`; it pushes main
   (a branch if main moved) and dispatches `tests.yml`.

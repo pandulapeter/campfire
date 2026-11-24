@@ -144,7 +144,7 @@ jobs:
         run: |
           python .github/scripts/write_local_properties.py campfire.dropbox.appKey=DROPBOX_APP_KEY
           export SKIKO_RENDER_API=SOFTWARE_FAST
-          ./gradlew :app:desktop:packageReleaseMsix
+          bash .github/scripts/gradlew_retrying.sh :app:desktop:packageReleaseMsix
           ./gradlew --stop
       # A package whose identity or version does not match Partner Center is refused only after it has been uploaded.
       - name: Check the package
