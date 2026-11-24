@@ -29,7 +29,43 @@ import kotlinx.serialization.json.putJsonArray
 import java.io.File
 import java.lang.management.ManagementFactory
 import java.lang.management.MemoryType
+import java.util.Locale
 import kotlin.system.exitProcess
+
+/**
+ * The owner's benchmarks, `./gradlew :tools:screenshots:benchmark` with `--args="--suite library|transitions|all"`
+ * (`all` by default) and the suites' own options as `--key value` pairs: the library suite's below, the transitions
+ * suite's in [runTransitionSuite]. The numbers are this machine's, and only comparable with runs on it: the tables are
+ * printed, and nothing is written but the transitions suite's `--csv`. Every number is formatted without the system's
+ * locale, so a Hungarian Windows prints the same dots as any other.
+ */
+fun main(args: Array<String>) {
+    Locale.setDefault(Locale.ROOT)
+    val options = args.toList().windowed(size = 2, step = 2).associate { (key, value) -> key to value }
+    val suite = options["--suite"] ?: "all"
+    check(suite in setOf("library", "transitions", "all")) { "--suite is library, transitions, or all, not $suite." }
+    try {
+        if (suite != "transitions") {
+            runLibrarySuite(runs = options["--runs"]?.toInt() ?: DEFAULT_RUNS, songCount = options["--songs"]?.toInt() ?: DEFAULT_SONGS)
+        }
+        if (suite != "library") {
+            val transitionOptions = TransitionOptions(
+                runs = options["--runs"]?.toInt() ?: DEFAULT_TRANSITION_RUNS,
+                hz = options["--hz"]?.toInt() ?: DEFAULT_HZ,
+                widthPx = options["--width"]?.toInt() ?: DEFAULT_WIDTH_PX,
+                heightPx = options["--height"]?.toInt() ?: DEFAULT_HEIGHT_PX,
+                density = options["--density"]?.toFloat() ?: DEFAULT_DENSITY,
+                csv = options["--csv"]?.let(::File),
+            )
+            printTransitionReport(results = runBlocking(Dispatchers.Main) { runTransitionSuite(transitionOptions) }, options = transitionOptions)
+        }
+    } catch (throwable: Throwable) {
+        // The Swing event thread and the app's singletons would keep the process alive past a failure.
+        throwable.printStackTrace()
+        exitProcess(1)
+    }
+    exitProcess(0)
+}
 
 /**
  * Times what a user waits for in a large library, through the whole app drawn offscreen as the Mac app's window: the
@@ -37,67 +73,54 @@ import kotlin.system.exitProcess
  * songs from opening the export screen until the file is handed to the picker, and a zip of the whole library imported
  * into an empty one, until the review is up and until every song is listed. Each is taken once in a fresh process
  * (cold, what a launch feels like) and then [runs] more times with the code warmed up, every one in an app started anew
- * on a library of its own.
- *
- * `./gradlew :tools:screenshots:benchmark`, with `--args="--runs <n> --songs <n>"`. The numbers are this machine's,
- * and only comparable with runs on it: the table is printed and nothing is written.
+ * on a library of its own, made up of [songCount] songs (`--runs <n> --songs <n>`).
  */
-fun main(args: Array<String>) {
-    val options = args.toList().windowed(size = 2, step = 2).associate { (key, value) -> key to value }
-    val runs = options["--runs"]?.toInt() ?: DEFAULT_RUNS
-    val songCount = options["--songs"]?.toInt() ?: DEFAULT_SONGS
+private fun runLibrarySuite(runs: Int, songCount: Int) {
     val library = BenchmarkLibrary(songCount = songCount, seed = SEED)
     val zip = ImportedFile(name = "benchmark.zip", bytes = library.zip())
     val results = linkedMapOf<String, MutableList<Long>>()
     var residentSet: Long? = null
     fun record(name: String, millis: Long) = results.getOrPut(name) { mutableListOf() }.add(millis)
-    try {
-        runBlocking(Dispatchers.Main) {
-            repeat(runs + 1) { run ->
-                print("Run ${run + 1} of ${runs + 1}… ")
-                withBenchmarkApp(writeData = { library.writeInto(it) }) { app, started ->
-                    val firstTitle = checkNotNull(app.awaitSongList(count = library.songs.size))
-                    app.awaitFrame { app.scope.centerOf(firstTitle) != null }
-                    record("Start until $songCount songs are listed", millis(since = started))
-                    // Only the first start's: a JVM keeps the heap later starts grew, which a fresh app would not have.
-                    if (run == 0) residentSet = residentSetBytes()
-                    val longSong = app.scope.song(BenchmarkLibrary.LONG_SONG)
-                    val opened = System.nanoTime()
-                    app.viewModel.navigator.openSong(longSong)
-                    app.awaitFrame { app.scope.centersOf(BenchmarkLibrary.LONG_SONG_FIRST_LINE).isNotEmpty() }
-                    record("Long song opened until drawn", millis(since = opened))
-                    app.viewModel.navigator.popBackStack()
-                    app.scope.settle()
-                    val songs = app.viewModel.libraryState.allSongs.value.take(PDF_SONGS)
-                    val exported = System.nanoTime()
-                    app.viewModel.dialogHost.showDialog(DialogType.Export(songs = songs, format = PrintSettings.Format.PDF))
-                    app.awaitFrame { app.scope.centerOf(app.scope.string("print_save")) != null }
-                    app.scope.tap(app.scope.string("print_save"))
-                    app.awaitFrame { app.filePicker.savedAt != null }
-                    record("PDF of $PDF_SONGS songs, export opened until saved", (checkNotNull(app.filePicker.savedAt) - exported) / 1_000_000)
-                }
-                withBenchmarkApp(writeData = {}) { app, _ ->
-                    app.awaitSongList(count = 0)
-                    val imported = System.nanoTime()
-                    app.viewModel.importController.importFiles(listOf(zip))
-                    app.awaitFrame(timeoutMillis = IMPORT_TIMEOUT_MILLIS) { app.viewModel.importReportState.report is ImportReport.Review }
-                    record("Import of $songCount songs, until the review", millis(since = imported))
-                    app.viewModel.importController.confirmImport()
-                    app.awaitFrame(timeoutMillis = IMPORT_TIMEOUT_MILLIS) {
-                        !app.viewModel.importController.isImporting.value && app.viewModel.libraryState.allSongs.value.size == library.songs.size
-                    }
-                    record("Import of $songCount songs, until listed", millis(since = imported))
-                }
-                println("done")
+    runBlocking(Dispatchers.Main) {
+        repeat(runs + 1) { run ->
+            print("Run ${run + 1} of ${runs + 1}… ")
+            withBenchmarkApp(writeData = { library.writeInto(it) }) { app, started ->
+                val firstTitle = checkNotNull(app.awaitSongList(count = library.songs.size))
+                app.awaitFrame { app.scope.centerOf(firstTitle) != null }
+                record("Start until $songCount songs are listed", millis(since = started))
+                // Only the first start's: a JVM keeps the heap later starts grew, which a fresh app would not have.
+                if (run == 0) residentSet = residentSetBytes()
+                val longSong = app.scope.song(BenchmarkLibrary.LONG_SONG)
+                val opened = System.nanoTime()
+                app.viewModel.navigator.openSong(longSong)
+                app.awaitFrame { app.scope.centersOf(BenchmarkLibrary.LONG_SONG_FIRST_LINE).isNotEmpty() }
+                record("Long song opened until drawn", millis(since = opened))
+                app.viewModel.navigator.popBackStack()
+                app.scope.settle()
+                val songs = app.viewModel.libraryState.allSongs.value.take(PDF_SONGS)
+                val exported = System.nanoTime()
+                app.viewModel.dialogHost.showDialog(DialogType.Export(songs = songs, format = PrintSettings.Format.PDF))
+                app.awaitFrame { app.scope.centerOf(app.scope.string("print_save")) != null }
+                app.scope.tap(app.scope.string("print_save"))
+                app.awaitFrame { app.filePicker.savedAt != null }
+                record("PDF of $PDF_SONGS songs, export opened until saved", (checkNotNull(app.filePicker.savedAt) - exported) / 1_000_000)
             }
+            withBenchmarkApp(writeData = {}) { app, _ ->
+                app.awaitSongList(count = 0)
+                val imported = System.nanoTime()
+                app.viewModel.importController.importFiles(listOf(zip))
+                app.awaitFrame(timeoutMillis = IMPORT_TIMEOUT_MILLIS) { app.viewModel.importReportState.report is ImportReport.Review }
+                record("Import of $songCount songs, until the review", millis(since = imported))
+                app.viewModel.importController.confirmImport()
+                app.awaitFrame(timeoutMillis = IMPORT_TIMEOUT_MILLIS) {
+                    !app.viewModel.importController.isImporting.value && app.viewModel.libraryState.allSongs.value.size == library.songs.size
+                }
+                record("Import of $songCount songs, until listed", millis(since = imported))
+            }
+            println("done")
         }
-    } catch (throwable: Throwable) {
-        // The Swing event thread and the app's singletons would keep the process alive past a failure.
-        throwable.printStackTrace()
-        exitProcess(1)
     }
     printTable(results = results, residentSet = residentSet, peakHeap = peakHeapBytes())
-    exitProcess(0)
 }
 
 /** One start of the app the benchmark drives: what [ShotScope] finds on screen with, and a frame drawn at a time. */
@@ -218,12 +241,13 @@ private class BenchmarkFilePicker : FilePicker {
 private fun printTable(results: Map<String, List<Long>>, residentSet: Long?, peakHeap: Long) {
     val width = results.keys.maxOf { it.length }
     println()
-    println("%-${width}s  %8s  %8s  %15s".format("Measure", "Cold", "Median", "Warm range"))
+    println("%-${width}s  %8s  %8s  %15s".format(Locale.ROOT, "Measure", "Cold", "Median", "Warm range"))
     results.forEach { (name, millis) ->
         val warm = millis.drop(1).sorted()
         val median = warm.getOrNull(warm.size / 2)
         println(
             "%-${width}s  %8s  %8s  %15s".format(
+                Locale.ROOT,
                 name,
                 millis.first().seconds(),
                 median?.seconds() ?: "-",
@@ -237,7 +261,7 @@ private fun printTable(results: Map<String, List<Long>>, residentSet: Long?, pea
     println("Timings are this machine's, under whatever else it was doing.")
 }
 
-private fun Long.seconds() = "%.2f s".format(this / 1000.0)
+private fun Long.seconds() = "%.2f s".format(Locale.ROOT, this / 1000.0)
 
 private fun millis(since: Long) = (System.nanoTime() - since) / 1_000_000
 
@@ -252,6 +276,13 @@ private const val SEED = 2017
 private const val BENCHMARK_SETTLE_MILLIS = 1_500L
 private const val DEFAULT_RUNS = 3
 private const val DEFAULT_SONGS = 3000
+private const val DEFAULT_TRANSITION_RUNS = 10
+private const val DEFAULT_HZ = 60
+
+/** A 16" laptop's window at 150 %. */
+private const val DEFAULT_WIDTH_PX = 2400
+private const val DEFAULT_HEIGHT_PX = 1500
+private const val DEFAULT_DENSITY = 1.5f
 private const val PDF_SONGS = 60
 private const val TIMEOUT_MILLIS = 60_000L
 private const val IMPORT_TIMEOUT_MILLIS = 180_000L

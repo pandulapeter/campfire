@@ -123,14 +123,17 @@ tasks.named<JavaExec>("run") {
 }
 
 /**
- * The timings of a large library (`Benchmark.kt`), printed rather than written anywhere. Not a test: the numbers are
- * the machine's, so nothing runs it but the owner.
+ * The timings of a large library and of the app's transitions frame by frame (`Benchmark.kt`), printed rather than
+ * written anywhere. Not a test: the numbers are the machine's, so nothing runs it but the owner.
+ * `campfire.benchmark.jvmArgs` adds JVM options to a run (another garbage collector, a heap size), space-separated.
  */
+val benchmarkJvmArgs = project.property("campfire.benchmark.jvmArgs").toString().split(" ").filter { it.isNotBlank() }
 tasks.register<JavaExec>("benchmark") {
     classpath = sourceSets.main.get().runtimeClasspath
     mainClass = "com.pandulapeter.campfire.screenshots.BenchmarkKt"
     // As the desktop app runs: without it the largest Composables are never compiled, which the timings would show.
-    jvmArgs("-XX:-DontCompileHugeMethods")
+    jvmArgs(listOf("-XX:-DontCompileHugeMethods") + benchmarkJvmArgs)
     systemProperty("java.awt.headless", "true")
+    systemProperty("campfire.screenshots.library", file("library").absolutePath)
     systemProperty("campfire.screenshots.versionName", project.property("campfire.versionName").toString())
 }

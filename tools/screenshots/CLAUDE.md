@@ -69,14 +69,28 @@ publishes them on CI (`.github/workflows/screenshots.yml`, `.github/CLAUDE.md`);
 
 ## Benchmark
 
-`./gradlew :tools:screenshots:benchmark` (`Benchmark.kt`; `--args="--runs <n> --songs <n>"`, by default 3 and 3,000)
-prints a table of how long a large library takes: the start until the songs list shows its first song, a long song
-until its first line is drawn, a PDF of 60 songs from opening the export screen until the picker gets it, and a zip of
-the library imported into an empty one (until the review, until listed), plus the first start's resident set and the
-peak heap. The library is made up from a seed (`BenchmarkLibrary.kt`), never committed. Each figure is taken cold (the
-first, in a fresh process: what a launch feels like) and then as the median of warm runs, each in an app started anew.
-Nothing runs it but the owner and nothing is written: the numbers are the machine's, comparable only with its own
-earlier runs. Sync is not measured, since its fake provider is `:data:sync:implementation`'s test code.
+`./gradlew :tools:screenshots:benchmark` (Windows: `gradlew.bat`), `--args="--suite library|transitions|all"` (`all`
+by default), is run by the owner only: the numbers are the machine's, comparable only with its own earlier runs, and are
+printed with `Locale.ROOT`. `-Pcampfire.benchmark.jvmArgs="…"` adds JVM options (another collector) to a run.
+
+The **library suite** (`Benchmark.kt`; `--runs <n> --songs <n>`, by default 3 and 3,000) times a large library: the
+start until the songs list shows its first song, a long song until its first line is drawn, a PDF of 60 songs from
+opening the export screen until the picker gets it, and a zip of the library imported into an empty one (until the
+review, until listed), plus the first start's resident set and the peak heap. The library is made up from a seed
+(`BenchmarkLibrary.kt`). Each figure is taken cold (a fresh process) and then as the median of warm runs, each in an app
+started anew. Sync is not measured, since its fake provider is `:data:sync:implementation`'s test code.
+
+The **transitions suite** (`TransitionBenchmark.kt`; `--runs` 10, `--hz` 60, `--width 2400 --height 1500 --density 1.5`)
+times every frame of the app's transitions, over the committed `library/` (real cards' covers, labels, and tags cost what
+the generated one's cannot), as the Windows app in one `ImageComposeScene`. A frame (`PhasedFrame.kt`) is compose
+(`performFrame`), layout (`measureAndLayout`), and draw (recorded into a Skia picture, never rasterized), with the main
+thread's bytes allocated and GC pause time (pause beans only), then a pause of `1000 / hz` ms whose overrun is "between"
+(the app's coroutines on Main). The phases are private fields of `ImageComposeScene`: re-check after every Compose update
+(a failed lookup times `render` whole and says so). Scenarios, 50 frames after a trigger sent through the view model:
+`push:` / `pop:` `plain`, `long`, `tabs`, `abc`, `setlist` (a setlist's middle song), and `fresh` (a long song not opened
+before, each pass), `tab:songs>setlists`, `tab:setlists>songs`, `sheet:open`, and `sheet:close`. One app serves the whole
+run: pass 1 is cold, passes 2+ reopen, warm is the median of passes 3+. A frame is over budget when it and its "between"
+pass `1000 / hz` ms. `--csv <path>`, one row per frame, is the only thing either suite writes.
 
 ## UI tests
 
