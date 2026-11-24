@@ -131,8 +131,9 @@ extension (`iosApp/ShareExtension/`) and the widget extension (`iosApp/CampfireW
 - What a widget shows comes from the snapshot, in the app's language and direction. The gallery's names and
   descriptions, Edit Widget's words, and the line shown before the app has written a snapshot are the extension's
   `Localizable.strings`, keyed by their English text, in every app language. Inter through `UIAppFonts`, referencing
-  `:presentation`'s font files, by PostScript name (`Inter Medium` is a family of its own); the app's purple as
-  `AccentColor`; the system's widget background.
+  `:presentation`'s font files, by PostScript name (`Inter Medium` is a family of its own); the snapshot's theme
+  as `WidgetColors` in the environment (its palette and fixed half), else the app's purple as `AccentColor` and the
+  system's widget background.
 - Signed like the share extension: App ID `<bundle id>.widgets` with the App Group, its own App Store profile
   (`.github/CLAUDE.md`).
 

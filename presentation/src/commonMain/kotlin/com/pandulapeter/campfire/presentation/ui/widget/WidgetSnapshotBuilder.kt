@@ -25,6 +25,7 @@ internal fun widgetSnapshot(
     screenData: ScreenData,
     features: FeatureSwitches,
     strings: WidgetSnapshot.Strings,
+    theme: WidgetSnapshot.Theme,
     formatDate: (LocalDate) -> String,
 ): WidgetSnapshot {
     val songFileNames = screenData.unfilteredSongs.mapTo(mutableSetOf()) { it.fileName }
@@ -57,5 +58,6 @@ internal fun widgetSnapshot(
         homeLink = AppLinks.of(""),
         setlistsLink = AppLinks.of(BrowserRoutes.pathOf(CampfireDestination.Setlists)),
         strings = strings,
+        theme = theme,
     )
 }

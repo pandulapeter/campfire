@@ -102,11 +102,14 @@ struct RandomPicksView: View {
     let entry: RandomPicksEntry
     @Environment(\.widgetFamily) private var family
 
+    /// Its own, since the theme is put in the environment of the view it draws rather than its own.
+    private var colors: WidgetColors { WidgetColors(theme: entry.snapshot?.theme) }
+
     var body: some View {
         if let snapshot = entry.snapshot {
             content(snapshot)
                 .widgetURL(appLink(snapshot.homeLink))
-                .campfireWidget(isRightToLeft: snapshot.strings.isRightToLeft)
+                .campfireWidget(strings: snapshot.strings, theme: snapshot.theme)
         } else {
             NoSnapshotMessage().containerBackground(.background, for: .widget)
         }
@@ -150,14 +153,14 @@ struct RandomPicksView: View {
         HStack {
             Text(verbatim: strings.randomPicks)
                 .font(InterFont.bold(15))
-                .foregroundStyle(Color.campfireAccent)
+                .foregroundStyle(colors.accent)
                 .widgetAccentable()
             Spacer()
             if entry.snapshot?.areSongsEnabled == true, entry.snapshot?.songs.isEmpty == false {
                 Button(intent: ShuffleIntent()) {
                     Image(systemName: "shuffle")
                         .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(Color.campfireAccent)
+                        .foregroundStyle(colors.accent)
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(Text(verbatim: strings.drawNewPicks))
@@ -169,6 +172,7 @@ struct RandomPicksView: View {
 /// A song's title and artist, opening its details screen.
 private struct SongRow: View {
     let song: WidgetSnapshot.Song
+    @Environment(\.widgetColors) private var colors
 
     var body: some View {
         Link(destination: appLink(song.link)) {
@@ -179,7 +183,7 @@ private struct SongRow: View {
                 if !song.artist.isEmpty {
                     Text(verbatim: song.artist)
                         .font(InterFont.regular(12, relativeTo: .caption))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(colors.secondaryText)
                         .lineLimit(1)
                 }
             }

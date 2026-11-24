@@ -21,6 +21,8 @@ struct WidgetSnapshot: Decodable {
     let homeLink: String
     let setlistsLink: String
     let strings: Strings
+    /// Absent from a snapshot an app from before it wrote, which leaves the widget in the system's colors.
+    let theme: Theme?
 
     struct Song: Decodable {
         let fileName: String
@@ -39,6 +41,22 @@ struct WidgetSnapshot: Decodable {
         let isArchived: Bool
         let songFileNames: [String]
         let link: String
+    }
+
+    /// The app's theme: its dark half (true), its light half (false), or the system's (nil); and its palette's two
+    /// halves, absent where the app takes the system's own colors.
+    struct Theme: Decodable {
+        let isDark: Bool?
+        let light: Palette?
+        let dark: Palette?
+    }
+
+    /// The few colors a widget is drawn in, each as `0xAARRGGBB`.
+    struct Palette: Decodable {
+        let background: UInt32
+        let accent: UInt32
+        let text: UInt32
+        let secondaryText: UInt32
     }
 
     /// Every text the widgets show, in the app's language rather than the system's.

@@ -32,9 +32,10 @@ internal class SetlistWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         WidgetSnapshotFile.load(context)
         provideContent {
-            WidgetTheme {
+            val snapshot = rememberWidgetSnapshot()
+            WidgetTheme(theme = snapshot?.theme) {
                 SetlistWidgetLayout(
-                    snapshot = rememberWidgetSnapshot(),
+                    snapshot = snapshot,
                     pinnedFileName = currentState(WidgetState.PINNED_SETLIST),
                     todayEpochDay = LocalDate.now().toEpochDay(),
                 )

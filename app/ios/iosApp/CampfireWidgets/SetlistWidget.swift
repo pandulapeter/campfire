@@ -142,12 +142,15 @@ struct SetlistWidgetView: View {
     let entry: SetlistEntry
     @Environment(\.widgetFamily) private var family
 
+    /// Its own, since the theme is put in the environment of the view it draws rather than its own.
+    private var colors: WidgetColors { WidgetColors(theme: entry.snapshot?.theme) }
+
     var body: some View {
         if let snapshot = entry.snapshot {
             let content = SetlistContent(snapshot: snapshot, pinnedFileName: entry.pinnedFileName, on: entry.date)
             layout(content)
                 .widgetURL(appLink(content.link))
-                .campfireWidget(isRightToLeft: snapshot.strings.isRightToLeft)
+                .campfireWidget(strings: snapshot.strings, theme: snapshot.theme)
         } else {
             NoSnapshotMessage().containerBackground(.background, for: .widget)
         }
@@ -175,9 +178,9 @@ struct SetlistWidgetView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         RelativeDayText(text: relativeDay)
                         Text(verbatim: title).font(InterFont.bold(17)).lineLimit(2)
-                        Text(verbatim: date).font(InterFont.regular(13, relativeTo: .caption)).foregroundStyle(.secondary)
+                        Text(verbatim: date).font(InterFont.regular(13, relativeTo: .caption)).foregroundStyle(colors.secondaryText)
                         Spacer(minLength: 0)
-                        Text(verbatim: songCount).font(InterFont.regular(13, relativeTo: .caption)).foregroundStyle(.secondary)
+                        Text(verbatim: songCount).font(InterFont.regular(13, relativeTo: .caption)).foregroundStyle(colors.secondaryText)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     SongTitles(titles: songTitles)
@@ -197,11 +200,12 @@ struct SetlistWidgetView: View {
 
 private struct RelativeDayText: View {
     let text: String
+    @Environment(\.widgetColors) private var colors
 
     var body: some View {
         Text(verbatim: text)
             .font(InterFont.bold(13, relativeTo: .caption))
-            .foregroundStyle(Color.campfireAccent)
+            .foregroundStyle(colors.accent)
             .widgetAccentable()
     }
 }

@@ -71,6 +71,7 @@ class WidgetSnapshotBuilderTest {
         screenData = library,
         features = FeatureSwitches.of(preferences),
         strings = strings,
+        theme = widgetTheme(uiMode = null, colors = null),
         formatDate = { "on $it" },
     )
 

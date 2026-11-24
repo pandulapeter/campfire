@@ -53,7 +53,7 @@ import org.jetbrains.compose.resources.PluralStringResource
 
 /**
  * Hands [onChanged] the home screen widgets' snapshot whenever what it holds changes: the library, the Songs and
- * Setlists switches, or the app's language. Only a library read whole counts, never a first read's batches or a failed
+ * Setlists switches, the app's language, or its theme. Only a library read whole counts, never a first read's batches or a failed
  * read standing in as empty, which would show the widgets a library shrinking and growing back. A change is handed over
  * once it has held for a moment, since a sync run or an import changes the library file by file; an unchanged snapshot is
  * not handed over again.
@@ -76,11 +76,13 @@ internal fun WidgetSnapshotEffect(
     // The switches alone, not every preference: a transposition or a counted song open would rebuild the whole library's
     // snapshot otherwise.
     val features = FeatureSwitches.of(preferences)
-    val snapshot = remember(library, features, strings, locale) {
+    val theme = rememberWidgetTheme(preferences)
+    val snapshot = remember(library, features, strings, theme, locale) {
         widgetSnapshot(
             screenData = library,
             features = features,
             strings = strings,
+            theme = theme,
             formatDate = { day ->
                 // The formatter counts in UTC midnights, as the setlist dialog's does: any other zone would print the day
                 // before or after it on one side of UTC.

@@ -90,7 +90,9 @@
 - A launcher lays a widget out in the system's direction, so one in an app language written the other way is mirrored
   by hand (`isMirrored`: lines aligned to their end, the header's button first).
 - Every tap is `appLinkIntent` (the shortcuts' intent). Text is the system font (a launcher can't load Inter); colors
-  are Glance's dynamic ones from Android 12, the app's palette (`widgetLightColorScheme`) before. Gallery names,
+  are the snapshot's theme (`WidgetTheme.kt`): its palette where it has one, else the wallpaper's from Android 12 (the
+  app's `widgetLightColorScheme` before), in a fixed half where the app has one, which also spares a launcher below 12
+  the half it resolved at drawing time. Gallery names,
   descriptions, and the open-the-app sentence are `res/values*/strings.xml` in every app language (`values-iw` for
   Hebrew); `previewLayout`s are plain RemoteViews layouts with placeholder lines.
 

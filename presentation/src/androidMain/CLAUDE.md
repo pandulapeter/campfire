@@ -18,7 +18,7 @@
 - `SystemKeyboardShortcutsEffect` hands the activity the shortcuts for Meta + / as `KeyboardShortcutGroup`s, in the
   app's language, whenever they or the features they depend on change.
 - `ui/widget` here is what `:app:android`'s Glance widgets need of this module: the app's palette for them below
-  Android 12, and `SetlistWidgetChooser`, the setlist widget's configuration screen (the widget's colors, the system's
+  Android 12 when a snapshot has no theme, and `SetlistWidgetChooser`, the setlist widget's configuration screen (the widget's colors, the system's
   dark mode, the app's typeface, the snapshot's language and direction; no preferences are read).
 - `update/AppUpdate.android.kt` and `platform/SyncNotificationPermission.kt` live here rather than in `:app:android`
   because a composable can get the activity, a result launcher, and the lifecycle itself.

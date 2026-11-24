@@ -14,7 +14,9 @@ shells' (`app/android`'s Glance widgets, `app/ios`'s `CampfireWidgets` extension
 
 - **The app writes a snapshot, the widgets read only that** (`WidgetSnapshot`, JSON): every song (title, artist, link),
   every setlist (title, `yyyy-MM-dd` day and the app's own writing of it, archived, its songs the library holds, link),
-  the Songs and Setlists switches, and every text already in the app's language, so a widget never reads the library,
+  the Songs and Setlists switches, the app's theme (`WidgetThemes.kt`: its fixed light or dark half, and its palette's
+  few colors, sepia included, none for the system's own colors), and every text already in the app's language, so a
+  widget never reads the library,
   parses ChordPro, or starts Koin. Not a stored document: no version, unknown keys ignored, and the iOS extension
   decodes the same keys in Swift. An update's widgets read the old app's file until the app is opened, so a key added
   later has a default (optional in Swift). Never backed up, never synced.

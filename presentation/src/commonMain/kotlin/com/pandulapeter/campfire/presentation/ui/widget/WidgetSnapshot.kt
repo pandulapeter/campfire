@@ -37,6 +37,7 @@ data class WidgetSnapshot(
     val homeLink: String,
     val setlistsLink: String,
     val strings: Strings,
+    val theme: Theme? = null,
 ) {
 
     /** A song, with the app link ([link]) that opens its details screen. */
@@ -91,6 +92,29 @@ data class WidgetSnapshot(
         val inDays: Plural,
         val daysAgo: Plural,
         val songCount: Plural,
+    )
+
+    /**
+     * How the widgets are painted: in the app's theme rather than the system's, so that they look like the app.
+     *
+     * @property isDark The app's dark half (true) or its light half (false), or null for whichever the system is in.
+     * @property light The light half of the app's palette, its sepia included; null, with [dark], where the app takes the
+     *   system's own colors (Android's from the wallpaper), which the widgets then take from the system too.
+     */
+    @Serializable
+    data class Theme(
+        val isDark: Boolean?,
+        val light: Palette?,
+        val dark: Palette?,
+    )
+
+    /** The few colors a widget is drawn in, each as `0xAARRGGBB`. */
+    @Serializable
+    data class Palette(
+        val background: Long,
+        val accent: Long,
+        val text: Long,
+        val secondaryText: Long,
     )
 
     /**
