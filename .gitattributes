@@ -1,0 +1,14 @@
+# This file is part of Campfire.
+# Copyright (c) Pandula Péter 2017-2026.
+# https://github.com/pandulapeter/campfire
+#
+# This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+# If a copy of the MPL was not distributed with this file, You can obtain one at
+# https://mozilla.org/MPL/2.0/.
+
+# Tests compare text with fixtures and golden files byte for byte, so a Windows checkout must not turn them into CRLF.
+* text=auto eol=lf
+
+# A batch file wants CRLF, and one fixture exists to hold it.
+*.bat -text
+libs/chordpro/src/desktopTest/resources/corpus/27-crlf-bom.cho -text
