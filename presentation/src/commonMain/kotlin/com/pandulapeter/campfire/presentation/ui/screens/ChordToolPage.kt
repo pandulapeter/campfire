@@ -28,8 +28,9 @@ import com.pandulapeter.campfire.presentation.ui.settingsPage.PageWidthLayout
 
 /**
  * The page of the Chords or the Scales tab, as wide as [layout] lets it be from the start of the screen, with the
- * [PreferencesPill] floating over its end below the status bar, on the spot of the list screens' New button: the page
- * scrolls under it, and its instrument line keeps the pill's room where the button used to stand.
+ * [PreferencesPill] floating at the end of the screen below the status bar, on the spot of the list screens' New button,
+ * however much narrower the page is: the page scrolls under it, and its instrument line keeps the pill's room where the
+ * button used to stand.
  */
 @Composable
 internal fun ChordToolPage(
@@ -44,11 +45,11 @@ internal fun ChordToolPage(
 ) {
     Box(modifier = Modifier.widthIn(max = layout.animatedPageMaxWidth(sections = 2)).fillMaxSize()) {
         page()
-        PreferencesPill(
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(contentPadding.only(top = true, end = true, extraTop = NEW_ITEM_BUTTON_TOP_INSET, extraEnd = NEW_ITEM_BUTTON_END_INSET)),
-            onClick = { showDialog(DialogType.Preferences(PreferencesContext.CHORD_TOOLS, PreferencesPage.CHORDS)) },
-        )
     }
+    PreferencesPill(
+        modifier = Modifier
+            .align(Alignment.TopEnd)
+            .padding(contentPadding.only(top = true, end = true, extraTop = NEW_ITEM_BUTTON_TOP_INSET, extraEnd = NEW_ITEM_BUTTON_END_INSET)),
+        onClick = { showDialog(DialogType.Preferences(PreferencesContext.CHORD_TOOLS, PreferencesPage.CHORDS)) },
+    )
 }
