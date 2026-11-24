@@ -52,6 +52,7 @@ internal fun UnsavedChangesDialog(
     // taken as it opens (requested from the title, inside the dialog), Ctrl / Cmd + S, the same key the editor saves
     // with, would go unheard.
     val focusRequester = remember { FocusRequester() }
+    CloseWhenRequested(onCancel)
     AlertDialog(
         modifier = Modifier
             .saveShortcut { if (!isSaving) onSave() }

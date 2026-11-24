@@ -15,6 +15,7 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.DeleteSetlistConfirmati
 import com.pandulapeter.campfire.presentation.ui.dialogs.DeleteSongConfirmation
 import com.pandulapeter.campfire.presentation.ui.dialogs.DisconnectSyncConfirmation
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
+import com.pandulapeter.campfire.presentation.ui.dialogs.LocalIsDialogCloseRequested
 import com.pandulapeter.campfire.presentation.ui.dialogs.SendProcessLogDialog
 import com.pandulapeter.campfire.presentation.ui.dialogs.UnsavedChangesDialog
 import com.pandulapeter.campfire.presentation.ui.dialogs.about.OpenSourceLicenseSheet
@@ -43,7 +44,6 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.forms.NewSongDialog
 import com.pandulapeter.campfire.presentation.ui.dialogs.forms.SetlistDatePickerSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.forms.SetlistDetailsDialog
 import com.pandulapeter.campfire.presentation.ui.dialogs.forms.EditSetlistDialog
-import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.LocalIsSheetCloseRequested
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -90,7 +90,7 @@ internal fun CampfireDialogs(
     // under it - its sheet up, its draft and scroll position kept - and is only uncovered when that one goes.
     openDialogs.forEach { dialog ->
         key(dialog.slotKey) {
-            CompositionLocalProvider(LocalIsSheetCloseRequested provides (dialog == closeRequest)) {
+            CompositionLocalProvider(LocalIsDialogCloseRequested provides (dialog == closeRequest)) {
                 CampfireDialog(viewModel = viewModel, dialog = dialog, urlOpener = urlOpener)
             }
         }

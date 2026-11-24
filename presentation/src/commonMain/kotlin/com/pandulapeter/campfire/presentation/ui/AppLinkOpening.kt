@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui
 
 import androidx.lifecycle.viewModelScope
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.launch.LinkRefusal
 import com.pandulapeter.campfire.presentation.ui.navigation.AppLinks
@@ -18,6 +19,7 @@ import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.platform.ClipboardTextReader
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.yield
 
 /**
  * Opens what an app link names ([AppLinks]), a launcher shortcut's or a home screen widget's among them: the place its
@@ -26,8 +28,9 @@ import kotlinx.coroutines.launch
  * on the setlists screen ([BrowserRoutes.setlistToRevealOf]). New song and Paste a song
  * ([BrowserRoutes.LinkAction]) then do what the songs screen's New button and Paste from clipboard do, once the app is on
  * screen, and only where those are offered; a paste reads the clipboard with [clipboard], which asks the system as the
- * button does. Over what leaving would lose nothing happens ([LinkRefusal]). A dialog open stays, since it may hold
- * typed text, and New song and Paste a song are then not offered.
+ * button does. Over what leaving would lose nothing happens ([LinkRefusal]); anywhere else the dialogs open close
+ * themselves ([DialogHost.closeAll]), a sheet sliding away first, as the screens they were opened over have gone. New song
+ * over its own sheet already open keeps it.
  */
 internal fun CampfireViewModel.openAppLink(link: String, clipboard: ClipboardTextReader) {
     val path = AppLinks.pathOf(link) ?: return
@@ -47,11 +50,23 @@ internal fun CampfireViewModel.openAppLink(link: String, clipboard: ClipboardTex
                 }
         }
         if (refusal != null) return@launch println("App link not followed: ${refusal.name.lowercase()}")
+        val openDialog = dialogHost.visibleDialog.value
+        val isNewSongOpen = action == BrowserRoutes.LinkAction.NEW_SONG && openDialog == DialogType.NewSong
+        if (openDialog != null && !isNewSongOpen) {
+            println("App link closes the dialogs open")
+            dialogHost.closeAll()
+        }
         revealedSetlist?.let { fileName ->
             if (navigator.backStack.lastOrNull() == CampfireDestination.Setlists) setlistsController.revealSetlist(fileName, isAnimated = false)
         }
-        if (action == null) return@launch
+        if (action == null || isNewSongOpen) return@launch
         launchState.isAppOnScreen.first { it }
+        // Once the sheet has slid away: New song and Paste a song are offered over no dialog. Resumed from inside the
+        // host's change, so the change is let finish first, its listeners seeing the sheet go before anything opens.
+        if (openDialog != null) {
+            dialogHost.visibleDialog.first { it == null }
+            yield()
+        }
         when (action) {
             BrowserRoutes.LinkAction.NEW_SONG -> {
                 val isOffered = navigator.backStack.lastOrNull() == CampfireDestination.Songs && dialogHost.visibleDialog.value == null &&

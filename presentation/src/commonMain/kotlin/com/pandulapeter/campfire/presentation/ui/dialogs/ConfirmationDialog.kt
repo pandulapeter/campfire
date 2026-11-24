@@ -30,20 +30,23 @@ internal fun ConfirmationDialog(
     isDestructive: Boolean = true,
     dismissLabel: String = stringResource(Res.string.cancel),
     extraButton: (@Composable () -> Unit)? = null,
-) = AlertDialog(
-    onDismissRequest = onDismiss,
-    title = { Text(title) },
-    text = { Text(text) },
-    confirmButton = {
-        TextButton(
-            colors = if (isDestructive) ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error) else ButtonDefaults.textButtonColors(),
-            onClick = onConfirm,
-        ) { Text(confirmLabel) }
-    },
-    dismissButton = {
-        Row {
-            extraButton?.invoke()
-            TextButton(onClick = onDismiss) { Text(dismissLabel) }
-        }
-    },
-)
+) {
+    CloseWhenRequested(onDismiss)
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title) },
+        text = { Text(text) },
+        confirmButton = {
+            TextButton(
+                colors = if (isDestructive) ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error) else ButtonDefaults.textButtonColors(),
+                onClick = onConfirm,
+            ) { Text(confirmLabel) }
+        },
+        dismissButton = {
+            Row {
+                extraButton?.invoke()
+                TextButton(onClick = onDismiss) { Text(dismissLabel) }
+            }
+        },
+    )
+}

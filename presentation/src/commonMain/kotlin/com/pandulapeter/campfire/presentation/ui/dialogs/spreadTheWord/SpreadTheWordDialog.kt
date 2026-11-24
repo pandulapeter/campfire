@@ -37,6 +37,7 @@ import com.pandulapeter.campfire.presentation.resources.spread_the_word_rate
 import com.pandulapeter.campfire.presentation.resources.spread_the_word_title
 import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
 import com.pandulapeter.campfire.presentation.ui.components.fadingVerticalEdges
+import com.pandulapeter.campfire.presentation.ui.dialogs.CloseWhenRequested
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.painterResource
 
@@ -54,28 +55,31 @@ internal fun SpreadTheWordDialog(
     onShare: () -> Unit,
     onRate: () -> Unit,
     onDismiss: () -> Unit,
-) = AlertDialog(
-    modifier = Modifier.widthIn(max = 480.dp),
-    onDismissRequest = onDismiss,
-    title = { SpreadTheWordTitle() },
-    text = {
-        val scrollState = rememberScrollState()
-        Text(
-            modifier = Modifier.fadingVerticalEdges(scrollState).bounceVerticalScroll(scrollState),
-            text = stringResource(if (rateStoreName == null) Res.string.spread_the_word_message_without_rating else Res.string.spread_the_word_message),
-        )
-    },
-    // Both slots are laid out in one flowing row, so the buttons wrap under one another where the words are long.
-    dismissButton = {
-        TextButton(onClick = onDismiss) { Text(stringResource(Res.string.close)) }
-        if (rateStoreName != null) {
-            TextButton(onClick = onRate) { Text(stringResource(Res.string.spread_the_word_rate, stringResource(rateStoreName))) }
-        }
-    },
-    confirmButton = {
-        Button(onClick = onShare) { Text(stringResource(Res.string.settings_share_app)) }
-    },
-)
+) {
+    CloseWhenRequested(onDismiss)
+    AlertDialog(
+        modifier = Modifier.widthIn(max = 480.dp),
+        onDismissRequest = onDismiss,
+        title = { SpreadTheWordTitle() },
+        text = {
+            val scrollState = rememberScrollState()
+            Text(
+                modifier = Modifier.fadingVerticalEdges(scrollState).bounceVerticalScroll(scrollState),
+                text = stringResource(if (rateStoreName == null) Res.string.spread_the_word_message_without_rating else Res.string.spread_the_word_message),
+            )
+        },
+        // Both slots are laid out in one flowing row, so the buttons wrap under one another where the words are long.
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(Res.string.close)) }
+            if (rateStoreName != null) {
+                TextButton(onClick = onRate) { Text(stringResource(Res.string.spread_the_word_rate, stringResource(rateStoreName))) }
+            }
+        },
+        confirmButton = {
+            Button(onClick = onShare) { Text(stringResource(Res.string.settings_share_app)) }
+        },
+    )
+}
 
 /** The author's photo beside the title, which is what makes the note read as one person's rather than the app's. */
 @Composable

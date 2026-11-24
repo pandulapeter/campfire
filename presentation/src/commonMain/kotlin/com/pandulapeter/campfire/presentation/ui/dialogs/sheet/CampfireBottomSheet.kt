@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.dialogs.sheet
 
+import com.pandulapeter.campfire.presentation.ui.dialogs.CloseWhenRequested
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -73,6 +74,7 @@ import com.pandulapeter.campfire.presentation.ui.components.saveShortcut
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
+import com.pandulapeter.campfire.presentation.ui.dialogs.LocalIsDialogCloseRequested
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
@@ -195,8 +197,7 @@ internal fun CampfireBottomSheet(
     val cancel = { requestClose(false) }
     val close = { requestClose(true) }
     // Asked to close by the stack it is in rather than by its own controls, see DialogHost.dismissDialogAndSheetUnder.
-    val isCloseRequestedFromOutside = LocalIsSheetCloseRequested.current
-    LaunchedEffect(isCloseRequestedFromOutside) { if (isCloseRequestedFromOutside) close() }
+    CloseWhenRequested(close)
     val saveShortcut = remember { SheetSaveShortcut() }
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -260,7 +261,7 @@ internal fun CampfireBottomSheet(
                         LocalLayoutDirection provides currentLanguage.value.layoutDirection,
                         LocalIsSheetClosing provides isClosing,
                         // A sheet nested inside this one's content is not the dialog the request was for.
-                        LocalIsSheetCloseRequested provides false,
+                        LocalIsDialogCloseRequested provides false,
                         LocalSheetSaveShortcut provides saveShortcut,
                         LocalSheetHeightLag provides heightAnimation::heightLag,
                     ) {

@@ -108,6 +108,28 @@ class DialogHostTest {
     }
 
     @Test
+    fun `closing everything takes the dialogs over the bottom one and asks that one to close itself`() = runTest {
+        val host = DialogHost(backgroundScope)
+        val info = DialogType.SongInfo(song = song, target = file)
+        host.showDialog(info)
+        host.showDialog(DialogType.SongTags(song = song, target = file))
+        host.closeAll()
+        assertEquals(listOf<DialogType>(info), host.openDialogs.value)
+        assertEquals(info, host.closeRequest.value)
+        host.dismissSheet(info)
+        assertNull(host.visibleDialog.value)
+    }
+
+    @Test
+    fun `closing everything takes the export screen at once`() = runTest {
+        val host = DialogHost(backgroundScope)
+        host.showDialog(DialogType.Export(song = song))
+        host.closeAll()
+        assertNull(host.visibleDialog.value)
+        assertNull(host.closeRequest.value)
+    }
+
+    @Test
     fun `a confirmed removal closes the question and asks the cover sheet under it to close itself`() = runTest {
         val host = DialogHost(backgroundScope)
         val info = DialogType.SongInfo(song = song, target = file)

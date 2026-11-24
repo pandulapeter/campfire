@@ -72,4 +72,5 @@
   written: the web reads them as the home screen, a link opens the home screen and then New song or the clipboard paste
   (`AppLinkOpening.kt`, only where the songs screen offers it). A link that starts the app is the launch's navigation
   (`LaunchState.navigateToLink`, launch screen held); any replaces the stack (a restored one too), refused over unsaved editor text, a first run's onboarding, or
-  an import under review (`LinkRefusal`); a dialog open stays (it may hold typed text).
+  an import under review (`LinkRefusal`); the dialogs open close themselves (`DialogHost.closeAll`), New song's over its
+  own open sheet aside.

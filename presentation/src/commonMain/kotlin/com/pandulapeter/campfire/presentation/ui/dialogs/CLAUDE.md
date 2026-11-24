@@ -30,7 +30,9 @@ away and uncovers the one under it as it was (sheet, draft, scroll), never re-op
   back to it, one that stacks over the top goes over it, anything else replaces the stack.
 - **The stack never takes a sheet out from under the user**: a sheet closes itself and is removed once its hide ended
   (`dismissSheet`); an underlying dialog that must change is updated in place (`updateUnderlyingDialog`); a question
-  whose answer leaves the sheet under it nothing to do asks that sheet to close itself (`dismissDialogAndSheetUnder`).
+  whose answer leaves the sheet under it nothing to do asks that sheet to close itself (`dismissDialogAndSheetUnder`); an
+  app link closes the whole stack the same way (`closeAll`), which the questions honour too, unanswered
+  (`CloseWhenRequested`).
 - What belongs to a sheet lives as long as it is anywhere in the stack (`DialogHost.addOpenDialogsChange`).
 - Nested setlist naming and calendar sheets are local state of the sheet under them, not stack entries.
 

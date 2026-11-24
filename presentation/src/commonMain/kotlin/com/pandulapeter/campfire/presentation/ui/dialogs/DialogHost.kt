@@ -144,6 +144,19 @@ internal class DialogHost(
     }
 
     /**
+     * Closes every open dialog, for an app link taking the app elsewhere: the ones over the bottom of the stack go at once,
+     * as an answered question does, and that one is asked to close itself ([closeRequest]), a sheet sliding away. The
+     * export screen, drawn over the screens rather than in a window of its own, goes at once, as it closes itself.
+     */
+    fun closeAll() {
+        val open = _openDialogs.value
+        val bottom = open.firstOrNull() ?: return
+        if (bottom is DialogType.Export) return setVisibleDialog(null)
+        if (open.size > 1) setVisibleDialog(bottom)
+        _closeRequest.value = bottom
+    }
+
+    /**
      * Puts [dialog] in the place ([slotKey]) of the open dialog under the one on screen that has it, which is updated
      * where it is rather than put up again: the metadata form the song details lookup fills in, still under the lookup
      * as it slides away.

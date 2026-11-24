@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.runtime.compositionLocalOf
-import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import com.pandulapeter.campfire.presentation.resources.close
@@ -26,12 +25,6 @@ import com.pandulapeter.campfire.presentation.resources.close
  * value, read at the tap, so that nothing recomposes on the frames of the slide.
  */
 internal val LocalIsSheetClosing = compositionLocalOf<() -> Boolean> { { false } }
-
-/**
- * Whether the dialog a [CampfireBottomSheet] is drawn for has been asked to close by the stack of open dialogs it is in,
- * which it does as if one of its own actions had closed it, see `DialogHost.closeRequest`.
- */
-internal val LocalIsSheetCloseRequested = staticCompositionLocalOf { false }
 
 /** The column of a [CampfireBottomSheet], which its content can also close the sheet from. */
 internal class BottomSheetContentScope(

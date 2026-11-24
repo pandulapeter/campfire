@@ -36,6 +36,7 @@ import com.pandulapeter.campfire.presentation.resources.whats_new_message
 import com.pandulapeter.campfire.presentation.CAMPFIRE_VERSION_NAME
 import com.pandulapeter.campfire.presentation.ui.components.fadingVerticalEdges
 import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
+import com.pandulapeter.campfire.presentation.ui.dialogs.CloseWhenRequested
 
 /**
  * Each change gets its own row so wrapped lines stay aligned with the words rather than the bullet, a bold headline
@@ -46,63 +47,66 @@ import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
 @Composable
 internal fun WhatsNewDialog(
     onDismiss: () -> Unit,
-) = AlertDialog(
-    modifier = Modifier.widthIn(max = 480.dp),
-    onDismissRequest = onDismiss,
-    title = { Text(stringResource(Res.string.whats_new_title, CAMPFIRE_VERSION_NAME)) },
-    text = {
-        val scrollState = rememberScrollState()
-        val message = stringResource(Res.string.whats_new_message)
-        val changes = remember(message) {
-            message.lineSequence().map { it.trim().removePrefix("•").trim() }.filter { it.isNotBlank() }.map { change ->
-                val headline = WHATS_NEW_HEADLINE.matchEntire(change)
-                if (headline == null) null to change else headline.groupValues[1] to headline.groupValues[2]
-            }.toList()
-        }
-        val bulletColor = MaterialTheme.colorScheme.primary
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(max = 420.dp)
-                .fadingVerticalEdges(scrollState)
-                .bounceVerticalScroll(scrollState)
-                .padding(vertical = 4.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            changes.forEach { (headline, description) ->
-                Row(
-                    modifier = Modifier.fillMaxWidth().semantics(mergeDescendants = true) {},
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    Canvas(modifier = Modifier.padding(top = 10.dp).size(5.dp)) {
-                        drawCircle(color = bulletColor)
-                    }
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(2.dp),
+) {
+    CloseWhenRequested(onDismiss)
+    AlertDialog(
+        modifier = Modifier.widthIn(max = 480.dp),
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(Res.string.whats_new_title, CAMPFIRE_VERSION_NAME)) },
+        text = {
+            val scrollState = rememberScrollState()
+            val message = stringResource(Res.string.whats_new_message)
+            val changes = remember(message) {
+                message.lineSequence().map { it.trim().removePrefix("•").trim() }.filter { it.isNotBlank() }.map { change ->
+                    val headline = WHATS_NEW_HEADLINE.matchEntire(change)
+                    if (headline == null) null to change else headline.groupValues[1] to headline.groupValues[2]
+                }.toList()
+            }
+            val bulletColor = MaterialTheme.colorScheme.primary
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 420.dp)
+                    .fadingVerticalEdges(scrollState)
+                    .bounceVerticalScroll(scrollState)
+                    .padding(vertical = 4.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                changes.forEach { (headline, description) ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth().semantics(mergeDescendants = true) {},
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        if (headline != null) {
-                            Text(
-                                text = headline,
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.onSurface,
-                            )
+                        Canvas(modifier = Modifier.padding(top = 10.dp).size(5.dp)) {
+                            drawCircle(color = bulletColor)
                         }
-                        if (description.isNotEmpty()) {
-                            Text(
-                                text = description,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(2.dp),
+                        ) {
+                            if (headline != null) {
+                                Text(
+                                    text = headline,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                )
+                            }
+                            if (description.isNotEmpty()) {
+                                Text(
+                                    text = description,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
                         }
                     }
                 }
             }
-        }
-    },
-    confirmButton = {
-        Button(onClick = onDismiss) { Text(stringResource(Res.string.welcome_get_started)) }
-    },
-)
+        },
+        confirmButton = {
+            Button(onClick = onDismiss) { Text(stringResource(Res.string.welcome_get_started)) }
+        },
+    )
+}
 
 private val WHATS_NEW_HEADLINE = Regex("""^\*\*(.+?)\*\*\s*(.*)$""")
