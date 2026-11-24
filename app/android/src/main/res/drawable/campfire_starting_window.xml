@@ -9,13 +9,13 @@
  https://mozilla.org/MPL/2.0/.
 -->
 <!--
-  The starting window below Android 12, which has no splash screen of its own: the icon's flame on the window color, held
-  until the app is ready (see CampfireMainActivity). The flame alone, in the window's own onBackground, since the window
-  is drawn before anything can tell which theme color's icon was launched.
+  The starting window below Android 12, which has no splash screen of its own: the launch screen's mark on the window color,
+  held until the app is ready (see CampfireMainActivity). Neutral rather than the launcher icon, since the window is drawn
+  before anything can tell which theme color's icon was launched.
 -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:drawable="@color/campfire_window_background" />
     <item
-        android:drawable="@drawable/campfire_starting_window_icon"
+        android:drawable="@drawable/campfire_starting_window_mark"
         android:gravity="center" />
 </layer-list>
