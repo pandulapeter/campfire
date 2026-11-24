@@ -194,6 +194,26 @@ internal fun Modifier.fadingBottomEdge(strength: () -> Float, backgroundColor: C
     }
 }
 
+/**
+ * The painted [fadingTopEdge] of a container that runs on under the navigation bar, [bottomInset] tall, that also fades
+ * out at its bottom over the bar and [EDGE_FADE_SIZE] above it, so the bar's buttons never stand on the content: as
+ * strongly as there is content left below, so its end, which stops above the bar, is drawn whole. No bottom fade where
+ * the inset is none (no bar, or one drawn over by something else), nor while [isBottomCovered], read while drawing: a
+ * container ending at the keyboard fades at its top only.
+ */
+internal fun Modifier.fadingOverNavigationBar(
+    scrollState: ScrollState,
+    backgroundColor: Color,
+    bottomInset: Dp,
+    scrolledFromTop: () -> Int = { scrollState.value },
+    isBottomCovered: () -> Boolean = { false },
+) = fadingVerticalEdges(
+    scrolledFromTop = scrolledFromTop,
+    scrolledFromBottom = { if (bottomInset > 0.dp && !isBottomCovered()) scrollState.maxValue - scrollState.value else 0 },
+    backgroundColor = backgroundColor,
+    bottomHeight = bottomInset + EDGE_FADE_SIZE,
+)
+
 /** [fadingVerticalEdges] for a container scrolled by [scrollState]. */
 internal fun Modifier.fadingVerticalEdges(scrollState: ScrollState) = fadingVerticalEdges(
     scrolledFromTop = { scrollState.value },

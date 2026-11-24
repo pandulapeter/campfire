@@ -49,6 +49,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionOnScreen
@@ -58,7 +59,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.pandulapeter.campfire.presentation.ui.chrome.contentEdges
-import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
+import com.pandulapeter.campfire.presentation.ui.components.fadingOverNavigationBar
 import com.pandulapeter.campfire.presentation.ui.components.bounceHorizontalScroll
 import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
 import com.pandulapeter.campfire.presentation.ui.theme.LocalMonospaceFontFamily
@@ -197,7 +198,7 @@ internal fun ChordProTextField(
                 // and only once it reaches above the navigation bar it covers, which is when the padding outgrows that bar:
                 // the viewport then ends at the keyboard, so the caret the field brings into view is never behind it.
                 .padding(EditorFieldPadding(contentPadding = contentPadding, restingBottomInset = restingBottomInset))
-                .fadingTopEdge(scrollState, MaterialTheme.colorScheme.background)
+                .fieldEdgeFades(scrollState, colorScheme.background, contentPadding, restingBottomInset)
                 .onGloballyPositioned { viewportTop = it.positionOnScreen().y }
                 // The field's own scrolling cannot hold any room after the last line, so it is never given less height than
                 // its text and the scrolling is a container around it, one per axis. The vertical one hands its viewport
@@ -273,6 +274,23 @@ private class EditorFieldPadding(
 
     override fun calculateBottomPadding() = contentPadding.calculateBottomPadding().let { if (it > restingBottomInset) it else 0.dp }
 }
+
+/**
+ * The field's edges faded out over [backgroundColor]: its top as far as it is scrolled, and its bottom over the
+ * navigation bar it runs under, [restingBottomInset], while the keyboard is down. With the keyboard past that bar the
+ * field ends at the keyboard (see [EditorFieldPadding]), and fades at its top only.
+ */
+private fun Modifier.fieldEdgeFades(
+    scrollState: ScrollState,
+    backgroundColor: Color,
+    contentPadding: PaddingValues,
+    restingBottomInset: Dp,
+) = fadingOverNavigationBar(
+    scrollState = scrollState,
+    backgroundColor = backgroundColor,
+    bottomInset = restingBottomInset,
+    isBottomCovered = { contentPadding.calculateBottomPadding() > restingBottomInset },
+)
 
 /** The field's text layout as it last reported it, kept outside the snapshot system since only [revealOffset] reads it. */
 private class TextLayoutHolder {

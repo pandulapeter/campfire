@@ -26,7 +26,7 @@ the next share a height, so any motion takes away what is still to be read.
   last line passes the reading line; it follows every drag, fling, nudge, fold, and speed change.
 - A fling is not capped to a step here.
 - **The column scrolls on under the navigation bar** and fades out over it (and `EDGE_FADE_SIZE` above it) in the
-  background color, as strongly as there is song left below, so the bar's buttons never stand on a line (`songPageScroll`).
+  background color, as strongly as there is song left below, so the bar's buttons never stand on a line (`fadingOverNavigationBar`).
   Not where the inset is none (the desktop, the web) or in a setlist, whose pager bar stands over it.
 
 ## The pace

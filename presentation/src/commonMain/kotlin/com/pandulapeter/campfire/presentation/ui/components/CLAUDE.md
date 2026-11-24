@@ -58,7 +58,8 @@ The shared building blocks of the screens; subpackages with something to say hav
   every frame; `ListTopFade` paints the screen's background over each card, a song card's labels the card's color;
   masks only for alert dialogs, `fadingUnderStartOverlay`, and overscroll.
   `fadingVerticalEdges`: lists in a dialog; in a sheet only content above a pinned row, never content ending at the
-  window's bottom.
+  window's bottom. The one exception, `fadingOverNavigationBar`: a song read in one column and both editor panes fade
+  out over the navigation bar they run under (the field only with the keyboard down), so its buttons never sit on text.
 - **`ShrinkToFit`**, never `TextAutoSize.StepBased`, which never shrinks on Skiko (no ellipsized line reported).
 - **`animatePlacement`**: a wrapping row's child travels to its new place instead of jumping; only moves inside the
   parent travel (so a dragged window edge is followed frame by frame), a new layout direction places at once. First in
