@@ -29,6 +29,39 @@ class ChordSheetSiteDetailsTest {
     }
 
     @Test
+    fun `a details row whose last value is on the line under its label is read as one row`() {
+        val song = "\n\n[Verse]\nG      C\nHello world"
+        val split = convert("Riverlight Chords by Someone\nTuning: E A D G B ECapo: \n2nd fret$song")
+        assertEquals(convert("Riverlight Chords by Someone\nTuning: E A D G B ECapo: 2nd fret$song"), split)
+        val metadata = ChordProParser.parse(split).metadata
+        assertEquals("Riverlight", metadata.title)
+        assertEquals("Someone", metadata.artist)
+        assertTrue("{capo: 2}" in split, split)
+        assertFalse("fret" in split || "Tuning" in split, split)
+        // A page's crop starts at the row, the title read from the page's own header, as the import's crop does.
+        val cropped = ChordSheetConverter.convert(
+            sheet = ChordSheet.ofPlainText("Tuning: E A D G B ECapo: \n2nd fret\nSomeone - Riverlight$song"),
+            guessesTitle = false,
+            knownTitle = PageTitle("Riverlight", "Someone"),
+        ).single()
+        assertTrue("{capo: 2}" in cropped, cropped)
+        assertFalse("fret" in cropped || "Tuning" in cropped || "Riverlight" in cropped, cropped)
+        for ((label, value) in listOf("Capo:" to "II", "Key:" to "Em", "Tempo:" to "96 BPM", "Time:" to "3/4", "Capo:" to "No capo")) {
+            val result = convert("Riverlight\n$label\n$value$song")
+            assertFalse(value in result.substringAfter("}\n\n"), result)
+        }
+    }
+
+    @Test
+    fun `a sung line under a details label with no value stays a line of the song`() {
+        for ((label, lyric) in listOf("Capo:" to "2 hearts beating", "Key:" to "Hello my love", "Tuning: E A D G B ECapo:" to "Fret not my dear")) {
+            val result = convert("Riverlight\n$label\n$lyric\n\n[Verse]\nG      C\nHello world")
+            assertTrue(lyric in result, result)
+            assertFalse("{capo" in result || "{key" in result, result)
+        }
+    }
+
+    @Test
     fun `a glued block keeps a capo a tempo and a non-standard tuning`() {
         val result = convert("Song\nSomeone\nDifficulty: novice\nTuning: Eb Ab Db Gb Bb EbKey: EbCapo: 2nd fretTempo: 96\n\nG      C\nHello world")
         assertTrue(result.contains("{meta: tuning Eb Ab Db Gb Bb Eb}"), result)

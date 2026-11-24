@@ -9,7 +9,9 @@
  */
 package com.pandulapeter.campfire.chordpro.convert
 
+import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordWords.ascii
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordWords.chordTokens
+import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordWords.isChordOrLatinName
 
 /**
  * The song details a chord site prints around a song besides its key, capo, and tempo (the tuning, the difficulty, who
@@ -93,6 +95,51 @@ internal object ChordSheetSiteDetails {
         }
     }
 
+    /**
+     * The [lines] with a details row whose last label has no value (`Tuning: E A D G B ECapo:`) joined to the line right
+     * under it where that line is only a value of the label's field (`2nd fret`), as a copy that broke the line between
+     * the label's element and its value's leaves it; the row is then read whole ([ChordSheetMetadata.labelledRow]).
+     * A capo, key, tempo, or time signature only, each by its own shape alone, so a sung line under a bare label stays.
+     */
+    fun withValuesJoined(lines: List<Rendered>): List<Rendered> {
+        val joined = mutableListOf<Rendered>()
+        var index = 0
+        while (index < lines.size) {
+            val row = lines[index]
+            val value = lines.getOrNull(index + 1)
+            if (value != null && isValueOfLastLabel(row.text, value.text)) {
+                val text = value.text.trim()
+                val start = value.text.indexOf(text)
+                val space = (row.positions.lastOrNull() ?: 0.0) + 1.0
+                joined += row.copy(
+                    text = "${row.text} $text",
+                    positions = row.positions + space + value.positions.copyOfRange(start, start + text.length),
+                    bidi = null,
+                )
+                index += 2
+            } else {
+                joined += row
+                index++
+            }
+        }
+        return joined
+    }
+
+    private fun isValueOfLastLabel(row: String, value: String): Boolean {
+        val trimmed = row.trim()
+        val label = emptyLabel.find(trimmed)?.groupValues?.get(1)?.takeIf { rowStart.containsMatchIn(trimmed) } ?: return false
+        val candidate = value.trim()
+        val isValue = when (ChordSheetMetadata.metadata("$label: $candidate")?.first) {
+            "capo" -> capoValue.matches(candidate.lowercase()) || romanCapoValue.matches(candidate)
+            ChordSheetMetadata.NO_CAPO -> true
+            "key" -> isChordOrLatinName(ascii(candidate))
+            "tempo" -> tempoValue.matches(candidate)
+            "time" -> timeValue.matches(candidate)
+            else -> false
+        }
+        return isValue && ChordSheetMetadata.labelledRow("$trimmed $candidate", isHeader = true) != null
+    }
+
     /** Whether [text] is, as a whole line, one of a chord site's controls or calls to action. */
     fun isCallToAction(text: String): Boolean {
         val trimmed = text.trim().trimEnd('»', '›', '>', '→', ' ').lowercase()
@@ -129,6 +176,11 @@ internal object ChordSheetSiteDetails {
     ).sortedByDescending { it.length }.joinToString("|")
     private val rowLabel = Regex("(?:$rowLabels)\\s*:")
     private val rowStart = Regex("^(?:$rowLabels)\\s*:", RegexOption.IGNORE_CASE)
+    private val emptyLabel = Regex("($rowLabels)\\s*:$")
+    private val capoValue = Regex("^[0-9]{1,2}(?:st|nd|rd|th|\\.|ª|º|°)?(?:\\s+(?:frets?|traste|casa|tasto|bund|case|tastă|próg|pražec|שריג))?$")
+    private val romanCapoValue = Regex("^(?:XII|XI|X|IX|IV|V?I{1,3}|V)$")
+    private val tempoValue = Regex("^[0-9]{2,3}(?:\\s*BPM)?$", RegexOption.IGNORE_CASE)
+    private val timeValue = Regex("^[0-9]{1,2}/[0-9]{1,2}$")
     private val labelled = Regex(
         "^(" + (tuningLabels + detailLabels + authorLabels).sortedByDescending { it.length }.joinToString("|") + ")\\s*:\\s*(.+)$",
         RegexOption.IGNORE_CASE,

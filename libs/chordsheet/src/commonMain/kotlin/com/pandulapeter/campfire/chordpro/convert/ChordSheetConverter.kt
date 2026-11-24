@@ -77,7 +77,7 @@ public object ChordSheetConverter {
             }
         }
         return groups.map { ChordSheetSongCrop.cropped(it, pageScores) }
-            .map { normalize(convertSong(expandLabels(withoutInjections(singleSpaced(ChordSheetRomanChords.named(it)))), guessesTitle, profile, knownTitle)) }.filter { it.isNotBlank() }
+            .map { normalize(convertSong(expandLabels(withoutInjections(singleSpaced(ChordSheetSiteDetails.withValuesJoined(ChordSheetRomanChords.named(it))))), guessesTitle, profile, knownTitle)) }.filter { it.isNotBlank() }
     }
 
     /**
