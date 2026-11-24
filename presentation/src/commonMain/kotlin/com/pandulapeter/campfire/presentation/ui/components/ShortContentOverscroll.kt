@@ -24,6 +24,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
+/**
+ * Hands the drags content that fits cannot scroll by to [effect] (`bounceScrollableContent`), and records them in
+ * [overscrollPull] only where the effect carries the content with them ([isContentCarried]): under Android's glow
+ * before 12 the content stays put, and a fade following the finger would fade cards that never moved.
+ */
 internal class ShortContentOverscroll(
     private val state: ScrollableState,
     private val effect: OverscrollEffect,
@@ -31,6 +36,7 @@ internal class ShortContentOverscroll(
     private val dispatcher: NestedScrollDispatcher,
     private val scope: CoroutineScope,
     private val overscrollPull: OverscrollPull,
+    private val isContentCarried: Boolean,
 ) : NestedScrollConnection {
     private var hasPulled = false
     private var releaseJob: Job? = null
@@ -46,7 +52,7 @@ internal class ShortContentOverscroll(
         if (pull != Offset.Zero) {
             hasPulled = true
             releaseJob?.cancel()
-            overscrollPull.towardsStart = (overscrollPull.towardsStart - pull.y).coerceAtLeast(0f)
+            if (isContentCarried) overscrollPull.towardsStart = (overscrollPull.towardsStart - pull.y).coerceAtLeast(0f)
             effect.applyToScroll(pull, source) { Offset.Zero }
         }
         return delta

@@ -32,16 +32,18 @@ import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.input.nestedscroll.NestedScrollDispatcher
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
+import com.pandulapeter.campfire.presentation.ui.platform.isContentCarriedByOverscroll
 
 /**
  * Lets content that fits its container stretch or bounce under a drag the way content that scrolls does. Foundation
  * only hands a drag to the overscroll effect while there is something to scroll, so a short list or form felt dead
  * under the finger. This takes the drags such content cannot scroll by and gives them to the effect Compose provides
- * for the platform (`rememberOverscrollEffect`: Android's stretch, iOS's bounce, and none on the desktop and the web,
- * where it does nothing); content that does scroll is left to Foundation's own.
+ * for the platform (`rememberOverscrollEffect`: Android's stretch, its glow before 12, iOS's bounce, and none on the
+ * desktop and the web, where it does nothing); content that does scroll is left to Foundation's own.
  *
  * Content pulled up this way is carried to the top edge of its viewport, where a sheet's header or an app bar sits, and
- * fades out there as it would scrolled under them, as strong as it has been pulled: a container's own top fade follows
+ * fades out there as it would scrolled under them, as strong as it has been pulled (not under the glow, which carries
+ * nothing: `isContentCarriedByOverscroll`): a container's own top fade follows
  * its scroll position, which content that fits never leaves. A container whose content fades somewhere other than its
  * viewport's top edge (the list screens' cards, under the pinned header) passes a [pull] of its own and fades by it
  * instead.
@@ -64,7 +66,7 @@ internal fun Modifier.bounceScrollableContent(
     // the spring cancelled with the scope: the cards would be left carried up.
     DisposableEffect(usedPull) { onDispose { usedPull.towardsStart = 0f } }
     val connection = remember(state, effect, orientation, dispatcher, scope, usedPull) {
-        ShortContentOverscroll(state, effect, orientation, dispatcher, scope, usedPull)
+        ShortContentOverscroll(state, effect, orientation, dispatcher, scope, usedPull, isContentCarriedByOverscroll)
     }
     // Content that fits is clipped to keep its stretch inside the container. Content that scrolls is clipped along its
     // main axis by its own container and not across it, where the chips' ripples and focus rings and a sheet's sideways

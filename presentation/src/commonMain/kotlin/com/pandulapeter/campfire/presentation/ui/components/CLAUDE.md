@@ -68,7 +68,8 @@ The shared building blocks of the screens; subpackages with something to say hav
   down, and taking only what the content inside left over (a pager holding one song still lets its strip scroll). Installed whether or not the content fits (deciding while composing would compose every row twice); the clip is
   drawn only while it fits (a scrolling container must not clip its cross axis), and never as a layer's clip, which on
   Android can keep the layer's first size. The vertical form draws its own top fade while pulled (`fadingTopEdge` is
-  off at scroll zero); list screens pass their `ListTopFade`'s `OverscrollPull`.
+  off at scroll zero); list screens pass their `ListTopFade`'s `OverscrollPull`. No pull is recorded where the effect
+  leaves the content in place (Android's glow before 12, `isContentCarriedByOverscroll`), so nothing fades there.
 - **A list's cards compose an animation only once its value first changes** (`ChangeAnimations.kt`:
   `AnimatedContentOnChange`, `AnimatedVisibilityOnChange`, the star's own gate), since a pop or a tab switch composes
   every card at once; the resting content is movable, so the arming frame keeps its state (a closing menu's fade). Their
