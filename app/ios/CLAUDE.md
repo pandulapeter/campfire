@@ -123,8 +123,9 @@ extension (`iosApp/ShareExtension/`) and the widget extension (`iosApp/CampfireW
   hands over one; WidgetKit budgets reloads), its folder excluded from backup. **The reload seam**: WidgetKit has no
   Objective-C API, so `CampfireViewController` takes `reloadWidgetTimelines`, which `ContentView.swift` passes as
   `WidgetCenter.shared.reloadAllTimelines()`, called after each write.
-- Random picks: 25 hourly entries, each drawn (SplitMix64) by the seed in the group's `UserDefaults` mixed with the
-  hour, so a timeline rebuilt within the hour draws the same; Shuffle (`ShuffleIntent`) stores a new seed, shared by
+- Random picks: 25 hourly entries, each drawn by the seed in the group's `UserDefaults` mixed with the hour (SplitMix64's
+  finalizer, never added: an added hour slides the same draw along), ranking songs as `pickWidgetSongs` does, so a
+  timeline rebuilt within the hour draws the same; Shuffle (`ShuffleIntent`) stores a new seed, shared by
   every such widget. Setlist: an entry now and at each of the week's midnights; the choice is a `SetlistEntity`
   (`next-gig`, else a setlist's file name) listed from the snapshot, a missing one kept until changed.
 - What a widget shows comes from the snapshot, in the app's language and direction. The gallery's names and

@@ -12,7 +12,6 @@ package com.pandulapeter.campfire.presentation.ui.widget
 import com.pandulapeter.campfire.presentation.ui.components.RelativeDay
 import com.pandulapeter.campfire.presentation.ui.components.relativeDay
 import kotlinx.datetime.LocalDate
-import kotlin.random.Random
 
 /** What the random picks widget shows: the songs drawn, or a sentence where there is nothing to draw from. */
 sealed interface RandomPicksContent {
@@ -50,14 +49,14 @@ sealed interface SetlistWidgetContent {
 }
 
 /**
- * Up to [count] songs drawn from the library by [seed]: the same seed draws the same songs from the same library, so a
- * widget keeps its picks by keeping the seed, and draws again by taking a new one. Every song can be drawn, however few:
- * a library of three shows all three.
+ * Up to [count] songs drawn from the library by [seed]: the same seed draws the same songs from the same library, in
+ * whatever order it is sorted, so a widget keeps its picks by keeping the seed, and draws again by taking a new one.
+ * Every song can be drawn, however few: a library of three shows all three.
  */
 fun WidgetSnapshot.randomPicksContent(count: Int, seed: Long): RandomPicksContent = when {
     !areSongsEnabled -> RandomPicksContent.Message(strings.songsOff)
     songs.isEmpty() -> RandomPicksContent.Message(strings.emptyLibrary)
-    else -> RandomPicksContent.Picks(pickWidgetSongs(songs = songs, count = count, random = Random(seed)))
+    else -> RandomPicksContent.Picks(pickWidgetSongs(songs = songs, count = count, seed = seed))
 }
 
 /**
@@ -84,8 +83,23 @@ fun WidgetSnapshot.setlistContent(pinnedFileName: String?, todayEpochDay: Long):
     )
 }
 
-/** Up to [count] of [songs], drawn by [random]. */
-internal fun pickWidgetSongs(songs: List<WidgetSnapshot.Song>, count: Int, random: Random) = songs.shuffled(random).take(count.coerceAtLeast(0))
+/**
+ * Up to [count] of [songs]: those whose file names, mixed with [seed], rank first. A song's rank is its own name's alone,
+ * so the library's order (its sorting, a rename elsewhere) leaves the picks as they are, and a song added or removed
+ * changes one of them at most. The iOS widget ranks the same way (`RandomPicksWidget.swift`).
+ */
+internal fun pickWidgetSongs(songs: List<WidgetSnapshot.Song>, count: Int, seed: Long) =
+    songs.sortedBy { drawRank(seed = seed, fileName = it.fileName) }.take(count.coerceAtLeast(0))
+
+/** The file name's 64-bit FNV-1a hash, mixed with [seed] by SplitMix64's finalizer. */
+private fun drawRank(seed: Long, fileName: String): ULong {
+    var hash = 0xCBF29CE484222325uL
+    fileName.encodeToByteArray().forEach { byte -> hash = (hash xor byte.toUByte().toULong()) * 0x100000001B3uL }
+    var mixed = hash xor seed.toULong()
+    mixed = (mixed xor (mixed shr 30)) * 0xBF58476D1CE4E5B9uL
+    mixed = (mixed xor (mixed shr 27)) * 0x94D049BB133111EBuL
+    return mixed xor (mixed shr 31)
+}
 
 /**
  * The next gig on [today]: the setlist not archived with the earliest day that is today or later, the first of a day's

@@ -59,7 +59,7 @@ struct RandomPicksProvider: TimelineProvider {
         let hour = UInt64(max(0, Int64(date.timeIntervalSince1970 / 3600)))
         // Mixed, not added: a seed one increment of the generator's own on would start the same stream one value later,
         // so each hour would show nearly the picks of the hour before it.
-        return RandomPicksEntry(date: date, snapshot: snapshot, seed: SeededGenerator.mix(ShuffleSeed.current ^ hour))
+        return RandomPicksEntry(date: date, snapshot: snapshot, seed: SplitMix.mix(ShuffleSeed.current ^ hour))
     }
 }
 
@@ -88,18 +88,8 @@ struct ShuffleIntent: AppIntent {
     }
 }
 
-/// SplitMix64: the same seed shuffles the same library the same way, which `SystemRandomNumberGenerator` cannot.
-struct SeededGenerator: RandomNumberGenerator {
-    private var state: UInt64
-
-    init(seed: UInt64) { state = seed }
-
-    mutating func next() -> UInt64 {
-        state &+= 0x9E37_79B9_7F4A_7C15
-        return Self.mix(state)
-    }
-
-    /// SplitMix64's finalizer: nearby inputs give unrelated outputs.
+/// SplitMix64's finalizer: nearby inputs give unrelated outputs.
+enum SplitMix {
     static func mix(_ value: UInt64) -> UInt64 {
         var z = value
         z = (z ^ (z >> 30)) &* 0xBF58_476D_1CE4_E5B9
@@ -143,10 +133,17 @@ struct RandomPicksView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
-    /// Up to `count` songs, by this entry's seed: every song can be drawn, however few there are.
+    /// Up to `count` songs, by this entry's seed: every song can be drawn, however few there are. Those whose file names,
+    /// mixed with the seed, rank first, as `:presentation`'s `pickWidgetSongs` draws them: a song's rank is its own name's
+    /// alone, so the library's order leaves the picks as they are, and a song added changes one of them at most.
     private func draw(_ songs: [WidgetSnapshot.Song], count: Int) -> [WidgetSnapshot.Song] {
-        var generator = SeededGenerator(seed: entry.seed)
-        return Array(songs.shuffled(using: &generator).prefix(count))
+        Array(songs.map { (rank: Self.rank(of: $0.fileName, seed: entry.seed), song: $0) }.sorted { $0.rank < $1.rank }.prefix(count).map(\.song))
+    }
+
+    /// The file name's 64-bit FNV-1a hash, mixed with `seed`.
+    private static func rank(of fileName: String, seed: UInt64) -> UInt64 {
+        let hash = fileName.utf8.reduce(UInt64(0xCBF2_9CE4_8422_2325)) { ($0 ^ UInt64($1)) &* 0x0000_0100_0000_01B3 }
+        return SplitMix.mix(hash ^ seed)
     }
 
     private func header(_ strings: WidgetSnapshot.Strings) -> some View {

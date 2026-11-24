@@ -13,11 +13,11 @@ import com.pandulapeter.campfire.presentation.localization.AppLocale
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.widget_song_count
 import kotlinx.datetime.LocalDate
-import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class WidgetContentTest {
 
@@ -55,9 +55,31 @@ class WidgetContentTest {
     @Test
     fun `the draw takes up to the count asked for and every song of a smaller library`() {
         val songs = listOf("a", "b", "c").map(::song)
-        assertEquals(songs.toSet(), pickWidgetSongs(songs, count = 5, random = Random(1)).toSet())
-        val drawn = pickWidgetSongs(songs, count = 2, random = Random(1))
+        assertEquals(songs.toSet(), pickWidgetSongs(songs, count = 5, seed = 1).toSet())
+        val drawn = pickWidgetSongs(songs, count = 2, seed = 1)
         assertEquals(2, drawn.toSet().size)
+    }
+
+    @Test
+    fun `the library's order leaves the draw as it is`() {
+        val songs = (1..30).map { song("s$it") }
+        assertEquals(pickWidgetSongs(songs, count = 5, seed = 7), pickWidgetSongs(songs.reversed(), count = 5, seed = 7))
+    }
+
+    @Test
+    fun `a song added to the library changes one pick at most`() {
+        val songs = (1..30).map { song("s$it") }
+        (0L..20L).forEach { seed ->
+            val before = pickWidgetSongs(songs, count = 5, seed = seed)
+            val after = pickWidgetSongs(songs + song("new"), count = 5, seed = seed)
+            assertTrue((before - after.toSet()).size <= 1)
+        }
+    }
+
+    @Test
+    fun `different seeds draw different songs`() {
+        val songs = (1..30).map { song("s$it") }
+        assertTrue((0L..9L).map { pickWidgetSongs(songs, count = 5, seed = it).toSet() }.toSet().size > 1)
     }
 
     @Test
