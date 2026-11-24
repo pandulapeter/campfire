@@ -88,10 +88,12 @@ heuristics and near misses are pinned in `ChordSheetConverterTest` and its sibli
   is cut back into a row; a tuning is `{meta: tuning …}` unless standard, a CCLI song number `{meta: ccli …}`, a capo of
   none nothing. Values that are the site's (difficulty, a transcriber's credit that counts its contributors) and whole
   lines that are its controls or calls to action (`Autoscroll`, `1,234 views`) are left out only before the first chord
-  row, after the last, or alone between blank lines: between two lyrics they are as likely sung. `Author:` alone stays.
-  A list of the chords the song plays, one a line (`ChordSheetChordList`), goes only corroborated: three or more, each
-  once, all played in the song, outside it and under no heading. A line before the song that is just its title and
-  artist (`Artist - Title`, the header's or a caller's `knownTitle`, a page's header) goes too.
+  row, after the last, or alone between blank lines: between two lyrics they are as likely sung. `Author:` alone stays,
+  and goes only glued into a row beside a site's value (`52Difficulty:`). A list of the chords the song plays, one a
+  line (`ChordSheetChordList`), goes only corroborated: three or more, each once, all played in the song, outside it
+  and under no heading, with a short label right above it naming chords in an app language. A line before the song
+  that is just its title and artist (`Artist - Title`, the header's or a caller's `knownTitle`, a page's header; one
+  with no artist, `Artist: Title`, by its two names) goes too.
 - **Documented limits**: `Artist - Title` is read artist first, since both orders are common on the web; a title
   ending in a page word with no credit after it (`Three Chords`) loses that word.
 
