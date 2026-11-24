@@ -15,6 +15,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.theme.appIconColor
+import com.pandulapeter.campfire.shortcuts.LauncherShortcutPublisher
 import java.util.concurrent.Executors
 
 /**
@@ -89,14 +90,14 @@ internal object AppIconSwitcher {
             if (hasNeverSwitched && !isLeaving) return
             // The new entry is enabled before anything is disabled, so that there is never a moment in which the app has
             // no launcher entry at all - a launcher that looks then would take the app for one that cannot be opened.
-            ENTRIES.entries.sortedByDescending { (color, _) -> color == target }.forEach { (color, name) ->
+            val changes = ENTRIES.entries.sortedByDescending { (color, _) -> color == target }.map { (color, name) ->
                 packageManager.setState(
                     component = component(context, name),
                     state = if (color == target) PackageManager.COMPONENT_ENABLED_STATE_ENABLED else PackageManager.COMPONENT_ENABLED_STATE_DEFAULT,
                 )
-            }
-            packageManager.setState(component = initialEntry, state = PackageManager.COMPONENT_ENABLED_STATE_DISABLED)
+            } + packageManager.setState(component = initialEntry, state = PackageManager.COMPONENT_ENABLED_STATE_DISABLED)
             appliedTarget = target
+            if (changes.any { it }) LauncherShortcutPublisher.republish(context)
         } catch (exception: Exception) {
             // A device policy (a managed or work profile, some OEM launchers) may refuse a component switch, and this
             // is asked for on every stop, where a crash would come back every time the app is left. The icon stays as it
@@ -105,10 +106,9 @@ internal object AppIconSwitcher {
         }
     }
 
-    private fun PackageManager.setState(component: ComponentName, state: Int) {
-        if (getComponentEnabledSetting(component) != state) {
-            setComponentEnabledSetting(component, state, PackageManager.DONT_KILL_APP)
-        }
+    /** Sets [component]'s [state] unless it has it, and says whether it did. */
+    private fun PackageManager.setState(component: ComponentName, state: Int) = (getComponentEnabledSetting(component) != state).also { isChanged ->
+        if (isChanged) setComponentEnabledSetting(component, state, PackageManager.DONT_KILL_APP)
     }
 
     /**

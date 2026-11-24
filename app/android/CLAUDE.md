@@ -65,6 +65,8 @@
   it must match; no flags, so the running task is kept (`onNewIntent`). `handle` takes the app links after the OAuth
   and share links and reports a shortcut's use.
 - A pinned shortcut no longer offered is disabled with `app_shortcut_withdrawn`, enabled again once offered.
+- A dynamic shortcut belongs to the launcher entry that was the main one when it was published, and the system drops it
+  with that entry, so `AppIconSwitcher` has the last list published again after a switch that changed an entry.
 
 ## Home screen widgets (`widget/`)
 

@@ -26,7 +26,12 @@ internal object LauncherShortcutPublisher {
     /** The shortcut an intent was built for, read back by [openAppLink] to report its use. */
     const val EXTRA_SHORTCUT_ID = "com.pandulapeter.campfire.extra.SHORTCUT_ID"
 
+    /** The shortcuts last published, for [republish]. */
+    @Volatile
+    private var published: LauncherShortcuts? = null
+
     fun publish(context: Context, shortcuts: LauncherShortcuts) {
+        published = shortcuts
         val manager = context.getSystemService(ShortcutManager::class.java) ?: return
         // More than the activity may have is refused whole; the launcher shows the first few anyway.
         val offered = shortcuts.offered.take(manager.maxShortcutCountPerActivity)
@@ -53,6 +58,15 @@ internal object LauncherShortcutPublisher {
             // Refused while the user is locked, which the next change or launch answers again.
             println("Could not publish the launcher shortcuts: ${exception.message}")
         }
+    }
+
+    /**
+     * Publishes the last shortcuts again, after the launcher icon has moved to another entry (`AppIconSwitcher`): a
+     * dynamic shortcut belongs to the entry that was the app's main one when it was published, and the system removes
+     * it with that entry.
+     */
+    fun republish(context: Context) {
+        published?.let { publish(context = context, shortcuts = it) }
     }
 
     /** Tells the launcher [id] was used, which it learns from what to offer first. */
