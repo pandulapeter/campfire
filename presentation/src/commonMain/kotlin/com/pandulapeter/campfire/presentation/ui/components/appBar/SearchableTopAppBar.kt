@@ -11,7 +11,6 @@ package com.pandulapeter.campfire.presentation.ui.components.appBar
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.BoundsTransform
-import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.animateBounds
 import androidx.compose.animation.core.Transition
 import androidx.compose.animation.core.VisibilityThreshold
@@ -151,7 +150,6 @@ import kotlin.math.roundToInt
  * @param actions The screen's other actions, which stay whether or not the search is open. Each is laid out with
  *   [overlappingAction], as every action of the pill is.
  */
-@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 internal fun SearchableTopAppBar(
     modifier: Modifier = Modifier,
