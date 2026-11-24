@@ -29,6 +29,13 @@ fi
 # Spotless and the unit tests need Gradle, so they run only when the commit stages more than Markdown. Gradle reruns only
 # the modules a change reaches: a few seconds when none, under a minute for :presentation. Both read the working tree,
 # which is what the staged files are unless a commit stages part of a file. The UI tests take minutes and stay in CI.
-if git diff --cached --name-only --diff-filter=ACMRD | grep -qvE '\.md$'; then
+# A version bump alone skips them too: it changes no code or test, yet invalidates the configuration cache and the
+# generated version constants, which reran every test downstream of them.
+staged_code=$(git diff --cached --name-only --diff-filter=ACMRD | grep -vE '\.md$' || true)
+if [ "$staged_code" = "gradle.properties" ] && ! git diff --cached -U0 -- gradle.properties |
+    grep -E '^[+-]' | grep -vE '^(\+\+\+|---) ' | grep -qvE '^[+-]campfire\.(versionName|buildNumber)='; then
+    staged_code=""
+fi
+if [ -n "$staged_code" ]; then
     ./gradlew spotlessCheck desktopTest --quiet
 fi

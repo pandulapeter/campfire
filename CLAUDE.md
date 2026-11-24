@@ -346,7 +346,7 @@ same way.
 - **Run `git config core.hooksPath .githooks` once per clone**: the pre-commit hook runs the `.github/scripts` checks
   (license headers, sizes, `:presentation`'s package layers, sync's seams, store listings, `CLAUDE.md` names, regexes,
   and test names Kotlin/Native refuses), refuses deleting `.run/iOS.run.xml` (which the IDE drops now and then), and, when more than
-  Markdown is staged, `spotlessCheck` and `desktopTest`.
+  Markdown (or a version bump alone) is staged, `spotlessCheck` and `desktopTest`.
 - `.run/` holds the IDE-written run configurations (no license header, the IDE would drop it).
 
 Commands:
