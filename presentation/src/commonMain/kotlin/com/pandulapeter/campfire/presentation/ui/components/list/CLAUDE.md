@@ -29,9 +29,10 @@
   redraw a layer whose alpha alone changed.
 - The bubble is as tall as the app bar's pill (48dp), the letter at its far end under the pill's last button (assuming
   New is detached), so the finger on the thumb doesn't cover it.
-- Position is estimated from average item size, excluding the pinned header. The estimate shifts as rows of other
-  heights scroll in, so a drag scrolls by the thumb's step plus a bounded share of the error, never against the thumb;
-  only a jump over a screen and the two ends are placed absolutely.
+- Position is estimated from average item size, excluding the pinned header, as the distance scrolled over that plus
+  the distance left (`ScrollMetrics.kt`): each is exact once its end is on screen, so thumb and list reach an end
+  together. The estimate shifts as rows of other heights scroll in, so a drag scrolls by the thumb's step plus a
+  bounded share of the error, never against the thumb; only a jump over a screen and the two ends are placed absolutely.
 - Haptics (touch only): a tick per row, a notch per section letter and at the ends, the end decided by where the finger
   asked the thumb to be. Pointer events go through a conflated channel read once per frame, so they can't cancel the
   frame wait or a scroll.

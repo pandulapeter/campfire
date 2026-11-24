@@ -487,47 +487,6 @@ internal suspend fun scrollOncePerFrame(requests: ReceiveChannel<Float>, onScrol
 }
 
 /**
- * Estimates the scroll position from the sizes of the visible items, as the total content size of a lazy grid is
- * unknown. Null if the whole list fits into the viewport.
- */
-private fun LazyGridState.scrollMetrics(): ScrollMetrics? {
-    if (!canScrollForward && !canScrollBackward) return null
-    val info = layoutInfo
-    val firstIndex = firstVisibleItemIndex
-    // A pinned sticky header is listed among the visible items but sits out of order, so it must not skew the estimate.
-    val visibleItems = info.visibleItemsInfo.filter { it.index >= firstIndex }.distinctBy { it.index }
-    if (visibleItems.isEmpty() || info.totalItemsCount == 0) return null
-    val first = visibleItems.first()
-    val last = visibleItems.last()
-    // Items of the same row share their offset, so this averages the height of a row over the items in it: the
-    // per item slice of the content the index based math below works with.
-    val averageItemSize = (last.offset.y + last.size.height - first.offset.y).toFloat() / visibleItems.size
-    if (averageItemSize <= 0f) return null
-    val contentHeight = info.beforeContentPadding + averageItemSize * info.totalItemsCount + info.afterContentPadding
-    val maxScrollOffset = max(contentHeight - info.viewportSize.height, 1f)
-    val scrollOffset = (firstIndex * averageItemSize + firstVisibleItemScrollOffset).coerceIn(0f, maxScrollOffset)
-    return ScrollMetrics(
-        scrollFraction = scrollOffset / maxScrollOffset,
-        scrollOffset = scrollOffset,
-        viewportHeight = info.viewportSize.height,
-        viewportFraction = (info.viewportSize.height / contentHeight).coerceIn(0f, 1f),
-        averageItemSize = averageItemSize,
-        totalItemsCount = info.totalItemsCount,
-        maxScrollOffset = maxScrollOffset,
-    )
-}
-
-private class ScrollMetrics(
-    val scrollFraction: Float,
-    val scrollOffset: Float,
-    val viewportHeight: Int,
-    val viewportFraction: Float,
-    val averageItemSize: Float,
-    val totalItemsCount: Int,
-    val maxScrollOffset: Float,
-)
-
-/**
  * The width of the column a [FastScroller] takes up over its list's end padding while the list scrolls (see
  * [FastScrollerColumn]), all of which is its touch target (and the cards' outer margin next to it as well).
  * It is the smallest width a touch target is still reliably hit at rather than the 48dp of a button, because it is taken
