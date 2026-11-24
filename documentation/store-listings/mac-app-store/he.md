@@ -21,7 +21,7 @@ review notes and App Sandbox information stay in `en.md`.
 ## Promotional text (170 characters max)
 
 ```
-חדש ב־5.5.0: תמונות בעמודי השיר, קובצי PDF, הקלטות וסרטונים שמצורפים לשירים, וגיבויים של עד 16 GB שמחזירים את כולם.
+חדש ב־5.6.0: הדביקו את דף האינטרנט של שיר, או רק את הקישור שלו, ו־Campfire ישלוף את המילים, האקורדים, הטונליות והקאפו, בלי התפריטים, הפרסומות והתגובות.
 ```
 
 ## Description (4,000 characters max)

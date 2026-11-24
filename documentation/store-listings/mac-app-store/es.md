@@ -21,7 +21,7 @@ in `../app-store/es.md`; the review notes and App Sandbox information are single
 ## Promotional text (170 characters max)
 
 ```
-Novedad en 5.5.0: imágenes en las páginas de una canción, PDF, grabaciones y vídeos adjuntos a las canciones y copias de seguridad de hasta 16 GB que lo recuperan todo.
+Novedad en 5.6.0: pega la página web de una canción o solo su enlace, y Campfire extrae la letra, los acordes, la tonalidad y el capo, sin menús, anuncios ni comentarios.
 ```
 
 ## Description (4,000 characters max)

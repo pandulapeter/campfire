@@ -18,7 +18,7 @@ sheet, or the wallpaper's colors.
 ## Promotional text (170 characters max)
 
 ```
-New in 5.5.0: pictures on a song's pages, PDFs, recordings, and videos attached to songs, and backups of up to 16 GB that bring them all back.
+New in 5.6.0: paste a song's web page, or just its link, and Campfire picks out the lyrics, chords, key, and capo, leaving the menus, ads, and comments behind.
 ```
 
 ## Description (4,000 characters max)
@@ -108,9 +108,7 @@ The microphone is used only by the Tuner tab (and the tuner sheet opened from a 
 Network use is limited to features the user starts: optional sync with the user's own Dropbox account (Settings → Sync, not needed to review anything else); sharing a song or setlist as a public link in that same Dropbox; opening a shared link, which downloads it from dl.dropboxusercontent.com with no account; cover art for songs, an image downloaded from the address a song names and a search of MusicBrainz and the iTunes Search API, opened by clicking the cover in the "About the song" sheet; the song details lookup, which searches the same two services; pictures named by an https address, downloaded once into the library when the user enters one with From a link in the editor's Image menu, clicks Download on a missing picture, or opens the review of an import whose songs name one (Settings → Features → Pictures from links turns that off); and a web page pasted as its address alone, read once on the device, offscreen in the system's own WebKit web view, keeping only its text for the import (public https hosts only, never the local network; Settings → Features → Pages from links turns that off). Everything else works offline.
 
 New since the last approved version, and where to find it:
-- Pictures in songs: open a song, click Edit, then Image in the editor's toolbar (Files, or From a link). After Save, the picture shows on the song's page, opens full screen when clicked, and is printed in the PDF made from Share or export in the song's three-dot menu.
-- Attachments: in the editor, Attachment (after Link in the toolbar) adds a document, recording, or video of up to 50 MB. It is listed in the About the song sheet (the song's three-dot menu, or a click on the title at the song's top), where a click opens it with the app macOS picks. Settings → Features → Attachments hides them.
-- Large backups: Import files (the New button's menu on the Songs screen) takes archives of up to 16 GB, with their pictures and attachments, and shows how far it has got. Quitting during an import asks first.
+- Songs from web pages: copy a song page's address in Safari (or select the whole page and copy it), then click Paste from clipboard in the New button's menu on the Songs screen, or drag the link onto the window. Campfire reads the page on the Mac ("Reading the page…"), keeps only the song, and opens it in the editor, where Save keeps it and Use the whole page brings back anything left out. Settings → Features → Pages from links turns reading addresses off.
 ```
 
 ## App Sandbox Information

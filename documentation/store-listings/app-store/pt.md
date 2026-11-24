@@ -32,7 +32,7 @@ Cifras, letras e repertórios
 ## Promotional text (170 characters max)
 
 ```
-Novo na 5.5.0: imagens nas páginas das músicas, PDFs, gravações e vídeos anexados às músicas e backups de até 16 GB que trazem tudo de volta.
+Novo na 5.6.0: compartilhe uma música do Safari ou cole o link dela, e o Campfire extrai a letra, os acordes, o tom e o capotraste, sem menus, anúncios nem comentários.
 ```
 
 ## Description (4,000 characters max)

@@ -21,7 +21,7 @@ Paste into App Store Connect's pl localization of the macOS version. The name an
 ## Promotional text (170 characters max)
 
 ```
-Nowość w 5.5.0: obrazy na stronach piosenek, załączone do piosenek pliki PDF, nagrania i wideo oraz kopie zapasowe do 16 GB, które przywracają je wszystkie.
+Nowość w 5.6.0: wklej stronę z piosenką albo tylko jej link, a Campfire wyciągnie tekst, akordy, tonację i kapodaster, bez menu, reklam i komentarzy.
 ```
 
 ## Description (4,000 characters max)

@@ -20,7 +20,7 @@ Paste into App Store Connect's French localizations: fr-FR and fr-CA.
 ## Promotional text (170 characters max)
 
 ```
-Nouveau en 5.5.0 : des images sur les pages des chansons, des PDF, enregistrements et vidéos joints aux chansons, et des sauvegardes jusqu'à 16 Go qui ramènent tout.
+Nouveau en 5.6.0 : colle la page web d'une chanson ou juste son lien, et Campfire en extrait paroles, accords, tonalité et capo, sans menus, publicités ni commentaires.
 ```
 
 ## Description (4,000 characters max)

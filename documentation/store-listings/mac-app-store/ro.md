@@ -20,7 +20,7 @@ Paste into the App Store Connect locale: ro (the Mac version's own fields; the n
 ## Promotional text (170 characters max)
 
 ```
-Nou în 5.5.0: imagini în paginile cântecelor, PDF-uri, înregistrări și videoclipuri atașate cântecelor și backupuri de până la 16 GB care le aduc pe toate înapoi.
+Nou în 5.6.0: lipește pagina web a unui cântec sau doar linkul ei, iar Campfire preia versurile, acordurile, tonalitatea și capodastrul, fără meniuri și reclame.
 ```
 
 ## Description (4,000 characters max)

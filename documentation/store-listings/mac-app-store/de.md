@@ -21,7 +21,7 @@ Information stay as in the English file.
 ## Promotional text (170 characters max)
 
 ```
-Neu in 5.5.0: Bilder auf den Seiten eines Songs, an Songs angehängte PDFs, Aufnahmen und Videos sowie Backups bis 16 GB, die all das zurückbringen.
+Neu in 5.6.0: Füge die Webseite eines Songs oder nur ihren Link ein, und Campfire übernimmt Text, Akkorde, Tonart und Kapodaster ohne Menüs, Werbung und Kommentare.
 ```
 
 ## Description (4,000 characters max)

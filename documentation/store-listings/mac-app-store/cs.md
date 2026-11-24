@@ -21,7 +21,7 @@ Paste into App Store Connect's cs localization of the macOS version. The name an
 ## Promotional text (170 characters max)
 
 ```
-Novinka ve verzi 5.5.0: obrázky na stránkách písní, PDF, nahrávky a videa přiložená k písním a zálohy do 16 GB, které je všechny vrátí zpět.
+Novinka ve verzi 5.6.0: vlož webovou stránku s písní, nebo jen její odkaz, a Campfire vytáhne text, akordy, tóninu a kapodastr bez nabídek, reklam a komentářů.
 ```
 
 ## Description (4,000 characters max)

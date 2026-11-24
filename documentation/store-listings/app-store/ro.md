@@ -32,7 +32,7 @@ Versuri, acorduri și liste
 ## Promotional text (170 characters max)
 
 ```
-Nou în 5.5.0: imagini în paginile cântecelor, PDF-uri, înregistrări și videoclipuri atașate cântecelor și backupuri de până la 16 GB care le aduc pe toate înapoi.
+Nou în 5.6.0: partajează un cântec din Safari sau lipește-i linkul, iar Campfire preia versurile, acordurile, tonalitatea și capodastrul, fără meniuri și reclame.
 ```
 
 ## Description (4,000 characters max)

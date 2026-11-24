@@ -32,7 +32,7 @@ Akkordok, dalszövegek, listák
 ## Promotional text (170 characters max)
 
 ```
-Újdonságok az 5.5.0-ban: képek a dalok oldalain, a dalokhoz csatolt PDF-ek, felvételek és videók, és akár 16 GB-os mentések, amelyek mindezt visszahozzák.
+Újdonság az 5.6.0-ban: oszd meg a dalt a Safariból, vagy illeszd be a linkjét, és a Campfire kiveszi a szöveget, az akkordokat, a hangnemet és a capót, reklám nélkül.
 ```
 
 ## Description (4,000 characters max)

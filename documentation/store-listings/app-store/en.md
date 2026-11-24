@@ -30,7 +30,7 @@ Chords, lyrics, and setlists
 ## Promotional text (170 characters max)
 
 ```
-New in 5.5.0: pictures on a song's pages, PDFs, recordings, and videos attached to songs, and backups of up to 16 GB that bring them all back.
+New in 5.6.0: share a song from Safari, or just paste its link, and Campfire picks out the lyrics, chords, key, and capo, leaving the menus, ads, and comments behind.
 ```
 
 ## Description (4,000 characters max)
@@ -139,7 +139,5 @@ The "audio" background mode keeps the metronome clicking while the screen is loc
 On iOS 26 and later, an import the user started keeps working for a while after they leave the app, as a continued processing task shown in the system's own progress; it exists only while that import runs and ends with it.
 
 New since the last approved version, and where to find it:
-- Pictures in songs: open a song, tap Edit, then Image in the editor's toolbar (Photos, Files, or From a link). After Save, the picture shows on the song's page, opens full screen when tapped, and is printed in the PDF made from Share or export in the song's three-dot menu.
-- Attachments: in the editor, Attachment (after Link in the toolbar) adds a document, recording, or video of up to 50 MB. It is listed in the About the song sheet (the song's three-dot menu, or a tap on the title at the song's top), where a tap opens it with the app iOS picks. Settings → Features → Attachments hides them.
-- Large backups: Import files (the New button's menu on the Songs screen) takes archives of up to 16 GB, with their pictures and attachments, and shows how far it has got.
+- Songs from web pages: open a page with a song's chords and lyrics in Safari, tap Share, then Campfire, and open Campfire (or tap the notification it posts); or copy the page's address and tap Paste from clipboard in the New button's menu on the Songs screen. Campfire reads the page on the device ("Reading the page…"), keeps only the song, and opens it in the editor, where Save keeps it and Use the whole page brings back anything left out. Settings → Features → Pages from links turns reading addresses off.
 ```
