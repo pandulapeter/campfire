@@ -13,18 +13,22 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.click
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasScrollToIndexAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.longClick
+import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performMouseInput
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTouchInput
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.setlists_new_setlist
 import com.pandulapeter.campfire.presentation.resources.settings
 import com.pandulapeter.campfire.presentation.resources.settings_tooltips
 import com.pandulapeter.campfire.presentation.resources.songs
+import com.pandulapeter.campfire.presentation.resources.songs_choose_setlists
 import com.pandulapeter.campfire.presentation.resources.songs_search
 import com.pandulapeter.campfire.presentation.resources.songs_sort
 import com.pandulapeter.campfire.presentation.resources.songs_sorting_mode_by_title
@@ -105,6 +109,15 @@ internal class TooltipTest {
         onNodeWithContentDescription(searchName).performMouseInput { enter(center) }
         val tooltip = hasText(searchName, substring = true) and hasText(keys(KeyShortcut.FIND), substring = true)
         waitUntil { onAllNodes(tooltip).fetchSemanticsNodes().isNotEmpty() }
+    }
+
+    @Test
+    fun `an icon button never hovered or held shows no tooltip and presses as before`() = runAppTest {
+        val label = string(Res.string.songs_choose_setlists)
+        onAllNodesWithContentDescription(label)[0].performTouchInput { click() }
+        // The test library has no setlist to choose, so the press asks for a new one's name.
+        waitUntil { onAllNodes(hasText(string(Res.string.setlists_new_setlist))).fetchSemanticsNodes().isNotEmpty() }
+        assertFalse(onAllNodes(hasText(label)).fetchSemanticsNodes().isNotEmpty(), "A press showed the star's tooltip.")
     }
 
     private fun AppTestScope.sortButton() = onNodeWithContentDescription(string(Res.string.songs_sort))

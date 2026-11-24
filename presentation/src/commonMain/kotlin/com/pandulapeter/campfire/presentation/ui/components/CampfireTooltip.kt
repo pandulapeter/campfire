@@ -14,6 +14,8 @@ import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
@@ -24,6 +26,10 @@ import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipState
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerEventTimeoutCancellationException
@@ -75,22 +81,33 @@ internal fun CampfireTooltip(
     isShownOnLongPress: Boolean = true,
     content: @Composable () -> Unit,
 ) {
+    // The state stays out of the armed branch: Material's box, composed a frame after a show, finds the state already
+    // visible and animates the bubble in from hidden, as it would have had it been there all along.
     val state = rememberTooltipState()
+    var isArmed by remember { mutableStateOf(false) }
+    val arm = remember { { isArmed = true } }
     val hint = shortcut?.hint()
     Box(
         modifier = when {
             !isEnabled || !LocalAreTooltipsEnabled.current || (label == null && hint == null) -> modifier
-            isShownOnLongPress -> modifier.showsOnLongPress(state).showsOnHover(state)
-            else -> modifier.showsOnHover(state)
+            isShownOnLongPress -> modifier.showsOnLongPress(state, arm).showsOnHover(state, arm)
+            else -> modifier.showsOnHover(state, arm)
         },
     ) {
-        TooltipBox(
-            positionProvider = rememberTooltipPositionProvider(),
-            tooltip = { TooltipBubble(label = label, hint = hint) },
-            state = state,
-            enableUserInput = false,
-            content = content,
-        )
+        content()
+        // A screen full of icon buttons is composed on every return to a list, so Material's box (its anchor tracking,
+        // transition, and position provider) is composed only once a tooltip is first asked for, and kept from then on.
+        // It is a sibling over the content rather than its parent, so arming it never composes the control afresh.
+        if (isArmed) {
+            Box(modifier = Modifier.matchParentSize()) {
+                TooltipBox(
+                    positionProvider = rememberTooltipPositionProvider(),
+                    tooltip = { TooltipBubble(label = label, hint = hint) },
+                    state = state,
+                    enableUserInput = false,
+                ) { Spacer(Modifier.fillMaxSize()) }
+            }
+        }
     }
 }
 
@@ -130,7 +147,7 @@ private fun TooltipBubble(label: String?, hint: String?) = Surface(
  * only just been shown ([TooltipWarmth]); a press hides it until the pointer leaves and comes back. Seen on the main
  * pass and never consumed, so the control under it hovers and clicks as it would without a tooltip.
  */
-private fun Modifier.showsOnHover(state: TooltipState) = pointerInput(state) {
+private fun Modifier.showsOnHover(state: TooltipState, arm: () -> Unit) = pointerInput(state) {
     coroutineScope {
         var pending: Job? = null
         fun hide() {
@@ -148,6 +165,7 @@ private fun Modifier.showsOnHover(state: TooltipState) = pointerInput(state) {
                         pending?.cancel()
                         pending = launch {
                             if (!TooltipWarmth.isWarm) delay(HOVER_DELAY_MILLIS)
+                            arm()
                             state.show(MutatePriority.UserInput)
                         }
                     }
@@ -162,7 +180,7 @@ private fun Modifier.showsOnHover(state: TooltipState) = pointerInput(state) {
  * Shows the tooltip once a finger or a stylus has held the anchor for a long press, and keeps it a moment after the
  * release, which is consumed on the initial pass so that the control under it is not pressed as well.
  */
-private fun Modifier.showsOnLongPress(state: TooltipState) = pointerInput(state) {
+private fun Modifier.showsOnLongPress(state: TooltipState, arm: () -> Unit) = pointerInput(state) {
     coroutineScope {
         awaitEachGesture {
             val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
@@ -170,6 +188,7 @@ private fun Modifier.showsOnLongPress(state: TooltipState) = pointerInput(state)
             try {
                 withTimeout(viewConfiguration.longPressTimeoutMillis) { waitForUpOrCancellation(PointerEventPass.Initial) }
             } catch (_: PointerEventTimeoutCancellationException) {
+                arm()
                 val showing = launch { state.show(MutatePriority.UserInput) }
                 waitForUpOrCancellation(PointerEventPass.Initial)?.consume()
                 launch {

@@ -19,7 +19,8 @@ The shared building blocks of the screens; subpackages with something to say hav
   the wrapper. Hover and long press are the wrapper's own, Material's off: its `TooltipBox` drops a parent's modifier,
   opens on keyboard focus for good (eating Escape), and opens the moment a pointer passes. Hover waits 500 ms, none
   within 300 ms of another tooltip going (a pointer moving along a toolbar; timed by a coroutine, not a clock); a press
-  hides it. A long press that is already the control's (a repeating stepper) leaves hover alone (`isShownOnLongPress`);
+  hides it. Material's box is composed only once the wrapper's hover or long press first asks for a tooltip, beside the
+  control, never around it. A long press that is already the control's (a repeating stepper) leaves hover alone (`isShownOnLongPress`);
   a label the control sometimes shows itself turns it off (`isEnabled`). A toggle's tooltip names what a press does. Drawn as the app's tonal pills are,
   not Material's dark slab. Kept off every inset, keyboard included (`TooltipPosition.kt`, `PopupRoom`). Settings → General's Tooltips switch turns every one off
   (`LocalAreTooltipsEnabled`).
