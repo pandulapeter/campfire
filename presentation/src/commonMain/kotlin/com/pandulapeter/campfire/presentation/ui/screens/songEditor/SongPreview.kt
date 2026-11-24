@@ -42,7 +42,7 @@ import com.pandulapeter.campfire.presentation.ui.chrome.contentEdges
 import com.pandulapeter.campfire.presentation.ui.rendering.SongRenderer
 import com.pandulapeter.campfire.presentation.ui.state.editor.EditorSession
 import kotlinx.coroutines.flow.StateFlow
-import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
+import com.pandulapeter.campfire.presentation.ui.components.fadingOverNavigationBar
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
 import com.pandulapeter.campfire.presentation.ui.songView.SectionMotion
@@ -146,7 +146,8 @@ internal fun SongPreview(
     // The keyboard only ever covers the lower part of the preview, which the scroll room below the last line lets the
     // user scroll past, so it decides that room and not the columns: the height the sections are laid out against is
     // the pane's less the resting inset, and the preview keeps its columns while the keyboard comes and goes.
-    val restingBottomPadding = WindowInsets.contentEdges.asPaddingValues().calculateBottomPadding() + 32.dp
+    val restingBottomInset = WindowInsets.contentEdges.asPaddingValues().calculateBottomPadding()
+    val restingBottomPadding = restingBottomInset + 32.dp
     val layoutDirection = LocalLayoutDirection.current
     // Read by both the padding and the width the song is handed, so the two can never drift apart.
     val startPadding = 16.dp + contentPadding.calculateStartPadding(layoutDirection)
@@ -155,7 +156,7 @@ internal fun SongPreview(
         SongLyrics(
             modifier = Modifier
                 .fillMaxSize()
-                .fadingTopEdge(scrollState, MaterialTheme.colorScheme.background)
+                .fadingOverNavigationBar(scrollState, MaterialTheme.colorScheme.background, bottomInset = restingBottomInset)
                 .bounceVerticalScroll(scrollState)
                 .padding(start = startPadding, end = endPadding, top = topPadding)
                 .padding(contentPadding.only(bottom = true, extraBottom = 32.dp)),

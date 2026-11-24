@@ -11,5 +11,6 @@
 <resources>
 
     <color name="campfire_window_background">#141218</color>
+    <color name="campfire_window_mark">#C9C3D9</color>
 
 </resources>

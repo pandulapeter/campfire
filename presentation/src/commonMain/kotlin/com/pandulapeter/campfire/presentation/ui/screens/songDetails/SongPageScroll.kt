@@ -26,7 +26,7 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 import com.pandulapeter.campfire.presentation.ui.components.bounceHorizontalScroll
 import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
-import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
+import com.pandulapeter.campfire.presentation.ui.components.fadingOverNavigationBar
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.RowSnapFlingBehavior
 import com.pandulapeter.campfire.presentation.ui.songView.COLUMN_GAP
 import com.pandulapeter.campfire.chordpro.language.WritingDirection
@@ -39,6 +39,9 @@ import com.pandulapeter.campfire.chordpro.language.WritingDirection
  * [COLUMN_GAP] it leaves there and the page's padding on that side ([endPadding] where it is the screen's end,
  * [startPadding] where it is its start), painted over in the screen's background, so the column after the ones in view
  * slides in out of the fade. Its step buttons are a row along the bottom (`StepControls`), with nothing at the end edge.
+ *
+ * A song read down fades out at its bottom too where it scrolls under a navigation bar ([bottomInset], none where it is
+ * zero, see [fadingOverNavigationBar]).
  */
 @Composable
 internal fun Modifier.songPageScroll(
@@ -48,6 +51,7 @@ internal fun Modifier.songPageScroll(
     textDirection: WritingDirection,
     startPadding: Dp,
     endPadding: Dp,
+    bottomInset: Dp,
 ): Modifier = if (isAcross) {
     val isScreenRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     val readsLeftwards = textDirection == WritingDirection.RIGHT_TO_LEFT
@@ -67,9 +71,11 @@ internal fun Modifier.songPageScroll(
         reverseScrolling = readsLeftwards != isScreenRtl,
     )
 } else {
-    fadingTopEdge(
-        scrolled = { flingBehavior.rows.scrolledIntoRow(scrollState.value) },
+    fadingOverNavigationBar(
+        scrollState = scrollState,
         backgroundColor = MaterialTheme.colorScheme.background,
+        bottomInset = bottomInset,
+        scrolledFromTop = { flingBehavior.rows.scrolledIntoRow(scrollState.value) },
     ).bounceVerticalScroll(state = scrollState, flingBehavior = flingBehavior)
 }
 

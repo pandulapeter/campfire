@@ -25,6 +25,7 @@ internal data class RouteInputs(
     val isSetlistsSearchOpen: Boolean,
     val isSetlistReordering: Boolean,
     val isSongSelecting: Boolean = false,
+    val isSongAutoScrolling: Boolean = false,
     val settingsTab: SettingsTab,
     val currentSongFileNames: Map<String, String?>,
     val hasOverlay: Boolean,

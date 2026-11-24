@@ -25,6 +25,9 @@ the next share a height, so any motion takes away what is still to be read.
 - **The countdown** runs until the scroll can go no further (the last screen at rest, when playing stops), not until the
   last line passes the reading line; it follows every drag, fling, nudge, fold, and speed change.
 - A fling is not capped to a step here.
+- **The column scrolls on under the navigation bar** and fades out over it (and `EDGE_FADE_SIZE` above it) in the
+  background color, as strongly as there is song left below, so the bar's buttons never stand on a line (`fadingOverNavigationBar`).
+  Not where the inset is none (the desktop, the web) or in a setlist, whose pager bar stands over it.
 
 ## The pace
 
@@ -48,4 +51,8 @@ the next share a height, so any motion takes away what is still to be read.
 - It stops only when asked, at the song's end, on another page, with the layout back to pages, under anything drawn over
   the screen, or on `ON_STOP` (another app, a minimised window, a hidden tab); it never starts by itself, nor again once
   what covered it has gone.
+- **The first step back while it plays stops it**; only the next leaves the screen. The back gesture is the screen's own
+  `NavigationBackHandler`, so a predictive one turns the button to play while dragged (and back if cancelled); Escape and
+  the app bar's arrow reach it through `Navigator.navigateBack` (`AutoScrollPlayback`), the web's Back through a history
+  entry of its own (`BrowserRoutes`).
 - The layout is asked over the first song opened (never by the onboarding), as the song details notes say.

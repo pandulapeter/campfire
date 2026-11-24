@@ -73,6 +73,8 @@ key leaves numbers nothing to count from.
   would shift every offset the layout reports. Left and Right follow each line's own direction (a directive, `#`, tab,
   grid, or delegated line is left to right, a lyric or comment by its letters); only character steps are answered,
   word and line steps stay the platform's. A letterless row of a right-to-left song shows reversed in the editor only.
+- Both panes run under the navigation bar and fade out over it (`fadingOverNavigationBar`); the field not while the
+  keyboard is past the bar, where it ends at the keyboard.
 - Only the keyboard is excluded outside the scroll, read during layout. The preview lays out against a height ignoring
   the keyboard, so sliding it moves neither pane's composition nor the columns.
 - Scroll states live next to the `TextFieldState`, not in the panes, which are recomposed from scratch when Edit,

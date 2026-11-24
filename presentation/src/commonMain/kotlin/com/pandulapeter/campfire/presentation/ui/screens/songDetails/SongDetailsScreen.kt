@@ -52,6 +52,7 @@ import com.pandulapeter.campfire.data.model.preferences.SongLayout
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.metronome.api.model.MetronomePlayback
+import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeController
 import com.pandulapeter.campfire.presentation.mapper.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.instrument.chordTuning
@@ -155,26 +156,17 @@ internal fun SongDetailsScreen(
     val areSetlistsEnabled = userPreferences?.areSetlistsEnabled != false
     val isCoverArtEnabled = userPreferences?.isCoverArtEnabled == true
     val currentSongText = currentSong?.let { songTexts[it.fileName] }
-    // The sheet of what the song is, opened from the app bar's title and its menu. Performance mode edits nothing, so
-    // there it is only offered where it has something in it, and it is read from the song's text, so nowhere before that
-    // is at hand. Outside performance mode it is offered wherever the text is, so nothing of the text needs to be read
-    // for it.
-    val hasSongInfo = remember(currentSongText, isReadOnly, userPreferences?.isAttachmentsEnabled) {
-        isReadOnly && currentSongText?.let { viewModel.songMetadataEditing.hasSongInfo(it, userPreferences?.isAttachmentsEnabled != false) } == true
-    }
-    // A preview offers none: the sheet reads and writes the library's file, which the preview's song is not yet.
-    val openCurrentSongInfo = currentSong?.takeIf { !isImportPreview }?.let { song ->
-        if (currentSongText == null || (isReadOnly && !hasSongInfo)) null else { { viewModel.dialogHost.showDialog(DialogType.SongInfo(song = song, target = SongEditTarget.File(song.fileName))) } }
-    }
+    val openCurrentSongInfo = rememberOpenSongInfo(
+        viewModel = viewModel,
+        song = currentSong?.takeIf { !isImportPreview },
+        songText = currentSongText,
+        isReadOnly = isReadOnly,
+        areAttachmentsEnabled = userPreferences?.isAttachmentsEnabled != false,
+    )
     val chordSpelling = userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default
     val layoutDirection = LocalLayoutDirection.current
-    val metronomePlayback by viewModel.metronomeController.metronomePlayback.collectAsStateWithLifecycle()
     val metronomeSettings by viewModel.metronomeController.metronomeSettings.collectAsStateWithLifecycle()
-    val isMetronomePlaying = metronomePlayback is MetronomePlayback.Playing
-    // A click can only play here while the panel is up, which is what starts and stops it; the preference is read
-    // beside it anyway, since a click stopped from the panel leaves it where it was, see
-    // MetronomeController.toggleMetronomePanel.
-    val isMetronomePanelShown = metronomeSettings.isSongPanelShown || isMetronomePlaying
+    val isMetronomePanelShown = isMetronomePanelShown(viewModel.metronomeController, metronomeSettings.isSongPanelShown)
     val coroutineScope = rememberCoroutineScope()
     val pageStepper = remember(pagerState, coroutineScope) { PageStepper(pagerState, coroutineScope) }
     // The arrow keys scroll the song the reader is looking at, and the pages each scroll on their own, so the one
@@ -196,6 +188,7 @@ internal fun SongDetailsScreen(
     val autoScrolling = rememberSongAutoScrolling(
         userPreferences = userPreferences,
         isUncovered = isUncovered,
+        playback = viewModel.navigator.autoScrollPlayback,
         currentPage = pagerState.currentPage,
         songFileName = currentSong?.fileName,
         writeSpeed = viewModel.preferencesController::setAutoScrollSpeed,
@@ -463,6 +456,39 @@ private fun rememberChordDiagrams(
             notation = notation,
         )
     }
+}
+
+/**
+ * Whether the metronome panel is up over the song. A click can only play here while the panel is up, which is what starts
+ * and stops it; the preference ([isSongPanelShown]) is read beside it anyway, since a click stopped from the panel leaves
+ * it where it was, see [MetronomeController.toggleMetronomePanel].
+ */
+@Composable
+private fun isMetronomePanelShown(metronomeController: MetronomeController, isSongPanelShown: Boolean): Boolean {
+    val metronomePlayback by metronomeController.metronomePlayback.collectAsStateWithLifecycle()
+    return isSongPanelShown || metronomePlayback is MetronomePlayback.Playing
+}
+
+/**
+ * Opens the sheet of what [song] is, from the app bar's title and its menu, or null where it is not offered. Performance
+ * mode edits nothing, so there it is only offered where it has something in it, and it is read from the song's text, so
+ * nowhere before that is at hand. Outside performance mode it is offered wherever the text is, so nothing of the text
+ * needs to be read for it. A preview ([song] null) offers none: the sheet reads and writes the library's file, which the
+ * preview's song is not yet.
+ */
+@Composable
+private fun rememberOpenSongInfo(
+    viewModel: CampfireViewModel,
+    song: Song?,
+    songText: String?,
+    isReadOnly: Boolean,
+    areAttachmentsEnabled: Boolean,
+): (() -> Unit)? {
+    val hasSongInfo = remember(songText, isReadOnly, areAttachmentsEnabled) {
+        isReadOnly && songText?.let { viewModel.songMetadataEditing.hasSongInfo(it, areAttachmentsEnabled) } == true
+    }
+    if (song == null || songText == null || (isReadOnly && !hasSongInfo)) return null
+    return { viewModel.dialogHost.showDialog(DialogType.SongInfo(song = song, target = SongEditTarget.File(song.fileName))) }
 }
 
 /**

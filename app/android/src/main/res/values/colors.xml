@@ -14,8 +14,10 @@
          gradient drawn as it is (mipmap-*/ic_launcher_background) rather than a color. -->
     <color name="campfire">#5A49CA</color>
 
-    <!-- The window's background before the first frame (values-night has the dark one). -->
+    <!-- The window's background before the first frame (values-night has the dark one), and the mark drawn on it below
+         Android 12 in the launch screen's color: onSurfaceVariant of the palette it guesses (see CampfireColorScheme.kt). -->
     <color name="campfire_window_background">#FEF7FF</color>
+    <color name="campfire_window_mark">#494456</color>
 
     <!-- The launcher icons of the other theme colors, the seeds of their palettes (see MaterialColorSchemes.kt), with
          those more saturated than the orange brought down to its saturation the way generate_theme_icons.py brings

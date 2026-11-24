@@ -126,7 +126,7 @@ internal fun BoxScope.AutoScrollControls(
         PlayButton(
             // A song that fits the screen, or one already at its end, has nothing to play.
             isVisible = isVisible && (isPlaying || scroller?.canPlay == true),
-            isPlaying = isPlaying,
+            isPlaying = isPlaying && !autoScrolling.isStopPreviewed(),
             onClick = autoScrolling::togglePlaying,
         )
     }

@@ -38,6 +38,8 @@ import com.pandulapeter.campfire.data.model.song.Song
  *   before it leaves the screen;
  * - `songs` again while songs are being selected, under `songs/search` where the search is open too, so that Back
  *   closes the search, then ends the mode, and only then leaves the page;
+ * - the song's address again while the song details screen on top scrolls by itself, so that Back stops it before it
+ *   leaves the song;
  * - and, on top of any of them, the same address again while a dialog, a sheet or a menu is open over it.
  *
  * The bare address names no screen: it opens the home screen (`CampfireDestination.TopLevel.home`) and is written over
@@ -101,6 +103,8 @@ internal object BrowserRoutes {
                 is CampfireDestination.Onboarding -> add(lastOrNull() ?: ROOT)
             }
         }
+        // Anything drawn over the song stops it, so this entry is a passing one under a dialog opened over it.
+        if (inputs.isSongAutoScrolling && inputs.backStack.lastOrNull() is CampfireDestination.SongDetails) lastOrNull()?.let(::add)
         // Without an entry of its own, a Back on a screen with nothing under it in the history leaves the page rather
         // than closing what is open over the screen. It keeps the screen's address, since nothing could open it again.
         // The unsaved changes question gets none: it is asked in answer to a Back, whose entry is then gone forward to
@@ -112,8 +116,8 @@ internal object BrowserRoutes {
     /**
      * How many history entries [state] makes, which is the size [paths] has once the app is there: one per screen of
      * the back stack, one more for each list screen whose search is open, and one more for a settings screen open on a
-     * tab other than its first. A dialog, the setlist reorder mode and the song selection mode are never part of [state], so
-     * Forward to the entry of one that was closed is refused, and the browser is taken back to the screen under it.
+     * tab other than its first. A dialog, the setlist reorder mode, the song selection mode, and a song scrolling by
+     * itself are never part of [state], so Forward to the entry of one that was closed is refused, and the browser is taken back to the screen under it.
      */
     fun entryCount(state: NavigationState) = state.backStack.size + state.backStack.count { destination ->
         destination == CampfireDestination.Songs && state.isSongsSearchOpen ||

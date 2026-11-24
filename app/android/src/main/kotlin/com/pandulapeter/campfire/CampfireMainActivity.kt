@@ -11,12 +11,15 @@ package com.pandulapeter.campfire
 
 import android.app.ActivityManager
 import android.content.Intent
+import android.content.res.Configuration
+import android.graphics.Color
 import android.os.Bundle
 import android.view.KeyboardShortcutGroup
 import android.view.Menu
 import android.view.View
 import android.view.ViewTreeObserver
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.lifecycle.lifecycleScope
@@ -49,7 +52,15 @@ class CampfireMainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        // Never the default automatic styles: on Android 10 and later they ask the system to keep the navigation bar
+        // readable, which draws a scrim under a three-button bar, and this first call's styles are the ones replayed on
+        // every configuration change. The system's theme decides until the app's own is known (CampfireAndroidApp).
+        val barStyle = if (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES) {
+            SystemBarStyle.dark(Color.TRANSPARENT)
+        } else {
+            SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
+        }
+        enableEdgeToEdge(statusBarStyle = barStyle, navigationBarStyle = barStyle)
         keepStartupScreenUntilAppIsReady()
         // An intent is acted on once. A recreated activity is handed the intent of the instance before it - on a
         // rotation, and when the system brings the app back after killing it - and one reopened from Recents the
@@ -97,7 +108,7 @@ class CampfireMainActivity : ComponentActivity() {
 
     /**
      * Holds whatever the system is showing while the app starts - the splash screen on Android 12 and above, the
-     * window background below it - until there is an app behind it to uncover.
+     * launch screen's mark on the window background below it - until there is an app behind it to uncover.
      *
      * The system takes it away as soon as the first frame is drawn, and that frame is not the app: the preferences
      * that decide the palette and the language have not been read yet, so it is Campfire's own launch screen. Left
@@ -110,6 +121,9 @@ class CampfireMainActivity : ComponentActivity() {
             override fun onPreDraw(): Boolean {
                 if (!isAppReady) return false
                 content.viewTreeObserver.removeOnPreDrawListener(this)
+                // The starting window shows the mark below Android 12, and the window background stays behind the app for
+                // as long as it runs: a resize or the keyboard uncovering a strip of it must show the color alone.
+                window.setBackgroundDrawableResource(R.color.campfire_window_background)
                 return true
             }
         })

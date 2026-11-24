@@ -65,6 +65,7 @@ class BrowserRoutesTest {
         state: NavigationState,
         isSetlistReordering: Boolean = false,
         isSongSelecting: Boolean = false,
+        isSongAutoScrolling: Boolean = false,
         hasOverlay: Boolean = false,
     ) = RouteInputs(
         backStack = state.backStack,
@@ -72,6 +73,7 @@ class BrowserRoutesTest {
         isSetlistsSearchOpen = state.isSetlistsSearchOpen,
         isSetlistReordering = isSetlistReordering,
         isSongSelecting = isSongSelecting,
+        isSongAutoScrolling = isSongAutoScrolling,
         settingsTab = state.settingsTab,
         currentSongFileNames = state.backStack.filterIsInstance<CampfireDestination.SongDetails>()
             .associate { it.id to it.songFileNames.getOrNull(it.initialIndex) },
@@ -111,6 +113,14 @@ class BrowserRoutesTest {
     fun `the selection mode repeats the songs under their search`() {
         assertEquals(listOf("songs", "songs"), BrowserRoutes.paths(inputs(home, isSongSelecting = true)))
         assertEquals(listOf("songs", "songs", "songs/search"), BrowserRoutes.paths(inputs(home.copy(isSongsSearchOpen = true), isSongSelecting = true)))
+    }
+
+    @Test
+    fun `a song scrolling by itself repeats its address under an overlay`() {
+        val song = home.copy(backStack = listOf(CampfireDestination.Songs, songDetails("a.cho")))
+        assertEquals(listOf("songs", "song/a", "song/a"), BrowserRoutes.paths(inputs(song, isSongAutoScrolling = true)))
+        assertEquals(listOf("songs", "song/a", "song/a", "song/a"), BrowserRoutes.paths(inputs(song, isSongAutoScrolling = true, hasOverlay = true)))
+        assertEquals(listOf("songs", "song/a", "song/a/edit"), BrowserRoutes.paths(inputs(home.copy(backStack = song.backStack + CampfireDestination.SongEditor(fileName = "a.cho")), isSongAutoScrolling = true)))
     }
 
     @Test

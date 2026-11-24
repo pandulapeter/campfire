@@ -30,6 +30,7 @@ internal fun routeInputsOf(
     isSetlistsSearchOpen = setlistsController.setlistsSearch.isOpen.value,
     isSetlistReordering = setlistsController.isSetlistReordering,
     isSongSelecting = songSelection.isSongSelecting,
+    isSongAutoScrolling = navigator.autoScrollPlayback.isPlaying,
     settingsTab = navigator.settingsTab,
     currentSongFileNames = navigator.backStack.filterIsInstance<CampfireDestination.SongDetails>().associate { it.id to navigator.currentSongFileName(it) },
     hasOverlay = RouteInputs.hasOverlay(dialog = dialogHost.visibleDialog.value, isAnyMenuOpen = dialogHost.overlayState.isAnyMenuOpen),
