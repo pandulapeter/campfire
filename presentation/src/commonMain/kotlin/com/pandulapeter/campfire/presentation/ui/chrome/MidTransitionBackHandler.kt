@@ -27,14 +27,17 @@ import com.pandulapeter.campfire.presentation.ui.platform.isBackGestureFollowedM
  * `NavDisplay`, so that it is heard before NavDisplay's handler while it is enabled. A gesture it has taken stays with it
  * until it is let go of or called off, even if the transition ends meanwhile. Where Navigation 3 follows such a gesture
  * itself ([isBackGestureFollowedMidTransition]), this stays out of its way.
+ *
+ * [isTransitionRunning] is read here rather than by the caller, so that a transition starting or ending recomposes this
+ * handler alone and not the whole deck of screens around it.
  */
 @Composable
 internal fun MidTransitionBackHandler(
-    isTransitionRunning: Boolean,
+    isTransitionRunning: () -> Boolean,
     canGoBack: Boolean,
     onBack: () -> Unit,
 ) = NavigationBackHandler(
     state = rememberNavigationEventState(currentInfo = NavigationEventInfo.None),
-    isBackEnabled = !isBackGestureFollowedMidTransition && isTransitionRunning && canGoBack,
+    isBackEnabled = !isBackGestureFollowedMidTransition && isTransitionRunning() && canGoBack,
     onBackCompleted = onBack,
 )

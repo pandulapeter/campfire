@@ -48,7 +48,8 @@ internal fun CampfireContent(
 ) {
     val backStack = viewModel.navigator.backStack
     val topLevelDestinations by viewModel.preferencesController.topLevelDestinations.collectAsStateWithLifecycle()
-    var isNavigationTransitionRunning by remember { mutableStateOf(false) }
+    // Read only where it is used, so that a transition starting or ending does not compose the screens again.
+    val isNavigationTransitionRunning = remember { mutableStateOf(false) }
     var isChromeInScreens by remember { mutableStateOf(false) }
     // Derived, so that a push or a pop between two cards does not compose the whole app again.
     val isTopLevelScreenCovered by remember(backStack) { derivedStateOf { backStack.lastOrNull() !is CampfireDestination.TopLevel } }
@@ -62,7 +63,7 @@ internal fun CampfireContent(
             isChromeInScreens = true
         } else {
             repeat(2) { withFrameNanos { } }
-            snapshotFlow { isNavigationTransitionRunning }.first { !it }
+            snapshotFlow { isNavigationTransitionRunning.value }.first { !it }
             isChromeInScreens = false
         }
     }
@@ -70,14 +71,17 @@ internal fun CampfireContent(
     // included, so the screens draw their own copy of it from the frame it is asked for until it has slid all the way
     // off again, the way they do under a card. The copy swaps for the shared one only where both sit still.
     val exportTransition = remember { ExportTransition() }
-    val visibleDialog by viewModel.dialogHost.visibleDialog.collectAsStateWithLifecycle()
+    // Derived, so that opening any other sheet or changing the metronome's tempo does not compose the app's root again.
+    val visibleDialog = viewModel.dialogHost.visibleDialog.collectAsStateWithLifecycle()
+    val isExportDialogVisible by remember(visibleDialog) { derivedStateOf { visibleDialog.value is DialogType.Export } }
     val isExportMovingDeck by remember { derivedStateOf { exportTransition.progress.value > 0f } }
-    val chromeInScreens = isChromeInScreens || isTopLevelScreenCovered || visibleDialog is DialogType.Export || isExportMovingDeck
-    val metronomeSettings by viewModel.metronomeController.metronomeSettings.collectAsStateWithLifecycle()
+    val chromeInScreens = isChromeInScreens || isTopLevelScreenCovered || isExportDialogVisible || isExportMovingDeck
+    val metronomeSettings = viewModel.metronomeController.metronomeSettings.collectAsStateWithLifecycle()
+    val isVisualBeatEnabled by remember(metronomeSettings) { derivedStateOf { metronomeSettings.value.isVisualBeatEnabled } }
     val metronomeBeat = rememberMetronomeIconBeat(
         playback = viewModel.metronomeController.metronomePlayback,
         beats = viewModel.metronomeController.metronomeBeats,
-        isEnabled = metronomeSettings.isVisualBeatEnabled,
+        isEnabled = isVisualBeatEnabled,
     )
 
     // Worked out once for both the expanded rail and the Songs screen's columns, so that the two are never decided
@@ -147,8 +151,8 @@ internal fun CampfireContent(
                 chromeInScreens = chromeInScreens,
                 exportTransition = exportTransition,
                 metronomeBeat = metronomeBeat,
-                isNavigationTransitionRunning = isNavigationTransitionRunning,
-                onNavigationTransitionRunningChanged = { isNavigationTransitionRunning = it },
+                isNavigationTransitionRunning = { isNavigationTransitionRunning.value },
+                onNavigationTransitionRunningChanged = { isNavigationTransitionRunning.value = it },
             )
             OnboardingCelebration(
                 isCelebrating = viewModel.navigator.isOnboardingFinishCelebrated,

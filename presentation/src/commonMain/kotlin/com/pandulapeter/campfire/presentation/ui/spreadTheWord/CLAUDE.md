@@ -34,6 +34,8 @@ An existing user starts counting from the version that added it.
 - On the way back from song details: a pop from a `SongDetails` that leaves `Songs` or `Setlists` on top, once its
   transition has ended (`SpreadTheWordController.onTransitionEnded`), so the dialog never fights it. Any other change of
   the back stack before then drops it for this return.
+- An open is counted once its push has settled (a push interrupted by a back once the two have), so the write never
+  lands mid-slide; the pop that ends the tenth open sees it counted.
 - Never over another question (`canShowSpreadTheWord`): what holds What's new back, plus an owed onboarding, What's new
   not yet recorded for this version, and a sync run stopped before deleting most of the library. Conditions met while
   that gate is shut wait for the next return.

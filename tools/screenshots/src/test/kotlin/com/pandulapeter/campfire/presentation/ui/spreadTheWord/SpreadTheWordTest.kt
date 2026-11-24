@@ -10,10 +10,12 @@
 package com.pandulapeter.campfire.presentation.ui.spreadTheWord
 
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.click
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performTouchInput
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.close
 import com.pandulapeter.campfire.presentation.resources.spread_the_word_title
@@ -21,8 +23,11 @@ import com.pandulapeter.campfire.screenshots.AppTestScope
 import com.pandulapeter.campfire.screenshots.runAppTest
 import com.pandulapeter.campfire.screenshots.tap
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.int
+import kotlinx.serialization.json.jsonPrimitive
 import java.time.LocalDate
 import kotlin.test.Test
+import kotlin.test.assertEquals
 
 @OptIn(ExperimentalTestApi::class)
 internal class SpreadTheWordTest {
@@ -65,6 +70,36 @@ internal class SpreadTheWordTest {
         onNodeWithText(string(Res.string.spread_the_word_title)).assertDoesNotExist()
     }
 
+    @Test
+    fun `a song opened is counted only once its slide has ended`() = runAppTest(songs = OWN_SONGS) {
+        val countBefore = storedSongOpenCount()
+        mainClock.autoAdvance = false
+        onNode(hasText("A Long Tune") and hasClickAction()).performTouchInput { click() }
+        repeat(2) { mainClock.advanceTimeByFrame() }
+        // Real time for a write on a background dispatcher to land, with the slide held where it is.
+        Thread.sleep(WRITE_WAIT_MILLIS)
+        assertEquals(countBefore, storedSongOpenCount())
+        mainClock.autoAdvance = true
+        waitForIdle()
+        waitUntil(timeoutMillis = DIALOG_TIMEOUT_MILLIS) { storedSongOpenCount() == countBefore + 1 }
+    }
+
+    @Test
+    fun `a song closed before its slide has ended is counted once`() = runAppTest(songs = OWN_SONGS) {
+        val countBefore = storedSongOpenCount()
+        mainClock.autoAdvance = false
+        onNode(hasText("A Long Tune") and hasClickAction()).performTouchInput { click() }
+        repeat(2) { mainClock.advanceTimeByFrame() }
+        pressBack()
+        mainClock.autoAdvance = true
+        waitForIdle()
+        waitUntil(timeoutMillis = DIALOG_TIMEOUT_MILLIS) { storedSongOpenCount() == countBefore + 1 }
+        Thread.sleep(WRITE_WAIT_MILLIS)
+        assertEquals(countBefore + 1, storedSongOpenCount())
+    }
+
+    private fun AppTestScope.storedSongOpenCount() = storedPreferences()["songOpenCount"]?.jsonPrimitive?.int ?: 0
+
     /** The first song of the list, since the demo's sort under the test's own and out of a phone's view. */
     private fun AppTestScope.openOwnSong() = tap(hasText("A Long Tune") and hasClickAction())
 
@@ -77,5 +112,6 @@ internal class SpreadTheWordTest {
             "campfire_tests-the_music_song.cho",
         )
         const val DIALOG_TIMEOUT_MILLIS = 5_000L
+        const val WRITE_WAIT_MILLIS = 1_000L
     }
 }

@@ -134,30 +134,30 @@ fun CampfireApp(
         viewModel.metronomeController.onAppStarted()
         viewModel.randomPicksDraw.onAppStarted(isSongsOnTop = viewModel.navigator.backStack.lastOrNull() == CampfireDestination.Songs)
     }
-    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+    val rootPreferences by rememberRootPreferences(viewModel.userPreferences)
     val arePreferencesLoaded by viewModel.preferencesController.arePreferencesLoaded.collectAsStateWithLifecycle()
-    ApplyLanguagePreference(userPreferences?.language)
+    ApplyLanguagePreference(rootPreferences.language)
     // Menus are counted into the view model's own overlay state rather than a global, so the key handlers and the web
     // build's history that read it read the one this app is composed with.
     CompositionLocalProvider(
         LocalLayoutDirection provides currentLanguage.value.layoutDirection,
         LocalOverlayState provides viewModel.dialogHost.overlayState,
         LocalPopupRoom provides rememberPopupRoom(),
-        LocalTagColors provides (userPreferences?.tagColors ?: emptyMap()),
-        LocalAreTooltipsEnabled provides (userPreferences?.areTooltipsEnabled != false),
+        LocalTagColors provides rootPreferences.tagColors,
+        LocalAreTooltipsEnabled provides rootPreferences.areTooltipsEnabled,
         LocalShowsShortcutHints provides rememberHasHardwareKeyboard(),
         LocalAbcRenderer provides koinInject<AbcRenderer>(),
         LocalNotationCache provides remember { NotationCache() },
-        LocalNotationInstrument provides userPreferences?.instrument,
+        LocalNotationInstrument provides rootPreferences.instrument,
         LocalSongImageLoader provides viewModel.songImages,
         LocalMessagePlaces provides remember { MessagePlaces() },
     ) {
         // The flow is handed over rather than collected here, so a change of the library recomposes nothing.
         WarmNotationEngine(songs = viewModel.libraryState.allSongs)
         CampfireTheme(
-            uiMode = userPreferences?.uiMode,
-            themeColor = userPreferences?.themeColor,
-            backgroundWarmth = userPreferences?.backgroundWarmth ?: 0,
+            uiMode = rootPreferences.uiMode,
+            themeColor = rootPreferences.themeColor,
+            backgroundWarmth = rootPreferences.backgroundWarmth,
             neededScriptFaces = rememberNeededScriptFaces(viewModel),
         ) { isThemeSettled, launchScreenColors ->
             val backgroundColor = MaterialTheme.colorScheme.background

@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.spreadTheWord
 
 import com.pandulapeter.campfire.data.model.DataState
+import com.pandulapeter.campfire.data.model.preferences.SongOpens
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.data.model.sync.SyncOutcome
 import com.pandulapeter.campfire.data.model.sync.SyncState
@@ -65,11 +66,17 @@ internal class SpreadTheWordController(
     /** Whether the last change of the back stack was a return from song details to a list, see [onTransitionEnded]. */
     private var isReturnFromSongPending = false
 
+    /**
+     * Song details screens pushed since the last transition ended, counted only then: the write and the [UserPreferences]
+     * it emits would otherwise land mid-slide and recompose everything that reads the preferences.
+     */
+    private var pendingSongOpens = 0
+
     fun onBackStackChanged(previousTop: CampfireDestination?, stack: List<CampfireDestination>) {
         val top = stack.lastOrNull()
         // A push rather than the editor closing over it or a rename rewriting it, which keep its id; an import's
         // preview is not the user's song, and paging between a setlist's songs happens inside one push.
-        if (top is CampfireDestination.SongDetails && top.importPreview == null && top.id !in songDetailsIds) countSongOpen()
+        if (top is CampfireDestination.SongDetails && top.importPreview == null && top.id !in songDetailsIds) pendingSongOpens++
         songDetailsIds = stack.songDetailsIds()
         isReturnFromSongPending = previousTop is CampfireDestination.SongDetails &&
             previousTop.importPreview == null &&
@@ -81,12 +88,13 @@ internal class SpreadTheWordController(
      * never fights it; any other change of the back stack before then is a reason not to ask this time.
      */
     fun onTransitionEnded() {
+        val songOpens = countPendingSongOpens()
         if (!isReturnFromSongPending) return
         isReturnFromSongPending = false
         val preferences = userPreferencesState.value.data ?: return
         val isDue = isSpreadTheWordDue(
             ownSongCount = ownSongCount(screenData.value.data?.unfilteredSongs.orEmpty().map { it.fileName }, DemoLibrary::isDemoSong),
-            songOpens = preferences.songOpens,
+            songOpens = songOpens ?: preferences.songOpens,
             isShown = hasShownRequest || preferences.isSpreadTheWordShown,
         )
         val canShow = canShowSpreadTheWord(
@@ -106,11 +114,20 @@ internal class SpreadTheWordController(
         }
     }
 
-    private fun countSongOpen() {
-        val preferences = userPreferencesState.value.data ?: return
-        if (hasShownRequest || preferences.isSpreadTheWordShown || preferences.songOpens.areEnough) return
+    /**
+     * Writes the opens noted since the last transition ended and returns the count as the write leaves it, which
+     * [userPreferencesState] reaches only later, or null when nothing was counted.
+     */
+    private fun countPendingSongOpens(): SongOpens? {
+        val count = pendingSongOpens
+        pendingSongOpens = 0
+        if (count == 0) return null
+        val preferences = userPreferencesState.value.data ?: return null
+        if (hasShownRequest || preferences.isSpreadTheWordShown || preferences.songOpens.areEnough) return null
         val today = today()
-        updatePreferences("count the song opened") { it.copy(songOpens = it.songOpens.counted(today)) }
+        val counted = { songOpens: SongOpens -> (1..count).fold(songOpens) { opens, _ -> opens.counted(today) } }
+        updatePreferences("count the song opened") { it.copy(songOpens = counted(it.songOpens)) }
+        return counted(preferences.songOpens)
     }
 
     private fun updatePreferences(description: String, update: (UserPreferences) -> UserPreferences) {

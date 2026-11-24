@@ -111,7 +111,7 @@ internal fun CampfireScreens(
     chromeInScreens: Boolean,
     exportTransition: ExportTransition,
     metronomeBeat: MetronomeIconBeat,
-    isNavigationTransitionRunning: Boolean,
+    isNavigationTransitionRunning: () -> Boolean,
     onNavigationTransitionRunningChanged: (Boolean) -> Unit,
 ) {
     val backStack = viewModel.navigator.backStack
