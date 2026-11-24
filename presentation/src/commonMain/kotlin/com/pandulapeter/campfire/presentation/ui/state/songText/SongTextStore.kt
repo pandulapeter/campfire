@@ -28,6 +28,7 @@ import com.pandulapeter.campfire.chordpro.edit.ChordProImages
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.NonCancellable
+import com.pandulapeter.campfire.presentation.ui.songView.model.SongLyricsModelCache
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -72,6 +73,13 @@ internal class SongTextStore(
      */
     private val _songTexts = MutableStateFlow(emptyMap<String, String>())
     val songTexts: StateFlow<Map<String, String>> = _songTexts.asStateFlow()
+
+    /**
+     * The models the song pages built of these texts lately, so a song opened again takes its model from memory. Never
+     * pruned with the texts ([pruneSongTexts] is about not reading files again): a kept model can only be served for the
+     * very text and settings it was built of, so one whose text changed or left simply ages out.
+     */
+    val lyricsModels = SongLyricsModelCache()
 
     /**
      * The songs whose files are being renamed right now, under the names they had when it started.

@@ -19,6 +19,7 @@ import com.pandulapeter.campfire.presentation.ui.songView.LocalSongChange
 import com.pandulapeter.campfire.presentation.ui.songView.SectionMotion
 import com.pandulapeter.campfire.presentation.ui.songView.SongChange
 import com.pandulapeter.campfire.presentation.ui.songView.SongLyrics
+import com.pandulapeter.campfire.presentation.ui.songView.SongModelBuild
 import com.pandulapeter.campfire.presentation.ui.songView.rememberSongLyricsModel
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongPlayingControls
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongPlayingTools
@@ -93,6 +94,7 @@ import org.jetbrains.compose.resources.painterResource
  * @param text The ChordPro text of the song, null while it is still being read.
  * @param buildsModelInPlace Whether the first rendering of the text is built while composing rather than in the
  *   background, see [buildsModelInPlace] and [rememberSongLyricsModel].
+ * @param modelBuild Where the model is taken from when it was built before, and kept once built, see [SongModelBuild].
  * @param isViewportSettled Whether the app bar and the metronome panel above the pager are at rest, read while
  *   composing: the grid is decided against the height the page has then, see [settledHeight].
  * @param followsViewport Whether the page follows the viewport's height frame by frame: the page being read and the one
@@ -148,6 +150,7 @@ internal fun SongDetailsPage(
     flingBehavior: RowSnapFlingBehavior,
     text: String?,
     buildsModelInPlace: Boolean,
+    modelBuild: SongModelBuild,
     isViewportSettled: () -> Boolean,
     followsViewport: Boolean,
     hasFailed: Boolean,
@@ -226,10 +229,7 @@ internal fun SongDetailsPage(
             showsDegrees = showsDegrees,
             imageSizes = rememberSongImageSizes(songText),
         )
-        val built = rememberSongLyricsModel(
-            inputs = lyricsInputs,
-            buildsInPlace = buildsModelInPlace,
-        ) { inputs, searchesShapes ->
+        val built = rememberSongLyricsModel(inputs = lyricsInputs, buildsInPlace = buildsModelInPlace, build = modelBuild) { inputs, searchesShapes ->
             // The scales are read from the song as its file capos it, the capo saying only which shapes the file is written
             // in; the page names the capo it is played at.
             val reading = songRenderer.songReadingOf(inputs.text, inputs.transposition, inputs.tabCapo, inputs.spelling, inputs.tabs, inputs.shapeNames, inputs.inferredChordsKey)

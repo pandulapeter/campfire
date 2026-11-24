@@ -42,29 +42,40 @@ import kotlinx.coroutines.withContext
  * searched shapes the in-place one went without. Every later model is built on [Dispatchers.Default] whole, with the
  * one before it staying on screen until it is ready. A change that arrives meanwhile cancels the wait, although not the
  * parse or the search itself, which are not cooperative: that one finishes in the background and its result is dropped.
+ *
+ * Every model built is kept in [build]'s cache by its inputs, the in-place one as soon as it is built, so a song opened
+ * again takes it from there wherever it would be built in place, shapes searched included where the search had finished.
+ * A page building in the background takes a kept model only from the effect, after its first frame, since handing it
+ * one at once would lay a second whole song out on the push frame.
  */
 @Composable
 internal fun rememberSongLyricsModel(
     inputs: SongLyricsInputs,
     buildsInPlace: Boolean,
+    build: SongModelBuild,
     prepare: (inputs: SongLyricsInputs, searchesShapes: Boolean) -> SongLyricsModel,
 ): Pair<SongLyricsInputs, SongLyricsModel>? {
+    val cache = build.cache
     val latestPrepare by rememberUpdatedState(prepare)
-    val state = remember { mutableStateOf(if (buildsInPlace) inputs to prepare(inputs, false) else null) }
+    val inPlaceModelOf = { of: SongLyricsInputs -> of to (cache?.get(of) ?: prepare(of, false).also { cache?.keep(of, it) }) }
+    val state = remember { mutableStateOf(if (buildsInPlace) inPlaceModelOf(inputs) else null) }
     // Not snapshot state: it is written while composing, and only ever read in the same composition that wrote it.
     val inPlace = remember { InPlaceSongLyricsModel() }
     if (state.value != null) {
         inPlace.built = null
     } else if (buildsInPlace && inPlace.built?.first != inputs) {
-        inPlace.built = inputs to prepare(inputs, false)
+        inPlace.built = inPlaceModelOf(inputs)
     }
     LaunchedEffect(inputs) {
         val built = state.value
-        state.value = when {
-            built == null || built.first != inputs -> inputs to withContext(Dispatchers.Default) { latestPrepare(inputs, true) }
-            built.second.hasPendingShapes -> inputs to withContext(Dispatchers.Default) { built.second.withSearchedShapes() }
+        val model = when {
+            built == null || built.first != inputs ->
+                cache?.get(inputs)?.takeUnless { it.hasPendingShapes } ?: withContext(Dispatchers.Default) { latestPrepare(inputs, true) }
+            built.second.hasPendingShapes -> withContext(Dispatchers.Default) { built.second.withSearchedShapes() }
             else -> return@LaunchedEffect
         }
+        state.value = inputs to model
+        cache?.keep(inputs, model)
     }
     return state.value ?: inPlace.built
 }

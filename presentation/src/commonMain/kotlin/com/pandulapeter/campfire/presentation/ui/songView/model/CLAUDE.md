@@ -52,6 +52,10 @@
 ### Building the model, and the budget
 
 - Built off the main thread except the first page on screen and those before it, so a page never opens empty.
+- **Models are kept by their inputs** (`SongLyricsModelCache`, eight, never a cut one; held by `SongTextStore`, none for
+  an import preview), so a song opened again takes its model, shapes searched, on its push frame. A page building in
+  the background still gets its model only after its first frame. `TabReading` compares by value for this
+  (`tabPlayerOf` hands back one player per reader).
 - **One scale walk a model** (`songScaleAnalysisOf`), shared by the Scales section and the Chords section's key groups
   and degrees, in the in-place first model too so degrees are right on the first frame; never for a songbook. Without a
   home the degrees count from `SongKeys.ofChords` (the capo chart rule).

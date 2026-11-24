@@ -32,8 +32,11 @@ import com.pandulapeter.campfire.presentation.ui.instrument.instrumentTuning
  * was done to them is said in. The [player] also picks the notation written for an instrument (`{start_of_abc-piano}`).
  * Where [selects] is false (the editor's preview) every tab and tune written for an instrument is shown, since the
  * preview shows the song as it is written.
+ *
+ * Equal to another of the same reader ([tabPlayerOf] hands back the same [player] for one), so a song's model built on an
+ * earlier open is found again by its inputs.
  */
-internal class TabReading(val player: TabPlayer, val labels: TabNoticeLabels, val selects: Boolean)
+internal data class TabReading(val player: TabPlayer, val labels: TabNoticeLabels, val selects: Boolean)
 
 /**
  * The [TabReading] of the reader [preferences] describe, null until they are read. The same one is given back for as

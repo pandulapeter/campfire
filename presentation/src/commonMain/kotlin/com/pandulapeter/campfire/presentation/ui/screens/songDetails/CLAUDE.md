@@ -27,7 +27,8 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
   while the step reaching the end still moves is not that first one. The bar's buttons, swipes, and Shift + an arrow do
   not ask.
 - The first page's text and its neighbours' are read ahead as the screen is pushed, so a song read before opens with its
-  lyrics in the first frame and its model is built before the transition moves, not during it.
+  lyrics in the first frame and its model is built before the transition moves, not during it; a song opened before
+  takes its model from `SongTextStore.lyricsModels` instead.
 
 ## The import preview
 

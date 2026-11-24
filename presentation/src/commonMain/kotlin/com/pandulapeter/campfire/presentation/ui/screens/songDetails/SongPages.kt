@@ -68,6 +68,7 @@ import com.pandulapeter.campfire.presentation.ui.playing.soundingTransposition
 import com.pandulapeter.campfire.presentation.ui.playing.songPlaybackOf
 import com.pandulapeter.campfire.presentation.ui.playing.tabCapoFor
 import com.pandulapeter.campfire.presentation.ui.tabs.rememberTabReading
+import com.pandulapeter.campfire.presentation.ui.songView.SongModelBuild
 
 /**
  * The pages of [SongDetailsPager], one song each, with the one beside the current page on either side composed ahead of
@@ -123,6 +124,7 @@ internal fun SongPages(
     // only so that nothing writes to a song file that is not there yet, so its diagrams open their sheets.
     val canPickChordShapes = !isPerformanceModeEnabled && (importPreview != null || !isReadOnly)
     val tabs = rememberTabReading(userPreferences)
+    val modelBuild = remember(songTextStore, importPreview == null) { SongModelBuild(songTextStore.lyricsModels.takeIf { importPreview == null }) }
     val showsDegrees = SongSections.of(userPreferences).areDegreesShown
     val scaleSuggestions = rememberScaleSuggestions(dialogHost = dialogHost, userPreferences = userPreferences)
     val isContinuous = userPreferences?.songLayout == SongLayout.CONTINUOUS
@@ -196,6 +198,7 @@ internal fun SongPages(
             text = shownText,
             followsViewport = isFollowingGesture,
             buildsModelInPlace = buildsInPlace,
+            modelBuild = modelBuild,
             isViewportSettled = isViewportSettled,
             hasFailed = song.fileName in failedSongFileNames,
             transposition = playback.soundingTransposition,
@@ -252,11 +255,7 @@ internal fun SongPages(
             shouldShowChords = shouldShowChords,
             shouldShowTempo = isMetronomeEnabled,
             shouldNumberSections = userPreferences?.shouldNumberSections == true,
-            fontScale = if (isFollowingGesture) {
-                { fontScaleController.fontScale }
-            } else {
-                { fontScaleController.settledFontScale }
-            },
+            fontScale = { if (isFollowingGesture) fontScaleController.fontScale else fontScaleController.settledFontScale },
             // In a setlist the step buttons page to the songs beside every song, whether it scrolls or not.
             keepsStepButtonInset = canPage,
             // One set per song, wherever it is opened from: folding is how this reader reads it, not how the

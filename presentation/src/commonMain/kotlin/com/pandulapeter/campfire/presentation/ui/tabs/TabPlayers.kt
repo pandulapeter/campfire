@@ -24,8 +24,40 @@ import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
  *
  * Where [isMoved] is false (the editor's preview, which shows a song as it is written) the tabs are only named, a
  * staff that names no strings having the standard ones written in front of it, and nothing is moved or hidden.
+ *
+ * The same instance comes back for the same reader while it is among the last few asked for: a [TabPlayer] holds lambdas
+ * and is compared by identity, and a [TabReading] built of it on another open of a song must equal the one before for
+ * the song's model to be found again (`SongLyricsModelCache`). Main thread only, as every caller is (composition, and
+ * the export's preparation before it leaves the main dispatcher), so the memo has no lock.
  */
 internal fun tabPlayerOf(
+    instrument: UserPreferences.Instrument,
+    tuning: InstrumentTuning?,
+    notation: ChordNotation,
+    isMoved: Boolean,
+): TabPlayer = TabPlayerKey(instrument, tuning, notation, isMoved).let { key ->
+    (tabPlayers.remove(key) ?: newTabPlayer(instrument, tuning, notation, isMoved)).also {
+        tabPlayers[key] = it
+        if (tabPlayers.size > MAX_KEPT_TAB_PLAYERS) tabPlayers.remove(tabPlayers.keys.first())
+    }
+}
+
+private data class TabPlayerKey(
+    val instrument: UserPreferences.Instrument,
+    val tuning: InstrumentTuning?,
+    val notation: ChordNotation,
+    val isMoved: Boolean,
+)
+
+/**
+ * The readers asked for lately, least recently asked for first (one asked for is taken out and put back last): only a
+ * reader no longer in use ever leaves.
+ */
+private val tabPlayers = LinkedHashMap<TabPlayerKey, TabPlayer>()
+
+private const val MAX_KEPT_TAB_PLAYERS = 8
+
+private fun newTabPlayer(
     instrument: UserPreferences.Instrument,
     tuning: InstrumentTuning?,
     notation: ChordNotation,

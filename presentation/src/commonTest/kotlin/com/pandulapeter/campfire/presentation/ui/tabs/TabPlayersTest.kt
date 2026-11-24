@@ -16,6 +16,7 @@ import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -173,5 +174,17 @@ class TabPlayersTest {
         assertEquals("as written", labels.describe(TabNotice(TabNotice.Kind.NOT_MOVED)))
         assertEquals("Guitar tab hidden", labels.describe(TabNotice(TabNotice.Kind.HIDDEN, instrument = "guitar")))
         assertEquals("hidden", labels.describe(TabNotice(TabNotice.Kind.HIDDEN, instrument = "kazoo")))
+    }
+
+    @Test
+    fun `the readings of one reader on two opens are equal`() {
+        fun reading(tuning: InstrumentTuning, isMoved: Boolean) =
+            TabReading(player = tabPlayerOf(Instrument.GUITAR, tuning, ChordNotation.STANDARD, isMoved = isMoved), labels = noticeLabels.copy(), selects = isMoved)
+
+        val reading = reading(InstrumentTuning.GUITAR, isMoved = true)
+        assertEquals(reading, reading(InstrumentTuning.GUITAR, isMoved = true))
+        assertEquals(reading.hashCode(), reading(InstrumentTuning.GUITAR, isMoved = true).hashCode())
+        assertNotEquals(reading, reading(InstrumentTuning.GUITAR_DROP_D, isMoved = true))
+        assertNotEquals(reading, reading(InstrumentTuning.GUITAR, isMoved = false))
     }
 }
