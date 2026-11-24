@@ -20,6 +20,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusTarget
 import androidx.compose.ui.focus.onFocusChanged
@@ -48,6 +49,11 @@ import kotlinx.coroutines.launch
  * Keys travel only along the focus path, and nothing on a list screen is focused while its search is closed, so the
  * root holds the focus itself whenever nothing under it does, a frame after it went: whatever took it has it by then.
  * Not while a dialog, a sheet or a menu is up, which hold their own and give it back as they go.
+ * While something under it has the focus the root cannot take it back by a focus search: Android below 13 hands its back
+ * key to the focused view first, and Compose spends a back key nobody consumes on moving the focus out to the nearest
+ * focus target that can take it, which would be this one, so the key never reached the system's back and a screen that
+ * takes the focus again (song details) could never be left. With no such target the key goes on to the system's back,
+ * as it does from Android 13 on, which never shows it to the views.
  * The shortcuts a platform's shell hears itself ([LocalKeysLeftToShell]) are left alone, so that none is handled twice.
  */
 @Composable
@@ -95,6 +101,7 @@ internal fun Modifier.appKeyboardShortcuts(viewModel: CampfireViewModel): Modifi
         .focusRequester(focusRequester)
         .onFocusChanged { focusState ->
             lastPress.hasFocus = focusState.hasFocus
+            lastPress.isFocusUnder = focusState.hasFocus && !focusState.isFocused
             if (!focusState.hasFocus) {
                 heldKeys.clear()
                 coroutineScope.launch {
@@ -103,6 +110,7 @@ internal fun Modifier.appKeyboardShortcuts(viewModel: CampfireViewModel): Modifi
                 }
             }
         }
+        .focusProperties { canFocus = !lastPress.isFocusUnder }
         .focusTarget()
 }
 
@@ -116,4 +124,7 @@ internal val LocalKeysLeftToShell = staticCompositionLocalOf { emptySet<KeyShort
 private class KeyPress {
     var isRepeat = false
     var hasFocus = false
+
+    /** Whether something under the root has the focus, rather than the root itself. */
+    var isFocusUnder = false
 }
