@@ -180,8 +180,8 @@ jobs:
           python3 "$SIGNING" certificate MAC_INSTALLER_DISTRIBUTION "$KEYCHAIN_PATH"
           python3 "$SIGNING" profile MAC_APP_STORE com.pandulapeter.campfire MAC_APP_DISTRIBUTION "$RUNNER_TEMP/embedded.provisionprofile"
           python3 "$SIGNING" profile MAC_APP_STORE com.oracle.java.com.pandulapeter.campfire MAC_APP_DISTRIBUTION "$RUNNER_TEMP/runtime.provisionprofile"
-          # Without the partition list codesign and productbuild stop to ask for the keychain password, which nobody
-          # can type here.
+          # Without the partition list codesign, productbuild, and productsign stop to ask for the keychain password,
+          # which nobody can type here.
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH" > /dev/null
           security list-keychains -d user -s "$KEYCHAIN_PATH" $(security list-keychains -d user | tr -d '"')
           # The build is given the name the two certificates share, without the prefix it adds itself.
@@ -265,6 +265,15 @@ jobs:
             --data "$HOME/Library/Containers/com.pandulapeter.campfire/Data/Library/Application Support/Campfire" \
             --log "$RUNNER_TEMP/campfire.log" \
             --started "The release build started in the sandbox"
+      # jpackage's own product definition lets the package install from 10.11, which App Store Connect refuses when the
+      # app says otherwise (.github/scripts/pkg_allowed_os_versions.py says why it is done here).
+      - name: Allow only the app's minimum macOS
+        if: github.event_name != 'workflow_dispatch' || inputs.upload
+        run: |
+          PACKAGE=$(find app/desktop/build/compose/binaries/main-release/pkg -name '*.pkg' | head -n 1)
+          MINIMUM=$(/usr/libexec/PlistBuddy -c 'Print :LSMinimumSystemVersion' app/desktop/build/compose/binaries/main-release/app/Campfire.app/Contents/Info.plist)
+          python3 .github/scripts/pkg_allowed_os_versions.py "$PACKAGE" "$MINIMUM" \
+            --sign "3rd Party Mac Developer Installer: $MAC_SIGNING_IDENTITY" --keychain "$KEYCHAIN_PATH"
       - name: Upload to App Store Connect
         if: github.event_name != 'workflow_dispatch' || inputs.upload
         env:

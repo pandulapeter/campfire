@@ -159,6 +159,9 @@ locales are filled in from the language), Play's `update-priority`, a `submit` a
   build only starts under TestFlight, so the start check runs on an ad-hoc-signed copy with the same entitlements minus
   the two naming the App ID. The `build_number` input re-uploads a release under a new number; `upload` off builds
   nothing and only writes the listing of the build already uploaded under that number (iOS too).
+- macOS: `pkg_allowed_os_versions.py` leaves the `.pkg`'s Distribution allowing only the app's `LSMinimumSystemVersion`
+  and signs it again: jpackage adds 10.11, which App Store Connect refuses (90264). It is a workflow step, not a build
+  task, so a hand dispatch fixes a package built from an existing tag.
 - iOS: archived with the App Store profiles of the app, the share extension, and the widgets (`app_store_signing.py
   profile`, never one Xcode made, which manual signing refuses), uploaded to TestFlight. Xcode starts Gradle without
   properties, so the sync key goes into `local.properties`, which the version build phase also reads (last value wins)

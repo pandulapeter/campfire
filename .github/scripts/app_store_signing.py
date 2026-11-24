@@ -212,7 +212,7 @@ def import_certificate(certificate_type, keychain):
         run(OPENSSL, "rsa", "-in", os.environ["APPLE_SIGNING_KEY_PATH"], "-out", key)
         with open(certificate, "wb") as file:
             file.write(current["content"])
-        tools = ["-T", "/usr/bin/codesign", "-T", "/usr/bin/productbuild", "-T", "/usr/bin/security"]
+        tools = ["-T", "/usr/bin/codesign", "-T", "/usr/bin/productbuild", "-T", "/usr/bin/productsign", "-T", "/usr/bin/security"]
         imported = subprocess.run(
             ["security", "import", key, "-k", keychain, "-t", "priv", "-f", "openssl", *tools], capture_output=True, text=True,
         )
