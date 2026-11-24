@@ -9,18 +9,28 @@
  */
 package com.pandulapeter.campfire.widget
 
+import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.glance.ColorFilter
 import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
+import androidx.glance.Image
+import androidx.glance.ImageProvider
 import androidx.glance.LocalContext
-import androidx.glance.LocalSize
 import androidx.glance.action.clickable
+import androidx.glance.appwidget.lazy.LazyColumn
+import androidx.glance.appwidget.lazy.items
+import androidx.glance.layout.Box
 import androidx.glance.layout.Column
+import androidx.glance.layout.ColumnScope
+import androidx.glance.layout.ContentScale
+import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.Spacer
 import androidx.glance.layout.height
+import androidx.glance.layout.padding
 import androidx.glance.text.FontWeight
 import androidx.glance.text.TextAlign
 import androidx.glance.text.Text
@@ -31,9 +41,9 @@ import com.pandulapeter.campfire.presentation.ui.widget.WidgetSnapshot
 import com.pandulapeter.campfire.presentation.ui.widget.setlistContent
 
 /**
- * The setlist widget: the setlist's title, its date and how far away it is, its song count, and as many of its songs'
- * titles as the height has room for, or the snapshot's sentence saying why there is no setlist. The whole widget is one
- * tap target, opening the content's link (the app, before it ever wrote a snapshot).
+ * The setlist widget: the setlist's title, its date and how far away it is, its song count, and its songs in a list that
+ * scrolls, each opening the setlist at it; or the snapshot's sentence saying why there is no setlist. The rest of the
+ * widget opens the content's link (the app, before it ever wrote a snapshot).
  */
 @Composable
 internal fun SetlistWidgetLayout(
@@ -57,7 +67,7 @@ internal fun SetlistWidgetLayout(
 
 /** [content], under [label] (Next gig, where the widget is not pinned to the setlist). */
 @Composable
-private fun Setlist(
+private fun ColumnScope.Setlist(
     content: SetlistWidgetContent.Shown,
     label: String?,
     textAlign: TextAlign,
@@ -86,23 +96,46 @@ private fun Setlist(
         maxLines = 1,
         style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 12.sp, textAlign = textAlign),
     )
-    val songLines = SetlistWidgetMetrics.songLinesFitting(LocalSize.current.height.value)
-    if (songLines > 0 && content.songTitles.isNotEmpty()) {
-        Spacer(modifier = GlanceModifier.height(4.dp))
-        // Glance draws only the first ten children of a container, so the titles go in columns of their own, ten at most.
-        content.songTitles.take(songLines).chunked(MAX_CONTAINER_CHILDREN).forEach { titles ->
-            Column(modifier = GlanceModifier.fillMaxWidth()) {
-                titles.forEach { title ->
+    if (content.songs.isNotEmpty()) {
+        Box(modifier = GlanceModifier.fillMaxWidth().defaultWeight()) {
+            LazyColumn(modifier = GlanceModifier.fillMaxSize()) {
+                // A row of the fades' height at either end, which is where a song sits once it is scrolled to an end: a
+                // widget's list cannot say how far it is scrolled, so the fades are always there, and only these are
+                // under them at rest.
+                item { Spacer(modifier = GlanceModifier.height(EDGE_FADE_HEIGHT.dp)) }
+                items(content.songs) { song ->
                     Text(
-                        modifier = GlanceModifier.fillMaxWidth(),
-                        text = title,
+                        modifier = GlanceModifier.fillMaxWidth().padding(vertical = 3.dp).clickable(openLinkAction(song.link)),
+                        text = song.title,
                         maxLines = 1,
                         style = TextStyle(color = GlanceTheme.colors.onSurface, fontSize = 13.sp, textAlign = textAlign),
                     )
                 }
+                item { Spacer(modifier = GlanceModifier.height(EDGE_FADE_HEIGHT.dp)) }
             }
+            EdgeFades()
         }
     }
 }
 
-private const val MAX_CONTAINER_CHILDREN = 10
+/**
+ * The songs fading out at the list's ends, as the app's lists do under its bars: the widget's background in a gradient
+ * over them, the drawables' alpha in its color. Drawn over the list without taking touches, which reach the list under it.
+ */
+@Composable
+private fun EdgeFades() = Column(modifier = GlanceModifier.fillMaxSize()) {
+    EdgeFade(R.drawable.widget_fade_top)
+    Spacer(modifier = GlanceModifier.defaultWeight())
+    EdgeFade(R.drawable.widget_fade_bottom)
+}
+
+@Composable
+private fun EdgeFade(@DrawableRes drawable: Int) = Image(
+    modifier = GlanceModifier.fillMaxWidth().height(EDGE_FADE_HEIGHT.dp),
+    provider = ImageProvider(drawable),
+    contentDescription = null,
+    contentScale = ContentScale.FillBounds,
+    colorFilter = ColorFilter.tint(GlanceTheme.colors.widgetBackground),
+)
+
+private const val EDGE_FADE_HEIGHT = 12

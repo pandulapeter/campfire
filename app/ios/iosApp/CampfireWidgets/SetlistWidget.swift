@@ -61,8 +61,14 @@ struct SetlistProvider: AppIntentTimelineProvider {
 /// What the widget shows on its entry's day: the same rules as the Android widget's (`:presentation`'s
 /// `WidgetContent.kt`), written again here, since the extension links no Kotlin.
 enum SetlistContent {
-    case shown(title: String, date: String, relativeDay: String, songCount: String, songTitles: [String], link: String)
+    case shown(title: String, date: String, relativeDay: String, songCount: String, songs: [Song], link: String)
     case message(text: String, link: String)
+
+    /// A song of the setlist shown, and the link that opens the setlist at it.
+    struct Song {
+        let title: String
+        let link: String
+    }
 
     init(snapshot: WidgetSnapshot, pinnedFileName: String?, on date: Date) {
         let strings = snapshot.strings
@@ -91,7 +97,10 @@ enum SetlistContent {
             date: setlist.formattedDate,
             relativeDay: Self.relativeDay(from: date, to: setlist.date, strings: strings),
             songCount: strings.songCount.format(setlist.songFileNames.count),
-            songTitles: setlist.songFileNames.compactMap { titles[$0] },
+            songs: setlist.songFileNames.enumerated().compactMap { index, fileName in
+                // A snapshot from before the songs had links of their own opens the setlist at its first.
+                titles[fileName].map { Song(title: $0, link: setlist.songLinks?[safe: index] ?? setlist.link) }
+            },
             link: setlist.link
         )
     }
@@ -165,7 +174,7 @@ struct SetlistWidgetView: View {
             } else {
                 WidgetMessage(text: text)
             }
-        case .shown(let title, let date, let relativeDay, let songCount, let songTitles, _):
+        case .shown(let title, let date, let relativeDay, let songCount, let songs, _):
             switch family {
             case .accessoryRectangular:
                 VStack(alignment: .leading, spacing: 0) {
@@ -183,7 +192,7 @@ struct SetlistWidgetView: View {
                         Text(verbatim: songCount).font(InterFont.regular(13, relativeTo: .caption)).foregroundStyle(colors.secondaryText)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    SongTitles(titles: songTitles)
+                    SongTitles(songs: songs)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             default:
@@ -210,19 +219,26 @@ private struct RelativeDayText: View {
     }
 }
 
-/// The first songs of the setlist, in order, as many as fit.
+/// The first songs of the setlist, in order, as many as fit, each opening the setlist at it.
 private struct SongTitles: View {
-    let titles: [String]
+    let songs: [SetlistContent.Song]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            ForEach(Array(titles.prefix(5).enumerated()), id: \.offset) { index, title in
-                Text(verbatim: "\(index + 1). \(title)")
-                    .font(InterFont.regular(13, relativeTo: .caption))
-                    .lineLimit(1)
+            ForEach(Array(songs.prefix(5).enumerated()), id: \.offset) { index, song in
+                Link(destination: appLink(song.link)) {
+                    Text(verbatim: "\(index + 1). \(song.title)")
+                        .font(InterFont.regular(13, relativeTo: .caption))
+                        .lineLimit(1)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
             }
             Spacer(minLength: 0)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
+}
+
+private extension Array {
+    subscript(safe index: Int) -> Element? { indices.contains(index) ? self[index] : nil }
 }

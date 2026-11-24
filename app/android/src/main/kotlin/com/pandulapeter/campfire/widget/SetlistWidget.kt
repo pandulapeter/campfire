@@ -10,11 +10,8 @@
 package com.pandulapeter.campfire.widget
 
 import android.content.Context
-import androidx.compose.ui.unit.DpSize
-import androidx.compose.ui.unit.dp
 import androidx.glance.GlanceId
 import androidx.glance.appwidget.GlanceAppWidget
-import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.provideContent
 import androidx.glance.currentState
 import java.time.LocalDate
@@ -25,9 +22,6 @@ import java.time.LocalDate
  * drawing: the provider's hourly update and the receiver's date, time, and time zone broadcasts bring one past midnight.
  */
 internal class SetlistWidget : GlanceAppWidget() {
-
-    /** One layout per number of song titles, so that the widget lists as many as its height has room for. */
-    override val sizeMode = SizeMode.Responsive(SetlistWidgetMetrics.SONG_LINE_STEPS.map { DpSize(MIN_WIDTH.dp, SetlistWidgetMetrics.heightFor(it).dp) }.toSet())
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         WidgetSnapshotFile.load(context)
@@ -41,9 +35,5 @@ internal class SetlistWidget : GlanceAppWidget() {
                 )
             }
         }
-    }
-
-    private companion object {
-        const val MIN_WIDTH = 100
     }
 }

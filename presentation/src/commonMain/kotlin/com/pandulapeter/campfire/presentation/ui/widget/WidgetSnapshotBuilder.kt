@@ -51,6 +51,7 @@ internal fun widgetSnapshot(
                 isArchived = setlist.isArchived,
                 songFileNames = setlistSongs,
                 link = AppLinks.of(BrowserRoutes.setlistPathOf(setlistFileName = setlist.fileName, songFileName = setlistSongs.firstOrNull())),
+                songLinks = setlistSongs.map { AppLinks.of(BrowserRoutes.setlistPathOf(setlistFileName = setlist.fileName, songFileName = it)) },
             )
         },
         areSongsEnabled = features.areSongsEnabled,

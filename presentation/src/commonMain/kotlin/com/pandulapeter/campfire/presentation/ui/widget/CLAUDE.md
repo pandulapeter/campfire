@@ -25,7 +25,8 @@ shells' (`app/android`'s Glance widgets, `app/ios`'s `CampfireWidgets` extension
 - A counted text is a `Plural` of the language's template for each count from 0 to 199 (a larger count reads as the
   one past 100 with its last two digits), so neither platform needs the plural rules.
 - **Every tap is an app link** (`navigation/CLAUDE.md`), built here: a song's details, a setlist's first song in setlist
-  mode, else (no songs) `setlist/{setlist}`, which brings it into sight.
+  mode, else (no songs) `setlist/{setlist}`, which brings it into sight, and each of a setlist's songs (`songLinks`) the
+  setlist at that song.
 - The decisions are pure and tested here (`WidgetContent.kt`), Android's widgets calling them: the draw (up to the
   count, by a seed the widget keeps, each song ranked by its file name's hash alone so the library's order never
   changes it; no 20-song threshold, the songs list's Random picks switch does not apply), the

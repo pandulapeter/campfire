@@ -41,6 +41,8 @@ struct WidgetSnapshot: Decodable {
         let isArchived: Bool
         let songFileNames: [String]
         let link: String
+        /// Each song's link, opening the setlist at it; absent from a snapshot an app from before it wrote.
+        let songLinks: [String]?
     }
 
     /// The app's theme: its dark half (true), its light half (false), or the system's (nil); and its palette's two

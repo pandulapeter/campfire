@@ -121,6 +121,21 @@ class WidgetSnapshotBuilderTest {
     }
 
     @Test
+    fun `each song of a setlist opens the setlist at that song`() {
+        val gig = build().setlists.first()
+        assertEquals(
+            shown(
+                listOf(
+                    CampfireDestination.Songs,
+                    CampfireDestination.Setlists,
+                    CampfireDestination.SongDetails(songFileNames = listOf(b.fileName, a.fileName), setlistFileName = gig.fileName, initialIndex = 1),
+                ),
+            ),
+            open(gig.songLinks[1]),
+        )
+    }
+
+    @Test
     fun `a setlist with no songs opens the setlists screen with it brought into sight`() {
         val empty = build().setlists.last()
         assertEquals(listOf<Any>(CampfireDestination.Songs, CampfireDestination.Setlists), open(empty.link))

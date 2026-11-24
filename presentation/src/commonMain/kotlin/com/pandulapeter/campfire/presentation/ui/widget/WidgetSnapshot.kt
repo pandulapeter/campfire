@@ -57,6 +57,8 @@ data class WidgetSnapshot(
      * @property songFileNames Its songs the library holds, in order: [songs] names each.
      * @property link The app link that opens its first song read from it, or for a setlist with none, the setlists screen
      *   with it brought into sight.
+     * @property songLinks The app link of each of [songFileNames], opening the setlist at that song; empty in a snapshot
+     *   written before it was part of one.
      */
     @Serializable
     data class Setlist(
@@ -67,6 +69,7 @@ data class WidgetSnapshot(
         val isArchived: Boolean,
         val songFileNames: List<String>,
         val link: String,
+        val songLinks: List<String> = emptyList(),
     )
 
     /**

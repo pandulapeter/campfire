@@ -23,6 +23,12 @@ sealed interface RandomPicksContent {
     data class Message(val text: String) : RandomPicksContent
 }
 
+/** A song of the setlist a setlist widget shows: its [title], and the app link that opens the setlist at it. */
+data class SetlistWidgetSong(
+    val title: String,
+    val link: String,
+)
+
 /** What the setlist widget shows: a setlist, or a sentence saying why there is none. Either opens [link]. */
 sealed interface SetlistWidgetContent {
 
@@ -30,14 +36,14 @@ sealed interface SetlistWidgetContent {
 
     /**
      * The setlist [title], on [date] ([WidgetSnapshot.Setlist.formattedDate]), [relativeDay] from today ("In 3 days"),
-     * with [songCount] ("12 songs") and its [songTitles] in order, for as many as a widget has room for.
+     * with [songCount] ("12 songs") and its [songs] in order, each opening the setlist at that song.
      */
     data class Shown(
         val title: String,
         val date: String,
         val relativeDay: String,
         val songCount: String,
-        val songTitles: List<String>,
+        val songs: List<SetlistWidgetSong>,
         override val link: String,
     ) : SetlistWidgetContent
 
@@ -78,7 +84,10 @@ fun WidgetSnapshot.setlistContent(pinnedFileName: String?, todayEpochDay: Long):
         date = setlist.formattedDate,
         relativeDay = LocalDate.parseOrNull(setlist.date)?.let { strings.relativeDayText(date = it, today = today) }.orEmpty(),
         songCount = strings.songCount.format(setlist.songFileNames.size),
-        songTitles = setlist.songFileNames.mapNotNull(titles::get),
+        songs = setlist.songFileNames.mapIndexedNotNull { index, fileName ->
+            // A snapshot from before the songs had links of their own opens the setlist at its first.
+            titles[fileName]?.let { SetlistWidgetSong(title = it, link = setlist.songLinks.getOrNull(index) ?: setlist.link) }
+        },
         link = setlist.link,
     )
 }
