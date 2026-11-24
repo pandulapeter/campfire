@@ -104,9 +104,17 @@ enum SetlistContent {
 
     private static func isDay(_ text: String) -> Bool { dayComponents(text) != nil }
 
-    /// `yyyy-MM-dd` of the day `date` falls on in the system's calendar, which sorts as the days do.
+    /// The snapshot's days are ISO dates, so they are read in the Gregorian calendar whatever calendar the system is set
+    /// to (a Buddhist or Japanese year would never compare with them), in the system's time zone.
+    private static let calendar: Calendar = {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = .autoupdatingCurrent
+        return calendar
+    }()
+
+    /// `yyyy-MM-dd` of the day `date` falls on, which sorts as the days do.
     private static func dayString(of date: Date) -> String {
-        let components = Calendar.current.dateComponents([.year, .month, .day], from: date)
+        let components = calendar.dateComponents([.year, .month, .day], from: date)
         return String(format: "%04d-%02d-%02d", components.year ?? 0, components.month ?? 0, components.day ?? 0)
     }
 
@@ -117,7 +125,6 @@ enum SetlistContent {
     }
 
     private static func relativeDay(from date: Date, to day: String, strings: WidgetSnapshot.Strings) -> String {
-        let calendar = Calendar.current
         guard let components = dayComponents(day), let target = calendar.date(from: components),
               let days = calendar.dateComponents([.day], from: calendar.startOfDay(for: date), to: calendar.startOfDay(for: target)).day
         else { return "" }
