@@ -13,9 +13,6 @@ What's planned for Campfire, grouped by area.
 
 ## In progress
 
-- Investigate and fix UI performance issues: Follow documentation/issues-performance/EXECUTION.md
-- **A song from any page**: an optional browser extension button (Chrome, Edge, Firefox, and Safari) handing a page to
-  Campfire, and the page model's training tool documented. Plan: [song-from-any-page.md](plans/song-from-any-page.md)
 - **App shortcuts** on Android and iOS: a long press on the app icon offers New song, Paste a song, and the main
   screens that are switched on. Plan: [app-shortcuts.md](plans/app-shortcuts.md)
 - **Home screen widgets** on Android and iOS: random picks (a few songs, a tap opening one, and a shuffle button, drawn

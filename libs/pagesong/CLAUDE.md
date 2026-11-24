@@ -9,7 +9,7 @@
 -->
 # :libs:pagesong
 
-The page model's forward pass and the crop it decides (`documentation/plans/song-from-any-page.md`): which lines of a
+The page model's forward pass and the crop it decides (`tools/page-model/CLAUDE.md`): which lines of a
 web page or a document are the song. Pure Kotlin on every platform, no dependency, no resources: the caller passes the
 weights' bytes to `PageSong`, which only answers line indices and never changes a line's text.
 
