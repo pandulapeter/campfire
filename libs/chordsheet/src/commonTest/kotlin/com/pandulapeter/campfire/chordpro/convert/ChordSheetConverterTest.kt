@@ -84,6 +84,7 @@ class ChordSheetConverterTest {
         assertFalse(ChordSheetConverter.isChordLine("Am I"))
         assertTrue(ChordSheetConverter.isChordLine("F\u266fm B\u266d"))
         assertEquals("[F#m] [Bb]\n", convert("F\u266fm B\u266d"))
+        assertEquals("Tak [a]bardzo bardzo [C]kocham ci\u0119\n", convert("    a             C\nTak bardzo bardzo kocham ci\u0119"))
     }
 
     @Test
