@@ -56,8 +56,9 @@ struct LanguageQuery: EntityQuery {
     }
 }
 
-/// The Random picks widget's settings, from Edit Widget: a title of its own, and the tags and languages its picks come
-/// from. A widget added before they existed has none of them, so it draws from every song under the snapshot's title.
+/// The Random picks widget's settings, from Edit Widget: a title of its own, the tags and languages its picks come from,
+/// and how many it draws. A widget added before they existed has none of them, so it draws the default count from every
+/// song under the snapshot's title.
 struct RandomPicksConfigurationIntent: WidgetConfigurationIntent {
     static var title: LocalizedStringResource = "Random picks"
     static var description = IntentDescription(
@@ -72,6 +73,17 @@ struct RandomPicksConfigurationIntent: WidgetConfigurationIntent {
 
     @Parameter(title: "Languages")
     var languages: [LanguageEntity]?
+
+    /// How many songs it draws (`:presentation`'s `RANDOM_PICKS_COUNTS`), of which it shows as many as its size has room
+    /// for. A widget from before there was a count takes the default (`DEFAULT_RANDOM_PICKS_COUNT`): as many as the
+    /// largest widget showed then.
+    @Parameter(title: "Number of picks", default: 5, controlStyle: .stepper, inclusiveRange: (1, 10))
+    var count: Int
+
+    var pickCount: Int { min(max(count, 1), 10) }
+
+    /// The parameter's default, for an entry drawn without a configuration (the gallery's placeholder).
+    static let defaultCount = 5
 
     var filter: RandomPicksFilter {
         RandomPicksFilter(tags: Set((tags ?? []).map(\.id)), languages: Set((languages ?? []).map(\.id)))

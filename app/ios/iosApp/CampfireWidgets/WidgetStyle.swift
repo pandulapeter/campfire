@@ -112,6 +112,8 @@ struct WidgetSongRow: View {
     let artist: String
     let link: String
     var number: Int?
+    /// The digits of the list's largest number: its column is that wide, so every title of the list starts in one line.
+    var numberDigits = 1
     @Environment(\.widgetColors) private var colors
     @Environment(\.widgetContentMargins) private var margins
 
@@ -120,13 +122,16 @@ struct WidgetSongRow: View {
             // On the title's baseline rather than centered on the two lines, so the number reads as the title's.
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 if let number {
-                    // Right-aligned in a column wide enough for two digits, so 1 and 10 end in one place.
-                    Text(verbatim: String(number))
-                        .font(InterFont.bold(14))
-                        .monospacedDigit()
-                        .foregroundStyle(colors.accent)
-                        .widgetAccentable()
-                        .frame(minWidth: 18, alignment: .trailing)
+                    // Starting where the header does, in a column as wide as the list's longest number, sized by hidden
+                    // zeros in the same font so the number keeps its baseline.
+                    ZStack(alignment: .leading) {
+                        Text(verbatim: String(repeating: "0", count: max(numberDigits, String(number).count))).hidden()
+                        Text(verbatim: String(number))
+                            .foregroundStyle(colors.accent)
+                            .widgetAccentable()
+                    }
+                    .font(InterFont.bold(14))
+                    .monospacedDigit()
                 }
                 VStack(alignment: .leading, spacing: 1) {
                     Text(verbatim: title)
@@ -145,6 +150,17 @@ struct WidgetSongRow: View {
             .padding(.trailing, margins.trailing)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .contentShape(Rectangle())
+        }
+    }
+}
+
+extension WidgetFamily {
+    /// How many songs a widget of this size lists at most: the room its height has for rows of one height, so medium and
+    /// large pack them alike (small has medium's height).
+    var songRowCapacity: Int {
+        switch self {
+        case .systemLarge, .systemExtraLarge: 8
+        default: 3
         }
     }
 }

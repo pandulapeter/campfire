@@ -19,6 +19,7 @@
 "Title" = "Cím";
 "Tags" = "Címkék";
 "Languages" = "Nyelvek";
+"Number of picks" = "Dalok száma";
 "Tag" = "Címke";
 "Language" = "Nyelv";
 "Choose the widget's title, and the tags and languages its picks come from. With none chosen in a group, that group leaves every song in." = "Válaszd ki a widget címét, és hogy mely címkéjű és nyelvű dalokból készüljön a válogatás. Ahol egy csoportban semmi sincs kijelölve, az a csoport minden dalt megtart.";

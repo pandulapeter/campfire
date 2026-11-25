@@ -186,13 +186,15 @@ struct SetlistWidgetView: View {
                 .padding(margins)
                 .frame(maxWidth: .infinity, alignment: .leading)
             case .systemMedium, .systemLarge:
-                let count = family == .systemLarge ? 5 : 3
+                let capacity = family.songRowCapacity
+                let shown = songs.prefix(capacity)
+                let digits = String(shown.map(\.number).max() ?? 1).count
                 VStack(alignment: .leading, spacing: 4) {
                     SetlistHeader(title: title, relativeDay: relativeDay)
                         .padding(.leading, margins.leading)
                         .padding(.trailing, margins.trailing)
-                    WidgetSongRows(count: count, rows: songs.prefix(count).map { song in
-                        WidgetSongRow(title: song.title, artist: song.artist, link: song.link, number: song.number)
+                    WidgetSongRows(count: capacity, rows: shown.map { song in
+                        WidgetSongRow(title: song.title, artist: song.artist, link: song.link, number: song.number, numberDigits: digits)
                     })
                 }
                 .padding(.top, margins.top)

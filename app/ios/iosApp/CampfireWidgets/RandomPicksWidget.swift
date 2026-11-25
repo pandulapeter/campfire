@@ -22,7 +22,7 @@ struct RandomPicksWidget: Widget {
         }
         .configurationDisplayName("Random picks")
         .description("A few random songs from your library, new ones every hour.")
-        .supportedFamilies([.systemMedium, .systemLarge])
+        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
         .contentMarginsDisabled()
     }
 }
@@ -35,6 +35,8 @@ struct RandomPicksEntry: TimelineEntry {
     /// The header's title from Edit Widget, nil for the snapshot's.
     let title: String?
     let filter: RandomPicksFilter
+    /// How many songs it draws, from Edit Widget; the widget shows as many of them as its size has room for.
+    let count: Int
 }
 
 /// A day of hourly entries, each its own draw, and a new timeline once they are used up. The seed of an hour is the
@@ -42,7 +44,9 @@ struct RandomPicksEntry: TimelineEntry {
 /// the same songs from the same library.
 struct RandomPicksProvider: AppIntentTimelineProvider {
     func placeholder(in context: Context) -> RandomPicksEntry {
-        RandomPicksEntry(date: Date(), snapshot: nil, seed: 0, title: nil, filter: RandomPicksFilter())
+        RandomPicksEntry(
+            date: Date(), snapshot: nil, seed: 0, title: nil, filter: RandomPicksFilter(), count: RandomPicksConfigurationIntent.defaultCount
+        )
     }
 
     func snapshot(for configuration: RandomPicksConfigurationIntent, in context: Context) async -> RandomPicksEntry {
@@ -69,7 +73,8 @@ struct RandomPicksProvider: AppIntentTimelineProvider {
             snapshot: snapshot,
             seed: SplitMix.mix(ShuffleSeed.current ^ hour),
             title: title?.isEmpty == false ? title : nil,
-            filter: configuration.filter
+            filter: configuration.filter,
+            count: configuration.pickCount
         )
     }
 }
@@ -127,15 +132,13 @@ struct RandomPicksView: View {
         }
     }
 
-    /// The most songs the widget lists (`:presentation`'s `RANDOM_PICKS_MAX_ROWS`): Shuffle shows only where there are
-    /// more to draw from, so it never only reorders the same songs.
-    private static let maxRows = 5
-
     @ViewBuilder
     private func content(_ snapshot: WidgetSnapshot) -> some View {
         let songs = entry.filter.songs(of: snapshot)
         VStack(alignment: .leading, spacing: 4) {
-            header(snapshot.strings, canDrawAgain: snapshot.areSongsEnabled && songs.count > Self.maxRows)
+            // Only where there are more to draw from than it draws, so it never only reorders the same songs, and not on
+            // small, whose width the title needs (the title shortened to make room would no longer say what it is).
+            header(snapshot.strings, canDrawAgain: family != .systemSmall && snapshot.areSongsEnabled && songs.count > entry.count)
                 .padding(.leading, margins.leading)
                 .padding(.trailing, margins.trailing)
             if !snapshot.areSongsEnabled {
@@ -145,8 +148,9 @@ struct RandomPicksView: View {
             } else if songs.isEmpty {
                 WidgetMessage(text: snapshot.strings.noMatchingSongs.flatMap { $0.isEmpty ? nil : $0 } ?? snapshot.strings.emptyLibrary)
             } else {
-                let count = family == .systemLarge ? Self.maxRows : 3
-                WidgetSongRows(count: count, rows: draw(songs, count: count).map { song in
+                // The draw of the whole count, cut to the rows that fit: a smaller widget shows the first of the same picks.
+                let capacity = family.songRowCapacity
+                WidgetSongRows(count: capacity, rows: draw(songs, count: min(entry.count, capacity)).map { song in
                     WidgetSongRow(title: song.title, artist: song.artist, link: song.link)
                 })
             }

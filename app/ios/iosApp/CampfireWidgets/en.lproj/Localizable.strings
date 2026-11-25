@@ -24,6 +24,7 @@
 "Title" = "Title";
 "Tags" = "Tags";
 "Languages" = "Languages";
+"Number of picks" = "Number of picks";
 "Tag" = "Tag";
 "Language" = "Language";
 "Choose the widget's title, and the tags and languages its picks come from. With none chosen in a group, that group leaves every song in." = "Choose the widget's title, and the tags and languages its picks come from. With none chosen in a group, that group leaves every song in.";

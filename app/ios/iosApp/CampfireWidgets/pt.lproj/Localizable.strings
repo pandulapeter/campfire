@@ -19,6 +19,7 @@
 "Title" = "Título";
 "Tags" = "Tags";
 "Languages" = "Idiomas";
+"Number of picks" = "Número de músicas";
 "Tag" = "Tag";
 "Language" = "Idioma";
 "Choose the widget's title, and the tags and languages its picks come from. With none chosen in a group, that group leaves every song in." = "Escolha o título do widget e as tags e os idiomas de onde vêm as sugestões. Um grupo sem nada selecionado mantém todas as músicas.";
