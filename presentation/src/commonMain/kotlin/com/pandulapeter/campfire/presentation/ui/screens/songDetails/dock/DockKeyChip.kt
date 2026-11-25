@@ -42,7 +42,7 @@ import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 /**
  * The key chip that starts the dock: one tonal pill ([DockControlPill], the dock's way of saying "this opens a sheet",
  * set apart from the outlined chord and scale chips that are the song's) naming the key the page's chords are in, in the
- * colour chords are written in, and after a stepper's divider the capo in orange wherever it is not zero, so that a capo
+ * colour chords are written in, and after a stepper's divider the capo wherever it is not zero, so that a capo
  * is never out of sight. The whole pill opens the Playing sheet ([onClick]), none in read only mode, whose chip only
  * reads. A song naming no key that the chip still opens the sheet for is named by the sheet. A new key crossfades, and
  * the capo slides in and out with its divider.
@@ -95,7 +95,6 @@ internal fun DockKeyChip(
                         modifier = Modifier.padding(horizontal = KEY_CHIP_PADDING),
                         text = stringResource(Res.string.song_details_capo, lastCapo.value),
                         style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.tertiary,
                         maxLines = 1,
                     )
                 }

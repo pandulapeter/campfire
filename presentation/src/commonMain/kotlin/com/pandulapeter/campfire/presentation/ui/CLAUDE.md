@@ -115,7 +115,7 @@ Tags, languages, cover, and links are directives in the song file, so they trave
 ## How a song is played
 
 - Song details' dock under the song (`screens/songDetails/dock`) starts with the key chip: the key of the page's chords
-  and, wherever it is not zero, the capo in orange. It opens the **Playing sheet** (`dialogs/playing`: the instrument
+  and, wherever it is not zero, the capo. It opens the **Playing sheet** (`dialogs/playing`: the instrument
   and tuning, the transposition and capo steppers, `songView/firstSection`'s, and the tuner), read only mode's opening
   nothing. The **tempo chip** ends it: the page's tempo, the bar lit while the click plays, and play and stop; the
   chip opens the **Tempo sheet** (`dialogs/playing`: the tempo stepper ending in Tap, the song's accents, and play and

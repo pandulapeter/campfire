@@ -54,12 +54,14 @@ internal class PageCountTest {
     @Test
     fun `a long strummed song takes at most two more pages than it did`() = assertAtMost(LONG_SONG_TITLE, PageTurn.PAGE, alone = 10, inSetlist = 11)
 
+    /** In a setlist one step more than two: the owner's, for the dock's top padding as wide as its side margins. */
     @Test
-    fun `a long strummed song takes at most two more column steps than it did`() = assertAtMost(LONG_SONG_TITLE, PageTurn.COLUMN, alone = 10, inSetlist = 10)
+    fun `a long strummed song takes at most two more column steps than it did`() = assertAtMost(LONG_SONG_TITLE, PageTurn.COLUMN, alone = 10, inSetlist = 11)
 
+    /** The long song one page more than the row cost it: the owner's, for the dock's top padding as wide as its side margins. */
     @Test
     fun `the long songs on a phone on its side take no more pages than the dock's bottom row cost them`() =
-        assertWindow(TestWindow.PHONE_ON_ITS_SIDE, risingSun = 12 to 16, longSong = 12 to 16)
+        assertWindow(TestWindow.PHONE_ON_ITS_SIDE, risingSun = 12 to 16, longSong = 13 to 17)
 
     @Test
     fun `the long songs in a small desktop window take no more pages than the dock's bottom row cost them`() =

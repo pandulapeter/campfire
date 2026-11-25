@@ -42,8 +42,8 @@ internal fun SongDetailsPreviewBar(
         start = contentPadding.calculateStartPadding(layoutDirection) + PREVIEW_CARD_MARGIN,
         top = PREVIEW_CARD_MARGIN,
         end = contentPadding.calculateEndPadding(layoutDirection) + PREVIEW_CARD_MARGIN,
-        // The dock's own padding above its first row is the rest of the gap under the card.
-        bottom = baseBottom + PREVIEW_CARD_MARGIN / 2,
+        // The dock's own padding above its first row (as wide as this margin) is the gap under the card.
+        bottom = baseBottom,
     ),
     importPreview = importPreview,
     currentPage = currentPage,

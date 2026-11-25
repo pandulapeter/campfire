@@ -75,7 +75,7 @@ internal fun dockBudgetOf(windowHeight: Dp, turnsByColumn: Boolean, hasPagerBar:
  */
 internal fun dockLayoutOf(rows: DockRows, budget: Dp, isOneRow: Boolean, rowHeight: Dp = DOCK_ROW_HEIGHT): DockLayout? {
     if (rows.isEmpty) return null
-    val oneRow = DockLayout(DockTier.CHORD_CHIPS, height = DOCK_VERTICAL_PADDING * 2 + rowHeight, rowHeight = rowHeight)
+    val oneRow = DockLayout(DockTier.CHORD_CHIPS, height = DOCK_TOP_PADDING + DOCK_BOTTOM_PADDING + rowHeight, rowHeight = rowHeight)
     // The playing controls and the scale chips share the first row, so only the chords can ask for a second.
     if (!rows.hasChordRow || isOneRow) return oneRow
     // Without scale suggestions, the key chip and the click's controls stand at the diagram row's ends instead.
@@ -83,7 +83,7 @@ internal fun dockLayoutOf(rows: DockRows, budget: Dp, isOneRow: Boolean, rowHeig
     val (full, small) = listOf(DockTier.FULL_DIAGRAMS to FULL_DIAGRAMS_PAST_ROW, DockTier.SMALL_DIAGRAMS to SMALL_DIAGRAMS_PAST_ROW).map { (tier, pastRow) ->
         // A row of diagrams is a line of names, as tall as the row's text, over the diagrams.
         val diagramRowHeight = rowHeight + pastRow
-        DockLayout(tier, height = DOCK_VERTICAL_PADDING * 2 + firstRow + diagramRowHeight, rowHeight = rowHeight, diagramRowHeight = diagramRowHeight)
+        DockLayout(tier, height = DOCK_TOP_PADDING + DOCK_BOTTOM_PADDING + firstRow + diagramRowHeight, rowHeight = rowHeight, diagramRowHeight = diagramRowHeight)
     }
     return if (full.height <= budget) full else small
 }
@@ -117,8 +117,17 @@ internal val DOCK_PANEL_WIDTH = 176.dp
 internal val DOCK_ROW_HEIGHT = 32.dp
 internal val DOCK_ROW_GAP = 8.dp
 
-/** Only as much as keeps a chip off the dock's edge, so that an upright phone's two rows cost it as little as they can. */
-internal val DOCK_VERTICAL_PADDING = 4.dp
+/**
+ * Above the dock's first row: as far in as its rows are from the window's sides (`PAGE_HORIZONTAL_PADDING`), so the
+ * rounded surface frames them evenly.
+ */
+internal val DOCK_TOP_PADDING = 8.dp
+
+/**
+ * Under the dock's last row, only as much as keeps a chip off the dock's edge, so that an upright phone's two rows cost it
+ * as little as they can: the bottom inset or the pager bar under it adds room of its own.
+ */
+internal val DOCK_BOTTOM_PADDING = 4.dp
 
 /**
  * How much taller than a row of chips a row of diagrams at their full size is: a chord's name over a diagram as large as
