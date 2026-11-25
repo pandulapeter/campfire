@@ -30,7 +30,8 @@ internal enum class DockTier { FULL_DIAGRAMS, SMALL_DIAGRAMS, CHORD_CHIPS }
  * setlist's pages turn: the playing controls ([hasPlayingRow]: the chords or the metronome on), the song's chords
  * ([hasChordRow]: chord diagrams on, on an instrument with shapes), and its scale suggestions ([hasScaleRow]).
  * [isMetronomeOnly] where the click is all the playing controls hold (the chords off), which makes the one row the
- * metronome panel.
+ * metronome panel. [hasTempo] where the playing controls hold the tempo chip (the metronome on, never in an import
+ * preview).
  */
 @Immutable
 internal data class DockRows(
@@ -38,8 +39,17 @@ internal data class DockRows(
     val hasChordRow: Boolean,
     val hasScaleRow: Boolean,
     val isMetronomeOnly: Boolean = false,
+    val hasTempo: Boolean = true,
 ) {
-    val isEmpty get() = !hasPlayingRow && !hasChordRow && !hasScaleRow
+    /**
+     * Where the playing controls would be the dock's only row and hold nothing but the key chip (and the tuner, and the
+     * instrument pill of an instrument without shapes): a whole surface spent on one chip, which the app bar holds
+     * instead, so the dock is gone.
+     */
+    val isKeyOnly get() = hasPlayingRow && !hasTempo && !hasChordRow && !hasScaleRow
+
+    /** No row at all, or one the app bar holds instead ([isKeyOnly]): no dock. */
+    val isEmpty get() = isKeyOnly || (!hasPlayingRow && !hasChordRow && !hasScaleRow)
 }
 
 /**
@@ -77,7 +87,7 @@ internal fun dockBudgetOf(windowHeight: Dp, turnsByColumn: Boolean, hasPagerBar:
  * its side), whose every line is a page's worth of room, and an import preview, whose card takes the dock's room. Any
  * other gets diagrams: at their full size where they fit the budget, else smaller ones however
  * little room there is, a long song taking up to two pages more for them on an upright phone. Null where there is no row
- * at all, which is no dock. A window that gives the dock a side panel ([isDockSidePanel]) has none of this.
+ * at all, or only the key chip's, which the app bar holds instead ([DockRows.isKeyOnly]): no dock. A window that gives the dock a side panel ([isDockSidePanel]) has none of this.
  */
 internal fun dockLayoutOf(
     rows: DockRows,

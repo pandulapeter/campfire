@@ -100,6 +100,21 @@ class PerformanceModeAppBarTest {
         assertTrue(appBarButtons(800.dp, hasCover = true, isReadOnly = false).isFontScaleShown)
     }
 
+    @Test
+    fun `the key chip and the tuner in the bar send its other controls into the menu sooner`() {
+        listOf(true, false).forEach { isReadOnly ->
+            val playingToolsWidth = appBarPlayingToolsWidth(hasKeyChip = true, hasTuner = true)
+            widths.forEach { width ->
+                val without = appBarButtons(width, hasCover = true, isReadOnly = isReadOnly)
+                val with = appBarButtons(width, hasCover = true, isReadOnly = isReadOnly, playingToolsWidth = playingToolsWidth)
+                if (with.isCoverShown) assertTrue(without.isCoverShown)
+                if (with.isFontScaleShown) assertTrue(without.isFontScaleShown)
+            }
+            assertTrue(appBarButtons(360.dp, hasCover = true, isReadOnly = isReadOnly).isCoverShown)
+            assertFalse(appBarButtons(360.dp, hasCover = true, isReadOnly = isReadOnly, playingToolsWidth = playingToolsWidth).isCoverShown)
+        }
+    }
+
     private fun buttons(cover: Boolean, setlistAssignments: Boolean, fontScale: Boolean) = AppBarButtons(
         isCoverShown = cover,
         isSetlistAssignmentsShown = setlistAssignments,

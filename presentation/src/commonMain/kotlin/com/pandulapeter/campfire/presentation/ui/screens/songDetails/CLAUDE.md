@@ -83,6 +83,14 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
   here) always before the overflow button, no Choose setlists. An import preview has read only mode's menu and never the
   mark, the mode or not: only Import makes it editable, and the mark comes with its song's screen. **The overflow button
   is always the bar's last.**
+- **Where the dock would hold only the key chip** (`DockRows.isKeyOnly`, an import preview's too) the bar holds it
+  instead, chip-high, and with the dock's tuner on a tuner icon button, both after the text size stepper and before the
+  setlists' star, the read only mark, and the overflow button (`AppBarPlayingTools`): the same chip, opening the same
+  sheet (nothing in read only mode), left out with neither key nor capo, for the page the pager is on or heading for,
+  crossfading as the subtitle does, which drops its key meanwhile. They come and go fading and growing as the dock
+  shrinks away or returns. Their room is taken before the cover's and the buttons' (`appBarPlayingToolsWidth`): the
+  chip by a constant, since the bar decides for every page at once and a width that followed the page would move the
+  cover in and out of the menu as pages turn. `App bar: tuner` and the dock's `Dock: key chip` breadcrumbs.
 - Both menus (read only mode's too) hold About the song (never in a preview), and Preferences (the sheet with every page,
   opening on Song, the read only mark's on General; written at once, so the song changes behind it), never let out as buttons.
 

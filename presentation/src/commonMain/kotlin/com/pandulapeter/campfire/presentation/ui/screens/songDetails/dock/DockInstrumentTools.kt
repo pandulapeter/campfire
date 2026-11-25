@@ -70,7 +70,10 @@ internal fun DockInstrumentTools(
                     isSheetShown = tools.isTunerSheetShown,
                     height = songControlHeight(MaterialTheme.typography.titleSmall),
                     fontScale = 1f,
-                    onClick = onTunerClicked,
+                    onClick = {
+                        println("Dock: tuner button")
+                        onTunerClicked()
+                    },
                 )
             }
         }

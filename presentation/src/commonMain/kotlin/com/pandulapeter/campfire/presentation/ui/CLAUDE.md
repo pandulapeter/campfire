@@ -117,7 +117,7 @@ Tags, languages, cover, and links are directives in the song file, so they trave
 - Song details' dock under the song (`screens/songDetails/dock`) starts with the key chip: the key of the page's chords
   and, wherever it is not zero, the capo. It opens the **Playing sheet** (`dialogs/playing`: the instrument
   and tuning, and the transposition and capo steppers, `songView/firstSection`'s), read only mode's opening nothing; the
-  tuner is the dock's own. The **tempo chip** ends it: the page's tempo, the bar lit while the click plays, and play and stop; the
+  tuner is the dock's own. A dock that would hold only the key chip leaves it, and the tuner, to the app bar. The **tempo chip** ends it: the page's tempo, the bar lit while the click plays, and play and stop; the
   chip opens the **Tempo sheet** (`dialogs/playing`: the tempo stepper ending in Tap, the song's accents, and play and
   stop), read only mode's opening nothing. With the chords off the dock is the metronome panel itself. The dock and the sheets are drawn
   at the interface's text size, never the song's; the editor's preview shows the four values in its About the song

@@ -64,7 +64,8 @@ internal class SongDockState(
 /**
  * The dock as the switches in [userPreferences] and the window decide it, never the song: its rows (the playing controls
  * with the chords or the metronome on, the chords with [chordDiagrams] drawn on an instrument with shapes, the scale
- * suggestions), and whether it is a side panel ([isDockSidePanel], which the reading mode weighs too) or rows under the song, which get as much room as the
+ * suggestions; none where the playing controls would hold only the key chip, [DockRows.isKeyOnly], which the app bar
+ * then holds), and whether it is a side panel ([isDockSidePanel], which the reading mode weighs too) or rows under the song, which get as much room as the
  * reading mode and a setlist's pager bar ([hasPagerBar]) leave them ([dockBudgetOf]) in a window that is not short and
  * outside an import preview ([isImportPreview]), whose card takes the room of a second row. Rows without the pager bar cover the bottom inset of
  * [contentPadding] too, and the panel its end inset.
@@ -84,6 +85,7 @@ internal fun rememberSongDock(
         hasChordRow = chordDiagrams?.tuning != null,
         hasScaleRow = SongSections.of(userPreferences).areScaleSuggestionsShown,
         isMetronomeOnly = userPreferences?.areChordsEnabled == false && isMetronomeShown,
+        hasTempo = isMetronomeShown,
     )
     val turnsByColumn = userPreferences?.songLayout != SongLayout.CONTINUOUS && userPreferences?.pageTurn == PageTurn.COLUMN
     val windowSize = LocalWindowInfo.current.containerDpSize
@@ -97,8 +99,7 @@ internal fun rememberSongDock(
         panelWidth = panelWidth,
         isContinuous = userPreferences?.songLayout == SongLayout.CONTINUOUS,
     )
-    // The controls are drawn at the interface's text size, which a large system text size grows past a chip's.
-    val rowHeight = maxOf(DOCK_ROW_HEIGHT, songControlHeight(MaterialTheme.typography.titleSmall))
+    val rowHeight = dockRowHeight()
     val bottomPadding = dockBottomPaddingOf(bottomInset = contentPadding.calculateBottomPadding())
     // Beside a side panel the rows under the song are the scale suggestions alone, which the panel has no width for.
     val rowsUnder = if (isSidePanel) DockRows(hasPlayingRow = false, hasChordRow = false, hasScaleRow = rows.hasScaleRow) else rows
@@ -132,3 +133,10 @@ internal fun rememberSongDock(
         steppers = remember { mutableStateMapOf() },
     )
 }
+
+/**
+ * How tall the dock's row of chips and controls is, and the key chip where the app bar holds it ([DockRows.isKeyOnly]):
+ * the controls are drawn at the interface's text size, which a large system text size grows past a chip's.
+ */
+@Composable
+internal fun dockRowHeight() = maxOf(DOCK_ROW_HEIGHT, songControlHeight(MaterialTheme.typography.titleSmall))

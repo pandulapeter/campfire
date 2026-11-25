@@ -42,7 +42,10 @@ app bar's metronome panel.
 ## Its rows
 
 - **Decided by the switches, never the song** (`DockRows`): the playing controls with the chords or the metronome on,
-  diagrams on an instrument with shapes, scale suggestions. No row, no dock. With the metronome alone the row is the
+  diagrams on an instrument with shapes, scale suggestions. No row, no dock; nor where the playing controls would be the
+  only row and hold only the key chip (no tempo, no diagrams, no scale suggestions, `DockRows.isKeyOnly`): the app bar
+  holds that chip and the tuner instead (`../CLAUDE.md`), the dock shrinking away as for any lost row, and the instrument
+  pill of an instrument without shapes is left to the Playing sheet's instrument row (and the tuner sheet's pill). With the metronome alone the row is the
   metronome panel (`DockMetronomePanel`): stepper with Tap, a bar as wide as the rest leaves with its accents tapped in
   place, play / stop. A song with nothing for a row leaves it empty, or says so.
 - **Its tier is the window's** (`dockLayoutOf`). A short window (`SHORT_WINDOW_HEIGHT`) narrower than the panel's gets

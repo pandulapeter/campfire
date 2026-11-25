@@ -215,6 +215,10 @@ internal fun SongDetailsScreen(
             isPerformanceModeEnabled = isPerformanceModeEnabled,
             shouldShowChords = shouldShowChords,
             isTunerInMenu = isTunerInMenu,
+            isKeyInBar = dock.rows.isKeyOnly,
+            isTunerInBar = isTunerEnabled && !isImportPreview,
+            dockContents = dock.contents,
+            targetPage = { pagerState.targetPage },
             areSetlistsEnabled = areSetlistsEnabled,
             // Nothing is fetched for a song that is not in the library.
             isCoverArtEnabled = isCoverArtEnabled && !isImportPreview,
@@ -290,11 +294,7 @@ internal fun SongDetailsScreen(
                             stepForward = steps.stepForward,
                             isContinuous = steps.isContinuous,
                             autoScrolling = steps.autoScrolling,
-                            onCurrentPage = { scrollState, stepper, autoScroller ->
-                                steps.current.scrollState = scrollState
-                                steps.current.stepper = stepper
-                                steps.autoScrolling.scroller = autoScroller
-                            },
+                            onCurrentPage = steps::onCurrentPage,
                         )
                     }
                 }

@@ -43,11 +43,13 @@ import com.pandulapeter.campfire.presentation.ui.fontScale.FontScaleController
 import kotlinx.coroutines.flow.StateFlow
 
 /**
- * The song details screen's app bar actions: the text size where the bar has room for it, then read only mode's mark and
- * menu, or the song's setlists and the song's menu, which holds what the bar has no room for.
+ * The song details screen's app bar actions: the text size where the bar has room for it, the key chip and the tuner
+ * where the bar holds them in place of the dock ([playingTools]), then read only mode's mark and menu, or the song's
+ * setlists and the song's menu, which holds what the bar has no room for.
  */
 @Composable
 internal fun RowScope.SongDetailsActions(
+    playingTools: @Composable () -> Unit,
     fontScaleController: FontScaleController,
     songFileNamesInSetlistsFlow: StateFlow<Set<String>>,
     songActions: SongActionHandler,
@@ -75,6 +77,7 @@ internal fun RowScope.SongDetailsActions(
     ) {
         LiveFontScaleControls(fontScaleController = fontScaleController)
     }
+    playingTools()
     val fontScaleMenuFooter: (@Composable () -> Unit)? = if (showsFontScaleInBar) {
         null
     } else {

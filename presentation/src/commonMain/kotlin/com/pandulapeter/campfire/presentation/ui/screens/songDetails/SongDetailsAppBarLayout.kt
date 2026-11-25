@@ -32,10 +32,12 @@ internal data class AppBarButtons(
  * title, which only decorates it - where [hasCover] says no song of the pager has one, it takes no room - then the
  * setlist assignments (never in read only mode), then the text size stepper. The stepper is the widest of them, only
  * adjusted now and then, and the menu and a pinch reach it anyway, so it waits for a title with room to spare
- * ([COMFORTABLE_TITLE_WIDTH]) beside the cover rather than squeezing either.
+ * ([COMFORTABLE_TITLE_WIDTH]) beside the cover rather than squeezing either. The key chip and the tuner the bar holds
+ * where the dock would hold nothing else ([playingToolsWidth], [appBarPlayingToolsWidth]) are always in the bar, so their
+ * room is taken first and the rest goes into the menu sooner.
  */
-internal fun appBarButtons(appBarWidth: Dp, hasCover: Boolean, isReadOnly: Boolean): AppBarButtons {
-    val fixedContentWidth = if (isReadOnly) PERFORMANCE_FIXED_CONTENT_WIDTH else APP_BAR_FIXED_CONTENT_WIDTH
+internal fun appBarButtons(appBarWidth: Dp, hasCover: Boolean, isReadOnly: Boolean, playingToolsWidth: Dp = 0.dp): AppBarButtons {
+    val fixedContentWidth = (if (isReadOnly) PERFORMANCE_FIXED_CONTENT_WIDTH else APP_BAR_FIXED_CONTENT_WIDTH) + playingToolsWidth
     val room = appBarWidth - fixedContentWidth - if (hasCover) APP_BAR_COVER_SIZE + APP_BAR_COVER_GAP else 0.dp
     val setlistAssignmentsWidth = if (isReadOnly) 0.dp else APP_BAR_OVERLAPPING_ACTION_WIDTH
     return AppBarButtons(
@@ -44,6 +46,19 @@ internal fun appBarButtons(appBarWidth: Dp, hasCover: Boolean, isReadOnly: Boole
         isFontScaleShown = room - setlistAssignmentsWidth - FONT_SCALE_STEPPER_WIDTH >= COMFORTABLE_TITLE_WIDTH,
     )
 }
+
+/**
+ * The room the bar keeps for the key chip ([hasKeyChip]) and the tuner's button ([hasTuner]) it holds in place of the
+ * dock (`AppBarPlayingTools`). The chip is reserved by a constant rather than measured: what it says differs from page
+ * to page (a key, its semitones, a capo), and the bar decides for every page at once, so a width that followed the page
+ * would send the cover and the buttons into the menu and back as a setlist's pages turn. [KEY_CHIP_ROOM] holds a key
+ * with its semitones ("F#m (+11)"); a chip that also names a capo takes the rest from the title, which is cut short.
+ */
+internal fun appBarPlayingToolsWidth(hasKeyChip: Boolean, hasTuner: Boolean) =
+    (if (hasKeyChip) KEY_CHIP_ROOM else 0.dp) + if (hasTuner) APP_BAR_ACTION_WIDTH else 0.dp
+
+/** A key chip naming a key and its semitones at the interface's text size, with the gaps parting it from its neighbours. */
+private val KEY_CHIP_ROOM = 96.dp
 
 private val APP_BAR_NAVIGATION_WIDTH = 52.dp // The 48dp button and the 4dp the bar pads its start by.
 private val APP_BAR_END_PADDING = 4.dp

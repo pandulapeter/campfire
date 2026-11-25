@@ -76,6 +76,18 @@ internal class DockLayoutTest {
     }
 
     @Test
+    fun `a playing row holding only the key chip is no dock since the app bar stands in for it`() {
+        val keyOnly = DockRows(hasPlayingRow = true, hasChordRow = false, hasScaleRow = false, hasTempo = false)
+        assertTrue(keyOnly.isKeyOnly)
+        assertNull(dockLayoutOf(keyOnly, 1000.dp, isOneRow = false))
+        assertNull(dockLayoutOf(keyOnly, 1000.dp, isOneRow = true))
+        listOf(keyOnly.copy(hasTempo = true), keyOnly.copy(hasChordRow = true), keyOnly.copy(hasScaleRow = true)).forEach { rows ->
+            assertFalse(rows.isKeyOnly, "$rows")
+            assertEquals(DockTier.CHORD_CHIPS, dockLayoutOf(rows, 1000.dp, isOneRow = true)?.tier, "$rows")
+        }
+    }
+
+    @Test
     fun `no row is no dock`() = assertNull(dockLayoutOf(DockRows(hasPlayingRow = false, hasChordRow = false, hasScaleRow = false), 1000.dp, isOneRow = false))
 
     @Test

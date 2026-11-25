@@ -65,7 +65,7 @@ import kotlinx.coroutines.flow.StateFlow
  * hands and its tuning ([PlayingInstrumentRow]), then the transposition and the capo ([PlayingStepperRow]), the very
  * steppers the song's first section had, writing the same overrides the same way (held pending, written once they rest,
  * see `PendingWrites`), so the song behind it follows every step. Nothing to save: its close button only closes it. No
- * tuner: the dock has it beside the key chip. The transposition and the capo leave with the chords; the instrument stays, as the tuner
+ * tuner: the dock has it beside the key chip, or the app bar beside the chip where it holds it. The transposition and the capo leave with the chords; the instrument stays, as the tuner
  * and the keyboard's names read it.
  */
 @Composable

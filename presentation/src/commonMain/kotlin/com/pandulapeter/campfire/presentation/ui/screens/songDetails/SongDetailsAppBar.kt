@@ -38,6 +38,8 @@ import com.pandulapeter.campfire.presentation.ui.state.editor.EditorSession
 import com.pandulapeter.campfire.presentation.ui.state.songText.SongTextStore
 import com.pandulapeter.campfire.presentation.ui.state.songs.SongFilesController
 import kotlinx.coroutines.flow.StateFlow
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.DockContent
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.dockRowHeight
 import com.pandulapeter.campfire.presentation.ui.components.appBar.CampfireTopAppBar
 import com.pandulapeter.campfire.presentation.ui.tuner.tunerAction
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
@@ -49,7 +51,8 @@ import org.jetbrains.compose.resources.painterResource
 
 /**
  * The song details screen's app bar: the way back, the title block that opens the sheet of what the song is, the song's
- * actions. A composable of its own because [SongDetailsScreen] recomposes on every
+ * actions, and where the dock would hold only the key chip ([isKeyInBar]) that chip, for the page the pager is on or
+ * heading for ([targetPage], [dockContents]), and the tuner ([isTunerInBar], never an import preview's, which has none). A composable of its own because [SongDetailsScreen] recomposes on every
  * page change: what only the bar reads is collected and decided here, so that a change of it recomposes the bar rather
  * than the whole screen.
  */
@@ -71,6 +74,10 @@ internal fun SongDetailsAppBar(
     isPerformanceModeEnabled: Boolean,
     shouldShowChords: Boolean,
     isTunerInMenu: Boolean,
+    isKeyInBar: Boolean,
+    isTunerInBar: Boolean,
+    dockContents: Map<Int, DockContent>,
+    targetPage: () -> Int,
     areSetlistsEnabled: Boolean,
     isCoverArtEnabled: Boolean,
     chordSpelling: UserPreferences.ChordSpelling,
@@ -94,6 +101,7 @@ internal fun SongDetailsAppBar(
         appBarWidth = appBarWidth,
         hasCover = isCoverArtEnabled && songs.any { it.coverArtUrl != null },
         isReadOnly = isReadOnly,
+        playingToolsWidth = appBarPlayingToolsWidth(hasKeyChip = isKeyInBar, hasTuner = isKeyInBar && isTunerInBar),
     )
     val showsCoverInBar = isCoverArtEnabled && appBarButtons.isCoverShown
     val showsFontScaleInBar = appBarButtons.isFontScaleShown
@@ -118,7 +126,8 @@ internal fun SongDetailsAppBar(
             SongDetailsTitle(
                 currentSong = currentSong,
                 setlistFileName = destination.setlistFileName,
-                shouldShowChords = shouldShowChords,
+                // The key chip names the key while it is in the bar.
+                shouldShowChords = shouldShowChords && !isKeyInBar,
                 chordSpelling = chordSpelling,
                 playingOverrides = playingOverrides,
                 songRenderer = songRenderer,
@@ -130,6 +139,15 @@ internal fun SongDetailsAppBar(
         },
         actions = {
             SongDetailsActions(
+                playingTools = {
+                    AppBarPlayingTools(
+                        isShown = isKeyInBar,
+                        contents = dockContents,
+                        targetPage = targetPage,
+                        chipHeight = dockRowHeight(),
+                        onTunerClicked = onTunerClicked.takeIf { isTunerInBar },
+                    )
+                },
                 fontScaleController = fontScaleController,
                 songFileNamesInSetlistsFlow = libraryState.songFileNamesInSetlists,
                 songActions = songActions,

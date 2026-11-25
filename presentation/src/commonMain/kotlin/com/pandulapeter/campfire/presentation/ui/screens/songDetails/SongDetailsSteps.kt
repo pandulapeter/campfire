@@ -24,6 +24,7 @@ import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.presentation.ui.navigation.AutoScrollPlayback
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.autoScroll.AutoScrollCover
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.autoScroll.SongAutoScroller
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.autoScroll.SongAutoScrolling
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.autoScroll.rememberSongAutoScrolling
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.PageStepper
@@ -50,7 +51,14 @@ internal data class SongDetailsSteps(
     val stepActions: SongStepActions,
     val stepBack: (from: Int?) -> Unit,
     val stepForward: (from: Int?) -> Unit,
-)
+) {
+    /** Takes the scroll, the stepper, and the self-scrolling of the page that has become the current one. */
+    fun onCurrentPage(scrollState: ScrollState, stepper: SongStepper, autoScroller: SongAutoScroller) {
+        current.scrollState = scrollState
+        current.stepper = stepper
+        autoScrolling.scroller = autoScroller
+    }
+}
 
 /** The scroll and the stepper of the page being read, which it hands up as it becomes the current one. */
 internal class CurrentSongPage {
