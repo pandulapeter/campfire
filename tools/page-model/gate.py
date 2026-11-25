@@ -12,9 +12,9 @@ The page model's gate (step 6 of `tools/page-model/CLAUDE.md`): trains the page 
 by a model that never saw it, and compares each crop with the converter alone, which keeps every line of the page.
 
     .venv/bin/python -I tools/page-model/gate.py <corpus folder> [--synthetic <import corpus>] [--epochs N]
-        [--variants both] [--rescore]
+        [--variants both] [--seed N] [--out <folder>] [--rescore]
 
-The report goes to `<corpus>/.runs/gate.txt` and the scores per page to `gate.tsv`: for each source and variant, how
+The report goes to `<corpus>/.runs/gate.txt` (or `--out`'s folder, so two runs can go side by side) and the scores per page to `gate.tsv`: for each source and variant, how
 many pages the crop beats keeping everything on (line F1 of the song's lines, its metadata included), how many lose a
 song line (and how many lines), how pages with no song are told, and how often the title and artist lines are hit.
 Each variant's predictions are kept in `predictions.json`, so `--rescore` tries the crop rules again without training.
@@ -236,6 +236,7 @@ def main():
     parser.add_argument("--seed", type=int, default=7)
     parser.add_argument("--variants", default="pages only,documents only,both", help="comma-separated variants to run")
     parser.add_argument("--rescore", action="store_true", help="score the predictions the last run saved instead of training")
+    parser.add_argument("--out", help="the folder the report and predictions go to, `<corpus>/.runs` by default")
     arguments = parser.parse_args()
     torch.set_num_threads(max(1, (os.cpu_count() or 2) - 2))
     examples = load(arguments.corpus)
@@ -245,7 +246,7 @@ def main():
     held_folds = folds(scored, arguments.seed)
     variants = {"pages only": {"page"}, "documents only": {"document"}, "both": {"page", "document"}}
     chosen = [name.strip() for name in arguments.variants.split(",")]
-    runs = os.path.join(arguments.corpus, ".runs")
+    runs = arguments.out or os.path.join(arguments.corpus, ".runs")
     os.makedirs(runs, exist_ok=True)
     saved_path = os.path.join(runs, "predictions.json")
     saved = {}
