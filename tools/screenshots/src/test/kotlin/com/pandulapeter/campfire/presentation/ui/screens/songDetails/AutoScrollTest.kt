@@ -17,7 +17,7 @@ import androidx.compose.ui.test.click
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performKeyInput
-import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.performMouseInput
 import androidx.compose.ui.test.pressKey
 import com.pandulapeter.campfire.data.model.preferences.SongLayout
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -114,10 +114,13 @@ internal class AutoScrollTest {
     /** Where the piece of the song [key] names is on screen. */
     private fun AppTestScope.lineTop(key: Pair<String, Int>) = songPieces(checkNotNull(songViewport()), 0f).single { it.key == key }.bounds.top
 
-    /** Folds a section whose heading is on screen below the reading line, which is a third of the way down the song. */
+    /**
+     * Folds a section whose heading is on screen below the reading line, which is a third of the way down the song, with a
+     * mouse's click on its chevron: a tap on an unfolded header steps the song instead.
+     */
     private fun AppTestScope.foldSectionBelowReadingLine() {
         val chevron = checkNotNull(chevronBelowReadingLine()) { "No section's header came into sight below the reading line." }
-        onNode(SemanticsMatcher("is the chevron") { it.id == chevron.id }, useUnmergedTree = true).performTouchInput { click() }
+        onNode(SemanticsMatcher("is the chevron") { it.id == chevron.id }, useUnmergedTree = true).performMouseInput { click() }
     }
 
     /** The fold chevron of a section header on screen in the lower part of the song, past its reading line, if any. */

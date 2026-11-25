@@ -15,7 +15,6 @@ import com.pandulapeter.campfire.presentation.ui.songView.model.RenderSection
 import com.pandulapeter.campfire.presentation.ui.songView.model.SectionItem
 import com.pandulapeter.campfire.presentation.ui.songView.model.SectionPart
 import com.pandulapeter.campfire.presentation.ui.songView.model.sectionChunkStarts
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -32,7 +31,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.style.TextDirection
@@ -72,8 +70,9 @@ import kotlin.math.ceil
  * **Every section with a header folds from it** ([foldedRuns]), so that a song can be read as the handful of parts that
  * are still to be learned: the pill is the toggle, its chevron after the name, and on a card the whole title row is,
  * its chevron at the far end the way an expandable card carries it — so that a folded chorus is a slim card of its
- * own that still stands out, and pressing anywhere along its top answers. A section with no header has nothing to fold
- * it from, except one that is nothing but tablature or a grid, which gets a toggle named after that.
+ * own that still stands out, and pressing anywhere along its top answers, as [FoldMenuAnchor] has it (on song details
+ * an unfolded one only to a long press or a mouse on its chevron, a tap stepping the song). A section with no header
+ * has nothing to fold it from, except one that is nothing but tablature or a grid, which gets a toggle named after that.
  *
  * Inside a section every run of tablature and every run of a chord grid folds on its own as well, since a solo written
  * out fret by fret or bar by bar is as tall as several verses and is of no use to somebody who only sings the song. It
@@ -421,8 +420,9 @@ private fun SectionRun(
 }
 
 /**
- * The title row of a section drawn on a card, which folds the section where it has anything to fold ([toggle]). It is
- * as wide as the card and pressed as a whole, with the chevron at its far end, since a card has no pill to press.
+ * The title row of a section drawn on a card, which folds the section where it has anything to fold ([toggle]), pressed
+ * as [FoldMenuAnchor] says. It is as wide as the card and pressed as a whole, with the chevron at its far end, since a
+ * card has no pill to press.
  */
 @Composable
 private fun CardTitleRow(
@@ -431,23 +431,26 @@ private fun CardTitleRow(
     toggle: FoldToggle?,
     style: TextStyle,
     chevronSize: Dp,
-) = SectionTitle(
-    modifier = Modifier
-        .fillMaxWidth()
-        .then(if (toggle == null) Modifier else Modifier.foldToggleClickable(toggle))
-        .then(modifier),
-    header = header,
-    toggle = toggle,
-    style = style,
-    chevronSize = chevronSize,
-    isChevronAtEnd = true,
-)
+) = FoldMenuAnchor(toggle = toggle, kind = null) { gestures, chevronGestures ->
+    SectionTitle(
+        modifier = Modifier
+            .fillMaxWidth()
+            .then(gestures)
+            .then(modifier),
+        header = header,
+        toggle = toggle,
+        style = style,
+        chevronSize = chevronSize,
+        isChevronAtEnd = true,
+        chevronModifier = chevronGestures,
+    )
+}
 
 /**
  * What folds a run of tablature or a grid that shares its section with other lines, or sits in a section without a
- * header, and what is left of the run once it is folded. It is named like a section that is nothing but that run would
- * be, and hangs into the section's padding the way a header pill does, so that its text starts on the keyline of the
- * lyrics around it.
+ * header, and what is left of the run once it is folded, pressed as [FoldMenuAnchor] says. It is named like a section
+ * that is nothing but that run would be, and hangs into the section's padding the way a header pill does, so that its
+ * text starts on the keyline of the lyrics around it.
  */
 @Composable
 private fun FoldToggleRow(
@@ -457,31 +460,28 @@ private fun FoldToggleRow(
     toggle: FoldToggle,
     style: TextStyle,
     chevronSize: Dp,
-) = Row(
-    modifier = modifier
-        .offset(x = -FOLD_TOGGLE_HORIZONTAL_PADDING)
-        .clip(MaterialTheme.shapes.small)
-        .foldToggleClickable(toggle)
-        .padding(horizontal = FOLD_TOGGLE_HORIZONTAL_PADDING, vertical = FOLD_TOGGLE_VERTICAL_PADDING),
-    verticalAlignment = Alignment.CenterVertically,
-) {
-    Text(
-        text = label,
-        style = style,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-    )
-    FoldChevron(
-        modifier = Modifier.padding(start = FOLD_CHEVRON_GAP).size(chevronSize),
-        kind = kind,
-        isExpanded = toggle.isExpanded,
-        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-    )
+) = FoldMenuAnchor(toggle = toggle, kind = kind) { gestures, chevronGestures ->
+    Row(
+        modifier = modifier
+            .offset(x = -FOLD_TOGGLE_HORIZONTAL_PADDING)
+            .clip(MaterialTheme.shapes.small)
+            .then(gestures)
+            .padding(horizontal = FOLD_TOGGLE_HORIZONTAL_PADDING, vertical = FOLD_TOGGLE_VERTICAL_PADDING),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = label,
+            style = style,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        FoldChevron(
+            modifier = Modifier.padding(start = FOLD_CHEVRON_GAP).size(chevronSize).then(chevronGestures),
+            kind = kind,
+            isExpanded = toggle.isExpanded,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
 }
-
-private fun Modifier.foldToggleClickable(toggle: FoldToggle) = clickable(
-    role = Role.Button,
-    onClick = toggle.onToggled,
-)
 
 private val INLINE_COMMENT_GAP = 12.dp
 

@@ -29,6 +29,8 @@ import androidx.compose.ui.layout.Measurable
 import androidx.compose.ui.layout.MeasurePolicy
 import androidx.compose.ui.layout.MeasureResult
 import androidx.compose.ui.layout.MeasureScope
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.isSpecified
@@ -39,6 +41,7 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.song_image
 import com.pandulapeter.campfire.presentation.resources.song_image_titled
 import com.pandulapeter.campfire.presentation.resources.song_image_view
+import com.pandulapeter.campfire.presentation.ui.components.list.onContextClick
 import com.pandulapeter.campfire.presentation.ui.pictures.ImageViewer
 import com.pandulapeter.campfire.presentation.ui.pictures.LocalSongImageAdder
 import com.pandulapeter.campfire.presentation.ui.pictures.MissingImage
@@ -66,7 +69,8 @@ internal fun songImageRoomOf(sections: List<RenderSection>, availableHeight: Dp,
 /**
  * A picture of a song ([RenderSection.Image]), its room known before it is decoded (see [fittedImageSize]): asked how
  * tall it is at a width, it answers the picture fitted to that width and [LocalSongImageRoom], so the layout places it
- * right from the first frame. Selecting it opens it over the whole window. One the library lacks is a [MissingImage],
+ * right from the first frame. Selecting it opens it over the whole window; where a tap steps the song
+ * ([LocalTapsStepSong]) a long press, or a right click, does instead. One the library lacks is a [MissingImage],
  * and one whose size is still being read takes that room, empty.
  */
 @Composable
@@ -96,7 +100,7 @@ private fun KnownImage(
                     .fillMaxSize()
                     .clip(MaterialTheme.shapes.small)
                     .background(MaterialTheme.colorScheme.surfaceContainerHighest)
-                    .clickable(onClickLabel = stringResource(Res.string.song_image_view)) { isViewerOpen = true },
+                    .opensViewer(label = stringResource(Res.string.song_image_view)) { isViewerOpen = true },
                 name = image.src,
                 contentDescription = description,
             )
@@ -111,6 +115,30 @@ private fun KnownImage(
             onClose = { isViewerOpen = false },
         )
     }
+}
+
+/**
+ * Opens a picture's viewer ([onOpen]) on a press, or where a tap steps the song ([LocalTapsStepSong]) on a long press or
+ * a right click, the tap left to step it. Screen readers open it as its action either way.
+ */
+@Composable
+private fun Modifier.opensViewer(label: String, onOpen: () -> Unit): Modifier = if (!LocalTapsStepSong.current) {
+    clickable(onClickLabel = label, onClick = onOpen)
+} else {
+    onContextClick {
+        println("Picture: opened by a right click")
+        onOpen()
+    }
+        .onLongPress {
+            println("Picture: opened by a long press")
+            onOpen()
+        }
+        .semantics {
+            onClick(label = label) {
+                onOpen()
+                true
+            }
+        }
 }
 
 /**

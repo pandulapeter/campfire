@@ -29,7 +29,7 @@ import com.pandulapeter.campfire.presentation.ui.songLayout.UNNAMED_SECTION_HEAD
 /**
  * A section's name, followed by the chevron that folds it where it can be folded; only the chevron for a section with
  * no name ([UNNAMED_SECTION_HEADER]), or the room for it where it cannot. [chevronDescription] names the chevron instead
- * of the default "Hide the section".
+ * of the default "Hide the section", and [chevronModifier] is what it is pressed by ([FoldMenuAnchor]).
  */
 @Composable
 internal fun SectionTitle(
@@ -40,6 +40,7 @@ internal fun SectionTitle(
     chevronSize: Dp,
     isChevronAtEnd: Boolean = false,
     chevronDescription: String? = null,
+    chevronModifier: Modifier = Modifier,
 ) = Row(
     modifier = modifier,
     verticalAlignment = Alignment.CenterVertically,
@@ -56,7 +57,7 @@ internal fun SectionTitle(
     if (toggle == null && header == UNNAMED_SECTION_HEADER) Spacer(modifier = Modifier.size(chevronSize))
     toggle?.let {
         FoldChevron(
-            modifier = Modifier.padding(start = if (header == UNNAMED_SECTION_HEADER) 0.dp else FOLD_CHEVRON_GAP).size(chevronSize),
+            modifier = Modifier.padding(start = if (header == UNNAMED_SECTION_HEADER) 0.dp else FOLD_CHEVRON_GAP).size(chevronSize).then(chevronModifier),
             kind = null,
             isExpanded = it.isExpanded,
             tint = MaterialTheme.colorScheme.primary,

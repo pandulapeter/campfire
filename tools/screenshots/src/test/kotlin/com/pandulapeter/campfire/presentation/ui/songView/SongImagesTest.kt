@@ -12,6 +12,8 @@ package com.pandulapeter.campfire.presentation.ui.songView
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.longClick
+import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
@@ -48,14 +50,18 @@ import kotlin.test.assertTrue
 internal class SongImagesTest {
 
     @Test
-    fun `a song that is only a picture shows it fitted to the column, and opens it over the window`() {
+    fun `a song that is only a picture shows it fitted to the column, and a long press opens it over the window`() {
         val picture = png(width = 800, height = 600)
         runAppTest(window = TestWindow.PHONE, libraryFiles = library(song("Only A Picture", "{image: src=${picture.name}}"), picture)) {
             openSong("Only A Picture")
             val bounds = pictureBounds()
             assertTrue(bounds.width > TestWindow.PHONE.width.value / 2 && bounds.right <= TestWindow.PHONE.width.value, "The picture is $bounds.")
             assertEquals(800f / 600f, bounds.width / bounds.height, ASPECT_TOLERANCE)
+            // A tap is the song's, to step it, and opens nothing.
             tap(hasContentDescription(string(Res.string.song_image)) and hasClickAction())
+            assertTrue(onAllNodes(hasContentDescription(string(Res.string.close))).fetchSemanticsNodes().isEmpty(), "A tap opened the viewer.")
+            onNode(hasContentDescription(string(Res.string.song_image)) and hasClickAction()).performTouchInput { longClick() }
+            waitForIdle()
             tap(hasContentDescription(string(Res.string.close)) and hasClickAction())
             assertTrue(onAllNodes(hasContentDescription(string(Res.string.close))).fetchSemanticsNodes().isEmpty(), "The viewer did not close.")
         }

@@ -18,6 +18,7 @@ import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.Ro
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.SongStepper
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.timingIndexAt
 import com.pandulapeter.campfire.presentation.ui.songView.LocalSongChange
+import com.pandulapeter.campfire.presentation.ui.songView.LocalTapsStepSong
 import com.pandulapeter.campfire.presentation.ui.songView.SectionMotion
 import com.pandulapeter.campfire.presentation.ui.songView.SongChange
 import com.pandulapeter.campfire.presentation.ui.songView.SongLyrics
@@ -347,7 +348,7 @@ internal fun SongDetailsPage(
             val settledPageWidth = maxOf(settledWidth, maxWidth)
             // Only one column scrolls on through the bottom inset; in a setlist the pager bar stands over it instead.
             val bottomInset = if (isContinuous) contentPadding.calculateBottomPadding() else 0.dp
-            CompositionLocalProvider(LocalSongChange provides songChange, LocalSongImageAdder provides onAddImage) {
+            CompositionLocalProvider(LocalSongChange provides songChange, LocalSongImageAdder provides onAddImage, LocalTapsStepSong provides true) {
                 SongLyrics(
                     modifier = Modifier
                         .fillMaxSize()

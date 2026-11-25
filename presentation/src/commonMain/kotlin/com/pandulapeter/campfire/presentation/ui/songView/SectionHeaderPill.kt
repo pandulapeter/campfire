@@ -24,9 +24,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 /**
- * The raised pill a section is headed by, which folds the section where it has anything to fold ([toggle]). It is laid
- * out at its own size: the touch target enforcement would grow it to 48dp and push the lines of the section down, just
- * as it would in the lists (see [SectionHeader]).
+ * The raised pill a section is headed by, which folds the section where it has anything to fold ([toggle]), pressed as
+ * [FoldMenuAnchor] says: an unfolded one only by a long press, a right click, or a mouse's click on its chevron, a
+ * folded one by any press. It is laid out at its own size: the touch target enforcement would grow it to 48dp and push
+ * the lines of the section down, just as it would in the lists (see [SectionHeader]).
  */
 @Composable
 internal fun SectionHeaderPill(
@@ -37,34 +38,24 @@ internal fun SectionHeaderPill(
     chevronSize: Dp,
     chevronDescription: String? = null,
 ) = CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
-    val pillModifier = modifier.offset(x = -HEADER_HORIZONTAL_PADDING)
-    val content = @Composable {
-        SectionTitle(
-            modifier = Modifier.padding(horizontal = HEADER_HORIZONTAL_PADDING, vertical = HEADER_VERTICAL_PADDING),
-            header = header,
-            toggle = toggle,
-            style = style,
-            chevronSize = chevronSize,
-            chevronDescription = chevronDescription,
-        )
-    }
-    if (toggle == null) {
+    FoldMenuAnchor(toggle = toggle, kind = null) { gestures, chevronGestures ->
+        // The press is the title's, inside the pill, so that its ripple is clipped to the pill and drawn over its colour.
         Surface(
-            modifier = pillModifier,
+            modifier = modifier.offset(x = -HEADER_HORIZONTAL_PADDING),
             shape = MaterialTheme.shapes.large,
             color = MaterialTheme.colorScheme.surfaceContainerHigh,
             shadowElevation = HEADER_ELEVATION,
-            content = content,
-        )
-    } else {
-        Surface(
-            onClick = toggle.onToggled,
-            modifier = pillModifier,
-            shape = MaterialTheme.shapes.large,
-            color = MaterialTheme.colorScheme.surfaceContainerHigh,
-            shadowElevation = HEADER_ELEVATION,
-            content = content,
-        )
+        ) {
+            SectionTitle(
+                modifier = gestures.padding(horizontal = HEADER_HORIZONTAL_PADDING, vertical = HEADER_VERTICAL_PADDING),
+                header = header,
+                toggle = toggle,
+                style = style,
+                chevronSize = chevronSize,
+                chevronDescription = chevronDescription,
+                chevronModifier = chevronGestures,
+            )
+        }
     }
 }
 

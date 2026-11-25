@@ -43,7 +43,7 @@ Pedal stepping and snapping, over the `SongRows` the layout reports (`ui/songVie
   never moves them. The song takes the full width; its bottom padding and reading window leave the row's height
   (`STEP_ROW_HEIGHT`), so the row covers no line.
 - **Tap to step**: top half previous, bottom half next (on a strip left and right, mirrored for a song read from the
-  right), only for taps nothing inside consumed; never a long press, a right or middle click, a fling-stopping press,
+  right), only for taps nothing inside consumed (an unfolded section header and a picture take none, `ui/songView`); never a long press, a right or middle click, a fling-stopping press,
   or one the system cancelled. A drag under 250 ms and a tenth of the height (a strip's width) is still a tap (a
   strumming hand slides), stepping from where the song was at finger-down and replacing the fling. A tap mid-step steps
   on from its target, as a second pedal press does, though the scroll takes its press and its release to stop the step

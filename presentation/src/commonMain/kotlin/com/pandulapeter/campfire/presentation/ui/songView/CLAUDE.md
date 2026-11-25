@@ -61,7 +61,8 @@ The song renderer, drawn by song details and the editor's preview; `model/` buil
 - A paragraph holding only one tab or grid run is headed "Tab" / "Grid" (screen and PDF).
 - **A picture** (`SongImageBlock`, `ui/pictures`) answers its height at any width from its header's size, so it is placed
   right before it is decoded; it is fitted to `LocalSongImageRoom`, the page's room less a row gap (a rest shows that
-  much of a row), which joins the measurements' keys only in a song holding a picture. Selecting it opens the viewer.
+  much of a row), which joins the measurements' keys only in a song holding a picture. Selecting it opens the viewer;
+  on song details (`LocalTapsStepSong`) a long press or a right click does, a tap stepping the song.
 
 ### The first, Chords, and Scales sections
 
@@ -87,13 +88,18 @@ The song renderer, drawn by song details and the editor's preview; `model/` buil
 - A plain paragraph, and the rest of a section a chorus recall cut, get a chevron-only pill, named for screen readers by
   its first lyric. The preview folds nothing but draws that pill, so it lays out like details. A chorus has no pill and
   folds from its whole title row.
+- **On song details a tap is the song's** (`FoldMenuAnchor`): an unfolded header takes none, so it steps; a long press
+  or a right click opens a dropdown whose one entry folds it, and a mouse's click on its chevron folds it at once. A
+  folded header unfolds on any press. Screen readers keep the toggle as its action, the menu as its long press.
+  Buttons inside the song (a missing picture's, the part picker, the cut-song notice) keep their taps; chord names in
+  the lyrics have no gesture. Breadcrumbs (kinds only): `Fold menu: …`, `Fold: …`, and `Picture: …`.
 - A fold re-measures only its section. An unfolding run animates only opacity: a height still animating would be
   measured halfway.
 
 ### Layout (`SongSectionsLayout`)
 
-- **A fold holds the columns in place for 900 ms** before re-centering, or the header just tapped would move and a
-  second tap miss.
+- **A fold holds the columns in place for 900 ms** before re-centering, or the header just pressed would move and a
+  second press miss.
 - A song scrolling by itself is an unmeasured single column cut a chunk a line, so its rows name every line
   (`screens/songDetails/autoScroll`); a staff system plays two bars a line, a tune's title none.
 - The preview and a songbook (over `MAX_CUT_SECTION_COUNT` sections) keep a plain unmeasured single column, neither cut
