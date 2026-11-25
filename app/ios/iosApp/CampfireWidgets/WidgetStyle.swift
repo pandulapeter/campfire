@@ -154,10 +154,10 @@ struct WidgetSongRow: View {
         }
     }
 
-    /// The number, centered on the row's height like the cover beside it. It starts where the header does, in a column as
-    /// wide as the list's longest number, sized by hidden zeros in the same font.
+    /// The number, centered on the row's height like the cover beside it, and across a column that starts where the header
+    /// does and is as wide as the list's longest number, sized by hidden zeros in the same font.
     private func numberColumn(_ number: Int) -> some View {
-        ZStack(alignment: .leading) {
+        ZStack(alignment: .center) {
             Text(verbatim: String(repeating: "0", count: max(numberDigits, String(number).count))).hidden()
             Text(verbatim: String(number))
                 .foregroundStyle(colors.accent)

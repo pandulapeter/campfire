@@ -80,8 +80,8 @@ import org.jetbrains.compose.resources.painterResource
 import kotlin.time.Duration
 
 /**
- * @param index The song's place in the setlist it is listed in, prefixed to its title.
- *   Null on the screens where a song is not in an order of anyone's making and a number would only claim it was.
+ * @param index The song's zero-based place in the setlist it is listed in, drawn one-based in a column in front of the
+ *   cover ([SongCardNumber]) as wide as [indexDigits] digits, the most a number of that setlist has. Null on the screens where a song is not in an order of anyone's making and a number would only claim it was.
  * @param key The key the song sounds in where it is listed, the transposition and the capo of that listing applied,
  *   which is a different key in every setlist that plays it differently (`SongRenderer.renderKey`), drawn first on
  *   the line under the artist. Null for a file that declares none.
@@ -124,6 +124,7 @@ internal fun SongListItem(
     modifier: Modifier = Modifier,
     song: Song,
     index: Int? = null,
+    indexDigits: Int = 1,
     key: String? = null,
     tempo: Int? = null,
     shouldShowChords: Boolean = true,
@@ -185,42 +186,14 @@ internal fun SongListItem(
                 .onContextClick(onContextClick)
                 .combinedClickable(onClick = onClick, onLongClick = onContextClick.takeUnless { isDesktopPlatform })
                 .then(remember(toggleableState) { selectionSemanticsOf(toggleableState) }),
+            number = index?.plus(1),
+            numberDigits = indexDigits,
             coverArtUrl = coverArtUrl,
             actions = actions,
             headlineContent = {
-                ListItemHeadline(title = song.title, index = index)
+                ListItemHeadline(title = song.title)
             },
-            // The artist and the values each get a line of their own beside the cover: the artist is cut short by nothing but
-            // the card's width, and the values, which are short, never take letters off it. Songs written in the app need
-            // no artist, and an empty line would just make the row taller. Nothing here shares the title's line: a title is
-            // the longest thing on the row and the one that must never be pushed out of sight. The languages and tags go
-            // under all of them, since a row of those is as long as somebody chose to make it.
-            supportingContent = if (!hasArtist) {
-                null
-            } else {
-                {
-                    // Faded and closed up rather than dropped, since switching the sort or opening the search, which takes
-                    // the headers away, is what hides and shows it. The fade trails the room opening and leads the room
-                    // closing, so the text is never squeezed while it is still visible. The room moves on the search's
-                    // spring, as the rest of the card's height does ([CenteredSongCardContent]).
-                    AnimatedVisibilityOnChange(
-                        visible = isArtistDrawn,
-                        enter = fadeIn(tween(durationMillis = 220, delayMillis = 100)) +
-                            expandVertically(searchTravelSpec(visibilityThreshold = IntSize.VisibilityThreshold)),
-                        exit = fadeOut(tween(durationMillis = 100)) +
-                            shrinkVertically(searchTravelSpec(visibilityThreshold = IntSize.VisibilityThreshold)),
-                    ) {
-                        Text(
-                            text = song.artist,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    }
-                    if (!isArtistDrawn) {
-                        Box(modifier = Modifier.semantics { text = AnnotatedString(song.artist) })
-                    }
-                }
-            },
+            supportingContent = if (!hasArtist) null else ({ SongCardArtist(artist = song.artist, isDrawn = isArtistDrawn) }),
             detailsContent = if (note == null && tempoNote == null && displayedDuration == null) {
                 null
             } else {
@@ -263,6 +236,42 @@ internal fun SongListItem(
                 }
             },
         )
+    }
+}
+
+/**
+ * The artist on the line under a card's title. The artist and the values each get a line of their own beside the cover:
+ * the artist is cut short by nothing but the card's width, and the values, which are short, never take letters off it.
+ * Songs written in the app need no artist, and an empty line would just make the row taller. Nothing here shares the
+ * title's line: a title is the longest thing on the row and the one that must never be pushed out of sight. The
+ * languages and tags go under all of them, since a row of those is as long as somebody chose to make it.
+ *
+ * @param isDrawn False under an artist header that names it already ([SongListItem]'s `isArtistShown`).
+ */
+@Composable
+private fun SongCardArtist(
+    artist: String,
+    isDrawn: Boolean,
+) {
+    // Faded and closed up rather than dropped, since switching the sort or opening the search, which takes
+    // the headers away, is what hides and shows it. The fade trails the room opening and leads the room
+    // closing, so the text is never squeezed while it is still visible. The room moves on the search's
+    // spring, as the rest of the card's height does ([CenteredSongCardContent]).
+    AnimatedVisibilityOnChange(
+        visible = isDrawn,
+        enter = fadeIn(tween(durationMillis = 220, delayMillis = 100)) +
+            expandVertically(searchTravelSpec(visibilityThreshold = IntSize.VisibilityThreshold)),
+        exit = fadeOut(tween(durationMillis = 100)) +
+            shrinkVertically(searchTravelSpec(visibilityThreshold = IntSize.VisibilityThreshold)),
+    ) {
+        Text(
+            text = artist,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+    if (!isDrawn) {
+        Box(modifier = Modifier.semantics { text = AnnotatedString(artist) })
     }
 }
 

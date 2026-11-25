@@ -31,6 +31,7 @@ import androidx.glance.layout.size
 import androidx.glance.layout.width
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
+import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
 
 /**
@@ -60,7 +61,7 @@ internal fun WidgetSongRow(
 ) {
     val hasArtist = artist.isNotBlank()
     if (number != null && !isMirrored) {
-        SongNumber(number = number, digits = numberDigits, isMirrored = false)
+        SongNumber(number = number, digits = numberDigits)
         Spacer(modifier = GlanceModifier.width(NUMBER_GAP.dp))
     }
     if (cover != null && !isMirrored) {
@@ -90,24 +91,23 @@ internal fun WidgetSongRow(
     }
     if (number != null && isMirrored) {
         Spacer(modifier = GlanceModifier.width(NUMBER_GAP.dp))
-        SongNumber(number = number, digits = numberDigits, isMirrored = true)
+        SongNumber(number = number, digits = numberDigits)
     }
 }
 
 /**
  * A setlist song's number in a column of [digits] digits, starting at the widget's padding as the header's text does,
- * centered on the row's height like the cover beside it.
+ * centered in it both ways: on the row's height like the cover beside it, and across the column.
  */
 @Composable
 private fun SongNumber(
     number: Int,
     digits: Int,
-    isMirrored: Boolean,
 ) = Text(
     modifier = GlanceModifier.width((digits * DIGIT_WIDTH).dp),
     text = number.toString(),
     maxLines = 1,
-    style = TextStyle(color = GlanceTheme.colors.primary, fontSize = TITLE_SIZE.sp, fontWeight = FontWeight.Bold, textAlign = textAlignOf(isMirrored)),
+    style = TextStyle(color = GlanceTheme.colors.primary, fontSize = TITLE_SIZE.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center),
 )
 
 /**

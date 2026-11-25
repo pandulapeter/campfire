@@ -55,6 +55,7 @@ import com.pandulapeter.campfire.presentation.ui.components.list.listItemAnimati
 import com.pandulapeter.campfire.presentation.ui.components.menu.rememberOverflowMenuState
 import com.pandulapeter.campfire.presentation.ui.rendering.rememberSongCardKey
 import com.pandulapeter.campfire.presentation.ui.components.songCard.songCardPadding
+import com.pandulapeter.campfire.presentation.ui.components.songCard.songCardNumberDigits
 import com.pandulapeter.campfire.presentation.ui.playing.PlayingOverridesSnapshot
 import com.pandulapeter.campfire.presentation.ui.playing.songPlaybackOf
 import com.pandulapeter.campfire.presentation.ui.playing.soundingTransposition
@@ -352,6 +353,7 @@ private fun SetlistEntryCard(
             modifier = modifier,
             song = entry.song,
             index = row.index,
+            indexDigits = songCardNumberDigits(setlistWithSongs.entries.size),
             cardPadding = cardPadding,
             key = renderedKey,
             // And the setlist's own tempo, for the same reason.
@@ -377,6 +379,7 @@ private fun SetlistEntryCard(
     is SetlistWithSongs.Entry.Missing -> MissingSongListItem(
         modifier = modifier,
         index = row.index,
+        indexDigits = songCardNumberDigits(setlistWithSongs.entries.size),
         songFileName = entry.songFileName,
         cardPadding = cardPadding,
         containerColor = containerColor,

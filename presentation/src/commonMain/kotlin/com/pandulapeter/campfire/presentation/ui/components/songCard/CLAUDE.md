@@ -15,7 +15,9 @@
   under all of it, 4dp under any last line, a title alone included, and 8dp under a cover. The title's line height is
   22sp with two lines and three alike, so a wrapped title is spaced the same in both; the cover is the text's height,
   58dp with three lines and 42dp with two (the card then lower), and animates.
-- A song inside a setlist prefixes its one-based place, missing files included.
+- A song inside a setlist shows its one-based place, missing files included, as the Setlist widget does: bold in the
+  primary color, in a column of its own before the cover, as wide as the setlist's largest number, so its titles start
+  in one line.
 - The title carries its `{subtitle}` in parentheses, as everywhere: a "Live" copy by the same artist is told apart by
   nothing else.
 - `CenteredSongCardContent` is laid out by hand, since a `ListItem` pins a three-line item to its top and grows it to

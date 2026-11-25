@@ -52,6 +52,8 @@ import androidx.compose.ui.unit.sp
  * icon well inside its touch target, so text that kept a list item's padding and gap from that target as well was cut
  * off with a wide empty band before the icon.
  *
+ * @param number The song's one-based place in its setlist, drawn in a column of its own in front of the cover
+ *   ([SongCardNumber]) as wide as [numberDigits] digits; null on a card listed outside a setlist.
  * @param coverArtUrl The cover drawn at the start of the body ([CoverArtImage]), next to the headline, the supporting
  *   line, and the details line only, and as tall as the lines drawn there.
  * @param isThreeLine Whether the supporting line and the details line are both drawn, which grows the cover to the three
@@ -66,6 +68,8 @@ import androidx.compose.ui.unit.sp
 @Composable
 internal fun CenteredSongCardContent(
     modifier: Modifier = Modifier,
+    number: Int? = null,
+    numberDigits: Int = 1,
     coverArtUrl: String? = null,
     actions: (@Composable () -> Unit)?,
     headlineContent: @Composable () -> Unit,
@@ -96,6 +100,12 @@ internal fun CenteredSongCardContent(
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
+                            if (number != null) {
+                                SongCardNumber(
+                                    number = number,
+                                    digits = numberDigits,
+                                )
+                            }
                             if (coverArtUrl != null) {
                                 SongCardCover(
                                     url = coverArtUrl,

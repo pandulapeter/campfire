@@ -52,6 +52,7 @@ import com.pandulapeter.campfire.presentation.ui.platform.isDesktopPlatform
 internal fun MissingSongListItem(
     modifier: Modifier = Modifier,
     index: Int,
+    indexDigits: Int,
     songFileName: String,
     cardPadding: PaddingValues = PaddingValues(horizontal = SONG_CARD_OUTER_PADDING, vertical = SONG_CARD_VERTICAL_PADDING),
     containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLow,
@@ -81,9 +82,11 @@ internal fun MissingSongListItem(
                 }
             },
         ),
+        number = index + 1,
+        numberDigits = indexDigits,
         actions = actions,
         headlineContent = {
-            ListItemHeadline(title = songFileName, index = index)
+            ListItemHeadline(title = songFileName)
         },
         supportingContent = {
             Text(
