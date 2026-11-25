@@ -47,24 +47,26 @@ import org.jetbrains.compose.resources.painterResource
  * stays behind: the Playing sheet has the instrument. Both come and go with the dock's rows, fading and growing, so a
  * switch flipped or a window resized moves nothing abruptly.
  *
- * In the bar the chip is a sibling of the text size stepper it may stand after ([isAfterStepper]): as tall as the
+ * In the bar the chip is a sibling of the text size stepper that may stand after it ([isBeforeStepper]): as tall as the
  * stepper ([STEPPER_HEIGHT]) and, like it, a tonal pill with no outline, which the dock's chips have only to stand out
- * from the dock's own surface. Everything in the bar's group of actions is [APP_BAR_PILL_GAP] apart: an icon button's
- * glyph keeps that much of its touch target clear on either side, so a pill needs no gap before a button, and only a pill
- * after the stepper is given it. The tuner reaches into the button after it by [ACTION_BUTTON_OVERLAP], as the bar's
- * other buttons do into theirs, so the tuner, the star or the lock, and the overflow button read as one row.
+ * from the dock's own surface. It comes first, as it does in the dock, against the title as the stepper would be.
+ * Everything in the bar's group of actions is [APP_BAR_PILL_GAP] apart: an icon button's glyph keeps that much of its
+ * touch target clear on either side, so only a pill followed by a pill is given the gap. The tuner reaches into the
+ * button after it by [ACTION_BUTTON_OVERLAP], as the bar's other buttons do into theirs, but never into the stepper's
+ * pill, which it would put inside its touch target.
  */
 @Composable
 internal fun AppBarPlayingTools(
     isShown: Boolean,
-    isAfterStepper: Boolean,
+    isBeforeStepper: Boolean,
     contents: Map<Int, DockContent>,
     targetPage: () -> Int,
     onTunerClicked: (() -> Unit)?,
 ) {
-    val gapBefore by animateDpAsState(if (isShown && isAfterStepper) APP_BAR_PILL_GAP else 0.dp)
+    val isTunerShown = onTunerClicked != null && isShown
+    val gapAfter by animateDpAsState(if (isShown && isBeforeStepper && !isTunerShown) APP_BAR_PILL_GAP else 0.dp)
     AnimatedVisibility(
-        modifier = Modifier.padding(start = gapBefore),
+        modifier = Modifier.padding(end = gapAfter),
         visible = isShown,
         enter = fadeIn() + expandHorizontally(),
         exit = fadeOut() + shrinkHorizontally(),
@@ -89,8 +91,9 @@ internal fun AppBarPlayingTools(
     val shownTuner = onTunerClicked?.takeIf { isShown }
     val lastTuner = remember { LastTunerClick() }
     shownTuner?.let { lastTuner.value = it }
+    val tunerOverlap by animateDpAsState(if (isBeforeStepper) 0.dp else ACTION_BUTTON_OVERLAP)
     AnimatedVisibility(
-        modifier = Modifier.overlappingAction(start = 0.dp, end = ACTION_BUTTON_OVERLAP),
+        modifier = Modifier.overlappingAction(start = 0.dp, end = tunerOverlap),
         visible = shownTuner != null,
         enter = fadeIn() + expandHorizontally(),
         exit = fadeOut() + shrinkHorizontally(),

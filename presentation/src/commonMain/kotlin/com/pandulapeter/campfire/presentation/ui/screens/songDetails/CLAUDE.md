@@ -63,7 +63,8 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
   gets 48dp).
 - **The subtitle names the sounding key** (transposition and capo played applied), whatever the chords are named by,
   after a 16dp dot (the cards' 24dp would grow the bar and shrink the lyrics' room). Worked out for the song its
-  crossfaded content was composed for, since a page change draws two. Chords off drop the key. No tempo (the dock
+  crossfaded content was composed for, since a page change draws two. Chords off, a song without chords, and a file
+  naming no key whose chords make none clear drop the key, as does the app bar's key chip naming the same one. No tempo (the dock
   says it) and no duration.
 - **A file with no `{key}` is named by the key its chords are in** (`inferredKeyOf`), shown and moved as a written key
   is everywhere (bar, key chip, Transposition control, numbering, the dock's chords and scales, chord shape
@@ -84,14 +85,15 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
   mark, the mode or not: only Import makes it editable, and the mark comes with its song's screen. **The overflow button
   is always the bar's last.**
 - **Where the dock would hold only the key chip** (`DockRows.isKeyOnly`, an import preview's too) the bar holds it
-  instead, and with the dock's tuner on a tuner icon button, both after the text size stepper and before the setlists'
-  star, the read only mark, and the overflow button (`AppBarPlayingTools`), so the stepper, the first to leave for the
-  menu as the bar narrows, moves nothing after it. The chip is the stepper's sibling there: as tall, tonal with no
-  outline (the dock's outline is for the dock's surface), 12dp after it, the room an icon button's touch target leaves
-  around its glyph, so every action of the group is as far from the next; the tuner reaches into the button after it as
-  the bar's buttons do, and the overflow button into the tuner. The same chip, opening the same
+  instead, and with the dock's tuner on a tuner icon button, both first among the actions, as the key chip is first in
+  the dock: before the text size stepper, the setlists' star, the read only mark, and the overflow button
+  (`AppBarPlayingTools`). The chip is the stepper's sibling there: as tall, tonal with no outline (the dock's outline is
+  for the dock's surface), 12dp before it where no tuner stands between, the room an icon button's touch target leaves
+  around its glyph, so every action of the group is as far from the next; the tuner reaches into a button after it as
+  the bar's buttons do, never into the stepper's pill, and the overflow button into the tuner. The same chip, opening the same
   sheet (nothing in read only mode), left out with neither key nor capo, for the page the pager is on or heading for,
-  crossfading as the subtitle does, which drops its key meanwhile. They come and go fading and growing as the dock
+  crossfading as the subtitle does, which leaves out its key where the chip names the same one (never where they
+  differ: the chip names the transposition stepper's key, with a capo the shapes', the subtitle the sounding one). They come and go fading and growing as the dock
   shrinks away or returns. Their room is taken before the cover's and the buttons' (`appBarPlayingToolsWidth`): the
   chip by a constant, since the bar decides for every page at once and a width that followed the page would move the
   cover in and out of the menu as pages turn. `App bar: tuner` and the dock's `Dock: key chip` breadcrumbs.
@@ -141,5 +143,5 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
 - Home goes back to the song's top, as a long press on the step back button does.
 - M starts and stops the click and T taps the tempo wherever the dock's tempo chip is (the metronome on, not an import
   preview; T not in read only mode, where it would write an override).
-- U opens the tuner sheet wherever the screen shows a way to the tuner (the Tuner feature and the Dock's tuner on, in the
-  dock or the app bar; not an import preview), leaving a `Keyboard: tuner` breadcrumb.
+- U opens the tuner sheet wherever the Tuner feature is on (the way to it in the dock, the app bar, or with the Dock's
+  tuner off the menu, whose entry names the key; not an import preview), leaving a `Keyboard: tuner` breadcrumb.

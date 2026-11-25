@@ -72,6 +72,9 @@ import org.jetbrains.compose.resources.painterResource
  *
  * @param inferredKeyOf The key a song's chords were found to be in, by its file name, for one whose file names none (see
  *   `InferredSongKeys`).
+ * @param barKeyOf The key the app bar's key chip names for a song, by its file name, where the bar holds the chip. The
+ *   subtitle leaves out a key the chip already names, but not one it does not: the chip names the key the transposition
+ *   stepper does, which with a capo is the shapes' while the subtitle's is the one that sounds.
  */
 @Composable
 internal fun SongDetailsTitle(
@@ -84,6 +87,7 @@ internal fun SongDetailsTitle(
     showsCoverInBar: Boolean,
     openCurrentSongInfo: (() -> Unit)?,
     inferredKeyOf: (fileName: String) -> String?,
+    barKeyOf: (fileName: String) -> String?,
 ) {
     val titleInteractionSource = remember { MutableInteractionSource() }
     val isTitlePressed by titleInteractionSource.collectIsPressedAsState()
@@ -112,7 +116,7 @@ internal fun SongDetailsTitle(
             songRenderer = songRenderer,
             chordSpelling = chordSpelling,
             inferredKey = song?.let { inferredKeyOf(it.fileName) },
-        )
+        )?.takeUnless { key -> song != null && key == barKeyOf(song.fileName) }
         SongTitleBlock(
             song = song,
             headerKey = headerKey,

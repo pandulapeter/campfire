@@ -69,6 +69,8 @@ internal fun RowScope.SongDetailsActions(
     onReadOnlyMarkClicked: () -> Unit,
 ) {
     val songFileNamesInSetlists by songFileNamesInSetlistsFlow.collectAsStateWithLifecycle()
+    // The key chip comes first, as it does in the dock.
+    playingTools()
     // The text size is in the bar wherever the title leaves it the room, and at the end of the menu where not: it is the
     // first of the bar's controls to go back into the menu as the bar narrows, expanding and shrinking as it goes, the
     // way the song's actions move in and out of their menu.
@@ -79,7 +81,6 @@ internal fun RowScope.SongDetailsActions(
     ) {
         LiveFontScaleControls(fontScaleController = fontScaleController)
     }
-    playingTools()
     val fontScaleMenuFooter: (@Composable () -> Unit)? = if (showsFontScaleInBar) {
         null
     } else {

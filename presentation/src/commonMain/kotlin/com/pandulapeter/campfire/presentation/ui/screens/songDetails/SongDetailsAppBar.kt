@@ -39,6 +39,7 @@ import com.pandulapeter.campfire.presentation.ui.state.songText.SongTextStore
 import com.pandulapeter.campfire.presentation.ui.state.songs.SongFilesController
 import kotlinx.coroutines.flow.StateFlow
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.DockContent
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.dockKeyOf
 import com.pandulapeter.campfire.presentation.ui.components.appBar.CampfireTopAppBar
 import com.pandulapeter.campfire.presentation.ui.tuner.tunerAction
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
@@ -125,8 +126,7 @@ internal fun SongDetailsAppBar(
             SongDetailsTitle(
                 currentSong = currentSong,
                 setlistFileName = destination.setlistFileName,
-                // The key chip names the key while it is in the bar.
-                shouldShowChords = shouldShowChords && !isKeyInBar,
+                shouldShowChords = shouldShowChords,
                 chordSpelling = chordSpelling,
                 playingOverrides = playingOverrides,
                 songRenderer = songRenderer,
@@ -134,6 +134,12 @@ internal fun SongDetailsAppBar(
                 openCurrentSongInfo = openCurrentSongInfo,
                 // Read through a lambda, so that a key arriving recomposes the title alone rather than the whole bar.
                 inferredKeyOf = { fileName -> inferredKeys[fileName] },
+                barKeyOf = { fileName ->
+                    // The dock's contents are by page, and the pages are the songs in order.
+                    dockContents[songs.indexOfFirst { it.fileName == fileName }]
+                        ?.takeIf { isKeyInBar }
+                        ?.let { dockKeyOf(it.playingControls, it.model)?.key }
+                },
             )
         },
         actions = {
@@ -141,13 +147,14 @@ internal fun SongDetailsAppBar(
                 playingTools = {
                     AppBarPlayingTools(
                         isShown = isKeyInBar,
-                        isAfterStepper = showsFontScaleInBar,
+                        isBeforeStepper = showsFontScaleInBar,
                         contents = dockContents,
                         targetPage = targetPage,
                         onTunerClicked = onTunerClicked.takeIf { isTunerInBar },
                     )
                 },
-                isAfterTuner = isKeyInBar && isTunerInBar,
+                // The stepper, where it is in the bar, stands between the tuner and the buttons after it.
+                isAfterTuner = isKeyInBar && isTunerInBar && !showsFontScaleInBar,
                 fontScaleController = fontScaleController,
                 songFileNamesInSetlistsFlow = libraryState.songFileNamesInSetlists,
                 songActions = songActions,
