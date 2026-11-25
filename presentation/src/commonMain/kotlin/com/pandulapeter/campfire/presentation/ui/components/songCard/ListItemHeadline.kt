@@ -42,7 +42,7 @@ internal fun ListItemHeadline(
 private fun songCardTitle(title: String, index: Int?, numberColor: Color): AnnotatedString = buildAnnotatedString {
     if (index != null) {
         withStyle(SpanStyle(color = numberColor, fontWeight = FontWeight.Bold)) { append((index + 1).toString()) }
-        append(" - ")
+        append(" ")
     }
     append(title)
 }
