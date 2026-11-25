@@ -38,6 +38,8 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.mapper.toChordNotation
 import com.pandulapeter.campfire.presentation.resources.settings_instrument
 import com.pandulapeter.campfire.presentation.resources.song_details_dock_playing
+import com.pandulapeter.campfire.presentation.resources.song_details_overrides_kept_app
+import com.pandulapeter.campfire.presentation.resources.song_details_overrides_kept_setlist
 import com.pandulapeter.campfire.presentation.resources.song_details_transposition
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_capo
 import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
@@ -152,6 +154,13 @@ internal fun PlayingSheet(
                         },
                     )
                 }
+            }
+            // About the steppers alone (the instrument is the app's, for every song), so it leaves with them.
+            val note = stringResource(
+                if (dialog.setlistFileName == null) Res.string.song_details_overrides_kept_app else Res.string.song_details_overrides_kept_setlist,
+            )
+            AnimatedPlayingRow(value = note.takeIf { controls?.key != null || controls?.capo != null }) { text ->
+                OverridesNote(text = text)
             }
         }
     }

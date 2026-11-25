@@ -33,6 +33,8 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.metronome_start
 import com.pandulapeter.campfire.presentation.resources.metronome_stop
 import com.pandulapeter.campfire.presentation.resources.song_details_dock_tempo
+import com.pandulapeter.campfire.presentation.resources.song_details_overrides_kept_app
+import com.pandulapeter.campfire.presentation.resources.song_details_tempo_kept_setlist
 import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
@@ -151,6 +153,12 @@ internal fun TempoSheet(
                     },
                 )
             }
+            // The accents are the song's wherever it is opened (`UserPreferences.beatLevels`), never a setlist entry's.
+            OverridesNote(
+                text = stringResource(
+                    if (dialog.setlistFileName == null) Res.string.song_details_overrides_kept_app else Res.string.song_details_tempo_kept_setlist,
+                ),
+            )
         }
     }
 }

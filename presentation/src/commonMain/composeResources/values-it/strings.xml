@@ -1244,6 +1244,9 @@
     <string name="song_details_dock_no_scales">Nessuna scala suggerita per questa canzone</string>
     <string name="song_details_dock_playing">Esecuzione</string>
     <string name="song_details_dock_tempo">Tempo</string>
+    <string name="song_details_overrides_kept_setlist">Salvato in questa scaletta. Il file della canzone resta com\'è.</string>
+    <string name="song_details_overrides_kept_app">Salvato nell\'app. Il file della canzone resta com\'è.</string>
+    <string name="song_details_tempo_kept_setlist">Il tempo è salvato in questa scaletta, gli accenti nell\'app. Il file della canzone resta com\'è.</string>
     <string name="song_details_dock_key">Tonalità</string>
     <string name="song_details_dock_transposition">Trasposizione: %1$s</string>
     <string name="song_details_dock_open_playing">Apri le impostazioni di esecuzione</string>

@@ -1243,6 +1243,9 @@
     <string name="song_details_dock_no_scales">Ehhez a dalhoz nincsenek skálajavaslatok</string>
     <string name="song_details_dock_playing">Játék</string>
     <string name="song_details_dock_tempo">Tempó</string>
+    <string name="song_details_overrides_kept_setlist">Ebben a listában marad. A dal fájlja nem változik.</string>
+    <string name="song_details_overrides_kept_app">Az alkalmazásban marad. A dal fájlja nem változik.</string>
+    <string name="song_details_tempo_kept_setlist">A tempó ebben a listában marad, a hangsúlyok az alkalmazásban. A dal fájlja nem változik.</string>
     <string name="song_details_dock_key">Hangnem</string>
     <string name="song_details_dock_transposition">Transzponálás: %1$s</string>
     <string name="song_details_dock_open_playing">Játékbeállítások megnyitása</string>

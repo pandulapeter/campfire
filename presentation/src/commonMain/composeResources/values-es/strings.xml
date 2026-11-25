@@ -1244,6 +1244,9 @@
     <string name="song_details_dock_no_scales">No hay sugerencias de escalas para esta canción</string>
     <string name="song_details_dock_playing">Cómo se toca</string>
     <string name="song_details_dock_tempo">Tempo</string>
+    <string name="song_details_overrides_kept_setlist">Se guarda en este repertorio. El archivo de la canción no cambia.</string>
+    <string name="song_details_overrides_kept_app">Se guarda en la app. El archivo de la canción no cambia.</string>
+    <string name="song_details_tempo_kept_setlist">El tempo se guarda en este repertorio y los acentos en la app. El archivo de la canción no cambia.</string>
     <string name="song_details_dock_key">Tonalidad</string>
     <string name="song_details_dock_transposition">Transposición: %1$s</string>
     <string name="song_details_dock_open_playing">Abrir los ajustes de cómo se toca</string>

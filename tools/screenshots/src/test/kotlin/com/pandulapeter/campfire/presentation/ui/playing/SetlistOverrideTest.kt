@@ -22,6 +22,8 @@ import androidx.compose.ui.test.performTouchInput
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.back
 import com.pandulapeter.campfire.presentation.resources.setlists
+import com.pandulapeter.campfire.presentation.resources.song_details_overrides_kept_app
+import com.pandulapeter.campfire.presentation.resources.song_details_overrides_kept_setlist
 import com.pandulapeter.campfire.presentation.resources.song_details_transpose_up
 import com.pandulapeter.campfire.presentation.resources.songs
 import com.pandulapeter.campfire.screenshots.AppTestScope
@@ -42,12 +44,13 @@ import kotlin.test.assertTrue
 internal class SetlistOverrideTest {
 
     @Test
-    fun `a transposition set in a setlist is written to the setlist and not to the song`() = runAppTest(setlists = listOf(SETLIST)) {
+    fun `a transposition set in a setlist is written to the setlist and not to the song, as the Playing sheet says`() = runAppTest(setlists = listOf(SETLIST)) {
         val songsBefore = songContents()
         tap(hasText(string(Res.string.setlists)) and hasClickAction())
         // A setlist's row is numbered, which its text starts with.
         tap(hasText(RISING_SUN_TITLE, substring = true) and hasClickAction())
         openPlayingSheet()
+        onNode(hasText(string(Res.string.song_details_overrides_kept_setlist))).assertExists()
         tap(hasContentDescription(string(Res.string.song_details_transpose_up)))
         waitForLibrary { setlistEntries().singleOrNull()?.second == 1 }
         // The setlist file can land before the stepper's next frame, since the write and the view model's state both
@@ -60,6 +63,7 @@ internal class SetlistOverrideTest {
         tap(hasText(string(Res.string.songs)) and hasClickAction())
         tap(hasText(RISING_SUN_TITLE) and hasClickAction())
         openPlayingSheet()
+        onNode(hasText(string(Res.string.song_details_overrides_kept_app))).assertExists()
         assertTrue(transposition().startsWith("0 "), "The library's stepper reads ${transposition()}.")
     }
 

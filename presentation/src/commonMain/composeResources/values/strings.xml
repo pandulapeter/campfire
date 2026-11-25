@@ -1244,6 +1244,9 @@
     <string name="song_details_dock_no_scales">No scale suggestions for this song</string>
     <string name="song_details_dock_playing">Playing</string>
     <string name="song_details_dock_tempo">Tempo</string>
+    <string name="song_details_overrides_kept_setlist">Kept in this setlist. The song file stays as it is.</string>
+    <string name="song_details_overrides_kept_app">Kept in the app. The song file stays as it is.</string>
+    <string name="song_details_tempo_kept_setlist">The tempo is kept in this setlist, the accents in the app. The song file stays as it is.</string>
     <string name="song_details_dock_key">Key</string>
     <string name="song_details_dock_transposition">Transposition: %1$s</string>
     <string name="song_details_dock_open_playing">Open playing settings</string>

@@ -1280,6 +1280,9 @@
     <string name="song_details_dock_no_scales">Brak podpowiedzi skal dla tej piosenki</string>
     <string name="song_details_dock_playing">Granie</string>
     <string name="song_details_dock_tempo">Tempo</string>
+    <string name="song_details_overrides_kept_setlist">Zapisane w tej setliście. Plik piosenki pozostaje bez zmian.</string>
+    <string name="song_details_overrides_kept_app">Zapisane w aplikacji. Plik piosenki pozostaje bez zmian.</string>
+    <string name="song_details_tempo_kept_setlist">Tempo jest zapisane w tej setliście, a akcenty w aplikacji. Plik piosenki pozostaje bez zmian.</string>
     <string name="song_details_dock_key">Tonacja</string>
     <string name="song_details_dock_transposition">Transpozycja: %1$s</string>
     <string name="song_details_dock_open_playing">Otwórz ustawienia grania</string>
