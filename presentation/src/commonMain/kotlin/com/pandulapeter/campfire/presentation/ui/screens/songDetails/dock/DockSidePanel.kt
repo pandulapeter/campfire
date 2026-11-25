@@ -114,7 +114,6 @@ internal fun DockSidePanel(
                             modifier = Modifier.padding(top = DOCK_ROW_GAP, bottom = DOCK_VERTICAL_PADDING),
                             content = dock.contents[page],
                             stepper = dock.steppers[page],
-                            scrollState = scrollState,
                             layout = layout,
                         )
                     }

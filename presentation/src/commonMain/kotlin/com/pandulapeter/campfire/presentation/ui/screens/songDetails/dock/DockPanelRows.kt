@@ -9,7 +9,6 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock
 
-import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -17,8 +16,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,9 +26,8 @@ import com.pandulapeter.campfire.presentation.ui.songView.rememberChordCells
 /**
  * What scrolls in the side panel for one song's [content], under its controls ([DockPanelControls]): the diagrams at
  * the Chords section's size in a grid, every chord of the song. The scale suggestions are the row under the song beside
- * the panel, where they scroll sideways as under the song elsewhere. On a page turn the panel ([scrollState]) scrolls
- * only as far as brings the first chord of the page the reader is headed for into view, which the page's [stepper]
- * says, as the strip under the song scrolls to it.
+ * the panel, where they scroll sideways as under the song elsewhere. The chords on the screen the page's [stepper] shows are
+ * drawn as they are and the rest faded back ([rememberChordsOnScreen]); the panel moves only under the reader's finger.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -39,15 +35,12 @@ internal fun DockPanelRows(
     modifier: Modifier = Modifier,
     content: DockContent?,
     stepper: SongStepper?,
-    scrollState: ScrollState,
     layout: DockLayout,
 ) {
     if (content == null) return
     val model = content.model
-    val headedSection by remember(stepper) { derivedStateOf { stepper?.headedSection } }
     val cells = rememberChordCells(model, content.chordDiagrams)
     val names = remember(cells) { cells.mapTo(mutableSetOf()) { it.name } }
-    val headedChord = remember(model, names, headedSection) { headedSection?.let { section -> firstChordFrom(model.sections, section, names) } }
     FlowRow(
         // As wide as its widest line, centred as a block under the centred controls, so that an odd last chord stays in
         // its column rather than being centred on a line of its own.
@@ -61,11 +54,8 @@ internal fun DockPanelRows(
             isSmall = false,
             rowHeight = layout.diagramRowHeight,
             hasTooManyChords = remember(model) { cells.isEmpty() && model.shouldShowChords && hasTooManySongChords(model.song, model.notation) },
-            scrollState = scrollState,
-            headedChord = headedChord,
             markedChords = rememberChordsOnScreen(stepper, model.sections, names),
             onChordClicked = content.chordDiagrams?.onChordClicked,
-            isGrid = true,
         )
     }
 }

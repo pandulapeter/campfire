@@ -14,13 +14,12 @@ import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.GridToken
 import com.pandulapeter.campfire.chordpro.tabs.ChordProTabWrapper
 import com.pandulapeter.campfire.presentation.ui.songView.model.RenderSection
-import com.pandulapeter.campfire.presentation.ui.songView.model.SongScaleGroup
 
 /**
- * The chord the dock's diagram strip scrolls to for a page whose first section is [section] (an index into
- * [sections]): the first of [names] (the strip's chords) played from there on, which is the page's first chord, else the
- * last one played before it, since a section of none (an instrumental's comment, a picture) is still played over the
- * chord before it. Null where the song plays none of them.
+ * The chord a screen whose first section is [section] (an index into [sections]) is headed by, which the diagram strip
+ * marks where the screen plays none ([chordsOnScreen]): the first of [names] (the strip's chords) played from there on,
+ * which is the screen's first chord, else the last one played before it, since a section of none (an instrumental's
+ * comment, a picture) is still played over the chord before it. Null where the song plays none of them.
  */
 internal fun firstChordFrom(sections: List<RenderSection>, section: Int, names: Set<String>): String? {
     val from = section.coerceIn(0, sections.size)
@@ -60,14 +59,3 @@ private fun List<RenderSection>.chordsOf(index: Int, names: Set<String>) = (this
     .filter { it in names }
 
 private const val GRID_CELL_CHORD_SEPARATOR = '~'
-
-/**
- * The group of [groups] (by index) the dock's row of scales scrolls to for a page whose first section is [section]: the
- * one the last of its sections at or before it is in, since a section no group is for (a comment, a picture) is still
- * played in the group before it, else the first one the song comes to after it. Null where no group names a section.
- */
-internal fun scaleGroupAt(groups: List<SongScaleGroup>, section: Int): Int? {
-    val before = groups.indices.mapNotNull { index -> groups[index].sections.filter { it <= section }.maxOrNull()?.let { index to it } }
-    if (before.isNotEmpty()) return before.maxBy { it.second }.first
-    return groups.indices.mapNotNull { index -> groups[index].sections.minOrNull()?.let { index to it } }.minByOrNull { it.second }?.first
-}

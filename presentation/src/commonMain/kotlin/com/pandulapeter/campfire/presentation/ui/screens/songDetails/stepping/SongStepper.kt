@@ -75,11 +75,18 @@ internal class SongStepper(
      */
     val headedOffset get() = stepTarget ?: flingBehavior.flingTarget ?: scrollState.value.takeUnless { scrollState.isScrollInProgress }
 
-    /** The section the reader is headed for at the top of the screen ([sectionAt]), null where [headedOffset] is. */
-    val headedSection get() = headedOffset?.let { sectionAt(it, flingBehavior.rows, scrollState.maxValue) }
-
-    /** The sections on the screen the reader is headed for ([sectionsOnScreen]), null where [headedOffset] is. */
-    val headedSections get() = headedOffset?.let { sectionsOnScreen(it, scrollState.viewportSize, flingBehavior.rows, scrollState.maxValue) }
+    /**
+     * The sections on the screen ([sectionsOnScreen]): the one a step or a fling being animated comes to rest on where
+     * one is known, else the one shown now, so they follow a finger dragging the song and a song scrolling by itself
+     * (`SongAutoScroller`, which moves the same scroll) as they go. Null before the song has been laid out. Changes with
+     * every pixel scrolled, so it is to be read through derived state, which tells only of a new range.
+     */
+    val shownSections get() = sectionsOnScreen(
+        offset = stepTarget ?: flingBehavior.flingTarget ?: scrollState.value,
+        viewport = scrollState.viewportSize,
+        rows = flingBehavior.rows,
+        maxValue = scrollState.maxValue,
+    )
 
     /** Whether there is anything to step to in [direction] from [from], or from [origin] where it is null. */
     fun canStep(direction: Int, from: Int? = null) = when {

@@ -17,18 +17,13 @@ import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.So
 import com.pandulapeter.campfire.presentation.ui.songView.model.RenderSection
 
 /**
- * The chords of [names] on the screen the reader is headed for ([SongStepper.headedSections], [chordsOnScreen]), which
- * the diagram strip marks. While a finger drags the song, which says nothing yet of where it will be read, the last
- * screen's are kept, so the marks do not blink off under it.
+ * The chords of [names] on the screen ([SongStepper.shownSections], [chordsOnScreen]), which the diagram strip marks:
+ * the screen a step or a fling comes to rest on, else the one shown now, following a song dragged by hand or scrolling
+ * by itself. Derived, so that what reads it is recomposed only when the range of sections on the screen changes, never
+ * on every frame of a scroll.
  */
 @Composable
 internal fun rememberChordsOnScreen(stepper: SongStepper?, sections: List<RenderSection>, names: Set<String>): Set<String> {
-    val headedSections by remember(stepper) { derivedStateOf { stepper?.headedSections } }
-    val last = remember(stepper) { LastSections() }
-    headedSections?.let { last.value = it }
-    val onScreen = last.value ?: return emptySet()
-    return remember(sections, names, onScreen) { chordsOnScreen(sections, onScreen, names) }
+    val onScreen by remember(stepper) { derivedStateOf { stepper?.shownSections } }
+    return remember(sections, names, onScreen) { onScreen?.let { chordsOnScreen(sections, it, names) }.orEmpty() }
 }
-
-/** The sections [rememberChordsOnScreen] last knew to be on the screen. Not a state: written and read in one composition. */
-private class LastSections(var value: IntRange? = null)

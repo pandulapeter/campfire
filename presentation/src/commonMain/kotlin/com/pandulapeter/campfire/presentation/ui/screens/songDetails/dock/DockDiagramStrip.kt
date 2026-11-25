@@ -11,10 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock
 
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.relocation.BringIntoViewRequester
-import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -33,8 +30,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.layout.onPlaced
-import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
@@ -70,12 +65,7 @@ import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
  * The chords played on the screen the reader is headed for ([markedChords], `rememberChordsOnScreen`) are drawn as they
  * are and the rest faded back ([DIMMED_ALPHA]), so that the page's chords are found at a glance with no colour spent on
  * them and the others still read as playable, never as disabled. Nothing is faded while no chord is known to be on the
- * screen.
- *
- * The strip ([scrollState], its row's) scrolls itself to [headedChord], the first chord of the page the reader is
- * headed for, whenever that changes, and only then: a strip swiped by hand stays where it was left until the next turn.
- * In a grid ([isGrid], the side panel's, which wraps the cells) [scrollState] is the panel's, scrolled on a page turn
- * only as far as brings the headed chord into view.
+ * screen. The strip, and the side panel's grid of them, move only under the reader's finger, never by themselves.
  */
 @Composable
 internal fun DockDiagramStrip(
@@ -83,11 +73,8 @@ internal fun DockDiagramStrip(
     isSmall: Boolean,
     rowHeight: Dp,
     hasTooManyChords: Boolean,
-    scrollState: ScrollState,
-    headedChord: String?,
     markedChords: Set<String>,
     onChordClicked: ((chordName: String) -> Unit)?,
-    isGrid: Boolean = false,
 ) {
     if (cells.isEmpty()) {
         Text(
@@ -109,18 +96,11 @@ internal fun DockDiagramStrip(
     val density = LocalDensity.current
     val glossHeight = if (hasGlosses) with(density) { glossStyle.lineHeight.toDp() } + CELL_LINE_GAP else 0.dp
     val diagramHeight = rowHeight - with(density) { nameStyle.lineHeight.toDp() } - CELL_LINE_GAP - glossHeight
-    val positions = remember(cells) { DockRowPositions() }
-    // A key's first chord is shown with the label naming its key.
-    val shown = headedChord?.let { chord ->
-        cells.firstOrNull { it.name == chord }?.keyName?.takeIf { key -> cells.first { it.keyName == key }.name == chord }?.let(::keyLabelId) ?: chord
-    }
-    val requester = remember { BringIntoViewRequester() }
-    fun Modifier.headed(id: String) = if (isGrid && id == shown) bringIntoViewRequester(requester) else this
     cells.forEachIndexed { index, cell ->
         val keyName = cell.keyName
         if (keyName != null && (index == 0 || cells[index - 1].keyName != keyName)) {
             Text(
-                modifier = Modifier.widthIn(max = KEY_LABEL_WIDTH).onPlaced { positions.record(keyLabelId(keyName), it.positionInParent().x, it.size.width) }.headed(keyLabelId(keyName)),
+                modifier = Modifier.widthIn(max = KEY_LABEL_WIDTH),
                 text = textResource(Res.string.song_details_key_change, keyName),
                 style = typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -129,7 +109,6 @@ internal fun DockDiagramStrip(
         }
         key(cell.name) {
             DiagramCell(
-                modifier = Modifier.onPlaced { positions.record(cell.name, it.positionInParent().x, it.size.width) }.headed(cell.name),
                 cell = cell,
                 isDimmed = markedChords.isNotEmpty() && cell.name !in markedChords,
                 nameStyle = nameStyle,
@@ -139,17 +118,11 @@ internal fun DockDiagramStrip(
             )
         }
     }
-    if (isGrid) {
-        BringIntoViewOnPageTurn(id = shown, scrollState = scrollState, requester = requester)
-    } else {
-        ScrollToOnPageTurn(id = shown, scrollState = scrollState, positions = positions)
-    }
 }
 
 /** One chord of [DockDiagramStrip], faded back where it [isDimmed] as not played on the screen, pressed to open its sheet. */
 @Composable
 private fun DiagramCell(
-    modifier: Modifier,
     cell: ChordCell,
     isDimmed: Boolean,
     nameStyle: TextStyle,
@@ -159,7 +132,7 @@ private fun DiagramCell(
 ) {
     val alpha by animateFloatAsState(if (isDimmed) DIMMED_ALPHA else 1f)
     Column(
-        modifier = modifier
+        modifier = Modifier
             .clip(MaterialTheme.shapes.small)
             .graphicsLayer { this.alpha = alpha }
             .then(
@@ -229,8 +202,6 @@ internal fun dockDiagramSize(isFretted: Boolean, maxHeight: Dp): DpSize {
     val height = maxHeight.coerceIn(MIN_DIAGRAM_HEIGHT, full.height)
     return DpSize(full.width * (height / full.height), height)
 }
-
-private fun keyLabelId(keyName: String) = "key:$keyName"
 
 private val CELL_LINE_GAP = 2.dp
 private val CELL_HORIZONTAL_PADDING = 4.dp

@@ -103,15 +103,16 @@ app bar's metronome panel.
 - **The scale chips** are the Scales section's groups, the home one untitled, the rest under their titles ("Over E7").
   None (a songbook, a song over `MAX_PLAYED_CHORDS` included) says so: the row is the screen's.
 - **The diagram strip** (`DockDiagramStrip`) is the Chords section's cells (`rememberChordCells`), sized by what the
-  row's height leaves (`dockDiagramSize`). The chords played on the screen the reader is headed for are drawn as
-  they are (`rememberChordsOnScreen`: `SongStepper.headedSections`, `chordsOnScreen`) and the rest faded back to 60 %,
-  well above a disabled control's 38 %, so no colour is spent on the mark and nothing looks unplayable; nothing fades
-  while no chord is known to be on screen. A chord chip or diagram opens the chord sheet, not in performance mode (it
-  writes the player's pick), yes in an import preview; a scale chip its sheet, read only mode included.
-- **Rows scroll themselves only on a page turn**, never under a finger (`ScrollToOnPageTurn`): the strip to the headed
-  page's first chord (`firstChordFrom`), the scale row to its group (`scaleGroupAt`), from each page's stepper
-  (`SongDockState.steppers`). A row swiped by hand stays put until the next turn; the panel only brings that chord into
-  view (`BringIntoViewOnPageTurn`).
+  row's height leaves (`dockDiagramSize`). The chords played on the screen are drawn as they are and the rest faded
+  back to 60 %, well above a disabled control's 38 %, so no colour is spent on the mark and nothing looks unplayable;
+  nothing fades before the song is laid out. The screen is the one a step or a fling comes to rest on, else the one
+  shown now, so the marks follow a hand drag and a self-scrolling column too (`rememberChordsOnScreen`:
+  `SongStepper.shownSections`, derived, so only a new range of sections recomposes; `chordsOnScreen`, a screen of none
+  marking the chord it is headed by, `firstChordFrom`). A chord chip or diagram opens the chord sheet, not in
+  performance mode (it writes the player's pick), yes in an import preview; a scale chip its sheet, read only mode
+  included.
+- **The rows never scroll themselves**, only under a finger: a row following the song would fight a hand scroll and
+  a self-scrolling column, which never settles.
 - A chord or scale sheet opened from the dock pauses a self-scrolling column and resumes it on closing
   (`autoScroll/CLAUDE.md`).
 - Breadcrumbs (kinds only): `Dock: …` for every chip, the click, its accents, and the panel's stepper; `Tempo sheet: …`

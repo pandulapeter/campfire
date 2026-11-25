@@ -32,7 +32,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -144,7 +143,8 @@ private fun DockRowsBox(dock: SongDockState, metronome: DockMetronome, contentPa
  * dock's start and the tempo chip, both as tall as the diagrams (see [DockKeyAndTuner] and [DockTempoChip]), under a row of
  * the scale chips alone where there are scale suggestions. Whatever scrolls fades only where it meets what stands still. The click is the
  * screen's ([metronome]), whichever page the rows are drawn for.
- * The diagrams and the scale chips follow the page the reader is headed for, which the page's [stepper] says. Beside
+ * The diagrams fade back the chords not on the screen the page's [stepper] shows; the rows move only under the
+ * reader's finger. Beside
  * the side panel ([isBesidePanel]) the one row is the scale chips alone, fading where they scroll under the panel.
  */
 @Composable
@@ -178,9 +178,6 @@ private fun DockRowsOf(
         return@Column
     }
     val end = tempo?.let { @Composable { DockTempoChip(tempo = it, metronome = metronome, height = layout.rowHeight) } }
-    val headedSection by remember(stepper) { derivedStateOf { stepper?.headedSection } }
-    val scaleGroups = content?.model?.scaleGroups.orEmpty()
-    val headedGroup = remember(scaleGroups, headedSection) { headedSection?.let { scaleGroupAt(scaleGroups, it) } }
     if (!hasDiagramRow) {
         DockScrollingRow(
             height = layout.rowHeight,
@@ -192,14 +189,13 @@ private fun DockRowsOf(
         ) {
             if (content != null) {
                 if (rows.hasChordRow) DockChordChips(cells = cells, onChordClicked = onChordClicked)
-                // The chord chips before them would throw the groups' places off, and they are a short window's and an import preview's alone.
-                DockScaleChips(content = content, scrollState = rowScroll.takeUnless { rows.hasChordRow }, headedGroup = headedGroup)
+                DockScaleChips(content = content)
             }
         }
     } else {
         if (rows.hasScaleRow) {
             DockScrollingRow(height = layout.rowHeight, horizontalPadding = horizontalPadding, scrollState = rowScroll, start = null, end = null) {
-                if (content != null) DockScaleChips(content = content, scrollState = rowScroll, headedGroup = headedGroup)
+                if (content != null) DockScaleChips(content = content)
             }
         }
         val stripScroll = rememberScrollState()
@@ -213,14 +209,11 @@ private fun DockRowsOf(
             if (content != null) {
                 val model = content.model
                 val names = remember(cells) { cells.mapTo(mutableSetOf()) { it.name } }
-                val headedChord = remember(model, names, headedSection) { headedSection?.let { section -> firstChordFrom(model.sections, section, names) } }
                 DockDiagramStrip(
                     cells = cells,
                     isSmall = layout.tier == DockTier.SMALL_DIAGRAMS,
                     rowHeight = layout.diagramRowHeight,
                     hasTooManyChords = remember(model) { cells.isEmpty() && model.shouldShowChords && hasTooManySongChords(model.song, model.notation) },
-                    scrollState = stripScroll,
-                    headedChord = headedChord,
                     markedChords = rememberChordsOnScreen(stepper, model.sections, names),
                     onChordClicked = onChordClicked,
                 )
