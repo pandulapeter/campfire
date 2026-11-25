@@ -11,7 +11,7 @@
 
 **Status:** the experiment is done and every mark earns its place (third gate runs). Under way (2026-11-25): step 1's
 two diagnostic gates (`.runs/diag-seed11/` and `.runs/diag-nostaves/`, both variant, `gate.py --out`) and step 2's
-script merge (*Next session*, at the end).
+corpus half; its script half is done (*Next session*, at the end).
 When the app reads a web page itself, it hands the page model each line's structure too: whether the line is a link or
 a button, whether it starts a new card or section, and how it is set. The crop can then drop calls to action and
 partner cards next to a song, which text alone cannot tell apart from the song's own notes.
@@ -201,8 +201,8 @@ pages-only experiments above cannot be set against it.
   gate), `compare.py` and `sitescore.py` (pages every run scores; per site, Ultimate Guitar first), the six runs' reports
   (A3/B3/E3 page-grouped, C3/D3/F3 site-grouped: none, every mark, link/new block/landmark), `collect_marked.py` and
   the teacher helpers that grew the corpus, and `raised-chords.js`.
-- **The marks script** is `marked/spike/page-marks.js`; the app's read is `PageSnapshotScript.kt` (the same as
-  `PageText.js`). They are separate scripts today.
+- **The marks script** is now part of the app's read, `PageSnapshotScript.kt` (the same as `PageText.js`);
+  `marked/spike/page-marks.js` is the spike it came from.
 - The experiment's `lines.py` adds three features (22 in all) and fills the page's eight layout inputs from the marks:
   `size` (over the body's, capped at 3, divided by 3), `bold`, `italic`, `monospace`, three zeros (`page`, `column`,
   `indent`), `heading`, then `link`, `newBlock`, and `landmark`. A line `unaligned` or with no marks gets zeros.
@@ -213,9 +213,10 @@ pages-only experiments above cannot be set against it.
    the current corpus, today's recipe with `--seed 11`, and the same without `staves_ignored`. Compare each with
    `gate-official2` and `gate-shipped` on the unchanged pages (Ultimate Guitar apart). If the grown corpus is the
    cause, balance it (for example weight sites so the large ones do not dominate) before the marks.
-2. **The script**: merge `page-marks.js` into `PAGE_SNAPSHOT_SCRIPT` after the raised-chord rewrite (a line split into
-   a chord row and its words gives both halves its marks), the same into `PageText.js`; `collect.py` writes `marks`
-   into `pages/<id>.json`. Read the corpus again with it, carry the labels over as `marked/` did, and let `pages/` and
+2. **The script** (done): `PAGE_SNAPSHOT_SCRIPT` and `PageText.js` return `marks`, one per line of the final text, a
+   line the raised-chord rewrite splits giving both halves its marks (the words half `newBlock` 0); `collect.py` writes
+   them into `pages/<id>.json`. On 30 corpus pages the text is unchanged and the marks are `page-marks.js`'s. Kotlin's
+   `lines()` also splits on a lone `\r`: the decoding (step 6) splits on `\n` only. Still to do: read the corpus again with it, carry the labels over as `marked/` did, and let `pages/` and
    `labels/` take the result, the old ones kept aside.
 3. **The model in the repository**: the experiment's `lines.py` and gate changes into `tools/page-model` (marked pages
    trained twice, the gate scoring unmarked pages too).
