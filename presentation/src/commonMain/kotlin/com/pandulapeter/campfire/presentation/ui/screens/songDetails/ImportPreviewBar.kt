@@ -45,7 +45,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
@@ -74,7 +73,6 @@ import com.pandulapeter.campfire.presentation.ui.state.importing.ImportPreviewAc
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportPreviewPage
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportPreviewPageChoice
 import com.pandulapeter.campfire.presentation.ui.state.importing.importPreviewPageChoiceOf
-import kotlin.math.max
 
 /**
  * What says, at the bottom of the pages and for as long as the screen is a preview, that the song on it is not in the
@@ -309,47 +307,6 @@ private fun compactLineOf(page: ImportPreviewPage, importPreview: ImportPreviewS
 }
 
 /**
- * The message, and the buttons beside it at the end, centred on it, where the width left to the message is at least
- * [MIN_MESSAGE_WIDTH], else under it at the end. The buttons travel between the two places as the window changes width,
- * rather than jumping. Decided by width alone, not by the message's intrinsic width: the review's choices under it are
- * drawn by layouts that cannot be asked for one.
- */
-@Composable
-private fun MessageBesideOrAboveButtons(
-    modifier: Modifier = Modifier,
-    message: @Composable () -> Unit,
-    buttons: @Composable () -> Unit,
-) {
-    val placement = Modifier.animatePlacement(MaterialTheme.motionScheme.defaultSpatialSpec())
-    Layout(
-        modifier = modifier,
-        contents = listOf(message, { Box(placement) { buttons() } }),
-    ) { (messageMeasurables, buttonMeasurables), constraints ->
-        val gap = MESSAGE_GAP.roundToPx()
-        val loose = constraints.copy(minWidth = 0, minHeight = 0)
-        val buttonPlaceable = buttonMeasurables.single().measure(loose)
-        val hasButtons = buttonPlaceable.width > 0
-        val besideWidth = constraints.maxWidth - buttonPlaceable.width - gap
-        val isBeside = !hasButtons || besideWidth >= MIN_MESSAGE_WIDTH.roundToPx()
-        val messagePlaceable = messageMeasurables.single().measure(loose.copy(maxWidth = if (hasButtons && isBeside) besideWidth else constraints.maxWidth))
-        val width = constraints.maxWidth
-        val height = when {
-            isBeside -> max(messagePlaceable.height, buttonPlaceable.height)
-            else -> messagePlaceable.height + gap + buttonPlaceable.height
-        }
-        layout(width, max(height, constraints.minHeight)) {
-            if (isBeside) {
-                messagePlaceable.placeRelative(0, (height - messagePlaceable.height) / 2)
-                buttonPlaceable.placeRelative(width - buttonPlaceable.width, (height - buttonPlaceable.height) / 2)
-            } else {
-                messagePlaceable.placeRelative(0, 0)
-                buttonPlaceable.placeRelative(width - buttonPlaceable.width, messagePlaceable.height + gap)
-            }
-        }
-    }
-}
-
-/**
  * The line under the title and, over the review, the tick and the taken name's choice of the page's entry, bound to the
  * choices its row reads. The preview of one song has its choice in its buttons instead, both ways at once. Where there
  * is nothing to say it draws nothing, not even the gap under the title, which would push the title off the centre of
@@ -454,13 +411,5 @@ private fun ResolutionChoice(
     }
 }
 
-private val MESSAGE_GAP = 12.dp
-
 /** The pill's room before the box, which the pill takes out of the card's own padding (16 dp) to keep the box aligned. */
 private val INCLUDE_TOGGLE_PADDING = 12.dp
-
-/**
- * The narrowest the message may be beside the buttons: on a 360 dp phone the lone Import still fits beside it, the
- * title taking two lines, where Import as a copy and Replace together send the buttons under it.
- */
-private val MIN_MESSAGE_WIDTH = 140.dp
