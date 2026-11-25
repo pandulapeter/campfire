@@ -13,6 +13,7 @@ import androidx.compose.animation.core.animateDpAsState
 import com.pandulapeter.campfire.presentation.ui.songView.songControlHeight
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
@@ -60,7 +61,7 @@ internal class SongDockState(
 /**
  * The dock as the switches in [userPreferences] and the window decide it, never the song: its rows (the playing controls
  * with the chords or the metronome on, the chords with [chordDiagrams] drawn on an instrument with shapes, the scale
- * suggestions), and whether it is a side panel ([isDockSidePanel]) or rows under the song, which get as much room as the
+ * suggestions), and whether it is a side panel ([isDockSidePanel], which the reading mode weighs too) or rows under the song, which get as much room as the
  * reading mode and a setlist's pager bar ([hasPagerBar]) leave them ([dockBudgetOf]) in a window that is not short and
  * outside an import preview ([isImportPreview]), whose card takes the room of a second row. Rows without the pager bar cover the bottom inset of
  * [contentPadding] too, and the panel its end inset.
@@ -82,7 +83,15 @@ internal fun rememberSongDock(
     )
     val turnsByColumn = userPreferences?.songLayout != SongLayout.CONTINUOUS && userPreferences?.pageTurn == PageTurn.COLUMN
     val windowSize = LocalWindowInfo.current.containerDpSize
-    val isSidePanel = isDockSidePanel(windowWidth = windowSize.width)
+    val layoutDirection = LocalLayoutDirection.current
+    val endInset = contentPadding.calculateEndPadding(layoutDirection)
+    val panelWidth = dockPanelWidthOf(tempoChipWidth = dockTempoChipWidth())
+    val isSidePanel = isDockSidePanel(
+        windowWidth = windowSize.width,
+        sideInsets = contentPadding.calculateStartPadding(layoutDirection) + endInset,
+        panelWidth = panelWidth,
+        isContinuous = userPreferences?.songLayout == SongLayout.CONTINUOUS,
+    )
     // The controls are drawn at the interface's text size, which a large system text size grows past a chip's.
     val rowHeight = maxOf(DOCK_ROW_HEIGHT, songControlHeight(MaterialTheme.typography.titleSmall))
     val bottomPadding = dockBottomPaddingOf(bottomInset = contentPadding.calculateBottomPadding())
@@ -101,7 +110,7 @@ internal fun rememberSongDock(
     }
     val panelLayout = remember(rows, rowHeight, isSidePanel) { if (isSidePanel) dockPanelLayoutOf(rows, rowHeight) else null }
     val target = layout?.let { it.height + if (hasPagerBar) 0.dp else contentPadding.calculateBottomPadding() } ?: 0.dp
-    val panelTarget = if (panelLayout == null) 0.dp else DOCK_PANEL_WIDTH + contentPadding.calculateEndPadding(LocalLayoutDirection.current)
+    val panelTarget = if (panelLayout == null) 0.dp else panelWidth + endInset
     return SongDockState(
         rows = rows,
         layout = layout,

@@ -371,7 +371,7 @@ private class LastShownTuning(var value: InstrumentTuning? = null)
 /** The tunes' arrival (`SongNotations.arrival`) [SongLyrics] was last composed with. Not a state. */
 private class SeenArrival(var value: Any? = null)
 
-private val MIN_COLUMN_WIDTH = 384.dp
+internal val MIN_COLUMN_WIDTH = 384.dp
 
 /**
  * The narrowest a column may be, three quarters of [MIN_COLUMN_WIDTH]: taken only by a song whose lines mostly fit it,

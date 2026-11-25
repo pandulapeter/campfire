@@ -21,10 +21,15 @@ app bar's metronome panel.
   `surfaceContainer` surface rounded at its top, never collapsed, no divider or shadow.
 - **Its height is the screen's, never the song's** (`SongDockState`): one that followed the song would lay the viewport
   out anew on every setlist page turn. A new height animates, the grid waiting for it as for the app bar.
-- **A wide window** (`isDockSidePanel`: `WindowSize.EXPANDED`, 840 dp and wider, whatever its height) **gets a 176 dp side
-  panel** at the song's end (`DockSidePanel`), the step buttons between them; the grid is searched without its width.
-  Narrower windows keep the rows: beside a panel a phone on its side wraps a long-lined song's lines (`PageCountTest`,
-  640 × 360: 13 pages under the row, 17 beside a panel), and 176 dp is as wide as costs a 1024 × 720 window no page.
+- **A side panel** at the song's end (`DockSidePanel`, `isDockSidePanel`), the step buttons between them; the grid is
+  searched without its width. **In pages**, a wide window's (`WindowSize.EXPANDED`, 840 dp and wider, whatever its
+  height); narrower ones keep the rows: beside a panel a phone on its side wraps a long-lined song's lines
+  (`PageCountTest`, 640 × 360: 13 pages under the row, 17 beside a panel). **In one column scrolling by itself**, any
+  window holding the narrowest column (`MIN_COLUMN_WIDTH`) and the step buttons beside the panel, its side insets left
+  out: that song is read by its height and never wider than a column, so the rows would cost every screen lines for
+  nothing. **As wide as the chip-high tempo chip** (`dockTempoChipWidth`, measured at the interface's text size) within
+  8 dp each side, so the pill sits in it evenly, never narrower than two full-size diagrams (`dockPanelWidthOf`), the
+  controls' line centred; with the metronome alone it shows that chip too, the metronome panel having no room there.
   The switch travels: the rows shrink away as the panel slides in, the end inset passing between them
   (`PaddingBesidePanel`) so the song's start never moves.
 - **A setlist's pager bar is its last row** (`lastRow`), stacked at the panel's foot (`isStacked`). **An import
@@ -79,8 +84,10 @@ app bar's metronome panel.
 - **The scale chips** are the Scales section's groups, the home one untitled, the rest under their titles ("Over E7").
   None (a songbook, a song over `MAX_PLAYED_CHORDS` included) says so: the row is the screen's.
 - **The diagram strip** (`DockDiagramStrip`) is the Chords section's cells (`rememberChordCells`), sized by what the
-  row's height leaves (`dockDiagramSize`). The chords played on the screen the reader is headed for are tinted
-  (`rememberChordsOnScreen`: `SongStepper.headedSections`, `chordsOnScreen`), the rest left as they are, never dimmed. A chord chip or diagram opens the chord sheet, not in performance mode (it
+  row's height leaves (`dockDiagramSize`). The chords played on the screen the reader is headed for are drawn as
+  they are (`rememberChordsOnScreen`: `SongStepper.headedSections`, `chordsOnScreen`) and the rest faded back to 60 %,
+  well above a disabled control's 38 %, so no colour is spent on the mark and nothing looks unplayable; nothing fades
+  while no chord is known to be on screen. A chord chip or diagram opens the chord sheet, not in performance mode (it
   writes the player's pick), yes in an import preview; a scale chip its sheet, read only mode included.
 - **Rows scroll themselves only on a page turn**, never under a finger (`ScrollToOnPageTurn`): the strip to the headed
   page's first chord (`firstChordFrom`), the scale row to its group (`scaleGroupAt`), from each page's stepper

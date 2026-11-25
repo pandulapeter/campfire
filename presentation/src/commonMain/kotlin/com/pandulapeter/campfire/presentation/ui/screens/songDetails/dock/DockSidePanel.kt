@@ -94,7 +94,7 @@ internal fun DockSidePanel(
                 card()
                 Crossfade(targetState = targetPage) { page ->
                     DockPanelRows(
-                        modifier = Modifier.padding(horizontal = PANEL_HORIZONTAL_PADDING, vertical = PANEL_VERTICAL_PADDING),
+                        modifier = Modifier.padding(horizontal = DOCK_PANEL_PADDING, vertical = PANEL_VERTICAL_PADDING),
                         content = dock.contents[page],
                         stepper = dock.steppers[page],
                         scrollState = scrollState,
@@ -112,5 +112,4 @@ internal fun DockSidePanel(
 /** The side panel's layout and width as [DockSidePanel] last drew them. Not a state. */
 private class LastDockPanel(var layout: DockLayout? = null, var width: Dp = 0.dp)
 
-private val PANEL_HORIZONTAL_PADDING = 8.dp
 private val PANEL_VERTICAL_PADDING = 12.dp

@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock
 
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -79,15 +80,36 @@ internal class DockLayoutTest {
 
     @Test
     fun `a wide window gets the side panel whatever its height`() {
-        assertTrue(isDockSidePanel(windowWidth = 1024.dp))
-        assertTrue(isDockSidePanel(windowWidth = 840.dp))
+        assertTrue(isPagedSidePanel(windowWidth = 1024.dp))
+        assertTrue(isPagedSidePanel(windowWidth = 840.dp))
     }
 
     @Test
-    fun `a narrower window keeps the rows under the song even on its side`() {
-        assertFalse(isDockSidePanel(windowWidth = 800.dp))
-        assertFalse(isDockSidePanel(windowWidth = 640.dp))
-        assertFalse(isDockSidePanel(windowWidth = 360.dp))
+    fun `a narrower window keeps the rows under paged songs even on its side`() {
+        assertFalse(isPagedSidePanel(windowWidth = 800.dp))
+        assertFalse(isPagedSidePanel(windowWidth = 640.dp))
+        assertFalse(isPagedSidePanel(windowWidth = 360.dp))
+    }
+
+    @Test
+    fun `a song in one column gets the side panel wherever a column still fits beside it`() {
+        assertTrue(isContinuousSidePanel(windowWidth = 800.dp))
+        assertTrue(isContinuousSidePanel(windowWidth = 720.dp))
+        assertFalse(isContinuousSidePanel(windowWidth = 640.dp))
+        assertFalse(isContinuousSidePanel(windowWidth = 360.dp))
+    }
+
+    @Test
+    fun `a song in one column counts the window's side insets against the room beside the panel`() {
+        assertTrue(isDockSidePanel(windowWidth = 720.dp, sideInsets = 0.dp, panelWidth = PANEL_WIDTH, isContinuous = true))
+        assertFalse(isDockSidePanel(windowWidth = 720.dp, sideInsets = 96.dp, panelWidth = PANEL_WIDTH, isContinuous = true))
+    }
+
+    @Test
+    fun `the side panel is as wide as the tempo chip within its padding but never narrower than two diagrams`() {
+        val twoDiagrams = dockPanelWidthOf(tempoChipWidth = 0.dp)
+        assertEquals(twoDiagrams, dockPanelWidthOf(tempoChipWidth = twoDiagrams - DOCK_PANEL_PADDING * 2 - 4.dp))
+        assertEquals(200.dp + DOCK_PANEL_PADDING * 2, dockPanelWidthOf(tempoChipWidth = 200.dp))
     }
 
     @Test
@@ -105,3 +127,9 @@ internal class DockLayoutTest {
         assertEquals(atEdge.height - overInset.height, atEdge.bottomPadding - overInset.bottomPadding)
     }
 }
+
+private val PANEL_WIDTH = dockPanelWidthOf(tempoChipWidth = 130.dp)
+
+private fun isPagedSidePanel(windowWidth: Dp) = isDockSidePanel(windowWidth = windowWidth, sideInsets = 0.dp, panelWidth = PANEL_WIDTH, isContinuous = false)
+
+private fun isContinuousSidePanel(windowWidth: Dp) = isDockSidePanel(windowWidth = windowWidth, sideInsets = 0.dp, panelWidth = PANEL_WIDTH, isContinuous = true)

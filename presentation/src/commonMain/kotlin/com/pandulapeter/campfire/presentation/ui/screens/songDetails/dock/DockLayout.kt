@@ -13,6 +13,10 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.ui.components.WindowSize
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.PAGE_HORIZONTAL_PADDING
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.STEP_BUTTON_GAP
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.STEP_BUTTON_SIZE
+import com.pandulapeter.campfire.presentation.ui.songView.MIN_COLUMN_WIDTH
 
 /**
  * How the song's chords are shown in the dock, from the most room to the least: diagrams at the size the song's Chords
@@ -98,13 +102,23 @@ internal fun dockLayoutOf(
 }
 
 /**
- * Whether the dock is a side panel at the end of the song rather than rows under it: in a wide window
- * ([WindowSize.EXPANDED], 840 dp and wider, where the editor's split panes start), whatever its height, whose song has
- * width to spare beside the panel and keeps all of its height. A narrower window keeps the rows, a short one (a phone on
- * its side) their one row: the panel would take a width its song's lines need, and a long-lined song wrapped to it took
- * five pages more on a 640 × 360 phone than under the one row.
+ * Whether the dock is a side panel at the end of the song rather than rows under it, never decided by the song.
+ *
+ * Laid out in pages, only in a wide window ([WindowSize.EXPANDED], 840 dp and wider, where the editor's split panes
+ * start), whatever its height, whose song has width to spare beside the panel and keeps all of its height. A narrower
+ * window keeps the rows, a short one (a phone on its side) their one row: the panel would take a width its columns need,
+ * and a long-lined song wrapped to it took five pages more on a 640 × 360 phone than under the one row.
+ *
+ * In one column scrolling by itself ([isContinuous]) the song is read by its height and is never wider than a column, so
+ * the panel wins wherever the window, its [sideInsets] left out, still holds the narrowest ordinary column beside a panel
+ * [panelWidth] wide, between the step buttons: a phone on its side included, whose rows would take a seventh of its
+ * height.
  */
-internal fun isDockSidePanel(windowWidth: Dp) = WindowSize.fromWidth(windowWidth) == WindowSize.EXPANDED
+internal fun isDockSidePanel(windowWidth: Dp, sideInsets: Dp, panelWidth: Dp, isContinuous: Boolean) = if (isContinuous) {
+    windowWidth - sideInsets - panelWidth >= CONTINUOUS_COLUMN_ROOM
+} else {
+    WindowSize.fromWidth(windowWidth) == WindowSize.EXPANDED
+}
 
 /**
  * The dock as a side panel for [rows], its chips and controls [rowHeight] tall and its diagrams at the Chords section's
@@ -117,11 +131,14 @@ internal fun dockPanelLayoutOf(rows: DockRows, rowHeight: Dp = DOCK_ROW_HEIGHT):
 }
 
 /**
- * How wide the side panel is, the end inset it covers left out: three diagrams at the Chords section's size side by
- * side, or the key chip and the tempo chip, within its padding.
+ * How wide the side panel is, the end inset it covers left out: the tempo chip ([tempoChipWidth], `dockTempoChipWidth`)
+ * within its padding, so that the pill heading the panel sits in it evenly, and never narrower than two diagrams at the
+ * Chords section's size side by side, between which the pill is centred where it is the narrower.
  */
-internal val DOCK_PANEL_WIDTH = 176.dp
+internal fun dockPanelWidthOf(tempoChipWidth: Dp) = maxOf(tempoChipWidth, DOCK_DIAGRAM_CELL_WIDTH * 2 + DOCK_ITEM_GAP) + DOCK_PANEL_PADDING * 2
 
+/** How far the side panel's rows are from its sides. */
+internal val DOCK_PANEL_PADDING = 8.dp
 /** A row of chips or playing controls at the interface's own text size: as tall as a chip, and as the controls. */
 internal val DOCK_ROW_HEIGHT = 32.dp
 internal val DOCK_ROW_GAP = 8.dp
@@ -147,6 +164,12 @@ private val FULL_DIAGRAMS_PAST_ROW = 60.dp
 
 /** The same of a row of smaller diagrams (42 dp), as large as keeps a long song within two pages of its count without the dock. */
 private val SMALL_DIAGRAMS_PAST_ROW = 32.dp
+
+/**
+ * The width a song in one column needs beside the side panel: the narrowest column the grid sets songs in, between the
+ * step buttons, and the room past them at the window's edges, all of which the continuous layout keeps.
+ */
+private val CONTINUOUS_COLUMN_ROOM = MIN_COLUMN_WIDTH + (STEP_BUTTON_SIZE + STEP_BUTTON_GAP + PAGE_HORIZONTAL_PADDING) * 2
 
 /** The height of the window the budgets were measured in, the smallest phone's. */
 private const val MEASURED_WINDOW_HEIGHT = 640f

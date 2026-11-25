@@ -22,16 +22,20 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
@@ -106,6 +110,22 @@ internal fun DockTempoChip(
             DockPlayStop(isPlaying = panel.isPlaying, onClick = metronome.onPlayStop)
         }
     }
+}
+
+/**
+ * How wide the chip-high [DockTempoChip] is, whatever the tempo: the widest tempo at the interface's text size, which a
+ * large system text size widens, and the beats, the divider, and play and stop beside it. The side panel is made as wide
+ * as this (`dockPanelWidthOf`), so that the pill sits in it evenly.
+ */
+@Composable
+internal fun dockTempoChipWidth(): Dp {
+    val style = MaterialTheme.typography.labelLarge
+    val measurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+    val numberWidth = remember(measurer, style, density) {
+        with(density) { measurer.measure(text = MetronomePattern.BPM_RANGE.last.toString(), style = style, maxLines = 1).size.width.toDp() }
+    }
+    return TEMPO_CHIP_PADDING + numberWidth + BEAT_ROW_GAP + BEATS_WIDTH + BEAT_ROW_GAP + DividerDefaults.Thickness + DOCK_PLAY_STOP_WIDTH
 }
 
 /** The page's tempo in [style], as wide as the widest tempo, so that what comes after it never moves. */

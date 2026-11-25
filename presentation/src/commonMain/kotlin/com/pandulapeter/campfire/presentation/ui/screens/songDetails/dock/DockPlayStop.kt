@@ -81,3 +81,6 @@ internal fun DockRoundPlayStop(
 private val PLAY_STOP_PADDING = 8.dp
 private val ROUND_PLAY_STOP_MARK_SIZE = 20.dp
 private val PLAY_STOP_SIZE = 18.dp
+
+/** How wide [DockPlayStop] is: its mark and the room around it that takes the press. */
+internal val DOCK_PLAY_STOP_WIDTH = PLAY_STOP_SIZE + PLAY_STOP_PADDING * 2

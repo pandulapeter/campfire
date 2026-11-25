@@ -11,7 +11,6 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock
 
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.background
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.relocation.BringIntoViewRequester
@@ -27,11 +26,13 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalDensity
@@ -66,8 +67,10 @@ import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
  * songbook ([hasTooManyChords]) that it has too many, so that the row, which the screen's switches give the dock rather
  * than the song, is not left looking broken.
  *
- * The chords played on the screen the reader is headed for ([markedChords], `rememberChordsOnScreen`) are tinted, the
- * rest drawn as they are, so that the page's chords are found at a glance without the others looking unplayable.
+ * The chords played on the screen the reader is headed for ([markedChords], `rememberChordsOnScreen`) are drawn as they
+ * are and the rest faded back ([DIMMED_ALPHA]), so that the page's chords are found at a glance with no colour spent on
+ * them and the others still read as playable, never as disabled. Nothing is faded while no chord is known to be on the
+ * screen.
  *
  * The strip ([scrollState], its row's) scrolls itself to [headedChord], the first chord of the page the reader is
  * headed for, whenever that changes, and only then: a strip swiped by hand stays where it was left until the next turn.
@@ -128,7 +131,7 @@ internal fun DockDiagramStrip(
             DiagramCell(
                 modifier = Modifier.onPlaced { positions.record(cell.name, it.positionInParent().x, it.size.width) }.headed(cell.name),
                 cell = cell,
-                isMarked = cell.name in markedChords,
+                isDimmed = markedChords.isNotEmpty() && cell.name !in markedChords,
                 nameStyle = nameStyle,
                 glossHeight = glossHeight,
                 diagramSize = dockDiagramSize(isFretted = cell.tuning.instrument.isFretted, maxHeight = diagramHeight),
@@ -143,35 +146,47 @@ internal fun DockDiagramStrip(
     }
 }
 
-/** One chord of [DockDiagramStrip], tinted where it [isMarked] as played on the screen: its gloss (or the room for one), its name, and its diagram, crossfading as its shape changes. */
+/** One chord of [DockDiagramStrip], faded back where it [isDimmed] as not played on the screen, pressed to open its sheet. */
 @Composable
 private fun DiagramCell(
     modifier: Modifier,
     cell: ChordCell,
-    isMarked: Boolean,
+    isDimmed: Boolean,
     nameStyle: TextStyle,
     glossHeight: Dp,
     diagramSize: DpSize,
     onClick: (() -> Unit)?,
-) = Column(
-    modifier = modifier
-        .clip(MaterialTheme.shapes.small)
-        // A tint rather than a dimming of the rest, which would read as chords that cannot be played. Its alpha fades rather
-        // than its colour, since a colour animated to Transparent (transparent black) passes through grey on a light theme.
-        .background(MaterialTheme.colorScheme.secondaryContainer.copy(alpha = animateFloatAsState(if (isMarked) 1f else 0f).value))
-        .then(
-            if (onClick == null) {
-                Modifier
-            } else {
-                Modifier.clickable(role = Role.Button) {
-                    println("Dock: chord diagram")
-                    onClick()
-                }
-            },
-        )
-        .padding(horizontal = 4.dp),
-    horizontalAlignment = Alignment.CenterHorizontally,
-    verticalArrangement = Arrangement.spacedBy(CELL_LINE_GAP),
+) {
+    val alpha by animateFloatAsState(if (isDimmed) DIMMED_ALPHA else 1f)
+    Column(
+        modifier = modifier
+            .clip(MaterialTheme.shapes.small)
+            .graphicsLayer { this.alpha = alpha }
+            .then(
+                if (onClick == null) {
+                    Modifier
+                } else {
+                    Modifier.clickable(role = Role.Button) {
+                        println("Dock: chord diagram")
+                        onClick()
+                    }
+                },
+            )
+            .padding(horizontal = CELL_HORIZONTAL_PADDING),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(CELL_LINE_GAP),
+    ) {
+        DiagramCellContent(cell = cell, nameStyle = nameStyle, glossHeight = glossHeight, diagramSize = diagramSize)
+    }
+}
+
+/** What [DiagramCell] draws: its gloss (or the room for one), its name, and its diagram, crossfading as its shape changes. */
+@Composable
+private fun DiagramCellContent(
+    cell: ChordCell,
+    nameStyle: TextStyle,
+    glossHeight: Dp,
+    diagramSize: DpSize,
 ) {
     val gloss = cell.letterName ?: cell.degree
     if (glossHeight > 0.dp) {
@@ -218,9 +233,19 @@ internal fun dockDiagramSize(isFretted: Boolean, maxHeight: Dp): DpSize {
 private fun keyLabelId(keyName: String) = "key:$keyName"
 
 private val CELL_LINE_GAP = 2.dp
+private val CELL_HORIZONTAL_PADDING = 4.dp
+
+/**
+ * How opaque a chord not played on the screen is drawn: faded back far enough for the screen's chords to stand out, and
+ * clearly more than a disabled control's 38 %, so that it still reads as a chord to play.
+ */
+private const val DIMMED_ALPHA = 0.6f
 private val KEY_LABEL_WIDTH = 56.dp
 private val MIN_DIAGRAM_HEIGHT = 24.dp
 private val FRETTED_WIDTH = 56.dp
 private val FRETTED_HEIGHT = 70.dp
+
+/** How wide a diagram cell of a fretted instrument is at the Chords section's size, its padding included. */
+internal val DOCK_DIAGRAM_CELL_WIDTH = FRETTED_WIDTH + CELL_HORIZONTAL_PADDING * 2
 private val KEYBOARD_WIDTH = 76.dp
 private val KEYBOARD_HEIGHT = 40.dp
