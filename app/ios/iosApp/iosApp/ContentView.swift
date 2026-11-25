@@ -48,7 +48,7 @@ final class ShortcutListingController: UIViewController {
             // Which widgets are placed, so that covers are made only for them; none where WidgetKit cannot say.
             readPlacedWidgetKinds: { answer in
                 WidgetCenter.shared.getCurrentConfigurations { result in
-                    answer((try? result.get())?.map(\.kind) ?? [])
+                    answer((try? result.get())?.map(\.kind))
                 }
             }
         )

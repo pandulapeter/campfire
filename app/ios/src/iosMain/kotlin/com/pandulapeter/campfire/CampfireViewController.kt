@@ -80,14 +80,14 @@ private val metronomeNotifier by lazy { IosMetronomeNotifier(KoinPlatform.getKoi
  * @param reloadWidgetTimelines Runs `WidgetCenter.shared.reloadAllTimelines()`, which only Swift can call, once a new
  *   widget snapshot has been written ([IosWidgetFiles]).
  * @param readPlacedWidgetKinds Runs `WidgetCenter.shared.getCurrentConfigurations`, which only Swift can call, answering
- *   the kind of every widget on the Home Screen ([IosWidgetPlacement]).
+ *   the kind of every widget on the Home Screen, or null where WidgetKit could not say ([IosWidgetPlacement]).
  */
 @Suppress("unused", "FunctionName")
 fun CampfireViewController(
     continuedImportTasks: ContinuedImportTasks?,
     onKeyCommandsChanged: (List<UIKeyCommand>) -> Unit,
     reloadWidgetTimelines: () -> Unit,
-    readPlacedWidgetKinds: ((List<String>) -> Unit) -> Unit,
+    readPlacedWidgetKinds: ((List<String>?) -> Unit) -> Unit,
 ): UIViewController {
     startProcess()
     if (processContinuedImportTasks == null) processContinuedImportTasks = continuedImportTasks
