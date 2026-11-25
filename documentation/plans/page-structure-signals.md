@@ -9,7 +9,7 @@
 -->
 # Plan: the page model sees the page's structure
 
-song's chords turns up, and the gate runs again over it.
+**Status:** the marks earn their place over the grown corpus (third gate runs, below); the port and plumbing are next.
 When the app reads a web page itself, it hands the page model each line's structure too: whether the line is a link or
 a button, whether it starts a new card or section, and how it is set. The crop can then drop calls to action and
 partner cards next to a song, which text alone cannot tell apart from the song's own notes.
