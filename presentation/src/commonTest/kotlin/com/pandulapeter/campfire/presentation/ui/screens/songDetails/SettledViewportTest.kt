@@ -33,12 +33,17 @@ class SettledViewportTest {
 
     @Test
     fun `the settled height keeps the previous one while the viewport moves`() {
-        assertEquals(400.dp, settledHeight(previous = 400.dp, live = 372.dp, isSettled = false))
+        assertEquals(400.dp, settledSize(previous = 400.dp, live = 372.dp, isSettled = false))
     }
 
     @Test
     fun `the settled height takes the live one once the viewport is at rest`() {
-        assertEquals(344.dp, settledHeight(previous = 400.dp, live = 344.dp, isSettled = true))
+        assertEquals(344.dp, settledSize(previous = 400.dp, live = 344.dp, isSettled = true))
+    }
+
+    @Test
+    fun `the settled width keeps the previous one while the side panel slides in`() {
+        assertEquals(640.dp, settledSize(previous = 640.dp, live = 520.dp, isSettled = false))
     }
 
     @Test

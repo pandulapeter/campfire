@@ -12,6 +12,8 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -64,6 +66,8 @@ import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
  *
  * The strip ([scrollState], its row's) scrolls itself to [headedChord], the first chord of the page the reader is
  * headed for, whenever that changes, and only then: a strip swiped by hand stays where it was left until the next turn.
+ * In a grid ([isGrid], the side panel's, which wraps the cells) [scrollState] is the panel's, scrolled on a page turn
+ * only as far as brings the headed chord into view.
  */
 @Composable
 internal fun DockDiagramStrip(
@@ -74,6 +78,7 @@ internal fun DockDiagramStrip(
     scrollState: ScrollState,
     headedChord: String?,
     onChordClicked: ((chordName: String) -> Unit)?,
+    isGrid: Boolean = false,
 ) {
     if (cells.isEmpty()) {
         Text(
@@ -96,11 +101,17 @@ internal fun DockDiagramStrip(
     val glossHeight = if (hasGlosses) with(density) { glossStyle.lineHeight.toDp() } + CELL_LINE_GAP else 0.dp
     val diagramHeight = rowHeight - with(density) { nameStyle.lineHeight.toDp() } - CELL_LINE_GAP - glossHeight
     val positions = remember(cells) { DockRowPositions() }
+    // A key's first chord is shown with the label naming its key.
+    val shown = headedChord?.let { chord ->
+        cells.firstOrNull { it.name == chord }?.keyName?.takeIf { key -> cells.first { it.keyName == key }.name == chord }?.let(::keyLabelId) ?: chord
+    }
+    val requester = remember { BringIntoViewRequester() }
+    fun Modifier.headed(id: String) = if (isGrid && id == shown) bringIntoViewRequester(requester) else this
     cells.forEachIndexed { index, cell ->
         val keyName = cell.keyName
         if (keyName != null && (index == 0 || cells[index - 1].keyName != keyName)) {
             Text(
-                modifier = Modifier.widthIn(max = KEY_LABEL_WIDTH).onPlaced { positions.record(keyLabelId(keyName), it.positionInParent().x, it.size.width) },
+                modifier = Modifier.widthIn(max = KEY_LABEL_WIDTH).onPlaced { positions.record(keyLabelId(keyName), it.positionInParent().x, it.size.width) }.headed(keyLabelId(keyName)),
                 text = textResource(Res.string.song_details_key_change, keyName),
                 style = typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -109,7 +120,7 @@ internal fun DockDiagramStrip(
         }
         key(cell.name) {
             DiagramCell(
-                modifier = Modifier.onPlaced { positions.record(cell.name, it.positionInParent().x, it.size.width) },
+                modifier = Modifier.onPlaced { positions.record(cell.name, it.positionInParent().x, it.size.width) }.headed(cell.name),
                 cell = cell,
                 nameStyle = nameStyle,
                 glossHeight = glossHeight,
@@ -118,11 +129,11 @@ internal fun DockDiagramStrip(
             )
         }
     }
-    // A key's first chord is shown with the label naming its key.
-    val shown = headedChord?.let { chord ->
-        cells.firstOrNull { it.name == chord }?.keyName?.takeIf { key -> cells.first { it.keyName == key }.name == chord }?.let(::keyLabelId) ?: chord
+    if (isGrid) {
+        BringIntoViewOnPageTurn(id = shown, scrollState = scrollState, requester = requester)
+    } else {
+        ScrollToOnPageTurn(id = shown, scrollState = scrollState, positions = positions)
     }
-    ScrollToOnPageTurn(id = shown, scrollState = scrollState, positions = positions)
 }
 
 /** One chord of [DockDiagramStrip]: its gloss (or the room for one), its name, and its diagram, crossfading as its shape changes. */

@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock
 
 import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.withFrameNanos
@@ -51,5 +52,21 @@ internal fun ScrollToOnPageTurn(id: String?, scrollState: ScrollState, positions
         withFrameNanos {}
         if (scrollState.isScrollInProgress) return@LaunchedEffect
         positions.scrollOffsetOf(id, layoutDirection)?.let { scrollState.animateScrollTo(it.coerceIn(0, scrollState.maxValue)) }
+    }
+}
+
+/**
+ * Brings the item [requester] is on into view in the side panel ([scrollState], the panel's) whenever [id], the item it
+ * is on, changes, and only then, scrolling no further than that: a panel scrolled by hand stays where it was left until
+ * the next page turn, and one whose every item is in view does not move.
+ */
+@Composable
+internal fun BringIntoViewOnPageTurn(id: String?, scrollState: ScrollState, requester: BringIntoViewRequester) {
+    LaunchedEffect(id, scrollState, requester) {
+        if (id == null) return@LaunchedEffect
+        // The requester is on the new item by the next frame.
+        withFrameNanos {}
+        if (scrollState.isScrollInProgress) return@LaunchedEffect
+        requester.bringIntoView()
     }
 }

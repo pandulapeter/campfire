@@ -12,10 +12,12 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.pandulapeter.campfire.presentation.ui.components.WindowSize
 
 /**
  * How the song's chords are shown in the dock, from the most room to the least: diagrams at the size the song's Chords
- * section draws them, smaller diagrams, or a chip per chord naming it, in the row the playing controls are in.
+ * section draws them, smaller diagrams, or a chip per chord naming it, in the row the playing controls are in (a short
+ * window's, and an import preview's, whose card takes the room of a second row).
  */
 internal enum class DockTier { FULL_DIAGRAMS, SMALL_DIAGRAMS, CHORD_CHIPS }
 
@@ -37,8 +39,9 @@ internal data class DockRows(
 }
 
 /**
- * How the dock is laid out: its [tier], how tall it is above whatever inset it covers, how tall its row of chips and
- * controls is ([rowHeight]), and its row of diagrams ([diagramRowHeight], none in [DockTier.CHORD_CHIPS]).
+ * How the dock is laid out: its [tier], how tall it is above whatever inset it covers (nothing for the side panel, which
+ * is as tall as the song), how tall its row of chips and controls is ([rowHeight]), and its row of diagrams
+ * ([diagramRowHeight], none in [DockTier.CHORD_CHIPS]).
  */
 @Immutable
 internal data class DockLayout(
@@ -63,11 +66,12 @@ internal fun dockBudgetOf(windowHeight: Dp, turnsByColumn: Boolean, hasPagerBar:
 } / MEASURED_WINDOW_HEIGHT
 
 /**
- * The dock for [rows] within [budget], its row of chips and controls [rowHeight] tall (taller than a chip at a large
- * system text size). [isOneRow] keeps it to one row, its chords as chips: a short window (a phone on its side), whose
- * every line is a page's worth of room, and an import preview, whose card takes the dock's room. Any other gets diagrams: at their full size where they fit the
- * budget, else smaller ones however little room there is, a long song taking up to two pages more for them on an
- * upright phone. Null where there is no row at all, which is no dock.
+ * The dock's rows under the song for [rows] within [budget], its row of chips and controls [rowHeight] tall (taller than
+ * a chip at a large system text size). [isOneRow] keeps it to one row, its chords as chips: a short window (a phone on
+ * its side), whose every line is a page's worth of room, and an import preview, whose card takes the dock's room. Any
+ * other gets diagrams: at their full size where they fit the budget, else smaller ones however
+ * little room there is, a long song taking up to two pages more for them on an upright phone. Null where there is no row
+ * at all, which is no dock. A window that gives the dock a side panel ([isDockSidePanel]) has none of this.
  */
 internal fun dockLayoutOf(rows: DockRows, budget: Dp, isOneRow: Boolean, rowHeight: Dp = DOCK_ROW_HEIGHT): DockLayout? {
     if (rows.isEmpty) return null
@@ -83,6 +87,31 @@ internal fun dockLayoutOf(rows: DockRows, budget: Dp, isOneRow: Boolean, rowHeig
     }
     return if (full.height <= budget) full else small
 }
+
+/**
+ * Whether the dock is a side panel at the end of the song rather than rows under it: in a wide window
+ * ([WindowSize.EXPANDED], 840 dp and wider, where the editor's split panes start), whatever its height, whose song has
+ * width to spare beside the panel and keeps all of its height. A narrower window keeps the rows, a short one (a phone on
+ * its side) their one row: the panel would take a width its song's lines need, and a long-lined song wrapped to it took
+ * five pages more on a 640 × 360 phone than under the one row.
+ */
+internal fun isDockSidePanel(windowWidth: Dp) = WindowSize.fromWidth(windowWidth) == WindowSize.EXPANDED
+
+/**
+ * The dock as a side panel for [rows], its chips and controls [rowHeight] tall and its diagrams at the Chords section's
+ * size, which a panel as tall as the window has room for; null where there is no row at all, which is no dock.
+ */
+internal fun dockPanelLayoutOf(rows: DockRows, rowHeight: Dp = DOCK_ROW_HEIGHT): DockLayout? = if (rows.isEmpty) {
+    null
+} else {
+    DockLayout(DockTier.FULL_DIAGRAMS, height = 0.dp, rowHeight = rowHeight, diagramRowHeight = rowHeight + FULL_DIAGRAMS_PAST_ROW)
+}
+
+/**
+ * How wide the side panel is, the end inset it covers left out: three diagrams at the Chords section's size side by
+ * side, or the key chip and the tempo chip, within its padding.
+ */
+internal val DOCK_PANEL_WIDTH = 176.dp
 
 /** A row of chips or playing controls at the interface's own text size: as tall as a chip, and as the controls. */
 internal val DOCK_ROW_HEIGHT = 32.dp

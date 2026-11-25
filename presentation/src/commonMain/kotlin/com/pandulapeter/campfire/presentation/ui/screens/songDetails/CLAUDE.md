@@ -11,7 +11,7 @@
 # :presentation — ui/screens/songDetails
 
 The song details screen. The song is drawn by `ui/songView/`, starting at its first line; how it is played (the playing
-controls, its chords, its scale suggestions) is in the dock under it, `dock/`; pedal stepping is in `stepping/`, the
+controls, its chords, its scale suggestions) is in the dock under it, or beside it in a wide window, `dock/`; pedal stepping is in `stepping/`, the
 self-scrolling column in `autoScroll/`. Read only mode is in `ui/CLAUDE.md`.
 
 The guarantee most of this file serves: **every line of a song can be reached with Up and Down alone** (a page turner
@@ -41,13 +41,13 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
   addressed as `/import`. Without the review it was opened over the screen closes itself, except while the report is
   `Importing`. Its pages show the pictures the review's songs bring (in memory, or read whole from the staging folder for a
   staged one) ahead of the library's (`ImportPreviewState.images`), and never offer Add image.
-- **Marked plainly**: a card on the dock's surface, above its rows (at most 720dp wide, `dock/`), says the song is not
+- **Marked plainly**: a card on the dock's surface, above its rows or heading the side panel (at most 720dp wide, `dock/`), says the song is not
   in the library yet and, for a taken name, that it is. Its buttons sit beside the message where that keeps 140dp, else under it; the pages'
-  bottom padding clears the card (pedal rule), measured in the same pass as the pages so the lyrics are never flowed
+  bottom padding clears a card under them (pedal rule), measured in the same pass as the pages so the lyrics are never flowed
   twice as the screen opens. **Import**, or for a taken name **Import as a copy** and **Replace** (confirmed), Replace
   first for a shared link imported here before; side by side where they fit. Ctrl / Cmd + S presses the primary one
   unless it is Replace.
-- **In a short window** the card is one line and its buttons; over the review the page's tick and Keep both / Replace go
+- **In a short window** (the panel's too) the card is one line and its buttons; over the review the page's tick and Keep both / Replace go
   into a dropdown behind a choices button, and the line names them.
 - **One song** stands in for the import screen. Once written, it waits for the text and the lookup, then is rewritten
   in place into the song's screen (same `id`, page kept), with a message. A failed write puts it back. A batch joining

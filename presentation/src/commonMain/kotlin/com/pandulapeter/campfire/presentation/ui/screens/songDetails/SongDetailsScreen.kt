@@ -11,13 +11,17 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.autoScroll.autoScrollCoverOf
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.readAfterDock
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.DockSidePanel
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.PaddingBesidePanel
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.SongDock
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.rememberDockMetronome
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.rememberSongDock
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongPlayingControls
 import com.pandulapeter.campfire.presentation.ui.songView.model.ChordDiagrams
 import com.pandulapeter.campfire.presentation.ui.songView.grid.pageCount
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
@@ -52,6 +56,7 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
 import com.pandulapeter.campfire.presentation.ui.metronome.SongTiming
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
+import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.pictures.LocalSongImageLoader
 import com.pandulapeter.campfire.presentation.ui.screens.rememberSongActionHandler
@@ -151,7 +156,9 @@ internal fun SongDetailsScreen(
     )
     val chordSpelling = userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default
     val layoutDirection = LocalLayoutDirection.current
-    val dock = rememberSongDock(userPreferences, chordDiagrams, hasPagerBar = hasPagerControls, isImportPreview = isImportPreview, bottomInset = contentPadding.calculateBottomPadding())
+    val dock = rememberSongDock(userPreferences, chordDiagrams, hasPagerBar = hasPagerControls, isImportPreview = isImportPreview, contentPadding = contentPadding)
+    // The side panel covers the end inset for what stands beside it, which keeps only what of it is still its own.
+    val songPadding = remember(contentPadding, dock) { PaddingBesidePanel(contentPadding) { dock.panelWidth } }
     val isUncovered = isSongDetailsUncovered(visibleDialog, viewModel.navigator.backStack.lastOrNull())
     val steps = rememberSongDetailsSteps(
         pagerState = pagerState,
@@ -224,99 +231,142 @@ internal fun SongDetailsScreen(
             onBack = onBack,
         )
         // The paging bar, or the dock without one, sits below the pager and covers the bottom inset for it, so the pages
-        // only keep the padding that is still theirs to apply.
-        val baseBottom = if (hasPagerControls) 0.dp else (contentPadding.calculateBottomPadding() - dock.height).coerceAtLeast(0.dp)
-        PagesAbovePreviewBar(
-            modifier = Modifier.weight(1f).fillMaxWidth().readAfterDock(),
-            baseBottom = baseBottom,
-            bar = {
-                SongDetailsPreviewBar(
-                    importController = viewModel.importController,
-                    importReportState = viewModel.importReportState,
-                    importPreview = importPreview,
-                    currentPage = pagerState.currentPage,
-                    isAddingToReview = viewModel.importController.isAddingToReview.collectAsStateWithLifecycle().value,
-                    contentPadding = contentPadding,
-                    layoutDirection = layoutDirection,
+        // only keep the padding that is still theirs to apply; the paging bar leaving for the side panel hands it back.
+        val pagerBarCover by animateDpAsState(if (hasPagerControls && !dock.isSidePanel) contentPadding.calculateBottomPadding() else 0.dp)
+        val baseBottom = (contentPadding.calculateBottomPadding() - dock.height - pagerBarCover).coerceAtLeast(0.dp)
+        val previewCard = @Composable { preview: ImportPreviewState?, padding: PaddingValues, bottom: Dp ->
+            PreviewCard(viewModel = viewModel, importPreview = preview, currentPage = pagerState.currentPage, contentPadding = padding, baseBottom = bottom)
+        }
+        val pagerBar: (@Composable (PaddingValues, Boolean) -> Unit)? = if (!hasPagerControls) null else { padding, isStacked ->
+            SetlistPagerBar(setlistTitle = setlist?.title, setlistSlots = setlistSlots, pagerState = pagerState, songs = songs, steps = steps, contentPadding = padding, isStacked = isStacked)
+        }
+        val metronome = rememberDockMetronome(viewModel.metronomeController, viewModel.libraryState, viewModel.songTextStore)
+        Row(modifier = Modifier.weight(1f).fillMaxWidth()) {
+            Column(modifier = Modifier.weight(1f)) {
+                PagesAbovePreviewBar(
+                    modifier = Modifier.weight(1f).fillMaxWidth().readAfterDock(),
                     baseBottom = baseBottom,
-                )
-            },
-        ) { bottomPadding ->
-            // A preview's pictures are the ones its review brings, which no shelf keeps before Import.
-            CompositionLocalProvider(LocalSongImageLoader provides (importPreview?.images ?: LocalSongImageLoader.current)) {
-                SongDetailsPager(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = contentPadding,
-                    songTextStore = viewModel.songTextStore,
-                    overrides = viewModel.overrides,
-                    preferencesController = viewModel.preferencesController,
-                    fontScaleController = viewModel.fontScaleController,
-                    songRenderer = viewModel.songRenderer,
-                    dialogHost = viewModel.dialogHost,
-                    onTunerClicked = viewModel::openTunerSheet,
-                    destination = destination,
-                    importPreview = importPreview,
-                    pageKey = pageKey,
-                    songs = songs,
-                    pagerState = pagerState,
-                    pageStepper = steps.pageStepper,
-                    pageScrollStates = steps.pageScrollStates,
+                    bar = { previewCard(importPreview.takeUnless { dock.isSidePanel }, songPadding, baseBottom) },
+                ) { bottomPadding ->
+                    // A preview's pictures are the ones its review brings, which no shelf keeps before Import.
+                    CompositionLocalProvider(LocalSongImageLoader provides (importPreview?.images ?: LocalSongImageLoader.current)) {
+                        SongDetailsPager(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = songPadding,
+                            songTextStore = viewModel.songTextStore,
+                            overrides = viewModel.overrides,
+                            preferencesController = viewModel.preferencesController,
+                            fontScaleController = viewModel.fontScaleController,
+                            songRenderer = viewModel.songRenderer,
+                            dialogHost = viewModel.dialogHost,
+                            onTunerClicked = viewModel::openTunerSheet,
+                            destination = destination,
+                            importPreview = importPreview,
+                            pageKey = pageKey,
+                            songs = songs,
+                            pagerState = pagerState,
+                            pageStepper = steps.pageStepper,
+                            pageScrollStates = steps.pageScrollStates,
+                            dock = dock,
+                            songTimings = songTimings,
+                            isReadOnly = isReadOnly,
+                            chordSpelling = chordSpelling,
+                            shouldShowChords = shouldShowChords,
+                            isMetronomeEnabled = isMetronomeEnabled,
+                            isTunerEnabled = isTunerEnabled,
+                            isTunerSheetShown = visibleDialog is DialogType.Tuner,
+                            canPage = canPage,
+                            settledWidth = settledWidth - dock.panelTarget,
+                            pageContentPadding = PaddingValues(
+                                start = contentPadding.calculateStartPadding(layoutDirection),
+                                end = songPadding.calculateEndPadding(layoutDirection),
+                                bottom = bottomPadding,
+                            ),
+                            chordDiagrams = chordDiagrams,
+                            isViewportSettled = isViewportSettled,
+                            currentPageScrollState = { steps.current.scrollState },
+                            currentPageStepper = { steps.current.stepper },
+                            canStepBackInSong = steps.canStepBackInSong,
+                            canStepForwardInSong = steps.canStepForwardInSong,
+                            hasPreviousSongToStepTo = steps.hasPreviousSongToStepTo,
+                            hasNextSongToStepTo = steps.hasNextSongToStepTo,
+                            stepBack = steps.stepBack,
+                            stepForward = steps.stepForward,
+                            isContinuous = steps.isContinuous,
+                            autoScrolling = steps.autoScrolling,
+                            onCurrentPage = { scrollState, stepper, autoScroller ->
+                                steps.current.scrollState = scrollState
+                                steps.current.stepper = stepper
+                                steps.autoScrolling.scroller = autoScroller
+                            },
+                        )
+                    }
+                }
+                SongDock(
                     dock = dock,
-                    songTimings = songTimings,
-                    isReadOnly = isReadOnly,
-                    chordSpelling = chordSpelling,
-                    shouldShowChords = shouldShowChords,
-                    isMetronomeEnabled = isMetronomeEnabled,
-                    isTunerEnabled = isTunerEnabled,
-                    isTunerSheetShown = visibleDialog is DialogType.Tuner,
-                    canPage = canPage,
-                    settledWidth = settledWidth,
-                    pageContentPadding = PaddingValues(
-                        start = contentPadding.calculateStartPadding(layoutDirection),
-                        end = contentPadding.calculateEndPadding(layoutDirection),
-                        bottom = bottomPadding,
-                    ),
-                    chordDiagrams = chordDiagrams,
-                    isViewportSettled = isViewportSettled,
-                    currentPageScrollState = { steps.current.scrollState },
-                    currentPageStepper = { steps.current.stepper },
-                    canStepBackInSong = steps.canStepBackInSong,
-                    canStepForwardInSong = steps.canStepForwardInSong,
-                    hasPreviousSongToStepTo = steps.hasPreviousSongToStepTo,
-                    hasNextSongToStepTo = steps.hasNextSongToStepTo,
-                    stepBack = steps.stepBack,
-                    stepForward = steps.stepForward,
-                    isContinuous = steps.isContinuous,
-                    autoScrolling = steps.autoScrolling,
-                    onCurrentPage = { scrollState, stepper, autoScroller ->
-                        steps.current.scrollState = scrollState
-                        steps.current.stepper = stepper
-                        steps.autoScrolling.scroller = autoScroller
-                    },
+                    metronome = metronome,
+                    contentPadding = songPadding,
+                    targetPage = pagerState.targetPage,
+                    isUnderCard = importPreview != null && !dock.isSidePanel,
+                    lastRow = pagerBar?.takeUnless { dock.isSidePanel }?.let { bar -> { bar(songPadding, false) } },
                 )
             }
+            DockSidePanel(
+                dock = dock,
+                metronome = metronome,
+                contentPadding = contentPadding,
+                targetPage = pagerState.targetPage,
+                card = { previewCard(importPreview.takeIf { dock.isSidePanel }, PaddingValues(), 0.dp) },
+                lastRow = pagerBar?.takeIf { dock.isSidePanel }?.let { bar -> { bar(contentPadding.only(end = true, bottom = true), true) } },
+            )
         }
-        SongDock(
-            dock = dock,
-            metronome = rememberDockMetronome(viewModel.metronomeController, viewModel.libraryState, viewModel.songTextStore),
-            contentPadding = contentPadding,
-            targetPage = pagerState.targetPage,
-            isUnderCard = importPreview != null,
-            lastRow = if (!hasPagerControls) null else ({
-                SongPagerControls(
-                    setlistTitle = setlist?.title, setlistSlots = setlistSlots,
-                    currentPage = pagerState.currentPage,
-                    targetPage = pagerState.targetPage,
-                    pageCount = songs.size,
-                    contentPadding = contentPadding,
-                    nextSongTitle = songs.getOrNull(pagerState.targetPage + 1)?.title?.takeIf { steps.nextSongConfirmation.armedPage == pagerState.targetPage },
-                    onStep = steps.pageStepper::step,
-                    onConfirmNextSong = { steps.stepForward(null) },
-                )
-            }),
-        )
     }
 }
+
+/** [SongDetailsPreviewBar] for [importPreview] on the page the pager is on ([currentPage]), padded by [contentPadding]. */
+@Composable
+private fun PreviewCard(
+    viewModel: CampfireViewModel,
+    importPreview: ImportPreviewState?,
+    currentPage: Int,
+    contentPadding: PaddingValues,
+    baseBottom: Dp,
+) = SongDetailsPreviewBar(
+    importController = viewModel.importController,
+    importReportState = viewModel.importReportState,
+    importPreview = importPreview,
+    currentPage = currentPage,
+    isAddingToReview = viewModel.importController.isAddingToReview.collectAsStateWithLifecycle().value,
+    contentPadding = contentPadding,
+    layoutDirection = LocalLayoutDirection.current,
+    baseBottom = baseBottom,
+)
+
+/**
+ * [SongPagerControls] for a setlist read through [songs], stepping with [steps]: under the song, or [isStacked] as the
+ * side panel's last row.
+ */
+@Composable
+private fun SetlistPagerBar(
+    setlistTitle: String?,
+    setlistSlots: SetlistSlots?,
+    pagerState: PagerState,
+    songs: List<Song>,
+    steps: SongDetailsSteps,
+    contentPadding: PaddingValues,
+    isStacked: Boolean,
+) = SongPagerControls(
+    setlistTitle = setlistTitle,
+    setlistSlots = setlistSlots,
+    currentPage = pagerState.currentPage,
+    targetPage = pagerState.targetPage,
+    pageCount = songs.size,
+    contentPadding = contentPadding,
+    nextSongTitle = songs.getOrNull(pagerState.targetPage + 1)?.title?.takeIf { steps.nextSongConfirmation.armedPage == pagerState.targetPage },
+    onStep = steps.pageStepper::step,
+    onConfirmNextSong = { steps.stepForward(null) },
+    isStacked = isStacked,
+)
 
 /**
  * What the song details screen does rather than draws: it closes once there is nothing left to show, asks the questions

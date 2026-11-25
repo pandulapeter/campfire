@@ -10,7 +10,12 @@
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock
 
 import com.pandulapeter.campfire.presentation.ui.songView.rememberChordCells
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -48,7 +53,8 @@ import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.So
  * rounded at its top corners, with no divider or shadow, its rows as tall as [dock] says, the bottom inset included where
  * there is no [lastRow] under them to cover that. Its rows are the screen's ([SongDockState.rows]) and their contents
  * the song's that the pager is on or heading for ([targetPage], [SongDockState.contents]), crossfading as a page turns, as the app
- * bar's subtitle does. [lastRow] is a setlist's pager bar, on the same surface. Where an import preview's card stands on
+ * bar's subtitle does. [lastRow] is a setlist's pager bar, on the same surface, shrinking away as it leaves for the side
+ * panel ([DockSidePanel]), as the rows do. Where an import preview's card stands on
  * the surface above it ([isUnderCard]) its corners square off, the card's room rounding the surface's top instead. Read
  * by screen readers after the app bar and before the song.
  */
@@ -74,7 +80,16 @@ internal fun SongDock(
             },
     ) {
         DockRowsBox(dock = dock, metronome = metronome, contentPadding = contentPadding, targetPage = targetPage)
-        lastRow?.invoke()
+        // Kept while it leaves for the side panel, so that it shrinks away as it was rather than as nothing.
+        val shownLastRow = remember { LastRow() }
+        lastRow?.let { shownLastRow.value = it }
+        AnimatedVisibility(
+            visible = lastRow != null,
+            enter = fadeIn() + expandVertically(expandFrom = Alignment.Top),
+            exit = fadeOut() + shrinkVertically(shrinkTowards = Alignment.Top),
+        ) {
+            shownLastRow.value?.invoke()
+        }
     }
 }
 
@@ -107,8 +122,8 @@ private fun DockRowsBox(dock: SongDockState, metronome: DockMetronome, contentPa
 
 /**
  * The dock's rows for one song's [content], laid out at the dock's full height whatever height it is animating through.
- * With the metronome all it holds, one row that is the metronome panel ([DockMetronomePanel]). In [DockTier.CHORD_CHIPS],
- * or without the diagrams, one row: what starts the dock ([DockStart]), then the chord chips and the scale chips
+ * With the metronome all it holds, one row that is the metronome panel ([DockMetronomePanel]). In [DockTier.CHORD_CHIPS]
+ * (a short window's and an import preview's), or without the diagrams, one row: what starts the dock ([DockStart]), then the chord chips and the scale chips
  * scrolling between it and the tempo chip ([DockTempoChip]). Otherwise the diagrams have a row of their own, ended by
  * the tempo chip, under a row of the dock's start and the scale chips where there are scale suggestions, else starting
  * with the dock's start itself. Whatever scrolls fades only where it meets what stands still. The click is the
@@ -151,7 +166,7 @@ private fun DockRowsOf(
         DockScrollingRow(height = layout.rowHeight, horizontalPadding = horizontalPadding, scrollState = rowScroll, start = start, end = end) {
             if (content != null) {
                 if (rows.hasChordRow) DockChordChips(cells = cells, onChordClicked = onChordClicked)
-                // The chord chips before them would throw the groups' places off, and they are a short window's alone.
+                // The chord chips before them would throw the groups' places off, and they are a short window's and an import preview's alone.
                 DockScaleChips(content = content, scrollState = rowScroll.takeUnless { rows.hasChordRow }, headedGroup = headedGroup)
             }
         }
@@ -200,8 +215,11 @@ internal fun Modifier.readAfterDock() = semantics {
 /** The dock's layout as [SongDock] last drew it. Not a state. */
 private class LastDockLayout(var value: DockLayout? = null)
 
+/** The dock's last row as [SongDock] last drew it. Not a state. */
+private class LastRow(var value: (@Composable () -> Unit)? = null)
+
 internal val DOCK_CORNER = 16.dp
 private val DOCK_HORIZONTAL_PADDING = 16.dp
 
 /** After the app bar's, which is the screen's first, and before the song's pages, which come after it. */
-private const val DOCK_TRAVERSAL_INDEX = 1f
+internal const val DOCK_TRAVERSAL_INDEX = 1f

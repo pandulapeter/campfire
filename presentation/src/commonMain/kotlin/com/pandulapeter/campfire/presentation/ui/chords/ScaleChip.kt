@@ -14,12 +14,16 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.TextStyle
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.chordpro.scales.Scale
 import com.pandulapeter.campfire.presentation.ui.components.controls.SelectableChip
 import com.pandulapeter.campfire.presentation.ui.scales.scaleTitle
 
-/** A chip naming [scale] on [rootName] (a note in the standard notation) in [notation], handing its id and that root to [onScaleSelected]. */
+/**
+ * A chip naming [scale] on [rootName] (a note in the standard notation) in [notation], handing its id and that root to
+ * [onScaleSelected], its name set in [textStyle] (a size smaller where its row is narrow).
+ */
 @Composable
 internal fun ScaleChip(
     modifier: Modifier = Modifier,
@@ -27,6 +31,7 @@ internal fun ScaleChip(
     rootName: String,
     notation: ChordNotation,
     onScaleSelected: (scaleId: String, rootName: String) -> Unit,
+    textStyle: TextStyle = MaterialTheme.typography.labelLarge,
 ) = SelectableChip(
     modifier = modifier,
     isSelected = false,
@@ -35,7 +40,7 @@ internal fun ScaleChip(
 ) { contentColor ->
     Text(
         text = scaleTitle(scale, rootName, notation),
-        style = MaterialTheme.typography.labelLarge,
+        style = textStyle,
         color = contentColor,
     )
 }

@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock
 import androidx.compose.ui.unit.dp
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -30,7 +31,7 @@ internal class DockLayoutTest {
     }
 
     @Test
-    fun `a short window gets one row of chord chips however much budget it has`() =
+    fun `a short window and an import preview get one row of chord chips however much budget they have`() =
         assertEquals(DockTier.CHORD_CHIPS, dockLayoutOf(everyRow, 1000.dp, isOneRow = true)?.tier)
 
     @Test
@@ -75,4 +76,23 @@ internal class DockLayoutTest {
 
     @Test
     fun `no row is no dock`() = assertNull(dockLayoutOf(DockRows(hasPlayingRow = false, hasChordRow = false, hasScaleRow = false), 1000.dp, isOneRow = false))
+
+    @Test
+    fun `a wide window gets the side panel whatever its height`() {
+        assertTrue(isDockSidePanel(windowWidth = 1024.dp))
+        assertTrue(isDockSidePanel(windowWidth = 840.dp))
+    }
+
+    @Test
+    fun `a narrower window keeps the rows under the song even on its side`() {
+        assertFalse(isDockSidePanel(windowWidth = 800.dp))
+        assertFalse(isDockSidePanel(windowWidth = 640.dp))
+        assertFalse(isDockSidePanel(windowWidth = 360.dp))
+    }
+
+    @Test
+    fun `the side panel draws full diagrams and is no dock without a row`() {
+        assertEquals(DockTier.FULL_DIAGRAMS, dockPanelLayoutOf(everyRow)?.tier)
+        assertNull(dockPanelLayoutOf(DockRows(hasPlayingRow = false, hasChordRow = false, hasScaleRow = false)))
+    }
 }

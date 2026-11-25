@@ -99,8 +99,8 @@ import org.jetbrains.compose.resources.painterResource
  * @param buildsModelInPlace Whether the first rendering of the text is built while composing rather than in the
  *   background, see [buildsModelInPlace] and [rememberSongLyricsModel].
  * @param modelBuild Where the model is taken from when it was built before, and kept once built, see [SongModelBuild].
- * @param isViewportSettled Whether the app bar above the pager and the dock under it are at rest, read while
- *   composing: the grid is decided against the height the page has then, see [settledHeight].
+ * @param isViewportSettled Whether the app bar above the pager and the dock under or beside it are at rest, read while
+ *   composing: the grid is decided against the height and the width the page has then, see [settledSize].
  * @param followsViewport Whether the page follows the viewport's height frame by frame: the page being read and the one
  *   a swipe is heading to; the others keep the height it last rested at, see [pageViewportHeight].
  * @param hasFailed Whether the file could not be read. The page then offers a retry rather than a loading indicator
@@ -305,8 +305,8 @@ internal fun SongDetailsPage(
             // since every pixel either moves would otherwise search it again, on all three composed pages; the rows
             // are still padded to the live height, so what is on screen follows the bar frame by frame. Reading whether
             // they are at rest is what recomposes this once they come to rest.
-            val settled = remember { SettledHeight(maxHeight) }
-            settled.height = settledHeight(previous = settled.height, live = maxHeight, isSettled = isViewportSettled())
+            val settled = remember { SettledViewport(maxHeight, maxOf(settledWidth, maxWidth)) }
+            settled.height = settledSize(previous = settled.height, live = maxHeight, isSettled = isViewportSettled())
             // The pages beside the one being read are off screen, so they keep the height the viewport last rested at
             // rather than laying themselves out again on every frame of it moving.
             val viewportHeight = pageViewportHeight(live = maxHeight, settled = settled.height, followsViewport = followsViewport)
@@ -345,7 +345,7 @@ internal fun SongDetailsPage(
             // once, rather than a difference added back to a width that changes on every frame of a transition.
             val startPadding = contentPadding.calculateStartPadding(layoutDirection) + PAGE_HORIZONTAL_PADDING
             val endPadding = contentPadding.calculateEndPadding(layoutDirection) + PAGE_HORIZONTAL_PADDING
-            val settledPageWidth = maxOf(settledWidth, maxWidth)
+            val settledPageWidth = settledSize(previous = settled.width, live = maxOf(settledWidth, maxWidth), isSettled = isViewportSettled()).also { settled.width = it }
             // Only one column scrolls on through the bottom inset; in a setlist the pager bar stands over it instead.
             val bottomInset = if (isContinuous) contentPadding.calculateBottomPadding() else 0.dp
             CompositionLocalProvider(LocalSongChange provides songChange, LocalSongImageAdder provides onAddImage, LocalTapsStepSong provides true) {
@@ -438,17 +438,20 @@ private fun buildSongLyrics(songRenderer: SongRenderer, inputs: SongLyricsInputs
  */
 internal fun scrolledViewport(width: Int, height: Int, isAcross: Boolean) = if (isAcross) IntSize(height, width) else IntSize(width, height)
 
-/** The height a page's grid is decided against: the [live] one while the viewport is settled, the [previous] one otherwise. */
-internal fun settledHeight(previous: Dp, live: Dp, isSettled: Boolean) = if (isSettled) live else previous
+/**
+ * The height or the width a page's grid is decided against: the [live] one while the viewport is settled, the [previous]
+ * one otherwise, so that the dock's rows growing or its side panel sliding in lay the song out once, at their rest.
+ */
+internal fun settledSize(previous: Dp, live: Dp, isSettled: Boolean) = if (isSettled) live else previous
 
 /** The height a page pads its rows to: the [live] one where it [followsViewport], the [settled] one otherwise. */
 internal fun pageViewportHeight(live: Dp, settled: Dp, followsViewport: Boolean) = if (followsViewport) live else settled
 
 /**
- * The page's height when the viewport was last at rest. Not state: it is written while composing, and that composition
- * is the one that reads it.
+ * The page's height and the width its grid was decided against when the viewport was last at rest. Not state: it is
+ * written while composing, and that composition is the one that reads it.
  */
-private class SettledHeight(var height: Dp)
+private class SettledViewport(var height: Dp, var width: Dp)
 
 /** As far above the bottom of the pages as the step buttons are, so the song ends where the bottom button does. */
 private val PAGE_BOTTOM_PADDING = STEP_BUTTON_EDGE_MARGIN
