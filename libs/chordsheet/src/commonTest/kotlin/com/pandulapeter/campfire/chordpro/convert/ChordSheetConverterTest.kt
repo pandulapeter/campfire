@@ -580,6 +580,18 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `a note in parentheses over a staff is a comment in the section the tab is played in`() {
+        val staff = "e|---0---|---3---|\nB|---1---|---1---|"
+        val result = convert("[Intro]\n$staff\n\n(let the last note ring)\n   C       G\n$staff\n\n[Verse]\nAm     C\nHello world")
+        assertTrue(
+            result.contains("{comment: (let the last note ring)}\n{start_of_tab}\n   C       G\n$staff\n{end_of_tab}\n\n{end_of_intro}"),
+            result,
+        )
+        // Over a lyric, a line in parentheses is a backing vocal.
+        assertTrue(convert("Am     C\nHello world\n(oh yeah)\nAm     C\nHello again").contains("(oh yeah)\n[Am]"))
+    }
+
+    @Test
     fun `chords written with dashes for their beats are not a tab`() {
         for (text in listOf("Intro\nA - - -\nE - - -", "Chorus\nE - x2\nA - x2", "A - 1 2 3 4\nB - 1 2 3 4", "A-\nE- x2")) {
             assertFalse(convert(text).contains("{start_of_tab}"), text)

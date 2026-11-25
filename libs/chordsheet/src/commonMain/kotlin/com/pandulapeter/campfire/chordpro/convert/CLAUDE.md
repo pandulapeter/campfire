@@ -40,6 +40,8 @@ heuristics and near misses are pinned in `ChordSheetConverterTest` and its sibli
   German or Hungarian staff names its B string `H`, and a string may carry a short note in parentheses or in its
   margin (`-0(let ring)|`, `|(repeat`), kept where it stands.
 - Over a tab, a heading naming no section (`Intro`, `Solo`) opens one of its kind, until the next heading or lyric.
+  A note in parentheses on a line of its own right over a staff (`(let ring)`) is a comment there, not a lyric
+  ending that section; one over a lyric is a backing vocal.
 
 ## Words any sheet may print
 

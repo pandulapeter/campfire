@@ -58,6 +58,7 @@ internal object LineKinds {
         Rule(::grid) { it.next != LineKind.LYRIC },
         Rule(::heading) { it.next == null || it.next == LineKind.CHORD || it.next == LineKind.BLANK },
         Rule(::metadata),
+        Rule(::noteOverStaff),
         Rule(::italicComment),
         Rule(::severalChords),
         Rule(::singleChordUnderHeading) {
@@ -156,6 +157,16 @@ internal object LineKinds {
                 features.bodyRow != null
             ).gives(LineKind.METADATA)
     }
+
+    /**
+     * A note to the player in parentheses on a line of its own right over a staff or the chord row naming its bars
+     * (`(let last note of each bar ring)`): a comment, kept in the section the tab is played in, which as a lyric it
+     * would end. A sung line in parentheses (a backing vocal) stands over a lyric or under a chord row, never over a staff.
+     */
+    private fun noteOverStaff(context: Context, index: Int) =
+        (context.candidates[index] == null && parenthesizedNote.matches(context.lines[index].text.trim()) &&
+            index < context.lines.lastIndex && staff(context, index + 1) != null)
+            .gives(LineKind.COMMENT)
 
     private fun italicComment(context: Context, index: Int) = context.isItalicComment[index].gives(LineKind.COMMENT)
 
@@ -258,6 +269,7 @@ internal object LineKinds {
     private val gridVolta = Regex(":?\\|\\d+>?")
     private const val MAX_TRAILING_WORDS = 2
     private val bracketedLine = Regex("^\\[([^\\[\\]]+)\\]$")
+    private val parenthesizedNote = Regex("^\\([^()]*\\p{L}[^()]*\\)$")
 
     /**
      * A string's name, then its staff: after a bar line (`e|---`), or straight after the name (`e-----`), as many sites
