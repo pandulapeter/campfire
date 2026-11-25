@@ -1124,7 +1124,7 @@
     </plurals>
     <string name="song_details_playing_tempo">Andamento (BPM)</string>
     <string name="song_details_playing_range">%1$d a %2$d</string>
-    <string name="song_details_scroll_to_top">Rolar até o topo</string>
+    <string name="song_details_back_to_top">Voltar ao topo</string>
     <string name="song_details_text_size_increase">Aumentar o texto</string>
     <string name="song_details_text_size_decrease">Diminuir o texto</string>
     <string name="song_details_text_size_reset">Redefinir tamanho do texto</string>

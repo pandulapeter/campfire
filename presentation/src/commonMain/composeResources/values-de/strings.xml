@@ -1122,7 +1122,7 @@
     </plurals>
     <string name="song_details_playing_tempo">Tempo (BPM)</string>
     <string name="song_details_playing_range">%1$d bis %2$d</string>
-    <string name="song_details_scroll_to_top">Nach ganz oben scrollen</string>
+    <string name="song_details_back_to_top">Zurück nach oben</string>
     <string name="song_details_text_size_increase">Text vergrößern</string>
     <string name="song_details_text_size_decrease">Text verkleinern</string>
     <string name="song_details_text_size_reset">Textgröße zurücksetzen</string>

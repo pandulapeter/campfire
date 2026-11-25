@@ -70,10 +70,11 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
   sheet, editor preview, PDF). It is worked out off the main thread as the text is read, before handing it on, and kept by
   file name for the view model's life: a song reopened names it on its first frame; one never read gets it with its
   lyrics, crossfading in. The list cards never parse a file, so they name only a written key.
-- **The title scrolls the song to its top, and at the top opens the About the song sheet.** A chevron shows while a tap
-  would open it; its room is kept wherever the sheet is offered, so a long title is not cut afresh. The touch target is
-  all the bar's free space but reports only the title's room. No ripple: a press dims the title, cover, and chevron.
-  The scroll is read inside the title slot, so passing the top recomposes only it.
+- **The title opens the About the song sheet on every tap**, a chevron after it wherever the sheet is offered (never in
+  an import preview). The touch target is all the bar's free space but reports only the title's room. No ripple: a
+  press dims the title, cover, and chevron. **Back to the top** is the menu's (enabled while the song has left its top),
+  Home's, and a long press on the step back button's wherever there is song above (no tooltip on that press); each
+  leaves a `Back to the top:` breadcrumb naming it.
 - As the bar narrows the text size stepper goes into the menu (at its end, the menu staying open while pressed), then
   Choose setlists, then the cover, decided from the settled width for every page at once: the cover and Choose setlists
   each while the title keeps 160dp, the stepper only while the title keeps a comfortable 200dp beside the cover (about
@@ -82,7 +83,7 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
   here) always before the overflow button, no Choose setlists. An import preview has read only mode's menu and never the
   mark, the mode or not: only Import makes it editable, and the mark comes with its song's screen. **The overflow button
   is always the bar's last.**
-- Both menus (read only mode's too) hold About the song (never in a preview) and Preferences (the sheet with every page,
+- Both menus (read only mode's too) hold Back to the top, About the song (never in a preview), and Preferences (the sheet with every page,
   opening on Song, the read only mark's on General; written at once, so the song changes behind it), never let out as buttons.
 
 ## The questions asked once over a song
@@ -125,5 +126,6 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
   (chords on, a song with chords) wherever the key chip is, the Playing sheet shut, and T taps its tempo (metronome on)
   wherever the tempo chip is.
 - In one column (`autoScroll/`) the step buttons and step keys nudge it, and Space plays and stops it.
+- Home goes back to the song's top, as the menu's Back to the top does.
 - M starts and stops the click and T taps the tempo wherever the dock's tempo chip is (the metronome on, not an import
   preview; T not in read only mode, where it would write an override).

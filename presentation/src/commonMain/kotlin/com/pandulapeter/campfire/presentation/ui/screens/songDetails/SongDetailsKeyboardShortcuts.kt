@@ -62,6 +62,7 @@ internal fun Modifier.songDetailsKeyboardShortcuts(
     return songKeyboardShortcuts(
         onScrollUp = { currentPageScrollState()?.let { coroutineScope.launch { it.scrollByKeyStep(-1f) } } },
         onScrollDown = { currentPageScrollState()?.let { coroutineScope.launch { it.scrollByKeyStep(1f) } } },
+        onBackToTop = { coroutineScope.scrollBackToTop(currentPageScrollState(), "the Home key") },
         onStepBack = if (canStepBack) {
             { stepActions.stepBack(null) }
         } else {

@@ -72,6 +72,7 @@ import kotlinx.coroutines.launch
  * what makes a held arrow scroll continuously.
  *
  * Space plays and stops a song that scrolls by itself ([onToggleAutoScroll]), once a press, as a step key steps once.
+ * Home goes back to the top of the song ([onBackToTop]), as its menu's entry does.
  *
  * Ctrl / Cmd + E opens the editor, the way the overflow menu's Edit does, so not in performance mode, where there is none.
  * Not with Alt held, since AltGr arrives as Ctrl + Alt on Windows and the web and types a character on some layouts.
@@ -106,6 +107,7 @@ import kotlinx.coroutines.launch
 internal fun Modifier.songKeyboardShortcuts(
     onScrollUp: () -> Unit,
     onScrollDown: () -> Unit,
+    onBackToTop: () -> Unit,
     onPreviousSong: (() -> Unit)?,
     onNextSong: (() -> Unit)?,
     onStepBack: (() -> Unit)?,
@@ -178,6 +180,10 @@ internal fun Modifier.songKeyboardShortcuts(
             if (!latestIsUncovered) return@onPreviewKeyEvent STEP_AND_SCROLL_KEYS.any { it.matches(keyEvent) }
             if (onTapTempo != null && KeyShortcut.TAP_TEMPO.matches(keyEvent)) {
                 if (heldStepKeys.add(keyEvent.key)) onTapTempo()
+                return@onPreviewKeyEvent true
+            }
+            if (KeyShortcut.SONG_HOME.matches(keyEvent)) {
+                if (heldStepKeys.add(keyEvent.key)) onBackToTop()
                 return@onPreviewKeyEvent true
             }
             if (onToggleAutoScroll != null && KeyShortcut.PLAY.matches(keyEvent)) {

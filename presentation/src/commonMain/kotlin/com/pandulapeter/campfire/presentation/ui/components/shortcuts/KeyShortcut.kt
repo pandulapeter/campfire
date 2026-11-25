@@ -105,6 +105,9 @@ internal enum class KeyShortcut(
     SONG_PAGE_UP(KeyChord.plain(Key.PageUp, label = null), ShortcutScope.SONG),
     SONG_PAGE_DOWN(KeyChord.plain(Key.PageDown, label = null), ShortcutScope.SONG),
 
+    /** Back to the top of the song, as its menu's entry and a long press on its previous step button go. */
+    SONG_HOME(KeyChord.plain(Key.MoveHome, label = null), ShortcutScope.SONG),
+
     /**
      * The previous and the next song of a setlist, as the pager bar's buttons go to them: Left and Right to the one lying
      * that way in the pager, which in a right-to-left layout is the next one for Left.

@@ -1164,7 +1164,7 @@
     </plurals>
     <string name="song_details_playing_tempo">טמפו (BPM)</string>
     <string name="song_details_playing_range">%1$d עד %2$d</string>
-    <string name="song_details_scroll_to_top">גלילה להתחלה</string>
+    <string name="song_details_back_to_top">חזרה להתחלה</string>
     <string name="song_details_text_size_increase">הגדלת הטקסט</string>
     <string name="song_details_text_size_decrease">הקטנת הטקסט</string>
     <string name="song_details_text_size_reset">איפוס גודל הטקסט</string>

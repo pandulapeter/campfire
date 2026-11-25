@@ -9,18 +9,46 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
+import androidx.compose.foundation.ScrollState
 import androidx.compose.runtime.Composable
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_info
+import com.pandulapeter.campfire.presentation.resources.ic_move_up
 import com.pandulapeter.campfire.presentation.resources.ic_tune
 import com.pandulapeter.campfire.presentation.resources.settings_preferences
+import com.pandulapeter.campfire.presentation.resources.song_details_back_to_top
 import com.pandulapeter.campfire.presentation.resources.song_details_song_info
 import com.pandulapeter.campfire.presentation.ui.components.menu.ActionsMenuItem
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * The About the song sheet, also reached by the title at the top of the song: the menu is where it is found from
+ * Back to the top of the song being read, or to a strip's first column: kept in the menu, as the Home key and a long
+ * press on the step buttons' previous one are, since the title, which used to do it, opens About the song wherever it
+ * is pressed. Enabled while there is anywhere to go back to ([canGoBack]), which is read only while the menu is open.
+ */
+@Composable
+internal fun backToTopAction(canGoBack: () -> Boolean, onClick: () -> Unit) = ActionsMenuItem(
+    title = stringResource(Res.string.song_details_back_to_top),
+    icon = painterResource(Res.drawable.ic_move_up),
+    isAlwaysInMenu = true,
+    isEnabledInMenu = canGoBack,
+    shortcut = KeyShortcut.SONG_HOME,
+    onClick = onClick,
+)
+
+/** Scrolls the song read in [scrollState] back to its top, where it is anywhere else; [source] names what asked, in the log. */
+internal fun CoroutineScope.scrollBackToTop(scrollState: ScrollState?, source: String) {
+    if (scrollState == null || scrollState.value == 0) return
+    println("Back to the top: $source")
+    launch { scrollState.animateScrollTo(0) }
+}
+
+/**
+ * The About the song sheet, also reached by the song's title in the bar: the menu is where it is found from
  * anywhere in the song, and by somebody who never thought to press a title. Never let out of the menu, as a button would
  * only repeat the title.
  */

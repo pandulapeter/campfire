@@ -1121,7 +1121,7 @@
     </plurals>
     <string name="song_details_playing_tempo">Tempó (BPM)</string>
     <string name="song_details_playing_range">%1$d és %2$d között</string>
-    <string name="song_details_scroll_to_top">Görgetés az elejére</string>
+    <string name="song_details_back_to_top">Vissza az elejére</string>
     <string name="song_details_text_size_increase">Szöveg nagyítása</string>
     <string name="song_details_text_size_decrease">Szöveg kicsinyítése</string>
     <string name="song_details_text_size_reset">Szövegméret visszaállítása</string>

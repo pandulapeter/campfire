@@ -18,7 +18,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -33,7 +32,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -53,7 +51,6 @@ import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_expand
-import com.pandulapeter.campfire.presentation.resources.song_details_scroll_to_top
 import com.pandulapeter.campfire.presentation.resources.song_details_song_info
 import com.pandulapeter.campfire.presentation.resources.songs_key
 import com.pandulapeter.campfire.presentation.ui.components.coverArt.APP_BAR_COVER_GAP
@@ -65,15 +62,13 @@ import com.pandulapeter.campfire.presentation.ui.playing.PlayingOverridesSnapsho
 import com.pandulapeter.campfire.presentation.ui.playing.songPlaybackOf
 import com.pandulapeter.campfire.presentation.ui.playing.soundingTransposition
 import com.pandulapeter.campfire.presentation.ui.rendering.SongRenderer
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 
 /**
  * The title block of the song details screen's app bar: the cover, the title and the artist of [currentSong], and the
  * key it sounds in. The title and the cover are the heading of the sheet of what the song is, so a tap on them opens it
- * once there is nothing left to scroll back to. The scroll is read here rather than in the screen's own body, so that
- * passing the top recomposes the bar's title alone.
+ * wherever it is offered ([openCurrentSongInfo]), however far the song has been read: back to the top is the menu's, the
+ * Home key's, and the back step button's long press.
  *
  * @param inferredKeyOf The key a song's chords were found to be in, by its file name, for one whose file names none (see
  *   `InferredSongKeys`).
@@ -87,29 +82,19 @@ internal fun SongDetailsTitle(
     playingOverrides: PlayingOverridesSnapshot,
     songRenderer: SongRenderer,
     showsCoverInBar: Boolean,
-    currentPageScrollState: () -> ScrollState?,
     openCurrentSongInfo: (() -> Unit)?,
-    coroutineScope: CoroutineScope,
     inferredKeyOf: (fileName: String) -> String?,
 ) {
-    val isScrolledToTop by remember { derivedStateOf { (currentPageScrollState()?.value ?: 0) == 0 } }
-    val openSongInfoAtTop = openCurrentSongInfo?.takeIf { isScrolledToTop }
     val titleInteractionSource = remember { MutableInteractionSource() }
     val isTitlePressed by titleInteractionSource.collectIsPressedAsState()
     val titleAlpha by animateFloatAsState(if (isTitlePressed) PRESSED_HEADING_ALPHA else 1f)
     AnimatedContent(
         modifier = Modifier
             .titleTouchTarget(
-                isEnabled = currentSong != null && (openSongInfoAtTop != null || !isScrolledToTop),
+                isEnabled = currentSong != null && openCurrentSongInfo != null,
                 interactionSource = titleInteractionSource,
-                onClickLabel = stringResource(if (openSongInfoAtTop == null) Res.string.song_details_scroll_to_top else Res.string.song_details_song_info),
-                onClick = {
-                    if (openSongInfoAtTop == null) {
-                        currentPageScrollState()?.let { coroutineScope.launch { it.animateScrollTo(0) } }
-                    } else {
-                        openSongInfoAtTop()
-                    }
-                },
+                onClickLabel = stringResource(Res.string.song_details_song_info),
+                onClick = { openCurrentSongInfo?.invoke() },
             )
             .graphicsLayer { alpha = titleAlpha },
         targetState = currentSong,
@@ -132,8 +117,7 @@ internal fun SongDetailsTitle(
             song = song,
             headerKey = headerKey,
             showsCoverInBar = showsCoverInBar,
-            isChevronKept = openCurrentSongInfo != null,
-            isChevronShown = openSongInfoAtTop != null,
+            hasChevron = openCurrentSongInfo != null,
         )
     }
 }
@@ -170,16 +154,15 @@ internal fun headerKeyOf(
 /**
  * The cover, the title and the artist of [song], and its [headerKey] after them.
  *
- * @param isChevronKept Whether the room of the chevron saying that the title opens the sheet is kept, which it is wherever
- *   the sheet is offered at all.
+ * @param hasChevron Whether the chevron saying that the title opens the sheet is there, which it is wherever the sheet is
+ *   offered.
  */
 @Composable
 private fun SongTitleBlock(
     song: Song?,
     headerKey: String?,
     showsCoverInBar: Boolean,
-    isChevronKept: Boolean,
-    isChevronShown: Boolean,
+    hasChevron: Boolean,
 ) = Row(
     verticalAlignment = Alignment.CenterVertically,
 ) {
@@ -221,31 +204,12 @@ private fun SongTitleBlock(
                     overflow = TextOverflow.Ellipsis,
                 )
             }
-            // What says that the title opens the sheet, shown only while a tap does: scrolled down,
-            // a tap scrolls back to the top instead. Its room is kept while it is hidden wherever the
-            // sheet is offered at all, so that a long title is not cut off afresh every time the
-            // song passes its top.
-            if (isChevronKept) {
-                // A fade on the effects spring and a grow from half its size on the spatial one, which
-                // overshoots a little as it arrives: the chevron pops in as an offer and recedes as the
-                // song scrolls away, rather than collapsing to a point that reads as a glitch.
-                                val chevronAlpha by animateFloatAsState(
-                    targetValue = if (isChevronShown) 1f else 0f,
-                    animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
-                )
-                val chevronScale by animateFloatAsState(
-                    targetValue = if (isChevronShown) 1f else HIDDEN_CHEVRON_SCALE,
-                    animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
-                )
+            // What says that the title opens the sheet.
+            if (hasChevron) {
                 Icon(
                     modifier = Modifier
                         .padding(start = APP_BAR_TITLE_CHEVRON_GAP)
-                        .size(APP_BAR_TITLE_CHEVRON_SIZE)
-                        .graphicsLayer {
-                            alpha = chevronAlpha
-                            scaleX = chevronScale
-                            scaleY = chevronScale
-                        },
+                        .size(APP_BAR_TITLE_CHEVRON_SIZE),
                     painter = painterResource(Res.drawable.ic_expand),
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -282,8 +246,8 @@ private fun SongTitleBlock(
 }
 
 /**
- * The app bar's title as the touch target of what the caller does with a tap on it — scrolling the song back to its
- * top, the way tapping the bar does on a phone, and opening the sheet of what the song is once it is already there.
+ * The app bar's title as the touch target of what the caller does with a tap on it: opening the sheet of what the song
+ * is.
  * It is the whole of the bar that nothing else takes: as wide as the room the bar leaves the title and as tall
  * as the bar, so that a tap anywhere on its empty part counts. The bar pads that room by [TITLE_TOUCH_HORIZONTAL_OUTSET]
  * at either end and centers the title in its height, and the target reaches out over both while reporting only the room
@@ -323,5 +287,4 @@ private fun Modifier.titleTouchTarget(
 private val TITLE_TOUCH_HORIZONTAL_OUTSET = 4.dp // The padding the bar puts around its title.
 private val APP_BAR_TITLE_CHEVRON_SIZE = 20.dp // A little under the titleMedium line it follows.
 private val APP_BAR_TITLE_CHEVRON_GAP = 2.dp // The chevron's own artwork leaves the rest of the gap after the title.
-private const val HIDDEN_CHEVRON_SCALE = 0.5f
 private val TITLE_TOUCH_VERTICAL_OUTSET = 12.dp // From the two lines of title, 40dp, to the bar's 64dp.

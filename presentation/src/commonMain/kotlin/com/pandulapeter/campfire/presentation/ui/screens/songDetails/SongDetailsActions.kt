@@ -59,6 +59,7 @@ internal fun RowScope.SongDetailsActions(
     areSetlistsEnabled: Boolean,
     showsFontScaleInBar: Boolean,
     showsSetlistAssignmentsInBar: Boolean,
+    backToTopAction: ActionsMenuItem,
     aboutSongAction: ActionsMenuItem?,
     tunerAction: ActionsMenuItem?,
     preferencesAction: ActionsMenuItem,
@@ -110,7 +111,7 @@ internal fun RowScope.SongDetailsActions(
                 ActionsMenu(
                     isAfterButton = showsReadOnlyMark,
                     menuFooter = fontScaleMenuFooter,
-                    items = { listOfNotNull(aboutSongAction, tunerAction, preferencesAction) },
+                    items = { listOfNotNull(backToTopAction, aboutSongAction, tunerAction, preferencesAction) },
                 )
             } else {
                 currentSong?.let { song ->
@@ -122,6 +123,7 @@ internal fun RowScope.SongDetailsActions(
                         isReadOnly = isReadOnly,
                         areSetlistsEnabled = areSetlistsEnabled,
                         showsSetlistAssignmentsInBar = showsSetlistAssignmentsInBar,
+                        backToTopAction = backToTopAction,
                         aboutSongAction = aboutSongAction,
                         tunerAction = tunerAction,
                         preferencesAction = preferencesAction,
@@ -153,6 +155,7 @@ private fun SongActionsWithSetlists(
     isReadOnly: Boolean,
     areSetlistsEnabled: Boolean,
     showsSetlistAssignmentsInBar: Boolean,
+    backToTopAction: ActionsMenuItem,
     aboutSongAction: ActionsMenuItem?,
     tunerAction: ActionsMenuItem?,
     preferencesAction: ActionsMenuItem,
@@ -185,6 +188,7 @@ private fun SongActionsWithSetlists(
         exportShortcut = KeyShortcut.SAVE,
         leadingItems = {
             listOfNotNull(
+                backToTopAction,
                 aboutSongAction,
                 if (isReadOnly || showsSetlistAssignmentsInBar || !areSetlistsEnabled) {
                     null

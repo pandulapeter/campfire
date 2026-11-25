@@ -1167,7 +1167,7 @@
     </plurals>
     <string name="song_details_playing_tempo">Tempo (BPM)</string>
     <string name="song_details_playing_range">de la %1$d la %2$d</string>
-    <string name="song_details_scroll_to_top">Derulează la început</string>
+    <string name="song_details_back_to_top">Înapoi la început</string>
     <string name="song_details_text_size_increase">Mărește textul</string>
     <string name="song_details_text_size_decrease">Micșorează textul</string>
     <string name="song_details_text_size_reset">Resetează dimensiunea textului</string>

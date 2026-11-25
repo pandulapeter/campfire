@@ -9,6 +9,16 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.semantics.onLongClick
+import androidx.compose.ui.semantics.semantics
+import com.pandulapeter.campfire.presentation.resources.song_details_back_to_top
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -75,6 +85,9 @@ import org.jetbrains.compose.resources.painterResource
  * row is there for every song so turned, a strip or not, so paging through a setlist never moves them; it is laid out
  * in the direction a strip reads, and a strip's arrows point the way it moves.
  *
+ * A long press on the previous one goes back to the top of the song ([onBackToTop]) wherever there is song above to go
+ * back to, as the menu's entry and the Home key do; it shows no tooltip there.
+ *
  * A song that scrolls by itself ([isNudging]) keeps the buttons, which nudge it there and still go on to the songs beside
  * it, but not the dots, whose room the controls of the scroll take (`AutoScrollControls`).
  */
@@ -90,6 +103,7 @@ internal fun BoxScope.StepControls(
     contentPadding: PaddingValues,
     onStepBack: () -> Unit,
     onStepForward: () -> Unit,
+    onBackToTop: () -> Unit,
 ) {
     val layoutDirection = LocalLayoutDirection.current
     val isSteppedByRow = stepper?.isSteppedByRow == true
@@ -116,6 +130,7 @@ internal fun BoxScope.StepControls(
         ),
         shortcut = if (stepper?.isAcross != true) KeyShortcut.SONG_UP else songArrowShortcut(-1, stepper.readsLeftwards),
         onClick = onStepBack,
+        onLongPress = onBackToTop.takeIf { canStepBackInSong },
     )
     val forward = StepButtonLook(
         isVisible = canStepForwardInSong || hasNextSong,
@@ -155,13 +170,14 @@ internal fun stepControlsPadding(pageContentPadding: PaddingValues, layoutDirect
     bottom = pageContentPadding.calculateBottomPadding() + STEP_BUTTON_EDGE_MARGIN,
 )
 
-/** What one of [StepControls]' buttons shows and does. */
+/** What one of [StepControls]' buttons shows and does, and its long press, where it has one. */
 private class StepButtonLook(
     val isVisible: Boolean,
     val rotation: Float,
     val description: String,
     val shortcut: KeyShortcut,
     val onClick: () -> Unit,
+    val onLongPress: (() -> Unit)? = null,
 )
 
 @Composable
@@ -254,14 +270,15 @@ private fun StepButton(
     LaunchedEffect(look.rotation, look.isVisible) {
         if (look.isVisible) rotation.animateTo(look.rotation)
     }
-    CampfireTooltip(label = look.description, shortcut = look.shortcut) {
+    CampfireTooltip(label = look.description, shortcut = look.shortcut, isShownOnLongPress = look.onLongPress == null) {
         SmallFloatingActionButton(
             // A button that has the focus takes it away with it as it leaves, which leaves nothing on the screen focused
             // and every key after that to Compose's own focus search, which scrolls the song instead of stepping it. They
             // are pressed by the same keys the screen hears anyway.
             modifier = Modifier
                 .size(STEP_BUTTON_SIZE)
-                .focusProperties { canFocus = false },
+                .focusProperties { canFocus = false }
+                .then(look.onLongPress?.let { Modifier.onLongPressInstead(label = stringResource(Res.string.song_details_back_to_top), onLongPress = it) } ?: Modifier),
             onClick = look.onClick,
             // The shadow is drawn around the button by FloatingControlVisibility, which fades it with the button.
             elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp),
@@ -271,6 +288,37 @@ private fun StepButton(
                 painter = icon,
                 contentDescription = look.description,
             )
+        }
+    }
+}
+
+/**
+ * Calls [onLongPress] once a press of the button has been held for the long press timeout, and takes the rest of that
+ * press, its release above all, before the button sees it, so that it does not also step. Looked at in the initial pass,
+ * since the button takes the press itself. Screen readers have it as the button's long press, named by [label].
+ */
+@Composable
+private fun Modifier.onLongPressInstead(label: String, onLongPress: () -> Unit): Modifier {
+    val currentOnLongPress by rememberUpdatedState(onLongPress)
+    return semantics {
+        onLongClick(label = label) {
+            currentOnLongPress()
+            true
+        }
+    }.pointerInput(Unit) {
+        awaitEachGesture {
+            awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+            var isOver = false
+            withTimeoutOrNull(viewConfiguration.longPressTimeoutMillis) {
+                waitForUpOrCancellation(pass = PointerEventPass.Initial)
+                isOver = true
+            }
+            if (isOver) return@awaitEachGesture
+            currentOnLongPress()
+            do {
+                val event = awaitPointerEvent(PointerEventPass.Initial)
+                event.changes.forEach { it.consume() }
+            } while (event.changes.any { it.pressed })
         }
     }
 }

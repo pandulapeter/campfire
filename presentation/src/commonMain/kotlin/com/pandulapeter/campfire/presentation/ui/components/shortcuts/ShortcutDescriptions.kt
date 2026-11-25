@@ -37,6 +37,7 @@ import com.pandulapeter.campfire.presentation.resources.shortcut_screen
 import com.pandulapeter.campfire.presentation.resources.shortcut_select_all
 import com.pandulapeter.campfire.presentation.resources.shortcut_shortcuts
 import com.pandulapeter.campfire.presentation.resources.shortcut_song_neighbours
+import com.pandulapeter.campfire.presentation.resources.song_details_back_to_top
 import com.pandulapeter.campfire.presentation.resources.shortcut_song_step_column
 import com.pandulapeter.campfire.presentation.resources.shortcut_song_step_nudge
 import com.pandulapeter.campfire.presentation.resources.shortcut_song_step_page
@@ -94,6 +95,7 @@ internal fun KeyShortcut.descriptionIn(scope: ShortcutScope, features: ShortcutF
         SongStep.NUDGE -> Res.string.shortcut_song_step_nudge
     }
     KeyShortcut.SONG_SWITCH_UP -> Res.string.shortcut_song_neighbours
+    KeyShortcut.SONG_HOME -> Res.string.song_details_back_to_top
     KeyShortcut.METRONOME -> Res.string.shortcut_metronome
     KeyShortcut.TAP_TEMPO -> Res.string.shortcut_tap_tempo
     KeyShortcut.PREVIEW_PAGE_UP -> Res.string.shortcut_preview_turn

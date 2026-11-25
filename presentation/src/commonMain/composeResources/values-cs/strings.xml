@@ -1162,7 +1162,7 @@
     </plurals>
     <string name="song_details_playing_tempo">Tempo (BPM)</string>
     <string name="song_details_playing_range">%1$d až %2$d</string>
-    <string name="song_details_scroll_to_top">Posunout na začátek</string>
+    <string name="song_details_back_to_top">Zpět na začátek</string>
     <string name="song_details_text_size_increase">Zvětšit text</string>
     <string name="song_details_text_size_decrease">Zmenšit text</string>
     <string name="song_details_text_size_reset">Resetovat velikost textu</string>

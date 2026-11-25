@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -146,6 +147,7 @@ internal fun SongDetailsPager(
         onCurrentPage = onCurrentPage,
     )
     val controlsPadding = stepControlsPadding(pagePadding, layoutDirection)
+    val coroutineScope = rememberCoroutineScope()
     StepControls(
         isNudging = isContinuous,
         isRow = !isContinuous && preferencesController.userPreferences.collectAsStateWithLifecycle().value?.pageTurn == PageTurn.COLUMN,
@@ -157,6 +159,7 @@ internal fun SongDetailsPager(
         contentPadding = controlsPadding,
         onStepBack = { stepBack(null) },
         onStepForward = { stepForward(null) },
+        onBackToTop = { coroutineScope.scrollBackToTop(currentPageScrollState(), "a long press on the step back button") },
     )
     AutoScrollControls(
         isVisible = isContinuous,

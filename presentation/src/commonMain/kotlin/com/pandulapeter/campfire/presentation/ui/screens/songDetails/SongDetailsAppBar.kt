@@ -55,8 +55,8 @@ import org.jetbrains.compose.resources.painterResource
  * page change: what only the bar reads is collected and decided here, so that a change of it recomposes the bar rather
  * than the whole screen.
  *
- * @param currentPageScrollState Read where it is used rather than handed down as a value, so that passing the top
- *   recomposes the title alone.
+ * @param currentPageScrollState Read where it is used rather than handed down as a value: by the menu's Back to the top,
+ *   only while the menu is open.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -132,9 +132,7 @@ internal fun SongDetailsAppBar(
                 playingOverrides = playingOverrides,
                 songRenderer = songRenderer,
                 showsCoverInBar = showsCoverInBar,
-                currentPageScrollState = currentPageScrollState,
                 openCurrentSongInfo = openCurrentSongInfo,
-                coroutineScope = coroutineScope,
                 // Read through a lambda, so that a key arriving recomposes the title alone rather than the whole bar.
                 inferredKeyOf = { fileName -> inferredKeys[fileName] },
             )
@@ -152,6 +150,10 @@ internal fun SongDetailsAppBar(
                 areSetlistsEnabled = areSetlistsEnabled,
                 showsFontScaleInBar = showsFontScaleInBar,
                 showsSetlistAssignmentsInBar = showsSetlistAssignmentsInBar,
+                backToTopAction = backToTopAction(
+                    canGoBack = { (currentPageScrollState()?.value ?: 0) > 0 },
+                    onClick = { coroutineScope.scrollBackToTop(currentPageScrollState(), "the menu") },
+                ),
                 aboutSongAction = openCurrentSongInfo?.let { aboutSongAction(onClick = it) },
                 tunerAction = tunerAction,
                 preferencesAction = preferencesAction(onClick = { openPreferences(PreferencesPage.SONG) }),
