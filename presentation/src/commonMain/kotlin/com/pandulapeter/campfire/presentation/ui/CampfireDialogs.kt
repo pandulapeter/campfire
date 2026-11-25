@@ -402,7 +402,6 @@ private fun SongPlayingDialog(
             overrides = viewModel.overrides,
             songRenderer = viewModel.songRenderer,
             dialogHost = viewModel.dialogHost,
-            onTunerClicked = viewModel::openTunerSheet,
             dialog = dialog,
         )
         is DialogType.Tempo -> TempoSheet(

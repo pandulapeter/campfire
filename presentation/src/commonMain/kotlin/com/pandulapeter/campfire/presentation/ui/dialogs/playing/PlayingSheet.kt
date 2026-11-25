@@ -18,11 +18,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.Icon
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -41,10 +36,8 @@ import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.mapper.toChordNotation
-import com.pandulapeter.campfire.presentation.resources.ic_tuner
 import com.pandulapeter.campfire.presentation.resources.settings_instrument
 import com.pandulapeter.campfire.presentation.resources.song_details_dock_playing
-import com.pandulapeter.campfire.presentation.resources.tuner
 import com.pandulapeter.campfire.presentation.resources.song_details_transposition
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_capo
 import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
@@ -66,14 +59,13 @@ import com.pandulapeter.campfire.presentation.ui.songView.firstSection.rememberS
 import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
 import com.pandulapeter.campfire.presentation.ui.state.songText.SongTextStore
 import kotlinx.coroutines.flow.StateFlow
-import org.jetbrains.compose.resources.painterResource
 
 /**
  * How a song is played where it is read, opened from the key chip of song details' dock: the instrument in the player's
- * hands and its tuning ([PlayingInstrumentRow]), then the transposition and the capo ([PlayingStepperRow]), and last the
- * tuner ([PlayingTunerButton]), the very steppers the song's first section had, writing the same overrides the same way (held
- * pending, written once they rest, see `PendingWrites`), so the song behind it follows every step. Nothing to save: its
- * close button only closes it. The transposition and the capo leave with the chords; the instrument stays, as the tuner
+ * hands and its tuning ([PlayingInstrumentRow]), then the transposition and the capo ([PlayingStepperRow]), the very
+ * steppers the song's first section had, writing the same overrides the same way (held pending, written once they rest,
+ * see `PendingWrites`), so the song behind it follows every step. Nothing to save: its close button only closes it. No
+ * tuner: the dock has it beside the key chip. The transposition and the capo leave with the chords; the instrument stays, as the tuner
  * and the keyboard's names read it.
  */
 @Composable
@@ -84,7 +76,6 @@ internal fun PlayingSheet(
     overrides: PlayingOverrides,
     songRenderer: SongRenderer,
     dialogHost: DialogHost,
-    onTunerClicked: () -> Unit,
     dialog: DialogType.Playing,
 ) {
     val songs by allSongs.collectAsStateWithLifecycle()
@@ -162,9 +153,6 @@ internal fun PlayingSheet(
                     )
                 }
             }
-            AnimatedPlayingRow(value = onTunerClicked.takeIf { userPreferences?.isTunerEnabled != false }) { onClick ->
-                PlayingTunerButton(onClick = onClick)
-            }
         }
     }
 }
@@ -198,24 +186,6 @@ private fun PlayingInstrumentRow(
         onInstrumentClicked = onInstrumentClicked,
         onTuningClicked = onTuningClicked,
     )
-}
-
-/**
- * The way to the tuner, which tunes the strings the instrument row names: a full-width tonal button saying what it opens,
- * since the sheet has the room a bare icon was saving, last, as it is what a player reaches for once the rest is set.
- */
-@Composable
-private fun PlayingTunerButton(onClick: () -> Unit) = FilledTonalButton(
-    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-    onClick = onClick,
-) {
-    Icon(
-        modifier = Modifier.size(ButtonDefaults.IconSize),
-        painter = painterResource(Res.drawable.ic_tuner),
-        contentDescription = null,
-    )
-    Spacer(modifier = Modifier.width(ButtonDefaults.IconSpacing))
-    Text(text = stringResource(Res.string.tuner))
 }
 
 /** A setting of the sheet: its [label] at the start and its [stepper] at the end. */

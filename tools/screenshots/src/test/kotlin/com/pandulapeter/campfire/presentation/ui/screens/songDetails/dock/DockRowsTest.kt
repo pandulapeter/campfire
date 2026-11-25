@@ -63,6 +63,20 @@ internal class DockRowsTest {
         onNode(hasText(string(Res.string.tuner)) and hasAnyAncestor(isPopup())).assertExists()
     }
 
+    @Test
+    fun `with an instrument without shapes the tuner stands beside the key chip in the one row`() = runAppTest(
+        extraPreferences = mapOf("instrument" to JsonPrimitive("violin")),
+    ) {
+        openSong()
+        waitForIdle()
+        val keyChip = keyChip()
+        val tuner = onNode(hasContentDescription(string(Res.string.tuner), substring = true) and hasClickAction()).fetchSemanticsNode().boundsInRoot
+        assertTrue(
+            tuner.right <= keyChip.left && tuner.bottom > keyChip.top && tuner.top < keyChip.bottom,
+            "The tuner at $tuner does not stand before the key chip at $keyChip.",
+        )
+    }
+
     /** The key chip and the tuner's pill under it stand before the diagram, within its row, so neither is lost. */
     private fun AppTestScope.assertKeyChipStartsDiagramRow() {
         val keyChip = keyChip()

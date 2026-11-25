@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.Dp
 
 /**
  * What starts the dock for one song's [content]: the instrument and the tuner where the key chip does not hold them
- * ([DockInstrumentTools]), then the key chip ([DockKeyChip]) where there is a [dockKey], [height] tall. In the diagram
+ * ([DockInstrumentTools], the tuner as a round button beside a key chip that opens the Playing sheet in one row), then the key chip ([DockKeyChip]) where there is a [dockKey], [height] tall. In the diagram
  * row ([tallHeight], its height), a key chip that opens the Playing sheet stands over the tuner's pill
  * ([DockKeyAndTuner]) where the tuner is on. A change of which of these there are (read only mode switched, a switch
  * of the Dock section) crossfades as the start resizes; one that keeps them (a new key, another page) is drawn in place.
@@ -71,12 +71,13 @@ private data class DockStartLook(val content: DockContent, val dockKey: DockKey?
     /** Which items the start has, whatever they name: what a change of crossfades. */
     fun shapeIn(tallHeight: Dp?): List<Boolean> {
         val keyOpensPlaying = dockKey?.opensPlaying == true
+        val keyHoldsTuner = content.keyHoldsTuner(keyOpensPlaying = keyOpensPlaying, isTall = tallHeight != null)
         return listOf(
             content.showsInstrumentPill(keyOpensPlaying),
-            content.showsTuner(keyOpensPlaying),
+            content.showsTuner(keyHoldsTuner),
             dockKey != null,
             keyOpensPlaying,
-            tallHeight != null && keyOpensPlaying && content.playingTools?.onTunerClicked != null && content.chordDiagrams != null,
+            keyHoldsTuner,
         )
     }
 }
@@ -91,18 +92,25 @@ private data class DockStartLook(val content: DockContent, val dockKey: DockKey?
 @Composable
 private fun DockStartItems(content: DockContent, dockKey: DockKey?, height: Dp, tallHeight: Dp?, pillWidth: Dp?) {
     val keyOpensPlaying = dockKey?.opensPlaying == true
-    if (pillWidth == null) DockInstrumentTools(content = content, keyOpensPlaying = keyOpensPlaying, pillWidth = null, pillHeight = height)
-    if (dockKey != null) DockStartKey(content = content, dockKey = dockKey, height = height, tallHeight = tallHeight, pillWidth = pillWidth)
-    if (pillWidth != null) DockInstrumentTools(content = content, keyOpensPlaying = keyOpensPlaying, pillWidth = pillWidth, pillHeight = height)
+    val keyHoldsTuner = content.keyHoldsTuner(keyOpensPlaying = keyOpensPlaying, isTall = tallHeight != null)
+    if (pillWidth == null) {
+        DockInstrumentTools(content = content, keyOpensPlaying = keyOpensPlaying, keyHoldsTuner = keyHoldsTuner, pillWidth = null, pillHeight = height)
+    }
+    if (dockKey != null) {
+        DockStartKey(content = content, dockKey = dockKey, height = height, tallHeight = tallHeight, pillWidth = pillWidth, keyHoldsTuner = keyHoldsTuner)
+    }
+    if (pillWidth != null) {
+        DockInstrumentTools(content = content, keyOpensPlaying = keyOpensPlaying, keyHoldsTuner = keyHoldsTuner, pillWidth = pillWidth, pillHeight = height)
+    }
 }
 
 /** The key chip of [DockStartItems], over the tuner's pill where the diagram row has room for both ([DockKeyAndTuner]). */
 @Composable
-private fun DockStartKey(content: DockContent, dockKey: DockKey, height: Dp, tallHeight: Dp?, pillWidth: Dp?) {
+private fun DockStartKey(content: DockContent, dockKey: DockKey, height: Dp, tallHeight: Dp?, pillWidth: Dp?, keyHoldsTuner: Boolean) {
     val onPlayingClicked = content.playingControls?.onPlayingClicked?.takeIf { dockKey.opensPlaying }
     val onTunerClicked = content.playingTools?.onTunerClicked
     val chordDiagrams = content.chordDiagrams
-    if (tallHeight != null && onPlayingClicked != null && onTunerClicked != null && chordDiagrams != null) {
+    if (tallHeight != null && keyHoldsTuner && onPlayingClicked != null && onTunerClicked != null && chordDiagrams != null) {
         DockKeyAndTuner(
             modifier = if (pillWidth == null) Modifier else Modifier.width(pillWidth),
             dockKey = dockKey,
@@ -111,7 +119,7 @@ private fun DockStartKey(content: DockContent, dockKey: DockKey, height: Dp, tal
             onPlayingClicked = onPlayingClicked,
             onTunerClicked = onTunerClicked,
         )
-    } else if (tallHeight != null && pillWidth == null && !content.hasInstrumentTools(keyOpensPlaying = dockKey.opensPlaying)) {
+    } else if (tallHeight != null && pillWidth == null && !content.hasInstrumentTools(keyOpensPlaying = dockKey.opensPlaying, keyHoldsTuner = keyHoldsTuner)) {
         // Alone at the start of the diagram row, it is as tall as the tempo chip at its end.
         DockKeyChip(dockKey = dockKey, height = tallHeight, onClick = onPlayingClicked, isTall = true)
     } else {

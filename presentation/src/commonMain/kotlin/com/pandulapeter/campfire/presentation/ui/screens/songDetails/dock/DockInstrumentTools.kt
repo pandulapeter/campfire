@@ -22,8 +22,10 @@ import com.pandulapeter.campfire.presentation.ui.songView.songControlHeight
 import com.pandulapeter.campfire.presentation.ui.tuner.TunerButton
 
 /**
- * What starts the dock where the key chip opens no Playing sheet to hold it ([keyOpensPlaying] false: read only mode, or
- * the chords switched off): the instrument and tuning pill where the diagrams are on, and the tuner. An instrument
+ * What starts the dock beside the key chip: the instrument and tuning pill where the diagrams are on and the key chip
+ * opens no Playing sheet to hold it ([keyOpensPlaying] false: read only mode, or the chords switched off), and the tuner
+ * wherever the key chip does not stand over its pill ([keyHoldsTuner], the diagram row's and the side panel's
+ * [DockKeyAndTuner]), so that the tuner is never more than one press away, the Playing sheet having none. An instrument
  * without shapes keeps the pill here even beside a chip that opens the sheet, since it is what brings the diagrams back.
  * Emits nothing where neither is there.
  *
@@ -35,6 +37,7 @@ import com.pandulapeter.campfire.presentation.ui.tuner.TunerButton
 internal fun DockInstrumentTools(
     content: DockContent,
     keyOpensPlaying: Boolean,
+    keyHoldsTuner: Boolean,
     pillWidth: Dp?,
     pillHeight: Dp,
 ) {
@@ -58,7 +61,7 @@ internal fun DockInstrumentTools(
     }
     val tools = content.playingTools
     val onTunerClicked = tools?.onTunerClicked
-    val tuner = if (onTunerClicked != null && content.showsTuner(keyOpensPlaying)) {
+    val tuner = if (onTunerClicked != null && content.showsTuner(keyHoldsTuner)) {
         @Composable {
             if (pillWidth != null && chordDiagrams != null) {
                 DockTunerPill(modifier = Modifier.width(pillWidth), chordDiagrams = chordDiagrams, height = pillHeight, onClick = onTunerClicked)
@@ -83,12 +86,23 @@ internal fun DockInstrumentTools(
     }
 }
 
-/** Whether [DockInstrumentTools] draws anything for this content beside a key chip that does or does not open the Playing sheet. */
-internal fun DockContent.hasInstrumentTools(keyOpensPlaying: Boolean) = showsInstrumentPill(keyOpensPlaying) || showsTuner(keyOpensPlaying)
+/**
+ * Whether [DockInstrumentTools] draws anything for this content beside a key chip that does or does not open the Playing
+ * sheet, and does or does not stand over the tuner's pill.
+ */
+internal fun DockContent.hasInstrumentTools(keyOpensPlaying: Boolean, keyHoldsTuner: Boolean) =
+    showsInstrumentPill(keyOpensPlaying) || showsTuner(keyHoldsTuner)
 
 /** Whether [DockInstrumentTools] draws the instrument pill beside a key chip that does or does not open the Playing sheet. */
 internal fun DockContent.showsInstrumentPill(keyOpensPlaying: Boolean) =
     chordDiagrams?.onInstrumentClicked != null && (!keyOpensPlaying || chordDiagrams.tuning == null)
 
-/** Whether [DockInstrumentTools] draws the tuner button beside a key chip that does or does not open the Playing sheet. */
-internal fun DockContent.showsTuner(keyOpensPlaying: Boolean) = playingTools?.onTunerClicked != null && !keyOpensPlaying
+/** Whether [DockInstrumentTools] draws the tuner beside a key chip that does or does not stand over the tuner's pill. */
+internal fun DockContent.showsTuner(keyHoldsTuner: Boolean) = playingTools?.onTunerClicked != null && !keyHoldsTuner
+
+/**
+ * Whether a key chip that does or does not open the Playing sheet ([keyOpensPlaying]) stands over the tuner's pill
+ * ([DockKeyAndTuner]): only where it is as tall as the diagram row ([isTall], the side panel's included) beside diagrams.
+ */
+internal fun DockContent.keyHoldsTuner(keyOpensPlaying: Boolean, isTall: Boolean) =
+    isTall && keyOpensPlaying && playingTools?.onTunerClicked != null && chordDiagrams != null

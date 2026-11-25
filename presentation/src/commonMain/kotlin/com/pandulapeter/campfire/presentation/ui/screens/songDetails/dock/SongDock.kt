@@ -170,7 +170,7 @@ private fun DockRowsOf(
     val onChordClicked = content?.chordDiagrams?.onChordClicked
     val hasDiagramRow = rows.hasChordRow && layout.tier != DockTier.CHORD_CHIPS
     val dockKey = remember(content?.playingControls, content?.model) { content?.let { dockKeyOf(it.playingControls, it.model) } }
-    val startContent = content?.takeIf { rows.hasPlayingRow }?.takeIf { dockKey != null || it.hasInstrumentTools(keyOpensPlaying = dockKey?.opensPlaying == true) }
+    val startContent = content?.takeIf { rows.hasPlayingRow }?.takeIf { dockKey != null || it.hasInstrumentTools(keyOpensPlaying = dockKey?.opensPlaying == true, keyHoldsTuner = false) }
     val start = startContent?.let { @Composable { DockStart(content = it, dockKey = dockKey, height = layout.rowHeight) } }
     val tempo = content?.tempo?.takeIf { rows.hasPlayingRow }
     if (rows.isMetronomeOnly) {

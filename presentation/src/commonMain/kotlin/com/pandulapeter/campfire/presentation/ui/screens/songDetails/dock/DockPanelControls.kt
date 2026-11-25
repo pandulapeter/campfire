@@ -39,7 +39,7 @@ internal fun DockPanelControls(
     if (content == null) return@Column
     val pillWidth = dockPanelContentWidthOf(tempoChipWidth = dockTempoChipWidth())
     val dockKey = remember(content.playingControls, content.model) { dockKeyOf(content.playingControls, content.model) }
-    if (dockKey != null || content.hasInstrumentTools(keyOpensPlaying = dockKey?.opensPlaying == true)) {
+    if (dockKey != null || content.hasInstrumentTools(keyOpensPlaying = dockKey?.opensPlaying == true, keyHoldsTuner = false)) {
         DockStart(
             modifier = Modifier.fillMaxWidth(),
             content = content,
