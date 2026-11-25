@@ -45,7 +45,7 @@ internal object ChordSheetMetadata {
                 in capoLabels -> "capo"
                 "temp\u00f3", "bpm", "\u05d8\u05de\u05e4\u05d5" -> "tempo"
                 "\u00fctemmutat\u00f3", in foreignTimeLabels -> "time"
-                "el\u0151ad\u00f3" -> "artist"
+                "el\u0151ad\u00f3", "band" -> "artist"
                 "by", "words and music by", "words and music", in foreignCreditLabels -> CREDIT
                 in composerLabels -> "composer"
                 in lyricistLabels -> "lyricist"
@@ -195,7 +195,7 @@ internal object ChordSheetMetadata {
         "^(Capo|Capotraste|Cejilla|Kapodaster|Kapodastr|Capodastre|Kapo|Capodastru|Capotasto|\u05e7\u05d0\u05e4\u05d5|" +
             "Key|Hangnem|T\u00f3nina|Tom|Tono|Tonalidad|Tonart|Tonalit\u00e9|Tonalit\u00e0|Tonacja|Toonsoort|Tonalitate|\u05d8\u05d5\u05e0\u05dc\u05d9\u05d5\u05ea|" +
             "Tempo|Temp\u00f3|BPM|\u05d8\u05de\u05e4\u05d5|Time signature|Time|\u00dctemmutat\u00f3|M\u0103sur\u0103|Taktart|Comp\u00e1s|Mesure|Metro|\u05de\u05e9\u05e7\u05dc|" +
-            "Artist|El\u0151ad\u00f3|Song|Title|Album|Year|Composer|Lyricist|words (?:and|&) music by|words (?:and|&) music|by|" +
+            "Artist|Band|El\u0151ad\u00f3|Song|Title|Album|Year|Composer|Lyricist|words (?:and|&) music by|words (?:and|&) music|by|" +
             (foreignCreditLabels + composerLabels + lyricistLabels).sortedByDescending { it.length }.joinToString("|") + ")" +
             "\\s*[:;]\\s*(.+)$",
         RegexOption.IGNORE_CASE,

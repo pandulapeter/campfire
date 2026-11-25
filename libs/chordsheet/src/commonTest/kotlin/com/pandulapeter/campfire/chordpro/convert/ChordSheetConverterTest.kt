@@ -262,6 +262,14 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `a band label names the artist`() {
+        assertEquals(
+            "{title: Landslide}\n{artist: Fleetwood Mac}\n\n[Am]Hello [C]world\n",
+            convert("Song: Landslide\nBand: Fleetwood Mac\n\nAm     C\nHello world"),
+        )
+    }
+
+    @Test
     fun `a header labelled with semicolons names the song and its album and the year its credit ends in and each once`() {
         assertEquals(
             "{artist: Someone}\n{title: Hello}\n{album: Best of}\n{year: 1972}\n\n[Am]Hello [C]world\n",
@@ -303,19 +311,34 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun `chord shapes listed one a line become definitions - a chord listed with and without a star neither`() {
+    fun `chord shapes listed one a line become definitions - a chord listed with and without a star its plain shape`() {
         val result = convert(
             "Am C\nHello world\n\nBb(#11)/A = x03330\nC: x32010\nD7 (x-x-0-2-1-2)\nF 2 0 1 0\nBb  = 688766\nBb* = 013331\nDm 2010\nLove 202000",
         )
         assertTrue(
             result.startsWith(
                 "{define: Bb(#11)/A base-fret 1 frets x 0 3 3 3 0}\n{define: C base-fret 1 frets x 3 2 0 1 0}\n" +
-                    "{define: D7 base-fret 1 frets x x 0 2 1 2}\n{define: F base-fret 1 frets 2 0 1 0}\n\n",
+                    "{define: D7 base-fret 1 frets x x 0 2 1 2}\n{define: F base-fret 1 frets 2 0 1 0}\n" +
+                    "{define: Bb base-fret 6 frets 1 3 3 2 1 1}\n\n",
             ),
             result,
         )
-        assertTrue(result.endsWith("Bb  = 688766\nBb* = 013331\nDm 2010\nLove 202000\n"), result)
+        // Every other line of the list became a definition, so the starred shape, which no name can define, goes with it.
+        assertTrue(result.endsWith("lo world\n\nDm 2010\nLove 202000\n"), result)
         assertTrue(convert("Am C\nHello world\n\nEm* = 022000").startsWith("{define: Em base-fret 1 frets 0 2 2 0 0 0}\n"))
+        assertTrue(convert("Am C\nHello world\n\nBb  = 688766\nBb = 013331").endsWith("lo world\n\nBb  = 688766\nBb = 013331\n"))
+    }
+
+    @Test
+    fun `a list of shapes that all became definitions loses its label - one with a line left over keeps its starred shape`() {
+        val listed = convert("Am C\nHello world\n\nChords used:\nC:     x32010\nG/B:   x20033\nG/B*:  x20030\nAm7:   x02010")
+        assertEquals(
+            "{define: C base-fret 1 frets x 3 2 0 1 0}\n{define: G/B base-fret 1 frets x 2 0 0 3 3}\n" +
+                "{define: Am7 base-fret 1 frets x 0 2 0 1 0}\n\n[Am]Hel[C]lo world\n",
+            listed,
+        )
+        val leftOver = convert("Am C\nHello world\n\nChords used:\nG/B:   x20033\nG/B*:  x20030\nG/B:   x20003")
+        assertTrue(leftOver.endsWith("Chords used:\nG/B:   x20033\nG/B*:  x20030\nG/B:   x20003\n"), leftOver)
     }
 
     @Test
@@ -549,8 +572,20 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `a string with a note in its margin or in parentheses inside it stays in the staff`() {
+        val text = "e|---0---|---3---|\nB|---1---|---1---|(repeat\nG|---0---|---0---|  5x)\nD|---2---|-0(let ring)|\n" +
+            "A|-3-----|---------| repeat once\nE|-------|---------|"
+        assertEquals("{start_of_tab}\n$text\n{end_of_tab}\n", convert(text))
+        assertEquals("{start_of_tab}\ne|---3-2-0(let ring)|\nB|-0-------------|\n{end_of_tab}\n", convert("e|---3-2-0(let ring)|\nB|-0-------------|"))
+    }
+
+    @Test
     fun `chords written with dashes for their beats are not a tab`() {
         for (text in listOf("Intro\nA - - -\nE - - -", "Chorus\nE - x2\nA - x2", "A - 1 2 3 4\nB - 1 2 3 4", "A-\nE- x2")) {
+            assertFalse(convert(text).contains("{start_of_tab}"), text)
+        }
+        // A string's name and its bar line start a staff: a lyric with a word in parentheses or after a bar is none.
+        for (text in listOf("A love (so true)\nB|ut I know | the way home", "E-mail me (any time) - - -\nA-ha | take on me |")) {
             assertFalse(convert(text).contains("{start_of_tab}"), text)
         }
     }

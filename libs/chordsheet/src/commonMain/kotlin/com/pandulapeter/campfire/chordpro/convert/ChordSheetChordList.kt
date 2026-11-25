@@ -56,7 +56,8 @@ internal object ChordSheetChordList {
     /** A chord's name as it is compared, a German `H` read as the `B` a list beside the song may name it by. */
     private fun name(value: String) = rowChordName(value).replace('H', 'B')
 
-    private fun isLabel(text: String): Boolean {
+    /** A short line naming chords in a language of the app, which labels a list of chords or of their shapes. */
+    fun isLabel(text: String): Boolean {
         val words = text.trim().removeSuffix(":").lowercase().split(' ').filter { it.isNotEmpty() }
         return words.size <= MAX_LABEL_WORDS && words.any { it in chordWords }
     }

@@ -37,7 +37,8 @@ heuristics and near misses are pinned in `ChordSheetConverterTest` and its sibli
 - Over a lyric, the bar lines and repeat counts of any other chord row are dropped, but `N.C.` stays where it stands. A
   `\` among a row's chords is a strum mark, dropped. A row of chord names (or playing marks, `PM`) against a tab staff
   is a line of the tab, kept as it stands in its columns against the strings (a margin all its lines share goes); a
-  German or Hungarian staff names its B string `H`.
+  German or Hungarian staff names its B string `H`, and a string may carry a short note in parentheses or in its
+  margin (`-0(let ring)|`, `|(repeat`), kept where it stands.
 - Over a tab, a heading naming no section (`Intro`, `Solo`) opens one of its kind, until the next heading or lyric.
 
 ## Words any sheet may print
@@ -73,8 +74,10 @@ heuristics and near misses are pinned in `ChordSheetConverterTest` and its sibli
   look, not only at the next heading; with no heading, a run of bold or italic lyrics is a chorus. An inset alone is
   not one (a second column or a bridge starts further in too), and a run right under the title is the header's (a
   credit, an album).
-- Chord shapes listed one a line become `{define}` lines (`ChordSheetDefinitions`), except a chord listed both plain
-  and starred (`Bb`, `Bb*`): the star is dropped where the chord is played, so one definition would stand for both.
+- Chord shapes listed one a line become `{define}` lines (`ChordSheetDefinitions`). Of a chord listed both plain and
+  starred (`G/B`, `G/B*`) only the plain line is: the star is dropped where the chord is played and the app reads no
+  starred name, so no name defines the starred shape without mislabelling one. It goes, with the list's label
+  (`Chords used:`), where every other line of the list became a definition; otherwise it stays text.
 - The ChordPro program's plain text (`ChordProTextExport`): `-- Start of verse` / `-- End of verse` markers, a `-- Title:`
   line, and a literal `{chorus}` recall, which would otherwise make it pass for ChordPro, are read as headings, the title,
   and a recall.

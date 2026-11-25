@@ -265,8 +265,15 @@ internal object LineKinds {
      * with dashes for its beats (`A - - -`, `E - x2`) is otherwise a staff too, two such lines a tab, its chords lost. Its
      * techniques are written as letters too: hammer-on, pull-off, bend, release, dead note, and slide (`4s5`), and as
      * marks: an artificial harmonic (`3*`), a natural one (`<12>`), a tap (`t`), and a vibrato bar (`v`, `^`).
+     *
+     * A string may carry a short note of its own, in parentheses inside the staff (`-0(let ring)|`) or in the margin
+     * after its last bar line (`|(repeat`, `|  5x)`, `| repeat once`), as a sheet prints a repeat beside the middle
+     * strings: read as a lyric, that string would cut the staff in two. The note stays on the line as it stands.
      */
-    private val tab = Regex("^[eEaAbBdDgGhH](?:[#b])?(?:\\s*\\||-(?=(?:[^-]*-){2}))[-0-9|hpbrsxtv/\\\\~(). :*<>^]+$")
+    private val tab = Regex(
+        "^[eEaAbBdDgGhH](?:[#b])?(?:\\s*\\||-(?=(?:[^-]*-){2}))(?:[-0-9|hpbrsxtv/\\\\~(). :*<>^]|\\([A-Za-z][A-Za-z .]{0,15}\\))+" +
+            "(?:\\|\\s*[^|\\s][^|]{0,23})?$",
+    )
 
     /**
      * A row of playing marks printed against a staff's first or last string (`PM---|   PM`, `let ring`, `N.H.`), the

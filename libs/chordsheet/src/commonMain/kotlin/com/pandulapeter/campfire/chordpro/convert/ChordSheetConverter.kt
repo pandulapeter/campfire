@@ -321,8 +321,8 @@ public object ChordSheetConverter {
         )
         val song = SongStructure.Song(
             // A credit printed both under the title and as a labelled line names the song once.
-            header = (title.leading + fields.entries + title.trailing + definitions.values).distinct(),
-            parts = SongStructure.of(lines, features, kinds, candidates, omitted + definitions.keys, fields.changes, convertParentheses),
+            header = (title.leading + fields.entries + title.trailing + definitions.defines.values).distinct(),
+            parts = SongStructure.of(lines, features, kinds, candidates, omitted + definitions.defines.keys + definitions.dropped, fields.changes, convertParentheses),
         )
         val output = SongWriter.write(song)
         // The key lines after the header and the blank line under it are the key changes the body writes.
