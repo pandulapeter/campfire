@@ -43,7 +43,7 @@ internal object ChordSheetChordPlacement {
         }
     } +
         chordRow?.annotation?.let { note ->
-            val inner = note.removeSurrounding("(", ")").replace('[', '(').replace(']', ')').trim()
+            val inner = note.removeSurrounding("(", ")").removeSurrounding("[", "]").replace('[', '(').replace(']', ')').trim()
             " " + if (inner.isEmpty()) ChordProLiteralText.escape(note) else "[$ANNOTATION_MARKER$inner]"
         }.orEmpty()
 

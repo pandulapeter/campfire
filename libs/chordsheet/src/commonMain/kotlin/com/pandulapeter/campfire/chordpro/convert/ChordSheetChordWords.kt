@@ -86,6 +86,9 @@ internal object ChordSheetChordWords {
         val words = rowTokens(text)
         val start = words.indexOfLast { it.text.startsWith('(') }.takeIf { start ->
             start > 0 && words.size - start <= 4 && words.last().text.endsWith(')') && words.drop(start).none { rowChord(it.text) || furniture(it.text) }
+        } ?: (words.size - 1).takeIf { last ->
+            // A note in brackets ends a row, never sits among its chords: a repeat count, `Am7 D7 G7 C [2x]`.
+            last > 0 && words[last].text.let { it.length > 2 && it.startsWith('[') && it.endsWith(']') && !rowChord(it) && !furniture(it) }
         } ?: words.size
         val row = mutableListOf<Token>()
         val notes = mutableListOf<Token>()
