@@ -58,6 +58,8 @@ Documents are read locally, never rendered, uploaded, or kept.
   not make one, so a page number `3` under a small chord-only outro does not take it along; `&`, `+`, `-`, `/`, `|`, and
   dashes are not marks, so a count row (`1 & 2 &`) or a footer (`- 3 -`) ends a run. A small chord row over a count row
   of bare digits (`1 2 3 4`) is still taken for a diagram: nothing in the glyphs tells it from one.
+  A column of diagrams beside the song, sharing its baselines, goes first: one past a band no glyph crosses (two ems)
+  at either edge where every row is chord names each followed by small marks, two names or more.
 - A blank line is a gap over 2.2 em, or one 1.4 times the document's usual step (`PdfParagraphs`: a quantile above the
   median, since a chord row sits closer to its lyric than to the lyric before it) between runs of three lines or more on
   each side, so a tightly set songbook's stanzas part while a header's credits and a diagram's name over its frets stay.

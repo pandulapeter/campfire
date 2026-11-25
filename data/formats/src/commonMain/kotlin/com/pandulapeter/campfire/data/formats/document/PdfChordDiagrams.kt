@@ -24,14 +24,10 @@ import kotlin.math.abs
  * a row of bare digits under a chord row (`1 2 3 4`) still reads as a diagram, which nothing in the glyphs tells apart.
  */
 internal object PdfChordDiagrams {
-    fun withoutDiagrams(glyphs: List<Positioned>): List<Positioned> {
-        val rows = mutableListOf<MutableList<Int>>()
-        for (index in glyphs.indices.sortedBy { glyphs[it].y }) {
-            val row = rows.lastOrNull()
-            val first = row?.first()?.let(glyphs::get)
-            if (first == null || abs(first.y - glyphs[index].y) > minOf(first.span.size, glyphs[index].span.size) * 0.22) rows += mutableListOf(index)
-            else row += index
-        }
+    fun withoutDiagrams(glyphs: List<Positioned>): List<Positioned> = withoutDiagramRows(withoutDiagramColumn(glyphs))
+
+    private fun withoutDiagramRows(glyphs: List<Positioned>): List<Positioned> {
+        val rows = rows(glyphs)
         val inks = rows.map { row -> row.map(glyphs::get).filter { it.span.text.isNotBlank() }.sortedBy { it.span.start } }
         val kinds = inks.map(::kind)
         // The song's text is the measure of small type, since a page of many diagrams and few lyrics has as many labels.
@@ -50,6 +46,61 @@ internal object PdfChordDiagrams {
         }
         return if (isDropped.none { it }) glyphs else glyphs.filterIndexed { index, _ -> !isDropped[index] }
     }
+
+    /**
+     * The page without a column of diagrams set beside the song, at either edge (a margin the ChordPro program fills with
+     * the song's chords). Their labels share baselines with the song's lines, so no whole row is only a diagram's and the
+     * rows above miss them; across the page they would be read into the song's lines as stray chords and numbers. A column
+     * is cut off at a band no glyph crosses, two ems of the song's type wide, and goes only where every row of it is a
+     * diagram's: chord names, each followed by marks before the next, every mark in small type, two names or more.
+     */
+    private fun withoutDiagramColumn(glyphs: List<Positioned>): List<Positioned> {
+        val ink = glyphs.filter { it.span.text.isNotBlank() }.sortedBy { it.span.start }
+        if (ink.isEmpty()) return glyphs
+        val em = ink.map { it.span.size }.sorted()[ink.size / 2]
+        var reach = ink.first().span.end
+        for (glyph in ink.drop(1)) {
+            if (glyph.span.start - reach > em * GUTTER) {
+                val (left, right) = glyphs.partition { it.span.start < glyph.span.start }
+                if (isDiagramColumn(right, besides = left)) return left
+                if (isDiagramColumn(left, besides = right)) return right
+            }
+            reach = maxOf(reach, glyph.span.end)
+        }
+        return glyphs
+    }
+
+    private fun isDiagramColumn(column: List<Positioned>, besides: List<Positioned>): Boolean {
+        val songSizes = inks(besides).filter { kind(it) == Kind.TEXT }.flatMap { row -> row.map { it.span.size } }.sorted()
+        if (songSizes.isEmpty()) return false
+        val small = songSizes[songSizes.size / 2] * SMALL_TYPE
+        val rows = inks(column).filter { it.isNotEmpty() }
+        val kinds = rows.map(::kind)
+        if (kinds.count { it == Kind.NAMES } < 2 || kinds.first() != Kind.NAMES) return false
+        return kinds.indices.all { index ->
+            when (kinds[index]) {
+                Kind.NAMES -> kinds.getOrNull(index + 1).let { it == Kind.MARK || it == Kind.MARKS }
+                Kind.MARK, Kind.MARKS -> rows[index].all { it.span.size < small }
+                Kind.TEXT -> false
+            }
+        }
+    }
+
+    /** The glyphs' rows, top to bottom, as indices into [glyphs]: those within a fifth of their type of one baseline. */
+    private fun rows(glyphs: List<Positioned>): List<List<Int>> {
+        val rows = mutableListOf<MutableList<Int>>()
+        for (index in glyphs.indices.sortedBy { glyphs[it].y }) {
+            val row = rows.lastOrNull()
+            val first = row?.first()?.let(glyphs::get)
+            if (first == null || abs(first.y - glyphs[index].y) > minOf(first.span.size, glyphs[index].span.size) * 0.22) rows += mutableListOf(index)
+            else row += index
+        }
+        return rows
+    }
+
+    /** Each row's ink in reading order. */
+    private fun inks(glyphs: List<Positioned>) =
+        rows(glyphs).map { row -> row.map(glyphs::get).filter { it.span.text.isNotBlank() }.sortedBy { it.span.start } }
 
     /** A row's role in a diagram: its names, one mark, several marks (a diagram's string row), or neither. */
     private enum class Kind { NAMES, MARK, MARKS, TEXT }
@@ -82,6 +133,9 @@ internal object PdfChordDiagrams {
 
     /** What count rows (`1 & 2 &`), page footers (`- 3 -`, `3 / 5`), and bar lines are made of, never a diagram's string. */
     private const val NOT_MARKS = "&+-/|–—"
+
+    /** The narrowest band, in ems of the page's type, that sets a column of diagrams apart from the song. */
+    private const val GUTTER = 2.0
 
     /** The largest share of the song's type a diagram's labels are set in. */
     private const val SMALL_TYPE = 0.85
