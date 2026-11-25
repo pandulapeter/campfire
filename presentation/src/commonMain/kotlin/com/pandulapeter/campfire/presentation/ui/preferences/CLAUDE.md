@@ -26,8 +26,9 @@ same setting**: a page is one component wherever it appears (the Metronome page 
   is the only one. Settings has no buttons: its own tab row picks the page, as nested navigation (tabs over buttons) read
   as two.
 - Pages: **General** (read only mode, `PerformanceSection`, only while the songs are on; Appearance, ending with the
-  Tooltips switch; Language), **Song** (layout and, under pages, turn by; the Chords switch, i.e. lyrics only, scale
-  suggestions, section numbers), **Chords** (Diagrams: the instrument and tuning, diagrams, degrees; Names: notation,
+  Tooltips switch; Language), **Song** (layout and, under pages, turn by; the Chords switch, i.e. lyrics only, section
+  numbers; then Dock: diagrams, scale suggestions, and the dock's own Metronome and Tuner, every switch that adds to
+  song details' dock in one section), **Chords** (Diagrams: the instrument and tuning, degrees; Names: notation,
   accidentals, chord names with a capo, capo keeps the key), **Metronome** (sound, volume, subdivision, tempo change, visual
   beat, vibrate). Same order everywhere.
 - Pages crossfade; each keeps its own scroll position, as Settings' tabs do, and the open page's button pressed again

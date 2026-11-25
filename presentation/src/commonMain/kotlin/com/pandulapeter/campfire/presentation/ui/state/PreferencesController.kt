@@ -180,6 +180,10 @@ internal class PreferencesController(
 
     fun setScaleSuggestionsEnabled(value: Boolean) = changeUserPreferences { copy(areScaleSuggestionsEnabled = value) }
 
+    fun setDockMetronomeEnabled(value: Boolean) = changeUserPreferences { copy(isDockMetronomeEnabled = value) }
+
+    fun setDockTunerEnabled(value: Boolean) = changeUserPreferences { copy(isDockTunerEnabled = value) }
+
     /** The onboarding's scales card, which stands for the scale suggestions too; one write, so neither change is lost. */
     fun setScalesWithSuggestionsEnabled(value: Boolean) = changeUserPreferences { copy(areScalesEnabled = value, areScaleSuggestionsEnabled = value) }
 

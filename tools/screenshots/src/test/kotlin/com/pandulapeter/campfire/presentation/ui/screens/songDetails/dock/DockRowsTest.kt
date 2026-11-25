@@ -15,14 +15,19 @@ import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isPopup
 import androidx.compose.ui.test.onFirst
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.songs_actions
 import com.pandulapeter.campfire.presentation.resources.tuner
 import com.pandulapeter.campfire.screenshots.AppTestScope
 import com.pandulapeter.campfire.screenshots.openSong
 import com.pandulapeter.campfire.screenshots.opensPlayingSheet
 import com.pandulapeter.campfire.screenshots.runAppTest
+import com.pandulapeter.campfire.screenshots.tap
 import kotlinx.serialization.json.JsonPrimitive
 import kotlin.test.Test
 import kotlin.test.assertTrue
@@ -45,6 +50,17 @@ internal class DockRowsTest {
         openSong()
         waitForIdle()
         assertKeyChipStartsDiagramRow()
+    }
+
+    @Test
+    fun `with the dock's tuner switched off the key chip stands alone and the menu holds the tuner`() = runAppTest(
+        extraPreferences = mapOf("isDockTunerEnabled" to JsonPrimitive(false)),
+    ) {
+        openSong()
+        waitForIdle()
+        onNode(hasContentDescription(string(Res.string.tuner)) and hasClickAction()).assertDoesNotExist()
+        tap(hasContentDescription(string(Res.string.songs_actions)))
+        onNode(hasText(string(Res.string.tuner)) and hasAnyAncestor(isPopup())).assertExists()
     }
 
     /** The key chip and the tuner's pill under it stand before the diagram, within its row, so neither is lost. */

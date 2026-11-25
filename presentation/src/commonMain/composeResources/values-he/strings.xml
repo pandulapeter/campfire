@@ -549,7 +549,7 @@
     <string name="settings_chords">אקורדים</string>
     <string name="settings_chords_description">הצגת האקורדים לצד המילים, יחד עם הטונליות, העברת הטונליות והקאפו. כשהאפשרות כבויה, כל שיר מוצג עם מילים בלבד.</string>
     <string name="settings_chord_diagrams">דיאגרמות אקורדים</string>
-    <string name="settings_chord_diagrams_description">הצגת אופן הנגינה של כל אקורד בשיר, בראש השיר.</string>
+    <string name="settings_chord_diagrams_description">מציג איך מנגנים כל אקורד של השיר, לצד השיר וב-PDF שלו.</string>
     <string name="settings_chord_degrees">דרגות האקורדים</string>
     <string name="settings_chord_degrees_description">ציון הדרגה בטונליות של השיר שעליה עומד כל אקורד בדיאגרמה, למשל V7 ליד G7.</string>
     <string name="settings_chord_names">שמות האקורדים עם קאפו</string>
@@ -563,7 +563,10 @@
     <string name="settings_scales_description">הלשונית “סולמות”: כל הסולמות והמודוסים שהאפליקציה מכירה, מוצגים על הכלי שלכם</string>
     <string name="settings_chord_library_description">הלשונית “אקורדים”: כל האקורדים שהאפליקציה מכירה, מוצגים על הכלי שלכם</string>
     <string name="settings_scale_suggestions">הצעות לסולמות</string>
-    <string name="settings_scale_suggestions_description">הצגת הסולמות שאפשר לנגן מעל כל חלק בשיר, אחרי האקורדים שלו, ואת הסולמות של אקורד בדף שלו.</string>
+    <string name="settings_scale_suggestions_description">מציג את הסולמות שעליהם אפשר לנגן כל חלק של השיר, לצד השיר, ואת הסולמות של אקורד בגיליון שלו.</string>
+    <string name="settings_group_dock">סרגל כלים</string>
+    <string name="settings_dock_metronome_description">מציג את הטמפו של השיר ואת הקליק שלו. לשונית המטרונום שומרת עליהם בכל מקרה.</string>
+    <string name="settings_dock_tuner_description">מציג דרך אל הטיונר. בלעדיה, הטיונר נמצא בתפריט של השיר.</string>
     <string name="settings_setlists_description">הלשונית “סט־ליסטים” והוספת שירים לסט־ליסטים. כשהאפשרות כבויה הם רק מוסתרים: אף סט־ליסט לא נמחק.</string>
     <string name="settings_random_picks_description">חמישה שירים אקראיים בראש רשימה של יותר מ־20, חדשים בכל שעה</string>
     <string name="settings_song_details_lookup">פרטי שיר מהרשת</string>

@@ -67,6 +67,8 @@ internal data class UserPreferencesDocument(
     val isChordLibraryEnabled: Boolean = true,
     val areScalesEnabled: Boolean = true,
     val areScaleSuggestionsEnabled: Boolean = true,
+    val isDockMetronomeEnabled: Boolean = true,
+    val isDockTunerEnabled: Boolean = true,
     val instrument: String = "",
     val tunings: Map<String, String> = emptyMap(),
     val toolCapo: Int = 0,

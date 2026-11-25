@@ -509,7 +509,7 @@
     <string name="settings_chords">Accordi</string>
     <string name="settings_chords_description">Mostra gli accordi insieme al testo, con la tonalità, la trasposizione e il capotasto. Se disattivato, ogni canzone mostra solo il testo.</string>
     <string name="settings_chord_diagrams">Diagrammi degli accordi</string>
-    <string name="settings_chord_diagrams_description">Mostra come si suona ogni accordo di una canzone, in cima alla canzone.</string>
+    <string name="settings_chord_diagrams_description">Mostra come si suona ogni accordo del brano, accanto al brano e nel suo PDF.</string>
     <string name="settings_chord_degrees">Gradi degli accordi</string>
     <string name="settings_chord_degrees_description">Indica il grado della tonalità della canzone su cui poggia ogni diagramma, ad esempio V7 accanto a G7.</string>
     <string name="settings_chord_names">Nomi degli accordi con il capotasto</string>
@@ -523,7 +523,10 @@
     <string name="settings_scales_description">La scheda Scale: tutte le scale e i modi che l\'app conosce, disegnati sul tuo strumento</string>
     <string name="settings_chord_library_description">La scheda Accordi: tutti gli accordi che l\'app conosce, disegnati sul tuo strumento</string>
     <string name="settings_scale_suggestions">Scale suggerite</string>
-    <string name="settings_scale_suggestions_description">Mostra le scale su cui si può suonare ogni parte di una canzone, dopo i suoi accordi, e le scale per un accordo nella sua scheda.</string>
+    <string name="settings_scale_suggestions_description">Mostra le scale su cui si può suonare ogni parte del brano, accanto al brano, e le scale di un accordo nella sua scheda.</string>
+    <string name="settings_group_dock">Pannello comandi</string>
+    <string name="settings_dock_metronome_description">Mostra il tempo del brano e il suo clic. La scheda Metronomo li mantiene comunque.</string>
+    <string name="settings_dock_tuner_description">Mostra un accesso all\'accordatore. Senza, l\'accordatore è nel menu del brano.</string>
     <string name="settings_setlists_description">La scheda Scalette e l\'aggiunta di canzoni alle scalette. Se disattivata, vengono solo nascoste: nessuna scaletta viene eliminata.</string>
     <string name="settings_random_picks_description">Cinque canzoni a caso in cima a una lista di più di 20, nuove ogni ora</string>
     <string name="settings_song_details_lookup">Dettagli delle canzoni online</string>

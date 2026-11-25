@@ -171,6 +171,16 @@ data class UserPreferences(
      */
     val areScaleSuggestionsEnabled: Boolean = true,
     /**
+     * Whether song details' dock holds the song's click: its tempo chip, the Tempo sheet it opens, and the M and T keys
+     * there. Off only takes them off the song's screen; the Metronome tab is [isMetronomeEnabled]'s.
+     */
+    val isDockMetronomeEnabled: Boolean = true,
+    /**
+     * Whether song details' dock holds a way to the tuner (its tuner pill, or its tuner button). Off, the tuner is still
+     * reached from the song's menu and the Playing sheet; the Tuner tab is [isTunerEnabled]'s.
+     */
+    val isDockTunerEnabled: Boolean = true,
+    /**
      * The instrument in the player's hands: what the chord diagrams are drawn for, what the tuner listens for, and what
      * decides whether a capo is read as a transposition ([Instrument.KEYBOARD]). Kept on the device and never synced,
      * since one player of a shared library plays the bass and another the guitar.

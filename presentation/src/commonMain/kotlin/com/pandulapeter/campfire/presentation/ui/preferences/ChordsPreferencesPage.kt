@@ -29,8 +29,6 @@ import com.pandulapeter.campfire.presentation.resources.settings_chord_names_sha
 import com.pandulapeter.campfire.presentation.resources.settings_chord_names_sounding
 import com.pandulapeter.campfire.presentation.resources.settings_chord_degrees
 import com.pandulapeter.campfire.presentation.resources.settings_chord_degrees_description
-import com.pandulapeter.campfire.presentation.resources.settings_chord_diagrams
-import com.pandulapeter.campfire.presentation.resources.settings_chord_diagrams_description
 import com.pandulapeter.campfire.presentation.resources.settings_group_chord_names
 import com.pandulapeter.campfire.presentation.resources.settings_group_diagrams
 import com.pandulapeter.campfire.presentation.resources.settings_instrument
@@ -54,8 +52,7 @@ import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSection
 
 /**
  * The Preferences' Chords page, the same in Settings and in the sheet the song details, the Chords, and the Scales tabs
- * open: first how the chords are drawn (the instrument in the player's hands, then whether a song shows its diagrams and
- * their degrees), then how they are written (their notation, their accidentals, whether a song's chords name the shapes
+ * open: first how the chords are drawn (the instrument in the player's hands, then the diagrams' degrees), then how they are written (their notation, their accidentals, whether a song's chords name the shapes
  * fingered above its capo or what sounds, and whether its capo stepper keeps the key). The instrument is also picked
  * where it is used (song details, the Tuner, the Chords and the Scales tabs, and the onboarding): this is the one place
  * that finds it with the rest of how a chord is shown.
@@ -70,7 +67,7 @@ internal fun ChordsPreferencesPage(
     ChordNamesSection(userPreferences = userPreferences, preferencesController = preferencesController, showDialog = showDialog)
 }
 
-/** The instrument the diagrams are drawn for, whether a song shows them, and whether they carry their degrees. */
+/** The instrument the diagrams are drawn for, and whether they carry their degrees; whether a song shows them is the Song page's dock section. */
 @Composable
 private fun ChordDiagramsSection(
     userPreferences: UserPreferences?,
@@ -95,13 +92,6 @@ private fun ChordDiagramsSection(
     val areChordsEnabled = userPreferences?.areChordsEnabled != false
     val areChordDiagramsEnabled = userPreferences?.areChordDiagramsEnabled != false
     val areSongsEnabled = userPreferences?.areSongsEnabled != false
-    SwitchListItem(
-        title = stringResource(Res.string.settings_chord_diagrams),
-        description = stringResource(Res.string.settings_chord_diagrams_description),
-        isChecked = areChordDiagramsEnabled,
-        isEnabled = areSongsEnabled && areChordsEnabled,
-        onCheckedChange = preferencesController::setChordDiagramsEnabled,
-    )
     // A degree labels a diagram, a song's or one of the chords a scale sheet lists (which needs both the Scales and the
     // Chords tab), so it is disabled only where neither is drawn. A numbering already names a song's chords by their
     // degrees, so its diagrams carry none, while a scale sheet's chords keep their letters and their numerals.

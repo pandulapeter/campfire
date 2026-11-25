@@ -166,7 +166,7 @@ internal class MetronomeController(
         val isAccepted = when (val top = backStack.lastOrNull()) {
             CampfireDestination.Metronome -> true
             // A preview shows no metronome, so nothing would be on screen to stop the click with.
-            is CampfireDestination.SongDetails -> top.importPreview == null && userPreferences.value?.isMetronomeEnabled != false
+            is CampfireDestination.SongDetails -> top.importPreview == null && userPreferences.value?.let { it.isMetronomeEnabled && it.isDockMetronomeEnabled } != false
             else -> false
         }
         if (!isAccepted) return false

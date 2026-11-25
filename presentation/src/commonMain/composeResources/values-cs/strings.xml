@@ -545,7 +545,7 @@
     <string name="settings_chords">Akordy</string>
     <string name="settings_chords_description">Zobrazovat akordy nad textem spolu s tóninou, transpozicí a kapodastrem. Když je vypnuto, je každá píseň jen text.</string>
     <string name="settings_chord_diagrams">Diagramy akordů</string>
-    <string name="settings_chord_diagrams_description">Zobrazovat na začátku písně, jak se hraje každý její akord.</string>
+    <string name="settings_chord_diagrams_description">Ukazuje, jak se hraje každý akord písně, vedle písně a v jejím PDF.</string>
     <string name="settings_chord_degrees">Stupně akordů</string>
     <string name="settings_chord_degrees_description">Uvádět, na kterém stupni tóniny písně stojí každý diagram akordu, například V7 vedle G7.</string>
     <string name="settings_chord_names">Názvy akordů s kapodastrem</string>
@@ -559,7 +559,10 @@
     <string name="settings_scales_description">Karta Stupnice: všechny stupnice a módy, které aplikace zná, zakreslené na tvém nástroji</string>
     <string name="settings_chord_library_description">Karta Akordy: všechny akordy, které aplikace zná, zakreslené na tvém nástroji</string>
     <string name="settings_scale_suggestions">Návrhy stupnic</string>
-    <string name="settings_scale_suggestions_description">Zobrazovat za akordy písně stupnice, na které se dá hrát v každé její části, a stupnice k akordu v textu s akordy.</string>
+    <string name="settings_scale_suggestions_description">Ukazuje stupnice, přes které lze hrát každou část písně, vedle písně, a stupnice akordu na jeho kartě.</string>
+    <string name="settings_group_dock">Panel nástrojů</string>
+    <string name="settings_dock_metronome_description">Ukazuje tempo písně a její klik. Karta Metronom je zachová tak jako tak.</string>
+    <string name="settings_dock_tuner_description">Ukazuje cestu k ladičce. Bez ní je ladička v nabídce písně.</string>
     <string name="settings_setlists_description">Karta Setlisty a přidávání písní do setlistů. Když je vypnuto, jsou jen skryté: žádný setlist se nesmaže.</string>
     <string name="settings_random_picks_description">Pět náhodných písní na začátku seznamu s více než 20 písněmi, každou hodinu nové</string>
     <string name="settings_song_details_lookup">Podrobnosti o písni online</string>

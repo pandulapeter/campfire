@@ -143,8 +143,7 @@ internal fun SongDetailsScreen(
     val setlistSlots = remember(setlist, songs) { setlist?.let { buildSetlistSlots(it.entries, songs.map { song -> song.fileName }) } }
     val shouldShowChords = userPreferences?.areChordsEnabled != false
     val chordDiagrams = rememberChordDiagrams(userPreferences = userPreferences)
-    val isMetronomeEnabled = userPreferences?.isMetronomeEnabled != false
-    val isTunerEnabled = userPreferences?.isTunerEnabled != false
+    val (isMetronomeEnabled, isTunerEnabled, isTunerInMenu) = songDetailsToolsOf(userPreferences, shouldShowChords)
     val areSetlistsEnabled = userPreferences?.areSetlistsEnabled != false
     val isCoverArtEnabled = userPreferences?.isCoverArtEnabled == true
     val openCurrentSongInfo = rememberOpenSongInfo(
@@ -215,8 +214,7 @@ internal fun SongDetailsScreen(
             isReadOnly = isReadOnly,
             isPerformanceModeEnabled = isPerformanceModeEnabled,
             shouldShowChords = shouldShowChords,
-            isMetronomeEnabled = isMetronomeEnabled,
-            isTunerEnabled = isTunerEnabled,
+            isTunerInMenu = isTunerInMenu,
             areSetlistsEnabled = areSetlistsEnabled,
             // Nothing is fetched for a song that is not in the library.
             isCoverArtEnabled = isCoverArtEnabled && !isImportPreview,

@@ -159,6 +159,8 @@ Features (Settings → Features):
   (`ImportController`'s `areSongsEnabled`).
 - **Random picks** (`isRandomPicksEnabled`, disabled with the songs off): also answers the question under them.
 - **Metronome**: its tab, a song's tempo chip and Tempo sheet, the M and T keys, and tempo and time wherever a song is read.
+  The Song page's Dock section takes the song's part alone (`isDockMetronomeEnabled`), as it does the dock's way to the
+  tuner (`isDockTunerEnabled`, the song's menu then holding it); both are device-local.
 - **Tuner**: its tab and the sheet's entry, and with them every way to ask for the microphone.
 - **Chords** (`isChordLibraryEnabled`): the Chords tab and the scale sheet's chord rows, whatever songs show.
 - **Scales** (`areScalesEnabled`): the Scales tab and the scale sheet, and with them the scale suggestions.
@@ -177,8 +179,9 @@ another takes what it adds:
 
 - **Chords** (`areChordsEnabled`): a song's chords, key, transposition, and capo; the chord spelling rows are disabled
   only once neither songs nor the Chords and Scales tabs name a chord.
-- **Chord diagrams** (`areChordDiagramsEnabled`): disabled while chords are off; takes a song's diagrams (the dock's, the
-  preview's and the PDF's Chords section); chosen shapes kept. The instrument pill stays (the tuner, the keyboard's
+- **Chord diagrams** (`areChordDiagramsEnabled`, in the Song page's Dock section with scale suggestions): disabled
+  while chords are off; takes a song's diagrams (the dock's, the preview's and the PDF's Chords section); chosen shapes
+  kept. The instrument pill stays (the tuner, the keyboard's
   sounding names).
 - **Chord degrees** (`areChordDegreesEnabled`): off by default, since numerals a reader never asked for look like the
   notation gone wrong; disabled while no diagram it labels is drawn (a song's in neither numbering, or a scale sheet's,

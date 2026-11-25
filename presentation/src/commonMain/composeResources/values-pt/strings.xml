@@ -511,7 +511,7 @@
     <string name="settings_chords">Acordes</string>
     <string name="settings_chords_description">Mostra os acordes junto com a letra, além do tom, da transposição e do capotraste. Desativado, todas as músicas mostram só a letra.</string>
     <string name="settings_chord_diagrams">Diagramas de acordes</string>
-    <string name="settings_chord_diagrams_description">Mostra como cada acorde da música é tocado, no início da música.</string>
+    <string name="settings_chord_diagrams_description">Mostra como se toca cada acorde da música, ao lado da música e no seu PDF.</string>
     <string name="settings_chord_degrees">Graus dos acordes</string>
     <string name="settings_chord_degrees_description">Indica em qual grau do tom da música cada diagrama de acorde está, como V7 ao lado de G7.</string>
     <string name="settings_chord_names">Nomes dos acordes com capotraste</string>
@@ -525,7 +525,10 @@
     <string name="settings_scales_description">A aba Escalas: todas as escalas e modos que o app conhece, desenhados no seu instrumento</string>
     <string name="settings_chord_library_description">A aba Acordes: todos os acordes que o app conhece, desenhados no seu instrumento</string>
     <string name="settings_scale_suggestions">Sugestões de escalas</string>
-    <string name="settings_scale_suggestions_description">Mostra as escalas que podem ser tocadas sobre cada parte da música, depois dos acordes, e as escalas de um acorde na cifra.</string>
+    <string name="settings_scale_suggestions_description">Mostra as escalas sobre as quais cada parte da música pode ser tocada, ao lado da música, e as escalas de um acorde na sua folha.</string>
+    <string name="settings_group_dock">Painel de ferramentas</string>
+    <string name="settings_dock_metronome_description">Mostra o andamento da música e o seu clique. A aba Metrônomo os mantém de qualquer forma.</string>
+    <string name="settings_dock_tuner_description">Mostra um acesso ao afinador. Sem ele, o afinador fica no menu da música.</string>
     <string name="settings_setlists_description">A aba Repertórios e a adição de músicas a repertórios. Desativados, eles ficam apenas ocultos: nenhum repertório é excluído.</string>
     <string name="settings_random_picks_description">Cinco músicas aleatórias no topo de uma lista com mais de 20, renovadas a cada hora</string>
     <string name="settings_song_details_lookup">Detalhes da música online</string>

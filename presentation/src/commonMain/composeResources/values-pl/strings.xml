@@ -540,7 +540,7 @@
     <string name="settings_chords">Akordy</string>
     <string name="settings_chords_description">Pokazuj akordy nad tekstem, a do tego tonację, transpozycję i kapodaster. Po wyłączeniu każda piosenka to sam tekst.</string>
     <string name="settings_chord_diagrams">Diagramy akordów</string>
-    <string name="settings_chord_diagrams_description">Pokazuj na początku piosenki, jak zagrać każdy jej akord.</string>
+    <string name="settings_chord_diagrams_description">Pokazuje, jak gra się każdy akord utworu, obok utworu i w jego PDF-ie.</string>
     <string name="settings_chord_degrees">Stopnie akordów</string>
     <string name="settings_chord_degrees_description">Podawaj stopień tonacji piosenki, na którym stoi każdy diagram akordu, np. V7 obok G7.</string>
     <string name="settings_chord_names">Nazwy akordów z kapodastrem</string>
@@ -554,7 +554,10 @@
     <string name="settings_scales_description">Karta Skale: każda skala i modus znane aplikacji, rozrysowane na twoim instrumencie</string>
     <string name="settings_chord_library_description">Karta Akordy: każdy akord znany aplikacji, rozrysowany na twoim instrumencie</string>
     <string name="settings_scale_suggestions">Podpowiedzi skal</string>
-    <string name="settings_scale_suggestions_description">Pokazuj po akordach piosenki skale, na których można grać w każdej jej części, oraz skale dla akordu w tekście z akordami.</string>
+    <string name="settings_scale_suggestions_description">Pokazuje skale, na których można grać każdą część utworu, obok utworu, oraz skale akordu na jego karcie.</string>
+    <string name="settings_group_dock">Panel narzędzi</string>
+    <string name="settings_dock_metronome_description">Pokazuje tempo utworu i jego klik. Karta Metronom zachowuje je tak czy inaczej.</string>
+    <string name="settings_dock_tuner_description">Pokazuje drogę do stroika. Bez niej stroik jest w menu utworu.</string>
     <string name="settings_setlists_description">Karta Setlisty i dodawanie piosenek do setlist. Po wyłączeniu są tylko ukryte: żadna setlista nie zostanie usunięta.</string>
     <string name="settings_random_picks_description">Pięć losowych piosenek na początku listy liczącej ponad 20, nowe co godzinę</string>
     <string name="settings_song_details_lookup">Szczegóły piosenki z sieci</string>

@@ -70,8 +70,7 @@ internal fun SongDetailsAppBar(
     isReadOnly: Boolean,
     isPerformanceModeEnabled: Boolean,
     shouldShowChords: Boolean,
-    isMetronomeEnabled: Boolean,
-    isTunerEnabled: Boolean,
+    isTunerInMenu: Boolean,
     areSetlistsEnabled: Boolean,
     isCoverArtEnabled: Boolean,
     chordSpelling: UserPreferences.ChordSpelling,
@@ -99,10 +98,9 @@ internal fun SongDetailsAppBar(
     val showsCoverInBar = isCoverArtEnabled && appBarButtons.isCoverShown
     val showsFontScaleInBar = appBarButtons.isFontScaleShown
     val showsSetlistAssignmentsInBar = areSetlistsEnabled && appBarButtons.isSetlistAssignmentsShown
-    // The tuner is the dock's, which is there wherever the chords or the metronome are switched on; with both off there
-    // is no dock to put it in, so the menu holds it then.
+    // The tuner is the dock's wherever the dock holds one (see SongDetailsScreen), else the menu's.
     val openPreferences = { page: PreferencesPage -> dialogHost.showDialog(DialogType.Preferences(PreferencesContext.SONG_DETAILS, page)) }
-    val tunerAction = if (isTunerEnabled && !shouldShowChords && !isMetronomeEnabled) {
+    val tunerAction = if (isTunerInMenu) {
         tunerAction(isAlwaysInMenu = isReadOnly, onClick = onTunerClicked)
     } else {
         null

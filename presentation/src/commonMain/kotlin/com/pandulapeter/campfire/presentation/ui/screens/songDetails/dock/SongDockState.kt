@@ -73,11 +73,12 @@ internal fun rememberSongDock(
     isImportPreview: Boolean,
     contentPadding: PaddingValues,
 ): SongDockState {
+    val isMetronomeShown = userPreferences?.isMetronomeEnabled != false && userPreferences?.isDockMetronomeEnabled != false
     val rows = DockRows(
-        hasPlayingRow = userPreferences?.areChordsEnabled != false || userPreferences.isMetronomeEnabled,
+        hasPlayingRow = userPreferences?.areChordsEnabled != false || isMetronomeShown,
         hasChordRow = chordDiagrams?.tuning != null,
         hasScaleRow = SongSections.of(userPreferences).areScaleSuggestionsShown,
-        isMetronomeOnly = userPreferences?.areChordsEnabled == false && userPreferences.isMetronomeEnabled,
+        isMetronomeOnly = userPreferences?.areChordsEnabled == false && isMetronomeShown,
     )
     val turnsByColumn = userPreferences?.songLayout != SongLayout.CONTINUOUS && userPreferences?.pageTurn == PageTurn.COLUMN
     val windowSize = LocalWindowInfo.current.containerDpSize
