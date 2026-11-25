@@ -477,9 +477,9 @@ class ChordSheetConverterTest {
             ),
         )
         val result = ChordSheetConverter.convert(sheet)
-        assertEquals(4, result.size, result.joinToString("{new_song}\n"))
-        assertTrue(result[0].startsWith("Contents\n"), result[0])
-        assertEquals(listOf("{title: Alpha}", "{title: Beta}", "{title: Gamma}"), result.drop(1).map { it.lineSequence().first() })
+        // The contents page splits the book and is no song of it.
+        assertEquals(3, result.size, result.joinToString("{new_song}\n"))
+        assertEquals(listOf("{title: Alpha}", "{title: Beta}", "{title: Gamma}"), result.map { it.lineSequence().first() })
     }
 
     @Test
@@ -748,10 +748,10 @@ class ChordSheetConverterTest {
             "Gamma\nAm    C\nLast words",
         ).map { ChordSheet.Page(ChordSheet.ofPlainText(it).pages.single().lines) }
         val result = ChordSheetConverter.convert(ChordSheet(pages))
-        assertEquals(5, result.size, result.joinToString("{new_song}\n"))
-        assertEquals("{title: Alpha}\n\n[Am]Hello [C]world\n[G]Beta [F]\n", result[2])
-        assertTrue(result[3].startsWith("{title: Beta}"), result[3])
-        assertTrue(result[4].startsWith("{title: Gamma}"), result[4])
+        assertEquals(4, result.size, result.joinToString("{new_song}\n"))
+        assertEquals("{title: Alpha}\n\n[Am]Hello [C]world\n[G]Beta [F]\n", result[1])
+        assertTrue(result[2].startsWith("{title: Beta}"), result[2])
+        assertTrue(result[3].startsWith("{title: Gamma}"), result[3])
     }
 
     @Test
@@ -1095,11 +1095,11 @@ class ChordSheetConverterTest {
                 titles.map { ChordSheet.Page(ChordSheet.ofPlainText("$it\nAm    C\nHello world").pages.single().lines) },
         )
         val counted = ChordSheetConverter.convert(book("1. Alpha", "2. Beta", "3. Gamma"))
-        assertEquals(listOf("Alpha", "Beta", "Gamma"), counted.drop(1).map { ChordProParser.parse(it).metadata.title })
+        assertEquals(listOf("Alpha", "Beta", "Gamma"), counted.map { ChordProParser.parse(it).metadata.title })
         val named = ChordSheetConverter.convert(book("99 Red Balloons", "Alpha", "Beta"))
-        assertEquals(listOf("99 Red Balloons", "Alpha", "Beta"), named.drop(1).map { ChordProParser.parse(it).metadata.title })
+        assertEquals(listOf("99 Red Balloons", "Alpha", "Beta"), named.map { ChordProParser.parse(it).metadata.title })
         val blankFirstPage = ChordSheetConverter.convert(ChordSheet(listOf(ChordSheet.Page(emptyList())) + book("1. Alpha", "2. Beta", "3. Gamma").pages))
-        assertEquals(listOf("Alpha", "Beta", "Gamma"), blankFirstPage.drop(1).map { ChordProParser.parse(it).metadata.title })
+        assertEquals(listOf("Alpha", "Beta", "Gamma"), blankFirstPage.map { ChordProParser.parse(it).metadata.title })
     }
 
     @Test

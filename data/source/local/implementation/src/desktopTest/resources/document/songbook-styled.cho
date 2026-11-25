@@ -1,13 +1,6 @@
 {title: Guitar Songbook}
 {artist: Folk songs}
 {new_song}
-{title: Songs Index}
-
-Amazing Grace ............................................... 1
-Oh! Susanna ................................................. 2
-Home on the Range ........................................... 3
-Shenandoah .................................................. 4
-{new_song}
 {title: Amazing Grace}
 {artist: John Newton}
 

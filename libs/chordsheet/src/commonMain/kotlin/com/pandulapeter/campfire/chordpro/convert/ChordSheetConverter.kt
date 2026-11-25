@@ -76,9 +76,24 @@ public object ChordSheetConverter {
                 if (place !in cuts.dropped) groups.last() += cuts.numbers[place]?.let { length -> withoutNumber(line, length) } ?: line
             }
         }
-        return groups.map { ChordSheetSongCrop.cropped(it, pageScores) }
+        val songs = groups.map { ChordSheetSongCrop.cropped(it, pageScores) }
+        return songs.filterIndexed { index, song -> !isContents(song, songs.filterIndexed { other, _ -> other != index }) }
             .map { normalize(convertSong(expandLabels(withoutInjections(singleSpaced(ChordSheetSiteDetails.withValuesJoined(ChordSheetRomanChords.named(it))))), guessesTitle, profile, knownTitle)) }.filter { it.isNotBlank() }
     }
+
+    /**
+     * Whether [song], one of a document's several, is its contents rather than a song: it plays no chord, and its lines
+     * name at least two of the [others] by the titles they open with (`1. Red River Valley ....... 2`). The split already
+     * reads a contents page for where songs start; the page itself is no song to import.
+     */
+    private fun isContents(song: List<Rendered>, others: List<List<Rendered>>): Boolean {
+        if (others.size < 2 || chordCandidates(song).any { it != null }) return false
+        val entries = song.map { contentsWords(it.text) }.filter { it.isNotEmpty() }
+        val titles = others.mapNotNull { other -> other.firstOrNull { it.text.isNotBlank() }?.let { contentsWords(it.text) } }.filter { it.isNotEmpty() }
+        return titles.count { title -> entries.any { entry -> " $entry ".contains(" $title ") } } >= 2
+    }
+
+    private fun contentsWords(text: String) = text.lowercase().split(Regex("[^\\p{L}]+")).filter { it.isNotEmpty() }.joinToString(" ")
 
     /**
      * The lines a lyrics site puts into a copy of its page, Genius's "You might also like" and the "12Embed" its
