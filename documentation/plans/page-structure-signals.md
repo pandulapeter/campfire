@@ -10,8 +10,9 @@
 # Plan: the page model sees the page's structure
 
 **Status:** the experiment is done and every mark earns its place (third gate runs). Under way (2026-11-25): step 1's
-two diagnostic gates (`.runs/diag-seed11/` and `.runs/diag-nostaves/`, both variant, `gate.py --out`) and step 2's
-corpus half; its script half is done (*Next session*, at the end).
+two diagnostic gates (`.runs/diag-seed11/` and `.runs/diag-nostaves/`, both variant, `gate.py --out`, over the corpus
+before step 2), then step 4's gates. Step 2 is done; steps 3, 5, and 6 are written in the session's worktree and land
+together with the weights step 4 exports, since a change to `lines.py` ships with its port (*Next session*, at the end).
 When the app reads a web page itself, it hands the page model each line's structure too: whether the line is a link or
 a button, whether it starts a new card or section, and how it is set. The crop can then drop calls to action and
 partner cards next to a song, which text alone cannot tell apart from the song's own notes.
@@ -191,9 +192,7 @@ pages-only experiments above cannot be set against it.
 ## Where things are
 
 - **Corpus** (`campfire.pageCorpus`): `pages/` and `labels/` are what today's gate, export, and `PageCorpusTest` read.
-  `marked/` holds the marked copies (its `README.md`): 899 pages with `marks`, `marked/labels/` the labels moved onto
-  them. 16 labelled pages have no marked copy, and the 33 raised-chord pages' marked copies predate the raised-chord
-  read (five moved aside to `.runs/before-raised/marked/`): read those again with the merged script.
+  Every page but ten carries `marks` (step 2); `marked/` is the experiment's copy, now superseded.
 - **The experiment** (`marked/spike/experiment/`, outside git): the gate, `lines.py`, `model.py`, and `synthetic.py`
   with marks (`gate.py --marks size,bold,italic,monospace,heading,link,newBlock,landmark --group-by page|site --out
   <run> --variants "pages only"`, run from that folder; each marked page also trains unmarked, so a run takes about
@@ -216,8 +215,13 @@ pages-only experiments above cannot be set against it.
 2. **The script** (done): `PAGE_SNAPSHOT_SCRIPT` and `PageText.js` return `marks`, one per line of the final text, a
    line the raised-chord rewrite splits giving both halves its marks (the words half `newBlock` 0); `collect.py` writes
    them into `pages/<id>.json`. On 30 corpus pages the text is unchanged and the marks are `page-marks.js`'s. Kotlin's
-   `lines()` also splits on a lone `\r`: the decoding (step 6) splits on `\n` only. Still to do: read the corpus again with it, carry the labels over as `marked/` did, and let `pages/` and
-   `labels/` take the result, the old ones kept aside.
+   `lines()` also splits on a lone `\r`: the decoding (step 6) splits on `\n` only. The corpus (done): `pages/` and
+   `labels/` now hold the marked read, the old ones in `.runs/before-marks/`. 905 of 915 pages have marks (amdm.ru's
+   three turn the browser away, abcnotation.com's seven did not answer); a page whose `marked/` copy was today's read
+   took it and its carried labels, the 45 that were not (the raised-chord sites, and the 16 with no marked copy) were
+   read again, and six whose chord rows the raised-chord read now splits were labelled again by the teacher (agreement
+   0.98 to 1.0). The raised-chord re-read of 2026-11-25 had covered only spiewnik.wywrota.pl and chords-and-tabs.net
+   (33 pages); kytaristka.cz's and beausoleil.free.fr's were read again here.
 3. **The model in the repository**: the experiment's `lines.py` and gate changes into `tools/page-model` (marked pages
    trained twice, the gate scoring unmarked pages too).
 4. **The gate that decides**: both variant, three models on the same corpus (no marks, every mark, every mark given
