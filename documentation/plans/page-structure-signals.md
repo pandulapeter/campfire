@@ -208,10 +208,13 @@ pages-only experiments above cannot be set against it.
 
 ## Next session
 
-1. **Explain the plain retrain's loss on other sites** before anything ships: two both-variant gates side by side on
-   the current corpus, today's recipe with `--seed 11`, and the same without `staves_ignored`. Compare each with
-   `gate-official2` and `gate-shipped` on the unchanged pages (Ultimate Guitar apart). If the grown corpus is the
-   cause, balance it (for example weight sites so the large ones do not dominate) before the marks.
+1. **The plain retrain's loss on other sites** (done): seed noise, not the corpus. On the 441 unchanged pages of other
+   sites, today's recipe scored F1 0.874 with `--seed 7` (`gate-official2`) and 0.888 with `--seed 11` (32 pages losing
+   a song line, 156 lines lost, 5,811 clutter lines kept), against `gate-shipped`'s 0.886 (37, 150, 5,427); without
+   `staves_ignored` it scored 0.878 (39, 184, 6,058), so that rule stays. Ultimate Guitar's 25 unchanged pages lost
+   nothing in any run, F1 0.975 shipped, 0.980 to 0.986 retrained. No balancing: a seed moves F1 on other sites by about
+   0.014, as much as the change being judged, so step 4 runs every model at both seeds (7 and 11) and compares like
+   with like.
 2. **The script** (done): `PAGE_SNAPSHOT_SCRIPT` and `PageText.js` return `marks`, one per line of the final text, a
    line the raised-chord rewrite splits giving both halves its marks (the words half `newBlock` 0); `collect.py` writes
    them into `pages/<id>.json`. On 30 corpus pages the text is unchanged and the marks are `page-marks.js`'s. Kotlin's
@@ -225,7 +228,8 @@ pages-only experiments above cannot be set against it.
 3. **The model in the repository**: the experiment's `lines.py` and gate changes into `tools/page-model` (marked pages
    trained twice, the gate scoring unmarked pages too).
 4. **The gate that decides**: both variant, three models on the same corpus (no marks, every mark, every mark given
-   unmarked pages), each against `gate-shipped` on unchanged pages, Ultimate Guitar first, by the rule in *Which pages
+   unmarked pages), each at seeds 7 and 11 (`.runs/decide-<nomarks|marks>-s<seed>/`, the marked runs scoring unmarked
+   pages too), each against `gate-shipped` on unchanged pages, Ultimate Guitar first, by the rule in *Which pages
    count most*.
 5. **The port**: `LineFeatures.kt` and `LineRules.kt` follow `lines.py`, `PageModelWeights` accepts the new feature
    count with `export.py`'s `VERSION` bumped, the fixtures are regenerated (`export.py --fixtures`), and the weights
