@@ -13,9 +13,6 @@ What's planned for Campfire, grouped by area.
 
 ## In progress
 
-- **Song details as a reading surface with a dock**: the song starts at its first line; taps on it only step; the key
-  (and capo), chord diagrams, scale suggestions, and tempo with its click live in a dock under it (a side panel on short
-  and wide windows). Plan: [song-details-dock.md](plans/song-details-dock.md)
 - **Very large screens**: check how every screen behaves on a very wide or tall window (a 4K or ultrawide monitor, a TV),
   now that the Chords and Scales tabs fill the whole width and the Metronome and Tuner are centered under a width cap
 - **The page model sees the page's structure.** A page the app reads itself (a link, a Safari share)
