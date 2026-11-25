@@ -56,4 +56,21 @@ internal class HeadedSectionTest {
         assertEquals(0..0, sectionsOnScreen(0, 300, rows))
         assertEquals(0..1, sectionsOnScreen(300, 300, rows))
     }
+
+    @Test
+    fun `rows over a tall last row are read by their stops until its lines begin`() {
+        val rows = SongRows(
+            stepOffsets = listOf(0, 470, 942),
+            stepSections = listOf(0, 2, 4),
+            isSteppedByRow = true,
+            lineTops = listOf(942, 1002, 1026),
+            lineBottoms = listOf(1002, 1026, 1050),
+            lineSections = listOf(4, 4, 5),
+        )
+        assertEquals(0, sectionAt(0, rows))
+        assertEquals(2, sectionAt(470, rows))
+        assertEquals(0..1, sectionsOnScreen(0, 470, rows))
+        assertEquals(4, sectionAt(1002, rows))
+        assertEquals(4..5, sectionsOnScreen(942, 470, rows))
+    }
 }
