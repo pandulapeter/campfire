@@ -32,11 +32,13 @@ still to come (the key and tempo chips, the chord strip, the scale row, the shee
 - **Decided by the switches** (`DockRows`): the playing controls with the chords or the metronome on, the chords with
   diagrams drawn on an instrument with shapes, the scale suggestions. No row, no dock. A song with nothing for a row
   leaves it empty, or for the diagrams says so.
-- **The budget scales to the room** (`dockBudgetOf`, tested): the share of the window that costs no page turn, as
-  `PageCountTest` measured it on 360 × 640 dp (80 dp turned by page, 60 by column, 48 and 40 over a pager bar), the same
-  share of a taller window. Within it, the richest tier that fits (`dockLayoutOf`): diagrams at the Chords section's
-  size, smaller ones, or one row with a chip per chord. A phone always gets the one row; its padding is as thin as a
-  chip allows, since 48 dp already cost a column-turned setlist a step.
+- **Its tier is the window's** (`dockLayoutOf`, tested). A short window (`SHORT_WINDOW_HEIGHT`, a phone on its side)
+  gets one row with a chip per chord until the side panel comes (the plan's step 13). Any other window gets two rows,
+  the chords' diagrams in the second: at the Chords section's size where they fit the budget (`dockBudgetOf`: the
+  share of the window that costs no page turn, as `PageCountTest` measured it on 360 × 640 dp, 80 dp turned by page, 60
+  by column, 48 and 40 over a pager bar, the same share of a taller window), else smaller. The owner chose diagrams on
+  an upright phone at the cost of up to two pages or steps on a long song, which `PageCountTest` holds (the smaller
+  diagrams are as large as keep that: a 112 dp dock). Its padding is as thin as a chip allows.
 - The row height follows the system text size (`songControlHeight`), never the song's: the controls are drawn at the
   interface's size (`fontScale` 1).
 - Every row scrolls sideways by hand and runs to the screen's edges, padded in from them, so nothing fades yet: a fade

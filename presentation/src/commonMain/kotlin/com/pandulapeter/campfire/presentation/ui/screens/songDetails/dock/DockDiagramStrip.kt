@@ -84,7 +84,7 @@ internal fun DockDiagramStrip(
     }
 }
 
-/** How large a diagram is drawn: the Chords section's size, or [isSmall] about seven tenths of it. */
+/** How large a diagram is drawn: the Chords section's size, or [isSmall] six tenths of it. */
 private fun diagramSizeOf(isFretted: Boolean, isSmall: Boolean): DpSize {
     val full = if (isFretted) DpSize(FRETTED_WIDTH, FRETTED_HEIGHT) else DpSize(KEYBOARD_WIDTH, KEYBOARD_HEIGHT)
     return if (isSmall) full * SMALL_SCALE else full
@@ -94,4 +94,4 @@ private val FRETTED_WIDTH: Dp = 56.dp
 private val FRETTED_HEIGHT: Dp = 70.dp
 private val KEYBOARD_WIDTH: Dp = 76.dp
 private val KEYBOARD_HEIGHT: Dp = 40.dp
-private const val SMALL_SCALE = 0.7f
+private const val SMALL_SCALE = 0.6f

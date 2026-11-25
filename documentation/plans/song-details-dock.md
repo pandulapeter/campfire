@@ -105,20 +105,21 @@ step everywhere, but a fixed 122 dp dock then costs 1 to 3 pages or column steps
 by column: 12 → 15; in a setlist by page: 13 → 15), and more at 592 dp (the bars taken off). The break-even is about
 80 dp turned by page and about 60 dp turned by column; in a column-turned setlist only 20 to 40 dp above the pager row.
 
-**Decided: the dock scales to the room.** Its height is chosen by the screen (the window's height, the reading mode, a
-setlist's pager row), never by the song, so the page count does not grow: full diagrams where there is room, smaller
-diagrams below that, and on the shortest budget one row of chord-name chips (a chip opens the chord sheet as a diagram
-does) beside the key and tempo. The budget is the step 1 break-even for the mode, rechecked by the same measurement as a
-UI test once the dock exists.
+**Decided: the dock scales to the room, and an upright phone keeps its diagrams.** Its height is chosen by the screen
+(the window's height, the reading mode, a setlist's pager row), never by the song: full diagrams where they fit the
+step 1 break-even for the mode (`dockBudgetOf`), smaller diagrams below that, and in a short window
+(`SHORT_WINDOW_HEIGHT`) one row of chord-name chips (a chip opens the chord sheet as a diagram does) beside the key
+and tempo, until step 13 gives it the side panel. The owner chose diagrams on an upright phone at the cost of up to two
+pages on a long song; the one-row tier is for short windows only. `PageCountTest` holds every case within two pages or
+steps of its count before the dock, and fails past that.
 
-**Measured (steps 3 and 8, `PageCountTest`, 360 × 640 dp).** Pages or column steps, before → with the dock (one row of
-40 dp there): House of the Rising Sun 8 → 7 by page, 9 → 8 in a setlist, 7 → 7 by column, 8 → 8 in a setlist; a
-seven-verse strummed song 10 → 10, 11 → 10, 10 → 9, 10 → 10. The budgets this fixes (`dockBudgetOf`): 80 dp by page,
-60 dp by column, 48 dp by page over a pager bar (60 dp costs the long song a page there), 40 dp by column over one
-(48 dp costs it a step), the same share of a taller window. A phone always gets the one row, the controls, chord chips,
-and scale chips in it; smaller diagrams from about 960 dp tall, full ones from about 1,120 dp. A step inside a tall stop
-now pages at least half the screen rather than two thirds, so a chorded line the page cuts at its bottom is whole at the
-next one's top (the dock's 40 dp exposed it on a phone on its side at the largest text size).
+**Measured (`PageCountTest`, 360 × 640 dp, the smaller diagrams' 112 dp dock).** Pages or column steps, before → with
+the dock: House of the Rising Sun 8 → 8 by page, 9 → 9 in a setlist, 7 → 8 by column, 8 → 9 in a setlist; a
+seven-verse strummed song 10 → 12, 11 → 13, 10 → 12, 10 → 12. Diagrams 50 dp tall (a 120 dp dock) cost the long song
+three steps by column in a setlist, so they are 42 dp. Full ones come from about 1,120 dp tall.
+
+**Decided: a step inside a tall stop pages at least half the screen** rather than two thirds, so a chorded line the page
+cuts at its bottom is whole at the next one's top (the dock exposed it on a phone on its side at the largest text size).
 
 ## Steps
 

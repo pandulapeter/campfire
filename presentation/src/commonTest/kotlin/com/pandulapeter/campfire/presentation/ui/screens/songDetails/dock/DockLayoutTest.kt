@@ -20,19 +20,25 @@ internal class DockLayoutTest {
     private val everyRow = DockRows(hasPlayingRow = true, hasChordRow = true, hasScaleRow = true)
 
     @Test
-    fun `the smallest phone gets one row of chord chips however it is read`() {
+    fun `an upright phone gets smaller diagrams in two rows however it is read`() {
         listOf(false to false, false to true, true to false, true to true).forEach { (turnsByColumn, hasPagerBar) ->
             val budget = dockBudgetOf(windowHeight = 640.dp, turnsByColumn = turnsByColumn, hasPagerBar = hasPagerBar)
-            assertEquals(DockTier.CHORD_CHIPS, dockLayoutOf(everyRow, budget)?.tier)
+            val layout = checkNotNull(dockLayoutOf(everyRow, budget, isShortWindow = false))
+            assertEquals(DockTier.SMALL_DIAGRAMS, layout.tier)
+            assertTrue(layout.height <= 122.dp, "$layout is taller than the plan's two rows")
         }
     }
 
     @Test
-    fun `a taller window gets smaller diagrams and then full ones`() {
+    fun `a short window gets one row of chord chips however much budget it has`() =
+        assertEquals(DockTier.CHORD_CHIPS, dockLayoutOf(everyRow, 1000.dp, isShortWindow = true)?.tier)
+
+    @Test
+    fun `a taller window gets full diagrams once they fit its budget`() {
         val tiers = listOf(640, 1024, 1280).map { height ->
-            dockLayoutOf(everyRow, dockBudgetOf(windowHeight = height.dp, turnsByColumn = false, hasPagerBar = false))?.tier
+            dockLayoutOf(everyRow, dockBudgetOf(windowHeight = height.dp, turnsByColumn = false, hasPagerBar = false), isShortWindow = false)?.tier
         }
-        assertEquals(listOf(DockTier.CHORD_CHIPS, DockTier.SMALL_DIAGRAMS, DockTier.FULL_DIAGRAMS), tiers)
+        assertEquals(listOf(DockTier.SMALL_DIAGRAMS, DockTier.SMALL_DIAGRAMS, DockTier.FULL_DIAGRAMS), tiers)
     }
 
     @Test
@@ -46,19 +52,20 @@ internal class DockLayoutTest {
     }
 
     @Test
-    fun `a dock never grows past its budget unless it is one row`() {
+    fun `full diagrams never grow past the budget`() {
         (0..1600 step 40).forEach { budget ->
-            val layout = checkNotNull(dockLayoutOf(everyRow, budget.dp))
-            assertTrue(layout.height <= budget.dp || layout.tier == DockTier.CHORD_CHIPS, "$layout over a budget of $budget dp")
+            val layout = checkNotNull(dockLayoutOf(everyRow, budget.dp, isShortWindow = false))
+            assertTrue(layout.height <= budget.dp || layout.tier != DockTier.FULL_DIAGRAMS, "$layout over a budget of $budget dp")
         }
     }
 
     @Test
     fun `without the chords' row the dock is one row however much room there is`() {
         val rows = everyRow.copy(hasChordRow = false)
-        assertEquals(dockLayoutOf(rows, 0.dp), dockLayoutOf(rows, 1000.dp))
+        assertEquals(dockLayoutOf(rows, 0.dp, isShortWindow = false), dockLayoutOf(rows, 1000.dp, isShortWindow = false))
+        assertEquals(DockTier.CHORD_CHIPS, dockLayoutOf(rows, 1000.dp, isShortWindow = false)?.tier)
     }
 
     @Test
-    fun `no row is no dock`() = assertNull(dockLayoutOf(DockRows(hasPlayingRow = false, hasChordRow = false, hasScaleRow = false), 1000.dp))
+    fun `no row is no dock`() = assertNull(dockLayoutOf(DockRows(hasPlayingRow = false, hasChordRow = false, hasScaleRow = false), 1000.dp, isShortWindow = false))
 }

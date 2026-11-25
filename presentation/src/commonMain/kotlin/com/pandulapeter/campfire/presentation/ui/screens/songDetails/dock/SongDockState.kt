@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.preferences.PageTurn
 import com.pandulapeter.campfire.data.model.preferences.SongLayout
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
+import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.preferences.SongSections
 import com.pandulapeter.campfire.presentation.ui.songView.model.ChordDiagrams
 
@@ -48,7 +49,7 @@ internal class SongDockState(
  * The dock as the switches in [userPreferences] and the window decide it, never the song: its rows (the playing controls
  * with the chords or the metronome on, the chords with [chordDiagrams] drawn on an instrument with shapes, the scale
  * suggestions), and how much room the reading mode and a setlist's pager bar ([hasPagerBar]) leave it
- * ([dockBudgetOf]). Without the pager bar it covers the [bottomInset] too.
+ * ([dockBudgetOf]) in a window that is not short. Without the pager bar it covers the [bottomInset] too.
  */
 @Composable
 internal fun rememberSongDock(
@@ -67,7 +68,12 @@ internal fun rememberSongDock(
     // The controls are drawn at the interface's text size, which a large system text size grows past a chip's.
     val rowHeight = maxOf(DOCK_ROW_HEIGHT, songControlHeight(MaterialTheme.typography.titleSmall))
     val layout = remember(rows, windowHeight, turnsByColumn, hasPagerBar, rowHeight) {
-        dockLayoutOf(rows, dockBudgetOf(windowHeight = windowHeight, turnsByColumn = turnsByColumn, hasPagerBar = hasPagerBar), rowHeight)
+        dockLayoutOf(
+            rows = rows,
+            budget = dockBudgetOf(windowHeight = windowHeight, turnsByColumn = turnsByColumn, hasPagerBar = hasPagerBar),
+            isShortWindow = windowHeight < SHORT_WINDOW_HEIGHT,
+            rowHeight = rowHeight,
+        )
     }
     val target = layout?.let { it.height + if (hasPagerBar) 0.dp else bottomInset } ?: 0.dp
     return SongDockState(

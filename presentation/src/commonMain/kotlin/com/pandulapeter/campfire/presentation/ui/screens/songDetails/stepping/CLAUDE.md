@@ -18,9 +18,10 @@ Pedal stepping and snapping, over the `SongRows` the layout reports (`ui/songVie
   its top, then scrolls freely. Rows are measured by content, never trailing space. The top fade is the scroll past the
   current row's top, so a rested row is unfaded.
 - Step stops are rows or pages, or sections in an unpaged single column, each `EDGE_FADE_SIZE` above its section.
-- Inside a stop taller than the screen a step pages: the screen less the top fade, the bars, and two lines (at most
-  half: a chorded line a page cuts at the bottom is whole at the next one's top, below the fade), starting at a line; it
-  moves on only once the stop's end is in view. Back from mid-stop, where the fade covers
+- Inside a stop taller than the screen a step pages: the screen less the top fade, the bars, and two lines, starting at
+  a line; it moves on only once the stop's end is in view. **Decided: a page is at least half the screen** (not two
+  thirds), so a chorded line a page cuts at the bottom is whole at the next one's top, below the fade
+  (`ReadingWindow.pageHeight`). Back from mid-stop, where the fade covers
   song, it moves at most a page.
 - A press moves at least a line where that skips nothing; the last press hands off only once the whole song is on
   screen. **A press mid-step steps on from its target**: two quick presses are two steps.
