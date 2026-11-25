@@ -38,6 +38,7 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.create
 import com.pandulapeter.campfire.presentation.resources.songs_new_song
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
+import com.pandulapeter.campfire.presentation.ui.components.MAX_TITLE_LENGTH
 import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
 import com.pandulapeter.campfire.presentation.ui.songInfo.fromSongMetadataDraft
 import com.pandulapeter.campfire.presentation.ui.songInfo.songMetadataSaver

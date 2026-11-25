@@ -62,6 +62,7 @@ import com.pandulapeter.campfire.presentation.resources.setlists_new_setlist_tit
 import com.pandulapeter.campfire.presentation.resources.setlists_pick_date
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.rememberClearTextButton
+import com.pandulapeter.campfire.presentation.ui.components.MAX_TITLE_LENGTH
 import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
