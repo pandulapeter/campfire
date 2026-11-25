@@ -57,7 +57,8 @@ Two folders feed it, both named in `local.properties`:
    naming its song's group; one aligned too poorly is left out, never fixed by hand.
 6. **Gate** (`gate.py <corpus> --synthetic <import corpus>`): five-fold cross-validation grouped by song, for pages
    only, documents only, and both, with each fold's training widened by `synthetic.py`'s made-up pages (built in
-   memory; that script has no command). Writes `.runs/gate.txt`, `gate.tsv`, `lost.txt` (each song line a crop lost),
+   memory; that script has no command). A staff string after a song's first line labelled clutter trains as `IGNORE`,
+   since the crop keeps it anyway (`tab_lines`, `CropRule.kt`'s staff rule, which the gate scores with). Writes `.runs/gate.txt`, `gate.tsv`, `lost.txt` (each song line a crop lost),
    and `predictions.json`, which `--rescore` scores again without training.
 7. **Export** (`export.py <corpus> --synthetic <import corpus> --weights
    presentation/src/commonMain/composeResources/files/page-model.bin`): the gate's recipe trained once on every
