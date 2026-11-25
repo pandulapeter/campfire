@@ -77,13 +77,14 @@
   `setlistContent`); no snapshot yet (the app never ran) says to open the app.
 - **The file is read once per process, on IO** (`WidgetSnapshotFile.load` in `provideGlance`, then kept current by its
   `write`): Glance composes on the main thread, once per responsive size. The covers it names are decoded with it
-  (`RGB_565`), one `Bitmap` per cover kept across snapshots: a widget's views carry their bitmaps, the same one once,
+  (cropped square, its corners rounded into the bitmap as iOS rounds them, since a widget cannot clip below Android
+  12), one `Bitmap` per cover kept across snapshots: a widget's views carry their bitmaps, the same one once,
   within Android's limit on a widget's bitmap memory.
 - **A refresh moves `REFRESHED_AT` in each widget's Glance state before `update`**: a composition still alive is only
   recomposed by an update, and not at all for a state that did not change, so `rememberWidgetSnapshot` reads it, and
   the day is read again.
-- Both widgets list songs in one row (`WidgetSongRow`: title, artist, the cover where it has one, 36 dp, rounded from
-  Android 12, and in a setlist its number), spanning the widget edge to edge so its touch feedback does:
+- Both widgets list songs in one row (`WidgetSongRow`: title, artist, the cover where it has one, 36 dp, and in a setlist its
+  number, centered on the row), spanning the widget edge to edge so its touch feedback does:
   `widgetBackground` pads only above and below, and every other part pads its own sides. The headers tell the widgets
   apart.
 - The Setlist's songs are a `LazyColumn` (scrolling, so any number; a plain container draws only its first ten

@@ -154,23 +154,17 @@ struct WidgetSongRow: View {
         }
     }
 
-    /// The number, on the title's line rather than centered on the two lines, so it reads as the title's: the rows are
-    /// centered on the cover, so a hidden artist line under it keeps it as tall as the text beside it. It starts where the
-    /// header does, in a column as wide as the list's longest number, sized by hidden zeros in the same font.
+    /// The number, centered on the row's height like the cover beside it. It starts where the header does, in a column as
+    /// wide as the list's longest number, sized by hidden zeros in the same font.
     private func numberColumn(_ number: Int) -> some View {
-        VStack(alignment: .leading, spacing: 1) {
-            ZStack(alignment: .leading) {
-                Text(verbatim: String(repeating: "0", count: max(numberDigits, String(number).count))).hidden()
-                Text(verbatim: String(number))
-                    .foregroundStyle(colors.accent)
-                    .widgetAccentable()
-            }
-            .font(InterFont.bold(14))
-            .monospacedDigit()
-            if !artist.isEmpty {
-                artistLine(" ").hidden()
-            }
+        ZStack(alignment: .leading) {
+            Text(verbatim: String(repeating: "0", count: max(numberDigits, String(number).count))).hidden()
+            Text(verbatim: String(number))
+                .foregroundStyle(colors.accent)
+                .widgetAccentable()
         }
+        .font(InterFont.bold(14))
+        .monospacedDigit()
     }
 
     private func artistLine(_ text: String) -> some View {

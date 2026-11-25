@@ -18,7 +18,6 @@ import androidx.glance.GlanceTheme
 import androidx.glance.Image
 import androidx.glance.ImageProvider
 import androidx.glance.action.clickable
-import androidx.glance.appwidget.cornerRadius
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Column
 import androidx.glance.layout.ContentScale
@@ -60,7 +59,7 @@ internal fun WidgetSongRow(
 ) {
     val hasArtist = artist.isNotBlank()
     if (number != null && !isMirrored) {
-        SongNumber(number = number, digits = numberDigits, hasArtist = hasArtist, isMirrored = false)
+        SongNumber(number = number, digits = numberDigits, isMirrored = false)
         Spacer(modifier = GlanceModifier.width(NUMBER_GAP.dp))
     }
     if (cover != null && !isMirrored) {
@@ -90,46 +89,33 @@ internal fun WidgetSongRow(
     }
     if (number != null && isMirrored) {
         Spacer(modifier = GlanceModifier.width(NUMBER_GAP.dp))
-        SongNumber(number = number, digits = numberDigits, hasArtist = hasArtist, isMirrored = true)
+        SongNumber(number = number, digits = numberDigits, isMirrored = true)
     }
 }
 
 /**
- * A setlist song's number in a column of [digits] digits, starting at the widget's padding as the header's text does, on
- * the title's line: a widget has no baseline alignment, so where an artist line follows the title, an empty line of its
- * size under the number keeps the two columns of one height and the number level with the title.
+ * A setlist song's number in a column of [digits] digits, starting at the widget's padding as the header's text does,
+ * centered on the row's height like the cover beside it.
  */
 @Composable
 private fun SongNumber(
     number: Int,
     digits: Int,
-    hasArtist: Boolean,
     isMirrored: Boolean,
-) = Column(modifier = GlanceModifier.width((digits * DIGIT_WIDTH).dp)) {
-    val textAlign = textAlignOf(isMirrored)
-    Text(
-        modifier = GlanceModifier.fillMaxWidth(),
-        text = number.toString(),
-        maxLines = 1,
-        style = TextStyle(color = GlanceTheme.colors.primary, fontSize = TITLE_SIZE.sp, fontWeight = FontWeight.Bold, textAlign = textAlign),
-    )
-    if (hasArtist) {
-        Text(
-            modifier = GlanceModifier.fillMaxWidth(),
-            text = " ",
-            maxLines = 1,
-            style = TextStyle(fontSize = ARTIST_SIZE.sp),
-        )
-    }
-}
+) = Text(
+    modifier = GlanceModifier.width((digits * DIGIT_WIDTH).dp),
+    text = number.toString(),
+    maxLines = 1,
+    style = TextStyle(color = GlanceTheme.colors.primary, fontSize = TITLE_SIZE.sp, fontWeight = FontWeight.Bold, textAlign = textAlignOf(isMirrored)),
+)
 
 /**
- * A song's cover, cropped to a square with the songs list's rounded corners (from Android 12; square before it, where a
- * widget cannot clip). The cover is decoration beside the title, which says what the row is.
+ * A song's cover, its rounded corners already in the bitmap ([WidgetCoverFiles]), since a widget below Android 12 cannot
+ * clip. The cover is decoration beside the title, which says what the row is.
  */
 @Composable
 private fun SongCover(cover: Bitmap) = Image(
-    modifier = GlanceModifier.size(COVER_SIZE.dp).cornerRadius(COVER_CORNER_RADIUS.dp),
+    modifier = GlanceModifier.size(COVER_SIZE.dp),
     provider = ImageProvider(cover),
     contentDescription = null,
     contentScale = ContentScale.Crop,
@@ -141,7 +127,6 @@ private const val NUMBER_GAP = 8
 
 /** A little smaller than the songs list's two-line cover, to leave the rows packed as they are. */
 private const val COVER_SIZE = 36
-private const val COVER_CORNER_RADIUS = 8
 private const val COVER_GAP = 12
 private const val TITLE_SIZE = 14
 private const val ARTIST_SIZE = 12
