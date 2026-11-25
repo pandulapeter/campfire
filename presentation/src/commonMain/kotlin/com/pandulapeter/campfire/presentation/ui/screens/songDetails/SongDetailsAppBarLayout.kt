@@ -26,7 +26,7 @@ internal data class AppBarButtons(
 /**
  * What the app bar of a screen [appBarWidth] wide has the room for besides what it always holds: the back button and the
  * overflow button ([APP_BAR_FIXED_CONTENT_WIDTH]), which holds the way into the editor whatever the width (the metronome
- * and the tuner are the song's own first section's, see `SongPlayingTools`), and in read only mode ([isReadOnly]) the
+ * and the tuner are the dock's, see `SongPlayingTools`), and in read only mode ([isReadOnly]) the
  * read only mark too ([PERFORMANCE_FIXED_CONTENT_WIDTH]). The rest comes out of that menu one at a time as the bar
  * widens, each needing the title left [MIN_TITLE_WIDTH] beside it and everything before it: the cover in front of the
  * title, which only decorates it - where [hasCover] says no song of the pager has one, it takes no room - then the

@@ -33,6 +33,7 @@ import com.pandulapeter.campfire.screenshots.openChordsPreferences
 import com.pandulapeter.campfire.screenshots.openSong
 import com.pandulapeter.campfire.screenshots.runAppTest
 import com.pandulapeter.campfire.screenshots.tap
+import com.pandulapeter.campfire.screenshots.tapScrolledTo
 import org.jetbrains.compose.resources.StringResource
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -46,7 +47,7 @@ internal class CapoKeepsKeyTest {
         openSong()
         // Named as they sound, so that the transposition stepper names the key the song is heard in.
         changePreference(Res.string.settings_chord_names_sounding)
-        repeat(3) { tap(hasContentDescription(string(Res.string.song_details_capo_increase))) }
+        repeat(3) { tapScrolledTo(hasContentDescription(string(Res.string.song_details_capo_increase))) }
         // House of the Rising Sun is in Am: three frets up, its Am shapes sound in Cm.
         waitUntil { transposition() == "0 · Cm" }
 
@@ -54,12 +55,12 @@ internal class CapoKeepsKeyTest {
         waitUntil { transposition() == "0 · Am" }
         assertFalse(hasTranspositionReset(), "Keeping the key is no transposition of the reader's.")
 
-        tap(hasContentDescription(string(Res.string.song_details_capo_increase)))
+        tapScrolledTo(hasContentDescription(string(Res.string.song_details_capo_increase)))
         waitUntil { capo() == "4" }
         assertEquals("0 · Am", transposition())
         assertFalse(hasTranspositionReset())
 
-        tap(clickLabelled(string(Res.string.song_details_capo_reset)))
+        tapScrolledTo(clickLabelled(string(Res.string.song_details_capo_reset)))
         waitUntil { capo() == "0" }
         assertEquals("0 · Am", transposition())
         assertFalse(hasTranspositionReset())

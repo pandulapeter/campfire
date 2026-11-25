@@ -18,7 +18,7 @@ import kotlin.time.Duration
  * how far it runs until the next one does ([spans]), and how many lines of it take a moment to play ([playedLines]). The
  * song's time is spent on those lines, a line each, so a line that wraps, a larger text size, or a narrower window move
  * the song at another speed on screen but at the same pace through it. What plays no line - a heading on its own, a
- * section folded away, the Chords and the Scales sections, the gap between two sections - is passed at the speed the song
+ * section folded away, the gap between two sections - is passed at the speed the song
  * averages over its lines, so that it neither stops the scroll nor jumps it. A chunk with no height (the hidden lines of a
  * folded run) plays none of its lines, since nothing of it passes the reading line.
  *

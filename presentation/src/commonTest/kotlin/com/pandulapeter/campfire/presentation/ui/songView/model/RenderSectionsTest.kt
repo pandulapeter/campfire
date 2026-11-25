@@ -487,15 +487,15 @@ class RenderSectionsTest {
         val model = prepareSongLyrics(ChordProParser.parse("{sov}\n[G]la [C]la\n{eov}"), shouldShowChords = true, labels = labels)
         assertTrue(model.hasChords)
         val sections = withMetadataSection(model.sections, model.song.metadata, shouldShowChords = true, isSongInfoShown = false, hasPlayingControls = true)
-        val withoutDiagrams = withChordsSection(sections, cells = emptyList(), isFolded = false, hasChords = model.hasChords, instrumentPill = guitarPill)
+        val withoutDiagrams = withChordsSection(sections, cells = emptyList(), hasChords = model.hasChords, instrumentPill = guitarPill)
         assertTrue(withoutDiagrams.none { it is RenderSection.Chords })
         assertEquals(guitarPill, (withoutDiagrams.first() as RenderSection.Metadata).instrumentPill)
         assertEquals(sections.drop(1), withoutDiagrams.drop(1))
         val cell = ChordCell(name = "G", tuning = ChordTuning.GUITAR, root = 7, selection = SelectedShape(null, SelectedShape.Source.DEFAULT))
-        val withDiagrams = withChordsSection(sections, cells = listOf(cell), isFolded = false, hasChords = model.hasChords, instrumentPill = guitarPill)
+        val withDiagrams = withChordsSection(sections, cells = listOf(cell), hasChords = model.hasChords, instrumentPill = guitarPill)
         assertEquals(guitarPill, (withDiagrams.first() as RenderSection.Metadata).instrumentPill)
         assertTrue(withDiagrams[1] is RenderSection.Chords)
-        assertEquals(sections, withChordsSection(sections, cells = emptyList(), isFolded = false, hasChords = model.hasChords, instrumentPill = null))
+        assertEquals(sections, withChordsSection(sections, cells = emptyList(), hasChords = model.hasChords, instrumentPill = null))
     }
 
     @Test
@@ -503,7 +503,7 @@ class RenderSectionsTest {
         val model = prepareSongLyrics(ChordProParser.parse("{sov}\n[G]la [C]la\n{eov}"), shouldShowChords = true, labels = labels)
         val sections = withMetadataSection(model.sections, model.song.metadata, shouldShowChords = true, isSongInfoShown = false, hasPlayingControls = true)
         fun firstSection(pill: InstrumentPillContent) =
-            withChordsSection(sections, cells = emptyList(), isFolded = false, hasChords = model.hasChords, instrumentPill = pill).first()
+            withChordsSection(sections, cells = emptyList(), hasChords = model.hasChords, instrumentPill = pill).first()
         val pills = listOf(
             guitarPill,
             InstrumentPillContent(UserPreferences.Instrument.GUITAR_TWELVE_STRING, InstrumentTuning.GUITAR, ChordNotation.STANDARD),
@@ -529,7 +529,7 @@ class RenderSectionsTest {
     fun `a song without chords gets no Chords section whatever the instrument`() {
         val model = prepareSongLyrics(ChordProParser.parse("{sov}\nla la\n{eov}"), shouldShowChords = true, labels = labels)
         assertFalse(model.hasChords)
-        assertEquals(model.sections, withChordsSection(model.sections, cells = emptyList(), isFolded = false, hasChords = false, instrumentPill = guitarPill))
+        assertEquals(model.sections, withChordsSection(model.sections, cells = emptyList(), hasChords = false, instrumentPill = guitarPill))
         val lyricsOnly = prepareSongLyrics(ChordProParser.parse("{sov}\n[G]la\n{eov}"), shouldShowChords = false, labels = labels)
         assertFalse(lyricsOnly.hasChords)
     }

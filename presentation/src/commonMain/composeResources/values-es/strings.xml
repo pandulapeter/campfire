@@ -1237,6 +1237,7 @@
     <string name="tab_notice_hidden">Tablatura oculta</string>
     <string name="tab_notice_hidden_instrument">Tablatura de %1$s oculta</string>
     <string name="song_details_chords">Acordes</string>
+    <string name="song_details_dock_no_chords">Esta canción no tiene acordes</string>
     <string name="song_details_chord_tuning">Afinación: %1$s</string>
     <string name="song_details_chord_defined_standard_tuning">Definido en esta canción para la afinación estándar</string>
     <string name="song_details_chord_defined_standard_tuning_show">Mostrar la forma de la canción</string>

@@ -71,17 +71,18 @@ internal class StepTapsTest {
     private fun AppTestScope.scroll() = checkNotNull(songViewport()).scroll()
 
     /**
-     * A point on the words of a line on the bottom half of the song, below the chords drawn over them, which nothing
-     * inside the song takes a tap at: a section header folds on one, and a chord diagram opens its sheet.
+     * A point on the bottom half of the song which nothing inside it takes a tap at (a section header folds on one): on the
+     * words of a line there, below the chords drawn over them, else in the room under the first page's last row.
      */
     private fun AppTestScope.tapPoint(): Offset {
         val viewport = checkNotNull(songViewport())
         val bounds = viewport.boundsInRoot
         val clickable = onAllNodes(hasClickAction(), useUnmergedTree = true).fetchSemanticsNodes().map { it.boundsInRoot }
             .filter { it.height < bounds.height / 2 }
+        val isFree = { point: Offset -> point.y > bounds.center.y && point.y < bounds.bottom - LYRICS_TAP_INSET && clickable.none { it.contains(point) } }
         return songPieces(viewport, songTop = 0f).filter { it.text.trim().contains(' ') && it.text.any(Char::isLowerCase) }
             .map { Offset(it.bounds.left + LYRICS_TAP_INSET, it.bounds.bottom - LYRICS_TAP_INSET) }
-            .first { point -> point.y > bounds.center.y && point.y < bounds.bottom - LYRICS_TAP_INSET && clickable.none { it.contains(point) } }
+            .firstOrNull(isFree) ?: Offset(bounds.left + bounds.width / 4, bounds.bottom - bounds.height / 8).also { check(isFree(it)) }
     }
 }
 

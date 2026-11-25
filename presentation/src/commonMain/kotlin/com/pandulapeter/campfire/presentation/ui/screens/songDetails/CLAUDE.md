@@ -10,8 +10,9 @@
 
 # :presentation — ui/screens/songDetails
 
-The song details screen. The song is drawn by `ui/songView/`; pedal stepping is in `stepping/`, the self-scrolling
-column in `autoScroll/`. The first section and read only mode are in `ui/CLAUDE.md`.
+The song details screen. The song is drawn by `ui/songView/`, starting at its first line; how it is played (the playing
+controls, its chords, its scale suggestions) is in the dock under it, `dock/`; pedal stepping is in `stepping/`, the
+self-scrolling column in `autoScroll/`. Read only mode is in `ui/CLAUDE.md`.
 
 The guarantee most of this file serves: **every line of a song can be reached with Up and Down alone** (a page turner
 pedal), at any text size on any screen. `LayoutBudget` is its only exception.
@@ -62,11 +63,11 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
   gets 48dp).
 - **The subtitle names the sounding key** (transposition and capo played applied), whatever the chords are named by,
   after a 16dp dot (the cards' 24dp would grow the bar and shrink the lyrics' room). Worked out for the song its
-  crossfaded content was composed for, since a page change draws two. Chords off drop the key. No tempo (the first
-  section says it) and no duration.
+  crossfaded content was composed for, since a page change draws two. Chords off drop the key. No tempo (the dock
+  says it) and no duration.
 - **A file with no `{key}` is named by the key its chords are in** (`inferredKeyOf`), shown and moved as a written key
-  is everywhere (bar, Transposition control, read only line, numbering, Chords and Scales sections, chord shape sheet,
-  editor preview, PDF). It is worked out off the main thread as the text is read, before handing it on, and kept by
+  is everywhere (bar, Transposition control, read only line, numbering, the dock's chords and scales, chord shape
+  sheet, editor preview, PDF). It is worked out off the main thread as the text is read, before handing it on, and kept by
   file name for the view model's life: a song reopened names it on its first frame; one never read gets it with its
   lyrics, crossfading in. The list cards never parse a file, so they name only a written key.
 - **The title scrolls the song to its top, and at the top opens the About the song sheet.** A chevron shows while a tap

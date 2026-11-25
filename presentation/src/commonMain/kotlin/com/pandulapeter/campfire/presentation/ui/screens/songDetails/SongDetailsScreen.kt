@@ -10,6 +10,9 @@
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.autoScroll.rememberSongAutoScrolling
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.readAfterDock
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.SongDock
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.rememberSongDock
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.PageStepper
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.SongStepper
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongPlayingControls
@@ -63,11 +66,11 @@ import com.pandulapeter.campfire.presentation.ui.pictures.LocalSongImageLoader
 import com.pandulapeter.campfire.presentation.ui.screens.rememberSongActionHandler
 
 /**
- * The lyrics (and chords) of a song, or of a setlist's songs in a pager. **How the song is played is set in the song
- * itself**: the key, the capo, the tempo and the time signature are the first section of its own grid, each next to the
- * control that sets it (see [SongPlayingControls]), so the app bar is left with what is about the song rather than about
- * how it is played, and read only mode - performance mode, and a song read from an archived setlist - gets the line of
- * text those four used to be.
+ * The lyrics (and chords) of a song, or of a setlist's songs in a pager. **How the song is played is set under the
+ * song**, in the dock ([SongDock]): the key, the capo, the tempo and the time signature, each next to the control that
+ * sets it (see [SongPlayingControls]), with the song's chords and scale suggestions, so the app bar is left with what is
+ * about the song rather than about how it is played, and the song starts at its first line. Read only mode -
+ * performance mode, and a song read from an archived setlist - gets the line of text those four used to be.
  *
  * The text size is the one control that is still the bar's, as a row at the end of its overflow menu
  * ([MenuStepperRow]) - and in performance mode, where it is the one control beside that menu, in the bar itself
@@ -116,7 +119,6 @@ internal fun SongDetailsScreen(
     val songs = resolvedSongs.orEmpty()
     val pagerState = rememberPagerState(initialPage = destination.initialIndex.coerceIn(0, maxOf(0, songs.lastIndex))) { songs.size }
     val pageKey = rememberPageKeys(songs = songs, isImportPreview = isImportPreview)
-    val isAddingToReview by viewModel.importController.isAddingToReview.collectAsStateWithLifecycle()
     // The stretch every composed page is headed for, by its song's file name, where the song changes its tempo or time
     // signature further down: what the click and the app bar's tempo follow, see SongDetailsPage's onTimingChanged.
     val songTimings = remember { mutableStateMapOf<String, SongTiming>() }
@@ -138,7 +140,6 @@ internal fun SongDetailsScreen(
     // from the library, with nothing before or after it, goes without one.
     val hasPagerControls = canPage || (destination.setlistFileName != null && songs.isNotEmpty())
     val setlist = destination.setlistFileName?.let { fileName -> setlists.firstOrNull { it.fileName == fileName } }
-    val setlistTitle = setlist?.title
     // Each page's place in the setlist, the missing files included, which is what the setlist's rows are numbered by:
     // a setlist is read by its own order, and "2 / 3" over the song its screen calls number 3 would read as a mistake.
     // The pages only count themselves where one of them cannot be placed - the setlist is gone, or the library has not
@@ -150,11 +151,10 @@ internal fun SongDetailsScreen(
     val isTunerEnabled = userPreferences?.isTunerEnabled != false
     val areSetlistsEnabled = userPreferences?.areSetlistsEnabled != false
     val isCoverArtEnabled = userPreferences?.isCoverArtEnabled == true
-    val currentSongText = currentSong?.let { songTexts[it.fileName] }
     val openCurrentSongInfo = rememberOpenSongInfo(
         viewModel = viewModel,
         song = currentSong?.takeIf { !isImportPreview },
-        songText = currentSongText,
+        songText = currentSong?.let { songTexts[it.fileName] },
         isReadOnly = isReadOnly,
         areAttachmentsEnabled = userPreferences?.isAttachmentsEnabled != false,
     )
@@ -173,6 +173,7 @@ internal fun SongDetailsScreen(
     // The scroll of every page that is composed, the ones beside the current page included, so that a step back from
     // the top of a song can put the one before it at its end before the pager gets there.
     val pageScrollStates = remember { mutableStateMapOf<Int, ScrollState>() }
+    val dock = rememberSongDock(userPreferences, chordDiagrams, hasPagerBar = hasPagerControls, bottomInset = contentPadding.calculateBottomPadding())
     // The steps go on to the song beside this one at either end of it, worked out from the page being headed for like the
     // pager bar's buttons. Both are decided again at the time of the press.
     val hasPreviousSongToStepTo = canPage && pagerState.targetPage > 0
@@ -214,7 +215,7 @@ internal fun SongDetailsScreen(
     val metronomePanelState = remember { MutableTransitionState(isMetronomePanelVisible) }
     // The room above the pages changes on every frame the bar collapses or comes back and the panel opens or closes, so
     // the pages decide their grid only once both are at rest, see SongDetailsPage's isViewportSettled.
-    val isViewportSettled = { (!isCompactHeight || isAppBarSettled(appBarScrollBehavior.state.collapsedFraction)) && metronomePanelState.isIdle }
+    val isViewportSettled = { (!isCompactHeight || isAppBarSettled(appBarScrollBehavior.state.collapsedFraction)) && metronomePanelState.isIdle && dock.isSettled }
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -272,11 +273,11 @@ internal fun SongDetailsScreen(
             coroutineScope = coroutineScope,
             onBack = onBack,
         )
-        // The paging bar sits below the pager and covers the bottom inset for it, so the pages only keep the
-        // padding that is still theirs to apply.
-        val baseBottom = if (hasPagerControls) 0.dp else contentPadding.calculateBottomPadding()
+        // The paging bar, or the dock without one, sits below the pager and covers the bottom inset for it, so the pages
+        // only keep the padding that is still theirs to apply.
+        val baseBottom = if (hasPagerControls) 0.dp else (contentPadding.calculateBottomPadding() - dock.height).coerceAtLeast(0.dp)
         PagesAbovePreviewBar(
-            modifier = Modifier.weight(1f).fillMaxWidth(),
+            modifier = Modifier.weight(1f).fillMaxWidth().readAfterDock(),
             baseBottom = baseBottom,
             bar = {
                 SongDetailsPreviewBar(
@@ -284,7 +285,7 @@ internal fun SongDetailsScreen(
                     importReportState = viewModel.importReportState,
                     importPreview = importPreview,
                     currentPage = pagerState.currentPage,
-                    isAddingToReview = isAddingToReview,
+                    isAddingToReview = viewModel.importController.isAddingToReview.collectAsStateWithLifecycle().value,
                     contentPadding = contentPadding,
                     layoutDirection = layoutDirection,
                     baseBottom = baseBottom,
@@ -311,6 +312,7 @@ internal fun SongDetailsScreen(
                     pagerState = pagerState,
                     pageStepper = pageStepper,
                     pageScrollStates = pageScrollStates,
+                    dockContents = dock.contents,
                     songTimings = songTimings,
                     isReadOnly = isReadOnly,
                     chordSpelling = chordSpelling,
@@ -347,9 +349,10 @@ internal fun SongDetailsScreen(
                 )
             }
         }
+        SongDock(dock = dock, contentPadding = contentPadding, targetPage = pagerState.targetPage)
         if (hasPagerControls) {
             SongPagerControls(
-                setlistTitle = setlistTitle,
+                setlistTitle = setlist?.title,
                 setlistSlots = setlistSlots,
                 currentPage = pagerState.currentPage,
                 targetPage = pagerState.targetPage,

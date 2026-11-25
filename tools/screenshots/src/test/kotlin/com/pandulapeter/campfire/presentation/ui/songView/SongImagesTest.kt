@@ -14,10 +14,6 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
-import androidx.compose.ui.test.onRoot
-import androidx.compose.ui.test.performKeyInput
-import androidx.compose.ui.test.pressKey
-import androidx.compose.ui.input.key.Key
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.close
@@ -78,12 +74,10 @@ internal class SongImagesTest {
     }
 
     @Test
-    fun `a portrait photo on a phone is scaled down to a page of its own, seen whole after one pedal press`() {
+    fun `a portrait photo on a phone is scaled down to a page of its own, seen whole`() {
         val picture = png(width = 1200, height = 3000)
         runAppTest(window = TestWindow.PHONE, libraryFiles = library(song("A Tall Photo", "{image: src=${picture.name}}"), picture)) {
             openSong("A Tall Photo")
-            onRoot().performKeyInput { pressKey(Key.DirectionDown) }
-            waitForIdle()
             val bounds = pictureBounds()
             val viewport = checkNotNull(songViewport()).unclippedBounds()
             assertTrue(bounds.top >= viewport.top && bounds.bottom <= viewport.bottom, "The picture is $bounds, past the page's $viewport.")

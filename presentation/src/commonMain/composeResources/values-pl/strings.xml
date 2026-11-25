@@ -1273,6 +1273,7 @@
     <string name="tab_notice_hidden">Ukryto tabulaturę</string>
     <string name="tab_notice_hidden_instrument">Ukryto tabulaturę (%1$s)</string>
     <string name="song_details_chords">Akordy</string>
+    <string name="song_details_dock_no_chords">Ta piosenka nie ma akordów</string>
     <string name="song_details_chord_tuning">Strój: %1$s</string>
     <string name="song_details_chord_defined_standard_tuning">Zdefiniowany w tej piosence dla stroju standardowego</string>
     <string name="song_details_chord_defined_standard_tuning_show">Pokaż chwyt z piosenki</string>

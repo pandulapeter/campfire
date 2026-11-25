@@ -10,13 +10,12 @@
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.autoScroll.SongAutoScroller
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.DockContent
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.SongStepper
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.rememberRowSnapFlingBehavior
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.rememberSongPlayingControls
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.rememberSongPlayingTools
-import com.pandulapeter.campfire.presentation.ui.songView.model.CHORDS_FOLD_KEY
 import com.pandulapeter.campfire.presentation.ui.songView.model.ChordDiagrams
-import com.pandulapeter.campfire.presentation.ui.songView.model.SCALES_FOLD_KEY
 import com.pandulapeter.campfire.presentation.ui.songView.model.buildsModelInPlace
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.gestures.Orientation
@@ -31,7 +30,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -81,6 +79,7 @@ import com.pandulapeter.campfire.presentation.ui.songView.SongModelBuild
  *   puts at the end of the one before it.
  * @param onCurrentPage Handed the scroll, the stepper, and the scroller of the page being read, which the keys, the
  *   step buttons, and the controls of a song that scrolls by itself drive.
+ * @param dockContents What the dock draws for every page that is composed, by page, see [DockContent].
  */
 @Composable
 internal fun SongPages(
@@ -98,6 +97,7 @@ internal fun SongPages(
     songs: List<Song>,
     pagerState: PagerState,
     pageScrollStates: SnapshotStateMap<Int, ScrollState>,
+    dockContents: SnapshotStateMap<Int, DockContent>,
     songTimings: SnapshotStateMap<String, SongTiming>,
     isReadOnly: Boolean,
     chordSpelling: UserPreferences.ChordSpelling,
@@ -148,6 +148,7 @@ internal fun SongPages(
             pageScrollStates[page] = scrollState
             onDispose { if (pageScrollStates[page] === scrollState) pageScrollStates.remove(page) }
         }
+        DisposableEffect(page) { onDispose { dockContents.remove(page) } }
         val flingBehavior = rememberRowSnapFlingBehavior(scrollState)
         val stepper = remember(scrollState, flingBehavior) { SongStepper(scrollState, flingBehavior) }
         val autoScroller = remember(scrollState, flingBehavior) { SongAutoScroller(scrollState, flingBehavior) }
@@ -179,8 +180,6 @@ internal fun SongPages(
         if (shownText != null && !hasShownLyrics) SideEffect { hasShownLyrics = true }
         val foldedSections = foldedSectionsOf(song.fileName, importPreview, userPreferences, isPerformanceModeEnabled)
         val toggleFold = rememberFoldToggle(song.fileName, importPreview, preferencesController, isPerformanceModeEnabled)
-        val isChordSectionFolded = CHORDS_FOLD_KEY in foldedSections
-        val isScaleSectionFolded = SCALES_FOLD_KEY in foldedSections
         val playback = songPlaybackOf(song = song, setlistFileName = destination.setlistFileName, overrides = playingOverrides)
         val shapeCapo = playback.shapeCapoFor(userPreferences)
         val tempo = playback.tempo
@@ -272,31 +271,24 @@ internal fun SongPages(
                 song = song,
                 setlistFileName = destination.setlistFileName,
                 canPickChordShapes = canPickChordShapes,
-                isFolded = isChordSectionFolded,
                 previewText = text.takeIf { importPreview != null },
                 dialogHost = dialogHost,
-                onFoldToggled = toggleFold?.let { toggle -> { toggle(CHORDS_FOLD_KEY) } },
             ),
             tabs = tabs,
             showsDegrees = showsDegrees,
             isContinuous = isContinuous,
             turnsByColumn = !isContinuous && userPreferences?.pageTurn == PageTurn.COLUMN,
             onAddImage = rememberSongImageAdder(songTextStore, song.fileName, isWritable = !isReadOnly && importPreview == null),
-            scaleSuggestions = remember(scaleSuggestions, song.fileName, isScaleSectionFolded, shapeCapo, importPreview != null, toggleFold != null) {
-                scaleSuggestions?.copy(
-                    isFolded = isScaleSectionFolded,
-                    capo = shapeCapo,
-                    onFoldToggled = toggleFold?.let { toggle -> { toggle(SCALES_FOLD_KEY) } },
-                )
-            },
+            scaleSuggestions = remember(scaleSuggestions, shapeCapo) { scaleSuggestions?.copy(capo = shapeCapo) },
+            onDockContent = { content -> if (dockContents[page] != content) dockContents[page] = content },
         )
     }
 }
 
 /**
- * What the Chords section of [song]'s page is drawn with, from the pager's [chordDiagrams]: whether it is folded, and
- * whether it folds at all ([onFoldToggled], null in performance mode), what its diagrams open, a chord's shape sheet only where shapes may be picked ([canPickChordShapes]), and for a
- * preview's page with the text it was drawn from ([previewText]).
+ * What the diagrams of [song]'s page are drawn with, from the pager's [chordDiagrams]: what they open, a chord's shape
+ * sheet only where shapes may be picked ([canPickChordShapes]), and for a preview's page with the text it was drawn from
+ * ([previewText]).
  */
 @Composable
 private fun rememberPageChordDiagrams(
@@ -304,40 +296,32 @@ private fun rememberPageChordDiagrams(
     song: Song,
     setlistFileName: String?,
     canPickChordShapes: Boolean,
-    isFolded: Boolean,
     previewText: String?,
     dialogHost: DialogHost,
-    onFoldToggled: (() -> Unit)?,
-): ChordDiagrams? {
-    val latestOnFoldToggled by rememberUpdatedState(onFoldToggled)
-    val canFold = onFoldToggled != null
-    return remember(chordDiagrams, song.fileName, setlistFileName, canPickChordShapes, isFolded, previewText, canFold) {
-        chordDiagrams?.copy(
-            isFolded = isFolded,
-            onFoldToggled = if (canFold) ({ latestOnFoldToggled?.invoke() }) else null,
-            onChordClicked = if (!canPickChordShapes) null else {
-                { chordName ->
-                    dialogHost.showDialog(
-                        DialogType.ChordShape(
-                            song = song,
-                            setlistFileName = setlistFileName,
-                            chordName = chordName,
-                            previewText = previewText,
-                        ),
-                    )
-                }
-            },
-            // Read only mode keeps them: they change this device's preference rather than the song or the setlist.
-            onInstrumentClicked = { dialogHost.showDialog(DialogType.Instrument) },
-            onTuningClicked = { dialogHost.showDialog(DialogType.Tuning) },
-        )
-    }
+): ChordDiagrams? = remember(chordDiagrams, song.fileName, setlistFileName, canPickChordShapes, previewText) {
+    chordDiagrams?.copy(
+        onChordClicked = if (!canPickChordShapes) null else {
+            { chordName ->
+                dialogHost.showDialog(
+                    DialogType.ChordShape(
+                        song = song,
+                        setlistFileName = setlistFileName,
+                        chordName = chordName,
+                        previewText = previewText,
+                    ),
+                )
+            }
+        },
+        // Read only mode keeps them: they change this device's preference rather than the song or the setlist.
+        onInstrumentClicked = { dialogHost.showDialog(DialogType.Instrument) },
+        onTuningClicked = { dialogHost.showDialog(DialogType.Tuning) },
+    )
 }
 
 /**
- * What the Scales section of every page is drawn with, null where it is off: with the chords, since the scales are
- * read from them, and with the Scale suggestions switch, which the Scales switch takes with it. One for the whole pager,
- * since nothing else in it belongs to one song: whether the section is folded is each song's own, given by its page.
+ * What the scale suggestions of every page are drawn with, null where they are off: with the chords, since the scales
+ * are read from them, and with the Scale suggestions switch, which the Scales switch takes with it. One for the whole
+ * pager, since nothing in it belongs to one song but the capo, which each page puts in.
  */
 @Composable
 private fun rememberScaleSuggestions(

@@ -30,14 +30,12 @@ import com.pandulapeter.campfire.presentation.resources.song_details_scales_unhe
 import com.pandulapeter.campfire.presentation.ui.chords.SCALE_CHIPS_TITLE_GAP
 import com.pandulapeter.campfire.presentation.ui.chords.ScaleChipsTitle
 import com.pandulapeter.campfire.presentation.ui.components.controls.CHIP_GAP
-import com.pandulapeter.campfire.presentation.ui.songView.model.FoldToggle
 import com.pandulapeter.campfire.presentation.ui.songView.model.RenderSection
 import com.pandulapeter.campfire.presentation.ui.songView.model.ScaleSuggestions
 
 /**
  * One chunk of the scales the song is played over: the slots [items] names (counted as [RenderSection.Scales.itemCount]),
- * a section of its own after the chords whose first chunk is headed by a pill that folds it as the Chords section's does,
- * one choice for every song. A group of rows of chips per group of sections one set of scales fits: the home first,
+ * a section of its own after the chords whose first chunk is headed by a pill, as the Chords section's is. A group of rows of chips per group of sections one set of scales fits: the home first,
  * titled by nothing, as most of the song is played over it, then each other key or centre named by its sections
  * ("Bridge 3"); a song in several keys with no home names every group ("Intro, Verse, Chorus" over C's, "Solo" over
  * D's), one of sections the page heads with nothing as the rest of the song, or by its first words where several are.
@@ -46,8 +44,6 @@ import com.pandulapeter.campfire.presentation.ui.songView.model.ScaleSuggestions
  * line of chips a slot, as the Chords section's rows of diagrams are ([ScaleChipRows]), though the section is cut only
  * between rows, so that a title always heads all of its chips. A chip opens its scale's sheet.
  *
- * @param isFadingIn Whether the fold was toggled while the page is open, so that the rows coming back fade in, in every
- * chunk they come back in.
  * @param isAnimated Whether a chip a new width sends to another line travels there (see [ScaleChipRows]).
  */
 @Composable
@@ -56,37 +52,30 @@ internal fun SongScalesSection(
     section: RenderSection.Scales,
     items: IntRange,
     scaleSuggestions: ScaleSuggestions?,
-    isFadingIn: Boolean,
     isAnimated: Boolean,
     headerStyle: TextStyle,
     fontScale: Float,
 ) = Column(
-    // The chips end flush with their last row, so the section's last chunk (its pill alone, folded) keeps a gap of its own
-    // under it, for the section after it not to read as part of it.
+    // The chips end flush with their last row, so the section's last chunk keeps a gap of its own under it, for the section
+    // after it not to read as part of it.
     modifier = modifier.padding(bottom = if (items.last == section.itemCount - 1) SCALES_BOTTOM_GAP else 0.dp),
 ) {
     val isFirstChunk = items.first == 0
     if (isFirstChunk) {
         SectionHeaderPill(
             header = stringResource(Res.string.scales),
-            toggle = scaleSuggestions?.onFoldToggled?.let { onToggled ->
-                FoldToggle(
-                    isExpanded = !section.isFolded,
-                    onToggled = onToggled,
-                )
-            },
+            toggle = null,
             style = headerStyle,
             chevronSize = FOLD_CHEVRON_SIZE * fontScale,
         )
     }
-    if (section.isFolded || scaleSuggestions == null) return@Column
+    if (scaleSuggestions == null) return@Column
     val isGrouped = section.groups.size > 1
     val other = stringResource(Res.string.song_details_scales_other)
     val density = LocalDensity.current
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .fadingIn(isFadingIn = isFadingIn)
             .padding(top = if (isFirstChunk) SCALES_HEADER_GAP else 0.dp),
     ) {
         // The chips grow with the song's text as the Chords section's diagrams do: scaling the density they convert

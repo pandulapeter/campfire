@@ -44,6 +44,15 @@ internal fun AppTestScope.tap(matcher: SemanticsMatcher) {
 }
 
 /**
+ * Taps the node [matcher] finds in a row that scrolls sideways, such as the song details dock's, scrolled into view
+ * first as a finger would: a tap at a point outside the window reaches nothing.
+ */
+internal fun AppTestScope.tapScrolledTo(matcher: SemanticsMatcher) {
+    onNode(matcher).performScrollTo()
+    tap(matcher)
+}
+
+/**
  * Opens Settings on the tab named [tab]: found by its role, as a page composed beside it may have a row of that name,
  * and scrolled into view first, as the tab row is wider than a phone.
  */

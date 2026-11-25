@@ -116,8 +116,8 @@ internal fun SongDetailsAppBar(
     val showsCoverInBar = isCoverArtEnabled && appBarButtons.isCoverShown
     val showsFontScaleInBar = appBarButtons.isFontScaleShown
     val showsSetlistAssignmentsInBar = areSetlistsEnabled && appBarButtons.isSetlistAssignmentsShown
-    // The metronome and the tuner are buttons of the song's first section (SongPlayingTools), which is there wherever
-    // the chords or the metronome are switched on; with both off there is nothing to put the tuner next to, so the menu
+    // The metronome and the tuner are buttons of the dock (SongPlayingTools), which is there wherever the chords or the
+    // metronome are switched on; with both off there is nothing to put the tuner next to, so the menu
     // holds it then.
     val openPreferences = { page: PreferencesPage -> dialogHost.showDialog(DialogType.Preferences(PreferencesContext.SONG_DETAILS, page)) }
     val tunerAction = if (isTunerEnabled && !shouldShowChords && !isMetronomeEnabled) {

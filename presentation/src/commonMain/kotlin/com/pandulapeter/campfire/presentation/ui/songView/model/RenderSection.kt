@@ -105,18 +105,14 @@ internal sealed interface RenderSection {
      * The diagrams of the song's chords, inserted after the metadata the way it is: one [ChordCell] per chord the song
      * plays, in the order they are first played, see [withChordsSection]. It is cut between its rows of diagrams like any
      * section, its rows drawn as slots the way a run of tablature is drawn as systems (see [SongChordsSection]).
-     *
-     * @param isFolded Whether only the header is shown, which is part of the content because the measured sizes of a
-     * section are kept by it.
      */
     @Immutable
     data class Chords(
         val cells: List<ChordCell>,
-        val isFolded: Boolean,
     ) : RenderSection {
 
-        /** One slot per row the diagrams can wrap into ([chordSlotCount]), the first headed by the pill; only the pill while folded. */
-        val itemCount = if (isFolded) 1 else chordSlotCount(cells.size)
+        /** One slot per row the diagrams can wrap into ([chordSlotCount]), the first headed by the pill. */
+        val itemCount = chordSlotCount(cells.size)
 
         /** Every row may start a piece: a row of diagrams is a line, with the header kept with the first one. */
         val chunkStarts = sectionChunkStarts(List(itemCount) { SectionItemKind.CONTENT })
@@ -126,13 +122,10 @@ internal sealed interface RenderSection {
      * The scales the song is played over, after its Chords section, in groups of the sections each fits (see
      * [songScaleGroupsOf]), each group followed by its chords worth a scale of their own. It is cut only between its rows
      * of chips, each row drawn as slots the way the Chords section's rows of diagrams are (see [ScaleChipRows]).
-     *
-     * @param isFolded Whether only the header is shown, part of the content for the reason [Chords] gives.
      */
     @Immutable
     data class Scales(
         val groups: List<SongScaleGroup>,
-        val isFolded: Boolean,
     ) : RenderSection {
 
         /** Every row of chips in the order they are drawn: a group's own, then one per chord of it worth a scale. */
@@ -146,14 +139,14 @@ internal sealed interface RenderSection {
          */
         val rowStarts = rows.runningFold(0) { start, row -> start + row.scalesOf(groups).size.coerceAtLeast(1) }.toIntArray()
 
-        /** One slot per line the rows' chips can wrap into, the first headed by the pill; only the pill while folded. */
-        val itemCount = if (isFolded) 1 else rowStarts.last().coerceAtLeast(1)
+        /** One slot per line the rows' chips can wrap into, the first headed by the pill. */
+        val itemCount = rowStarts.last().coerceAtLeast(1)
 
         /**
          * Only a row of chips may start a piece, the header kept with the first: a cut between the lines one row wraps
          * into would leave the chips after it under no title, read as the row before them in the next column.
          */
-        val chunkStarts = if (isFolded || rows.isEmpty()) intArrayOf(0) else rowStarts.copyOf(rowStarts.size - 1)
+        val chunkStarts = if (rows.isEmpty()) intArrayOf(0) else rowStarts.copyOf(rowStarts.size - 1)
     }
 
     /** A titled block of lines: an environment, an implicit paragraph, or a repeated chorus. */

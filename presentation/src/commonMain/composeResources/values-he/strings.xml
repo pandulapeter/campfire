@@ -1280,6 +1280,7 @@
     <string name="tab_notice_hidden">הטאב מוסתר</string>
     <string name="tab_notice_hidden_instrument">טאב ל־%1$s מוסתר</string>
     <string name="song_details_chords">אקורדים</string>
+    <string name="song_details_dock_no_chords">אין אקורדים בשיר הזה</string>
     <string name="song_details_chord_tuning">כיוון: %1$s</string>
     <string name="song_details_chord_defined_standard_tuning">מוגדר בשיר הזה לכיוון סטנדרטי</string>
     <string name="song_details_chord_defined_standard_tuning_show">הצגת הצורה מהשיר</string>

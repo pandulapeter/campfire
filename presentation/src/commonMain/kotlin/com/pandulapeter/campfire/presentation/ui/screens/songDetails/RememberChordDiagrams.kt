@@ -20,10 +20,10 @@ import com.pandulapeter.campfire.presentation.ui.instrument.storedChordShapes
 import com.pandulapeter.campfire.presentation.ui.preferences.SongSections
 
 /**
- * What the Chords section of every page is drawn with, null where the diagrams are off. One for the whole pager, since
- * nothing else in it belongs to one song: the instrument, the tuning, and the player's shapes are the same wherever a
- * song is read. Whether the section is folded is each song's own, given by its page. An instrument without shapes still gets one, with no tuning to draw in, so that
- * the first section keeps the chips that change it.
+ * What the dock's diagrams of every page are drawn with, null where the diagrams are off. One for the whole pager, since
+ * nothing in it belongs to one song: the instrument, the tuning, and the player's shapes are the same wherever a song is
+ * read. An instrument without shapes still gets one, with no tuning to draw in, so that the dock keeps the instrument
+ * pill that changes it.
  */
 @Composable
 internal fun rememberChordDiagrams(

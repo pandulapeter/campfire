@@ -25,11 +25,11 @@ import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
 /**
  * What a song's Chords section needs beyond the song: the instrument in the player's hands and the tuning it is in,
  * which its pill names, the tuning the diagrams are drawn for, the shapes the player chose in it (under its
- * [ChordTuning.voicingKey]), whether the section is folded, and what its header and its diagrams do.
+ * [ChordTuning.voicingKey]), and what its diagrams and its pill do. Song details draws them in its dock, the editor's
+ * preview as the section.
  *
  * @param tuning The tuning the diagrams are drawn for, null for an instrument without shapes, which draws none.
  *
- * @param onFoldToggled Folds the section or unfolds it, one choice per song ([CHORDS_FOLD_KEY]); null where nothing folds.
  * @param onChordClicked Opens the sheet of the chord a diagram was tapped on, by the name the page shows it with; null in
  * read only mode (performance mode, or a song read from an archived setlist), which takes the controls off the page.
  * @param onInstrumentClicked Opens the sheet of the instrument, from its pill at the top of the song's first section;
@@ -47,8 +47,6 @@ internal data class ChordDiagrams(
     val instrument: UserPreferences.Instrument = UserPreferences.Instrument.GUITAR,
     val instrumentTuning: InstrumentTuning? = null,
     val storedShapes: Map<String, String> = emptyMap(),
-    val isFolded: Boolean = false,
-    val onFoldToggled: (() -> Unit)? = null,
     val onChordClicked: ((chordName: String) -> Unit)? = null,
     val onInstrumentClicked: (() -> Unit)? = null,
     val onTuningClicked: (() -> Unit)? = null,
@@ -102,12 +100,11 @@ internal fun definitionCellsOf(song: ChordProSong, notation: ChordNotation) = so
 internal fun withChordsSection(
     sections: List<RenderSection>,
     cells: List<ChordCell>,
-    isFolded: Boolean,
     hasChords: Boolean,
     instrumentPill: InstrumentPillContent?,
 ): List<RenderSection> {
     val metadata = (sections.firstOrNull() as? RenderSection.Metadata)
         ?.let { if (hasChords && instrumentPill != null) it.copy(instrumentPill = instrumentPill) else it }
     val rest = if (metadata != null) sections.drop(1) else sections
-    return listOfNotNull(metadata) + listOfNotNull(RenderSection.Chords(cells = cells, isFolded = isFolded).takeIf { cells.isNotEmpty() }) + rest
+    return listOfNotNull(metadata) + listOfNotNull(RenderSection.Chords(cells = cells).takeIf { cells.isNotEmpty() }) + rest
 }

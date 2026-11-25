@@ -32,7 +32,7 @@ import org.jetbrains.compose.resources.painterResource
 /**
  * What the app bar says about how the song on screen is played, after the artist and separated from it by the dot a song
  * card uses: the key it sounds in, in the accent color that color is kept for. Crossfaded where it stands and the line closing up around it, since the key changes under the reader
- * — a transposition or a capo stepped in the song's own first section, a preference synced in from another device — and
+ * — a transposition or a capo stepped in the dock under the song, a preference synced in from another device — and
  * since the chords switched off take it away altogether.
  *
  * A 16dp dot rather than the cards' 24dp one: the two lines of the title are exactly as tall as the cover beside them,

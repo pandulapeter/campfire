@@ -58,7 +58,7 @@ internal class ColumnCenteringHold {
 
 /**
  * A [ColumnCenteringHold] that holds the columns for [FOLD_RECENTER_DELAY_MILLIS] whenever one of [foldKeys] changes -
- * the folds of the song, and of its Chords section - but not as the song is first composed.
+ * the folds of the song - but not as the song is first composed.
  *
  * The hold is armed in a [SideEffect], as the composition that changed the keys is applied, because that always comes
  * before the layout of the same frame: a [LaunchedEffect] body is only dispatched then, and on the `ComposeScene`

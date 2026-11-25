@@ -1236,6 +1236,7 @@
     <string name="tab_notice_hidden">Tabulatúra elrejtve</string>
     <string name="tab_notice_hidden_instrument">%1$s tabulatúra elrejtve</string>
     <string name="song_details_chords">Akkordok</string>
+    <string name="song_details_dock_no_chords">Ebben a dalban nincsenek akkordok</string>
     <string name="song_details_chord_tuning">Hangolás: %1$s</string>
     <string name="song_details_chord_defined_standard_tuning">A dal normál hangolásra adja meg ezt az akkordot</string>
     <string name="song_details_chord_defined_standard_tuning_show">A dal fogásának megjelenítése</string>

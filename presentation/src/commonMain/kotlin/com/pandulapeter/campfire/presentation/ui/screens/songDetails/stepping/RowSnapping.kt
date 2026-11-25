@@ -104,12 +104,14 @@ internal data class ReadingWindow(val top: Int = 0, val bottom: Int = 0, val end
     fun visibleHeight(viewportHeight: Int) = viewportHeight - top - bottom
 
     /**
-     * How far a step within a stop moves the song: never less than two thirds of what can be read at once, since at a
-     * large text size on a small screen two lines of overlap would leave a page smaller than a line.
+     * How far a step within a stop moves the song: never less than half of what can be read at once, since at a large
+     * text size on a small screen two lines of overlap would leave a page smaller than a line, and never more than what
+     * leaves a chorded line (two lines of lyrics tall) of overlap wherever that half allows, or a wrapped line that a page
+     * cuts across at the bottom would be cut across by the top edge's fade on the next.
      */
     fun pageHeight(viewportHeight: Int): Int {
         val visibleHeight = visibleHeight(viewportHeight)
-        return (visibleHeight - overlap.coerceAtMost(visibleHeight / 3)).coerceAtLeast(visibleHeight / 2).coerceAtLeast(MIN_PAGE_HEIGHT)
+        return (visibleHeight - overlap.coerceAtMost(visibleHeight / 2)).coerceAtLeast(visibleHeight / 2).coerceAtLeast(MIN_PAGE_HEIGHT)
     }
 
     /** The height of a line of lyrics, which [overlap] is two of: the least a press should move the song by. */

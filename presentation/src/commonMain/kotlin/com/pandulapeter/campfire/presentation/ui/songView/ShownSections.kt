@@ -24,13 +24,15 @@ import androidx.compose.runtime.remember
 import com.pandulapeter.campfire.presentation.ui.chords.ChordCell
 
 /**
- * The sections [SongLyrics] shows of [model]: the song's own, after its first section of what the song says about itself
- * and how it is played, the Chords section of its diagrams where [chordDiagrams] asks for one, and the Scales section
- * after it where [scaleSuggestions] does.
+ * The sections [SongLyrics] shows of [model]: the song's own, after (where [showsPlayingSections]) its first section of
+ * what the song says about itself and how it is played, the Chords section of its diagrams where [chordDiagrams] asks for
+ * one, and the Scales section after it where [scaleSuggestions] does. Song details draws those three in its dock
+ * instead, so the song there starts at its first line.
  */
 @Composable
 internal fun rememberShownSections(
     model: SongLyricsModel,
+    showsPlayingSections: Boolean,
     chordDiagrams: ChordDiagrams?,
     scaleSuggestions: ScaleSuggestions?,
     instrumentPill: InstrumentPillContent?,
@@ -41,7 +43,10 @@ internal fun rememberShownSections(
     readsDefaults: Boolean,
     hasTuner: Boolean,
     hasMetronome: Boolean,
-): List<RenderSection> = remember(
+): List<RenderSection> {
+    val cells = rememberChordCells(model, chordDiagrams.takeIf { showsPlayingSections })
+    if (!showsPlayingSections) return model.sections
+    val sections = remember(
         model.sections,
         model.song.metadata,
         model.shouldShowChords,
@@ -69,34 +74,42 @@ internal fun rememberShownSections(
             hasTuner = hasTuner,
             hasMetronome = hasMetronome,
         )
-    }.let { sections ->
-        // The cells last built are drawn on while the model for a new tuning is still being built, so that a tuning picked
-        // crossfades once, from the old shapes to the new, rather than through the old shapes drawn on the new strings.
-        // Not a state: nothing is redrawn because of it.
-        val lastCells = remember { LastChordCells() }
-        val cells = remember(model, chordDiagrams?.tuning, chordDiagrams?.storedShapes, chordDiagrams?.showsDefinitionsOnly) {
-            when {
-                chordDiagrams == null -> emptyList()
-                chordDiagrams.showsDefinitionsOnly -> definitionCellsOf(model.song, chordDiagrams.notation)
-                else -> chordDiagrams.tuning?.let { tuning ->
-                    chordCellsOf(model.chords, model.chordTuning, tuning, chordDiagrams.storedShapes) ?: lastCells.value
-                }.orEmpty()
-            }
-        }
-        lastCells.value = cells
-        val withChords = remember(sections, cells, chordDiagrams?.isFolded, model.hasChords, instrumentPill) {
-            withChordsSection(
-                sections = sections,
-                cells = cells,
-                isFolded = chordDiagrams?.isFolded == true,
-                hasChords = model.hasChords,
-                instrumentPill = instrumentPill,
-            )
-        }
-        remember(withChords, model.scaleGroups, scaleSuggestions?.isFolded) {
-            if (scaleSuggestions == null) withChords else withScalesSection(withChords, model.scaleGroups, scaleSuggestions.isFolded)
+    }
+    val withChords = remember(sections, cells, model.hasChords, instrumentPill) {
+        withChordsSection(
+            sections = sections,
+            cells = cells,
+            hasChords = model.hasChords,
+            instrumentPill = instrumentPill,
+        )
+    }
+    return remember(withChords, model.scaleGroups, scaleSuggestions != null) {
+        if (scaleSuggestions == null) withChords else withScalesSection(withChords, model.scaleGroups)
+    }
+}
+
+/**
+ * The diagrams of [model]'s chords as [chordDiagrams] asks for them, none where it is null: the song's chords in the
+ * player's shapes, or in the editor's preview only the song's own definitions.
+ */
+@Composable
+internal fun rememberChordCells(model: SongLyricsModel, chordDiagrams: ChordDiagrams?): List<ChordCell> {
+    // The cells last built are drawn on while the model for a new tuning is still being built, so that a tuning picked
+    // crossfades once, from the old shapes to the new, rather than through the old shapes drawn on the new strings.
+    // Not a state: nothing is redrawn because of it.
+    val lastCells = remember { LastChordCells() }
+    val cells = remember(model, chordDiagrams?.tuning, chordDiagrams?.storedShapes, chordDiagrams?.showsDefinitionsOnly) {
+        when {
+            chordDiagrams == null -> emptyList()
+            chordDiagrams.showsDefinitionsOnly -> definitionCellsOf(model.song, chordDiagrams.notation)
+            else -> chordDiagrams.tuning?.let { tuning ->
+                chordCellsOf(model.chords, model.chordTuning, tuning, chordDiagrams.storedShapes) ?: lastCells.value
+            }.orEmpty()
         }
     }
+    lastCells.value = cells
+    return cells
+}
 
-/** The Chords section's cells as [SongLyrics] last built them. */
+/** The cells [rememberChordCells] last built. */
 private class LastChordCells(var value: List<ChordCell> = emptyList())

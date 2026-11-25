@@ -1237,6 +1237,7 @@
     <string name="tab_notice_hidden">Intavolatura nascosta</string>
     <string name="tab_notice_hidden_instrument">Intavolatura per %1$s nascosta</string>
     <string name="song_details_chords">Accordi</string>
+    <string name="song_details_dock_no_chords">Questa canzone non ha accordi</string>
     <string name="song_details_chord_tuning">Accordatura: %1$s</string>
     <string name="song_details_chord_defined_standard_tuning">Definito in questa canzone per l\'accordatura standard</string>
     <string name="song_details_chord_defined_standard_tuning_show">Mostra la diteggiatura della canzone</string>

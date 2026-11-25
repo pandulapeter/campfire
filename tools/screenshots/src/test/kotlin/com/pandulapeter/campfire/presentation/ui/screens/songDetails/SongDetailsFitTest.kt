@@ -24,12 +24,9 @@ import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.TextUnit
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.chords
 import com.pandulapeter.campfire.presentation.resources.instrument_choose
 import com.pandulapeter.campfire.presentation.resources.instrument_tuning_choose
-import com.pandulapeter.campfire.presentation.resources.song_details_chord_diagram
 import com.pandulapeter.campfire.presentation.resources.song_details_metronome_show
-import com.pandulapeter.campfire.presentation.resources.song_details_next_page
 import com.pandulapeter.campfire.presentation.resources.song_details_transpose_down
 import com.pandulapeter.campfire.screenshots.APP_LANGUAGES
 import com.pandulapeter.campfire.screenshots.AppTestScope
@@ -46,40 +43,29 @@ import kotlin.test.Test
 import kotlin.test.fail
 
 /**
- * The first screen of a song on the smallest phone, which holds the song's controls (instrument, transposition, capo,
- * tempo, and time signature) and its Chords section before any lyric: the controls must leave the diagrams room there,
- * and their labels must stay whole at a large text size.
+ * The song's dock on the smallest phone, which holds its controls (instrument, transposition, capo, tempo, and time
+ * signature) and a chip for each of its chords in one row under the song: they must stay apart and off the song, and
+ * their labels must stay whole at a large text size.
  */
 @OptIn(ExperimentalTestApi::class)
 internal class SongDetailsFitTest {
 
     /**
-     * The song's controls and chords crowding a phone's first screen of the song: every chord the song plays has its
-     * diagram on that screen, inside the song's viewport and clear of the page button, and no control, the Chords
-     * section's title, or a row of diagrams is drawn over another.
+     * The dock crowding the song or itself: every chord the song plays has a chip in it, it stands under the song's
+     * viewport rather than over a line, and none of what it shows is drawn over another.
      */
     @Test
-    fun `a phone's first screen of a song holds its controls and every chord's diagram apart`() = runAppTest(window = TestWindow.PHONE) {
+    fun `a phone's dock holds every chord of the song and its controls apart, under the song`() = runAppTest(window = TestWindow.PHONE) {
         openSong()
         val failures = mutableListOf<String>()
         val viewport = checkNotNull(songViewport()) { "The song has no viewport." }.boundsInRoot
-        val pageButton = node(hasContentDescription(string(Res.string.song_details_next_page))).boundsInRoot
-        val diagramRows = songChords().map { chord ->
-            val prefix = text(Res.string.song_details_chord_diagram, chord, PLACEHOLDER).substringBefore(PLACEHOLDER)
-            val row = onAllNodes(hasContentDescription(prefix, substring = true), useUnmergedTree = true).fetchSemanticsNodes()
-                .firstOrNull { it.boundsInRoot.isVisible }
-            if (row == null) failures += "$chord has no diagram on the first screen."
-            row
-        }.filterNotNull().distinctBy { it.id }
-        diagramRows.filter { it.boundsInRoot.overlapsBeyondRounding(pageButton) }.forEach { row ->
-            failures += "A row of diagrams (${row.boundsInRoot}) is under the page button ($pageButton)."
+        val dock = controls()
+        if (dock.boundsInRoot.top < viewport.bottom - TOLERANCE) failures += "The dock (${dock.boundsInRoot}) reaches over the song ($viewport)."
+        songChords().forEach { chord ->
+            val chips = onAllNodes(hasText(chord), useUnmergedTree = true).fetchSemanticsNodes().filter { node -> node.ancestry().any { it.id == dock.id } }
+            if (chips.isEmpty()) failures += "$chord has no chip in the dock."
         }
-        val pieces = controls().leaves().map { it.label() to it.boundsInRoot } +
-            (string(Res.string.chords) to node(hasText(string(Res.string.chords))).boundsInRoot) +
-            diagramRows.map { "a row of diagrams" to it.boundsInRoot }
-        pieces.forEach { (label, bounds) ->
-            if (!viewport.containsWithinRounding(bounds)) failures += "\"$label\" ($bounds) is not on the first screen ($viewport)."
-        }
+        val pieces = dock.leaves().map { it.label() to it.boundsInRoot }
         pieces.forEachIndexed { index, (label, bounds) ->
             pieces.drop(index + 1).filter { it.second.overlapsBeyondRounding(bounds) }.forEach { (other, otherBounds) ->
                 failures += "\"$label\" ($bounds) and \"$other\" ($otherBounds) overlap."
@@ -90,8 +76,8 @@ internal class SongDetailsFitTest {
 
     /**
      * Labels broken in the middle of a word at a large text size, as the chips and the steppers were, and steppers that
-     * no longer fit their labels at the largest one: in every language, no text of the controls or the Chords section's
-     * title breaks a word, and every one is whole but the instrument pill's names, which it cuts short by design where
+     * no longer fit their labels at the largest one: in every language, no text of the controls breaks a word, and every
+     * one is whole but the instrument pill's names, which it cuts short by design where
      * the line is too narrow for both (`InstrumentPill`).
      */
     @Test
@@ -105,8 +91,7 @@ internal class SongDetailsFitTest {
                     val pillHalves = listOf(Res.string.instrument_choose, Res.string.instrument_tuning_choose).map { opening(string(it)).id }
                     val texts = controls().leaves().filter { it.config.getOrNull(SemanticsActions.GetTextLayoutResult) != null }
                     if (texts.isEmpty()) failures += "$case: the controls show no text."
-                    val chordsTitle = node(hasText(string(Res.string.chords)))
-                    (texts + chordsTitle).forEach { text ->
+                    texts.forEach { text ->
                         val layout = text.textLayout
                         val mayBeCutShort = text.ancestry().any { it.id in pillHalves }
                         if (!mayBeCutShort && !layout.fitsItsRoom) failures += "$case: \"${text.label()}\" is cut short."
@@ -127,7 +112,7 @@ private fun AppTestScope.node(matcher: SemanticsMatcher) = onNode(matcher, useUn
 
 /**
  * The song's controls: the smallest part of the screen that holds the instrument pill, the transposition, and the
- * metronome button, the first and the last of them.
+ * metronome button, which is the dock's row they are in, the song's chord chips with them.
  */
 @OptIn(ExperimentalTestApi::class)
 private fun AppTestScope.controls(): SemanticsNode {
@@ -182,15 +167,8 @@ private fun SemanticsNode.label() = config.getOrNull(SemanticsProperties.Text)?.
 
 private val Rect.isVisible get() = width > 0f && height > 0f
 
-/** Whether [other] is inside this, allowing the half a dp a layout rounds by. */
-private fun Rect.containsWithinRounding(other: Rect) = other.left >= left - TOLERANCE && other.top >= top - TOLERANCE &&
-    other.right <= right + TOLERANCE && other.bottom <= bottom + TOLERANCE
-
 /** Whether this and [other] share more than the half a dp a layout rounds by in both directions. */
 private fun Rect.overlapsBeyondRounding(other: Rect) = minOf(right, other.right) - maxOf(left, other.left) > TOLERANCE &&
     minOf(bottom, other.bottom) - maxOf(top, other.top) > TOLERANCE
 
 private const val TOLERANCE = 0.5f
-
-/** Stands in for a diagram's shape, so that the text before it is how a chord's description starts. */
-private const val PLACEHOLDER = "\u0000"

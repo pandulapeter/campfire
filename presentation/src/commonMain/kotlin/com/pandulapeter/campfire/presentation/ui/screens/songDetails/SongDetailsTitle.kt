@@ -142,7 +142,7 @@ internal fun SongDetailsTitle(
 /**
  * What the song sounds like where it is being read, the way a song card says it: the key with the transposition and the
  * capo played applied (`SongPlayback.soundingTransposition`), the key the band hears and the chords on the page spell. The tempo is left
- * to the song's own first section, a line below, which already says it. Worked out for the song the title's content was
+ * to the dock under the song, which already says it. Worked out for the song the title's content was
  * composed for rather than for the current one, since a crossfade between two songs draws both at once. Lyrics only
  * mode says nothing about the key, as it says nothing in a row.
  *

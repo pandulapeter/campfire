@@ -11,6 +11,10 @@
 
 # :presentation — ui/songView/firstSection
 
+The song's first section in the editor's preview. Song details draws the same `SongMetadataSection` in its dock
+(`screens/songDetails/dock`): on one line in a row that scrolls sideways (an unbounded width puts every group on it),
+at the interface's text size rather than the song's, its instrument pill drawn by the dock beside it.
+
 - Flows through the same rows and columns, never cut. Controls come in groups kept whole where they fit on a line
   (instrument and tuning pill; key and capo; tempo and time signature), sharing a line where they fit; one too wide
   flows its items and the next starts under it (`groupedLines`, tested). A control whose label and stepper are wider

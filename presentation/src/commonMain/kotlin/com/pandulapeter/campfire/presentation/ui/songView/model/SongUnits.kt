@@ -221,8 +221,8 @@ internal fun sectionKeysOf(sections: List<RenderSection>): List<SectionKey> {
         // crossfade) would start over each time.
         val identity: Any = when (section) {
             is RenderSection.Metadata -> RenderSection.Metadata::class
-            // Kept for the same reason: a shape chosen or the section folded is the same section, and folding it
-            // has to fade its body in rather than compose the whole of it afresh.
+            // Kept for the same reason: a shape chosen is the same section, its diagrams crossfading rather than composed
+            // afresh.
             is RenderSection.Chords -> RenderSection.Chords::class
             is RenderSection.Scales -> RenderSection.Scales::class
             // By what the file calls it, so that the chords switched off or on, a transposition, or a notation is the

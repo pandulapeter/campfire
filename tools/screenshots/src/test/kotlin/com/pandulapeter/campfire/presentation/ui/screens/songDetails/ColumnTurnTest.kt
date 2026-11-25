@@ -112,9 +112,15 @@ private class TurnedSong(val title: String, val file: String, val readsLeftwards
 @OptIn(ExperimentalTestApi::class)
 private class Reading(private val test: AppTestScope, private val readsLeftwards: Boolean) {
 
-    /** The song's scroll, sideways: the innermost container scrolled across that holds its lines, the pager's being outer. */
-    fun viewport(): SemanticsNode? = test.onAllNodes(isScrolledAcross, useUnmergedTree = true).fetchSemanticsNodes()
-        .lastOrNull { node -> songPieces(node, 0f).isNotEmpty() }
+    /**
+     * The song's scroll, sideways: the innermost container scrolled across that holds its lines, the pager's being outer,
+     * and as tall as the pager, which the dock's rows of chips under the song are not.
+     */
+    fun viewport(): SemanticsNode? {
+        val holdingLines = test.onAllNodes(isScrolledAcross, useUnmergedTree = true).fetchSemanticsNodes().filter { node -> songPieces(node, 0f).isNotEmpty() }
+        val tallest = holdingLines.maxOfOrNull { it.boundsInRoot.height } ?: return null
+        return holdingLines.lastOrNull { it.boundsInRoot.height >= tallest - 1f }
+    }
 
     fun lines() = songPieces(checkNotNull(viewport()), 0f).filter { it.text.isNotBlank() }
 

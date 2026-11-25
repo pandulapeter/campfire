@@ -234,15 +234,15 @@ class SongScaleGroupsTest {
     @Test
     fun `the scales section stands after the chords - else after the metadata - else first`() {
         val group = SongScaleGroup(label = null, rootName = "C", scales = emptyList(), exceptions = emptyList(), joinsSeveral = false, hasUnnamed = false, opening = null, isHome = false)
-        val scales = RenderSection.Scales(listOf(group), isFolded = false)
+        val scales = RenderSection.Scales(listOf(group))
         val sections = emptyList<RenderSection>()
-        assertEquals(listOf(scales), withScalesSection(sections, listOf(group), isFolded = false))
-        assertEquals(sections, withScalesSection(sections, emptyList(), isFolded = false))
-        val chords = RenderSection.Chords(cells = emptyList(), isFolded = false)
-        assertEquals(listOf(chords, RenderSection.Scales(listOf(group), isFolded = true)), withScalesSection(listOf(chords), listOf(group), isFolded = true))
+        assertEquals(listOf(scales), withScalesSection(sections, listOf(group)))
+        assertEquals(sections, withScalesSection(sections, emptyList()))
+        val chords = RenderSection.Chords(cells = emptyList())
+        assertEquals(listOf(chords, RenderSection.Scales(listOf(group))), withScalesSection(listOf(chords), listOf(group)))
         val metadata = RenderSection.Metadata(ChordProMetadata())
         val comment = RenderSection.Comment(text = "Slowly", style = CommentStyle.ITALIC)
-        assertEquals(listOf(metadata, scales, comment), withScalesSection(listOf(metadata, comment), listOf(group), isFolded = false))
-        assertEquals(listOf(scales, comment), withScalesSection(listOf(comment), listOf(group), isFolded = false))
+        assertEquals(listOf(metadata, scales, comment), withScalesSection(listOf(metadata, comment), listOf(group)))
+        assertEquals(listOf(scales, comment), withScalesSection(listOf(comment), listOf(group)))
     }
 }

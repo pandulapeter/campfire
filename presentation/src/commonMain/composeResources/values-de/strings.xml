@@ -1237,6 +1237,7 @@
     <string name="tab_notice_hidden">Tab ausgeblendet</string>
     <string name="tab_notice_hidden_instrument">Tab für %1$s ausgeblendet</string>
     <string name="song_details_chords">Akkorde</string>
+    <string name="song_details_dock_no_chords">Dieses Lied hat keine Akkorde</string>
     <string name="song_details_chord_tuning">Stimmung: %1$s</string>
     <string name="song_details_chord_defined_standard_tuning">In diesem Song für Standardstimmung definiert</string>
     <string name="song_details_chord_defined_standard_tuning_show">Griffbild des Songs zeigen</string>

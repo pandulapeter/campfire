@@ -17,8 +17,8 @@ hand-typed table first, a search for the rest).
 ### Instruments
 
 - Guitar (and the twelve-string, drawn as a guitar), ukulele, mandolin, banjo, and keyboard draw diagrams; the rest
-  draw none, as if Chord diagrams were off. The instrument pill heads the first section of every song with chords, even
-  an instrument without shapes, so the diagrams can be brought back.
+  draw none, as if Chord diagrams were off. The instrument pill starts song details' dock wherever diagrams are on,
+  even on an instrument without shapes, so the diagrams can be brought back.
 - **A chord is drawn as it is fingered** (`ui/playing/CLAUDE.md`): `SongChord.chord` is the sounding chord (notes,
   degree, scales), named as it sounds or, where the reader names shapes, as its shape (key headings too);
   `shapeChord` is the shape played above the capo, by which a shape is looked up, picked, and stored. A `{define}` is
@@ -55,6 +55,9 @@ hand-typed table first, a search for the rest).
 
 ### The Chords section
 
+Song details draws the diagrams in its dock instead (`screens/songDetails/dock`), the song starting at its first line;
+the section is the editor's preview's and the PDF's.
+
 - **Grouped by key** (`groupedByKey`, tested): where chords are in more than one key, the home key's first, then each
   key a key change reaches in order, every group starting a row under a "Key: A♭" line set as a label, not a chord (the
   PDF's too). With or without degrees, never in a songbook.
@@ -69,7 +72,6 @@ hand-typed table first, a search for the rest).
   written out, counts from the key it moved to, as a numbering names it; a chromatic chord by its step (`II7`, never
   `V/V`); none in a numbering. The degree stands on a line over the name (three quarters size, normal weight), a line
   every cell keeps where any has one. Only here and the PDF's diagrams: lyrics and the chord sheet keep their names.
-- Folded per song (`CHORDS_FOLD_KEY`), read only mode included.
 - **Every cell opens its chord's sheet** outside read only mode (an import preview's too). The press highlight waits
   for the tap timeout (immediate for a mouse), so a scroll started on a diagram never lights it; the tap is consumed so
   it doesn't turn the page. A screen reader gets one custom action per cell.

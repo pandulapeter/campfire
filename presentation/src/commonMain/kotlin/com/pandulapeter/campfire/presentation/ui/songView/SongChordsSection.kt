@@ -10,7 +10,6 @@
 package com.pandulapeter.campfire.presentation.ui.songView
 
 import com.pandulapeter.campfire.presentation.ui.songView.model.ChordDiagrams
-import com.pandulapeter.campfire.presentation.ui.songView.model.FoldToggle
 import com.pandulapeter.campfire.presentation.ui.songView.model.RenderSection
 import com.pandulapeter.campfire.presentation.ui.songView.model.withChordsSection
 import androidx.compose.animation.core.animateFloatAsState
@@ -80,7 +79,7 @@ import kotlin.math.roundToInt
 
 /**
  * One chunk of the song's chords as diagrams: the slots [items] names (counted as [RenderSection.Chords.itemCount]),
- * the first headed by a pill that folds them like any section's. The cells are drawn in rows that wrap rather than
+ * the first headed by a pill. The cells are drawn in rows that wrap rather than
  * scroll sideways, since a song may be read with a pedal, one slot per row the section may be cut between, as a run of
  * tablature is drawn as systems. A tap on a cell opens that chord's sheet (see [ChordDiagrams.onChordClicked]); a tap
  * between them, or on any of them in read only mode, turns the page like a tap anywhere on the song.
@@ -89,9 +88,6 @@ import kotlin.math.roundToInt
  * ([SongInstrumentPill], see [withChordsSection]), which an instrument without shapes, and so without this section,
  * keeps.
  *
- * @param onFoldToggled Folds the section or unfolds it, see [ChordDiagrams.onFoldToggled].
- * @param isFadingIn Whether the fold was toggled while the page is open, so that the rows coming back fade in, in
- * every chunk they come back in.
  * @param isAnimated Whether a diagram a new width sends to another row travels there (see [ChordRowsBlock]).
  */
 @Composable
@@ -101,8 +97,6 @@ internal fun SongChordsSection(
     items: IntRange,
     layouts: ChordCellLayouts,
     chordDiagrams: ChordDiagrams?,
-    onFoldToggled: (() -> Unit)?,
-    isFadingIn: Boolean,
     isAnimated: Boolean,
     headerStyle: TextStyle,
     fontScale: Float,
@@ -111,21 +105,14 @@ internal fun SongChordsSection(
     if (isFirstChunk) {
         SectionHeaderPill(
             header = stringResource(Res.string.song_details_chords),
-            toggle = onFoldToggled?.let {
-                FoldToggle(
-                    isExpanded = !section.isFolded,
-                    onToggled = it,
-                )
-            },
+            toggle = null,
             style = headerStyle,
             chevronSize = FOLD_CHEVRON_SIZE * fontScale,
         )
     }
-    if (section.isFolded) return@Column
     ChordRowsBlock(
         modifier = Modifier
             .fillMaxWidth()
-            .fadingIn(isFadingIn = isFadingIn)
             .padding(top = if (isFirstChunk) HEADER_GAP else 0.dp),
         layouts = layouts,
         firstSlot = items.first,

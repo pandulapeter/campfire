@@ -144,6 +144,8 @@ import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
  * next keystroke reshuffles, and the lines being typed are only easy to find in the order they are written.
  * @param turnsByColumn Whether a song that is stepped through is set as a strip of columns turned one at a time, which
  * scrolls sideways, a scroll that hands it no width: [viewportWidth] is then the width it is read in.
+ * @param showsPlayingSections Whether the song starts with its first section, its Chords section, and its Scales section
+ * (see [rememberShownSections]), as the editor's preview does; song details holds them in its dock instead.
  */
 @Composable
 internal fun SongLyrics(
@@ -175,6 +177,7 @@ internal fun SongLyrics(
     viewportWidth: Dp = Dp.Unspecified,
     chordDiagrams: ChordDiagrams? = null,
     scaleSuggestions: ScaleSuggestions? = null,
+    showsPlayingSections: Boolean = true,
 ) {
     // The fold toggles of the runs inside a section are named by these too, where the file names them nothing.
     val defaultLabels = rememberDefaultSectionLabels()
@@ -199,6 +202,7 @@ internal fun SongLyrics(
     }
     val sections = rememberShownSections(
         model = model,
+        showsPlayingSections = showsPlayingSections,
         chordDiagrams = chordDiagrams,
         scaleSuggestions = scaleSuggestions,
         instrumentPill = instrumentPill,
@@ -216,19 +220,6 @@ internal fun SongLyrics(
     // Kept across a new song text rather than keyed on it, since a transposition or a tag put on rewrites the song and
     // must not make what was just unfolded fade in a second time.
     var toggledFolds by remember { mutableStateOf(emptySet<String>()) }
-    // Whether the Chords or the Scales section was folded or unfolded while the page is open, so that its rows fade in as
-    // they come back in every chunk they come back in, rather than only in the one the pill is in.
-    var hasChordFoldBeenToggled by remember { mutableStateOf(false) }
-    var hasScaleFoldBeenToggled by remember { mutableStateOf(false) }
-    val shownScaleSuggestions = scaleSuggestions?.let { suggestions ->
-        remember(suggestions) {
-            suggestions.copy(
-                onFoldToggled = suggestions.onFoldToggled.runningFirst { hasScaleFoldBeenToggled = true },
-            )
-        }
-    }
-    val chordFoldToggle = chordDiagrams?.onFoldToggled
-    val onChordFoldToggled = remember(chordFoldToggle) { chordFoldToggle.runningFirst { hasChordFoldBeenToggled = true } }
     // Remembered rather than built on every composition, since every section's content is handed it and compares it
     // by identity: it is rebuilt exactly when what it answers changes, and the sections skip on everything else.
     val latestOnFoldToggled by rememberUpdatedState(onFoldToggled)
@@ -320,11 +311,7 @@ internal fun SongLyrics(
         chordsSection?.let { ChordCellLayouts(it.cells, chordStyle, keyHeading, textMeasurements.textMeasurer, density, fontScale) }
     }
     // Only where a fold can be toggled, which the editor's preview cannot.
-    val centeringHold = if (onFoldToggled == null && chordDiagrams?.onFoldToggled == null) {
-        null
-    } else {
-        rememberColumnCenteringHold(foldedSections, chordDiagrams?.isFolded)
-    }
+    val centeringHold = if (onFoldToggled == null) null else rememberColumnCenteringHold(foldedSections)
     // A boolean rather than the width itself, which changes on every frame of a navigation rail animating.
     val isResizing = extraWidth > 0.dp
     // The composition a tune's first rendering lands in lays the song out anew without narrating it (see SectionGlides).
@@ -384,12 +371,9 @@ internal fun SongLyrics(
                         playingControls = shownPlayingControls,
                         playingTools = playingTools,
                         chordDiagrams = chordDiagrams,
-                        scaleSuggestions = shownScaleSuggestions,
+                        scaleSuggestions = scaleSuggestions,
                         tuningVisibility = tuningVisibility,
                         chordLayouts = chordLayouts,
-                        onChordFoldToggled = onChordFoldToggled,
-                        hasChordFoldBeenToggled = hasChordFoldBeenToggled,
-                        hasScaleFoldBeenToggled = hasScaleFoldBeenToggled,
                         headerStyle = headerStyle,
                         lyricsStyle = lyricsStyle,
                         sentenceStyle = sentenceStyle,
@@ -426,11 +410,3 @@ internal val MAX_COLUMN_WIDTH = 560.dp
 
 private val SECTION_GAP = 16.dp
 private val ROW_GAP = 16.dp
-
-/** This fold toggle, running [action] before it, or null where nothing folds. */
-private fun (() -> Unit)?.runningFirst(action: () -> Unit): (() -> Unit)? = this?.let { toggle ->
-    {
-        action()
-        toggle()
-    }
-}

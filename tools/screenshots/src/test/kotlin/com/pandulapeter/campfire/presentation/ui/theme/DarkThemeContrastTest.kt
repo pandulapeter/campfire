@@ -20,18 +20,16 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
-import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isDialog
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performKeyInput
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.pressKey
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.chords
 import com.pandulapeter.campfire.presentation.resources.settings
 import com.pandulapeter.campfire.presentation.resources.setlists
-import com.pandulapeter.campfire.presentation.resources.song_details_chord_diagram
 import com.pandulapeter.campfire.presentation.resources.songs
 import com.pandulapeter.campfire.presentation.resources.tools
 import com.pandulapeter.campfire.screenshots.AppTestScope
@@ -69,17 +67,18 @@ internal class DarkThemeContrastTest {
     }
 
     /**
-     * The chord diagrams and the song's text drawn in colors meant for the light theme: the first screen's texts and
-     * first row of diagrams, and on the page that holds the first verse, its first line's chords and letters apart.
+     * The chords and the song's text drawn in colors meant for the light theme: the title, a chord's chip in the dock,
+     * and on the page that holds the first verse, its first line's chords and letters apart.
      */
     @Test
     fun `a song is readable in the dark theme`() = runAppTest(appearance = DARK) {
         openSong()
-        val firstDiagram = text(Res.string.song_details_chord_diagram, "Am", PLACEHOLDER).substringBefore(PLACEHOLDER)
+        // The dock's row scrolls sideways, and the chords' chips come after its controls.
+        onNode(hasText(DOCK_CHORD), useUnmergedTree = true).performScrollTo()
+        waitForIdle()
         val firstScreen = listOf(
             RISING_SUN_TITLE to node(hasText(RISING_SUN_TITLE)).boundsInRoot,
-            string(Res.string.chords) to node(hasText(string(Res.string.chords))).boundsInRoot,
-            "The diagrams of Am, C, and D" to node(hasContentDescription(firstDiagram, substring = true)).boundsInRoot,
+            "The dock's chip of C" to node(hasText(DOCK_CHORD)).boundsInRoot,
         )
         assertReadable(firstScreen)
         val firstLine = SemanticsMatcher("reads \"$FIRST_LYRIC\"") { it.text.replace(ZERO_WIDTH_SPACE, "").replace(WHITESPACE, " ").trim() == FIRST_LYRIC }
@@ -203,5 +202,5 @@ private const val FIRST_LYRIC = "There is a house in New Orleans"
 private const val ZERO_WIDTH_SPACE = "\u200B"
 private val WHITESPACE = Regex("\\s+")
 
-/** Stands in for a diagram's shape, so that the text before it is how a chord's description starts. */
-private const val PLACEHOLDER = "\u0000"
+/** A chord House of the Rising Sun plays, which only its chip in the dock names as a text of its own. */
+private const val DOCK_CHORD = "C"

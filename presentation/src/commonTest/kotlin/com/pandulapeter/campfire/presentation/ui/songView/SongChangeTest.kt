@@ -24,8 +24,8 @@ class SongChangeTest {
 
     @Test
     fun `the chords switched off take the Chords and Scales sections and the key changes`() {
-        assertTrue(RenderSection.Chords(cells = emptyList(), isFolded = false).leavesWith(chordsOff, 0..0))
-        assertTrue(RenderSection.Scales(groups = emptyList(), isFolded = false).leavesWith(chordsOff, 0..0))
+        assertTrue(RenderSection.Chords(cells = emptyList()).leavesWith(chordsOff, 0..0))
+        assertTrue(RenderSection.Scales(groups = emptyList()).leavesWith(chordsOff, 0..0))
         assertTrue(RenderSection.KeyChange(key = "A").leavesWith(chordsOff, 0..0))
     }
 
@@ -55,7 +55,7 @@ class SongChangeTest {
 
     @Test
     fun `nothing leaves with a change that takes nothing`() {
-        assertFalse(RenderSection.Chords(cells = emptyList(), isFolded = false).leavesWith(nothing, 0..0))
+        assertFalse(RenderSection.Chords(cells = emptyList()).leavesWith(nothing, 0..0))
         assertFalse(lines(chordRow()).leavesWith(nothing, 0..0))
     }
 

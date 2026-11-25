@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
 import com.pandulapeter.campfire.presentation.ui.notation.NotationChordSpelling
 import com.pandulapeter.campfire.presentation.mapper.toPreferFlats
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.DockContent
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.ReadingWindow
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.RowSnapFlingBehavior
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.SongStepper
@@ -107,24 +108,24 @@ import org.jetbrains.compose.resources.painterResource
  * @param tempoOverride The tempo the song plays at here where that is not its own, which the tempo line then shows,
  *   the way the key line shows the transposed key, so that the page never contradicts the metronome.
  * @param transposition The semitones the file's chords are moved by to the ones that sound, the capo played counted
- *   in (`SongPlayback.soundingTransposition`): what the Chords and Scales sections are read from, and the page's names
+ *   in (`SongPlayback.soundingTransposition`): what the dock's diagrams and scales are read from, and the page's names
  *   too unless [shapeNames] names the shapes instead.
  * @param tabCapo How many of [transposition]'s semitones a tab's frets are not moved by, see `SongPlayback.tabCapoFor`.
  * @param capoOverride The fret this setlist (or this device) capos the song at where that is not its own, shown the
  *   same way as [tempoOverride].
  * @param isCapoShown False where the line of values leaves the capo out (`SongPlayback.isCapoShownFor`).
- * @param shapeCapo The fret the Chords section's shapes are fingered above (`SongPlayback.shapeCapoFor`), none on the
+ * @param shapeCapo The fret the dock's diagrams' shapes are fingered above (`SongPlayback.shapeCapoFor`), none on the
  *   keyboard.
  * @param shapeNames How the page names its chords where they are the shapes fingered above the capo, see [ShapeNames];
  *   null where it names what sounds.
  * @param inferredChordsKey The key the song's chords were found in (`InferredSongKeys`) for a file that names none, in the
  *   standard notation and in the frame of the chords `SongRenderer.transposedSong` gives (`SongRenderer.movedKey`): what a numbering
- *   counts them from, its diagrams' and its Scales section's names included.
+ *   counts them from, the dock's diagrams' and scales' names included.
  * @param inferredKey The sounding key the song's chords were found in (`InferredSongKeys`), named by the read only line of
  *   a file that names none; null where the playing controls are drawn, which name it themselves.
- * @param playingControls What sets the key, the capo, the tempo and the time signature from the song's own first
- *   section, null in read only mode, see [SongPlayingControls].
- * @param playingTools The tuner and metronome buttons of that section, in read only mode too, see [SongPlayingTools].
+ * @param playingControls What sets the key, the capo, the tempo and the time signature from the dock, null in read only
+ *   mode, see [SongPlayingControls].
+ * @param playingTools The tuner and metronome buttons beside them, in read only mode too, see [SongPlayingTools].
  * @param shouldShowTempo False with the metronome switched off, which takes the tempo and the time signature off the page,
  *   the changes of them further down included.
  * @param fontScale Read where the lyrics are built rather than passed as a value: a pinch changes it on every frame,
@@ -132,9 +133,9 @@ import org.jetbrains.compose.resources.painterResource
  * @param headedOffset Where the reader is headed in the song, see [SongStepper.headedOffset].
  * @param onTimingChanged Told the stretch of the song [headedOffset] is in whenever it changes, null for its opening:
  *   the page being headed for, rather than the one a finger is still dragging past, is what the click follows.
- * @param chordDiagrams What the song's Chords section is drawn with, null where it has none.
+ * @param chordDiagrams What the song's diagrams in the dock are drawn with, null where it has none.
  * @param tabs Who the song's tabs are chosen for and moved to, null until the preferences are read.
- * @param showsDegrees Whether the Chords section labels each diagram with the step of the key its chord stands on.
+ * @param showsDegrees Whether the model names each chord's step of the key it stands on.
  * @param isContinuous Whether the song is laid out in one column that scrolls by itself (`SongLayout.CONTINUOUS`) rather
  *   than in pages: neither measured against the screen nor padded to it, and cut into a piece a line, so that its rows
  *   say where every line is, which is what it is timed by (see `autoScroll.AutoScrollTrack`).
@@ -142,6 +143,8 @@ import org.jetbrains.compose.resources.painterResource
  *   scrolls sideways wherever it is stepped through, see [songPageScroll], and stepped by a row of buttons along the
  *   bottom ([StepControls]) rather than a column of them at the end edge, whose room it leaves under it instead.
  * @param onAddImage Picks and stores a picture the song names but the library lacks, see [LocalSongImageAdder].
+ * @param onDockContent Handed what the dock draws for this song (its playing controls, diagrams, and scale chips, which
+ *   are not part of the song on this screen) whenever it changes, see [DockContent].
  */
 @Composable
 internal fun SongDetailsPage(
@@ -187,6 +190,7 @@ internal fun SongDetailsPage(
     isContinuous: Boolean,
     turnsByColumn: Boolean,
     onAddImage: MissingImageAdder?,
+    onDockContent: (DockContent) -> Unit,
 ) = AnimatedContent(
     modifier = modifier.fillMaxSize(),
     targetState = text,
@@ -263,6 +267,8 @@ internal fun SongDetailsPage(
             change = songChange,
         )
         val model = frame.model
+        val dockContent = frame.dockContent(playingTools)
+        SideEffect { onDockContent(dockContent) }
         if (model.song.blocks.isEmpty()) {
             // The file exists and could be read, it just has nothing in it yet - a newly created song, typically.
             CenteredInPage(contentPadding) {
@@ -355,11 +361,6 @@ internal fun SongDetailsPage(
                     fontScale = currentFontScale,
                     foldedSections = foldedSections,
                     onFoldToggled = onFoldToggled,
-                    playingControls = frame.playingControls,
-                    playingTools = playingTools,
-                    // Read only, the page is the one place left that says how the song is played, so a capo of none and the
-                    // tempo and the time the click starts at are said rather than left to be guessed from nothing.
-                    readsDefaults = frame.playingControls == null,
                     shouldShowTempo = frame.shouldShowTempo,
                     // The padding is inside the scroll, so a row is at the top of the viewport once the song is scrolled by
                     // its position plus the padding above it - all but the first, which is read at the top of the song.
@@ -381,13 +382,25 @@ internal fun SongDetailsPage(
                     isSingleColumn = isContinuous,
                     turnsByColumn = turnsByColumn,
                     viewportWidth = if (turnsByColumn) maxWidth - startPadding - endPadding else Dp.Unspecified,
-                    chordDiagrams = frame.chordDiagrams,
-                    scaleSuggestions = frame.scaleSuggestions,
+                    showsPlayingSections = false,
                 )
             }
         }
     }
 }
+
+/** What the dock draws for the song this frame shows, with the tuner and metronome buttons of [playingTools]. */
+private fun SongFrame.dockContent(playingTools: SongPlayingTools?) = DockContent(
+    model = model,
+    playingControls = playingControls,
+    playingTools = playingTools,
+    // Read only, the dock is the one place left that says how the song is played, so a capo of none and the tempo and the
+    // time the click starts at are said rather than left to be guessed from nothing.
+    readsDefaults = playingControls == null,
+    shouldShowTempo = shouldShowTempo,
+    chordDiagrams = chordDiagrams,
+    scaleSuggestions = scaleSuggestions,
+)
 
 /** The model of the song [inputs] give, as [SongDetailsPage] builds it, see [rememberSongLyricsModel]. */
 private fun buildSongLyrics(songRenderer: SongRenderer, inputs: SongLyricsInputs, searchesShapes: Boolean): SongLyricsModel {

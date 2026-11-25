@@ -63,10 +63,15 @@ The song renderer, drawn by song details and the editor's preview; `model/` buil
   right before it is decoded; it is fitted to `LocalSongImageRoom`, the page's room less a row gap (a rest shows that
   much of a row), which joins the measurements' keys only in a song holding a picture. Selecting it opens the viewer.
 
+### The first, Chords, and Scales sections
+
+- Only where `SongLyrics.showsPlayingSections` (the editor's preview); song details draws what they hold in its dock
+  (`screens/songDetails/dock`), so a song there starts at its first line. Neither folds.
+
 ### The Scales section
 
 - While chords and Scale suggestions are on; kept in read only mode (a scale sheet writes nothing); none for a songbook
-  or a song playing over `MAX_PLAYED_CHORDS` chords. Folded per song under `SCALES_FOLD_KEY`.
+  or a song playing over `MAX_PLAYED_CHORDS` chords.
 - Cut only between rows of chips, never between the lines one row wraps into, so a title heads all its chips; a chunk
   places only its own rows, since which line a chip lands on depends on the width being tried.
 - How groups are named and which chips they keep (at most four a group, rarities only as the home scale) is pinned by

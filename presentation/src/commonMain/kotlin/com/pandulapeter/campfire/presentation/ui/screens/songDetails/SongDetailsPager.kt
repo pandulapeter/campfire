@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.autoScroll.AutoScrollControls
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.autoScroll.SongAutoScroller
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.autoScroll.SongAutoScrolling
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.DockContent
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.PageStepper
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.SongStepper
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.stepOnTap
@@ -75,6 +76,7 @@ internal fun SongDetailsPager(
     pagerState: PagerState,
     pageStepper: PageStepper,
     pageScrollStates: SnapshotStateMap<Int, ScrollState>,
+    dockContents: SnapshotStateMap<Int, DockContent>,
     songTimings: SnapshotStateMap<String, SongTiming>,
     isReadOnly: Boolean,
     chordSpelling: UserPreferences.ChordSpelling,
@@ -138,6 +140,7 @@ internal fun SongDetailsPager(
         songs = songs,
         pagerState = pagerState,
         pageScrollStates = pageScrollStates,
+        dockContents = dockContents,
         songTimings = songTimings,
         isReadOnly = isReadOnly,
         chordSpelling = chordSpelling,

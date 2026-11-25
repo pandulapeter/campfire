@@ -185,6 +185,9 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
 - A song is read in pages turned by hand or pedal, a page or a column at a time (Preferences' Turn by, a strip sliding
   sideways), or (Preferences' Layout, asked once) in one column scrolling at its own pace, a speed per song; pedals and
   taps only nudge it: `ui/screens/songDetails/autoScroll`, `ui/songView/grid`.
+- Song details starts a song at its first line: its playing controls, chords, and scale suggestions are in a dock
+  under it, its rows decided by the switches and its height by the window and the reading mode, never by the song:
+  `ui/screens/songDetails/dock`.
 - Selection mode starts from a song's menu, lives while Songs is on top, never deletes in bulk: `ui/screens/songs`.
 - Tags, languages, cover, and links are ChordPro directives in the song file, so they travel with it: `ui`.
 - Pictures (`{image: src=…}`) are library files named by their content (PNG, JPEG, GIF, WebP, at most 8 MB; one the
@@ -220,8 +223,8 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
 - The Chords tab browses each key's common chords, and a search for a full name finds any drawable one (`D/F#`); a
   shape picked there applies everywhere: `ui/screens/chords`.
 - The Scales tab shows every scale of the catalogue on the player's instrument and tuning, every stringed instrument
-  included; 12-TET only. Scale suggestions (a song preference, needing the Scales tab) add a song's Scales section,
-  one home and at most three moments to change scale for (a key, a centre, a chord), and a chord sheet's scales:
+  included; 12-TET only. Scale suggestions (a song preference, needing the Scales tab) add a song's scales (chips
+  in song details' dock, a Scales section in the editor's preview and the PDF), one home and at most three moments to change scale for (a key, a centre, a chord), and a chord sheet's scales:
   `ui/screens/scales`, `ui/songView`, `chordpro/scales`.
 - The tuner asks for the microphone only on a tap, listens only while on screen, keeps nothing: `ui/tuner`.
 - The demo library (two songs, one setlist) is planted once on a fresh install through the import: `ui/firstRun`.

@@ -52,7 +52,7 @@ class SongUnitsTest {
 
     @Test
     fun `the metadata and the rows of chord diagrams are no lines`() {
-        val chords = RenderSection.Chords(cells = List(3) { cell }, isFolded = false)
+        val chords = RenderSection.Chords(cells = List(3) { cell })
         val units = SongUnits.of(listOf(RenderSection.Metadata(ChordProMetadata()), chords)) { true }
         assertContentEquals(intArrayOf(0, 1, 1, 1), units.unitSections)
         assertContentEquals(intArrayOf(0, 0, 0, 0), units.lineCount)

@@ -9,7 +9,7 @@
 -->
 # Plan: song details as a reading surface with a dock
 
-**Status:** steps 1 and 2 done; step 3 next. The gate decided the dock scales to the room (below). The mockups this plan was agreed on (360 × 640 dp, dark):
+**Status:** steps 1, 2, 3 (the scaffold), and 8 done; step 4 next. The gate decided the dock scales to the room (below). The mockups this plan was agreed on (360 × 640 dp, dark):
 https://claude.ai/artifact/PDMZvTbTcRH6CSQGQPJrra. `ui/` is
 `presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/`, as in the root `CLAUDE.md`.
 
@@ -110,6 +110,15 @@ setlist's pager row), never by the song, so the page count does not grow: full d
 diagrams below that, and on the shortest budget one row of chord-name chips (a chip opens the chord sheet as a diagram
 does) beside the key and tempo. The budget is the step 1 break-even for the mode, rechecked by the same measurement as a
 UI test once the dock exists.
+
+**Measured (steps 3 and 8, `PageCountTest`, 360 × 640 dp).** Pages or column steps, before → with the dock (one row of
+40 dp there): House of the Rising Sun 8 → 7 by page, 9 → 8 in a setlist, 7 → 7 by column, 8 → 8 in a setlist; a
+seven-verse strummed song 10 → 10, 11 → 10, 10 → 9, 10 → 10. The budgets this fixes (`dockBudgetOf`): 80 dp by page,
+60 dp by column, 48 dp by page over a pager bar (60 dp costs the long song a page there), 40 dp by column over one
+(48 dp costs it a step), the same share of a taller window. A phone always gets the one row, the controls, chord chips,
+and scale chips in it; smaller diagrams from about 960 dp tall, full ones from about 1,120 dp. A step inside a tall stop
+now pages at least half the screen rather than two thirds, so a chorded line the page cuts at its bottom is whole at the
+next one's top (the dock's 40 dp exposed it on a phone on its side at the largest text size).
 
 ## Steps
 

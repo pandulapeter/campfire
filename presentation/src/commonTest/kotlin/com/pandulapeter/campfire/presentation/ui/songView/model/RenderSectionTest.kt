@@ -20,17 +20,16 @@ import kotlin.test.assertEquals
 class RenderSectionTest {
 
     @Test
-    fun `a folded chords section is its header alone`() {
+    fun `a chords section has a slot for every row its diagrams can wrap into`() {
         val cell = ChordCell(
             name = "G",
             tuning = ChordTuning.GUITAR,
             root = 7,
             selection = SelectedShape(null, SelectedShape.Source.DEFAULT),
         )
-        assertEquals(1, RenderSection.Chords(cells = List(5) { cell }, isFolded = true).itemCount)
-        val unfolded = RenderSection.Chords(cells = List(5) { cell }, isFolded = false)
-        assertEquals(5, unfolded.itemCount)
-        assertContentEquals(intArrayOf(0, 1, 2, 3, 4), unfolded.chunkStarts)
+        val chords = RenderSection.Chords(cells = List(5) { cell })
+        assertEquals(5, chords.itemCount)
+        assertContentEquals(intArrayOf(0, 1, 2, 3, 4), chords.chunkStarts)
     }
 
     @Test
@@ -39,18 +38,17 @@ class RenderSectionTest {
             SongScaleGroup(label = "Verse", rootName = "C", scales = Scales.all.take(3), exceptions = emptyList(), joinsSeveral = false, hasUnnamed = false, opening = null, isHome = false),
             SongScaleGroup(label = "Solo", rootName = "D", scales = Scales.all.take(2), exceptions = emptyList(), joinsSeveral = false, hasUnnamed = false, opening = null, isHome = false),
         )
-        assertEquals(1, RenderSection.Scales(groups = groups, isFolded = true).itemCount)
-        val unfolded = RenderSection.Scales(groups = groups, isFolded = false)
-        assertEquals(5, unfolded.itemCount)
-        assertContentEquals(intArrayOf(0, 3, 5), unfolded.rowStarts)
-        assertContentEquals(intArrayOf(0, 3), unfolded.chunkStarts)
+        val scales = RenderSection.Scales(groups = groups)
+        assertEquals(5, scales.itemCount)
+        assertContentEquals(intArrayOf(0, 3, 5), scales.rowStarts)
+        assertContentEquals(intArrayOf(0, 3), scales.chunkStarts)
     }
 
     @Test
     fun `a scales section has a slot for every chip of every row`() {
         val exception = SongScaleException(chordNames = listOf("A7"), rootName = "A", scales = Scales.all.take(2))
         val group = SongScaleGroup(label = null, rootName = "C", scales = Scales.all.take(3), exceptions = listOf(exception), joinsSeveral = false, hasUnnamed = false, opening = null, isHome = false)
-        val scales = RenderSection.Scales(groups = listOf(group), isFolded = false)
+        val scales = RenderSection.Scales(groups = listOf(group))
         assertContentEquals(intArrayOf(0, 3, 5), scales.rowStarts)
         assertEquals(5, scales.itemCount)
     }

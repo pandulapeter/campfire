@@ -1237,6 +1237,7 @@
     <string name="tab_notice_hidden">Tab hidden</string>
     <string name="tab_notice_hidden_instrument">%1$s tab hidden</string>
     <string name="song_details_chords">Chords</string>
+    <string name="song_details_dock_no_chords">No chords in this song</string>
     <string name="song_details_chord_tuning">Tuning: %1$s</string>
     <string name="song_details_chord_defined_standard_tuning">Defined in this song for standard tuning</string>
     <string name="song_details_chord_defined_standard_tuning_show">Show the song\'s shape</string>

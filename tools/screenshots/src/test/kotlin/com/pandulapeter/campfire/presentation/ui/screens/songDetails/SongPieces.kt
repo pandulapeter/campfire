@@ -26,6 +26,8 @@ import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.TextUnit
+import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.song_image
 import com.pandulapeter.campfire.screenshots.AppTestScope
 import com.pandulapeter.campfire.screenshots.tap
 
@@ -49,10 +51,20 @@ internal data class Piece(val text: String, val occurrence: Int, val bounds: Rec
 
 private val isSongViewport = SemanticsMatcher.keyIsDefined(SemanticsProperties.VerticalScrollAxisRange)
 
+/**
+ * The scroll the open song is read in: the first one holding a piece of it, or a picture, which a song may be nothing but
+ * now that its playing controls are in the dock rather than above its first line.
+ */
 @OptIn(ExperimentalTestApi::class)
-internal fun AppTestScope.songViewport() = onAllNodes(isSongViewport, useUnmergedTree = true).fetchSemanticsNodes().firstOrNull { node ->
-    node.children.isNotEmpty() && songPieces(node, 0f).isNotEmpty()
+internal fun AppTestScope.songViewport(): SemanticsNode? {
+    val picture = string(Res.string.song_image)
+    return onAllNodes(isSongViewport, useUnmergedTree = true).fetchSemanticsNodes().firstOrNull { node ->
+        node.children.isNotEmpty() && (songPieces(node, 0f).isNotEmpty() || node.holds { picture in it.config.getOrNull(SemanticsProperties.ContentDescription).orEmpty() })
+    }
 }
+
+/** Whether a node under this one is one [predicate] picks. */
+private fun SemanticsNode.holds(predicate: (SemanticsNode) -> Boolean): Boolean = children.any { predicate(it) || it.holds(predicate) }
 
 internal fun SemanticsNode.scroll() = config[SemanticsProperties.VerticalScrollAxisRange].value()
 

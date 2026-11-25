@@ -319,9 +319,10 @@ class RowSnappingTest {
     }
 
     @Test
-    fun `a page is never less than two thirds of what can be read`() {
-        assertEquals(667, ReadingWindow(overlap = 2000).pageHeight(viewportHeight = 1000))
-        assertEquals(353 - 353 / 3, ReadingWindow(overlap = 204).pageHeight(viewportHeight = 353))
+    fun `a page is never less than half of what can be read`() {
+        assertEquals(500, ReadingWindow(overlap = 2000).pageHeight(viewportHeight = 1000))
+        assertEquals(353 - 353 / 2, ReadingWindow(overlap = 204).pageHeight(viewportHeight = 353))
+        assertEquals(353 - 120, ReadingWindow(overlap = 120).pageHeight(viewportHeight = 353))
         assertEquals(353 - 40, ReadingWindow(overlap = 40).pageHeight(viewportHeight = 353))
         assertEquals(700, ReadingWindow(top = 50, bottom = 150, overlap = 100).pageHeight(viewportHeight = 1000))
     }

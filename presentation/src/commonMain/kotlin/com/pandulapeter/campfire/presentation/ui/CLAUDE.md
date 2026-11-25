@@ -114,10 +114,11 @@ Tags, languages, cover, and links are directives in the song file, so they trave
 
 ## How a song is played
 
-- Transposition, capo, tempo, and time signature are the first section of the song details grid, after the instrument
-  pill (layout: `songView/firstSection`). The transposition stepper names the key it takes the page's chords to; the
-  tempo stepper ends in Tap, followed only by a time signature other than 4/4. They scale with the text, hence
-  `UserPreferences.MIN_FONT_SCALE`.
+- Transposition, capo, tempo, and time signature are in song details' dock under the song, after the instrument pill
+  (`screens/songDetails/dock`; the controls are `songView/firstSection`'s, which the editor's preview still draws as the
+  song's first section). The transposition stepper names the key it takes the page's chords to; the tempo stepper ends
+  in Tap, followed only by a time signature other than 4/4. In the preview they scale with the text, hence
+  `UserPreferences.MIN_FONT_SCALE`; the dock draws them at the interface's size.
 - Transposition, capo, and tempo are overridden per setlist or per device (`ui/playing`); **only the time signature is
   written into the file** (`{time}`), and the click counts by it. The **Song defaults sheet** (only from About the song)
   edits the file's four values; empty means the default.
@@ -173,14 +174,15 @@ another takes what it adds:
 
 - **Chords** (`areChordsEnabled`): a song's chords, key, transposition, and capo; the chord spelling rows are disabled
   only once neither songs nor the Chords and Scales tabs name a chord.
-- **Chord diagrams** (`areChordDiagramsEnabled`): disabled while chords are off; takes a song's Chords section, in the
-  PDF too; chosen shapes kept. The instrument pill stays (the tuner, the keyboard's sounding names).
+- **Chord diagrams** (`areChordDiagramsEnabled`): disabled while chords are off; takes a song's diagrams (the dock's, the
+  preview's and the PDF's Chords section); chosen shapes kept. The instrument pill stays (the tuner, the keyboard's
+  sounding names).
 - **Chord degrees** (`areChordDegreesEnabled`): off by default, since numerals a reader never asked for look like the
   notation gone wrong; disabled while no diagram it labels is drawn (a song's in neither numbering, or a scale sheet's,
   which needs the Scales and Chords tabs); takes the degree over each diagram's name, in the PDF too, and the scale
   sheet's numerals.
 - **Scale suggestions** (`areScaleSuggestionsEnabled`): disabled while scales or chords are off (read off the chords);
-  takes the song's Scales section and the chord sheets' scales.
+  takes the dock's scale chips (the preview's Scales section) and the chord sheets' scales.
 - **Chord names with a capo** (`chordNames`, after the accidentals): shapes fingered above the capo (default) or what
   sounds (`ui/playing`); disabled with songs or chords off and on the keyboard, which always reads what sounds, as its
   description says. Asked once, over the first song a capo matters on, never with the layout question.
