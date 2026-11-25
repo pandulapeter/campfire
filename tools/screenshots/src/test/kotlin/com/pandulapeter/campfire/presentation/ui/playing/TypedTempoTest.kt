@@ -24,7 +24,6 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.performMouseInput
-import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.pressKey
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -35,6 +34,7 @@ import com.pandulapeter.campfire.presentation.ui.components.controls.STEPPER_BUT
 import com.pandulapeter.campfire.screenshots.AppTestScope
 import com.pandulapeter.campfire.screenshots.openSong
 import com.pandulapeter.campfire.screenshots.runAppTest
+import com.pandulapeter.campfire.screenshots.scrollIntoView
 import com.pandulapeter.campfire.screenshots.tap
 import com.pandulapeter.campfire.screenshots.tapScrolledTo
 import kotlin.test.Test
@@ -95,7 +95,7 @@ internal class TypedTempoTest {
     fun `the reset icon takes a press as wide as the buttons and its showing leaves the pill as long`() = runAppTest {
         openSong()
         val increase = hasContentDescription(string(Res.string.song_details_tempo_increase))
-        onNode(increase).performScrollTo()
+        scrollIntoView(increase)
         val increaseLeftBefore = onNode(increase).getBoundsInRoot().left
         tap(increase)
         assertEquals("237", tempo())
@@ -125,7 +125,7 @@ internal class TypedTempoTest {
     @Test
     fun `a click on the tempo selects the number so that typing replaces it`() = runAppTest {
         openSong()
-        tempoField().performScrollTo()
+        scrollIntoView(tempoFieldMatcher())
         tempoField().performMouseInput {
             moveTo(center)
             press()

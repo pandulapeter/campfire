@@ -130,8 +130,8 @@ sealed interface DialogType {
     ) : DialogType
     /**
      * The instrument in the player's hands and its tuning, opened from the instrument chip of every screen that depends on
-     * it (the chips at the top of the song details screen's first section, the Tuner tab, the Chords tab, Settings, and
-     * the onboarding), so that it is changed where its effect is seen.
+     * it (song details' Playing sheet and its dock, the Tuner tab, the Chords tab, Settings, and the onboarding), so that
+     * it is changed where its effect is seen.
      */
     data object Instrument : DialogType
 
@@ -167,7 +167,16 @@ sealed interface DialogType {
         val soundingChords: List<String> = emptyList(),
     ) : DialogType
 
-    /** The tuner over the song being read, opened from the song's tuner button (or its overflow menu); it listens while it is up. */
+    /**
+     * How [song] is played where it is read, in the setlist [setlistFileName] or from the library for null: the instrument
+     * and its tuning, the tuner, the transposition, and the capo, opened from the key chip of song details' dock.
+     */
+    data class Playing(val song: Song, val setlistFileName: String?) : DialogType
+
+    /**
+     * The tuner over the song being read, opened from the Playing sheet, the song's tuner button where the dock has no key
+     * chip, or its overflow menu; it listens while it is up.
+     */
     data object Tuner : DialogType
     /**
      * Opened from the song details overflow menu, and offers the song's own tags and

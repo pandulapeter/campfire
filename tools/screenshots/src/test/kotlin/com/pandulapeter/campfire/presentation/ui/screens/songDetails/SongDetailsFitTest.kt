@@ -27,7 +27,7 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.instrument_choose
 import com.pandulapeter.campfire.presentation.resources.instrument_tuning_choose
 import com.pandulapeter.campfire.presentation.resources.song_details_metronome_show
-import com.pandulapeter.campfire.presentation.resources.song_details_transpose_down
+import com.pandulapeter.campfire.presentation.resources.song_details_dock_playing
 import com.pandulapeter.campfire.screenshots.APP_LANGUAGES
 import com.pandulapeter.campfire.screenshots.AppTestScope
 import com.pandulapeter.campfire.screenshots.HOUSE_OF_THE_RISING_SUN
@@ -43,15 +43,15 @@ import kotlin.test.Test
 import kotlin.test.fail
 
 /**
- * The song's dock on the smallest phone, which holds its controls (instrument, transposition, capo, tempo, and time
- * signature) and a chip for each of its chords in one row under the song: they must stay apart and off the song, and
- * their labels must stay whole at a large text size.
+ * The song's dock on the smallest phone, which holds its controls (the key chip, the tempo, and the time signature) and
+ * a diagram for each of its chords under the song: they must stay apart and off the song, and their labels must stay
+ * whole at a large text size.
  */
 @OptIn(ExperimentalTestApi::class)
 internal class SongDetailsFitTest {
 
     /**
-     * The dock crowding the song or itself: every chord the song plays has a chip in it, it stands under the song's
+     * The dock crowding the song or itself: every chord the song plays is named in it, it stands under the song's
      * viewport rather than over a line, and none of what it shows is drawn over another.
      */
     @Test
@@ -63,7 +63,7 @@ internal class SongDetailsFitTest {
         if (dock.boundsInRoot.top < viewport.bottom - TOLERANCE) failures += "The dock (${dock.boundsInRoot}) reaches over the song ($viewport)."
         songChords().forEach { chord ->
             val chips = onAllNodes(hasText(chord), useUnmergedTree = true).fetchSemanticsNodes().filter { node -> node.ancestry().any { it.id == dock.id } }
-            if (chips.isEmpty()) failures += "$chord has no chip in the dock."
+            if (chips.isEmpty()) failures += "$chord is not named in the dock."
         }
         val pieces = dock.leaves().map { it.label() to it.boundsInRoot }
         pieces.forEachIndexed { index, (label, bounds) ->
@@ -88,7 +88,7 @@ internal class SongDetailsFitTest {
                 runAppTest(window = TestWindow.PHONE, appearance = TestAppearance(language = language, textScale = textScale)) {
                     openSong()
                     val case = "${language.id} at $textScale"
-                    val pillHalves = listOf(Res.string.instrument_choose, Res.string.instrument_tuning_choose).map { opening(string(it)).id }
+                    val pillHalves = listOf(Res.string.instrument_choose, Res.string.instrument_tuning_choose).mapNotNull { openingOrNull(string(it))?.id }
                     val texts = controls().leaves().filter { it.config.getOrNull(SemanticsActions.GetTextLayoutResult) != null }
                     if (texts.isEmpty()) failures += "$case: the controls show no text."
                     texts.forEach { text ->
@@ -111,14 +111,13 @@ private fun songChords() = Regex("\\[([^\\]]+)]").findAll(demoSongText(HOUSE_OF_
 private fun AppTestScope.node(matcher: SemanticsMatcher) = onNode(matcher, useUnmergedTree = true).fetchSemanticsNode()
 
 /**
- * The song's controls: the smallest part of the screen that holds the instrument pill, the transposition, and the
- * metronome button, which is the dock's row they are in, the song's chord chips with them.
+ * The song's controls: the smallest part of the screen that holds the key chip and the metronome button, which is the
+ * dock, the song's chords with them.
  */
 @OptIn(ExperimentalTestApi::class)
 private fun AppTestScope.controls(): SemanticsNode {
     val anchors = listOf(
-        opening(string(Res.string.instrument_choose)),
-        node(hasContentDescription(string(Res.string.song_details_transpose_down))),
+        opening(string(Res.string.song_details_dock_playing)),
         node(hasContentDescription(string(Res.string.song_details_metronome_show), substring = true)),
     )
     return anchors.map { it.ancestry() }.reduce { common, ancestry -> common.filter { node -> ancestry.any { it.id == node.id } } }.first()
@@ -126,7 +125,13 @@ private fun AppTestScope.controls(): SemanticsNode {
 
 /** The button whose press is said as [label], such as an instrument pill's half. */
 @OptIn(ExperimentalTestApi::class)
-private fun AppTestScope.opening(label: String) = node(SemanticsMatcher("is pressed to $label") { it.config.getOrNull(SemanticsActions.OnClick)?.label == label })
+private fun AppTestScope.opening(label: String) = node(isPressedTo(label))
+
+/** [opening], or null where nothing on screen is pressed to [label]. */
+@OptIn(ExperimentalTestApi::class)
+private fun AppTestScope.openingOrNull(label: String) = onAllNodes(isPressedTo(label), useUnmergedTree = true).fetchSemanticsNodes().firstOrNull()
+
+private fun isPressedTo(label: String) = SemanticsMatcher("is pressed to $label") { it.config.getOrNull(SemanticsActions.OnClick)?.label == label }
 
 /** This node and its parents, nearest first. */
 private fun SemanticsNode.ancestry() = generateSequence(this) { it.parent }.toList()

@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.hasContentDescription
@@ -48,6 +49,9 @@ internal class AutoScrollTest {
         try {
             onRoot().performKeyInput { pressKey(Key.Spacebar) }
             mainClock.advanceTimeBy(PLAYED_MILLIS)
+            // Played on until a section's header is in sight below the reading line, as the sections may be longer
+            // than the room the dock leaves the song.
+            repeat(MAX_WAITS) { if (chevronBelowReadingLine() == null) mainClock.advanceTimeBy(WAIT_MILLIS) }
             val played = topmostLine()
             assertTrue(played.index > start.index, "The song has not moved while playing, so nothing could send it back.")
             foldSectionBelowReadingLine()
@@ -112,14 +116,19 @@ internal class AutoScrollTest {
 
     /** Folds a section whose heading is on screen below the reading line, which is a third of the way down the song. */
     private fun AppTestScope.foldSectionBelowReadingLine() {
+        val chevron = checkNotNull(chevronBelowReadingLine()) { "No section's header came into sight below the reading line." }
+        onNode(SemanticsMatcher("is the chevron") { it.id == chevron.id }, useUnmergedTree = true).performTouchInput { click() }
+    }
+
+    /** The fold chevron of a section header on screen in the lower part of the song, past its reading line, if any. */
+    private fun AppTestScope.chevronBelowReadingLine(): SemanticsNode? {
         val viewport = checkNotNull(songViewport()).unclippedBounds()
-        val chevron = onAllNodes(hasContentDescription(string(Res.string.song_details_section_collapse), substring = true), useUnmergedTree = true)
+        return onAllNodes(hasContentDescription(string(Res.string.song_details_section_collapse), substring = true), useUnmergedTree = true)
             .fetchSemanticsNodes()
-            .first { node ->
+            .firstOrNull { node ->
                 val bounds = node.unclippedBounds()
                 bounds.top > viewport.top + viewport.height / 2 && bounds.bottom < viewport.bottom
             }
-        onNode(SemanticsMatcher("is the chevron") { it.id == chevron.id }, useUnmergedTree = true).performTouchInput { click() }
     }
 }
 
@@ -128,6 +137,10 @@ private const val LONG_SONG_TITLE = "The Long Road North"
 
 /** About five lines of the song at its 112 BPM, two bars a line. */
 private const val PLAYED_MILLIS = 20_000L
+
+/** How long the song plays on at a time, at most [MAX_WAITS] times, waiting for a section's header to come into sight. */
+private const val WAIT_MILLIS = 500L
+private const val MAX_WAITS = 60
 
 /** Well inside the first nudge's quarter of a second, so that the second press lands while it still moves. */
 private const val SECOND_PRESS_MILLIS = 100L

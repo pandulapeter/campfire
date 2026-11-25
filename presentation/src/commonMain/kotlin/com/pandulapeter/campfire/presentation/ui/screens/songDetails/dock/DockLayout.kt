@@ -71,7 +71,8 @@ internal fun dockLayoutOf(rows: DockRows, budget: Dp, isShortWindow: Boolean, ro
     val oneRow = DockLayout(DockTier.CHORD_CHIPS, height = DOCK_VERTICAL_PADDING * 2 + rowHeight, rowHeight = rowHeight)
     // The playing controls and the scale chips share the first row, so only the chords can ask for a second.
     if (!rows.hasChordRow || isShortWindow) return oneRow
-    val firstRow = if (rows.hasPlayingRow || rows.hasScaleRow) rowHeight + DOCK_ROW_GAP else 0.dp
+    // Without scale suggestions, the key chip and the click's controls stand at the diagram row's ends instead.
+    val firstRow = if (rows.hasScaleRow) rowHeight + DOCK_ROW_GAP else 0.dp
     val (full, small) = listOf(DockTier.FULL_DIAGRAMS to FULL_DIAGRAMS_PAST_ROW, DockTier.SMALL_DIAGRAMS to SMALL_DIAGRAMS_PAST_ROW).map { (tier, pastRow) ->
         // A row of diagrams is a line of names, as tall as the row's text, over the diagrams.
         val diagramRowHeight = rowHeight + pastRow

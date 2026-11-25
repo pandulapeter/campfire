@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.presentation.ui.screens.songDetails.autoScroll.
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.DockContent
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.SongStepper
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.rememberRowSnapFlingBehavior
+import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongPlayingControls
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.rememberSongPlayingControls
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.rememberSongPlayingTools
 import com.pandulapeter.campfire.presentation.ui.songView.model.ChordDiagrams
@@ -51,6 +52,7 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.fontScale.FontScaleController
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeController
 import com.pandulapeter.campfire.presentation.ui.playing.PlayingOverrides
+import com.pandulapeter.campfire.presentation.ui.playing.SongPlayback
 import com.pandulapeter.campfire.presentation.ui.rendering.SongRenderer
 import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
 import com.pandulapeter.campfire.presentation.ui.state.songText.SongTextStore
@@ -221,24 +223,20 @@ internal fun SongPages(
             inferredKey = inferredKeys[song.fileName]?.takeIf { isReadOnly && song.key.isNullOrBlank() }?.let {
                 songRenderer.renderKey(key = it, transpose = 0, transposition = playback.soundingTransposition, spelling = chordSpelling)
             },
-            // Read only, the four playing values are read rather than set, so the page draws them as the
-            // line of text they have always been.
-            playingControls = if (isReadOnly) {
-                null
-            } else {
-                rememberSongPlayingControls(
-                    overrides = overrides,
-                    songRenderer = songRenderer,
-                    song = song,
-                    setlistFileName = destination.setlistFileName,
-                    playback = playback,
-                    userPreferences = userPreferences,
-                    chordSpelling = chordSpelling,
-                    shouldShowChords = shouldShowChords,
-                    shouldShowTempo = isMetronomeEnabled,
-                    inferredKey = inferredKeys[song.fileName],
-                )
-            },
+            playingControls = rememberPagePlayingControls(
+                overrides = overrides,
+                songRenderer = songRenderer,
+                dialogHost = dialogHost,
+                song = song,
+                setlistFileName = destination.setlistFileName,
+                playback = playback,
+                userPreferences = userPreferences,
+                chordSpelling = chordSpelling,
+                isReadOnly = isReadOnly,
+                shouldShowChords = shouldShowChords,
+                shouldShowTempo = isMetronomeEnabled,
+                inferredKey = inferredKeys[song.fileName],
+            ),
             playingTools = rememberSongPlayingTools(
                 metronomeController = metronomeController,
                 onTunerClicked = onTunerClicked,
@@ -283,6 +281,47 @@ internal fun SongPages(
             onDockContent = { content -> if (dockContents[page] != content) dockContents[page] = content },
         )
     }
+}
+
+/**
+ * The playing controls of [song]'s page ([rememberSongPlayingControls]), whose key chip opens its Playing sheet; none in
+ * read only mode, where the playing values are read rather than set.
+ */
+@Composable
+private fun rememberPagePlayingControls(
+    overrides: PlayingOverrides,
+    songRenderer: SongRenderer,
+    dialogHost: DialogHost,
+    song: Song,
+    setlistFileName: String?,
+    playback: SongPlayback,
+    userPreferences: UserPreferences?,
+    chordSpelling: UserPreferences.ChordSpelling,
+    isReadOnly: Boolean,
+    shouldShowChords: Boolean,
+    shouldShowTempo: Boolean,
+    inferredKey: String?,
+): SongPlayingControls? {
+    if (isReadOnly) return null
+    val onPlayingClicked = remember(dialogHost, song, setlistFileName) {
+        {
+            println("Dock: key chip")
+            dialogHost.showDialog(DialogType.Playing(song = song, setlistFileName = setlistFileName))
+        }
+    }
+    return rememberSongPlayingControls(
+        overrides = overrides,
+        songRenderer = songRenderer,
+        song = song,
+        setlistFileName = setlistFileName,
+        playback = playback,
+        userPreferences = userPreferences,
+        chordSpelling = chordSpelling,
+        shouldShowChords = shouldShowChords,
+        shouldShowTempo = shouldShowTempo,
+        inferredKey = inferredKey,
+        onPlayingClicked = onPlayingClicked,
+    )
 }
 
 /**

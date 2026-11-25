@@ -26,6 +26,7 @@ import com.pandulapeter.campfire.presentation.resources.song_details_transpose_u
 import com.pandulapeter.campfire.presentation.resources.songs
 import com.pandulapeter.campfire.screenshots.AppTestScope
 import com.pandulapeter.campfire.screenshots.HOUSE_OF_THE_RISING_SUN
+import com.pandulapeter.campfire.screenshots.openPlayingSheet
 import com.pandulapeter.campfire.screenshots.runAppTest
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.int
@@ -46,6 +47,7 @@ internal class SetlistOverrideTest {
         tap(hasText(string(Res.string.setlists)) and hasClickAction())
         // A setlist's row is numbered, which its text starts with.
         tap(hasText(RISING_SUN_TITLE, substring = true) and hasClickAction())
+        openPlayingSheet()
         tap(hasContentDescription(string(Res.string.song_details_transpose_up)))
         waitForLibrary { setlistEntries().singleOrNull()?.second == 1 }
         // The setlist file can land before the stepper's next frame, since the write and the view model's state both
@@ -53,9 +55,11 @@ internal class SetlistOverrideTest {
         waitUntil { transposition().startsWith("+1 ") }
         assertEquals(songsBefore, songContents())
         assertEquals(listOf(HOUSE_OF_THE_RISING_SUN to 1), setlistEntries())
+        pressBack()
         tap(hasContentDescription(string(Res.string.back)))
         tap(hasText(string(Res.string.songs)) and hasClickAction())
         tap(hasText(RISING_SUN_TITLE) and hasClickAction())
+        openPlayingSheet()
         assertTrue(transposition().startsWith("0 "), "The library's stepper reads ${transposition()}.")
     }
 

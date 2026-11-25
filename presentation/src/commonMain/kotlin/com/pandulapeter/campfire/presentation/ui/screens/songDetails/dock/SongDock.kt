@@ -86,9 +86,10 @@ internal fun SongDock(
 }
 
 /**
- * The dock's rows for one song's [content], laid out at the dock's full height whatever height it is animating through:
- * the playing controls with the scale chips after them (and the chord chips between the two in [DockTier.CHORD_CHIPS]),
- * and the diagrams in a row of their own in the other tiers, as [layout] sizes them.
+ * The dock's rows for one song's [content], laid out at the dock's full height whatever height it is animating through.
+ * In [DockTier.CHORD_CHIPS], one row: what starts the dock ([DockStart]), the click's controls, the chord chips, and the
+ * scale chips. Otherwise the diagrams have a row of their own ([DiagramRow]), ended by the click's controls, under a row
+ * of the dock's start and the scale chips where there are scale suggestions, else starting with the dock's start itself.
  */
 @Composable
 private fun DockRowsOf(
@@ -105,21 +106,95 @@ private fun DockRowsOf(
 ) {
     val cells = content?.let { rememberChordCells(it.model, it.chordDiagrams) }.orEmpty()
     val onChordClicked = content?.chordDiagrams?.onChordClicked
-    val isSmall = layout.tier == DockTier.SMALL_DIAGRAMS
     val hasDiagramRow = rows.hasChordRow && layout.tier != DockTier.CHORD_CHIPS
-    if (rows.hasPlayingRow || rows.hasScaleRow || !hasDiagramRow) {
+    val start = @Composable { if (content != null) DockStart(content = content, height = layout.rowHeight) }
+    if (!hasDiagramRow) {
         DockRow(height = layout.rowHeight, horizontalPadding = horizontalPadding) {
+            start()
             if (content != null) {
-                DockPlayingControls(content)
-                if (rows.hasChordRow && !hasDiagramRow) DockChordChips(cells = cells, onChordClicked = onChordClicked)
+                DockClickControls(content)
+                if (rows.hasChordRow) DockChordChips(cells = cells, onChordClicked = onChordClicked)
                 DockScaleChips(content)
             }
         }
-    }
-    if (hasDiagramRow) {
-        DockRow(height = layout.diagramRowHeight, horizontalPadding = horizontalPadding) {
-            if (content != null) DockDiagramStrip(cells = cells, isSmall = isSmall, onChordClicked = onChordClicked)
+    } else {
+        if (rows.hasScaleRow) {
+            DockRow(height = layout.rowHeight, horizontalPadding = horizontalPadding) {
+                start()
+                if (content != null) DockScaleChips(content)
+            }
         }
+        DiagramRow(
+            height = layout.diagramRowHeight,
+            horizontalPadding = horizontalPadding,
+            start = start.takeUnless { rows.hasScaleRow },
+            end = { if (content != null) DockClickControls(content) },
+        ) {
+            if (content != null) DockDiagramStrip(cells = cells, isSmall = layout.tier == DockTier.SMALL_DIAGRAMS, onChordClicked = onChordClicked)
+        }
+    }
+}
+
+/**
+ * What starts the dock for one song's [content]: the instrument and the tuner where the key chip does not hold them
+ * ([DockInstrumentTools]), then the key chip ([DockKeyChip]), [height] tall.
+ */
+@Composable
+private fun DockStart(content: DockContent, height: Dp) {
+    val dockKey = remember(content.playingControls, content.model) { dockKeyOf(content.playingControls, content.model) }
+    DockInstrumentTools(content = content, keyOpensPlaying = dockKey?.opensPlaying == true)
+    if (dockKey != null) {
+        DockKeyChip(
+            dockKey = dockKey,
+            height = height,
+            onClick = content.playingControls?.onPlayingClicked?.takeIf { dockKey.opensPlaying },
+        )
+    }
+}
+
+/**
+ * The row of the song's diagrams, [height] tall: [start] and [end] stand still at its two ends, and the [strip] between
+ * them scrolls sideways by hand, running to the screen's edge where nothing stands at it.
+ */
+@Composable
+private fun DiagramRow(
+    height: Dp,
+    horizontalPadding: PaddingValues,
+    start: (@Composable () -> Unit)?,
+    end: @Composable () -> Unit,
+    strip: @Composable RowScope.() -> Unit,
+) = Row(
+    modifier = Modifier
+        .fillMaxWidth()
+        .height(height),
+    verticalAlignment = Alignment.CenterVertically,
+) {
+    val layoutDirection = LocalLayoutDirection.current
+    val startPadding = horizontalPadding.calculateStartPadding(layoutDirection)
+    val endPadding = horizontalPadding.calculateEndPadding(layoutDirection)
+    if (start != null) {
+        Row(
+            modifier = Modifier.padding(start = startPadding),
+            horizontalArrangement = Arrangement.spacedBy(DOCK_ITEM_GAP),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            start()
+        }
+    }
+    Row(
+        modifier = Modifier
+            .weight(1f)
+            .horizontalScroll(rememberScrollState())
+            .padding(start = if (start == null) startPadding else DOCK_ITEM_GAP, end = DOCK_ITEM_GAP),
+        horizontalArrangement = Arrangement.spacedBy(DOCK_ITEM_GAP),
+        verticalAlignment = Alignment.CenterVertically,
+        content = strip,
+    )
+    Row(
+        modifier = Modifier.padding(end = endPadding),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        end()
     }
 }
 

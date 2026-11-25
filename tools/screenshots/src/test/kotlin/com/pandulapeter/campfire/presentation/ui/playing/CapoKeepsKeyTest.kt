@@ -30,6 +30,7 @@ import com.pandulapeter.campfire.presentation.resources.song_details_transpose_u
 import com.pandulapeter.campfire.presentation.resources.songs_actions
 import com.pandulapeter.campfire.screenshots.AppTestScope
 import com.pandulapeter.campfire.screenshots.openChordsPreferences
+import com.pandulapeter.campfire.screenshots.openPlayingSheet
 import com.pandulapeter.campfire.screenshots.openSong
 import com.pandulapeter.campfire.screenshots.runAppTest
 import com.pandulapeter.campfire.screenshots.tap
@@ -47,11 +48,14 @@ internal class CapoKeepsKeyTest {
         openSong()
         // Named as they sound, so that the transposition stepper names the key the song is heard in.
         changePreference(Res.string.settings_chord_names_sounding)
+        openPlayingSheet()
         repeat(3) { tapScrolledTo(hasContentDescription(string(Res.string.song_details_capo_increase))) }
         // House of the Rising Sun is in Am: three frets up, its Am shapes sound in Cm.
         waitUntil { transposition() == "0 · Cm" }
 
+        pressBack()
         changePreference(Res.string.settings_capo_keeps_key)
+        openPlayingSheet()
         waitUntil { transposition() == "0 · Am" }
         assertFalse(hasTranspositionReset(), "Keeping the key is no transposition of the reader's.")
 

@@ -43,6 +43,7 @@ import com.pandulapeter.campfire.presentation.ui.playing.wrapTransposition
  * @param shouldShowChords False with the chords switched off, which takes the transposition and the capo with them.
  * @param shouldShowTempo False with the metronome switched off, which takes the tempo and the time signature with it.
  * @param inferredKey The key the song's chords were found in, see `InferredSongKeys`, for a file that names none.
+ * @param onPlayingClicked See [SongPlayingControls.onPlayingClicked].
  * @return Null where both are switched off, which leaves the song nothing to set.
  */
 @Composable
@@ -57,6 +58,7 @@ internal fun rememberSongPlayingControls(
     shouldShowChords: Boolean,
     shouldShowTempo: Boolean,
     inferredKey: String?,
+    onPlayingClicked: (() -> Unit)?,
 ): SongPlayingControls? {
     if (!shouldShowChords && !shouldShowTempo) return null
     val (transposition, capo, tempo) = playback
@@ -95,6 +97,7 @@ internal fun rememberSongPlayingControls(
         tempo,
         timeSignature,
         song,
+        onPlayingClicked,
     ) {
         SongPlayingControls(
             key = if (canTranspose) {
@@ -130,6 +133,7 @@ internal fun rememberSongPlayingControls(
                 null
             },
             timeSignature = timeSignature?.takeIf { shouldShowTempo },
+            onPlayingClicked = onPlayingClicked,
         )
     }
 }

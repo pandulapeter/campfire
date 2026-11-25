@@ -101,7 +101,8 @@ internal class ChromeUnderCardTest {
         onRoot().performTouchInput { click(tunerButton) }
         waitForIdle()
         onNode(hasText(RISING_SUN_TITLE)).assertExists()
-        pressBack()
+        // The press may land on one of the song's dock's controls, whose sheet goes before the song does.
+        repeat(2) { if (onAllNodes(hasText(string(Res.string.chords)) and hasClickAction()).fetchSemanticsNodes().isEmpty()) pressBack() }
         onNode(hasText(string(Res.string.chords)) and hasClickAction()).assertExists()
         onNode(hasText(string(Res.string.tuner)) and hasClickAction()).assertDoesNotExist()
     }

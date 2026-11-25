@@ -37,6 +37,8 @@ internal fun TranspositionControls(
     isDefault: Boolean = transposition == 0,
     fontScale: Float = 1f,
     height: Dp = STEPPER_HEIGHT,
+    /** The keys that step it where they are heard, shown in its tooltips; none where a sheet covers the song that hears them. */
+    shortcuts: Pair<KeyShortcut, KeyShortcut>? = KeyShortcut.TRANSPOSE_DOWN to KeyShortcut.TRANSPOSE_UP,
     onStep: (semitones: Int) -> Unit,
     onReset: () -> Unit,
 ) = Stepper(
@@ -58,5 +60,5 @@ internal fun TranspositionControls(
     onIncrease = { onStep(1) },
     resetLabel = stringResource(Res.string.song_details_transpose_reset),
     onReset = onReset,
-    shortcuts = KeyShortcut.TRANSPOSE_DOWN to KeyShortcut.TRANSPOSE_UP,
+    shortcuts = shortcuts,
 )

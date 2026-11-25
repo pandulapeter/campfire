@@ -74,6 +74,16 @@ class DialogStackTest {
     }
 
     @Test
+    fun `the instrument and the tuning and the tuner stack over a song's Playing sheet`() {
+        val playing = DialogType.Playing(song = song, setlistFileName = null)
+        listOf(DialogType.Instrument, DialogType.Tuning, DialogType.Tuner).forEach { choice ->
+            assertEquals(listOf(playing), nextUnderlyingDialogs(openDialogs = listOf(playing), next = choice))
+        }
+        assertEquals(emptyList(), nextUnderlyingDialogs(openDialogs = listOf(playing), next = DialogType.Notation))
+        assertEquals(emptyList(), nextUnderlyingDialogs(openDialogs = listOf(info), next = DialogType.Tuner))
+    }
+
+    @Test
     fun `an open-source license stacks over the list of them`() {
         val license = DialogType.OpenSourceLicense(componentName = openSourceComponents.first().name, texts = null)
 

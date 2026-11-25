@@ -13,8 +13,7 @@
 What left the song on song details: its first section (instrument pill, tuner, transposition, capo, tempo, Tap, time
 signature, metronome button), its Chords section, and its Scales section, which the song no longer starts with
 (`SongLyrics.showsPlayingSections`; the editor's preview and the PDF keep them). The plan it follows, and what is
-still to come (the key and tempo chips, the chord strip, the scale row, the sheets), is
-`documentation/plans/song-details-dock.md`.
+still to come (the tempo chip and sheet, the scale row), is `documentation/plans/song-details-dock.md`.
 
 ## Where it is
 
@@ -48,7 +47,19 @@ still to come (the key and tempo chips, the chord strip, the scale row, the shee
 
 - Each page hands up what it drew the song with (`DockContent`, by page index); the dock shows the page the pager is
   on or heading for, crossfading as it turns, as the bar's subtitle does.
-- In one row: the instrument pill, the playing controls or read only mode's line (`DockPlayingControls`), the chord
-  chips (`DockChordChips`), the scale chips (`DockScaleChips`). With diagrams, those go in a row of their own
-  (`DockDiagramStrip`). A chord chip or diagram opens the chord's sheet where shapes may be picked (as the section's
-  diagrams did), a scale chip its scale's sheet, read only mode included.
+- **The dock's start** is the key chip (`DockKeyChip`, `dockKeyOf`, tested): the key of the page's chords as the
+  transposition stepper names it (the shapes' under `SHAPES`, the inferred key for a file naming none, the semitones for
+  a song naming none), and a capo other than zero as an orange half, sliding in and out. It opens the Playing sheet
+  (`DialogType.Playing`, its chevron saying so), which holds the instrument and tuning, the tuner, and the transposition
+  and capo steppers (their pending writes unchanged); the instrument, tuning, and tuner sheets stack over it. Read only
+  mode's chip opens nothing and has no chevron, and is left out where there is neither key nor capo; the instrument pill
+  and the tuner then start the dock (`DockInstrumentTools`), as they do with the chords off, which takes the chip. An
+  instrument without shapes keeps its pill there, since it is what brings the diagrams back.
+- **In one row** (a short window): the start, the click's controls or read only mode's line of them
+  (`DockClickControls`: tempo, Tap, time signature, metronome button), the chord chips (`DockChordChips`), the scale
+  chips (`DockScaleChips`). **In two**: the start and the scale chips, then the diagrams (`DockDiagramStrip`) ended by
+  the click's controls; without scale suggestions only the second, starting with the start. A chord chip or diagram
+  opens the chord's sheet where shapes may be picked (as the section's diagrams did), a scale chip its scale's sheet,
+  read only mode included.
+- Breadcrumbs: `Dock: key chip` as the chip opens the sheet, and the sheet's `Playing sheet: transposition stepped`
+  (`capo`, `reset`), kinds only.

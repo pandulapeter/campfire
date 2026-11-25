@@ -10,12 +10,15 @@
 package com.pandulapeter.campfire.screenshots
 
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTouchInput
@@ -29,6 +32,7 @@ import com.pandulapeter.campfire.presentation.resources.scales
 import com.pandulapeter.campfire.presentation.resources.setlists
 import com.pandulapeter.campfire.presentation.resources.setlists_actions
 import com.pandulapeter.campfire.presentation.resources.setlists_edit_details
+import com.pandulapeter.campfire.presentation.resources.song_details_dock_playing
 import com.pandulapeter.campfire.presentation.resources.song_details_duration
 import com.pandulapeter.campfire.presentation.resources.songs_actions
 import com.pandulapeter.campfire.presentation.resources.songs_create_song
@@ -48,8 +52,13 @@ internal fun AppTestScope.tap(matcher: SemanticsMatcher) {
  * first as a finger would: a tap at a point outside the window reaches nothing.
  */
 internal fun AppTestScope.tapScrolledTo(matcher: SemanticsMatcher) {
-    onNode(matcher).performScrollTo()
+    scrollIntoView(matcher)
     tap(matcher)
+}
+
+/** Scrolls what [matcher] finds into view where it is in something that scrolls, such as a row of the dock that does. */
+internal fun AppTestScope.scrollIntoView(matcher: SemanticsMatcher) {
+    if (onAllNodes(matcher and hasAnyAncestor(hasScrollAction())).fetchSemanticsNodes().isNotEmpty()) onNode(matcher).performScrollTo()
 }
 
 /**
@@ -71,6 +80,14 @@ internal fun AppTestScope.openChordsPreferences() =
     tap(hasContentDescription(string(Res.string.chords)) and SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.RadioButton))
 
 internal fun AppTestScope.openSong() = tap(hasText(RISING_SUN_TITLE) and hasClickAction())
+
+/** Opens the Playing sheet of the song on screen from its key chip in the dock, which is pressed to open it. */
+internal fun AppTestScope.openPlayingSheet() = tap(opensPlayingSheet())
+
+/** The dock's key chip, the one control whose press is said as opening the Playing sheet. */
+internal fun AppTestScope.opensPlayingSheet() = SemanticsMatcher("opens the Playing sheet") {
+    it.config.getOrNull(SemanticsActions.OnClick)?.label == string(Res.string.song_details_dock_playing)
+}
 
 internal fun AppTestScope.openEditor() {
     openSong()

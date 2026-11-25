@@ -1238,6 +1238,11 @@
     <string name="tab_notice_hidden_instrument">Tab für %1$s ausgeblendet</string>
     <string name="song_details_chords">Akkorde</string>
     <string name="song_details_dock_no_chords">Dieses Lied hat keine Akkorde</string>
+    <string name="song_details_dock_playing">Spielweise</string>
+    <plurals name="song_details_dock_too_many_chords">
+        <item quantity="one">Mehr als %1$d Akkord, zu viele zum Anzeigen</item>
+        <item quantity="other">Mehr als %1$d Akkorde, zu viele zum Anzeigen</item>
+    </plurals>
     <string name="song_details_chord_tuning">Stimmung: %1$s</string>
     <string name="song_details_chord_defined_standard_tuning">In diesem Song für Standardstimmung definiert</string>
     <string name="song_details_chord_defined_standard_tuning_show">Griffbild des Songs zeigen</string>

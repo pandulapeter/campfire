@@ -114,11 +114,12 @@ Tags, languages, cover, and links are directives in the song file, so they trave
 
 ## How a song is played
 
-- Transposition, capo, tempo, and time signature are in song details' dock under the song, after the instrument pill
-  (`screens/songDetails/dock`; the controls are `songView/firstSection`'s, which the editor's preview still draws as the
-  song's first section). The transposition stepper names the key it takes the page's chords to; the tempo stepper ends
-  in Tap, followed only by a time signature other than 4/4. In the preview they scale with the text, hence
-  `UserPreferences.MIN_FONT_SCALE`; the dock draws them at the interface's size.
+- Song details' dock under the song (`screens/songDetails/dock`) starts with the key chip: the key of the page's chords
+  and, wherever it is not zero, the capo as an orange half. It opens the **Playing sheet** (`dialogs/playing`: the
+  instrument and tuning, the tuner, and the transposition and capo steppers, `songView/firstSection`'s), read only mode's
+  opening nothing. The tempo stepper ends in Tap, followed only by a time signature other than 4/4, in the dock too. The
+  editor's preview still draws the controls as the song's first section, scaled with the text (hence
+  `UserPreferences.MIN_FONT_SCALE`); the dock and the sheet draw them at the interface's size.
 - Transposition, capo, and tempo are overridden per setlist or per device (`ui/playing`); **only the time signature is
   written into the file** (`{time}`), and the click counts by it. The **Song defaults sheet** (only from About the song)
   edits the file's four values; empty means the default.

@@ -67,5 +67,12 @@ internal class DockLayoutTest {
     }
 
     @Test
+    fun `without scale suggestions the diagrams' row is the only one`() {
+        val withScales = checkNotNull(dockLayoutOf(everyRow, 640.dp, isShortWindow = false))
+        val withoutScales = checkNotNull(dockLayoutOf(everyRow.copy(hasScaleRow = false), 640.dp, isShortWindow = false))
+        assertEquals(withScales.height - withScales.rowHeight - DOCK_ROW_GAP, withoutScales.height)
+    }
+
+    @Test
     fun `no row is no dock`() = assertNull(dockLayoutOf(DockRows(hasPlayingRow = false, hasChordRow = false, hasScaleRow = false), 1000.dp, isShortWindow = false))
 }

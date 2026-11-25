@@ -1279,6 +1279,12 @@
     <string name="tab_notice_hidden_instrument">Tabulatura (%1$s) skrytá</string>
     <string name="song_details_chords">Akordy</string>
     <string name="song_details_dock_no_chords">Tato píseň nemá akordy</string>
+    <string name="song_details_dock_playing">Hraní</string>
+    <plurals name="song_details_dock_too_many_chords">
+        <item quantity="one">Více než %1$d akord, příliš mnoho na zobrazení</item>
+        <item quantity="few">Více než %1$d akordy, příliš mnoho na zobrazení</item>
+        <item quantity="other">Více než %1$d akordů, příliš mnoho na zobrazení</item>
+    </plurals>
     <string name="song_details_chord_tuning">Ladění: %1$s</string>
     <string name="song_details_chord_defined_standard_tuning">Definováno v této písni pro standardní ladění</string>
     <string name="song_details_chord_defined_standard_tuning_show">Zobrazit hmat z písně</string>

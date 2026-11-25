@@ -25,6 +25,7 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.about.WhatsNewDialog
 import com.pandulapeter.campfire.presentation.ui.dialogs.instrument.ChordReferenceSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.scales.ScaleSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.instrument.ChordShapeSheet
+import com.pandulapeter.campfire.presentation.ui.dialogs.playing.PlayingSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.instrument.InstrumentSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.instrument.NotationSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.slotKey
@@ -190,15 +191,7 @@ private fun CampfireDialog(
 
         is DialogType.SongInfo -> SongInfoDialog(viewModel = viewModel, dialog = dialog, onDismiss = dismissSheet, urlOpener = urlOpener)
 
-        is DialogType.ChordShape -> ChordShapeSheet(
-            allSongs = viewModel.libraryState.allSongs,
-            songTextStore = viewModel.songTextStore,
-            preferencesController = preferencesController,
-            overrides = viewModel.overrides,
-            songRenderer = viewModel.songRenderer,
-            dialogHost = dialogHost,
-            dialog = dialog,
-        )
+        is DialogType.ChordShape, is DialogType.Playing -> SongPlayingDialog(viewModel = viewModel, dialog = dialog)
 
         is DialogType.ChordReference -> ChordReferenceSheet(preferencesController = preferencesController, dialogHost = dialogHost, dialog = dialog)
 
@@ -384,6 +377,36 @@ private fun SongFiltersDialog(viewModel: CampfireViewModel) = SongFiltersSheet(
     normalizeForSearch = viewModel.songRenderer::normalizeForSearch,
     onDismiss = { viewModel.dialogHost.dismissSheet(DialogType.SongFilters) },
 )
+
+/** The sheets about how a song is played where it is read: one of its chords, and its Playing sheet. */
+@Composable
+private fun SongPlayingDialog(
+    viewModel: CampfireViewModel,
+    dialog: DialogType,
+) {
+    when (dialog) {
+        is DialogType.ChordShape -> ChordShapeSheet(
+            allSongs = viewModel.libraryState.allSongs,
+            songTextStore = viewModel.songTextStore,
+            preferencesController = viewModel.preferencesController,
+            overrides = viewModel.overrides,
+            songRenderer = viewModel.songRenderer,
+            dialogHost = viewModel.dialogHost,
+            dialog = dialog,
+        )
+        is DialogType.Playing -> PlayingSheet(
+            allSongs = viewModel.libraryState.allSongs,
+            songTextStore = viewModel.songTextStore,
+            preferencesController = viewModel.preferencesController,
+            overrides = viewModel.overrides,
+            songRenderer = viewModel.songRenderer,
+            dialogHost = viewModel.dialogHost,
+            onTunerClicked = viewModel::openTunerSheet,
+            dialog = dialog,
+        )
+        else -> Unit
+    }
+}
 
 /** [WhatsNewDialog], recorded as seen once it has stayed up for [WHATS_NEW_SEEN_DELAY]. */
 @Composable

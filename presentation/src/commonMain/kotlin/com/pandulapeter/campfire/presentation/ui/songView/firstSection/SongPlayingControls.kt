@@ -36,6 +36,8 @@ internal class SongPlayingControls(
      * it out, and with the metronome switched off, since the bar it counts is the click's.
      */
     val timeSignature: String?,
+    /** Opens the Playing sheet from the dock's key chip, which sets the key and the capo there; null in the sheet itself. */
+    val onPlayingClicked: (() -> Unit)? = null,
 )
 
 /**
