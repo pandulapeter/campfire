@@ -46,7 +46,8 @@ app bar's metronome panel.
 - **In one row** (a short window, an import preview, no diagrams): the start, chord and scale chips scrolling, the tempo
   chip. **In two**: the start and the scale chips, then the diagrams and the tempo chip; without scale suggestions only
   the second. The start and the tempo chip stand still (`DockScrollingRow`) and what scrolls fades only where it meets
-  them; at the screen's edge a row runs to it, padded instead.
+  them; at the screen's edge a row runs to it, padded instead, as far in as the step buttons are
+  (`PAGE_HORIZONTAL_PADDING`, 8 dp past the insets) and the import preview's card.
 - **The panel's rows** (`DockPanelRows`) wrap rather than scroll; the panel scrolls as one where the height runs out.
 
 ## Its contents

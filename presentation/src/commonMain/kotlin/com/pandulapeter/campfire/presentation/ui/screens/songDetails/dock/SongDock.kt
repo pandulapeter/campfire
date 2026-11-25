@@ -46,6 +46,7 @@ import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.ui.chords.hasTooManySongChords
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.PAGE_HORIZONTAL_PADDING
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.SongStepper
 
 /**
@@ -105,8 +106,8 @@ private fun DockRowsBox(dock: SongDockState, metronome: DockMetronome, contentPa
         Box(modifier = Modifier.fillMaxWidth().height(dock.height).clipToBounds()) {
             val layoutDirection = LocalLayoutDirection.current
             val horizontalPadding = PaddingValues(
-                start = contentPadding.calculateStartPadding(layoutDirection) + DOCK_HORIZONTAL_PADDING,
-                end = contentPadding.calculateEndPadding(layoutDirection) + DOCK_HORIZONTAL_PADDING,
+                start = contentPadding.calculateStartPadding(layoutDirection) + PAGE_HORIZONTAL_PADDING,
+                end = contentPadding.calculateEndPadding(layoutDirection) + PAGE_HORIZONTAL_PADDING,
             )
             Crossfade(targetState = targetPage) { page ->
                 DockRowsOf(
@@ -221,7 +222,6 @@ private class LastDockLayout(var value: DockLayout? = null)
 private class LastRow(var value: (@Composable () -> Unit)? = null)
 
 internal val DOCK_CORNER = 16.dp
-private val DOCK_HORIZONTAL_PADDING = 16.dp
 
 /** After the app bar's, which is the screen's first, and before the song's pages, which come after it. */
 internal const val DOCK_TRAVERSAL_INDEX = 1f
