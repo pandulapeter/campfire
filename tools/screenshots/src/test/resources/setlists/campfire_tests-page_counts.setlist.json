@@ -1,0 +1,15 @@
+{
+    "title": "Page Counts",
+    "description": "Two songs read in a setlist with a song beside each, so that their pages are counted with the pager bar under them.",
+    "isArchived": false,
+    "songs": [
+        {
+            "file": "traditional_american-house_of_the_rising_sun.cho",
+            "transposition": 0
+        },
+        {
+            "file": "campfire_tests-the_lighthouse_keeper.cho",
+            "transposition": 0
+        }
+    ]
+}
