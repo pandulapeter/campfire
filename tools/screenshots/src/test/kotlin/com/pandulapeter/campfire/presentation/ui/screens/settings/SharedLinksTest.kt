@@ -167,7 +167,7 @@ internal class SharedLinksTest {
 
     private fun AppTestScope.openQrCode() {
         openLibraryTab()
-        // Under the sync section, which a short window leaves the list below.
+        // Under the sync and import sections, which a short window leaves the list below.
         onNode(hasText(RISING_SUN_TITLE) and hasClickAction()).performScrollTo().performTouchInput { click() }
         waitUntil(timeoutMillis = 10_000) { onAllNodes(hasContentDescription(string(Res.string.share_qr_code))).fetchSemanticsNodes().isNotEmpty() }
     }

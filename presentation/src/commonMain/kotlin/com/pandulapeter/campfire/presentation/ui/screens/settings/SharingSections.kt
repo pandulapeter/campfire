@@ -73,7 +73,7 @@ import org.jetbrains.compose.resources.painterResource
 
 /**
  * The Library tab's shared links: everything shared as a link from the connected account, on any device, there only
- * while an account is connected, since the sync section above it is where one is. Its stages ([sharingStageOf]) crossfade,
+ * while an account is connected, since the sync section at the tab's top is where one is. Its stages ([sharingStageOf]) crossfade,
  * each a user's tap or the connection's answer to one, except the list arriving over "Nothing shared yet", which is
  * data arriving and is simply there.
  *
@@ -159,7 +159,8 @@ internal fun SharingSections(
                 AnimatedSettingsRow(isVisible = isConnected && isStaleSharingList(refreshFailure)) {
                     SettingsMessage(text = stringResource(Res.string.settings_sharing_stale))
                 }
-                // Last, under every link it stops, as the tab keeps the rows that cannot be undone at its end.
+                // The section's last row, under every link it stops, as the tab keeps the rows that cannot be undone at
+                // the ends of their sections (and the library's own at its end, On this device following this section).
                 if (shown == SharingStage.SHARED) {
                     ActionListItem(
                         title = stringResource(Res.string.settings_sharing_stop_all),

@@ -247,15 +247,6 @@ private fun SettingsTabContent(
                     showDialog = viewModel.dialogHost::showDialog,
                     onConnectSyncProvider = viewModel::connectSyncProvider,
                 )
-                SharingSections(
-                    controller = viewModel.shareLinkController,
-                    syncController = viewModel.syncController,
-                    libraryState = viewModel.libraryState,
-                    showDialog = viewModel.dialogHost::showDialog,
-                    sendMessage = viewModel.messageSink::sendMessage,
-                    selectedTab = { viewModel.navigator.settingsTab },
-                    onConnectSyncProvider = viewModel::connectSyncProvider,
-                )
                 LibrarySections(
                     firstRunController = viewModel.firstRunController,
                     showDialog = viewModel.dialogHost::showDialog,
@@ -266,7 +257,17 @@ private fun SettingsTabContent(
                     coverArtCacheSize = viewModel.coverArtSearchController.coverArtCacheSize,
                     isImporting = isImporting,
                     isPerformanceModeEnabled = isPerformanceModeEnabled,
-                )
+                ) {
+                    SharingSections(
+                        controller = viewModel.shareLinkController,
+                        syncController = viewModel.syncController,
+                        libraryState = viewModel.libraryState,
+                        showDialog = viewModel.dialogHost::showDialog,
+                        sendMessage = viewModel.messageSink::sendMessage,
+                        selectedTab = { viewModel.navigator.settingsTab },
+                        onConnectSyncProvider = viewModel::connectSyncProvider,
+                    )
+                }
             }
             SettingsTab.FEATURES -> FeaturesSections(
                 preferencesController = viewModel.preferencesController,

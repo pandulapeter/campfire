@@ -22,11 +22,12 @@ do the wide layout's pages.
   (`SettingsTab.HOME`) is what the screen opens on, read only mode its first row. Song and Metronome go with their
   features (`settingsTabs`, tested); `settings/preferences` and `settings/songs` addresses open General and Song.
 - Set up Campfire again leads About's Help.
-- **Library**: On this device last, since its rows can't be undone. Deleting the library wants `DELETE` typed in every
+- **Library**: Sync, Import / export, Shared links, then On this device, last since its rows can't be undone (Import /
+  export comes before a shared links list that can grow long). Deleting the library wants `DELETE` typed in every
   language (into a capitalizing field). Its row's size is songs, setlists, and `library/files` (listed, never read;
   pictures by `IMAGE_EXTENSIONS`, the rest attachments), with a line naming the parts once two take up space.
-- **Shared links** (in Library, under Sync): there only while an account is connected, Sync being where one is
-  connected. Stages crossfade, except the list arriving over "Nothing shared yet". The Library tab settling into view
+- **Shared links** (in Library, before On this device): there only while an account is connected, Sync being where one
+  is connected. Stages crossfade, except the list arriving over "Nothing shared yet". The Library tab settling into view
   (not being composed by the pager) reads the account's list once per visit; the mirror shows meanwhile and offline,
   saying so once a read fails. A row being stopped (every row, for Stop sharing everything) fades, its menu
   crossfading into a progress indicator until it shrinks in place, or back with a snackbar saying why where the stop

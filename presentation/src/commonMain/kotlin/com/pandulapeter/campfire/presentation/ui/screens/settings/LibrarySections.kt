@@ -66,10 +66,12 @@ import kotlinx.coroutines.flow.StateFlow
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * The library tab after its sync section: what can be brought into the library and taken out of it, then what it holds
- * on this device. The rows that say what is on the device are also how it is taken off, last on the page since they
- * are the ones that cannot be undone: the library's row deletes every song and setlist, behind a dialog that wants a
- * word typed, and the cover cache's row deletes the copies of the covers, behind an ordinary one.
+ * The library tab after its sync section: what can be brought into the library and taken out of it, then the shared
+ * links ([sharedLinks]), then what it holds on this device. Import and export come before the shared links, whose list
+ * can grow long and would otherwise push them down. The rows that say what is on the device are also how it is taken
+ * off, last on the page since they are the ones that cannot be undone: the library's row deletes every song and
+ * setlist, behind a dialog that wants a word typed, and the cover cache's row deletes the copies of the covers, behind
+ * an ordinary one.
  *
  * The actions are disabled rather than hidden by performance mode, like the chord spelling with the chords switched
  * off: this screen is the one place the mode can be switched back off, and a settings screen whose rows come and go
@@ -86,6 +88,7 @@ internal fun LibrarySections(
     coverArtCacheSize: StateFlow<Long?>,
     isImporting: Boolean,
     isPerformanceModeEnabled: Boolean,
+    sharedLinks: @Composable () -> Unit,
 ) {
     ImportExportSection(
         firstRunController = firstRunController,
@@ -94,6 +97,7 @@ internal fun LibrarySections(
         isImporting = isImporting,
         isPerformanceModeEnabled = isPerformanceModeEnabled,
     )
+    sharedLinks()
     OnThisDeviceSection(
         showDialog = showDialog,
         librarySummaryFlow = librarySummary,
