@@ -12,7 +12,6 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock
 import com.pandulapeter.campfire.presentation.ui.songView.title
 import com.pandulapeter.campfire.presentation.ui.songView.model.RenderSection
 import androidx.compose.foundation.ScrollState
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -37,16 +36,13 @@ import com.pandulapeter.campfire.presentation.ui.chords.ScaleChip
  * row is the screen's rather than the song's. Emits nothing where the scale suggestions are off.
  *
  * Where [scrollState] is given, the row is the chips' own, and it scrolls itself to [headedGroup] (the index of the group
- * of the page the reader is headed for, [scaleGroupAt]) whenever that changes, and only then. In the side panel's column
- * ([isColumn]) each title and each chip takes a line of its own, the chips stretched to its width: wrapped onto its
- * narrow lines the chips broke into ragged stacks, and a row scrolling sideways there showed too little of itself.
+ * of the page the reader is headed for, [scaleGroupAt]) whenever that changes, and only then.
  */
 @Composable
 internal fun DockScaleChips(
     content: DockContent,
     scrollState: ScrollState? = null,
     headedGroup: Int? = null,
-    isColumn: Boolean = false,
 ) {
     val suggestions = content.scaleSuggestions ?: return
     val groups = content.model.scaleGroups
@@ -62,7 +58,6 @@ internal fun DockScaleChips(
     val isGrouped = groups.size > 1
     val other = stringResource(Res.string.song_details_scales_other)
     val positions = remember(groups) { DockRowPositions() }
-    val line = if (isColumn) Modifier.fillMaxWidth() else Modifier
     section.rows.forEach { row ->
         // Each group is scrolled to by the first thing its own row draws, its title where it has one.
         val first = if (row.exception == null) {
@@ -77,7 +72,7 @@ internal fun DockScaleChips(
         }
         if (title != null) {
             Text(
-                modifier = first.semantics { heading() }.then(line),
+                modifier = first.semantics { heading() },
                 text = title,
                 style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -87,7 +82,7 @@ internal fun DockScaleChips(
         val scales = row.scalesOf(groups)
         if (scales.isEmpty()) {
             Text(
-                modifier = itemModifier.then(line),
+                modifier = itemModifier,
                 text = stringResource(Res.string.song_details_scales_unheld),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -95,7 +90,7 @@ internal fun DockScaleChips(
         }
         scales.forEachIndexed { index, scale ->
             ScaleChip(
-                modifier = (if (index == 0) itemModifier else Modifier).then(line),
+                modifier = if (index == 0) itemModifier else Modifier,
                 scale = scale,
                 rootName = row.rootNameOf(groups),
                 notation = suggestions.notation,

@@ -70,10 +70,12 @@ internal fun SongDock(
     lastRow: (@Composable () -> Unit)?,
 ) {
     val corner by animateDpAsState(if (isUnderCard) 0.dp else DOCK_CORNER)
+    // Beside the side panel the row meets the panel's own surface, the two making one.
+    val endCorner by animateDpAsState(if (isUnderCard || dock.isSidePanel) 0.dp else DOCK_CORNER)
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(topStart = corner, topEnd = corner))
+            .clip(RoundedCornerShape(topStart = corner, topEnd = endCorner))
             .background(MaterialTheme.colorScheme.surfaceContainer)
             .semantics {
                 isTraversalGroup = true
@@ -114,7 +116,7 @@ private fun DockRowsBox(dock: SongDockState, metronome: DockMetronome, contentPa
                     content = dock.contents[page],
                     stepper = dock.steppers[page],
                     metronome = metronome,
-                    rows = dock.rows,
+                    rows = dock.rowsUnder,
                     layout = layout,
                     horizontalPadding = horizontalPadding,
                 )
@@ -152,9 +154,9 @@ private fun DockRowsOf(
     val onChordClicked = content?.chordDiagrams?.onChordClicked
     val hasDiagramRow = rows.hasChordRow && layout.tier != DockTier.CHORD_CHIPS
     val dockKey = remember(content?.playingControls, content?.model) { content?.let { dockKeyOf(it.playingControls, it.model) } }
-    val startContent = content?.takeIf { dockKey != null || it.hasInstrumentTools(keyOpensPlaying = dockKey?.opensPlaying == true) }
+    val startContent = content?.takeIf { rows.hasPlayingRow }?.takeIf { dockKey != null || it.hasInstrumentTools(keyOpensPlaying = dockKey?.opensPlaying == true) }
     val start = startContent?.let { @Composable { DockStart(content = it, dockKey = dockKey, height = layout.rowHeight) } }
-    val tempo = content?.tempo
+    val tempo = content?.tempo?.takeIf { rows.hasPlayingRow }
     if (rows.isMetronomeOnly) {
         if (tempo != null) DockMetronomePanel(tempo = tempo, metronome = metronome, height = layout.rowHeight, start = start, horizontalPadding = horizontalPadding)
         return@Column

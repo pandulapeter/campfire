@@ -59,10 +59,12 @@ app bar's metronome panel.
   navigation bar) half that, the inset parting them from the edge (`dockBottomPaddingOf`).
 - **The panel's controls stay put** (`DockPanelControls`): the key chip over the tuner's pill naming the tuning, as in
   the diagram row, then the tempo chip, all three a row tall and stretched to the panel's width (with the metronome
-  alone too: the metronome panel has no room there). **Under them scroll** (`DockPanelRows`) the scale chips, a chip a
-  line stretched to the panel under each group's title (wrapped they broke into ragged stacks, and a row scrolling
-  sideways showed too little), and the diagrams in a grid, fading under the controls and, only over a bottom inset, at
-  the bottom, padded by the inset.
+  alone too: the metronome panel has no room there). **Under them scroll** (`DockPanelRows`) the diagrams in a grid,
+  fading under the controls and, only over a bottom inset, at the bottom, padded by the inset.
+- **Beside the panel the scale suggestions are one row under the song** (`SongDockState.rowsUnder`), the rows' own
+  scale row, over the bottom inset, its corner square where it meets the panel: in the panel, wrapped they broke into
+  ragged stacks, a chip a line pushed the diagrams down, and a row scrolling sideways showed too little. The setlist's
+  pager bar stays the panel's last row.
 
 ## Its contents
 

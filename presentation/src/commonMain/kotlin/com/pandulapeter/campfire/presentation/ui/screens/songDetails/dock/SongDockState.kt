@@ -35,7 +35,8 @@ import com.pandulapeter.campfire.presentation.ui.songView.model.ChordDiagrams
 
 /**
  * The song details screen's dock: its [rows], and either its [layout] as rows under the song or its [panelLayout] as a
- * side panel at the song's end (null for no dock), the [height] the rows take from the bottom of the screen (the bottom
+ * side panel at the song's end (null for no dock), beside which [layout] is the one row of scale suggestions under the
+ * song, the rows under it being [rowsUnder], the [height] the rows take from the bottom of the screen (the bottom
  * inset included where they cover it) and the [panelWidth] the panel takes from its end (the end inset included), each
  * followed as it animates to a new one, which the pages' grid waits for ([isSettled]) as it does for the app bar. Each
  * page composed puts what the dock draws for it in [contents], and its stepper, which says where its reader is headed,
@@ -43,6 +44,7 @@ import com.pandulapeter.campfire.presentation.ui.songView.model.ChordDiagrams
  */
 internal class SongDockState(
     val rows: DockRows,
+    val rowsUnder: DockRows,
     val layout: DockLayout?,
     val panelLayout: DockLayout?,
     private val target: Dp,
@@ -95,9 +97,11 @@ internal fun rememberSongDock(
     // The controls are drawn at the interface's text size, which a large system text size grows past a chip's.
     val rowHeight = maxOf(DOCK_ROW_HEIGHT, songControlHeight(MaterialTheme.typography.titleSmall))
     val bottomPadding = dockBottomPaddingOf(bottomInset = contentPadding.calculateBottomPadding())
+    // Beside a side panel the rows under the song are the scale suggestions alone, which the panel has no width for.
+    val rowsUnder = if (isSidePanel) DockRows(hasPlayingRow = false, hasChordRow = false, hasScaleRow = rows.hasScaleRow) else rows
     val layout = remember(rows, windowSize.height, turnsByColumn, hasPagerBar, isImportPreview, rowHeight, isSidePanel, bottomPadding) {
         if (isSidePanel) {
-            null
+            dockLayoutOf(rows = rowsUnder, budget = 0.dp, isOneRow = true, rowHeight = rowHeight, bottomPadding = bottomPadding)
         } else {
             dockLayoutOf(
                 rows = rows,
@@ -109,10 +113,12 @@ internal fun rememberSongDock(
         }
     }
     val panelLayout = remember(rows, rowHeight, isSidePanel) { if (isSidePanel) dockPanelLayoutOf(rows, rowHeight) else null }
-    val target = layout?.let { it.height + if (hasPagerBar) 0.dp else contentPadding.calculateBottomPadding() } ?: 0.dp
+    // A setlist's pager bar covers the bottom inset under the rows, but beside a side panel it is the panel's last row.
+    val target = layout?.let { it.height + if (hasPagerBar && !isSidePanel) 0.dp else contentPadding.calculateBottomPadding() } ?: 0.dp
     val panelTarget = if (panelLayout == null) 0.dp else panelWidth + endInset
     return SongDockState(
         rows = rows,
+        rowsUnder = rowsUnder,
         layout = layout,
         panelLayout = panelLayout,
         target = target,
