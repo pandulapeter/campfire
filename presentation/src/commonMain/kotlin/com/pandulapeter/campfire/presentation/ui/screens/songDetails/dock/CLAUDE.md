@@ -77,8 +77,10 @@ app bar's metronome panel.
   screen reader reads each pill as one description of all it shows (key, transposition, and capo; tuner and tuning).
 - **The key chip** (`DockKeyChip`, `dockKeyOf`) names what the transposition stepper names (the shapes' under `SHAPES`,
   the inferred key for a file naming none), a moved song's semitones after a named key ("Bm (+2)", not in read only mode); **a capo other than zero is always on screen**, after a stepper's
-  divider. In the diagram row it stands over a pill of the tuner naming the tuning (`DockKeyAndTuner`), the two as
-  tall as the diagrams, where the start has no tuner of its own; never a key set large in a card. It opens
+  divider. In the diagram row it stands over a pill of the tuner naming the tuning (`DockKeyAndTuner`), the two filling
+  the row's height as the tempo chip does, where the start has no tuner of its own; alone there it is as tall as the
+  row, its text unscaled, the capo on a line under the key naming the shapes' key where the key names what sounds
+  ("Capo 2 (Am shapes)", `SongCapoControl.shapesKey`); never a key set large in a card. It opens
   the Playing sheet (`DialogType.Playing`): instrument and tuning, transposition and capo, then a
   full-width Tuner button, their pending writes unchanged. Read only mode's opens nothing (it would write overrides) and
   is left out with neither key nor capo; the instrument pill and tuner then start the dock (`DockInstrumentTools`), as

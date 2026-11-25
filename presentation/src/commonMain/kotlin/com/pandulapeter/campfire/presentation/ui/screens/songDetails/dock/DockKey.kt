@@ -21,6 +21,8 @@ import com.pandulapeter.campfire.presentation.ui.songView.model.SongLyricsModel
  * not zero, which is always on screen. [transposition] is the semitones the song is moved by ("+2") beside a named key,
  * so that a moved song says so without the sheet; null where it is not moved, or where [key] already is the semitones.
  * [opensPlaying] where the chip opens the Playing sheet, never in read only mode, whose sheet would write overrides.
+ * [shapesKey] is the key of the shapes fingered above the [capo] where [key] names what sounds, which a chip as tall as
+ * the diagram row says under the key ("Capo 2 (Am shapes)").
  */
 @Immutable
 internal data class DockKey(
@@ -28,6 +30,7 @@ internal data class DockKey(
     val capo: Int?,
     val opensPlaying: Boolean,
     val transposition: String? = null,
+    val shapesKey: String? = null,
 )
 
 /**
@@ -39,9 +42,11 @@ internal fun dockKeyOf(controls: SongPlayingControls?, model: SongLyricsModel): 
     if (!model.shouldShowChords) return null
     if (controls != null) {
         val keyControl = controls.key
+        val capo = controls.capo?.capo?.fret?.takeIf { it != 0 }
         return DockKey(
             key = keyControl?.let { transpositionValue(it.transposition, it.key) },
-            capo = controls.capo?.capo?.fret?.takeIf { it != 0 },
+            capo = capo,
+            shapesKey = controls.capo?.shapesKey?.takeIf { capo != null && it.isNotBlank() },
             opensPlaying = controls.onPlayingClicked != null,
             transposition = keyControl?.takeIf { it.transposition != 0 && !it.key.isNullOrBlank() }?.let { transpositionLabel(it.transposition, null) },
         )

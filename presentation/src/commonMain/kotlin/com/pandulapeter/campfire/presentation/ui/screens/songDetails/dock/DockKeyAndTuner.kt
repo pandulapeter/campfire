@@ -60,7 +60,8 @@ internal fun DockKeyAndTuner(
     modifier = modifier.height(height).width(IntrinsicSize.Max),
     verticalArrangement = Arrangement.spacedBy(KEY_AND_TUNER_GAP, Alignment.CenterVertically),
 ) {
-    val pillHeight = minOf((height - KEY_AND_TUNER_GAP) / 2, MAX_PILL_HEIGHT)
+    // The two fill the row, so that their edges line up with the tempo chip's at its end.
+    val pillHeight = (height - KEY_AND_TUNER_GAP) / 2
     DockKeyChip(modifier = Modifier.fillMaxWidth(), dockKey = dockKey, height = pillHeight, onClick = onPlayingClicked)
     DockTunerPill(modifier = Modifier.fillMaxWidth(), chordDiagrams = chordDiagrams, height = pillHeight, onClick = onTunerClicked)
 }
@@ -113,8 +114,6 @@ private fun DockTunerPill(
 
 internal val KEY_AND_TUNER_GAP = 6.dp
 
-/** As tall as a pill reads as one in the full-size diagram row, rather than as a card. */
-private val MAX_PILL_HEIGHT = 40.dp
 private val TUNER_PILL_PADDING = 12.dp
 private val TUNER_ICON_GAP = 6.dp
 private val TUNER_ICON_SIZE = 18.dp

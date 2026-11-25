@@ -24,6 +24,7 @@ import com.pandulapeter.campfire.presentation.ui.playing.SongPlayback
 import com.pandulapeter.campfire.presentation.ui.playing.isCapoShownFor
 import com.pandulapeter.campfire.presentation.ui.playing.nameCapoFor
 import com.pandulapeter.campfire.presentation.ui.playing.pitchCapo
+import com.pandulapeter.campfire.presentation.ui.playing.shapeCapoFor
 import com.pandulapeter.campfire.presentation.ui.playing.namingTransposition
 import com.pandulapeter.campfire.presentation.ui.playing.SEMITONES_PER_OCTAVE
 import com.pandulapeter.campfire.presentation.ui.playing.soundingTransposition
@@ -68,6 +69,14 @@ internal fun rememberSongPlayingControls(
     val isCapoShown = playback.isCapoShownFor(userPreferences)
     val nameCapo = playback.nameCapoFor(userPreferences)
     val key = if (canTranspose) songRenderer.renderKey(song = song, transposition = playback.namingTransposition(userPreferences), spelling = chordSpelling, inferredKey = inferredKey) else null
+    // The key of the shapes fingered above the capo, where the key above names what sounds rather than them; none on an
+    // instrument without a capo, whose shapes are what sounds.
+    val shapeCapo = playback.shapeCapoFor(userPreferences)
+    val shapesKey = if (canTranspose && shapeCapo != 0 && nameCapo == 0) {
+        songRenderer.renderKey(song = song, transposition = playback.soundingTransposition - shapeCapo, spelling = chordSpelling, inferredKey = inferredKey)
+    } else {
+        null
+    }
     val transpositionLabels = remember(songRenderer, song, canTranspose, chordSpelling, pitchCapo, nameCapo, inferredKey) {
         if (!canTranspose) return@remember emptyList()
         (0 until SEMITONES_PER_OCTAVE).map { semitones ->
@@ -88,6 +97,7 @@ internal fun rememberSongPlayingControls(
         isCapoShown,
         transposition,
         key,
+        shapesKey,
         capo,
         tempo,
         song,
@@ -110,6 +120,7 @@ internal fun rememberSongPlayingControls(
                 SongCapoControl(
                     capo = capo,
                     namesShapes = nameCapo != 0 && key != null,
+                    shapesKey = shapesKey,
                     onStep = { overrides.stepCapo(fileName, setlistFileName, it) },
                     onReset = { overrides.resetCapo(fileName, setlistFileName) },
                 )

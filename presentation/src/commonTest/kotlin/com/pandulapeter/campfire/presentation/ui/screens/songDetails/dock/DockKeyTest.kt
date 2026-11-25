@@ -53,6 +53,12 @@ internal class DockKeyTest {
     }
 
     @Test
+    fun `a capo names the key of the shapes fingered above it where the key names what sounds`() {
+        assertEquals("Am", dockKeyOf(controls(key = "Bm", capo = 2, shapesKey = "Am"), model("{key: Am}"))?.shapesKey)
+        assertNull(dockKeyOf(controls(key = "Am", capo = 0, shapesKey = "Am"), model("{key: Am}"))?.shapesKey)
+    }
+
+    @Test
     fun `the chords switched off take the chip`() = assertNull(dockKeyOf(controls(key = "Am", capo = 2), model("{key: Am}", shouldShowChords = false)))
 
     private fun model(text: String, shapesKey: String? = null, shouldShowChords: Boolean = true) = SongLyricsModel(
@@ -63,9 +69,9 @@ internal class DockKeyTest {
         shapesKey = shapesKey,
     )
 
-    private fun controls(key: String?, capo: Int, transposition: Int = 0) = SongPlayingControls(
+    private fun controls(key: String?, capo: Int, transposition: Int = 0, shapesKey: String? = null) = SongPlayingControls(
         key = SongKeyControl(transposition = transposition, isDefault = transposition == 0, key = key, labels = emptyList(), onStep = {}, onReset = {}),
-        capo = SongCapoControl(capo = EffectiveCapo(fret = capo, songFret = 0), namesShapes = false, onStep = {}, onReset = {}),
+        capo = SongCapoControl(capo = EffectiveCapo(fret = capo, songFret = 0), namesShapes = false, shapesKey = shapesKey, onStep = {}, onReset = {}),
         tempo = null,
         onPlayingClicked = {},
     )

@@ -88,7 +88,8 @@ private data class DockStartLook(val content: DockContent, val dockKey: DockKey?
  * The items of [DockStart]: the instrument and the tuner where the key chip does not hold them
  * ([DockInstrumentTools]), then the key chip ([DockKeyChip]) where there is a [dockKey], [height] tall. In the diagram
  * row ([tallHeight], its height), a key chip that opens the Playing sheet stands over the tuner's pill
- * ([DockKeyAndTuner]) where the tuner is on, both [pillWidth] wide where it is given.
+ * ([DockKeyAndTuner]) where the tuner is on, both [pillWidth] wide where it is given; a key chip alone there is as tall
+ * as the row, the capo on a line of its own.
  */
 @Composable
 private fun DockStartItems(content: DockContent, dockKey: DockKey?, height: Dp, tallHeight: Dp?, pillWidth: Dp?) {
@@ -106,6 +107,9 @@ private fun DockStartItems(content: DockContent, dockKey: DockKey?, height: Dp, 
             onPlayingClicked = onPlayingClicked,
             onTunerClicked = onTunerClicked,
         )
+    } else if (tallHeight != null && pillWidth == null && !content.hasInstrumentTools(keyOpensPlaying = dockKey.opensPlaying)) {
+        // Alone at the start of the diagram row, it is as tall as the tempo chip at its end.
+        DockKeyChip(dockKey = dockKey, height = tallHeight, onClick = onPlayingClicked, isTall = true)
     } else {
         DockKeyChip(modifier = if (pillWidth == null) Modifier else Modifier.width(pillWidth), dockKey = dockKey, height = height, onClick = onPlayingClicked)
     }
