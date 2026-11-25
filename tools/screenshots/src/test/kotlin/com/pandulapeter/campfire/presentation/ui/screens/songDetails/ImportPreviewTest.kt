@@ -9,10 +9,13 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasScrollToNodeAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isDialog
@@ -44,6 +47,7 @@ import com.pandulapeter.campfire.presentation.resources.songs_new_song
 import com.pandulapeter.campfire.screenshots.AppTestScope
 import com.pandulapeter.campfire.screenshots.HOUSE_OF_THE_RISING_SUN
 import com.pandulapeter.campfire.screenshots.TestWindow
+import com.pandulapeter.campfire.screenshots.opensTempoSheet
 import com.pandulapeter.campfire.screenshots.resourceText
 import com.pandulapeter.campfire.screenshots.runAppTest
 import kotlinx.coroutines.runBlocking
@@ -72,6 +76,19 @@ internal class ImportPreviewTest {
         assertEquals(resourceText("songs/$NEW_SONG"), File(songsFolder, NEW_SONG).readText())
         // The preview becomes the song's own screen, which says nothing of a preview any more.
         waitUntil(timeoutMillis = TIMEOUT_MILLIS) { onAllNodesWithText(string(Res.string.import_preview_title)).fetchSemanticsNodes().isEmpty() }
+    }
+
+    @Test
+    fun `a preview's dock is one row of chord chips with no tempo chip`() = runAppTest(pickedFiles = listOf(newSong)) {
+        pickFiles()
+        waitForText(string(Res.string.import_preview_title))
+        // A chip names its chord and nothing more, where a diagram is also said as its shape.
+        val chord = hasText(PREVIEW_CHORD) and hasClickAction() and hasAnyAncestor(hasScrollAction())
+        waitUntil(timeoutMillis = TIMEOUT_MILLIS) {
+            onAllNodes(chord and SemanticsMatcher.keyNotDefined(SemanticsProperties.ContentDescription)).fetchSemanticsNodes().isNotEmpty()
+        }
+        onAllNodes(chord and SemanticsMatcher.keyIsDefined(SemanticsProperties.ContentDescription)).assertCountEquals(0)
+        onNode(opensTempoSheet()).assertDoesNotExist()
     }
 
     @Test
@@ -176,6 +193,9 @@ internal class ImportPreviewTest {
 
 /** A song no library has; the import names it after its header. */
 private const val NEW_SONG = "campfire_tests-a_new_song.cho"
+
+/** A chord of [NEW_SONG] that is not its key. */
+private const val PREVIEW_CHORD = "G"
 
 /** A song whose header names it after a demo song it does not match. */
 private const val COLLISION = "house_of_the_rising_sun_rewritten.cho"
