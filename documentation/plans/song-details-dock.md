@@ -9,7 +9,7 @@
 -->
 # Plan: song details as a reading surface with a dock
 
-**Status:** not started; step 1 is a measurement gate. The mockups this plan was agreed on (360 × 640 dp, dark):
+**Status:** steps 1 and 2 done; step 3 next. The gate decided the dock scales to the room (below). The mockups this plan was agreed on (360 × 640 dp, dark):
 https://claude.ai/artifact/PDMZvTbTcRH6CSQGQPJrra. `ui/` is
 `presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/`, as in the root `CLAUDE.md`.
 
@@ -99,6 +99,17 @@ Everything shown today stays reachable; the text size is never traded for room.
 The dock is a constant cost on every page (about 122 dp on a 360 × 640 phone, 170 dp in a setlist) where the sections it
 replaces cost one page once. The grid is "fewest pages first" (`ui/songView/grid/CLAUDE.md`), so this is measured
 before anything ships: step 1.
+
+**Measured (step 1, offscreen at 360 × 640 dp, default text size).** Leaving the three sections out saves one page or
+step everywhere, but a fixed 122 dp dock then costs 1 to 3 pages or column steps on a long song (a 7-verse song turned
+by column: 12 → 15; in a setlist by page: 13 → 15), and more at 592 dp (the bars taken off). The break-even is about
+80 dp turned by page and about 60 dp turned by column; in a column-turned setlist only 20 to 40 dp above the pager row.
+
+**Decided: the dock scales to the room.** Its height is chosen by the screen (the window's height, the reading mode, a
+setlist's pager row), never by the song, so the page count does not grow: full diagrams where there is room, smaller
+diagrams below that, and on the shortest budget one row of chord-name chips (a chip opens the chord sheet as a diagram
+does) beside the key and tempo. The budget is the step 1 break-even for the mode, rechecked by the same measurement as a
+UI test once the dock exists.
 
 ## Steps
 
