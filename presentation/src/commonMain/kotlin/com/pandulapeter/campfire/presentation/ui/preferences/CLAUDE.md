@@ -18,7 +18,9 @@ same setting**: a page is one component wherever it appears (the Metronome page 
 ## Layout
 
 - The pages are picked by a connected button group (`PreferencesPageButtons`), as the tools are switched: an icon each,
-  the picked one named and wider. Never a second tab row (tabs nested in Settings') nor chips (read as a setting).
+  the picked one named and wider. Never a second tab row (tabs nested in Settings') nor chips (read as a setting). A
+  page switched off or on with the sheet open (the toolbar's Metronome) narrows away or widens in, never snaps; a
+  picked page leaving hands the pick to the first.
 - **The sheet's buttons are pinned at its bottom** (`PreferencesFrame`): the page scrolls above them and fades out at
   its bottom edge, so another page is picked from anywhere down this one, within the thumb's reach. The sheet takes each
   page's height, its top edge moving; the buttons stay on its bottom edge meanwhile (`PreferencesFrame` places them

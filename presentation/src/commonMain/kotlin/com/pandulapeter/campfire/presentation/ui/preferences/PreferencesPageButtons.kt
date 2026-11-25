@@ -15,7 +15,6 @@ import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -27,10 +26,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.ToggleButtonDefaults
+import androidx.compose.material3.ToggleButtonShapes
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
@@ -53,6 +55,11 @@ import com.pandulapeter.campfire.presentation.ui.components.list.LIST_ITEM_KEYLI
  * its name, widening as it does, since four names side by side would cut "Metronome" short on a 360dp phone; the others
  * are named for accessibility services and by a tooltip.
  *
+ * A page whose feature is switched off with the sheet open (the toolbar's Metronome, on the Song page) stays composed
+ * while its presence animates to nothing, narrowing and fading with the gap before it, rather than vanishing in one frame
+ * and snapping the others wider; one switched back on widens the same way. The connected shapes follow the buttons
+ * drawn, a leaving one included, so the group's ends morph once it is gone.
+ *
  * @param isKeyboard Whether the Chords page's icon is the keyboard's, as the Chords tab's is.
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -63,55 +70,92 @@ internal fun PreferencesPageButtons(
     selectedPage: PreferencesPage,
     isKeyboard: Boolean,
     onPageSelected: (PreferencesPage) -> Unit,
-) = Row(
-    modifier = modifier
-        .fillMaxWidth()
-        .padding(horizontal = LIST_ITEM_KEYLINE, vertical = 8.dp)
-        .selectableGroup(),
-    horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
-    verticalAlignment = Alignment.CenterVertically,
 ) {
-    pages.forEachIndexed { index, page ->
-        val isSelected = page == selectedPage
-        val label = page.label()
-        val weight by animateFloatAsState(
-            targetValue = if (isSelected) SELECTED_BUTTON_WEIGHT else 1f,
+    val presences = PreferencesPage.entries.associateWith { page ->
+        animateFloatAsState(
+            targetValue = if (page in pages) 1f else 0f,
             animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
         )
-        // The tooltip's anchor stands between the row and the button, so it takes the weight and the button fills it.
-        CampfireTooltip(modifier = Modifier.weight(weight), label = label.takeUnless { isSelected }) {
-            ToggleButton(
+    }
+    val shownPages = PreferencesPage.entries.filter { presences.getValue(it).value > 0f }
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = LIST_ITEM_KEYLINE, vertical = 8.dp)
+            .selectableGroup(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        shownPages.forEachIndexed { index, page ->
+            val presence = presences.getValue(page).value
+            val isSelected = page == selectedPage
+            val selectionWeight by animateFloatAsState(
+                targetValue = if (isSelected) SELECTED_BUTTON_WEIGHT else 1f,
+                animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
+            )
+            PreferencesPageButton(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    // One choice of several, as Material's single-select group reads, not a checkbox each.
-                    .semantics {
-                        role = Role.RadioButton
-                        if (!isSelected) contentDescription = label
-                    },
-                checked = isSelected,
-                onCheckedChange = { onPageSelected(page) },
-                shapes = when (index) {
-                    0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
-                    pages.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
-                    else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                    .weight(selectionWeight * presence)
+                    .padding(start = if (index == 0) 0.dp else ButtonGroupDefaults.ConnectedSpaceBetween * presence)
+                    .graphicsLayer { alpha = presence }
+                    .clipToBounds(),
+                page = page,
+                isSelected = isSelected,
+                isKeyboard = isKeyboard,
+                shapes = connectedShapes(index = index, lastIndex = shownPages.lastIndex),
+                onPageSelected = onPageSelected,
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun connectedShapes(index: Int, lastIndex: Int) = when (index) {
+    0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+    lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+    else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun PreferencesPageButton(
+    modifier: Modifier,
+    page: PreferencesPage,
+    isSelected: Boolean,
+    isKeyboard: Boolean,
+    shapes: ToggleButtonShapes,
+    onPageSelected: (PreferencesPage) -> Unit,
+) {
+    val label = page.label()
+    // The tooltip's anchor stands between the row and the button, so it takes the weight and the button fills it.
+    CampfireTooltip(modifier = modifier, label = label.takeUnless { isSelected }) {
+        ToggleButton(
+            modifier = Modifier
+                .fillMaxWidth()
+                // One choice of several, as Material's single-select group reads, not a checkbox each.
+                .semantics {
+                    role = Role.RadioButton
+                    if (!isSelected) contentDescription = label
                 },
-                contentPadding = BUTTON_CONTENT_PADDING,
+            checked = isSelected,
+            onCheckedChange = { onPageSelected(page) },
+            shapes = shapes,
+            contentPadding = BUTTON_CONTENT_PADDING,
+        ) {
+            PreferencesPageIcon(page = page, isKeyboard = isKeyboard)
+            AnimatedVisibility(
+                visible = isSelected,
+                enter = fadeIn(MaterialTheme.motionScheme.defaultEffectsSpec()) +
+                    expandHorizontally(MaterialTheme.motionScheme.defaultSpatialSpec()),
+                exit = fadeOut(MaterialTheme.motionScheme.defaultEffectsSpec()) +
+                    shrinkHorizontally(MaterialTheme.motionScheme.defaultSpatialSpec()),
             ) {
-                PreferencesPageIcon(page = page, isKeyboard = isKeyboard)
-                AnimatedVisibility(
-                    visible = isSelected,
-                    enter = fadeIn(MaterialTheme.motionScheme.defaultEffectsSpec()) +
-                        expandHorizontally(MaterialTheme.motionScheme.defaultSpatialSpec()),
-                    exit = fadeOut(MaterialTheme.motionScheme.defaultEffectsSpec()) +
-                        shrinkHorizontally(MaterialTheme.motionScheme.defaultSpatialSpec()),
-                ) {
-                    Text(
-                        modifier = Modifier.padding(start = ToggleButtonDefaults.IconSpacing),
-                        text = label,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
+                Text(
+                    modifier = Modifier.padding(start = ToggleButtonDefaults.IconSpacing),
+                    text = label,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
             }
         }
     }
