@@ -131,14 +131,20 @@ internal fun dockPanelLayoutOf(rows: DockRows, rowHeight: Dp = DOCK_ROW_HEIGHT):
 }
 
 /**
- * How wide the side panel is, the end inset it covers left out: the tempo chip ([tempoChipWidth], `dockTempoChipWidth`)
- * within its padding, so that the pill heading the panel sits in it evenly, and never narrower than two diagrams at the
- * Chords section's size side by side, between which the pill is centred where it is the narrower.
+ * How wide the side panel's content is, its padding left out: the tempo chip ([tempoChipWidth], `dockTempoChipWidth`)
+ * or two diagrams of a fretted instrument at the Chords section's size side by side with room to spare, so that they
+ * never wrap onto lines of one for a pixel's rounding, whichever is wider. Its pills are stretched to it. No wider than
+ * the tempo chip needs: a 1024 × 720 window's songs take a page more past 176 dp (`PageCountTest`).
  */
-internal fun dockPanelWidthOf(tempoChipWidth: Dp) = maxOf(tempoChipWidth, DOCK_DIAGRAM_CELL_WIDTH * 2 + DOCK_ITEM_GAP) + DOCK_PANEL_PADDING * 2
+internal fun dockPanelContentWidthOf(tempoChipWidth: Dp) = maxOf(tempoChipWidth, DOCK_DIAGRAM_CELL_WIDTH * 2 + DOCK_ITEM_GAP + DIAGRAMS_SPARE_ROOM)
+
+/** How wide the side panel is, the end inset it covers left out: its content ([dockPanelContentWidthOf]) within its padding. */
+internal fun dockPanelWidthOf(tempoChipWidth: Dp) = dockPanelContentWidthOf(tempoChipWidth) + DOCK_PANEL_PADDING * 2
 
 /** How far the side panel's rows are from its sides. */
 internal val DOCK_PANEL_PADDING = 8.dp
+
+private val DIAGRAMS_SPARE_ROOM = 8.dp
 /** A row of chips or playing controls at the interface's own text size: as tall as a chip, and as the controls. */
 internal val DOCK_ROW_HEIGHT = 32.dp
 internal val DOCK_ROW_GAP = 8.dp

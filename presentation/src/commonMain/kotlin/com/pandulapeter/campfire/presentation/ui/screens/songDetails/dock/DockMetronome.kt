@@ -15,7 +15,9 @@ import androidx.compose.runtime.remember
 import com.pandulapeter.campfire.metronome.api.model.BeatLevel
 import com.pandulapeter.campfire.metronome.api.model.MetronomeBeat
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeController
+import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeIconBeat
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomePanelState
+import com.pandulapeter.campfire.presentation.ui.metronome.rememberMetronomeIconBeat
 import com.pandulapeter.campfire.presentation.ui.metronome.rememberMetronomePanelState
 import com.pandulapeter.campfire.presentation.ui.state.LibraryState
 import com.pandulapeter.campfire.presentation.ui.state.songText.SongTextStore
@@ -24,13 +26,15 @@ import kotlinx.coroutines.flow.Flow
 /**
  * The click as the dock draws it, the screen's rather than a page's: there is one click, and it plays for the page the
  * pager is on or heading for ([MetronomePanelState]: the bar it counts, its accents, and whether it plays, the bar being
- * heard while a page turn waits for its end). [beats] light the beat rows, [onPlayStop] starts and stops it, and
+ * heard while a page turn waits for its end). [beats] light the beat rows, [iconBeat] swings the tempo chip's metronome
+ * mark as the navigation's does (where the visual beat is on), [onPlayStop] starts and stops it, and
  * [onBeatLevelsChanged] writes the accents tapped on a full beat row (the metronome-only dock's).
  */
 @Immutable
 internal class DockMetronome(
     val panel: MetronomePanelState,
     val beats: Flow<MetronomeBeat>,
+    val iconBeat: MetronomeIconBeat,
     val onPlayStop: () -> Unit,
     val onBeatLevelsChanged: (List<BeatLevel>) -> Unit,
 )
@@ -43,10 +47,16 @@ internal fun rememberDockMetronome(
     songTextStore: SongTextStore,
 ): DockMetronome {
     val panel = rememberMetronomePanelState(metronomeController, libraryState, songTextStore)
-    return remember(metronomeController, panel) {
+    val iconBeat = rememberMetronomeIconBeat(
+        playback = metronomeController.metronomePlayback,
+        beats = metronomeController.metronomeBeats,
+        isEnabled = panel.isFlashEnabled,
+    )
+    return remember(metronomeController, panel, iconBeat) {
         DockMetronome(
             panel = panel,
             beats = metronomeController.metronomeBeats,
+            iconBeat = iconBeat,
             onPlayStop = {
                 println("Dock: click toggled")
                 metronomeController.toggleMetronome()

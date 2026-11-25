@@ -106,10 +106,11 @@ internal class DockLayoutTest {
     }
 
     @Test
-    fun `the side panel is as wide as the tempo chip within its padding but never narrower than two diagrams`() {
-        val twoDiagrams = dockPanelWidthOf(tempoChipWidth = 0.dp)
-        assertEquals(twoDiagrams, dockPanelWidthOf(tempoChipWidth = twoDiagrams - DOCK_PANEL_PADDING * 2 - 4.dp))
-        assertEquals(200.dp + DOCK_PANEL_PADDING * 2, dockPanelWidthOf(tempoChipWidth = 200.dp))
+    fun `the side panel is as wide as the tempo chip but never narrower than two diagrams with room to spare`() {
+        assertEquals(dockPanelWidthOf(tempoChipWidth = 0.dp), dockPanelWidthOf(tempoChipWidth = 100.dp))
+        assertTrue(dockPanelContentWidthOf(tempoChipWidth = 0.dp) > DOCK_DIAGRAM_CELL_WIDTH * 2 + DOCK_ITEM_GAP)
+        assertEquals(200.dp, dockPanelContentWidthOf(tempoChipWidth = 200.dp))
+        assertEquals(10.dp, dockPanelWidthOf(tempoChipWidth = 210.dp) - dockPanelWidthOf(tempoChipWidth = 200.dp))
     }
 
     @Test

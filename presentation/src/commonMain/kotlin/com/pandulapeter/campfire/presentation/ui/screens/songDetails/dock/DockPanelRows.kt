@@ -14,10 +14,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -30,12 +28,11 @@ import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.So
 import com.pandulapeter.campfire.presentation.ui.songView.rememberChordCells
 
 /**
- * What scrolls in the side panel for one song's [content], under its controls ([DockPanelControls]): the scale chips as
- * one row scrolling sideways, as under the song, since wrapped onto the panel's narrow lines they broke into ragged
- * stacks, then the diagrams at the Chords section's size in a grid, every chord of the song. Rows the switches leave out
- * are left out here too ([rows]). On a page turn the scale row scrolls to the headed page's group, and the panel
- * ([scrollState]) only as far as brings the first chord of that page into view, which the page's [stepper] says, as the
- * strip under the song scrolls to it.
+ * What scrolls in the side panel for one song's [content], under its controls ([DockPanelControls]): the scale chips
+ * as a column, a chip a line under each group's title ([DockScaleChips]), then the diagrams at the Chords section's
+ * size in a grid, every chord of the song. Rows the switches leave out are left out here too ([rows]). On a page turn
+ * the panel ([scrollState]) scrolls only as far as brings the first chord of the page the reader is headed for into
+ * view, which the page's [stepper] says, as the strip under the song scrolls to it.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -54,17 +51,11 @@ internal fun DockPanelRows(
     val model = content.model
     val headedSection by remember(stepper) { derivedStateOf { stepper?.headedSection } }
     if (rows.hasScaleRow) {
-        val scaleGroups = model.scaleGroups
-        val headedGroup = remember(scaleGroups, headedSection) { headedSection?.let { scaleGroupAt(scaleGroups, it) } }
-        val scaleScroll = rememberScrollState()
-        DockScrollingRow(
-            height = layout.rowHeight,
-            horizontalPadding = PaddingValues(horizontal = DOCK_PANEL_PADDING),
-            scrollState = scaleScroll,
-            start = null,
-            end = null,
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = DOCK_PANEL_PADDING),
+            verticalArrangement = Arrangement.spacedBy(DOCK_ITEM_GAP),
         ) {
-            DockScaleChips(content = content, scrollState = scaleScroll, headedGroup = headedGroup)
+            DockScaleChips(content = content, isColumn = true)
         }
     }
     if (rows.hasChordRow) {

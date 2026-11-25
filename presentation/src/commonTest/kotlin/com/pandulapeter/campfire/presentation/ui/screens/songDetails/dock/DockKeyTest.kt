@@ -43,6 +43,16 @@ internal class DockKeyTest {
     fun `read only a song with neither a key nor a capo has no chip`() = assertNull(dockKeyOf(null, model("")))
 
     @Test
+    fun `a moved song names its semitones beside the key`() =
+        assertEquals("+2", dockKeyOf(controls(key = "Bm", capo = 0, transposition = 2), model("{key: Am}"))?.transposition)
+
+    @Test
+    fun `a song in its own key and one named by its semitones name no transposition beside the key`() {
+        assertNull(dockKeyOf(controls(key = "Am", capo = 0), model("{key: Am}"))?.transposition)
+        assertNull(dockKeyOf(controls(key = null, capo = 0, transposition = -3), model(""))?.transposition)
+    }
+
+    @Test
     fun `the chords switched off take the chip`() = assertNull(dockKeyOf(controls(key = "Am", capo = 2), model("{key: Am}", shouldShowChords = false)))
 
     private fun model(text: String, shapesKey: String? = null, shouldShowChords: Boolean = true) = SongLyricsModel(

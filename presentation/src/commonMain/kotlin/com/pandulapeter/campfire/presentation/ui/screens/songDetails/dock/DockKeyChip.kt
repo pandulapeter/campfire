@@ -43,7 +43,8 @@ import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 /**
  * The key chip that starts the dock: one tonal pill ([DockControlPill], the dock's way of saying "this opens a sheet",
  * set apart from the outlined chord and scale chips that are the song's) naming the key the page's chords are in, in the
- * colour chords are written in, and after a stepper's divider the capo wherever it is not zero, so that a capo
+ * colour chords are written in, a moved song's semitones after it in parentheses ("Bm (+2)"), and after a stepper's
+ * divider the capo wherever it is not zero, so that a capo
  * is never out of sight. The whole pill opens the Playing sheet ([onClick]), none in read only mode, whose chip only
  * reads. A song naming no key that the chip still opens the sheet for is named by the sheet. A new key crossfades, and
  * the capo slides in and out with its divider.
@@ -73,16 +74,26 @@ internal fun DockKeyChip(
                     modifier = Modifier
                         .padding(horizontal = KEY_CHIP_PADDING)
                         .semantics { contentDescription = keyDescription },
-                    targetState = key,
+                    targetState = key to dockKey.transposition,
                     transitionSpec = { fadeIn() togetherWith fadeOut() },
                     contentAlignment = Alignment.Center,
-                ) { shownKey ->
-                    Text(
-                        text = shownKey,
-                        style = MaterialTheme.typography.labelLarge,
-                        color = if (dockKey.key == null) MaterialTheme.colorScheme.onSurfaceVariant else LocalSecondAccentColor.current,
-                        maxLines = 1,
-                    )
+                ) { (shownKey, shownTransposition) ->
+                    Row(horizontalArrangement = Arrangement.spacedBy(TRANSPOSITION_GAP), verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = shownKey,
+                            style = MaterialTheme.typography.labelLarge,
+                            color = if (dockKey.key == null) MaterialTheme.colorScheme.onSurfaceVariant else LocalSecondAccentColor.current,
+                            maxLines = 1,
+                        )
+                        if (shownTransposition != null) {
+                            Text(
+                                text = "($shownTransposition)",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                            )
+                        }
+                    }
                 }
             }
             AnimatedVisibility(
@@ -109,3 +120,4 @@ internal fun DockKeyChip(
 private class LastCapo(var value: Int = 0)
 
 private val KEY_CHIP_PADDING = 12.dp
+private val TRANSPOSITION_GAP = 4.dp

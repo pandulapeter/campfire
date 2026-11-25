@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock
 
 import androidx.compose.runtime.Immutable
+import com.pandulapeter.campfire.presentation.ui.playing.transpositionLabel
 import com.pandulapeter.campfire.presentation.ui.playing.transpositionValue
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongPlayingControls
 import com.pandulapeter.campfire.presentation.ui.songView.model.SongLyricsModel
@@ -17,14 +18,16 @@ import com.pandulapeter.campfire.presentation.ui.songView.model.SongLyricsModel
 /**
  * What the dock's key chip says: the key the page's chords are in ([key], as the transposition stepper named it, its
  * semitones where the song names no key, null where there is neither) and the capo the song is played at where it is
- * not zero, which is always on screen. [opensPlaying] where the chip opens the Playing sheet, never in read only mode,
- * whose sheet would write overrides.
+ * not zero, which is always on screen. [transposition] is the semitones the song is moved by ("+2") beside a named key,
+ * so that a moved song says so without the sheet; null where it is not moved, or where [key] already is the semitones.
+ * [opensPlaying] where the chip opens the Playing sheet, never in read only mode, whose sheet would write overrides.
  */
 @Immutable
 internal data class DockKey(
     val key: String?,
     val capo: Int?,
     val opensPlaying: Boolean,
+    val transposition: String? = null,
 )
 
 /**
@@ -35,10 +38,12 @@ internal data class DockKey(
 internal fun dockKeyOf(controls: SongPlayingControls?, model: SongLyricsModel): DockKey? {
     if (!model.shouldShowChords) return null
     if (controls != null) {
+        val keyControl = controls.key
         return DockKey(
-            key = controls.key?.let { transpositionValue(it.transposition, it.key) },
+            key = keyControl?.let { transpositionValue(it.transposition, it.key) },
             capo = controls.capo?.capo?.fret?.takeIf { it != 0 },
             opensPlaying = controls.onPlayingClicked != null,
+            transposition = keyControl?.takeIf { it.transposition != 0 && !it.key.isNullOrBlank() }?.let { transpositionLabel(it.transposition, null) },
         )
     }
     val key = (model.shapesKey ?: model.song.metadata.key)?.takeIf { it.isNotBlank() }
