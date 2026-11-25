@@ -32,8 +32,8 @@ import com.pandulapeter.campfire.presentation.resources.scales
 import com.pandulapeter.campfire.presentation.resources.setlists
 import com.pandulapeter.campfire.presentation.resources.setlists_actions
 import com.pandulapeter.campfire.presentation.resources.setlists_edit_details
-import com.pandulapeter.campfire.presentation.resources.song_details_dock_playing
-import com.pandulapeter.campfire.presentation.resources.song_details_dock_tempo
+import com.pandulapeter.campfire.presentation.resources.song_details_dock_open_playing
+import com.pandulapeter.campfire.presentation.resources.song_details_dock_open_tempo
 import com.pandulapeter.campfire.presentation.resources.song_details_duration
 import com.pandulapeter.campfire.presentation.resources.songs_actions
 import com.pandulapeter.campfire.presentation.resources.songs_create_song
@@ -87,7 +87,7 @@ internal fun AppTestScope.openPlayingSheet() = tap(opensPlayingSheet())
 
 /** The dock's key chip, the one control whose press is said as opening the Playing sheet. */
 internal fun AppTestScope.opensPlayingSheet() = SemanticsMatcher("opens the Playing sheet") {
-    it.config.getOrNull(SemanticsActions.OnClick)?.label == string(Res.string.song_details_dock_playing)
+    it.config.getOrNull(SemanticsActions.OnClick)?.label == string(Res.string.song_details_dock_open_playing)
 }
 
 /** Opens the Tempo sheet of the song on screen from its tempo chip in the dock, which is pressed to open it. */
@@ -95,7 +95,7 @@ internal fun AppTestScope.openTempoSheet() = tap(opensTempoSheet())
 
 /** The dock's tempo chip's number, the one control whose press is said as opening the Tempo sheet. */
 internal fun AppTestScope.opensTempoSheet() = SemanticsMatcher("opens the Tempo sheet") {
-    it.config.getOrNull(SemanticsActions.OnClick)?.label == string(Res.string.song_details_dock_tempo)
+    it.config.getOrNull(SemanticsActions.OnClick)?.label == string(Res.string.song_details_dock_open_tempo)
 }
 
 internal fun AppTestScope.openEditor() {

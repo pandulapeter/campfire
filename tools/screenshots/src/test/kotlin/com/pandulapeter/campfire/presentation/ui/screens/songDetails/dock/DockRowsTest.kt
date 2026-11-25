@@ -58,7 +58,7 @@ internal class DockRowsTest {
     ) {
         openSong()
         waitForIdle()
-        onNode(hasContentDescription(string(Res.string.tuner)) and hasClickAction()).assertDoesNotExist()
+        onNode(hasContentDescription(string(Res.string.tuner), substring = true) and hasClickAction()).assertDoesNotExist()
         tap(hasContentDescription(string(Res.string.songs_actions)))
         onNode(hasText(string(Res.string.tuner)) and hasAnyAncestor(isPopup())).assertExists()
     }
@@ -66,7 +66,7 @@ internal class DockRowsTest {
     /** The key chip and the tuner's pill under it stand before the diagram, within its row, so neither is lost. */
     private fun AppTestScope.assertKeyChipStartsDiagramRow() {
         val keyChip = keyChip()
-        val tuner = onNode(hasContentDescription(string(Res.string.tuner)) and hasClickAction()).fetchSemanticsNode().boundsInRoot
+        val tuner = onNode(hasContentDescription(string(Res.string.tuner), substring = true) and hasClickAction()).fetchSemanticsNode().boundsInRoot
         val diagram = diagram()
         assertTrue(
             diagram.left >= keyChip.right && keyChip.top >= diagram.top && tuner.top >= keyChip.bottom && tuner.bottom <= diagram.bottom,

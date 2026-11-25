@@ -25,8 +25,8 @@ import androidx.compose.ui.unit.TextUnit
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.instrument_choose
 import com.pandulapeter.campfire.presentation.resources.instrument_tuning_choose
-import com.pandulapeter.campfire.presentation.resources.song_details_dock_tempo
-import com.pandulapeter.campfire.presentation.resources.song_details_dock_playing
+import com.pandulapeter.campfire.presentation.resources.song_details_dock_open_tempo
+import com.pandulapeter.campfire.presentation.resources.song_details_dock_open_playing
 import com.pandulapeter.campfire.screenshots.APP_LANGUAGES
 import com.pandulapeter.campfire.screenshots.AppTestScope
 import com.pandulapeter.campfire.screenshots.HOUSE_OF_THE_RISING_SUN
@@ -116,12 +116,12 @@ private fun AppTestScope.node(matcher: SemanticsMatcher) = onNode(matcher, useUn
 @OptIn(ExperimentalTestApi::class)
 private fun AppTestScope.controls(): SemanticsNode {
     val song = checkNotNull(songViewport()) { "The song has no viewport." }
-    val chip = opening(string(Res.string.song_details_dock_playing))
+    val chip = opening(string(Res.string.song_details_dock_open_playing))
     val diagramName = onAllNodes(hasText(songChords().last()), useUnmergedTree = true).fetchSemanticsNodes()
         .first { node -> node.ancestry().none { it.id == song.id || it.id == chip.id } }
     val anchors = listOf(
         chip,
-        opening(string(Res.string.song_details_dock_tempo)),
+        opening(string(Res.string.song_details_dock_open_tempo)),
         diagramName,
     )
     return anchors.map { it.ancestry() }.reduce { common, ancestry -> common.filter { node -> ancestry.any { it.id == node.id } } }.first()

@@ -11,7 +11,6 @@
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock
 
 import androidx.compose.ui.test.ExperimentalTestApi
-import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -35,7 +34,7 @@ internal class DockKeyChipTest {
     fun `the key chip names the song's key and opens the Playing sheet with its transposition and capo`() = runAppTest {
         openSong()
         // House of the Rising Sun is in Am.
-        onNode(hasText("Am") and hasAnyAncestor(opensPlayingSheet()), useUnmergedTree = true).assertExists()
+        onNode(hasContentDescription("Am", substring = true) and opensPlayingSheet()).assertExists()
         openPlayingSheet()
         onNode(hasText(string(Res.string.song_details_dock_playing))).assertExists()
         onNode(hasContentDescription(string(Res.string.song_details_transpose_up))).assertExists()
@@ -45,15 +44,16 @@ internal class DockKeyChipTest {
     @Test
     fun `a capo put on shows on the key chip after its key, and taken off leaves it`() = runAppTest {
         openSong()
-        val capoTwo = hasText(string(Res.string.song_details_capo, 2)) and hasAnyAncestor(opensPlayingSheet())
-        onNode(capoTwo, useUnmergedTree = true).assertDoesNotExist()
+        // The chip is read as one description, the capo in it.
+        val capoTwo = hasContentDescription(string(Res.string.song_details_capo, 2), substring = true) and opensPlayingSheet()
+        onNode(capoTwo).assertDoesNotExist()
         openPlayingSheet()
         repeat(2) { tap(hasContentDescription(string(Res.string.song_details_capo_increase))) }
         pressBack()
-        waitUntil { onAllNodes(capoTwo, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty() }
+        waitUntil { onAllNodes(capoTwo).fetchSemanticsNodes().isNotEmpty() }
         openPlayingSheet()
         repeat(2) { tap(hasContentDescription(string(Res.string.song_details_capo_decrease))) }
         pressBack()
-        waitUntil { onAllNodes(hasText(string(Res.string.song_details_capo, 2)), useUnmergedTree = true).fetchSemanticsNodes().isEmpty() }
+        waitUntil { onAllNodes(capoTwo).fetchSemanticsNodes().isEmpty() }
     }
 }
