@@ -54,7 +54,7 @@ the next share a height, so any motion takes away what is still to be read.
   details they open only from the dock, and one opened from another is still one): it plays on once the sheet is put
   away, unless anything else stopped it meanwhile (another cover, the page, `ON_STOP`). Breadcrumbs: `Auto scroll: …`.
 - **The first step back while it plays stops it**; only the next leaves the screen. The back gesture is the screen's own
-  `NavigationBackHandler`, so a predictive one turns the button to play while dragged (and back if cancelled); Escape and
-  the app bar's arrow reach it through `Navigator.navigateBack` (`AutoScrollPlayback`), the web's Back through a history
-  entry of its own (`BrowserRoutes`).
+  `NavigationBackHandler`, so a predictive one turns the button to play while dragged (and back if cancelled); Escape
+  reaches it through `Navigator.navigateBack` (`AutoScrollPlayback`), the web's Back through a history entry of its own
+  (`BrowserRoutes`). The app bar's arrow is not a step back but a press to leave: it pops the screen at once.
 - The layout is asked over the first song opened (never by the onboarding), as the song details notes say.

@@ -362,7 +362,7 @@ internal fun CampfireScreens(
                                 destination = destination,
                                 settledWidth = settledSongDetailsWidth,
                                 contentPadding = songDetailsContentPadding,
-                                onBack = viewModel.navigator::navigateBack,
+                                onBack = viewModel.navigator::popBackStack,
                             )
                         }
                     }
