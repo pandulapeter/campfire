@@ -14,9 +14,9 @@ import com.pandulapeter.campfire.presentation.ui.playing.EffectiveCapo
 import com.pandulapeter.campfire.presentation.ui.playing.EffectiveTempo
 
 /**
- * What sets the four values a song is played by, from the song's own first section, see [SongPlayingControlsRow]. The
+ * What sets the four values a song is played by, which song details' dock and its Playing and Tempo sheets step. The
  * song details screen builds it for the song on screen and only outside read only mode: performance mode and a song
- * read from an archived setlist get the plain line of text instead, since neither changes anything about a song.
+ * read from an archived setlist only read them, since neither changes anything about a song.
  *
  * Three of the four are set where the song is read — a transposition, a capo and a tempo belong to the setlist the
  * band plays it in, or to this device for a song opened from the library — while what the file itself declares, the

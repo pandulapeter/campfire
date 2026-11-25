@@ -39,10 +39,7 @@ internal fun rememberShownSections(
     shouldShowTempo: Boolean,
     isSongInfoShown: Boolean,
     isSongInfoEditable: Boolean,
-    hasPlayingControls: Boolean,
     readsDefaults: Boolean,
-    hasTuner: Boolean,
-    hasMetronome: Boolean,
 ): List<RenderSection> {
     val cells = rememberChordCells(model, chordDiagrams.takeIf { showsPlayingSections })
     if (!showsPlayingSections) return model.sections
@@ -54,11 +51,8 @@ internal fun rememberShownSections(
         shouldShowTempo,
         isSongInfoShown,
         isSongInfoEditable,
-        hasPlayingControls,
         readsDefaults,
         model.shapesKey,
-        hasTuner,
-        hasMetronome,
     ) {
         withMetadataSection(
             sections = model.sections,
@@ -69,10 +63,7 @@ internal fun rememberShownSections(
             shouldShowTempo = shouldShowTempo,
             isSongInfoShown = isSongInfoShown,
             isSongInfoEditable = isSongInfoEditable,
-            hasPlayingControls = hasPlayingControls,
             readsDefaults = readsDefaults,
-            hasTuner = hasTuner,
-            hasMetronome = hasMetronome,
         )
     }
     val withChords = remember(sections, cells, model.hasChords, instrumentPill) {

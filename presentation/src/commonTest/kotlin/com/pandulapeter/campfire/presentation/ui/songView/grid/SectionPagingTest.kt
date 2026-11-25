@@ -9,7 +9,6 @@
  */
 package com.pandulapeter.campfire.presentation.ui.songView.grid
 
-import com.pandulapeter.campfire.presentation.ui.songView.firstSection.places
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertContentEquals

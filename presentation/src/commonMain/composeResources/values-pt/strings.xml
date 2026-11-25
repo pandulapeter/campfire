@@ -1227,7 +1227,6 @@
     <string name="song_details_capo">Capotraste %1$d</string>
     <string name="song_details_tempo">%1$s BPM</string>
     <string name="song_details_time">%1$s</string>
-    <string name="song_details_time_signature">Fórmula de compasso: %1$s</string>
     <string name="song_details_key_change">Tom: %1$s</string>
     <string name="tab_notice_octave_up">Uma oitava acima para caber no braço</string>
     <string name="tab_notice_octave_down">Uma oitava abaixo para caber no braço</string>
@@ -1256,7 +1255,6 @@
     <string name="song_details_chord_shape_choose">Escolher formato do acorde - %1$s</string>
     <string name="song_details_chord_shape_capo">Formato de %1$s, capotraste %2$s</string>
     <string name="song_details_chord_sounding_capo">Soa como %1$s, capotraste %2$s</string>
-    <string name="song_details_shapes_capo">formatos, capotraste</string>
     <string name="song_details_capo_shapes">%1$s (formatos de %2$s)</string>
     <string name="song_details_chord_defined">Definido nesta música</string>
     <plurals name="song_details_chord_defined_moved">

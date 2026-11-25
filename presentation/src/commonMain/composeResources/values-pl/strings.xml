@@ -1261,7 +1261,6 @@
     <string name="song_details_capo">Kapodaster %1$d</string>
     <string name="song_details_tempo">%1$s BPM</string>
     <string name="song_details_time">%1$s</string>
-    <string name="song_details_time_signature">Metrum: %1$s</string>
     <string name="song_details_key_change">Tonacja: %1$s</string>
     <string name="tab_notice_octave_up">Przeniesiono oktawę wyżej, aby zmieścić się na gryfie</string>
     <string name="tab_notice_octave_down">Przeniesiono oktawę niżej, aby zmieścić się na gryfie</string>
@@ -1291,7 +1290,6 @@
     <string name="song_details_chord_shape_choose">Wybierz chwyt akordu – %1$s</string>
     <string name="song_details_chord_shape_capo">Chwyt %1$s, kapodaster %2$s</string>
     <string name="song_details_chord_sounding_capo">Brzmi jak %1$s, kapodaster %2$s</string>
-    <string name="song_details_shapes_capo">chwyty, kapodaster</string>
     <string name="song_details_capo_shapes">%1$s (chwyty %2$s)</string>
     <string name="song_details_chord_defined">Zdefiniowany w tej piosence</string>
     <plurals name="song_details_chord_defined_moved">

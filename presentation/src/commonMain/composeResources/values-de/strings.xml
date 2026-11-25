@@ -1225,7 +1225,6 @@
     <string name="song_details_capo">Capo %1$d</string>
     <string name="song_details_tempo">%1$s BPM</string>
     <string name="song_details_time">%1$s</string>
-    <string name="song_details_time_signature">Taktart: %1$s</string>
     <string name="song_details_key_change">Tonart: %1$s</string>
     <string name="tab_notice_octave_up">Eine Oktave höher verschoben, um auf dem Griffbrett zu bleiben</string>
     <string name="tab_notice_octave_down">Eine Oktave tiefer verschoben, um auf dem Griffbrett zu bleiben</string>
@@ -1254,7 +1253,6 @@
     <string name="song_details_chord_shape_choose">Griffbild wählen – %1$s</string>
     <string name="song_details_chord_shape_capo">%1$s-Griff, Capo %2$s</string>
     <string name="song_details_chord_sounding_capo">Klingt als %1$s, Capo %2$s</string>
-    <string name="song_details_shapes_capo">Griffe, Capo</string>
     <string name="song_details_capo_shapes">%1$s (%2$s-Griffe)</string>
     <string name="song_details_chord_defined">In diesem Song definiert</string>
     <plurals name="song_details_chord_defined_moved">

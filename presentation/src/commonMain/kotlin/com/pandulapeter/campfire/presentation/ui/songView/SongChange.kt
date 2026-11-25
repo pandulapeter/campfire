@@ -65,12 +65,12 @@ internal class SongChange {
 /** What a [SongChange] takes off the page, see [leavingPartsOf]. */
 @Immutable
 internal data class LeavingParts(
-    /** The chords over the lyrics, the transposition and the capo, the key changes, and the lines lyrics-only mode drops. */
+    /** The chords over the lyrics, the key changes, and the lines lyrics-only mode drops. */
     val chords: Boolean,
     val chordsSection: Boolean,
     val scalesSection: Boolean,
     val instrumentPill: Boolean,
-    /** The tempo and the time signature, and the changes of them further down the song. */
+    /** The changes of the tempo and the time signature further down the song. */
     val timing: Boolean,
 ) {
 

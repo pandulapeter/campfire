@@ -1268,7 +1268,6 @@
     <string name="song_details_capo">קאפו %1$d</string>
     <string name="song_details_tempo">%1$s BPM</string>
     <string name="song_details_time">%1$s</string>
-    <string name="song_details_time_signature">משקל: %1$s</string>
     <string name="song_details_key_change">טונליות: %1$s</string>
     <string name="tab_notice_octave_up">הועבר אוקטבה למעלה כדי להישאר על הצוואר</string>
     <string name="tab_notice_octave_down">הועבר אוקטבה למטה כדי להישאר על הצוואר</string>
@@ -1298,7 +1297,6 @@
     <string name="song_details_chord_shape_choose">בחירת צורת אקורד - %1$s</string>
     <string name="song_details_chord_shape_capo">צורת %1$s, קאפו %2$s</string>
     <string name="song_details_chord_sounding_capo">נשמע כ־%1$s, קאפו %2$s</string>
-    <string name="song_details_shapes_capo">צורות, קאפו</string>
     <string name="song_details_capo_shapes">%1$s (צורות %2$s)</string>
     <string name="song_details_chord_defined">מוגדר בשיר הזה</string>
     <plurals name="song_details_chord_defined_moved">

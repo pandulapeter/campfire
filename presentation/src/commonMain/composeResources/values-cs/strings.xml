@@ -1266,7 +1266,6 @@
     <string name="song_details_capo">Kapodastr %1$d</string>
     <string name="song_details_tempo">%1$s BPM</string>
     <string name="song_details_time">%1$s</string>
-    <string name="song_details_time_signature">Takt: %1$s</string>
     <string name="song_details_key_change">Tónina: %1$s</string>
     <string name="tab_notice_octave_up">Posunuto o oktávu výš, aby se vešlo na hmatník</string>
     <string name="tab_notice_octave_down">Posunuto o oktávu níž, aby se vešlo na hmatník</string>
@@ -1296,7 +1295,6 @@
     <string name="song_details_chord_shape_choose">Vybrat hmat akordu – %1$s</string>
     <string name="song_details_chord_shape_capo">Hmat %1$s, kapodastr %2$s</string>
     <string name="song_details_chord_sounding_capo">Zní jako %1$s, kapodastr %2$s</string>
-    <string name="song_details_shapes_capo">hmaty, kapodastr</string>
     <string name="song_details_capo_shapes">%1$s (hmaty %2$s)</string>
     <string name="song_details_chord_defined">Definováno v této písni</string>
     <plurals name="song_details_chord_defined_moved">

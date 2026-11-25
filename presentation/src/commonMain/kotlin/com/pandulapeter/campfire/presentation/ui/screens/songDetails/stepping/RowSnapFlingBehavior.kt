@@ -10,7 +10,6 @@
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping
 
 import com.pandulapeter.campfire.presentation.ui.songView.SongRows
-import com.pandulapeter.campfire.presentation.ui.songView.firstSection.places
 import androidx.compose.animation.core.AnimationState
 import androidx.compose.animation.core.DecayAnimationSpec
 import androidx.compose.animation.core.Spring

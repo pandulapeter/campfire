@@ -53,9 +53,8 @@ on Android with Vibrate on and a beat not muted (iOS has no background haptics).
   A lit beat also swells, since in the light theme an accent at rest is already half the lit color.
 - **A song's click is in its dock** (`screens/songDetails/dock`): the tempo chip (the number, a small beat row that only
   shows the bar, play / stop in place) ends it, and its number opens the Tempo sheet, where the stepper, Tap, and the
-  song's accents are; with the chords off the dock is a panel of its own. Nothing about it is a preference: the app bar's
-  panel and `MetronomeSettings.isSongPanelShown` are gone (an older document's key is ignored). Performance mode keeps
-  play / stop; its number opens nothing.
+  song's accents are; with the chords off the dock is a panel of its own. Nothing about it is a preference. Performance
+  mode keeps play / stop; its number opens nothing.
 - The pulsing mark (the navigation's Metronome icon) tints from a table of filters at 32 pulse steps, keyed on its two colors, so a playing click makes no
   filter per frame. Not a second draw at the pulse's alpha: that blends in sRGB where `lerp` mixes in Oklab.
 

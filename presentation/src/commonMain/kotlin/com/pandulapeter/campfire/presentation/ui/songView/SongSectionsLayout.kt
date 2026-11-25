@@ -9,7 +9,6 @@
  */
 package com.pandulapeter.campfire.presentation.ui.songView
 
-import com.pandulapeter.campfire.presentation.ui.songView.firstSection.places
 import com.pandulapeter.campfire.presentation.ui.songView.model.CardKey
 import com.pandulapeter.campfire.presentation.ui.songView.model.SongUnits
 import com.pandulapeter.campfire.presentation.ui.songView.model.UnitKey

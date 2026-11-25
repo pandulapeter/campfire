@@ -486,7 +486,7 @@ class RenderSectionsTest {
     fun `a song with chords has the instrument pill at the top of its first section - with diagrams or without`() {
         val model = prepareSongLyrics(ChordProParser.parse("{sov}\n[G]la [C]la\n{eov}"), shouldShowChords = true, labels = labels)
         assertTrue(model.hasChords)
-        val sections = withMetadataSection(model.sections, model.song.metadata, shouldShowChords = true, isSongInfoShown = false, hasPlayingControls = true)
+        val sections = withMetadataSection(model.sections, model.song.metadata, shouldShowChords = true, isSongInfoShown = false, readsDefaults = true)
         val withoutDiagrams = withChordsSection(sections, cells = emptyList(), hasChords = model.hasChords, instrumentPill = guitarPill)
         assertTrue(withoutDiagrams.none { it is RenderSection.Chords })
         assertEquals(guitarPill, (withoutDiagrams.first() as RenderSection.Metadata).instrumentPill)
@@ -501,7 +501,7 @@ class RenderSectionsTest {
     @Test
     fun `the first section differs by what the instrument pill names and is equal for the same pill`() {
         val model = prepareSongLyrics(ChordProParser.parse("{sov}\n[G]la [C]la\n{eov}"), shouldShowChords = true, labels = labels)
-        val sections = withMetadataSection(model.sections, model.song.metadata, shouldShowChords = true, isSongInfoShown = false, hasPlayingControls = true)
+        val sections = withMetadataSection(model.sections, model.song.metadata, shouldShowChords = true, isSongInfoShown = false, readsDefaults = true)
         fun firstSection(pill: InstrumentPillContent) =
             withChordsSection(sections, cells = emptyList(), hasChords = model.hasChords, instrumentPill = pill).first()
         val pills = listOf(

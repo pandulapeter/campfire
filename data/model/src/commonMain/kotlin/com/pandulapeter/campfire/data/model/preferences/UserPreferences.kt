@@ -304,10 +304,9 @@ data class UserPreferences(
         const val DEFAULT_FONT_SCALE = 1f
 
         /**
-         * How small a song is ever read. It bounds the whole song details screen rather than the lyrics alone - the
-         * section headers, the chords and the controls of the first section all follow it - so it is the size at which
-         * everything on that screen is still worth having on it: smaller lyrics only fit more of a song on the screen
-         * at a size nobody reads them at, and its steppers would be too small to hit.
+         * How small a song is ever read. It bounds the whole song rather than the lyrics alone - the section headers
+         * and the chords follow it - so it is the size at which everything in it is still worth having on the screen:
+         * smaller lyrics only fit more of a song on the screen at a size nobody reads them at.
          */
         const val MIN_FONT_SCALE = 0.8f
         const val MAX_FONT_SCALE = 2.5f

@@ -110,24 +110,6 @@ class SongMetadataTest {
     }
 
     @Test
-    fun `the playing controls are a section of their own for a song that names none of the four`() {
-        val body = listOf(verse)
-
-        assertEquals(
-            listOf(RenderSection.Metadata(metadata = ChordProMetadata(), hasPlayingControls = true), verse),
-            withMetadataSection(body, ChordProMetadata(), shouldShowChords = true, isSongInfoShown = false, hasPlayingControls = true),
-        )
-    }
-
-    @Test
-    fun `without chords and metronome the playing controls are left out with the values`() {
-        val body = listOf(verse)
-        val playing = ChordProMetadata(key = "G", capo = 2, tempo = "96", time = "6/8")
-
-        assertSame(body, withMetadataSection(body, playing, shouldShowChords = false, shouldShowTempo = false, isSongInfoShown = false, hasPlayingControls = true))
-    }
-
-    @Test
     fun `read only mode names a capo of none and the default tempo and time where the file names none`() {
         val body = listOf(verse)
 

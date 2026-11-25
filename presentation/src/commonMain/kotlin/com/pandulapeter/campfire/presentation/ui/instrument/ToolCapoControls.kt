@@ -87,5 +87,5 @@ internal fun ToolCapoControls(
 /** The fret the stepper last showed, which it keeps showing while it leaves. Not a state: only the composition writes it. */
 private class ShownCapo(var fret: Int = 0)
 
-/** As a song's label stands before its stepper (`PlayingControl`). */
+/** As a song's label stands before its stepper in the Playing sheet. */
 private val LABEL_GAP = 8.dp

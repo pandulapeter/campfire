@@ -1271,7 +1271,6 @@
     <string name="song_details_capo">Capodastru %1$d</string>
     <string name="song_details_tempo">%1$s BPM</string>
     <string name="song_details_time">%1$s</string>
-    <string name="song_details_time_signature">Măsură: %1$s</string>
     <string name="song_details_key_change">Tonalitate: %1$s</string>
     <string name="tab_notice_octave_up">Mutată cu o octavă mai sus ca să rămână pe grif</string>
     <string name="tab_notice_octave_down">Mutată cu o octavă mai jos ca să rămână pe grif</string>
@@ -1301,7 +1300,6 @@
     <string name="song_details_chord_shape_choose">Alege poziția acordului - %1$s</string>
     <string name="song_details_chord_shape_capo">Poziție %1$s, capodastru %2$s</string>
     <string name="song_details_chord_sounding_capo">Sună ca %1$s, capodastru %2$s</string>
-    <string name="song_details_shapes_capo">poziții, capodastru</string>
     <string name="song_details_capo_shapes">%1$s (poziții de %2$s)</string>
     <string name="song_details_chord_defined">Definit în acest cântec</string>
     <plurals name="song_details_chord_defined_moved">

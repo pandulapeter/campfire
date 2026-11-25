@@ -9,7 +9,6 @@
  */
 package com.pandulapeter.campfire.presentation.ui.songView.grid
 
-import com.pandulapeter.campfire.presentation.ui.songView.firstSection.places
 import com.pandulapeter.campfire.presentation.ui.songView.model.sectionChunkStarts
 import kotlin.math.max
 

@@ -11,8 +11,6 @@ package com.pandulapeter.campfire.presentation.ui.songView
 
 import com.pandulapeter.campfire.presentation.ui.notation.SongNotations
 import com.pandulapeter.campfire.presentation.ui.songView.model.ScaleSuggestions
-import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongPlayingControls
-import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongPlayingTools
 import com.pandulapeter.campfire.presentation.ui.songView.model.CardKey
 import com.pandulapeter.campfire.presentation.ui.songView.model.ChordDiagrams
 import com.pandulapeter.campfire.presentation.ui.songView.model.FoldedRuns
@@ -61,8 +59,6 @@ internal fun SongSectionChildren(
     notation: ChordNotation,
     isSongInfoShown: Boolean,
     songInfoEditing: SongInfoEditing?,
-    playingControls: SongPlayingControls?,
-    playingTools: SongPlayingTools?,
     chordDiagrams: ChordDiagrams?,
     scaleSuggestions: ScaleSuggestions?,
     tuningVisibility: MutableTransitionState<Boolean>,
@@ -108,8 +104,6 @@ internal fun SongSectionChildren(
                 notation = notation,
                 isSongInfoShown = isSongInfoShown,
                 songInfoEditing = songInfoEditing,
-                playingControls = playingControls,
-                playingTools = playingTools,
                 animatesRows = !placesAtOnce && (sectionMotion == SectionMotion.SPRING || sectionMotion == SectionMotion.GLIDE && !isTextScaling),
                 chordDiagrams = chordDiagrams,
                 scaleSuggestions = scaleSuggestions,

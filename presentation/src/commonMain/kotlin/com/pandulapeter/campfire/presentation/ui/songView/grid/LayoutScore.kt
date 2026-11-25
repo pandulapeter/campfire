@@ -10,7 +10,6 @@
 package com.pandulapeter.campfire.presentation.ui.songView.grid
 
 import com.pandulapeter.campfire.presentation.ui.songView.model.SongUnits
-import com.pandulapeter.campfire.presentation.ui.songView.firstSection.places
 
 /**
  * What a layout of a song is judged by besides its pages, in points: one point is what a column pays for ending one

@@ -1230,7 +1230,6 @@
     <string name="song_details_capo">Capo %1$d</string>
     <string name="song_details_tempo">%1$s BPM</string>
     <string name="song_details_time">%1$s</string>
-    <string name="song_details_time_signature">Mesure : %1$s</string>
     <string name="song_details_key_change">Tonalité : %1$s</string>
     <string name="tab_notice_octave_up">Montée d\'une octave pour rester sur le manche</string>
     <string name="tab_notice_octave_down">Descendue d\'une octave pour rester sur le manche</string>
@@ -1259,7 +1258,6 @@
     <string name="song_details_chord_shape_choose">Choisir le doigté - %1$s</string>
     <string name="song_details_chord_shape_capo">Doigté de %1$s, capo %2$s</string>
     <string name="song_details_chord_sounding_capo">Sonne comme %1$s, capo %2$s</string>
-    <string name="song_details_shapes_capo">doigtés, capo</string>
     <string name="song_details_capo_shapes">%1$s (doigtés de %2$s)</string>
     <string name="song_details_chord_defined">Défini dans cette chanson</string>
     <plurals name="song_details_chord_defined_moved">

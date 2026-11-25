@@ -9,8 +9,6 @@
  */
 package com.pandulapeter.campfire.presentation.ui.songView.grid
 
-import com.pandulapeter.campfire.presentation.ui.songView.firstSection.places
-
 /**
  * The units of a song as they stack in columns of one width, [heights] being every unit's height there: where a column
  * may end, how tall it is, and the cheapest way of setting a stretch of the song in a number of columns by the score of

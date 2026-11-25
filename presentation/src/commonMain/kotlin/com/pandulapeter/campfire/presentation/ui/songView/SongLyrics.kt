@@ -11,8 +11,6 @@ package com.pandulapeter.campfire.presentation.ui.songView
 
 import com.pandulapeter.campfire.presentation.ui.songView.model.ScaleSuggestions
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongMetadataSection
-import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongPlayingControls
-import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongPlayingTools
 import com.pandulapeter.campfire.presentation.ui.songView.model.ChordDiagrams
 import com.pandulapeter.campfire.presentation.ui.songView.model.FoldedRuns
 import com.pandulapeter.campfire.presentation.ui.songView.model.InstrumentPillContent
@@ -107,11 +105,6 @@ import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
  * [SongMetadataSection]), its Song defaults tiles in place of the line, which the editor's preview does; the song
  * details screen opens it as a sheet instead.
  * @param songInfoEditing The edit buttons of that card, null for none.
- * @param playingControls What sets the song's key, capo, tempo and time signature, drawn in place of the line that
- * only reads them; null leaves that line, which is what read only mode gets. Each control goes
- * with the values it sets, see [SongPlayingControls].
- * @param playingTools The tuner and metronome buttons the song's first section holds next to those values, whether they
- * are set there or read; null where it holds none, which is the editor's preview.
  * @param readsDefaults Whether that line names the capo, the tempo and the time signature where the file names none,
  * which read only mode on the song details screen asks for, see [withMetadataSection].
  * @param shouldShowTempo False with the metronome switched off, which leaves the tempo and the time signature out of
@@ -161,8 +154,6 @@ internal fun SongLyrics(
     onFoldToggled: ((key: String) -> Unit)? = null,
     isSongInfoShown: Boolean = false,
     songInfoEditing: SongInfoEditing? = null,
-    playingControls: SongPlayingControls? = null,
-    playingTools: SongPlayingTools? = null,
     readsDefaults: Boolean = false,
     shouldShowTempo: Boolean = true,
     onRowsPlaced: ((SongRows) -> Unit)? = null,
@@ -182,10 +173,6 @@ internal fun SongLyrics(
     // The fold toggles of the runs inside a section are named by these too, where the file names them nothing.
     val defaultLabels = rememberDefaultSectionLabels()
     val isSongInfoEditable = songInfoEditing != null
-    // The controls are only drawn where the values they set are, so a change of either decides the section's content.
-    val shownPlayingControls = playingControls?.takeIf { model.shouldShowChords || shouldShowTempo }
-    val hasTuner = playingTools?.onTunerClicked != null
-    val hasMetronome = playingTools?.metronome != null
     val shownTuning = chordDiagrams?.instrumentTuning?.takeIf { chordDiagrams.instrument.tunings.size > 1 }
     val tuningVisibility = remember { MutableTransitionState(shownTuning != null) }.apply { targetState = shownTuning != null }
     // A section is measured in the frame its content first appears in, and a leaving tuning half of the instrument pill is still laid
@@ -209,10 +196,7 @@ internal fun SongLyrics(
         shouldShowTempo = shouldShowTempo,
         isSongInfoShown = isSongInfoShown,
         isSongInfoEditable = isSongInfoEditable,
-        hasPlayingControls = shownPlayingControls != null,
         readsDefaults = readsDefaults,
-        hasTuner = hasTuner,
-        hasMetronome = hasMetronome,
     )
     val glideScope = rememberCoroutineScope()
     val sectionGlides = if (sectionMotion == SectionMotion.NONE) null else remember(glideScope) { SectionGlides(glideScope, SongMotionSpec) }
@@ -368,8 +352,6 @@ internal fun SongLyrics(
                         notation = model.notation,
                         isSongInfoShown = isSongInfoShown,
                         songInfoEditing = songInfoEditing,
-                        playingControls = shownPlayingControls,
-                        playingTools = playingTools,
                         chordDiagrams = chordDiagrams,
                         scaleSuggestions = scaleSuggestions,
                         tuningVisibility = tuningVisibility,

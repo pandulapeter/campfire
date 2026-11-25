@@ -12,7 +12,6 @@ package com.pandulapeter.campfire.presentation.ui.songView.grid
 import com.pandulapeter.campfire.presentation.ui.songView.SongSectionsLayout
 import com.pandulapeter.campfire.presentation.ui.songView.model.SongUnits
 import com.pandulapeter.campfire.presentation.ui.songView.model.LayoutBudget.MAX_CUT_SECTION_COUNT
-import com.pandulapeter.campfire.presentation.ui.songView.firstSection.places
 import kotlin.math.abs
 import kotlin.math.ln
 import kotlin.math.roundToInt

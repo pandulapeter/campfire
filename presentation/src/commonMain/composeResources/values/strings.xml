@@ -1225,7 +1225,6 @@
     <string name="song_details_capo">Capo %1$d</string>
     <string name="song_details_tempo">%1$s BPM</string>
     <string name="song_details_time">%1$s</string>
-    <string name="song_details_time_signature">Time signature: %1$s</string>
     <string name="song_details_key_change">Key: %1$s</string>
     <string name="tab_notice_octave_up">Moved up an octave to stay on the neck</string>
     <string name="tab_notice_octave_down">Moved down an octave to stay on the neck</string>
@@ -1254,7 +1253,6 @@
     <string name="song_details_chord_shape_choose">Choose chord shape - %1$s</string>
     <string name="song_details_chord_shape_capo">%1$s shape, capo %2$s</string>
     <string name="song_details_chord_sounding_capo">Sounds as %1$s, capo %2$s</string>
-    <string name="song_details_shapes_capo">shapes, capo</string>
     <string name="song_details_capo_shapes">%1$s (%2$s shapes)</string>
     <string name="song_details_chord_defined">Defined in this song</string>
     <plurals name="song_details_chord_defined_moved">

@@ -1225,7 +1225,6 @@
     <string name="song_details_capo">Capo %1$d</string>
     <string name="song_details_tempo">%1$s BPM</string>
     <string name="song_details_time">%1$s</string>
-    <string name="song_details_time_signature">Compás: %1$s</string>
     <string name="song_details_key_change">Tonalidad: %1$s</string>
     <string name="tab_notice_octave_up">Subida una octava para que quepa en el mástil</string>
     <string name="tab_notice_octave_down">Bajada una octava para que quepa en el mástil</string>
@@ -1254,7 +1253,6 @@
     <string name="song_details_chord_shape_choose">Elegir forma de acorde - %1$s</string>
     <string name="song_details_chord_shape_capo">Forma de %1$s, capo %2$s</string>
     <string name="song_details_chord_sounding_capo">Suena como %1$s, capo %2$s</string>
-    <string name="song_details_shapes_capo">formas, capo</string>
     <string name="song_details_capo_shapes">%1$s (formas de %2$s)</string>
     <string name="song_details_chord_defined">Definido en esta canción</string>
     <plurals name="song_details_chord_defined_moved">

@@ -12,7 +12,6 @@ package com.pandulapeter.campfire.presentation.ui.songView.model
 import com.pandulapeter.campfire.presentation.ui.songView.ScaleChipRows
 import com.pandulapeter.campfire.presentation.ui.songView.SongChordsSection
 import com.pandulapeter.campfire.presentation.ui.songView.SongSectionContent
-import com.pandulapeter.campfire.presentation.ui.songView.firstSection.places
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Immutable
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
@@ -79,12 +78,9 @@ internal sealed interface RenderSection {
     /**
      * The descriptive metadata, inserted after the body budget is applied and kept whole in the first grid cell.
      *
-     * @param hasPlayingControls Whether the key, capo, tempo and time are drawn as the controls that set them rather
-     * than as one line of text, which is part of the content because the measured sizes of a section are kept by it.
-     * @param readsDefaults Whether that line names a capo of none, and the default tempo and time signature, too, see
-     * [withMetadataSection].
-     * @param hasTuner Whether the tuner's button is drawn among them, part of the content for the same reason.
-     * @param hasMetronome Whether the metronome's button is drawn among them, part of the content for the same reason.
+     * @param readsDefaults Whether the line of the key, capo, tempo and time names a capo of none, and the default tempo
+     * and time signature, too, see [withMetadataSection]; part of the content, since the measured sizes of a section are
+     * kept by it.
      * @param instrumentPill What the instrument and tuning pill at its top names, null where it has none, part of the
      * content for the same reason, see [withChordsSection].
      * @param shapesKey The key of the shapes the chords are named by, which the line of text names after a capo, see
@@ -93,10 +89,7 @@ internal sealed interface RenderSection {
     @Immutable
     data class Metadata(
         val metadata: ChordProMetadata,
-        val hasPlayingControls: Boolean = false,
         val readsDefaults: Boolean = false,
-        val hasTuner: Boolean = false,
-        val hasMetronome: Boolean = false,
         val instrumentPill: InstrumentPillContent? = null,
         val shapesKey: String? = null,
     ) : RenderSection

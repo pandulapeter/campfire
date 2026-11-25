@@ -9,7 +9,6 @@
  */
 package com.pandulapeter.campfire.presentation.ui.songView.model
 
-import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongPlayingTools
 import com.pandulapeter.campfire.chordpro.ChordProTempo
 import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
 import com.pandulapeter.campfire.data.model.song.Song
@@ -34,16 +33,10 @@ import com.pandulapeter.campfire.presentation.ui.songInfo.hasSongInfo
  * which shows everything being typed, and not on the song details screen, whose app bar opens it as a sheet instead.
  * @param isSongInfoEditable Whether that card has edit buttons, which puts it there for a song that says nothing about
  * itself yet too: it is where its first tag or link is added.
- * @param hasPlayingControls Whether the four playing values are drawn as the controls that set them, which is what
- * the song details screen hands down outside read only mode. The section is then there for every song, since a capo
- * and a tempo can be set on one that names neither.
  * @param readsDefaults Whether the line of text read only mode draws in their place always names the capo, the tempo and
  * the time signature, a capo of none and the tempo and the time the click starts at where the file names none: a player
  * reading from a music stand has no control left to look at to tell that nothing was set, and the absence of a value is
- * a value to the hands on the guitar. The section is then there for every song too.
- * @param hasTuner Whether the section holds the tuner's button, see [SongPlayingTools]. It is never there on its own:
- * the section that holds it is the one the values above put there.
- * @param hasMetronome Whether the section holds the metronome's button, the same way.
+ * a value to the hands on the guitar. The section is then there for every song.
  */
 internal fun withMetadataSection(
     sections: List<RenderSection>,
@@ -54,13 +47,9 @@ internal fun withMetadataSection(
     shouldShowTempo: Boolean = true,
     isSongInfoShown: Boolean,
     isSongInfoEditable: Boolean = false,
-    hasPlayingControls: Boolean = false,
     readsDefaults: Boolean = false,
-    hasTuner: Boolean = false,
-    hasMetronome: Boolean = false,
 ): List<RenderSection> {
-    val hasControls = (shouldShowChords || shouldShowTempo) && hasPlayingControls
-    val readsBoth = (shouldShowChords || shouldShowTempo) && !hasControls && readsDefaults
+    val readsBoth = (shouldShowChords || shouldShowTempo) && readsDefaults
     // Read the way the click and the steppers read them, so that the line says what is played: a number of beats a
     // minute within the click's range, a time signature it can count ("C" being 4/4) and a capo on the neck.
     val shownMetadata = metadata.copy(
@@ -80,14 +69,11 @@ internal fun withMetadataSection(
                 ?: TimeSignature.COMMON_TIME.toString().takeIf { readsBoth }
         },
     )
-    return if ((isSongInfoShown && (isSongInfoEditable || shownMetadata.hasSongInfo(areAttachmentsShown = false))) || hasControls || readsBoth || shownMetadata.hasPlayingValues) {
+    return if ((isSongInfoShown && (isSongInfoEditable || shownMetadata.hasSongInfo(areAttachmentsShown = false))) || readsBoth || shownMetadata.hasPlayingValues) {
         val section = RenderSection.Metadata(
             metadata = shownMetadata,
-            hasPlayingControls = hasControls,
             readsDefaults = readsBoth,
             shapesKey = shapesKey?.takeIf { shownMetadata.capo.let { it != null && it != 0 } },
-            hasTuner = hasTuner,
-            hasMetronome = hasMetronome,
         )
         listOf(section) + sections
     } else {

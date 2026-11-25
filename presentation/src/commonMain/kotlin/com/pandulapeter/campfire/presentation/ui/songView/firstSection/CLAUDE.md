@@ -11,38 +11,21 @@
 
 # :presentation — ui/songView/firstSection
 
-The song's first section in the editor's preview. Song details draws none of it: its dock (`screens/songDetails/dock`)
-names the key and capo on its key chip, whose Playing sheet (`dialogs/playing`) holds the transposition and capo
-steppers (`TranspositionControls`, `CapoControls`), and the tempo on its tempo chip, whose Tempo sheet holds the tempo
-stepper (`metronome/TempoStepper`); the steppers' values come from here (`rememberSongPlayingControls`).
+The song's first section, which only the editor's preview draws, and what sets the values it says, which song details'
+dock and sheets use. Song details draws none of the section: its dock (`screens/songDetails/dock`) names the key and
+capo on its key chip, whose Playing sheet (`dialogs/playing`) holds the transposition and capo steppers
+(`TranspositionControls`, `CapoControls`), and the tempo on its tempo chip, whose Tempo sheet holds the tempo stepper
+(`metronome/TempoStepper`); the values and what steps them are `rememberSongPlayingControls`'s (`SongPlayingControls`).
 
-- Flows through the same rows and columns, never cut. Controls come in groups kept whole where they fit on a line
-  (instrument and tuning pill; key and capo; tempo and time signature), sharing a line where they fit; one too wide
-  flows its items and the next starts under it (`groupedLines`, tested). A control whose label and stepper are wider
-  than the line puts its label above, and only its own line grows; every line is at least a pill tall.
-- **Kept short, and every line starts with a pill**: `[transposition] Capo [capo]` and `[tempo | Tap] 3/4
-  [metronome]`, no unit (the stepper says "BPM" aloud), 4/4 left out. The transposition has no label and reads the key
-  of the page's chords where the song names one (semitones only said aloud), else the reader's semitones. Where that key
-  names the shapes above a capo, the capo's label reads "shapes, capo", crossfading as it changes. The keyboard has the
-  capo too.
-- **One keyline for the pills**: controls start where the section pills reach out to, so the instrument pill, the
-  transposition, and the tempo line up; a capo with no transposition before it starts on the lyrics' keyline, being a
-  label.
-- **Controls scale with the lyrics like the header pills**: `fontScale` grows their content, not their padding, so each
-  is exactly `songControlHeight`; scaling a pill whole towered over the page. `MIN_FONT_SCALE` keeps them big enough to
-  hit.
-- Tool buttons (`playingToolPlaces`, tested): the tuner after the instrument pill where it is shown (while it fades
-  too, so it is never shown twice), else after the capo or transposition; the metronome after the time signature (the
-  tempo at 4/4); a button whose group is absent goes after the other. With chords and metronome both off there is no
-  section and the tuner is an overflow menu entry.
-- Whether the section holds either button, and what the instrument pill names (label widths decide whether the tuner
-  fits beside it; a leaving tuning half is named until faded), are part of its content, since measured sizes are keyed
-  by it.
-- Read only line (performance mode, archived setlist): always names capo, tempo, and time, since an absent value would
-  read as unknown ("Capo 0", 120, 4/4); the preview names a capo only where the text writes one. Values read as the
-  click and steppers read them (tempo clamped to the click's range, `C` as 4/4, capo within the neck).
-- In the preview the section is the About the song tiles, under one key whatever it says, so its cover waits for typing
-  to pause rather than fetching half-typed addresses.
-- Over the read only line the pill reaches out as far as a section's pill, edges lined up (the tuner beside it takes
-  that width too); the tuner goes under it whole where it does not fit. It has a line of its own over the About the song
-  tiles and over a read only line without tools.
+- **In the preview the section is the About the song tiles** (`SongInfoCard`), under one key whatever it says, so its
+  cover waits for typing to pause rather than fetching half-typed addresses. The instrument and tuning pill, where there
+  is one, has a line of its own over it, reaching out as far as a section's pill, edges lined up; a leaving tuning half
+  is named until faded, since measured sizes are keyed by what the section holds.
+- Without the tiles the section is one line of the four values (`SongPlayingValues`): with `readsDefaults` it always
+  names capo, tempo, and time, since an absent value would read as unknown ("Capo 0", 120, 4/4); otherwise a capo only
+  where the text writes one. Values read as the click and steppers read them (tempo clamped to the click's range, `C` as
+  4/4, capo within the neck). The key is set as a chord is; a capo whose shapes the chords are named by says them.
+- The transposition reads the key of the page's chords where the song names one (semitones only said aloud), else the
+  reader's semitones; where that key names the shapes above a capo, the dock's key chip and the sheet say so.
+- `SongPlayingTools` are the dock's tuner and tempo chip; with chords and metronome both off there is no dock and the
+  tuner is an overflow menu entry.

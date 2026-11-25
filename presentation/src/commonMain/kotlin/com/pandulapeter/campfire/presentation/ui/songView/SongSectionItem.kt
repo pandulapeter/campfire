@@ -12,8 +12,6 @@ package com.pandulapeter.campfire.presentation.ui.songView
 import com.pandulapeter.campfire.presentation.ui.notation.SongNotations
 import com.pandulapeter.campfire.presentation.ui.songView.model.ScaleSuggestions
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongMetadataSection
-import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongPlayingControls
-import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongPlayingTools
 import com.pandulapeter.campfire.presentation.ui.songView.model.ChordDiagrams
 import com.pandulapeter.campfire.presentation.ui.songView.model.FoldedRuns
 import com.pandulapeter.campfire.presentation.ui.songView.model.RenderSection
@@ -49,8 +47,6 @@ internal fun SongSectionItem(
     notation: ChordNotation,
     isSongInfoShown: Boolean,
     songInfoEditing: SongInfoEditing?,
-    playingControls: SongPlayingControls?,
-    playingTools: SongPlayingTools?,
     animatesRows: Boolean,
     chordDiagrams: ChordDiagrams?,
     scaleSuggestions: ScaleSuggestions?,
@@ -75,12 +71,8 @@ internal fun SongSectionItem(
             metadata = section.metadata,
             isSongInfoShown = isSongInfoShown,
             songInfoEditing = songInfoEditing,
-            playingControls = playingControls,
-            playingTools = playingTools,
             readsDefaults = section.readsDefaults,
             shapesKey = section.shapesKey,
-            animatesControls = animatesRows,
-            titleStyle = headerStyle,
             lyricsStyle = sentenceStyle,
             fontScale = fontScale,
             instrumentPill = chordDiagrams?.onInstrumentClicked?.takeIf { section.instrumentPill != null }?.let { onInstrumentClicked ->

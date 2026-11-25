@@ -1225,7 +1225,6 @@
     <string name="song_details_capo">Capotasto %1$d</string>
     <string name="song_details_tempo">%1$s BPM</string>
     <string name="song_details_time">%1$s</string>
-    <string name="song_details_time_signature">Indicazione di tempo: %1$s</string>
     <string name="song_details_key_change">Tonalità: %1$s</string>
     <string name="tab_notice_octave_up">Spostata un\'ottava sopra per restare sul manico</string>
     <string name="tab_notice_octave_down">Spostata un\'ottava sotto per restare sul manico</string>
@@ -1254,7 +1253,6 @@
     <string name="song_details_chord_shape_choose">Scegli la diteggiatura - %1$s</string>
     <string name="song_details_chord_shape_capo">Diteggiatura di %1$s, capotasto %2$s</string>
     <string name="song_details_chord_sounding_capo">Suona come %1$s, capotasto %2$s</string>
-    <string name="song_details_shapes_capo">diteggiature, capotasto</string>
     <string name="song_details_capo_shapes">%1$s (diteggiature di %2$s)</string>
     <string name="song_details_chord_defined">Definito in questa canzone</string>
     <plurals name="song_details_chord_defined_moved">
