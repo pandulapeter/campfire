@@ -9,7 +9,7 @@
 -->
 # Plan: song details as a reading surface with a dock
 
-**Status:** steps 1 to 12 done; step 13 next. The gate decided the dock scales to the room (below). The mockups this plan was agreed on (360 × 640 dp, dark):
+**Status:** steps 1 to 13 done; step 14 next. The gate decided the dock scales to the room (below). The mockups this plan was agreed on (360 × 640 dp, dark):
 https://claude.ai/artifact/PDMZvTbTcRH6CSQGQPJrra. `ui/` is
 `presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/`, as in the root `CLAUDE.md`.
 
@@ -81,10 +81,17 @@ Everything shown today stays reachable; the text size is never traded for room.
 - **The title always opens About the song** (its chevron shown wherever the sheet is offered: never in an import
   preview). Back to the top moves to the overflow menu, the Home key, and a long press on the back step button where
   there is one.
-- **Short and wide windows** get the dock as a side panel at the end side (key and tempo, scale chips wrapping, the
-  diagrams in a grid; every chord of the song where the height allows), the step buttons between the song and the
-  panel. The grid is searched with the panel's width taken off. The switch at `SHORT_WINDOW_HEIGHT` travels or
-  crossfades, never jumps.
+- **Wide windows** (`WindowSize.EXPANDED`, 840 dp and wider, whatever their height) get the dock as a 176 dp side panel
+  at the end side (key and tempo, scale chips wrapping, the diagrams in a grid, every chord of the song, the panel
+  scrolling where the height runs out and bringing the page's first chord into view on a turn), the step buttons
+  between the song and the panel, a setlist's pager bar stacked at its foot and an import preview's card at its head.
+  The grid is searched with the panel's width taken off. The switch at 840 dp travels: the rows shrink away as the
+  panel slides in.
+- **A short window narrower than that** (a phone on its side) **keeps the one row under the song.** The plan first gave
+  short windows the panel too; measured (`PageCountTest`, 640 × 360), a panel wraps a long-lined song's lines: The
+  Lighthouse Keeper took 17 pages beside a 240, 200, or 176 dp panel against 12 under the row (House of the Rising Sun
+  gained, 16 → 11 in a setlist). The owner chose the panel on wide windows only, at 176 dp, the widest that cost a
+  laptop's window (1024 × 720) no page; no page count may grow anywhere.
 - **Read only mode follows today's matrix per element**, not one switch: the key chip opens nothing (it would write
   overrides) and drops its chevron; scale chips still open their sheets; diagrams do not open the chord sheet in
   performance mode (it writes the player's pick) but do in an import preview; the click still plays.
@@ -109,7 +116,7 @@ by column: 12 → 15; in a setlist by page: 13 → 15), and more at 592 dp (the 
 (the window's height, the reading mode, a setlist's pager row), never by the song: full diagrams where they fit the
 step 1 break-even for the mode (`dockBudgetOf`), smaller diagrams below that, and in a short window
 (`SHORT_WINDOW_HEIGHT`) one row of chord-name chips (a chip opens the chord sheet as a diagram does) beside the key
-and tempo, until step 13 gives it the side panel. The owner chose diagrams on an upright phone at the cost of up to two
+and tempo; a wide window has the side panel instead (step 13). The owner chose diagrams on an upright phone at the cost of up to two
 pages on a long song; the one-row tier is for short windows only. `PageCountTest` holds every case within two pages or
 steps of its count before the dock, and fails past that.
 
@@ -193,10 +200,12 @@ long press.
 A chord or scale sheet opened from the dock pauses the column and resumes it when it closes; every other cover still
 stops it (`autoScroll/CLAUDE.md`).
 
-### 13. Short and wide windows
+### 13. Wide windows
 
-The side panel, its order with the step column, the grid searched without its width, the travelling switch at
-`SHORT_WINDOW_HEIGHT`, the tablet and desktop widths.
+The side panel, its order with the step column, the grid searched without its width, the travelling switch at 840 dp.
+Done; page counts (`PageCountTest`, turned by page, alone / in a setlist, the rows under the song → now): 640 × 360
+unchanged (the row kept: Rising Sun 12 / 16, Lighthouse 12 / 16); 800 × 600 unchanged (4 / 5, 7 / 8); 1024 × 720 with
+the panel: Rising Sun 3 / 3 → 3 / 3, Lighthouse 4 / 5 → 4 / 4.
 
 ### 14. Finish
 
