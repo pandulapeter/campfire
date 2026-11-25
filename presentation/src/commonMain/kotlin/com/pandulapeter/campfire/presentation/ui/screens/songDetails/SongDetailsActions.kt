@@ -11,6 +11,8 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.EnterExitState
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.expandHorizontally
@@ -21,7 +23,10 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -125,9 +130,11 @@ internal fun RowScope.SongDetailsActions(
                         isInSetlist = song.fileName in songFileNamesInSetlists,
                         songActions = songActions,
                         setlistFileName = setlistFileName,
-                        isReadOnly = isReadOnly,
+                        // Read only mode also takes the star out of the bar: the leaving actions keep it while they
+                        // fade, or its own shrinking would slide it sideways under the lock fading in.
+                        isReadOnly = heldWhileLeaving(isReadOnly),
                         areSetlistsEnabled = areSetlistsEnabled,
-                        showsSetlistAssignmentsInBar = showsSetlistAssignmentsInBar,
+                        showsSetlistAssignmentsInBar = heldWhileLeaving(showsSetlistAssignmentsInBar),
                         isAfterTuner = isAfterTuner,
                         aboutSongAction = aboutSongAction,
                         tunerAction = tunerAction,
@@ -138,6 +145,20 @@ internal fun RowScope.SongDetailsActions(
             }
         }
     }
+}
+
+/**
+ * [value] as it was when this content started leaving its `AnimatedContent`, and as it is while it is shown: the leaving
+ * content is still recomposed with the values that replaced it, and it should fade out as it was, not change on its way.
+ */
+@Composable
+private fun <T> AnimatedVisibilityScope.heldWhileLeaving(value: T): T {
+    val held = remember { mutableStateOf(value) }
+    val isLeaving = transition.targetState == EnterExitState.PostExit
+    SideEffect {
+        if (!isLeaving) held.value = value
+    }
+    return if (isLeaving) held.value else value
 }
 
 /**
