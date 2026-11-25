@@ -20,6 +20,7 @@ import com.pandulapeter.campfire.presentation.resources.ic_tuner
 import com.pandulapeter.campfire.presentation.resources.tuner
 import com.pandulapeter.campfire.presentation.ui.components.controls.SongToolButton
 import com.pandulapeter.campfire.presentation.ui.components.controls.songToolIconSize
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -38,6 +39,7 @@ internal fun TunerButton(
     modifier = modifier,
     height = height,
     label = stringResource(Res.string.tuner),
+    shortcut = KeyShortcut.TUNER,
     isSelected = isSheetShown,
     onClick = onClick,
 ) {

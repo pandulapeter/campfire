@@ -1590,6 +1590,7 @@
     <string name="shortcut_song_neighbours">Música anterior ou próxima do repertório</string>
     <string name="shortcut_metronome">Iniciar ou parar o clique</string>
     <string name="shortcut_tap_tempo">Marcar o andamento com toques</string>
+    <string name="shortcut_tuner">Abrir o afinador</string>
     <string name="shortcut_find_step">Resultado seguinte ou anterior</string>
     <string name="shortcut_find_step_from_query">Resultado seguinte ou anterior, a partir do texto buscado</string>
     <string name="shortcut_preview_turn">Página anterior ou próxima</string>

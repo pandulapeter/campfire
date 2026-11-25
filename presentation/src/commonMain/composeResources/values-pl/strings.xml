@@ -1634,6 +1634,7 @@
     <string name="shortcut_song_neighbours">Poprzednia lub następna piosenka z setlisty</string>
     <string name="shortcut_metronome">Włącz lub wyłącz klik</string>
     <string name="shortcut_tap_tempo">Wystukaj tempo</string>
+    <string name="shortcut_tuner">Otwórz stroik</string>
     <string name="shortcut_find_step">Następne lub poprzednie trafienie</string>
     <string name="shortcut_find_step_from_query">Następne lub poprzednie trafienie, z pola wyszukiwania</string>
     <string name="shortcut_preview_turn">Poprzednia lub następna strona</string>

@@ -27,11 +27,15 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.keyboard_shortcuts
 import com.pandulapeter.campfire.presentation.resources.setlists
 import com.pandulapeter.campfire.presentation.resources.songs
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.platform.ImpersonatedPlatform
 import com.pandulapeter.campfire.screenshots.AppTestScope
 import com.pandulapeter.campfire.screenshots.TestWindow
+import com.pandulapeter.campfire.screenshots.openSong
 import com.pandulapeter.campfire.screenshots.runAppTest
+import kotlinx.serialization.json.JsonPrimitive
 import kotlin.test.Test
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 @OptIn(ExperimentalTestApi::class)
@@ -81,6 +85,25 @@ internal class AppKeyboardShortcutsTest {
         onRoot().performKeyInput { withKeyDown(Key.CtrlLeft) { pressKey(Key.Two) } }
         val setlistsItem = hasText(string(Res.string.setlists)) and SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Tab)
         waitUntil { onAllNodes(setlistsItem and isSelected()).fetchSemanticsNodes().isNotEmpty() }
+    }
+
+    @Test
+    fun `U opens the tuner sheet over a song`() = runAppTest {
+        openSong()
+        waitForIdle()
+        onRoot().performKeyInput { pressKey(Key.U) }
+        waitUntil { viewModel.dialogHost.visibleDialog.value is DialogType.Tuner }
+    }
+
+    @Test
+    fun `U opens nothing over a song with the dock's tuner switched off`() = runAppTest(
+        extraPreferences = mapOf("isDockTunerEnabled" to JsonPrimitive(false)),
+    ) {
+        openSong()
+        waitForIdle()
+        onRoot().performKeyInput { pressKey(Key.U) }
+        waitForIdle()
+        assertNull(viewModel.dialogHost.visibleDialog.value)
     }
 
     private fun AppTestScope.pressQuestionMark() = onRoot().performKeyInput { withKeyDown(Key.ShiftLeft) { pressKey(Key.Slash) } }

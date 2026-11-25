@@ -21,19 +21,21 @@ import kotlin.js.ExperimentalWasmJsInterop
 import kotlin.js.unsafeCast
 
 /**
- * M starts and stops the metronome (`MetronomeController.toggleMetronomeByKey`), and T taps the Metronome tab's tempo
- * (`tapTempoByKey`). Unlike the search shortcut this listens
+ * The shortcuts of a letter alone: M starts and stops the metronome (`MetronomeController.toggleMetronomeByKey`), T taps
+ * the Metronome tab's tempo (`tapTempoByKey`), and U opens the tuner over a song ([openTunerByKey]). Unlike the search
+ * shortcut this listens
  * in the bubbling phase and leaves alone whatever Compose already handled or what is typed into a field (the hidden
- * input of a focused text field), so that the key only toggles the metronome where it would otherwise do nothing.
+ * input of a focused text field), so that the key only acts where it would otherwise do nothing.
  */
 @Composable
-internal fun MetronomeShortcutEffect(viewModel: CampfireViewModel) = DisposableEffect(viewModel) {
+internal fun PlainKeyShortcutsEffect(viewModel: CampfireViewModel) = DisposableEffect(viewModel) {
     val listener: (Event) -> Unit = listener@{ event ->
         val keyEvent = event.unsafeCast<KeyboardEvent>()
         if (keyEvent.defaultPrevented || isTypingTarget(keyEvent)) return@listener
         val shortcut = when (keyEvent.code) {
             "KeyM" -> KeyShortcut.METRONOME
             "KeyT" -> KeyShortcut.TAP_TEMPO
+            "KeyU" -> KeyShortcut.TUNER
             else -> return@listener
         }
         val isShortcut = shortcut.chord.matches(
@@ -46,7 +48,11 @@ internal fun MetronomeShortcutEffect(viewModel: CampfireViewModel) = DisposableE
         // thirty times a second.
         if (!isShortcut || keyEvent.repeat) return@listener
         val metronomeController = viewModel.metronomeController
-        val isDone = if (shortcut == KeyShortcut.METRONOME) metronomeController.toggleMetronomeByKey() else metronomeController.tapTempoByKey()
+        val isDone = when (shortcut) {
+            KeyShortcut.METRONOME -> metronomeController.toggleMetronomeByKey()
+            KeyShortcut.TAP_TEMPO -> metronomeController.tapTempoByKey()
+            else -> viewModel.openTunerByKey()
+        }
         if (isDone) keyEvent.preventDefault()
     }
     window.addEventListener(EVENT_KEY_DOWN, listener)

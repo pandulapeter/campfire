@@ -21,6 +21,7 @@ class ShortcutListingTest {
     private val everything = ShortcutFeatures(
         areSongsEnabled = true,
         isMetronomeEnabled = true,
+        isTunerEnabled = true,
         isReadOnly = false,
         songStep = SongStep.NUDGE,
     )
@@ -91,6 +92,9 @@ class ShortcutListingTest {
         val withoutSongs = listed(AppBuild.WINDOWS, everything.copy(areSongsEnabled = false))
         assertEquals(listOf(ShortcutScope.APP, ShortcutScope.MAIN_SCREENS, ShortcutScope.METRONOME), withoutSongs.map { it.scope })
         assertFalse(ShortcutScope.METRONOME in listed(AppBuild.WINDOWS, everything.copy(isMetronomeEnabled = false)).map { it.scope })
+        val tunerOff = listed(AppBuild.WINDOWS, everything.copy(isTunerEnabled = false)).flatMap { group -> group.rows.flatMap { it.shortcuts } }
+        assertFalse(KeyShortcut.TUNER in tunerOff)
+        assertTrue(KeyShortcut.TUNER in listed(AppBuild.WINDOWS).single { it.scope == ShortcutScope.SONG }.rows.flatMap { it.shortcuts })
         val readOnly = listed(AppBuild.WINDOWS, everything.copy(isReadOnly = true))
         assertFalse(ShortcutScope.EDITOR in readOnly.map { it.scope })
         val readOnlyShortcuts = readOnly.flatMap { group -> group.rows.flatMap { it.shortcuts } }

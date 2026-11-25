@@ -1645,6 +1645,7 @@
     <string name="shortcut_song_neighbours">השיר הקודם או הבא בסט־ליסט</string>
     <string name="shortcut_metronome">הפעלה או עצירה של הקליק</string>
     <string name="shortcut_tap_tempo">הקשת הטמפו</string>
+    <string name="shortcut_tuner">פתיחת הטיונר</string>
     <string name="shortcut_find_step">ההתאמה הבאה או הקודמת</string>
     <string name="shortcut_find_step_from_query">ההתאמה הבאה או הקודמת, מתוך הטקסט לחיפוש</string>
     <string name="shortcut_preview_turn">העמוד הקודם או הבא</string>

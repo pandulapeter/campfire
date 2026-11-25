@@ -1588,6 +1588,7 @@
     <string name="shortcut_song_neighbours">Canción anterior o siguiente del repertorio</string>
     <string name="shortcut_metronome">Iniciar o detener el clic</string>
     <string name="shortcut_tap_tempo">Marca el tempo tocando</string>
+    <string name="shortcut_tuner">Abrir el afinador</string>
     <string name="shortcut_find_step">Coincidencia siguiente o anterior</string>
     <string name="shortcut_find_step_from_query">Coincidencia siguiente o anterior, desde el texto a buscar</string>
     <string name="shortcut_preview_turn">Página anterior o siguiente</string>

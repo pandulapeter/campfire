@@ -141,3 +141,5 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
 - Home goes back to the song's top, as a long press on the step back button does.
 - M starts and stops the click and T taps the tempo wherever the dock's tempo chip is (the metronome on, not an import
   preview; T not in read only mode, where it would write an override).
+- U opens the tuner sheet wherever the screen shows a way to the tuner (the Tuner feature and the Dock's tuner on, in the
+  dock or the app bar; not an import preview), leaving a `Keyboard: tuner` breadcrumb.

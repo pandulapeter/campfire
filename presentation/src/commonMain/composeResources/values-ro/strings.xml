@@ -1648,6 +1648,7 @@
     <string name="shortcut_song_neighbours">Cântecul anterior sau următor din listă</string>
     <string name="shortcut_metronome">Pornește sau oprește metronomul</string>
     <string name="shortcut_tap_tempo">Bate tempoul</string>
+    <string name="shortcut_tuner">Deschide acordorul</string>
     <string name="shortcut_find_step">Potrivirea următoare sau anterioară</string>
     <string name="shortcut_find_step_from_query">Potrivirea următoare sau anterioară, din textul căutat</string>
     <string name="shortcut_preview_turn">Pagina anterioară sau următoare</string>

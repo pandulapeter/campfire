@@ -1588,6 +1588,7 @@
     <string name="shortcut_song_neighbours">Previous or next song of the setlist</string>
     <string name="shortcut_metronome">Start or stop the click</string>
     <string name="shortcut_tap_tempo">Tap the tempo</string>
+    <string name="shortcut_tuner">Open the tuner</string>
     <string name="shortcut_find_step">Next or previous match</string>
     <string name="shortcut_find_step_from_query">Next or previous match, from the text to find</string>
     <string name="shortcut_preview_turn">Previous or next page</string>

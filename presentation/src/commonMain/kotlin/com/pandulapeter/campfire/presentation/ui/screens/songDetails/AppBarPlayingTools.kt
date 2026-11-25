@@ -33,6 +33,7 @@ import com.pandulapeter.campfire.presentation.ui.components.CampfireIconButton
 import com.pandulapeter.campfire.presentation.ui.components.controls.STEPPER_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.components.menu.ACTION_BUTTON_OVERLAP
 import com.pandulapeter.campfire.presentation.ui.components.menu.overlappingAction
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.DockContent
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.DockKeyChip
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.dockKeyOf
@@ -97,6 +98,7 @@ internal fun AppBarPlayingTools(
         CampfireIconButton(
             icon = painterResource(Res.drawable.ic_tuner),
             label = stringResource(Res.string.tuner),
+            shortcut = KeyShortcut.TUNER,
             onClick = {
                 println("App bar: tuner")
                 lastTuner.value?.invoke()

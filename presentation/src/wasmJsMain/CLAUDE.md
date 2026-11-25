@@ -41,7 +41,7 @@ and most dialogs open with a field focused.
 - **Escape** (`startForwardingEscapeKey`): a press Compose hasn't seen (its listener `preventDefault`s what it handles)
   is re-dispatched on the canvas, so the innermost back handler answers it. Don't decide its meaning here as the desktop
   does: that can't tell a dialog from the sheet under it. Held repeats are stopped in the capture phase.
-- The shortcuts answered here (find, paste, zoom, M, T, Ctrl / Cmd + 1 to 7, A, and slash) are `LocalKeysLeftToShell`,
+- The shortcuts answered here (find, paste, zoom, M, T, U, Ctrl / Cmd + 1 to 7, A, and slash) are `LocalKeysLeftToShell`,
   which the app's own root handler (`appKeyboardShortcuts`) leaves alone, so none is handled twice. Ctrl / Cmd + N is not
   the web's at all: Chrome opens a window before the page hears it.
 - **Ctrl/Cmd + 1 to 7 and A** (`ScreenShortcutEffect`): the browser's tab switch and select all are

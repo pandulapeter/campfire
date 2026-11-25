@@ -126,6 +126,12 @@ internal enum class KeyShortcut(
     /** Taps the tempo: the Metronome tab's Tap segment, and on a song wherever its dock's tempo chip is, which [METRONOME] starts. */
     TAP_TEMPO(KeyChord.plain(Key.T, "T"), ShortcutScope.METRONOME),
 
+    /**
+     * Opens the tuner sheet over a song wherever it shows a way to the tuner. U, as T is the tempo's and Ctrl / Cmd + T
+     * the browser's new tab; without a modifier, as M and T are, so that it is pressed with the instrument in hand.
+     */
+    TUNER(KeyChord.plain(Key.U, "U"), ShortcutScope.SONG),
+
     /** The print preview's pages: the previous and the next, the first and the last, and the one lying either way. */
     PREVIEW_PAGE_UP(KeyChord.plain(Key.PageUp, label = null), ShortcutScope.PRINT_PREVIEW),
     PREVIEW_PAGE_DOWN(KeyChord.plain(Key.PageDown, label = null), ShortcutScope.PRINT_PREVIEW),

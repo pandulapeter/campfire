@@ -1588,6 +1588,7 @@
     <string name="shortcut_song_neighbours">Vorheriger oder nächster Song der Setlist</string>
     <string name="shortcut_metronome">Klick starten oder stoppen</string>
     <string name="shortcut_tap_tempo">Tempo eintappen</string>
+    <string name="shortcut_tuner">Stimmgerät öffnen</string>
     <string name="shortcut_find_step">Nächster oder vorheriger Treffer</string>
     <string name="shortcut_find_step_from_query">Nächster oder vorheriger Treffer, aus dem Suchtext</string>
     <string name="shortcut_preview_turn">Vorherige oder nächste Seite</string>

@@ -43,6 +43,7 @@ import com.pandulapeter.campfire.presentation.resources.shortcut_song_step_nudge
 import com.pandulapeter.campfire.presentation.resources.shortcut_song_step_page
 import com.pandulapeter.campfire.presentation.resources.shortcut_tap_tempo
 import com.pandulapeter.campfire.presentation.resources.shortcut_transpose
+import com.pandulapeter.campfire.presentation.resources.shortcut_tuner
 import com.pandulapeter.campfire.presentation.resources.shortcut_zoom
 import com.pandulapeter.campfire.presentation.resources.shortcut_zoom_reset
 import com.pandulapeter.campfire.presentation.resources.song_editor_find
@@ -98,6 +99,7 @@ internal fun KeyShortcut.descriptionIn(scope: ShortcutScope, features: ShortcutF
     KeyShortcut.SONG_HOME -> Res.string.song_details_back_to_top
     KeyShortcut.METRONOME -> Res.string.shortcut_metronome
     KeyShortcut.TAP_TEMPO -> Res.string.shortcut_tap_tempo
+    KeyShortcut.TUNER -> Res.string.shortcut_tuner
     KeyShortcut.PREVIEW_PAGE_UP -> Res.string.shortcut_preview_turn
     KeyShortcut.PREVIEW_HOME -> Res.string.shortcut_preview_ends
     KeyShortcut.SCREEN_1,

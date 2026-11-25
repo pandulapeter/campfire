@@ -1640,6 +1640,7 @@
     <string name="shortcut_song_neighbours">Předchozí nebo další píseň setlistu</string>
     <string name="shortcut_metronome">Spustit nebo zastavit klikání</string>
     <string name="shortcut_tap_tempo">Vyťukat tempo</string>
+    <string name="shortcut_tuner">Otevřít ladičku</string>
     <string name="shortcut_find_step">Další nebo předchozí shoda</string>
     <string name="shortcut_find_step_from_query">Další nebo předchozí shoda, z pole hledání</string>
     <string name="shortcut_preview_turn">Předchozí nebo další stránka</string>

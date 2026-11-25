@@ -1587,6 +1587,7 @@
     <string name="shortcut_song_neighbours">A lista előző vagy következő dala</string>
     <string name="shortcut_metronome">A kattogás indítása vagy leállítása</string>
     <string name="shortcut_tap_tempo">Tempó megadása koppintással</string>
+    <string name="shortcut_tuner">A hangoló megnyitása</string>
     <string name="shortcut_find_step">Következő vagy előző találat</string>
     <string name="shortcut_find_step_from_query">Következő vagy előző találat a keresett szövegből</string>
     <string name="shortcut_preview_turn">Előző vagy következő oldal</string>

@@ -1588,6 +1588,7 @@
     <string name="shortcut_song_neighbours">Canzone precedente o successiva della scaletta</string>
     <string name="shortcut_metronome">Avvia o ferma il clic</string>
     <string name="shortcut_tap_tempo">Batti il tempo</string>
+    <string name="shortcut_tuner">Apri l\'accordatore</string>
     <string name="shortcut_find_step">Risultato successivo o precedente</string>
     <string name="shortcut_find_step_from_query">Risultato successivo o precedente, dal testo da trovare</string>
     <string name="shortcut_preview_turn">Pagina precedente o successiva</string>

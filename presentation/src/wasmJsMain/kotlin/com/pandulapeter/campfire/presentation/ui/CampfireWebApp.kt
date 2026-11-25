@@ -96,7 +96,7 @@ fun CampfireWebApp(
             if (viewModel.pastedSongController.isNewSongDropAvailable) viewModel.pastedSongController.newSongFromText(text)
         }
     }
-    MetronomeShortcutEffect(viewModel)
+    PlainKeyShortcutsEffect(viewModel)
     LaunchedEffect(viewModel) { WebMetronomeNotifier.forEachStopRequest(viewModel.metronomeController::stopMetronome) }
     // The composition stops collecting while the tab is hidden (Compose moves the lifecycle to CREATED), and a hidden tab
     // is when the browser's media controls are used: the session follows the engine itself, as Android's service does.
@@ -119,8 +119,8 @@ fun CampfireWebApp(
     }
     // A browser acts on these keys before Compose hears them, so the shell's own listeners answer them and keep the
     // browser from its find bar, its page zoom where the song's text is zoomed instead, its tabs and settings where a main
-    // screen is selected, and from reading a paste, which arrives as an event of its own; the metronome's listen on the
-    // whole page, which has the keys before the canvas has the focus.
+    // screen is selected, and from reading a paste, which arrives as an event of its own; the letters' (M, T, and U)
+    // listen on the whole page, which has the keys before the canvas has the focus.
     ProvideKeyboardInsets {
         CompositionLocalProvider(LocalKeysLeftToShell provides KEYS_LEFT_TO_BROWSER) {
             CampfireApp(
@@ -307,6 +307,7 @@ private val KEYS_LEFT_TO_BROWSER = setOf(
     KeyShortcut.PASTE,
     KeyShortcut.METRONOME,
     KeyShortcut.TAP_TEMPO,
+    KeyShortcut.TUNER,
     KeyShortcut.ZOOM_IN,
     KeyShortcut.ZOOM_OUT,
     KeyShortcut.ZOOM_RESET,
