@@ -53,18 +53,13 @@ import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.metronome.api.model.MetronomePlayback
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeController
-import com.pandulapeter.campfire.presentation.mapper.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
-import com.pandulapeter.campfire.presentation.ui.instrument.chordTuning
-import com.pandulapeter.campfire.presentation.ui.instrument.instrumentTuning
 import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
-import com.pandulapeter.campfire.presentation.ui.instrument.storedChordShapes
 import com.pandulapeter.campfire.presentation.ui.metronome.SongTiming
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.pictures.LocalSongImageLoader
-import com.pandulapeter.campfire.presentation.ui.preferences.SongSections
 import com.pandulapeter.campfire.presentation.ui.screens.rememberSongActionHandler
 
 /**
@@ -150,7 +145,7 @@ internal fun SongDetailsScreen(
     // caught up with a change to it yet - so that two numberings are never mixed in one bar.
     val setlistSlots = remember(setlist, songs) { setlist?.let { buildSetlistSlots(it.entries, songs.map { song -> song.fileName }) } }
     val shouldShowChords = userPreferences?.areChordsEnabled != false
-    val chordDiagrams = rememberChordDiagrams(viewModel = viewModel, userPreferences = userPreferences)
+    val chordDiagrams = rememberChordDiagrams(userPreferences = userPreferences)
     val isMetronomeEnabled = userPreferences?.isMetronomeEnabled != false
     val isTunerEnabled = userPreferences?.isTunerEnabled != false
     val areSetlistsEnabled = userPreferences?.areSetlistsEnabled != false
@@ -427,34 +422,6 @@ private fun SongDetailsEffects(
         )
     } else if (!isImportPreview) {
         LoadSongTexts(songTextStore = viewModel.songTextStore, songs = songs, currentPage = currentPage, songTexts = songTexts)
-    }
-}
-
-/**
- * What the Chords section of every page is drawn with, null where the diagrams are off. One for the whole pager, since
- * nothing else in it belongs to one song: the instrument, the tuning, and the player's shapes are the same wherever a
- * song is read. Whether the section is folded is each song's own, given by its page. An instrument without shapes still gets one, with no tuning to draw in, so that
- * the first section keeps the chips that change it.
- */
-@Composable
-private fun rememberChordDiagrams(
-    viewModel: CampfireViewModel,
-    userPreferences: UserPreferences?,
-): ChordDiagrams? {
-    val preferences = userPreferences?.takeIf { SongSections.of(it).areDiagramsShown } ?: return null
-    val chordTuning = preferences.chordTuning()
-    val storedChordShapes = chordTuning?.let { preferences.storedChordShapes(it) }.orEmpty()
-    val instrument = preferences.instrument
-    val instrumentTuning = preferences.instrumentTuning
-    val notation = preferences.chordSpelling.notation.toChordNotation()
-    return remember(chordTuning, storedChordShapes, instrument, instrumentTuning, notation) {
-        ChordDiagrams(
-            tuning = chordTuning,
-            instrument = instrument,
-            instrumentTuning = instrumentTuning,
-            storedShapes = storedChordShapes,
-            notation = notation,
-        )
     }
 }
 
