@@ -95,4 +95,13 @@ internal class DockLayoutTest {
         assertEquals(DockTier.FULL_DIAGRAMS, dockPanelLayoutOf(everyRow)?.tier)
         assertNull(dockPanelLayoutOf(DockRows(hasPlayingRow = false, hasChordRow = false, hasScaleRow = false)))
     }
+
+    @Test
+    fun `the dock's last row is as far from a bare window edge as from its top but closer over a navigation bar`() {
+        val atEdge = checkNotNull(dockLayoutOf(everyRow, 1000.dp, isOneRow = true, bottomPadding = dockBottomPaddingOf(bottomInset = 0.dp)))
+        val overInset = checkNotNull(dockLayoutOf(everyRow, 1000.dp, isOneRow = true, bottomPadding = dockBottomPaddingOf(bottomInset = 24.dp)))
+        assertEquals(DOCK_VERTICAL_PADDING, atEdge.bottomPadding)
+        assertTrue(overInset.bottomPadding < atEdge.bottomPadding)
+        assertEquals(atEdge.height - overInset.height, atEdge.bottomPadding - overInset.bottomPadding)
+    }
 }

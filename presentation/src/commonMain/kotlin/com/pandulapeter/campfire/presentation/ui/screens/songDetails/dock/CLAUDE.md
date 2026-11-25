@@ -42,13 +42,14 @@ app bar's metronome panel.
   one row with a chip per chord. Any other gets two, diagrams in the second at the Chords section's size where they fit
   `dockBudgetOf` (the share of the window that costs no page turn as `PageCountTest` measured it: 80 dp by page, 60 by
   column, 48 and 40 over a pager bar), else smaller. The owner chose diagrams on an upright phone at the cost of up to
-  two pages on a long song, and an 8 dp top padding at one more in some cases, which `PageCountTest` holds.
+  two pages on a long song, and its 8 dp padding at one more in some cases, which `PageCountTest` holds.
 - **In one row** (a short window, an import preview, no diagrams): the start, chord and scale chips scrolling, the tempo
   chip. **In two**: the start and the scale chips, then the diagrams and the tempo chip; without scale suggestions only
   the second. The start and the tempo chip stand still (`DockScrollingRow`) and what scrolls fades only where it meets
   them; at the screen's edge a row runs to it, padded instead, as far in as the step buttons are
-  (`PAGE_HORIZONTAL_PADDING`, 8 dp past the insets) and the import preview's card; the rows are as far under the
-  surface's top (`DOCK_TOP_PADDING`).
+  (`PAGE_HORIZONTAL_PADDING`, 8 dp past the insets) and the import preview's card; the rows are as far from the
+  surface's top and, at a window's edge with no bottom inset, its bottom (`DOCK_VERTICAL_PADDING`); over an inset (a
+  navigation bar) half that, the inset parting them from the edge (`dockBottomPaddingOf`).
 - **The panel's rows** (`DockPanelRows`) wrap rather than scroll; the panel scrolls as one where the height runs out.
 
 ## Its contents

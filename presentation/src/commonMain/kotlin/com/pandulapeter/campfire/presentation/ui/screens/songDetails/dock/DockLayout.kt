@@ -40,8 +40,9 @@ internal data class DockRows(
 
 /**
  * How the dock is laid out: its [tier], how tall it is above whatever inset it covers (nothing for the side panel, which
- * is as tall as the song), how tall its row of chips and controls is ([rowHeight]), and its row of diagrams
- * ([diagramRowHeight], none in [DockTier.CHORD_CHIPS]).
+ * is as tall as the song), how tall its row of chips and controls is ([rowHeight]), its row of diagrams
+ * ([diagramRowHeight], none in [DockTier.CHORD_CHIPS]), and the room under its last row ([bottomPadding],
+ * [dockBottomPaddingOf]).
  */
 @Immutable
 internal data class DockLayout(
@@ -49,6 +50,7 @@ internal data class DockLayout(
     val height: Dp,
     val rowHeight: Dp,
     val diagramRowHeight: Dp = 0.dp,
+    val bottomPadding: Dp = DOCK_VERTICAL_PADDING,
 )
 
 /**
@@ -73,9 +75,16 @@ internal fun dockBudgetOf(windowHeight: Dp, turnsByColumn: Boolean, hasPagerBar:
  * little room there is, a long song taking up to two pages more for them on an upright phone. Null where there is no row
  * at all, which is no dock. A window that gives the dock a side panel ([isDockSidePanel]) has none of this.
  */
-internal fun dockLayoutOf(rows: DockRows, budget: Dp, isOneRow: Boolean, rowHeight: Dp = DOCK_ROW_HEIGHT): DockLayout? {
+internal fun dockLayoutOf(
+    rows: DockRows,
+    budget: Dp,
+    isOneRow: Boolean,
+    rowHeight: Dp = DOCK_ROW_HEIGHT,
+    bottomPadding: Dp = DOCK_VERTICAL_PADDING,
+): DockLayout? {
     if (rows.isEmpty) return null
-    val oneRow = DockLayout(DockTier.CHORD_CHIPS, height = DOCK_TOP_PADDING + DOCK_BOTTOM_PADDING + rowHeight, rowHeight = rowHeight)
+    val padding = DOCK_VERTICAL_PADDING + bottomPadding
+    val oneRow = DockLayout(DockTier.CHORD_CHIPS, height = padding + rowHeight, rowHeight = rowHeight, bottomPadding = bottomPadding)
     // The playing controls and the scale chips share the first row, so only the chords can ask for a second.
     if (!rows.hasChordRow || isOneRow) return oneRow
     // Without scale suggestions, the key chip and the click's controls stand at the diagram row's ends instead.
@@ -83,7 +92,7 @@ internal fun dockLayoutOf(rows: DockRows, budget: Dp, isOneRow: Boolean, rowHeig
     val (full, small) = listOf(DockTier.FULL_DIAGRAMS to FULL_DIAGRAMS_PAST_ROW, DockTier.SMALL_DIAGRAMS to SMALL_DIAGRAMS_PAST_ROW).map { (tier, pastRow) ->
         // A row of diagrams is a line of names, as tall as the row's text, over the diagrams.
         val diagramRowHeight = rowHeight + pastRow
-        DockLayout(tier, height = DOCK_TOP_PADDING + DOCK_BOTTOM_PADDING + firstRow + diagramRowHeight, rowHeight = rowHeight, diagramRowHeight = diagramRowHeight)
+        DockLayout(tier, height = padding + firstRow + diagramRowHeight, rowHeight = rowHeight, diagramRowHeight = diagramRowHeight, bottomPadding = bottomPadding)
     }
     return if (full.height <= budget) full else small
 }
@@ -118,16 +127,17 @@ internal val DOCK_ROW_HEIGHT = 32.dp
 internal val DOCK_ROW_GAP = 8.dp
 
 /**
- * Above the dock's first row: as far in as its rows are from the window's sides (`PAGE_HORIZONTAL_PADDING`), so the
- * rounded surface frames them evenly.
+ * Above the dock's first row, and under its last at the window's bottom edge: as far in as its rows are from the
+ * window's sides (`PAGE_HORIZONTAL_PADDING`), so the rounded surface frames them evenly.
  */
-internal val DOCK_TOP_PADDING = 8.dp
+internal val DOCK_VERTICAL_PADDING = 8.dp
 
 /**
- * Under the dock's last row, only as much as keeps a chip off the dock's edge, so that an upright phone's two rows cost it
- * as little as they can: the bottom inset or the pager bar under it adds room of its own.
+ * The room under the dock's last row: [DOCK_VERTICAL_PADDING] where the window's bottom inset ([bottomInset]) is
+ * nothing, so the rows are framed evenly at the window's edge, and half of it over an inset (a navigation bar), whose own
+ * room already parts the rows from the edge, so that a phone's rows cost the song as little as they can.
  */
-internal val DOCK_BOTTOM_PADDING = 4.dp
+internal fun dockBottomPaddingOf(bottomInset: Dp) = if (bottomInset > 0.dp) DOCK_VERTICAL_PADDING / 2 else DOCK_VERTICAL_PADDING
 
 /**
  * How much taller than a row of chips a row of diagrams at their full size is: a chord's name over a diagram as large as

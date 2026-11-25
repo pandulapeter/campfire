@@ -145,7 +145,7 @@ private fun DockRowsOf(
     modifier = Modifier
         .fillMaxWidth()
         .wrapContentHeight(align = Alignment.Top, unbounded = true)
-        .padding(top = DOCK_TOP_PADDING, bottom = DOCK_BOTTOM_PADDING),
+        .padding(top = DOCK_VERTICAL_PADDING, bottom = layout.bottomPadding),
     verticalArrangement = Arrangement.spacedBy(DOCK_ROW_GAP),
 ) {
     val cells = content?.let { rememberChordCells(it.model, it.chordDiagrams) }.orEmpty()

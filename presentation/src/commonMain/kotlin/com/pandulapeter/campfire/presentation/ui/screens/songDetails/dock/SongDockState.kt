@@ -84,7 +84,8 @@ internal fun rememberSongDock(
     val isSidePanel = isDockSidePanel(windowWidth = windowSize.width)
     // The controls are drawn at the interface's text size, which a large system text size grows past a chip's.
     val rowHeight = maxOf(DOCK_ROW_HEIGHT, songControlHeight(MaterialTheme.typography.titleSmall))
-    val layout = remember(rows, windowSize.height, turnsByColumn, hasPagerBar, isImportPreview, rowHeight, isSidePanel) {
+    val bottomPadding = dockBottomPaddingOf(bottomInset = contentPadding.calculateBottomPadding())
+    val layout = remember(rows, windowSize.height, turnsByColumn, hasPagerBar, isImportPreview, rowHeight, isSidePanel, bottomPadding) {
         if (isSidePanel) {
             null
         } else {
@@ -93,6 +94,7 @@ internal fun rememberSongDock(
                 budget = dockBudgetOf(windowHeight = windowSize.height, turnsByColumn = turnsByColumn, hasPagerBar = hasPagerBar),
                 isOneRow = windowSize.height < SHORT_WINDOW_HEIGHT || isImportPreview,
                 rowHeight = rowHeight,
+                bottomPadding = bottomPadding,
             )
         }
     }
