@@ -12,6 +12,10 @@ package com.pandulapeter.campfire.presentation.ui.components.shortcuts
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.widthIn
 import com.pandulapeter.campfire.presentation.localization.isolatedLeftToRight
 
 /**
@@ -23,10 +27,17 @@ import com.pandulapeter.campfire.presentation.localization.isolatedLeftToRight
 internal fun menuShortcutHint(shortcut: KeyShortcut?): (@Composable () -> Unit)? {
     val hint = shortcut?.hint() ?: return null
     return {
+        // Material sets the trailing slot in a box at least as wide as an icon and puts what it holds at that box's start,
+        // so a one-letter hint would end short of the wider ones under it. Filling that width and ending the text there
+        // lines every hint of a menu up at the menu's edge.
         Text(
+            modifier = Modifier.widthIn(min = MENU_TRAILING_SLOT_WIDTH),
             text = hint.isolatedLeftToRight(),
+            textAlign = TextAlign.End,
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }
+
+private val MENU_TRAILING_SLOT_WIDTH = 24.dp
