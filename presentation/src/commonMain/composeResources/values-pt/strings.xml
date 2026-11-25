@@ -1246,6 +1246,7 @@
     <string name="song_details_dock_no_scales">Nenhuma sugestão de escalas para esta música</string>
     <string name="song_details_dock_playing">Execução</string>
     <string name="song_details_dock_tempo">Andamento</string>
+    <string name="song_details_dock_transposition">Transposição: %1$s</string>
     <plurals name="song_details_dock_too_many_chords">
         <item quantity="one">Mais de %1$d acorde, demais para mostrar aqui</item>
         <item quantity="other">Mais de %1$d acordes, demais para mostrar aqui</item>

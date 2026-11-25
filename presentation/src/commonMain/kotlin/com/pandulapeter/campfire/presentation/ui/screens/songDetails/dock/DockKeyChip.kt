@@ -27,8 +27,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.localization.stringResource
@@ -36,6 +36,7 @@ import com.pandulapeter.campfire.presentation.localization.textResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.song_details_capo
 import com.pandulapeter.campfire.presentation.resources.song_details_dock_playing
+import com.pandulapeter.campfire.presentation.resources.song_details_dock_transposition
 import com.pandulapeter.campfire.presentation.resources.song_details_key_change
 import com.pandulapeter.campfire.presentation.ui.components.controls.StepperDivider
 import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
@@ -65,15 +66,23 @@ internal fun DockKeyChip(
         onClickLabel = playing,
         onClick = onClick,
     ) {
+        val key = dockKey.key ?: playing.takeIf { onClick != null }
+        // One description for the whole pill: the clickable merges its children, and a description of the key alone
+        // would hide the transposition and the capo from a screen reader.
+        val description = listOfNotNull(
+            dockKey.key?.let { textResource(Res.string.song_details_key_change, it) } ?: key,
+            dockKey.transposition?.let { stringResource(Res.string.song_details_dock_transposition, it) },
+            dockKey.capo?.let { stringResource(Res.string.song_details_capo, it) },
+        ).joinToString(", ")
         // Centred, for where it is stretched to the width of the tuner pill under it (DockKeyAndTuner).
-        Row(horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
-            val key = dockKey.key ?: playing.takeIf { onClick != null }
+        Row(
+            modifier = Modifier.clearAndSetSemantics { contentDescription = description },
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             if (key != null) {
-                val keyDescription = dockKey.key?.let { textResource(Res.string.song_details_key_change, it) } ?: playing
                 AnimatedContent(
-                    modifier = Modifier
-                        .padding(horizontal = KEY_CHIP_PADDING)
-                        .semantics { contentDescription = keyDescription },
+                    modifier = Modifier.padding(horizontal = KEY_CHIP_PADDING),
                     targetState = key to dockKey.transposition,
                     transitionSpec = { fadeIn() togetherWith fadeOut() },
                     contentAlignment = Alignment.Center,

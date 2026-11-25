@@ -1244,6 +1244,7 @@
     <string name="song_details_dock_no_scales">Keine Tonleiter-Vorschläge für dieses Lied</string>
     <string name="song_details_dock_playing">Spielweise</string>
     <string name="song_details_dock_tempo">Tempo</string>
+    <string name="song_details_dock_transposition">Transposition: %1$s</string>
     <plurals name="song_details_dock_too_many_chords">
         <item quantity="one">Mehr als %1$d Akkord, zu viele zum Anzeigen</item>
         <item quantity="other">Mehr als %1$d Akkorde, zu viele zum Anzeigen</item>

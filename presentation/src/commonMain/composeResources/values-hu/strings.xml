@@ -1243,6 +1243,7 @@
     <string name="song_details_dock_no_scales">Ehhez a dalhoz nincsenek skálajavaslatok</string>
     <string name="song_details_dock_playing">Játék</string>
     <string name="song_details_dock_tempo">Tempó</string>
+    <string name="song_details_dock_transposition">Transzponálás: %1$s</string>
     <plurals name="song_details_dock_too_many_chords">
         <item quantity="one">Több mint %1$d akkord, túl sok ahhoz, hogy itt megjelenjen</item>
         <item quantity="other">Több mint %1$d akkord, túl sok ahhoz, hogy itt megjelenjen</item>

@@ -1244,6 +1244,7 @@
     <string name="song_details_dock_no_scales">Nessuna scala suggerita per questa canzone</string>
     <string name="song_details_dock_playing">Esecuzione</string>
     <string name="song_details_dock_tempo">Tempo</string>
+    <string name="song_details_dock_transposition">Trasposizione: %1$s</string>
     <plurals name="song_details_dock_too_many_chords">
         <item quantity="one">Più di %1$d accordo, troppi da mostrare qui</item>
         <item quantity="other">Più di %1$d accordi, troppi da mostrare qui</item>

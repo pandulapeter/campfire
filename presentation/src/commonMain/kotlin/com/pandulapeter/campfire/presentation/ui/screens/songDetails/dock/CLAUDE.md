@@ -73,7 +73,8 @@ app bar's metronome panel.
 - Each page hands up what it drew the song with (`DockContent`, by page index); the dock shows the page the pager is on
   or heading for, crossfading as it turns, as the bar's subtitle does.
 - **The key chip and the tempo chip are outlined tonal pills** (`DockControlPill`), set apart from the chord and scale
-  chips (the song's) by their fill rather than by chevrons, the outline giving them contrast on the dock's surface; every part of one opens its sheet but play and stop.
+  chips (the song's) by their fill rather than by chevrons, the outline giving them contrast on the dock's surface; every part of one opens its sheet but play and stop. A
+  screen reader reads each pill as one description of all it shows (key, transposition, and capo; tuner and tuning).
 - **The key chip** (`DockKeyChip`, `dockKeyOf`) names what the transposition stepper names (the shapes' under `SHAPES`,
   the inferred key for a file naming none), a moved song's semitones after a named key ("Bm (+2)", not in read only mode); **a capo other than zero is always on screen**, after a stepper's
   divider. In the diagram row it stands over a pill of the tuner naming the tuning (`DockKeyAndTuner`), the two as

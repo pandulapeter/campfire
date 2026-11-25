@@ -24,6 +24,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -74,24 +76,30 @@ private fun DockTunerPill(
     onClickLabel = stringResource(Res.string.tuner),
     onClick = onClick,
 ) {
+    val tuning = chordDiagrams.instrumentTuning
+    val label = when {
+        tuning == null -> instrumentLabel(chordDiagrams.instrument)
+        tuning.isStandard -> stringResource(Res.string.instrument_tuning_standard)
+        else -> tuningLabel(tuning, chordDiagrams.notation)
+    }
+    // One description for the whole pill ("Tuner, Drop D"): the clickable merges its children, and the mark's alone
+    // would hide the tuning from a screen reader.
+    val description = listOf(stringResource(Res.string.tuner), label).joinToString(", ")
     Row(
-        modifier = Modifier.padding(horizontal = TUNER_PILL_PADDING),
+        modifier = Modifier
+            .clearAndSetSemantics { contentDescription = description }
+            .padding(horizontal = TUNER_PILL_PADDING),
         horizontalArrangement = Arrangement.spacedBy(TUNER_ICON_GAP, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
             modifier = Modifier.size(TUNER_ICON_SIZE),
             painter = painterResource(Res.drawable.ic_tuner),
-            contentDescription = stringResource(Res.string.tuner),
+            contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        val tuning = chordDiagrams.instrumentTuning
         Text(
-            text = when {
-                tuning == null -> instrumentLabel(chordDiagrams.instrument)
-                tuning.isStandard -> stringResource(Res.string.instrument_tuning_standard)
-                else -> tuningLabel(tuning, chordDiagrams.notation)
-            },
+            text = label,
             style = MaterialTheme.typography.labelLarge,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
