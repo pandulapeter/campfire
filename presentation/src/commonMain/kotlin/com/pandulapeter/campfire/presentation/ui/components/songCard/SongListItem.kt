@@ -188,7 +188,7 @@ internal fun SongListItem(
             coverArtUrl = coverArtUrl,
             actions = actions,
             headlineContent = {
-                ListItemHeadline(text = songCardTitle(song.title, index))
+                ListItemHeadline(title = song.title, index = index)
             },
             // The artist and the values each get a line of their own beside the cover: the artist is cut short by nothing but
             // the card's width, and the values, which are short, never take letters off it. Songs written in the app need

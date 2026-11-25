@@ -15,7 +15,6 @@ import com.pandulapeter.campfire.presentation.ui.components.songCard.ListItemHea
 import com.pandulapeter.campfire.presentation.ui.components.songCard.SONG_CARD_OUTER_PADDING
 import com.pandulapeter.campfire.presentation.ui.components.songCard.SONG_CARD_VERTICAL_PADDING
 import com.pandulapeter.campfire.presentation.ui.components.songCard.SongListItem
-import com.pandulapeter.campfire.presentation.ui.components.songCard.songCardTitle
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -84,7 +83,7 @@ internal fun MissingSongListItem(
         ),
         actions = actions,
         headlineContent = {
-            ListItemHeadline(text = songCardTitle(songFileName, index))
+            ListItemHeadline(title = songFileName, index = index)
         },
         supportingContent = {
             Text(

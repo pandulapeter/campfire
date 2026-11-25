@@ -25,9 +25,6 @@ internal val isNarrowSongCardWindow: Boolean
  */
 internal val SONG_CARD_CONTENT_PADDING = 8.dp
 
-/** A setlist's zero-based position is shown to players as a one-based prefix. */
-internal fun songCardTitle(title: String, index: Int?): String = if (index == null) title else "${index + 1} - $title"
-
 /** Below this window width a song card's title gets a second line and its values a narrower gap. */
 private val NARROW_SONG_CARD_WINDOW_WIDTH = 480.dp
 
