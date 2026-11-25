@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.chordpro.convert
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class SongStructureTest {
 
@@ -54,5 +55,19 @@ class SongStructureTest {
                 "{start_of_verse: 2}\n[Am]The second [C]verse is here\n[G]Sing it again\n{end_of_verse}\n\nIn 1. place a line is sung\n",
             ChordSheetConverter.convert(ChordSheet.ofPlainText(sheet), guessesTitle = false).single(),
         )
+    }
+
+    @Test
+    fun `a verse's number on a line of its own or from a second verse on opens the verse under it`() {
+        val alone = "1.\nAm           C\nHello my old friend\nSing it again\n\n2.\nAm           C\nThe second verse is here\nSing it again"
+        assertEquals(
+            "{start_of_verse: 1}\n[Am]Hello my old [C]friend\nSing it again\n{end_of_verse}\n\n" +
+                "{start_of_verse: 2}\n[Am]The second ve[C]rse is here\nSing it again\n{end_of_verse}\n",
+            ChordSheetConverter.convert(ChordSheet.ofPlainText(alone), guessesTitle = false).single(),
+        )
+        val fromTwo = "Am    C\nHello my old friend\nSing it again\n\nAm    C\n2. The second verse\nSing it again\n\nAm    C\n3.The third verse\nSing it again"
+        val result = ChordSheetConverter.convert(ChordSheet.ofPlainText(fromTwo), guessesTitle = false).single()
+        assertTrue(result.contains("{start_of_verse: 2}\n[Am]The [C]second verse\n"), result)
+        assertTrue(result.contains("{start_of_verse: 3}\n[Am]The [C]third verse\n"), result)
     }
 }

@@ -119,9 +119,12 @@ internal object SongStructure {
                 index++
                 continue
             }
-            (unopenedNumbers.remove(index) ?: unopenedNumbers.takeIf { kinds[index] == LineKind.CHORD }?.remove(index + 1))?.let { number ->
+            val number = unopenedNumbers.remove(index) ?: unopenedNumbers.takeIf { kinds[index] == LineKind.CHORD }?.remove(index + 1)
+            if (number != null) {
                 closeSection()
                 openNumbered(number)
+                // A number on a line of its own heads the verse under it and is no line of it.
+                if (ChordSheetVerseNumbers.isAlone(line.text)) { index++; continue }
             }
             when (kinds[index]) {
                 LineKind.COMMENT -> {
