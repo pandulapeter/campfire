@@ -22,7 +22,8 @@ Only these, all in `:data:source:remote:implementation`, the only module that ma
 - **Sync**, off until the user connects their own cloud folder in Settings; no Campfire server exists. While the app
   is in front it also holds one long poll open on the folder's change feed.
 - **Cover images**: downloaded once from the address a song file names (public `https` hosts only, never the local
-  network), then kept on the device; an address that answers with no cover is remembered as such.
+  network), then kept on the device; an address that answers with no cover is remembered as such. On Android and iOS
+  every song's cover is fetched so, for the home screen widgets' thumbnails (made from those copies).
 - **Cover search and song details lookup**: MusicBrainz and the iTunes Search API, only from the sheet the user opens
   for them; the "Cover art" and "Online song details" switches in Settings → Features remove them.
 - **Picture links**: a picture a song names by its `https` address (public hosts only, never the local network) is
@@ -41,7 +42,7 @@ Only these, all in `:data:source:remote:implementation`, the only module that ma
   and, on a first launch, the install referrer over IPC (Play Store app); Android/iOS system backup copies `library/`
   (Android without `library/files/`, whose photos would pass its 25 MB cap; iOS without the attachments there) and
   `preferences.json` — never the sync credentials, the sync index, the shared links mirror and journal, the editor
-  draft and its pictures, the iOS share inbox, the widgets' snapshot, `covers/`, `exports/`, or `imports/` (`app/android/src/main/res/xml`; on
+  draft and its pictures, the iOS share inbox, the widgets' snapshot and covers, `covers/`, `exports/`, or `imports/` (`app/android/src/main/res/xml`; on
   iOS a device-bound Keychain item, the iOS storage's allow-list (`DeviceBackup.kt`), and the share inbox's own
   exclusion). A launch with no preferences document forgets any credentials it finds, since the iOS Keychain outlives an
   uninstall.
@@ -106,6 +107,7 @@ imports/<name>                         an archive being imported and the picture
                                        Library/Application Support)
 widget/snapshot.json                   Android: what the home screen widgets show, rewritten on every change, never
                                        backed up (iOS: Widget/ in the App Group's container)
+widget/covers/<sha256 hex>.jpg         thumbnails of the covers the snapshot names (by address), deleted once unnamed
 instance.lock / instance.endpoint      desktop only: single-instance guard
 campfire.log / campfire.log.1          desktop only, here (the other platforms keep it elsewhere, ui/platform)
 ```
@@ -278,7 +280,8 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
 - Home screen widgets (Android, iOS): Random picks (a few songs drawn on their own, hourly or on Shuffle, under a title
   and from tags and languages its setup picks) and Setlist
   (the next gig or a pinned one, opening its first song in setlist mode, each of its songs at that song), reading only a
-  snapshot the app writes in its language and theme, following the Songs and Setlists switches; on Android a setlist's
+  snapshot the app writes in its language and theme, each song with its cover where Cover art is on (a thumbnail the app
+  writes beside it), following the Songs and Setlists switches; on Android a setlist's
   menu adds one pinned to it (Add to home screen, iOS having no such request): `ui/widget`, `app/android`, `app/ios`.
 - A song is named by its own header; renames happen only when asked or when lossless: `domain/implementation`,
   `data/source/local/implementation`.

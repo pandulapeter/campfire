@@ -34,12 +34,13 @@ sealed interface RandomPicksContent {
 
 /**
  * A song of the setlist a setlist widget shows: its [number] in the setlist (from 1), its [title] and [artist] (blank for
- * none), and the app link that opens the setlist at it.
+ * none), its [cover] ([WidgetSnapshot.Song.cover]), and the app link that opens the setlist at it.
  */
 data class SetlistWidgetSong(
     val number: Int,
     val title: String,
     val artist: String,
+    val cover: String?,
     val link: String,
 )
 
@@ -128,6 +129,7 @@ fun WidgetSnapshot.setlistContent(pinnedFileName: String?, todayEpochDay: Long):
                     number = index + 1,
                     title = song.title,
                     artist = song.artist,
+                    cover = song.cover,
                     link = setlist.songLinks.getOrNull(index) ?: setlist.link,
                 )
             }

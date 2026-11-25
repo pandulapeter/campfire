@@ -79,6 +79,7 @@ private fun ColumnScope.Setlist(
 ) {
     SetlistHeader(content = content, label = label, textAlign = textAlignOf(isMirrored))
     if (content.songs.isNotEmpty()) {
+        val covers = rememberWidgetCovers()
         Box(modifier = GlanceModifier.fillMaxWidth().defaultWeight()) {
             LazyColumn(modifier = GlanceModifier.fillMaxSize()) {
                 // A row of the fade's height first, which is where the first song sits once it is scrolled back: a
@@ -90,6 +91,7 @@ private fun ColumnScope.Setlist(
                     WidgetSongRow(
                         title = song.title,
                         artist = song.artist,
+                        cover = song.cover?.let(covers::get),
                         number = song.number,
                         link = song.link,
                         isMirrored = isMirrored,

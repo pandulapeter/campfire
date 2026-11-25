@@ -38,7 +38,7 @@ import com.pandulapeter.campfire.shortcuts.isAppLink
 import com.pandulapeter.campfire.shortcuts.openAppLink
 import com.pandulapeter.campfire.sync.SyncServiceStarter
 import com.pandulapeter.campfire.widget.SetlistWidgetPinning
-import com.pandulapeter.campfire.widget.WidgetSnapshotPublisher
+import com.pandulapeter.campfire.widget.WidgetFilesImpl
 import kotlinx.coroutines.launch
 import org.koin.mp.KoinPlatform
 
@@ -58,6 +58,8 @@ class CampfireMainActivity : ComponentActivity() {
     private val setlistWidgetPinner by lazy {
         if (SetlistWidgetPinning.isSupported(this)) SetlistWidgetPinner { SetlistWidgetPinning.request(context = applicationContext, setlistFileName = it) } else null
     }
+
+    private val widgetFiles by lazy { WidgetFilesImpl(context = applicationContext) }
 
     /** The app's shortcuts as the composition last wrote them, in its language, for the system's list. */
     private var keyboardShortcuts = emptyList<KeyboardShortcutGroup>()
@@ -110,7 +112,7 @@ class CampfireMainActivity : ComponentActivity() {
                 },
                 onKeyboardShortcutsChanged = { keyboardShortcuts = it },
                 onLauncherShortcutsChanged = { LauncherShortcutPublisher.publish(context = this, shortcuts = it) },
-                onWidgetSnapshotChanged = { WidgetSnapshotPublisher.publish(context = this, snapshot = it) },
+                widgetFiles = widgetFiles,
                 setlistWidgetPinner = setlistWidgetPinner,
             )
         }

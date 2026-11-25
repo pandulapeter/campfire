@@ -38,11 +38,12 @@ import com.pandulapeter.campfire.presentation.ui.theme.appIconColor
 import com.pandulapeter.campfire.presentation.ui.theme.appIconThemeColor
 import com.pandulapeter.campfire.presentation.ui.shortcuts.LauncherShortcuts
 import com.pandulapeter.campfire.presentation.ui.shortcuts.LauncherShortcutsEffect
-import com.pandulapeter.campfire.presentation.ui.widget.WidgetSnapshot
+import com.pandulapeter.campfire.presentation.ui.widget.WidgetFiles
 import com.pandulapeter.campfire.presentation.ui.widget.WidgetSnapshotEffect
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
@@ -80,8 +81,8 @@ import org.koin.compose.viewmodel.koinViewModel
  *   as `UIKeyCommand`s in the Command-hold overlay ([IosKeyCommandsEffect]).
  * @param onLauncherShortcutsChanged Called with the launcher shortcuts, in the app's language, whenever they change, for
  *   the app module to set as the Home Screen quick actions ([LauncherShortcutsEffect]).
- * @param onWidgetSnapshotChanged Called with the home screen widgets' snapshot whenever it changes, for the app module to
- *   write into the App Group's container, where the widget extension reads it ([WidgetSnapshotEffect]).
+ * @param widgetFiles The App Group's container, where the widget extension reads the snapshot and its covers, which the
+ *   app writes whenever what the widgets show changes ([WidgetSnapshotEffect]); none writes nothing.
  */
 @Composable
 fun CampfireIosApp(
@@ -100,7 +101,7 @@ fun CampfireIosApp(
     onAppIconChanged: (UserPreferences.ThemeColor) -> Unit = {},
     onKeyCommandsChanged: (List<IosKeyCommand>) -> Unit = {},
     onLauncherShortcutsChanged: (LauncherShortcuts) -> Unit = {},
-    onWidgetSnapshotChanged: (WidgetSnapshot) -> Unit = {},
+    widgetFiles: WidgetFiles? = null,
 ) = CompositionLocalProvider(
     LocalFilePicker provides filePicker,
     LocalIosFileOpener provides fileOpener,
@@ -124,11 +125,14 @@ fun CampfireIosApp(
     }
     IosKeyCommandsEffect(viewModel = viewModel, onChanged = onKeyCommandsChanged)
     LauncherShortcutsEffect(preferencesController = viewModel.preferencesController, onChanged = onLauncherShortcutsChanged)
-    WidgetSnapshotEffect(
-        screenData = viewModel.libraryState.screenData,
-        preferencesController = viewModel.preferencesController,
-        onChanged = onWidgetSnapshotChanged,
-    )
+    if (widgetFiles != null) {
+        WidgetSnapshotEffect(
+            screenData = viewModel.libraryState.screenData,
+            preferencesController = viewModel.preferencesController,
+            files = widgetFiles,
+            getCoverArt = koinInject(),
+        )
+    }
     AppLinksEffect(viewModel = viewModel, appLinks = appLinks)
     // Asked as the app starts, without reading the pasteboard: the view model asks only once, and only on a first launch.
     LaunchedEffect(viewModel) { viewModel.firstRunController.offerClipboardLink(IosClipboardLinkReader) }

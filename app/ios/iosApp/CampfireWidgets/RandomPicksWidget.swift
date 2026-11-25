@@ -151,7 +151,7 @@ struct RandomPicksView: View {
                 // The draw of the whole count, cut to the rows that fit: a smaller widget shows the first of the same picks.
                 let capacity = family.songRowCapacity
                 WidgetSongRows(count: capacity, rows: draw(songs, count: min(entry.count, capacity)).map { song in
-                    WidgetSongRow(title: song.title, artist: song.artist, link: song.link)
+                    WidgetSongRow(title: song.title, artist: song.artist, cover: song.cover, link: song.link)
                 })
             }
         }

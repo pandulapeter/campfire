@@ -70,18 +70,22 @@
 
 ## Home screen widgets (`widget/`)
 
-- Glance, over the snapshot the composition hands over (`ui/widget/CLAUDE.md`): `WidgetSnapshotPublisher` writes
+- Glance, over the snapshot the composition hands over (`ui/widget/CLAUDE.md`): `WidgetFilesImpl` writes
   `widget/snapshot.json` (files directory; skipped when unchanged, written beside it and renamed over it) on a process
-  scope, then refreshes both widgets. The widgets read only that file (never Koin or the library) and call the common
-  decisions (`randomPicksContent`, `setlistContent`); no snapshot yet (the app never ran) says to open the app.
+  scope, then refreshes both widgets, and the cover thumbnails in `widget/covers/` (`WidgetCoverFiles`). The widgets
+  read only those files (never Koin or the library) and call the common decisions (`randomPicksContent`,
+  `setlistContent`); no snapshot yet (the app never ran) says to open the app.
 - **The file is read once per process, on IO** (`WidgetSnapshotFile.load` in `provideGlance`, then kept current by its
-  `write`): Glance composes on the main thread, once per responsive size.
+  `write`): Glance composes on the main thread, once per responsive size. The covers it names are decoded with it
+  (`RGB_565`), one `Bitmap` per cover kept across snapshots: a widget's views carry their bitmaps, the same one once,
+  within Android's limit on a widget's bitmap memory.
 - **A refresh moves `REFRESHED_AT` in each widget's Glance state before `update`**: a composition still alive is only
   recomposed by an update, and not at all for a state that did not change, so `rememberWidgetSnapshot` reads it, and
   the day is read again.
-- Both widgets list songs in one row (`WidgetSongRow`: title, artist, and in a setlist its number), spanning the
-  widget edge to edge so its touch feedback does: `widgetBackground` pads only above and below, and every other part
-  pads its own sides. The headers tell the widgets apart.
+- Both widgets list songs in one row (`WidgetSongRow`: title, artist, the cover where it has one, 36 dp, rounded from
+  Android 12, and in a setlist its number), spanning the widget edge to edge so its touch feedback does:
+  `widgetBackground` pads only above and below, and every other part pads its own sides. The headers tell the widgets
+  apart.
 - The Setlist's songs are a `LazyColumn` (scrolling, so any number; a plain container draws only its first ten
   children), each song opening the setlist at it.
 - Random picks: `SizeMode.Responsive`, one layout per row count (up to ten, the first of its draw that fit), and below
@@ -171,9 +175,9 @@ Play Store app only, read on a first launch (`presentation/src/androidMain/CLAUD
 
 `data_extraction_rules.xml` (API 31+) and `full_backup_content.xml` (API 28–30) **must say the same thing**: an
 allow-list of `library/songs/`, `library/setlists/`, and `preferences/preferences.json`. No `<exclude>`s (lint rejects
-one outside an included path), so the widgets' `widget/` stays out by not being listed. The 25 MB quota is all or
-nothing, which is why the songs' pictures (`library/files/`) stay out: a restored library shows their placeholders until
-sync or an import brings them back.
+one outside an included path), so the widgets' `widget/` (the snapshot and its covers) stays out by not being listed.
+The 25 MB quota is all or nothing, which is why the songs' pictures (`library/files/`) stay out: a restored library
+shows their placeholders until sync or an import brings them back.
 
 ## Build and resources
 

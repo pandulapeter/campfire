@@ -23,7 +23,7 @@ import java.io.IOException
 
 /**
  * `widget/snapshot.json` in the app's files directory: everything the widgets show, written by the app
- * ([WidgetSnapshotPublisher]) and read by the widgets alone, which never read the library. Outside the backup rules'
+ * ([WidgetFilesImpl]) and read by the widgets alone, which never read the library. Outside the backup rules'
  * allow-list, since it names songs and setlists and the app writes it again from the restored library.
  */
 internal object WidgetSnapshotFile {
@@ -35,10 +35,10 @@ internal object WidgetSnapshotFile {
     /** What the file holds, once [load]ed in this process, kept current by [write]. */
     val snapshot: StateFlow<WidgetSnapshot?> = _snapshot.asStateFlow()
 
-    /** Reads the file into [snapshot] unless this process already has, off the main thread. */
+    /** Reads the file into [snapshot], and the covers it names, unless this process already has, off the main thread. */
     suspend fun load(context: Context) = mutex.withLock {
         if (!isLoaded) {
-            _snapshot.value = withContext(Dispatchers.IO) { read(context) }
+            _snapshot.value = withContext(Dispatchers.IO) { read(context).also { WidgetCoverFiles.decode(context = context, snapshot = it) } }
             isLoaded = true
         }
     }
@@ -58,6 +58,7 @@ internal object WidgetSnapshotFile {
      */
     suspend fun write(context: Context, snapshot: WidgetSnapshot): Boolean = mutex.withLock {
         val isWritten = write(context = context, json = snapshot.encode())
+        WidgetCoverFiles.decode(context = context, snapshot = snapshot)
         _snapshot.value = snapshot
         isLoaded = true
         isWritten
@@ -77,8 +78,10 @@ internal object WidgetSnapshotFile {
         return true
     }
 
-    private fun file(context: Context) = File(File(context.filesDir, DIRECTORY_NAME), FILE_NAME)
+    private fun file(context: Context) = File(File(context.filesDir, WIDGET_DIRECTORY_NAME), FILE_NAME)
 
-    private const val DIRECTORY_NAME = "widget"
     private const val FILE_NAME = "snapshot.json"
 }
+
+/** The folder in the app's files directory that holds everything the widgets read. */
+internal const val WIDGET_DIRECTORY_NAME = "widget"

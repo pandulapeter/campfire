@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.widget
 
+import android.graphics.Bitmap
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -55,6 +56,7 @@ internal fun RandomPicksWidgetLayout(
     val shuffleDescription = snapshot?.strings?.drawNewPicks.takeIf { (content as? RandomPicksContent.Picks)?.canDrawAgain == true }
     val isMirrored = snapshot.isMirrored()
     val isCompact = RandomPicksWidgetMetrics.isCompact(height)
+    val covers = rememberWidgetCovers()
     Column(
         modifier = GlanceModifier
             .widgetBackground(
@@ -72,10 +74,10 @@ internal fun RandomPicksWidgetLayout(
         }
         when (content) {
             is RandomPicksContent.Picks -> if (isCompact) {
-                CompactPick(song = content.songs.first(), shuffleDescription = shuffleDescription, isMirrored = isMirrored)
+                CompactPick(song = content.songs.first(), cover = content.songs.first().cover?.let(covers::get), shuffleDescription = shuffleDescription, isMirrored = isMirrored)
             } else {
                 content.songs.take(RandomPicksWidgetMetrics.rowsFitting(height)).forEach { song ->
-                    WidgetSongRow(title = song.title, artist = song.artist, number = null, link = song.link, isMirrored = isMirrored)
+                    WidgetSongRow(title = song.title, artist = song.artist, cover = song.cover?.let(covers::get), number = null, link = song.link, isMirrored = isMirrored)
                 }
             }
             is RandomPicksContent.Message -> WidgetMessage(text = content.text)
@@ -84,10 +86,11 @@ internal fun RandomPicksWidgetLayout(
     }
 }
 
-/** The compact layout's one [song], and the button that draws again beside it where [shuffleDescription] is given. */
+/** The compact layout's one [song] with its [cover], and the button that draws again beside it where [shuffleDescription] is given. */
 @Composable
 private fun CompactPick(
     song: WidgetSnapshot.Song,
+    cover: Bitmap?,
     shuffleDescription: String?,
     isMirrored: Boolean,
 ) = Row(
@@ -99,6 +102,7 @@ private fun CompactPick(
         modifier = GlanceModifier.defaultWeight(),
         title = song.title,
         artist = song.artist,
+        cover = cover,
         number = null,
         link = song.link,
         isMirrored = isMirrored,

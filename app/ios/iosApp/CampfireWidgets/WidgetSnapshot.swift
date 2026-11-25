@@ -8,6 +8,7 @@
  * https://mozilla.org/MPL/2.0/.
  */
 import Foundation
+import UIKit
 import WidgetKit
 
 /// What the app writes for the widgets (`:presentation`'s `WidgetSnapshot`, the same keys), in the App Group's
@@ -37,6 +38,9 @@ struct WidgetSnapshot: Decodable {
         let tags: [String]?
         /// Its languages as lowercase ISO codes, empty where it names none; absent likewise.
         let languages: [String]?
+        /// The file name of its cover's thumbnail in `Widget/covers/` (`WidgetCover`), absent where it has none to show
+        /// or from a snapshot an app from before it wrote.
+        let cover: String?
     }
 
     /// A language of the library by its code, and its name in the app's language.
@@ -115,6 +119,16 @@ struct WidgetSnapshot: Decodable {
     /// A timeline's end when `load()` found nothing: soon, since the app reloads the widgets only when it writes a snapshot
     /// that differs from the file, and a file the widget could not read would otherwise leave it saying so for a day.
     static var retryPolicy: TimelineReloadPolicy { .after(Date().addingTimeInterval(15 * 60)) }
+}
+
+/// The thumbnails of the songs' covers, which the app writes beside the snapshot (`Widget/covers/`) before a snapshot
+/// names one: the extension cannot read the app's own copies.
+enum WidgetCover {
+    /// The thumbnail `name` names, nil for none or where its file is not there.
+    static func image(named name: String?) -> UIImage? {
+        guard let name, let folder = AppGroup.containerURL?.appendingPathComponent("Widget/covers", isDirectory: true) else { return nil }
+        return UIImage(contentsOfFile: folder.appendingPathComponent(name).path)
+    }
 }
 
 /// The App Group the app shares with its extensions, named by `CampfireAppGroup` in the `Info.plist`.

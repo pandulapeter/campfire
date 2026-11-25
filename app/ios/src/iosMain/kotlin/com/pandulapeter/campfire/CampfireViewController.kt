@@ -78,7 +78,7 @@ private val metronomeNotifier by lazy { IosMetronomeNotifier(KoinPlatform.getKoi
  * @param onKeyCommandsChanged Told the app's shortcuts for the Command-hold overlay whenever they change
  *   ([listedKeyCommands]), for the Swift controller around this one to list.
  * @param reloadWidgetTimelines Runs `WidgetCenter.shared.reloadAllTimelines()`, which only Swift can call, once a new
- *   widget snapshot has been written ([publishWidgetSnapshot]).
+ *   widget snapshot has been written ([IosWidgetFiles]).
  */
 @Suppress("unused", "FunctionName")
 fun CampfireViewController(
@@ -93,6 +93,7 @@ fun CampfireViewController(
     var controller: UIViewController? = null
     val filePicker = IosFilePicker { requireNotNull(controller) }
     val fileOpener = IosFileOpener { requireNotNull(controller) }
+    val widgetFiles = IosWidgetFiles(reloadTimelines = reloadWidgetTimelines)
     return ComposeUIViewController {
         CampfireIosApp(
             urlOpener = ::openUrl,
@@ -109,7 +110,7 @@ fun CampfireViewController(
             onAppIconChanged = ::applyAppIcon,
             onKeyCommandsChanged = { onKeyCommandsChanged(listedKeyCommands(it)) },
             onLauncherShortcutsChanged = ::applyQuickActions,
-            onWidgetSnapshotChanged = { publishWidgetSnapshot(snapshot = it, reloadTimelines = reloadWidgetTimelines) },
+            widgetFiles = widgetFiles,
         )
     }.also { controller = it }
 }

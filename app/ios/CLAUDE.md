@@ -118,12 +118,13 @@ extension (`iosApp/ShareExtension/`) and the widget extension (`iosApp/CampfireW
 
 - `CampfireWidgets` (iOS 17, the first with widget buttons and `AppIntentConfiguration`, so one code path; the app
   stays on 15.3): Random picks and Setlist in one `WidgetBundle`, what they show being `ui/widget/CLAUDE.md`'s. It links
-  no Kotlin and reads only `Widget/snapshot.json` in the App Group's container (`WidgetSnapshot.swift`, the same keys);
-  the next gig and relative day rules are written again in `SetlistWidget.swift`.
-- `IosWidgetSnapshot.kt` writes it atomically on one IO thread, skipping a snapshot equal to the file (every launch
-  hands over one; WidgetKit budgets reloads), its folder excluded from backup. **The reload seam**: WidgetKit has no
-  Objective-C API, so `CampfireViewController` takes `reloadWidgetTimelines`, which `ContentView.swift` passes as
-  `WidgetCenter.shared.reloadAllTimelines()`, called after each write.
+  no Kotlin and reads only `Widget/snapshot.json` in the App Group's container (`WidgetSnapshot.swift`, the same keys)
+  and the cover thumbnails it names in `Widget/covers/` (`WidgetCover`); the next gig and relative day rules are written
+  again in `SetlistWidget.swift`.
+- `IosWidgetFiles.kt` writes them atomically on one IO thread, in order, skipping a snapshot equal to the file (every
+  launch hands over one; WidgetKit budgets reloads), the `Widget/` folder excluded from backup. **The reload seam**:
+  WidgetKit has no Objective-C API, so `CampfireViewController` takes `reloadWidgetTimelines`, which `ContentView.swift`
+  passes as `WidgetCenter.shared.reloadAllTimelines()`, called after each write.
 - Random picks: 25 hourly entries, each drawn by the seed in the group's `UserDefaults` mixed with the hour (SplitMix64's
   finalizer, never added: an added hour slides the same draw along), ranking songs as `pickWidgetSongs` does, so a
   timeline rebuilt within the hour draws the same; Shuffle (`ShuffleIntent`) stores a new seed, shared by
@@ -134,7 +135,7 @@ extension (`iosApp/ShareExtension/`) and the widget extension (`iosApp/CampfireW
   Small (no Shuffle: its title needs the width), medium, and large: each family has a row capacity
   (`songRowCapacity`: 3, or 8 on large), a widget showing the first ones of its draw that fit, in slots of that
   capacity's height, so rows are packed alike in every size.
-  Both list songs in `WidgetSongRow` (`WidgetStyle.swift`), edge to edge: the widgets turn the
+  Both list songs in `WidgetSongRow` (`WidgetStyle.swift`, a 28 pt cover where the song has one), edge to edge: the widgets turn the
   content margins off (`contentMarginsDisabled`) and each part puts back the `widgetContentMargins` it needs; a
   setlist's numbers start at the header's edge, in a column as wide as the list's longest number. Setlist
   (medium and large like Random picks, small and the Lock Screen's its title and day only): an entry now and at each

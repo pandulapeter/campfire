@@ -562,7 +562,7 @@
             android:stopWithTask="false" />
 
         <!--
-          The home screen widgets, drawn by Glance from the snapshot the app writes (widget/WidgetSnapshotPublisher):
+          The home screen widgets, drawn by Glance from the snapshot the app writes (widget/WidgetFilesImpl):
           random picks, and a setlist. Both hear the app's update, which leaves them in their loading layout until drawn
           again; the setlist widget also hears the date, the clock, and the time zone change, since its relative day and
           its next gig follow today.

@@ -49,7 +49,7 @@ import com.pandulapeter.campfire.presentation.ui.theme.appIconThemeColor
 import com.pandulapeter.campfire.presentation.ui.platform.rememberAndroidFilePicker
 import com.pandulapeter.campfire.presentation.ui.shortcuts.LauncherShortcuts
 import com.pandulapeter.campfire.presentation.ui.shortcuts.LauncherShortcutsEffect
-import com.pandulapeter.campfire.presentation.ui.widget.WidgetSnapshot
+import com.pandulapeter.campfire.presentation.ui.widget.WidgetFiles
 import com.pandulapeter.campfire.presentation.ui.widget.WidgetSnapshotEffect
 import com.pandulapeter.campfire.presentation.ui.theme.isDarkTheme
 import kotlinx.coroutines.flow.Flow
@@ -57,6 +57,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
@@ -85,8 +86,8 @@ import org.koin.compose.viewmodel.koinViewModel
  *   activity to answer `onProvideKeyboardShortcuts` with ([SystemKeyboardShortcutsEffect]).
  * @param onLauncherShortcutsChanged Told the launcher shortcuts, in the app's language, whenever they change, for the
  *   activity to hand the launcher ([LauncherShortcutsEffect]).
- * @param onWidgetSnapshotChanged Told the home screen widgets' snapshot whenever it changes, for the activity to write
- *   where the widgets read it ([WidgetSnapshotEffect]).
+ * @param widgetFiles Where the home screen widgets read their snapshot and its covers, which the app writes whenever
+ *   what they show changes ([WidgetSnapshotEffect]); none writes nothing.
  */
 @Composable
 fun CampfireAndroidApp(
@@ -103,7 +104,7 @@ fun CampfireAndroidApp(
     onAppIconChanged: (UserPreferences.ThemeColor) -> Unit = {},
     onKeyboardShortcutsChanged: (List<KeyboardShortcutGroup>) -> Unit = {},
     onLauncherShortcutsChanged: (LauncherShortcuts) -> Unit = {},
-    onWidgetSnapshotChanged: (WidgetSnapshot) -> Unit = {},
+    widgetFiles: WidgetFiles? = null,
     setlistWidgetPinner: SetlistWidgetPinner? = null,
 ) {
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
@@ -120,11 +121,14 @@ fun CampfireAndroidApp(
     SyncNotificationPermissionEffect(isSyncConnected = isSyncConnected)
     SystemKeyboardShortcutsEffect(viewModel = viewModel, onChanged = onKeyboardShortcutsChanged)
     LauncherShortcutsEffect(preferencesController = viewModel.preferencesController, onChanged = onLauncherShortcutsChanged)
-    WidgetSnapshotEffect(
-        screenData = viewModel.libraryState.screenData,
-        preferencesController = viewModel.preferencesController,
-        onChanged = onWidgetSnapshotChanged,
-    )
+    if (widgetFiles != null) {
+        WidgetSnapshotEffect(
+            screenData = viewModel.libraryState.screenData,
+            preferencesController = viewModel.preferencesController,
+            files = widgetFiles,
+            getCoverArt = koinInject(),
+        )
+    }
     AppLinksEffect(viewModel = viewModel, appLinks = appLinks)
     val activity = LocalActivity.current as? ComponentActivity
     // Android clears the view model with every activity that is destroyed outside a configuration change, finishing

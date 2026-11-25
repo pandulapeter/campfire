@@ -9,28 +9,35 @@
  */
 package com.pandulapeter.campfire.widget
 
+import android.graphics.Bitmap
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
+import androidx.glance.Image
+import androidx.glance.ImageProvider
 import androidx.glance.action.clickable
+import androidx.glance.appwidget.cornerRadius
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Column
+import androidx.glance.layout.ContentScale
 import androidx.glance.layout.Row
 import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
 import androidx.glance.layout.padding
+import androidx.glance.layout.size
 import androidx.glance.layout.width
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 
 /**
- * A song both widgets list: its [title] and [artist] (none where blank), after its [number] in a setlist where there is
- * one, opening [link]. The row spans the widget from edge to edge, so that its touch feedback does too, and carries the
- * widget's side padding inside itself; where the widget [isMirrored], the number comes after the text. The numbers'
+ * A song both widgets list: its [title] and [artist] (none where blank), after its [cover] where it has one, as the songs
+ * list's rows have it (nothing in its place where it has none), and after its [number] in a setlist where there is one,
+ * opening [link]. The row spans the widget from edge to edge, so that its touch feedback does too, and carries the
+ * widget's side padding inside itself; where the widget [isMirrored], the number and the cover come after the text. The numbers'
  * column is as wide as [numberDigits] digits, the most a number of the list has, so that a list's numbers start where
  * the header's text does and its titles all start in one line.
  */
@@ -39,6 +46,7 @@ internal fun WidgetSongRow(
     modifier: GlanceModifier = GlanceModifier.fillMaxWidth(),
     title: String,
     artist: String,
+    cover: Bitmap?,
     number: Int?,
     link: String,
     isMirrored: Boolean,
@@ -54,6 +62,10 @@ internal fun WidgetSongRow(
     if (number != null && !isMirrored) {
         SongNumber(number = number, digits = numberDigits, hasArtist = hasArtist, isMirrored = false)
         Spacer(modifier = GlanceModifier.width(NUMBER_GAP.dp))
+    }
+    if (cover != null && !isMirrored) {
+        SongCover(cover)
+        Spacer(modifier = GlanceModifier.width(COVER_GAP.dp))
     }
     Column(modifier = GlanceModifier.defaultWeight()) {
         val textAlign = textAlignOf(isMirrored)
@@ -71,6 +83,10 @@ internal fun WidgetSongRow(
                 style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = ARTIST_SIZE.sp, textAlign = textAlign),
             )
         }
+    }
+    if (cover != null && isMirrored) {
+        Spacer(modifier = GlanceModifier.width(COVER_GAP.dp))
+        SongCover(cover)
     }
     if (number != null && isMirrored) {
         Spacer(modifier = GlanceModifier.width(NUMBER_GAP.dp))
@@ -107,8 +123,25 @@ private fun SongNumber(
     }
 }
 
+/**
+ * A song's cover, cropped to a square with the songs list's rounded corners (from Android 12; square before it, where a
+ * widget cannot clip). The cover is decoration beside the title, which says what the row is.
+ */
+@Composable
+private fun SongCover(cover: Bitmap) = Image(
+    modifier = GlanceModifier.size(COVER_SIZE.dp).cornerRadius(COVER_CORNER_RADIUS.dp),
+    provider = ImageProvider(cover),
+    contentDescription = null,
+    contentScale = ContentScale.Crop,
+)
+
 /** A digit's width with room to spare, so that a larger font size still fits it on one line. */
 private const val DIGIT_WIDTH = 11
 private const val NUMBER_GAP = 8
+
+/** A little smaller than the songs list's two-line cover, to leave the rows packed as they are. */
+private const val COVER_SIZE = 36
+private const val COVER_CORNER_RADIUS = 8
+private const val COVER_GAP = 12
 private const val TITLE_SIZE = 14
 private const val ARTIST_SIZE = 12

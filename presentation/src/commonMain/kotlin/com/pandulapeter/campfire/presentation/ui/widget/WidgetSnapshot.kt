@@ -47,7 +47,9 @@ data class WidgetSnapshot(
 
     /**
      * A song, with the app link ([link]) that opens its details screen, its [tags] as the file writes them, and its
-     * [languages] as lowercase ISO codes, empty where it names none.
+     * [languages] as lowercase ISO codes, empty where it names none. [cover] is the file name of its cover's thumbnail in
+     * the covers folder beside the snapshot ([widgetCoverName]), null where it has none to show: no cover, the Cover art
+     * switch off, or a cover that could not be had.
      */
     @Serializable
     data class Song(
@@ -57,6 +59,7 @@ data class WidgetSnapshot(
         val link: String,
         val tags: List<String> = emptyList(),
         val languages: List<String> = emptyList(),
+        val cover: String? = null,
     )
 
     /** A language of the library by its [code], and its [name] in the app's language. */

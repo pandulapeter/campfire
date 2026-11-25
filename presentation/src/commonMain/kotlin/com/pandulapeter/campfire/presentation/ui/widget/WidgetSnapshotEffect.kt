@@ -15,11 +15,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.song.SongLanguage
+import com.pandulapeter.campfire.domain.api.catalogue.GetCoverArtUseCase
 import com.pandulapeter.campfire.domain.api.library.ScreenData
 import com.pandulapeter.campfire.presentation.localization.AppLocale
 import com.pandulapeter.campfire.presentation.localization.currentLanguage
@@ -62,18 +62,19 @@ import kotlinx.datetime.atStartOfDayIn
 import org.jetbrains.compose.resources.PluralStringResource
 
 /**
- * Hands [onChanged] the home screen widgets' snapshot whenever what it holds changes: the library, the Songs and
- * Setlists switches, the app's language, or its theme. Only a library read whole counts, never a first read's batches or a failed
- * read standing in as empty, which would show the widgets a library shrinking and growing back. A change is handed over
- * once it has held for a moment, since a sync run or an import changes the library file by file; an unchanged snapshot is
- * not handed over again.
+ * Writes the home screen widgets' snapshot into [files] whenever what it holds changes: the library, the Songs and
+ * Setlists switches, the Cover art switch, the app's language, or its theme. Only a library read whole counts, never a
+ * first read's batches or a failed read standing in as empty, which would show the widgets a library shrinking and growing
+ * back. A change is handed over once it has held for a moment, since a sync run or an import changes the library file by
+ * file; an unchanged snapshot is not handed over again. Its songs' covers come through [getCoverArt] ([WidgetPublisher]).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun WidgetSnapshotEffect(
     screenData: StateFlow<DataState<ScreenData>>,
     preferencesController: PreferencesController,
-    onChanged: (WidgetSnapshot) -> Unit,
+    files: WidgetFiles,
+    getCoverArt: GetCoverArtUseCase,
 ) {
     val state by screenData.collectAsStateWithLifecycle()
     val userPreferences by preferencesController.userPreferences.collectAsStateWithLifecycle()
@@ -102,11 +103,18 @@ internal fun WidgetSnapshotEffect(
             languageName = { code -> if (code == SongLanguage.UNKNOWN) unknownLanguage else namedLanguageLabel(code = code, appLanguageCode = languageCode) },
         )
     }
-    val latestOnChanged by rememberUpdatedState(onChanged)
-    LaunchedEffect(snapshot) {
+    val coverAddresses = remember(library, preferences.isCoverArtEnabled) {
+        widgetCoverAddresses(songs = library.unfilteredSongs, isCoverArtEnabled = preferences.isCoverArtEnabled)
+    }
+    val publisher = remember(files, getCoverArt) {
+        WidgetPublisher(files = files, getCoverArt = getCoverArt::invoke, makeThumbnail = ::widgetCoverThumbnail)
+    }
+    // A newer snapshot cancels the covers still being made for the one before it: what was written stays, and the next
+    // publish names it.
+    LaunchedEffect(snapshot, coverAddresses) {
         delay(SETTLE_MILLISECONDS)
-        println("Widget snapshot published: ${snapshot.songs.size} songs, ${snapshot.setlists.size} setlists")
-        latestOnChanged(snapshot)
+        println("Widget snapshot published: ${snapshot.songs.size} songs, ${snapshot.setlists.size} setlists, ${coverAddresses.size} covers")
+        publisher.publish(snapshot = snapshot, coverAddresses = coverAddresses)
     }
 }
 

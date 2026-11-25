@@ -71,6 +71,7 @@ enum SetlistContent {
         let number: Int
         let title: String
         let artist: String
+        let cover: String?
         let link: String
     }
 
@@ -102,7 +103,7 @@ enum SetlistContent {
             songs: setlist.songFileNames.enumerated().compactMap { index, fileName in
                 // A snapshot from before the songs had links of their own opens the setlist at its first.
                 library[fileName].map { song in
-                    Song(number: index + 1, title: song.title, artist: song.artist, link: setlist.songLinks?[safe: index] ?? setlist.link)
+                    Song(number: index + 1, title: song.title, artist: song.artist, cover: song.cover, link: setlist.songLinks?[safe: index] ?? setlist.link)
                 }
             },
             link: setlist.link
@@ -194,7 +195,7 @@ struct SetlistWidgetView: View {
                         .padding(.leading, margins.leading)
                         .padding(.trailing, margins.trailing)
                     WidgetSongRows(count: capacity, rows: shown.map { song in
-                        WidgetSongRow(title: song.title, artist: song.artist, link: song.link, number: song.number, numberDigits: digits)
+                        WidgetSongRow(title: song.title, artist: song.artist, cover: song.cover, link: song.link, number: song.number, numberDigits: digits)
                     })
                 }
                 .padding(.top, margins.top)

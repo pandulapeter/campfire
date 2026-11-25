@@ -104,12 +104,15 @@ extension View {
     }
 }
 
-/// A song both widgets list: its title and artist, after its number in a setlist where it has one, opening `link`. Both
+/// A song both widgets list: its title and artist, after its cover where it has one, as the songs list's rows have it
+/// (nothing in its place where it has none), and after its number in a setlist where it has one, opening `link`. Both
 /// widgets turn the system's content margins off so that the row, and with it its pressed look, spans the widget from edge
 /// to edge; it puts the side margins back inside itself. It takes the height it is given, so a widget's rows share it.
 struct WidgetSongRow: View {
     let title: String
     let artist: String
+    /// The file name of its cover's thumbnail (`WidgetCover`).
+    var cover: String?
     let link: String
     var number: Int?
     /// The digits of the list's largest number: its column is that wide, so every title of the list starts in one line.
@@ -119,29 +122,27 @@ struct WidgetSongRow: View {
 
     var body: some View {
         Link(destination: appLink(link)) {
-            // On the title's baseline rather than centered on the two lines, so the number reads as the title's.
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
+            HStack(spacing: 0) {
                 if let number {
-                    // Starting where the header does, in a column as wide as the list's longest number, sized by hidden
-                    // zeros in the same font so the number keeps its baseline.
-                    ZStack(alignment: .leading) {
-                        Text(verbatim: String(repeating: "0", count: max(numberDigits, String(number).count))).hidden()
-                        Text(verbatim: String(number))
-                            .foregroundStyle(colors.accent)
-                            .widgetAccentable()
-                    }
-                    .font(InterFont.bold(14))
-                    .monospacedDigit()
+                    numberColumn(number)
+                        .padding(.trailing, 8)
+                }
+                if let image = WidgetCover.image(named: cover) {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 28, height: 28)
+                        .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                        .accessibilityHidden(true)
+                        .padding(.trailing, 10)
                 }
                 VStack(alignment: .leading, spacing: 1) {
                     Text(verbatim: title)
                         .font(InterFont.medium(14))
                         .lineLimit(1)
                     if !artist.isEmpty {
-                        Text(verbatim: artist)
-                            .font(InterFont.regular(12, relativeTo: .caption))
+                        artistLine(artist)
                             .foregroundStyle(colors.secondaryText)
-                            .lineLimit(1)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -151,6 +152,31 @@ struct WidgetSongRow: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .contentShape(Rectangle())
         }
+    }
+
+    /// The number, on the title's line rather than centered on the two lines, so it reads as the title's: the rows are
+    /// centered on the cover, so a hidden artist line under it keeps it as tall as the text beside it. It starts where the
+    /// header does, in a column as wide as the list's longest number, sized by hidden zeros in the same font.
+    private func numberColumn(_ number: Int) -> some View {
+        VStack(alignment: .leading, spacing: 1) {
+            ZStack(alignment: .leading) {
+                Text(verbatim: String(repeating: "0", count: max(numberDigits, String(number).count))).hidden()
+                Text(verbatim: String(number))
+                    .foregroundStyle(colors.accent)
+                    .widgetAccentable()
+            }
+            .font(InterFont.bold(14))
+            .monospacedDigit()
+            if !artist.isEmpty {
+                artistLine(" ").hidden()
+            }
+        }
+    }
+
+    private func artistLine(_ text: String) -> some View {
+        Text(verbatim: text)
+            .font(InterFont.regular(12, relativeTo: .caption))
+            .lineLimit(1)
     }
 }
 
