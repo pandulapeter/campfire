@@ -53,6 +53,27 @@ class NotationPlacementTest {
     }
 
     @Test
+    fun `a swing whose placements say what they were engraved for settles on the widest width that still fits`() {
+        val placement = NotationPlacement()
+        // The grid gives a tune engraved up to 470 units a column 500 units wide, and a wider one a column of 400.
+        fun placeEngraving(engraved: Int) = placement.place(first, widthPx = if (engraved <= 470) 1_000 else 800, engravedFor = engraved)
+        var width = placement.width()
+        val engraved = mutableListOf(width)
+        repeat(MAX_BOUNDARY_PROBES + 4) {
+            placeEngraving(width)
+            width = placement.width()
+            if (width != engraved.last()) engraved += width
+        }
+
+        assertEquals(listOf(300, 500, 400, 450, 475, 462, 468, 471, 468), engraved)
+        // A placement of a probe the layout has not yet replaced does not take the settled width down.
+        placement.place(first, widthPx = 800, engravedFor = 471)
+        assertEquals(468, placement.width())
+        placeEngraving(468)
+        assertEquals(468, placement.width())
+    }
+
+    @Test
     fun `a swing that passes a width twice settles on the narrowest it passed since`() {
         val placement = NotationPlacement()
         placement.width()

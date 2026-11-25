@@ -77,7 +77,7 @@ internal class SongNotations(
             minWidth = minWidth,
             isRerendered = abcTune in rendered.rerenderedTunes,
             reading = rendering.reading,
-            onPlaced = { widthPx -> placement?.place(abcTune, widthPx) },
+            onPlaced = { widthPx -> placement?.place(abcTune, widthPx, engravedFor = rendered.request?.width) },
         )
     }
 

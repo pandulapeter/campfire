@@ -22,7 +22,6 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.song_details_section_abc
 import com.pandulapeter.campfire.presentation.ui.platform.ImpersonatedPlatform
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.unclippedBounds
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.DOCK_PANEL_WIDTH
 import com.pandulapeter.campfire.screenshots.AppTestScope
 import com.pandulapeter.campfire.screenshots.TestWindow
 import com.pandulapeter.campfire.screenshots.runAppTest
@@ -46,9 +45,7 @@ internal class SheetMusicColumnTest {
     fun `a tune turned by column fills the strip's own columns at a larger text size`() = fillsItsColumn(fontScale = LARGER_TEXT)
 
     private fun fillsItsColumn(fontScale: Float) = runAppTest(
-        // A 1512 × 938 laptop's song area beside song details' side panel: the same strip, and the same columns, as the
-        // window gave the song before the panel took its width.
-        window = TestWindow(width = 1512.dp + DOCK_PANEL_WIDTH, height = 938.dp),
+        window = TestWindow(width = 1512.dp, height = 938.dp),
         songs = listOf(SONG_FILE),
         fontScale = fontScale,
         pageTurn = PageTurn.COLUMN,
