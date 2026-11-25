@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.CommentStyle
 import com.pandulapeter.campfire.presentation.ui.songView.model.RenderSection
 import com.pandulapeter.campfire.presentation.ui.songView.model.SectionPart
+import com.pandulapeter.campfire.presentation.ui.songView.model.SongScaleGroup
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -48,6 +49,34 @@ internal class DockStripScrollTest {
 
     @Test
     fun `a song playing none of the strip's chords heads no page`() = assertNull(firstChordFrom(listOf(verse("G")), 0, names))
+
+    @Test
+    fun `a page is in the group of the last section at or before its first`() {
+        val groups = listOf(scaleGroup(0, 1, 4), scaleGroup(2, 3), scaleGroup(6))
+        assertEquals(0, scaleGroupAt(groups, 0))
+        assertEquals(1, scaleGroupAt(groups, 3))
+        assertEquals(0, scaleGroupAt(groups, 5))
+        assertEquals(2, scaleGroupAt(groups, 9))
+    }
+
+    @Test
+    fun `a page before every group's sections is in the first group the song comes to`() =
+        assertEquals(1, scaleGroupAt(listOf(scaleGroup(5), scaleGroup(3)), 1))
+
+    @Test
+    fun `groups naming no section put a page in none`() = assertNull(scaleGroupAt(listOf(scaleGroup()), 0))
+
+    private fun scaleGroup(vararg sections: Int) = SongScaleGroup(
+        label = null,
+        rootName = "A",
+        scales = emptyList(),
+        exceptions = emptyList(),
+        joinsSeveral = false,
+        hasUnnamed = false,
+        opening = null,
+        isHome = false,
+        sections = sections.toList(),
+    )
 
     private fun verse(vararg chords: String) = RenderSection.Lines(
         header = "Verse",

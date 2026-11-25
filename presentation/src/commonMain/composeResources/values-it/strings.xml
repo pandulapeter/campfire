@@ -1238,6 +1238,7 @@
     <string name="tab_notice_hidden_instrument">Intavolatura per %1$s nascosta</string>
     <string name="song_details_chords">Accordi</string>
     <string name="song_details_dock_no_chords">Questa canzone non ha accordi</string>
+    <string name="song_details_dock_no_scales">Nessuna scala suggerita per questa canzone</string>
     <string name="song_details_dock_playing">Esecuzione</string>
     <plurals name="song_details_dock_too_many_chords">
         <item quantity="one">Più di %1$d accordo, troppi da mostrare qui</item>

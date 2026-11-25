@@ -1284,6 +1284,7 @@
     <string name="tab_notice_hidden_instrument">Tabulatură pentru %1$s ascunsă</string>
     <string name="song_details_chords">Acorduri</string>
     <string name="song_details_dock_no_chords">Acest cântec nu are acorduri</string>
+    <string name="song_details_dock_no_scales">Nicio sugestie de game pentru acest cântec</string>
     <string name="song_details_dock_playing">Interpretare</string>
     <plurals name="song_details_dock_too_many_chords">
         <item quantity="one">Peste %1$d acord, prea multe pentru a fi afișate aici</item>

@@ -13,7 +13,7 @@
 What left the song on song details: its first section (instrument pill, tuner, transposition, capo, tempo, Tap, time
 signature, metronome button), its Chords section, and its Scales section, which the song no longer starts with
 (`SongLyrics.showsPlayingSections`; the editor's preview and the PDF keep them). The plan it follows, and what is
-still to come (the tempo chip and sheet, the scale row), is `documentation/plans/song-details-dock.md`.
+still to come (the tempo chip and sheet), is `documentation/plans/song-details-dock.md`.
 
 ## Where it is
 
@@ -56,22 +56,29 @@ still to come (the tempo chip and sheet, the scale row), is `documentation/plans
   mode's chip opens nothing and has no chevron, and is left out where there is neither key nor capo; the instrument pill
   and the tuner then start the dock (`DockInstrumentTools`), as they do with the chords off, which takes the chip. An
   instrument without shapes keeps its pill there, since it is what brings the diagrams back.
-- **In one row** (a short window): the start, the click's controls or read only mode's line of them
-  (`DockClickControls`: tempo, Tap, time signature, metronome button), the chord chips (`DockChordChips`), the scale
-  chips (`DockScaleChips`). **In two**: the start, the click's controls, and the scale chips, then the diagrams
-  (`DockDiagramStrip`); without scale suggestions only the second, between the start and the click's controls. The
-  tempo chip (the plan's step 7) ends the diagrams' row in both: the stepper, Tap, and button would leave them a sliver. A chord chip or diagram
-  opens the chord's sheet where shapes may be picked (as the section's diagrams did), a scale chip its scale's sheet,
-  read only mode included.
+- **In one row** (a short window, or no diagrams): the start, then the chord chips (`DockChordChips`) and the scale
+  chips (`DockScaleChips`) scrolling, then the click's controls or read only mode's line of them (`DockClickControls`:
+  tempo, Tap, time signature, metronome button). **In two**: the start, the scale chips, and the click's controls, then
+  the diagrams (`DockDiagramStrip`); without scale suggestions only the second, between the start and the click's
+  controls. The start and the click's controls stand still (`DockScrollingRow`), and what scrolls between them fades
+  where it meets them. The tempo chip (the plan's step 7) ends the diagrams' row in both: the stepper, Tap, and button
+  would leave them a sliver. A chord chip or diagram opens the chord's sheet where shapes may be picked (as the
+  section's diagrams did), a scale chip its scale's sheet, read only mode included.
+- **The scale chips** are the Scales section's rows: the home group's untitled, then each group and each chord worth a
+  scale of its own under its title ("Over E7"). A song with none says so ("No scale suggestions for this song"), a
+  songbook and a song over `MAX_PLAYED_CHORDS` included, whose scales are never worked out: the row is the screen's.
 - **The diagram strip** (`DockDiagramStrip`) is the Chords section's cells (`rememberChordCells`): every chord once,
   first-played order, each key's group after a "Key: A♭" label where there are several, the degree or letters line
   over the names where they are on. The diagrams take what the row's height leaves the lines of text, at most the
   section's size (`dockDiagramSize`, tested), so the row stays the screen's; the keyboard's are wider. A changed shape
   crossfades. A song of no chords says so, a songbook (`hasTooManySongChords`) that it has too many. A cell opens the
   chord sheet as the section's did (not in performance mode, yes in an import preview).
-- **The strip scrolls itself only on a page turn**, never under a finger: to the first chord of the page the reader
-  is headed for (`SongStepper.headedSection`, `sectionAt`, `firstChordFrom`, tested; a key's first chord with its
-  label), each page's stepper handed to the dock by index (`SongDockState.steppers`). A strip swiped by hand stays
-  put until the next turn changes that chord.
-- Breadcrumbs (kinds only): `Dock: key chip`, `Dock: chord diagram`, `Dock: chord chip`, and the sheet's
+- **The strip and the scale row scroll themselves only on a page turn**, never under a finger (`ScrollToOnPageTurn`):
+  the strip to the first chord of the page the reader is headed for (`SongStepper.headedSection`, `sectionAt`,
+  `firstChordFrom`, tested; a key's first chord with its label), the scale row to that page's group (`scaleGroupAt`,
+  tested: the group of its last section at or before it, from `SongScaleGroup.sections`, which the model fills from the
+  blocks each section was made of), each page's stepper handed to the dock by index (`SongDockState.steppers`). A row
+  swiped by hand stays put until the next turn changes its target. A short window's row, whose chord chips come first,
+  does not scroll to a group.
+- Breadcrumbs (kinds only): `Dock: key chip`, `Dock: chord diagram`, `Dock: chord chip`, `Dock: scale chip`, and the sheet's
   `Playing sheet: transposition stepped` (`capo`, `reset`).

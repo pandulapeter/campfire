@@ -1240,6 +1240,7 @@
     <string name="tab_notice_hidden_instrument">Tablatura de %1$s oculta</string>
     <string name="song_details_chords">Acordes</string>
     <string name="song_details_dock_no_chords">Esta música não tem acordes</string>
+    <string name="song_details_dock_no_scales">Nenhuma sugestão de escalas para esta música</string>
     <string name="song_details_dock_playing">Execução</string>
     <plurals name="song_details_dock_too_many_chords">
         <item quantity="one">Mais de %1$d acorde, demais para mostrar aqui</item>

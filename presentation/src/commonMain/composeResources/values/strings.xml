@@ -1238,6 +1238,7 @@
     <string name="tab_notice_hidden_instrument">%1$s tab hidden</string>
     <string name="song_details_chords">Chords</string>
     <string name="song_details_dock_no_chords">No chords in this song</string>
+    <string name="song_details_dock_no_scales">No scale suggestions for this song</string>
     <string name="song_details_dock_playing">Playing</string>
     <plurals name="song_details_dock_too_many_chords">
         <item quantity="one">More than %1$d chord, too many to draw here</item>

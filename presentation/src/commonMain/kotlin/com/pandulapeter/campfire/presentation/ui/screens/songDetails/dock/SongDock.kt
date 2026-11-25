@@ -11,15 +11,11 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock
 
 import com.pandulapeter.campfire.presentation.ui.songView.rememberChordCells
 import androidx.compose.animation.Crossfade
-import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -43,7 +39,6 @@ import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.ui.chords.hasTooManySongChords
-import com.pandulapeter.campfire.presentation.ui.components.fadingHorizontalEdges
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.SongStepper
 
 /**
@@ -94,11 +89,11 @@ internal fun SongDock(
 
 /**
  * The dock's rows for one song's [content], laid out at the dock's full height whatever height it is animating through.
- * In [DockTier.CHORD_CHIPS], one row: what starts the dock ([DockStart]), the click's controls, the chord chips, and the
- * scale chips. Otherwise the diagrams have a row of their own ([DiagramRow]), under a row of the dock's start, the
- * click's controls, and the scale chips where there are scale suggestions, else starting with the dock's start itself
- * and ended by the click's controls.
- * The diagrams follow the page the reader is headed for, which the page's [stepper] says.
+ * In [DockTier.CHORD_CHIPS], or without the diagrams, one row: what starts the dock ([DockStart]), then the chord chips
+ * and the scale chips scrolling between it and the click's controls. Otherwise the diagrams have a row of their own,
+ * ended by the click's controls, under a row of the dock's start and the scale chips where there are scale
+ * suggestions, else starting with the dock's start itself. Whatever scrolls fades only where it meets what stands still.
+ * The diagrams and the scale chips follow the page the reader is headed for, which the page's [stepper] says.
  */
 @Composable
 private fun DockRowsOf(
@@ -117,43 +112,44 @@ private fun DockRowsOf(
     val cells = content?.let { rememberChordCells(it.model, it.chordDiagrams) }.orEmpty()
     val onChordClicked = content?.chordDiagrams?.onChordClicked
     val hasDiagramRow = rows.hasChordRow && layout.tier != DockTier.CHORD_CHIPS
-    val start = @Composable { if (content != null) DockStart(content = content, height = layout.rowHeight) }
+    val dockKey = remember(content?.playingControls, content?.model) { content?.let { dockKeyOf(it.playingControls, it.model) } }
+    val start = content?.takeIf { dockKey != null || it.hasInstrumentTools(keyOpensPlaying = dockKey?.opensPlaying == true) }?.let {
+        @Composable { DockStart(content = it, dockKey = dockKey, height = layout.rowHeight) }
+    }
+    val end = content?.takeIf { it.shouldShowTempo }?.let { @Composable { DockClickControls(it) } }
+    val headedSection by remember(stepper) { derivedStateOf { stepper?.headedSection } }
+    val scaleGroups = content?.model?.scaleGroups.orEmpty()
+    val headedGroup = remember(scaleGroups, headedSection) { headedSection?.let { scaleGroupAt(scaleGroups, it) } }
     if (!hasDiagramRow) {
-        DockRow(height = layout.rowHeight, horizontalPadding = horizontalPadding) {
-            start()
+        val rowScroll = rememberScrollState()
+        DockScrollingRow(height = layout.rowHeight, horizontalPadding = horizontalPadding, scrollState = rowScroll, start = start, end = end) {
             if (content != null) {
-                DockClickControls(content)
                 if (rows.hasChordRow) DockChordChips(cells = cells, onChordClicked = onChordClicked)
-                DockScaleChips(content)
+                // The chord chips before them would throw the groups' places off, and they are a short window's alone.
+                DockScaleChips(content = content, scrollState = rowScroll.takeUnless { rows.hasChordRow }, headedGroup = headedGroup)
             }
         }
     } else {
         if (rows.hasScaleRow) {
-            DockRow(height = layout.rowHeight, horizontalPadding = horizontalPadding) {
-                start()
-                if (content != null) {
-                    // Here rather than at the diagrams' end while they are the stepper, Tap, and button, which would
-                    // leave a phone's diagrams a sliver: the tempo chip that takes their place stands there.
-                    DockClickControls(content)
-                    DockScaleChips(content)
-                }
+            val scaleScroll = rememberScrollState()
+            // The stepper, Tap, and button stand here rather than at the diagrams' end, where they would leave a phone's
+            // diagrams a sliver.
+            DockScrollingRow(height = layout.rowHeight, horizontalPadding = horizontalPadding, scrollState = scaleScroll, start = start, end = end) {
+                if (content != null) DockScaleChips(content = content, scrollState = scaleScroll, headedGroup = headedGroup)
             }
         }
         val stripScroll = rememberScrollState()
-        DiagramRow(
+        DockScrollingRow(
             height = layout.diagramRowHeight,
             horizontalPadding = horizontalPadding,
             scrollState = stripScroll,
             start = start.takeUnless { rows.hasScaleRow },
-            end = { if (content != null) DockClickControls(content) },
-            hasEnd = !rows.hasScaleRow && content?.shouldShowTempo == true,
+            end = end.takeUnless { rows.hasScaleRow },
         ) {
             if (content != null) {
                 val model = content.model
                 val names = remember(cells) { cells.mapTo(mutableSetOf()) { it.name } }
-                val headedChord by remember(stepper, model, names) {
-                    derivedStateOf { stepper?.headedSection?.let { section -> firstChordFrom(model.sections, section, names) } }
-                }
+                val headedChord = remember(model, names, headedSection) { headedSection?.let { section -> firstChordFrom(model.sections, section, names) } }
                 DockDiagramStrip(
                     cells = cells,
                     isSmall = layout.tier == DockTier.SMALL_DIAGRAMS,
@@ -170,11 +166,10 @@ private fun DockRowsOf(
 
 /**
  * What starts the dock for one song's [content]: the instrument and the tuner where the key chip does not hold them
- * ([DockInstrumentTools]), then the key chip ([DockKeyChip]), [height] tall.
+ * ([DockInstrumentTools]), then the key chip ([DockKeyChip]) where there is a [dockKey], [height] tall.
  */
 @Composable
-private fun DockStart(content: DockContent, height: Dp) {
-    val dockKey = remember(content.playingControls, content.model) { dockKeyOf(content.playingControls, content.model) }
+private fun DockStart(content: DockContent, dockKey: DockKey?, height: Dp) {
     DockInstrumentTools(content = content, keyOpensPlaying = dockKey?.opensPlaying == true)
     if (dockKey != null) {
         DockKeyChip(
@@ -184,83 +179,6 @@ private fun DockStart(content: DockContent, height: Dp) {
         )
     }
 }
-
-/**
- * The row of the song's diagrams, [height] tall: [start] and [end] stand still at its two ends ([hasEnd] where [end]
- * draws anything), and the [strip] between them scrolls sideways ([scrollState]), fading out where it meets either of
- * them and running to the screen's edge, padded in from it, where nothing stands there.
- */
-@Composable
-private fun DiagramRow(
-    height: Dp,
-    horizontalPadding: PaddingValues,
-    scrollState: ScrollState,
-    start: (@Composable () -> Unit)?,
-    end: @Composable () -> Unit,
-    hasEnd: Boolean,
-    strip: @Composable RowScope.() -> Unit,
-) = Row(
-    modifier = Modifier
-        .fillMaxWidth()
-        .height(height),
-    verticalAlignment = Alignment.CenterVertically,
-) {
-    val layoutDirection = LocalLayoutDirection.current
-    val startPadding = horizontalPadding.calculateStartPadding(layoutDirection)
-    val endPadding = horizontalPadding.calculateEndPadding(layoutDirection)
-    if (start != null) {
-        Row(
-            modifier = Modifier.padding(start = startPadding),
-            horizontalArrangement = Arrangement.spacedBy(DOCK_ITEM_GAP),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            start()
-        }
-    }
-    Row(
-        modifier = Modifier
-            .weight(1f)
-            .fadingHorizontalEdges(
-                scrolledFromStart = if (start == null) null else { { scrollState.value } },
-                scrolledFromEnd = if (hasEnd) { { scrollState.maxValue - scrollState.value } } else null,
-                backgroundColor = MaterialTheme.colorScheme.surfaceContainer,
-            )
-            .horizontalScroll(scrollState)
-            .padding(start = if (start == null) startPadding else DOCK_ITEM_GAP, end = if (hasEnd) DOCK_ITEM_GAP else endPadding),
-        horizontalArrangement = Arrangement.spacedBy(DOCK_ITEM_GAP),
-        verticalAlignment = Alignment.CenterVertically,
-        content = strip,
-    )
-    if (hasEnd) {
-        Row(
-            modifier = Modifier.padding(end = endPadding),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            end()
-        }
-    }
-}
-
-/**
- * One row of the dock, [height] tall, scrolled sideways by hand only. It runs to the screen's edges, its content padded
- * in from them by [horizontalPadding], so it fades nowhere: a fade belongs only where a scrolling row meets something
- * that does not scroll.
- */
-@Composable
-private fun DockRow(
-    height: Dp,
-    horizontalPadding: PaddingValues,
-    content: @Composable RowScope.() -> Unit,
-) = Row(
-    modifier = Modifier
-        .fillMaxWidth()
-        .height(height)
-        .horizontalScroll(rememberScrollState())
-        .padding(horizontalPadding),
-    horizontalArrangement = Arrangement.spacedBy(DOCK_ITEM_GAP),
-    verticalAlignment = Alignment.CenterVertically,
-    content = content,
-)
 
 /**
  * Puts what it is applied to after the dock in the order a screen reader takes the screen in: the song's pages, which
@@ -276,7 +194,6 @@ private class LastDockLayout(var value: DockLayout? = null)
 
 private val DOCK_CORNER = 16.dp
 private val DOCK_HORIZONTAL_PADDING = 16.dp
-private val DOCK_ITEM_GAP = 8.dp
 
 /** After the app bar's, which is the screen's first, and before the song's pages, which come after it. */
 private const val DOCK_TRAVERSAL_INDEX = 1f

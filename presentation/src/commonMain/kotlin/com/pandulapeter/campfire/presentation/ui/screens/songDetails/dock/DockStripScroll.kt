@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock
 
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.presentation.ui.songView.model.RenderSection
+import com.pandulapeter.campfire.presentation.ui.songView.model.SongScaleGroup
 
 /**
  * The chord the dock's diagram strip scrolls to for a page whose first section is [section] (an index into
@@ -26,4 +27,15 @@ internal fun firstChordFrom(sections: List<RenderSection>, section: Int, names: 
     val from = section.coerceIn(0, sections.size)
     return (from until sections.size).firstNotNullOfOrNull { chordsOf(it).firstOrNull() }
         ?: (from - 1 downTo 0).firstNotNullOfOrNull { chordsOf(it).lastOrNull() }
+}
+
+/**
+ * The group of [groups] (by index) the dock's row of scales scrolls to for a page whose first section is [section]: the
+ * one the last of its sections at or before it is in, since a section no group is for (a comment, a picture) is still
+ * played in the group before it, else the first one the song comes to after it. Null where no group names a section.
+ */
+internal fun scaleGroupAt(groups: List<SongScaleGroup>, section: Int): Int? {
+    val before = groups.indices.mapNotNull { index -> groups[index].sections.filter { it <= section }.maxOrNull()?.let { index to it } }
+    if (before.isNotEmpty()) return before.maxBy { it.second }.first
+    return groups.indices.mapNotNull { index -> groups[index].sections.minOrNull()?.let { index to it } }.minByOrNull { it.second }?.first
 }

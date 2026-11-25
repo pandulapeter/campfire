@@ -55,12 +55,16 @@ import com.pandulapeter.campfire.presentation.ui.songLayout.withNumberedSections
  *
  * A picture ([ChordProBlock.Image]) is a unit of its own where it stands, cutting the section it is written in (the
  * rest of it is headed by its fold toggle alone, as a recall's cut is), and is drawn at the size [imageSizes] read it as.
+ *
+ * [sectionBlocks], where given, is handed one range per section returned: the indices of the song's blocks the section
+ * was made from (with whatever was joined to them), which is how a section is told which group of scales it is in.
  */
 internal fun ChordProSong.toRenderSections(
     shouldShowChords: Boolean,
     defaultLabels: DefaultSectionLabels,
     showsTiming: Boolean,
     imageSizes: Map<String, SongImageSize> = emptyMap(),
+    sectionBlocks: MutableList<IntRange>? = null,
 ): List<RenderSection> {
     val sections = mutableListOf<RenderSection>()
     // The rest of a section a change cut is folded under a key of the section it continues, so that switching the
@@ -104,7 +108,9 @@ internal fun ChordProSong.toRenderSections(
     val groups = blocks.withNumberedSections(defaultLabels).joinCutSections(joinsTimings = !showsTiming)
     // The key change each group starts under, which moves the ABC tunes in it as it moves the chords.
     val startOffsets = groupStartOffsetsOf(groups)
+    var groupStart = 0
     groups.forEachIndexed { groupIndex, pieces ->
+        val sectionCount = sections.size
         val block = pieces.firstSection()
         val continuesAfterTiming = isAfterTiming && block is ChordProBlock.Section && block.isContinuation
         isAfterTiming = block is ChordProBlock.Timing || (isAfterTiming && block !is ChordProBlock.Section)
@@ -157,6 +163,8 @@ internal fun ChordProSong.toRenderSections(
                 startOffset = startOffsets[groupIndex],
             )
         }
+        sectionBlocks?.let { ranges -> repeat(sections.size - sectionCount) { ranges += groupStart until groupStart + pieces.size } }
+        groupStart += pieces.size
     }
     return sections
 }

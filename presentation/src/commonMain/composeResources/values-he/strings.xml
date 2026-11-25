@@ -1281,6 +1281,7 @@
     <string name="tab_notice_hidden_instrument">טאב ל־%1$s מוסתר</string>
     <string name="song_details_chords">אקורדים</string>
     <string name="song_details_dock_no_chords">אין אקורדים בשיר הזה</string>
+    <string name="song_details_dock_no_scales">אין הצעות לסולמות לשיר הזה</string>
     <string name="song_details_dock_playing">נגינה</string>
     <plurals name="song_details_dock_too_many_chords">
         <item quantity="one">יותר מאקורד אחד, יותר מדי כדי להציג כאן</item>

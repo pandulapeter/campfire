@@ -156,7 +156,10 @@ internal fun prepareSongLyrics(
     notationChords: NotationChordSpelling = NotationChordSpelling.AS_WRITTEN,
     isCapoShown: Boolean = true,
     imageSizes: Map<String, SongImageSize> = emptyMap(),
-) = LayoutBudget.fit(song.toRenderSections(shouldShowChords, labels, showsTiming, imageSizes)).let { (sections, isCut) ->
+): SongLyricsModel {
+    val sectionBlocks = mutableListOf<IntRange>()
+    val (fitted, isCut) = LayoutBudget.fit(song.toRenderSections(shouldShowChords, labels, showsTiming, imageSizes, sectionBlocks))
+    val sections = fitted.withoutEmptyTimings()
     val collected = if (shouldShowChords && chordTuning != null) {
         songChordsOf(standardSong, notation, chordTuning, searchesShapes = searchesShapes, capo = shapeCapo, inferredKey = inferredKey)
     } else {
@@ -170,9 +173,9 @@ internal fun prepareSongLyrics(
     val keys = if (collected.isNotEmpty()) chordKeysOf(standardSong, analysis, isSongbook) else null
     val grouped = collected.groupedByKey(keys, notation, nameCapo)
     val chords = (if (degreesShown) grouped.withDegrees(keys, notation) else grouped).namedAsShapes(namedSong, notation, nameCapo, namedInferredKey)
-    SongLyricsModel(
+    return SongLyricsModel(
         song = song,
-        sections = sections.withoutEmptyTimings(),
+        sections = sections,
         isCut = isCut,
         shouldShowChords = shouldShowChords,
         notation = notation,
@@ -191,11 +194,22 @@ internal fun prepareSongLyrics(
             namedSong = namedSong,
             nameCapo = nameCapo,
             namedInferredKey = namedInferredKey,
+            // The sections are the shown song's and the groups the standard one's, the same blocks written another way.
+            sectionBlocks = if (song.blocks.size == standardSong.blocks.size) shownSectionBlocks(fitted, sections, sectionBlocks) else emptyList(),
         ) else emptyList(),
         notationChords = notationChords,
         shapesKey = shapesKey,
         isCapoShown = isCapoShown,
     )
+}
+
+/**
+ * The [ranges] of blocks each of [shown] was made from, [shown] being [sections] (whose [ranges] they are, one each) with
+ * some left out ([withoutEmptyTimings]).
+ */
+private fun shownSectionBlocks(sections: List<RenderSection>, shown: List<RenderSection>, ranges: List<IntRange>): List<IntRange> {
+    var next = 0
+    return sections.indices.mapNotNull { index -> ranges[index].takeIf { shown.getOrNull(next) === sections[index] }?.also { next++ } }
 }
 
 /**

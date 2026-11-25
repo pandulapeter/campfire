@@ -39,6 +39,8 @@ import com.pandulapeter.campfire.presentation.ui.songLayout.withNumberedSections
  * @property scales The group's chips; none for the row of the chorded sections no group holds, which says so instead.
  * @property isHome Whether the group is what most of the song is played over, which no title names: the rows after it
  *   are its moments. False for a home named by its sections, where a row of sections no group holds follows it.
+ * @property sections The indices of the page's sections the group is for, which the dock's row of scales scrolls to the
+ *   group of the page being read by; empty where the page's sections were not given.
  */
 @Immutable
 internal data class SongScaleGroup(
@@ -50,6 +52,7 @@ internal data class SongScaleGroup(
     val hasUnnamed: Boolean,
     val opening: String?,
     val isHome: Boolean,
+    val sections: List<Int> = emptyList(),
 )
 
 /**
@@ -70,6 +73,7 @@ internal data class SongScaleGroup(
  * names no key. Where the page names the shapes fingered above a capo of [nameCapo] frets, a chord is named as
  * [namedSong] (the same song moved down by [nameCapo]) writes it, a numbering counted from [namedInferredKey], while the
  * scales stay the ones that sound, since a scale is played by ear and by position rather than read off a shape.
+ * [sectionBlocks] are the blocks each of the page's sections was made from, see [SongScaleGroup.sections].
  */
 internal fun songScaleGroupsOf(
     song: ChordProSong,
@@ -80,10 +84,15 @@ internal fun songScaleGroupsOf(
     namedSong: ChordProSong = song,
     nameCapo: Int = 0,
     namedInferredKey: String? = inferredKey,
+    sectionBlocks: List<IntRange> = emptyList(),
 ): List<SongScaleGroup> {
     val numbered = analysis.numbered
     val groups = analysis.groups
     if (groups.isEmpty()) return emptyList()
+    fun sectionsOf(blocks: List<ChordProBlock>): List<Int> {
+        val indices = blocks.map { block -> numbered.indexOfFirst { it === block } }
+        return sectionBlocks.indices.filter { section -> indices.any { it in sectionBlocks[section] } }
+    }
     val shownName = shownChordNames(song, notation, inferredKey, namedSong, nameCapo, namedInferredKey)
     val exceptions = groups.map { group ->
         group.exceptions.map { exception ->
@@ -109,6 +118,7 @@ internal fun songScaleGroupsOf(
         hasUnnamed = false,
         opening = null,
         isHome = groups[index].isHome,
+        sections = sectionsOf(groups[index].blocks),
     )
     if (groups.size == 1 && missing.isEmpty()) return listOf(untitled(0))
     val played = numbered.filter(SongScaleGroups::playsChords).mapNotNull { block -> block.headingOf(labels)?.let { block to it } }
@@ -136,6 +146,7 @@ internal fun songScaleGroupsOf(
             hasUnnamed = names.isNotEmpty() && headers.any { it.isEmpty() },
             opening = if (names.isEmpty() && (headless > 1 || isMissing)) blocks.firstOrNull()?.opening() else null,
             isHome = false,
+            sections = sectionsOf(blocks),
         )
     }
     val rows = groups.mapIndexed { index, group ->

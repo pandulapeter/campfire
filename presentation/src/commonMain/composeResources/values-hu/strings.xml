@@ -1237,6 +1237,7 @@
     <string name="tab_notice_hidden_instrument">%1$s tabulatúra elrejtve</string>
     <string name="song_details_chords">Akkordok</string>
     <string name="song_details_dock_no_chords">Ebben a dalban nincsenek akkordok</string>
+    <string name="song_details_dock_no_scales">Ehhez a dalhoz nincsenek skálajavaslatok</string>
     <string name="song_details_dock_playing">Játék</string>
     <plurals name="song_details_dock_too_many_chords">
         <item quantity="one">Több mint %1$d akkord, túl sok ahhoz, hogy itt megjelenjen</item>

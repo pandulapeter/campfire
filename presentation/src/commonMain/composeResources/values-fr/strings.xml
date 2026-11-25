@@ -1243,6 +1243,7 @@
     <string name="tab_notice_hidden_instrument">Tablature pour %1$s masquée</string>
     <string name="song_details_chords">Accords</string>
     <string name="song_details_dock_no_chords">Cette chanson n\'a pas d\'accords</string>
+    <string name="song_details_dock_no_scales">Aucune suggestion de gammes pour cette chanson</string>
     <string name="song_details_dock_playing">Jeu</string>
     <plurals name="song_details_dock_too_many_chords">
         <item quantity="one">Plus de %1$d accord, trop pour les afficher ici</item>

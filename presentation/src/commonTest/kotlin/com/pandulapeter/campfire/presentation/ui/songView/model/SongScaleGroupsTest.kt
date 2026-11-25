@@ -68,6 +68,14 @@ class SongScaleGroupsTest {
     }
 
     @Test
+    fun `each group knows the sections of the page it is for - a comment between them in none`() {
+        val song = ChordProParser.parse("{key: C}\n" + verse + "{comment: Slowly}\n" + chorus + modulated + verse)
+        val model = prepareSongLyrics(song = song, shouldShowChords = true, labels = labels, suggestsScales = true)
+        assertEquals(5, model.sections.size)
+        assertEquals(listOf(listOf(0, 2, 4), listOf(3)), model.scaleGroups.map { it.sections })
+    }
+
+    @Test
     fun `a kind held whole by a group is named once and the rest by their own headings`() {
         val groups = groups("{key: C}\n" + verse + chorus + modulated + verse + elsewhere)
         assertEquals(listOf("Verse, Chorus", "Bridge", "Solo", "Outro"), groups.map { it.label })

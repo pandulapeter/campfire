@@ -23,23 +23,19 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.localization.pluralTextResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
@@ -99,7 +95,7 @@ internal fun DockDiagramStrip(
     val density = LocalDensity.current
     val glossHeight = if (hasGlosses) with(density) { glossStyle.lineHeight.toDp() } + CELL_LINE_GAP else 0.dp
     val diagramHeight = rowHeight - with(density) { nameStyle.lineHeight.toDp() } - CELL_LINE_GAP - glossHeight
-    val positions = remember(cells) { StripPositions() }
+    val positions = remember(cells) { DockRowPositions() }
     cells.forEachIndexed { index, cell ->
         val keyName = cell.keyName
         if (keyName != null && (index == 0 || cells[index - 1].keyName != keyName)) {
@@ -122,16 +118,11 @@ internal fun DockDiagramStrip(
             )
         }
     }
-    val layoutDirection = LocalLayoutDirection.current
-    LaunchedEffect(headedChord, scrollState, positions) {
-        val chord = headedChord ?: return@LaunchedEffect
-        // Placed by the next frame, a page with a strip new to it included.
-        withFrameNanos {}
-        if (scrollState.isScrollInProgress) return@LaunchedEffect
-        // A key's first chord is shown with the label naming its key.
-        val shown = cells.firstOrNull { it.name == chord }?.keyName?.takeIf { key -> cells.first { it.keyName == key }.name == chord }?.let(::keyLabelId) ?: chord
-        positions.scrollOffsetOf(shown, layoutDirection)?.let { scrollState.animateScrollTo(it.coerceIn(0, scrollState.maxValue)) }
+    // A key's first chord is shown with the label naming its key.
+    val shown = headedChord?.let { chord ->
+        cells.firstOrNull { it.name == chord }?.keyName?.takeIf { key -> cells.first { it.keyName == key }.name == chord }?.let(::keyLabelId) ?: chord
     }
+    ScrollToOnPageTurn(id = shown, scrollState = scrollState, positions = positions)
 }
 
 /** One chord of [DockDiagramStrip]: its gloss (or the room for one), its name, and its diagram, crossfading as its shape changes. */
@@ -200,25 +191,6 @@ internal fun dockDiagramSize(isFretted: Boolean, maxHeight: Dp): DpSize {
     val full = if (isFretted) DpSize(FRETTED_WIDTH, FRETTED_HEIGHT) else DpSize(KEYBOARD_WIDTH, KEYBOARD_HEIGHT)
     val height = maxHeight.coerceIn(MIN_DIAGRAM_HEIGHT, full.height)
     return DpSize(full.width * (height / full.height), height)
-}
-
-/** Where the strip placed each chord and key label, by its name or [keyLabelId]. Not a state: read only after placing. */
-private class StripPositions {
-    private val starts = mutableMapOf<String, Pair<Float, Int>>()
-
-    fun record(id: String, x: Float, width: Int) {
-        starts[id] = x to width
-    }
-
-    /** How far the strip scrolls to bring [id] to where its first item rests, its start being the right in [layoutDirection] Rtl. */
-    fun scrollOffsetOf(id: String, layoutDirection: LayoutDirection): Int? {
-        val (x, width) = starts[id] ?: return null
-        return if (layoutDirection == LayoutDirection.Rtl) {
-            (starts.values.maxOf { (start, size) -> start + size } - (x + width)).toInt()
-        } else {
-            (x - starts.values.minOf { it.first }).toInt()
-        }
-    }
 }
 
 private fun keyLabelId(keyName: String) = "key:$keyName"
