@@ -78,6 +78,9 @@ internal fun DockRoundPlayStop(
     }
 }
 
+/** The tall tempo chip's round play and stop button. */
+private val DOCK_ROUND_BUTTON_SIZE = 44.dp
+
 private val PLAY_STOP_PADDING = 8.dp
 private val ROUND_PLAY_STOP_MARK_SIZE = 20.dp
 private val PLAY_STOP_SIZE = 18.dp

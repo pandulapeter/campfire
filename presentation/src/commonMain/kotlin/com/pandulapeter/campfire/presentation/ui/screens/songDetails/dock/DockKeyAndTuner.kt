@@ -75,7 +75,10 @@ private fun DockTunerPill(
 ) = DockControlPill(
     modifier = modifier.height(height),
     onClickLabel = stringResource(Res.string.song_details_dock_open_tuner),
-    onClick = onClick,
+    onClick = {
+        println("Dock: tuner pill")
+        onClick()
+    },
 ) {
     val tuning = chordDiagrams.instrumentTuning
     val label = when {

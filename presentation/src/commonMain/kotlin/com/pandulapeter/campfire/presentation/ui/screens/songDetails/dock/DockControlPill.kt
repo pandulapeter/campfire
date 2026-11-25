@@ -54,12 +54,3 @@ internal fun DockControlPill(
         }
     }
 }
-
-/** The corners of the diagram row's tall tempo chip, which a pill's would make round. */
-internal val DOCK_TALL_CORNER = 16.dp
-
-/** The tall tempo chip's round play and stop button. */
-internal val DOCK_ROUND_BUTTON_SIZE = 44.dp
-
-/** Keeps a tall chip's round button as far from its end as from its top and bottom in a row of small diagrams. */
-internal val TALL_BUTTON_PADDING = 10.dp

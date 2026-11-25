@@ -45,7 +45,7 @@ import com.pandulapeter.campfire.presentation.ui.components.fadingOverNavigation
  * switches between the panel and the rows under the song, its content laid out at its full width all the while, so that
  * it slides rather than reflows. Its contents are the song's that the pager is on or heading for ([targetPage]),
  * crossfading as a page turns: under an import preview's [card], the controls stay put ([DockPanelControls]) and the
- * scale chips and diagrams scroll under them where the window is too short for them ([DockPanelRows]), fading out under
+ * diagrams scroll under them where the window is too short for them ([DockPanelRows]), fading out under
  * the controls, and at the bottom only over the window's bottom inset, which they scroll on under and are padded by;
  * [lastRow] is a setlist's pager bar, which ends the panel below what scrolls. Read by screen readers
  * after the app bar and before the song, as the rows under the song are.
@@ -106,17 +106,18 @@ internal fun DockSidePanel(
                     .verticalScroll(scrollState)
                     .padding(end = endInset, bottom = bottomInset),
             ) {
-                Crossfade(targetState = targetPage) { page ->
-                    DockPanelRows(
-                        // As far from the controls and the panel's end as the rows under the song are from each other
-                        // and from their surface's edge, and as the panel's sides are (DOCK_PANEL_PADDING).
-                        modifier = Modifier.padding(top = DOCK_ROW_GAP, bottom = DOCK_VERTICAL_PADDING),
-                        content = dock.contents[page],
-                        stepper = dock.steppers[page],
-                        scrollState = scrollState,
-                        rows = dock.rows,
-                        layout = layout,
-                    )
+                if (dock.rows.hasChordRow) {
+                    Crossfade(targetState = targetPage) { page ->
+                        DockPanelRows(
+                            // As far from the controls and the panel's end as the rows under the song are from each
+                            // other and from their surface's edge, and as the panel's sides are (DOCK_PANEL_PADDING).
+                            modifier = Modifier.padding(top = DOCK_ROW_GAP, bottom = DOCK_VERTICAL_PADDING),
+                            content = dock.contents[page],
+                            stepper = dock.steppers[page],
+                            scrollState = scrollState,
+                            layout = layout,
+                        )
+                    }
                 }
             }
             lastRow?.invoke()

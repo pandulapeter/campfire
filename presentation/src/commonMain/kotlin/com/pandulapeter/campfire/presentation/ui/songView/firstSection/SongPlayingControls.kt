@@ -31,11 +31,6 @@ internal class SongPlayingControls(
     val capo: SongCapoControl?,
     /** Null with the metronome switched off. */
     val tempo: SongTempoControl?,
-    /**
-     * The time signature the click counts the bar by, as the file writes it. Null where it is 4/4, as the song lists leave
-     * it out, and with the metronome switched off, since the bar it counts is the click's.
-     */
-    val timeSignature: String?,
     /** Opens the Playing sheet from the dock's key chip, which sets the key and the capo there; null in the sheet itself. */
     val onPlayingClicked: (() -> Unit)? = null,
 )

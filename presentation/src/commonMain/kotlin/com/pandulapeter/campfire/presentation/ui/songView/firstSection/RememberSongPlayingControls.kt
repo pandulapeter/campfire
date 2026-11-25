@@ -16,12 +16,10 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
-import com.pandulapeter.campfire.metronome.api.model.TimeSignature
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.playing.PlayingOverrides
 import com.pandulapeter.campfire.presentation.ui.rendering.SongRenderer
 import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
-import com.pandulapeter.campfire.presentation.mapper.timeSignatureOrDefault
 import com.pandulapeter.campfire.presentation.ui.playing.SongPlayback
 import com.pandulapeter.campfire.presentation.ui.playing.isCapoShownFor
 import com.pandulapeter.campfire.presentation.ui.playing.nameCapoFor
@@ -41,7 +39,7 @@ import com.pandulapeter.campfire.presentation.ui.playing.wrapTransposition
  * @param userPreferences The reader's, which say whether the chords, and the key the transposition reads, are named by
  *   the shapes fingered above the capo or by what sounds (`SongPlayback.nameCapoFor`).
  * @param shouldShowChords False with the chords switched off, which takes the transposition and the capo with them.
- * @param shouldShowTempo False with the metronome switched off, which takes the tempo and the time signature with it.
+ * @param shouldShowTempo False with the metronome switched off, which takes the tempo with it.
  * @param inferredKey The key the song's chords were found in, see `InferredSongKeys`, for a file that names none.
  * @param onPlayingClicked See [SongPlayingControls.onPlayingClicked].
  * @return Null where both are switched off, which leaves the song nothing to set.
@@ -78,9 +76,6 @@ internal fun rememberSongPlayingControls(
             transpositionValue(transposition, shownKey)
         }
     }
-    // Left out where it is 4/4, as the song lists leave it out: nearly every song is, and it is what the click counts
-    // where the file names none.
-    val timeSignature = song.timeSignatureOrDefault.takeUnless { it == TimeSignature.COMMON_TIME }?.toString()
     val fileName = song.fileName
     return remember(
         overrides,
@@ -95,7 +90,6 @@ internal fun rememberSongPlayingControls(
         key,
         capo,
         tempo,
-        timeSignature,
         song,
         onPlayingClicked,
     ) {
@@ -132,7 +126,6 @@ internal fun rememberSongPlayingControls(
             } else {
                 null
             },
-            timeSignature = timeSignature?.takeIf { shouldShowTempo },
             onPlayingClicked = onPlayingClicked,
         )
     }

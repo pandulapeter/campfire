@@ -67,7 +67,6 @@ internal class DockKeyTest {
         key = SongKeyControl(transposition = transposition, isDefault = transposition == 0, key = key, labels = emptyList(), onStep = {}, onReset = {}),
         capo = SongCapoControl(capo = EffectiveCapo(fret = capo, songFret = 0), namesShapes = false, onStep = {}, onReset = {}),
         tempo = null,
-        timeSignature = null,
         onPlayingClicked = {},
     )
 }

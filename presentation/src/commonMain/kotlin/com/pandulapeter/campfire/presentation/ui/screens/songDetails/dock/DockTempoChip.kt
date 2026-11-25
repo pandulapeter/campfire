@@ -196,6 +196,12 @@ private val BEATS_WIDTH = 40.dp
 private val BEAT_HEIGHT = 16.dp
 private val BEAT_GAP = 2.dp
 
+/** The corners of the diagram row's tall tempo chip, which a pill's would make round. */
+private val DOCK_TALL_CORNER = 16.dp
+
+/** Keeps a tall chip's round button as far from its end as from its top and bottom in a row of small diagrams. */
+private val TALL_BUTTON_PADDING = 10.dp
+
 private val TALL_GAP = 6.dp
 private val TALL_BEATS_WIDTH = 48.dp
 private val TALL_BEAT_HEIGHT = 12.dp
