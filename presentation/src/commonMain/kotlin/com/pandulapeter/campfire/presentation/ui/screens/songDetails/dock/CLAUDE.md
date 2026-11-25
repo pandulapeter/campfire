@@ -60,7 +60,9 @@ app bar's metronome panel.
   surface's top and, at a window's edge with no bottom inset, its bottom (`DOCK_VERTICAL_PADDING`); over an inset (a
   navigation bar) half that, the inset parting them from the edge (`dockBottomPaddingOf`).
 - **The panel's controls stay put** (`DockPanelControls`): the key chip over the tuner's pill naming the tuning, as in
-  the diagram row, then the tempo chip, all three a row tall and stretched to the panel's width. **Under them scroll** (`DockPanelRows`) the diagrams in a grid,
+  the diagram row, then the tempo chip, all three a row tall and stretched to the panel's width; in read only mode the
+  key chip, then the tuner's pill (never the round button the row under the song has) and the instrument pill, the
+  same column. **Under them scroll** (`DockPanelRows`) the diagrams in a grid,
   fading under the controls and, only over a bottom inset, at the bottom, padded by the inset.
 - **Beside the panel the scale suggestions are one row under the song** (`SongDockState.rowsUnder`), the rows' own
   scale row, over the bottom inset, its corner square where it meets the panel and fading out under it while there

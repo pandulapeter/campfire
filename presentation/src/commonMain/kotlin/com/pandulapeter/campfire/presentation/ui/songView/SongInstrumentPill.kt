@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.songView
 import com.pandulapeter.campfire.presentation.ui.songView.model.ChordDiagrams
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import com.pandulapeter.campfire.presentation.ui.instrument.InstrumentPill
 
@@ -24,12 +25,14 @@ import com.pandulapeter.campfire.presentation.ui.instrument.InstrumentPill
  */
 @Composable
 internal fun SongInstrumentPill(
+    modifier: Modifier = Modifier,
     chordDiagrams: ChordDiagrams,
     headerStyle: TextStyle,
     tuningVisibility: MutableTransitionState<Boolean>,
     onInstrumentClicked: () -> Unit,
     onTuningClicked: () -> Unit,
 ) = InstrumentPill(
+    modifier = modifier,
     instrument = chordDiagrams.instrument,
     tuning = chordDiagrams.instrumentTuning,
     notation = chordDiagrams.notation,

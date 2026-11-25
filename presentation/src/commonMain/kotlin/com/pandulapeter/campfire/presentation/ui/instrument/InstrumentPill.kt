@@ -198,7 +198,8 @@ private fun InstrumentPillHalves(
  * before the instrument's and is never left no room at all. The tuning half is measured at its animated width, so while
  * it expands the instrument gives up only what it actually takes. Both halves are measured from no minimum width, since
  * the `Surface` hands its own minimums on to its content, and at their natural widths where the width is unbounded,
- * which is also how a parent's intrinsic queries are answered (the sum of the halves', as a `Row` gives).
+ * which is also how a parent's intrinsic queries are answered (the sum of the halves', as a `Row` gives). A pill made
+ * wider than its halves centres them.
  */
 private val InstrumentPillMeasurePolicy = MeasurePolicy { measurables, constraints ->
     val halfConstraints = constraints.copy(minWidth = 0)
@@ -215,11 +216,14 @@ private val InstrumentPillMeasurePolicy = MeasurePolicy { measurables, constrain
         tuningPlaceable = tuning.measure(halfConstraints.copy(maxWidth = tuningHalfMaxWidth(constraints.maxWidth, instrumentWidth)))
         instrumentPlaceable = instrument.measure(halfConstraints.copy(maxWidth = constraints.maxWidth - tuningPlaceable.width))
     }
-    val width = constraints.constrainWidth(instrumentPlaceable.width + (tuningPlaceable?.width ?: 0))
+    val contentWidth = instrumentPlaceable.width + (tuningPlaceable?.width ?: 0)
+    val width = constraints.constrainWidth(contentWidth)
     val height = constraints.constrainHeight(maxOf(instrumentPlaceable.height, tuningPlaceable?.height ?: 0))
+    // Centred in a pill stretched wider than its halves (the side dock's column of controls).
+    val start = maxOf(0, (width - contentWidth) / 2)
     layout(width, height) {
-        instrumentPlaceable.placeRelative(0, (height - instrumentPlaceable.height) / 2)
-        tuningPlaceable?.placeRelative(instrumentPlaceable.width, (height - tuningPlaceable.height) / 2)
+        instrumentPlaceable.placeRelative(start, (height - instrumentPlaceable.height) / 2)
+        tuningPlaceable?.placeRelative(start + instrumentPlaceable.width, (height - tuningPlaceable.height) / 2)
     }
 }
 

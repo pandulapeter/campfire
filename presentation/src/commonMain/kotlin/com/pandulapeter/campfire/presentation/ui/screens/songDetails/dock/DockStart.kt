@@ -15,8 +15,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
@@ -32,11 +31,10 @@ import androidx.compose.ui.unit.Dp
  * ([DockKeyAndTuner]) where the tuner is on. A change of which of these there are (read only mode switched, a switch
  * of the Dock section) crossfades as the start resizes; one that keeps them (a new key, another page) is drawn in place.
  *
- * In the side panel ([pillWidth], the tempo chip's width) the key chip and the tuner's pill are that wide, so the three
- * read as one column of controls, and whatever else the start holds wraps onto centred lines rather than running past
- * the panel.
+ * In the side panel ([pillWidth], the tempo chip's width) everything the start holds is that wide, one column of
+ * controls with the tempo chip under it: the key chip on top, then in read only mode the tuner's pill and the instrument
+ * pill ([DockInstrumentTools]), as the key chip stands over the tuner's pill outside it.
  */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun DockStart(
     modifier: Modifier = Modifier,
@@ -57,11 +55,10 @@ internal fun DockStart(
             DockStartItems(content = shown.content, dockKey = shown.dockKey, height = height, tallHeight = tallHeight, pillWidth = null)
         }
     } else {
-        FlowRow(
+        Column(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(DOCK_ITEM_GAP, Alignment.CenterHorizontally),
-            verticalArrangement = Arrangement.spacedBy(DOCK_ITEM_GAP),
-            itemVerticalAlignment = Alignment.CenterVertically,
+            verticalArrangement = Arrangement.spacedBy(KEY_AND_TUNER_GAP),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             DockStartItems(content = shown.content, dockKey = shown.dockKey, height = height, tallHeight = tallHeight, pillWidth = pillWidth)
         }
@@ -89,12 +86,19 @@ private data class DockStartLook(val content: DockContent, val dockKey: DockKey?
  * ([DockInstrumentTools]), then the key chip ([DockKeyChip]) where there is a [dockKey], [height] tall. In the diagram
  * row ([tallHeight], its height), a key chip that opens the Playing sheet stands over the tuner's pill
  * ([DockKeyAndTuner]) where the tuner is on, both [pillWidth] wide where it is given; a key chip alone there is as tall
- * as the row, the capo on a line of its own.
+ * as the row, the capo on a line of its own. In the side panel the key chip leads, the instrument and the tuner under it.
  */
 @Composable
 private fun DockStartItems(content: DockContent, dockKey: DockKey?, height: Dp, tallHeight: Dp?, pillWidth: Dp?) {
-    DockInstrumentTools(content = content, keyOpensPlaying = dockKey?.opensPlaying == true)
-    if (dockKey == null) return
+    val keyOpensPlaying = dockKey?.opensPlaying == true
+    if (pillWidth == null) DockInstrumentTools(content = content, keyOpensPlaying = keyOpensPlaying, pillWidth = null, pillHeight = height)
+    if (dockKey != null) DockStartKey(content = content, dockKey = dockKey, height = height, tallHeight = tallHeight, pillWidth = pillWidth)
+    if (pillWidth != null) DockInstrumentTools(content = content, keyOpensPlaying = keyOpensPlaying, pillWidth = pillWidth, pillHeight = height)
+}
+
+/** The key chip of [DockStartItems], over the tuner's pill where the diagram row has room for both ([DockKeyAndTuner]). */
+@Composable
+private fun DockStartKey(content: DockContent, dockKey: DockKey, height: Dp, tallHeight: Dp?, pillWidth: Dp?) {
     val onPlayingClicked = content.playingControls?.onPlayingClicked?.takeIf { dockKey.opensPlaying }
     val onTunerClicked = content.playingTools?.onTunerClicked
     val chordDiagrams = content.chordDiagrams
