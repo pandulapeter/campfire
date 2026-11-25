@@ -265,6 +265,34 @@ internal fun Modifier.fadingVerticalEdges(gridState: LazyGridState, backgroundCo
 )
 
 /**
+ * Fades a sideways scrolling row out at its ends over a known opaque [backgroundColor], the way [fadingVerticalEdges]
+ * paints it: at its start as far as it has been scrolled from it ([scrolledFromStart]) and at its end as far as it
+ * still can be scrolled towards it ([scrolledFromEnd]), each null for an end that does not fade, the row running to
+ * the screen's edge there rather than meeting something that does not scroll. The start is the right in a right to
+ * left layout.
+ */
+internal fun Modifier.fadingHorizontalEdges(
+    scrolledFromStart: (() -> Int)?,
+    scrolledFromEnd: (() -> Int)?,
+    backgroundColor: Color,
+) = drawWithCache {
+    val width = EDGE_FADE_SIZE.toPx()
+    val isRtl = layoutDirection == LayoutDirection.Rtl
+    val leftGradient = Brush.horizontalGradient(listOf(backgroundColor, backgroundColor.copy(alpha = 0f)), startX = 0f, endX = width)
+    val rightGradient = Brush.horizontalGradient(listOf(backgroundColor.copy(alpha = 0f), backgroundColor), startX = size.width - width, endX = size.width)
+    onDrawWithContent {
+        drawContent()
+        val startStrength = ((scrolledFromStart?.invoke() ?: 0) / width).coerceIn(0f, 1f)
+        val endStrength = ((scrolledFromEnd?.invoke() ?: 0) / width).coerceIn(0f, 1f)
+        val (leftStrength, rightStrength) = if (isRtl) endStrength to startStrength else startStrength to endStrength
+        if (leftStrength > 0f) drawRect(brush = leftGradient, size = Size(width, size.height), alpha = leftStrength)
+        if (rightStrength > 0f) {
+            drawRect(brush = rightGradient, topLeft = Offset(size.width - width, 0f), size = Size(width, size.height), alpha = rightStrength)
+        }
+    }
+}
+
+/**
  * Fades a sideways scrolling row out under something pinned over its start, a control the row's items scroll behind:
  * they are gone entirely under its [overlayWidth] and fade back in over [EDGE_FADE_SIZE] past it, so the pinned control
  * is read against the background whatever is scrolled under it. As strong as the row is scrolled, like

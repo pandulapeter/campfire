@@ -218,4 +218,11 @@ internal fun hasSongChords(song: ChordProSong, notation: ChordNotation, inferred
     return chords.isNotEmpty() && chords.size <= MAX_SONG_CHORDS
 }
 
+/**
+ * Whether [song] is a songbook rather than a song: more than [MAX_SONG_CHORDS] chords, of which [songChordsOf] lists
+ * none, so that what would have shown them can say why it does not.
+ */
+internal fun hasTooManySongChords(song: ChordProSong, notation: ChordNotation): Boolean =
+    ChordProNotation.shownNames(song, notation).keys.mapNotNull { ChordProChords.parse(it) }.distinct().size > MAX_SONG_CHORDS
+
 internal const val MAX_SONG_CHORDS = 48

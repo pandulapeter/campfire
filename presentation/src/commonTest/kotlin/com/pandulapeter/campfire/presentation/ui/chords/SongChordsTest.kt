@@ -156,6 +156,14 @@ class SongChordsTest {
     }
 
     @Test
+    fun `a songbook is told apart from a song of no chords`() {
+        val many = (0 until 12).flatMap { root -> listOf("", "m", "7", "maj7", "sus4").map { listOf("C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B")[root] + it } }
+        assertTrue(hasTooManySongChords(ChordProParser.parse(many.joinToString(" ") { "[$it]la" }), ChordNotation.STANDARD))
+        assertFalse(hasTooManySongChords(ChordProParser.parse(many.take(MAX_SONG_CHORDS).joinToString(" ") { "[$it]la" }), ChordNotation.STANDARD))
+        assertFalse(hasTooManySongChords(ChordProParser.parse("la la"), ChordNotation.STANDARD))
+    }
+
+    @Test
     fun `the chords are named in the reader's notation`() {
         val german = names("[B]la [Bb]la", notation = ChordNotation.GERMAN)
         assertEquals(listOf("H", "B"), german.map { it.name })

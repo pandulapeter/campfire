@@ -26,13 +26,14 @@ import com.pandulapeter.campfire.data.model.preferences.SongLayout
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.preferences.SongSections
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.SongStepper
 import com.pandulapeter.campfire.presentation.ui.songView.model.ChordDiagrams
 
 /**
  * The song details screen's dock: its [rows] and [layout] (null for no dock), and the [height] it takes from the bottom
  * of the screen, the bottom inset included where it covers it, followed as it animates to a new one, which the pages'
  * grid waits for ([isSettled]) as it does for the app bar. Each page composed puts what the dock draws for it in
- * [contents], by its index.
+ * [contents], and its stepper, which says where its reader is headed, in [steppers], by its index.
  */
 internal class SongDockState(
     val rows: DockRows,
@@ -40,6 +41,7 @@ internal class SongDockState(
     private val target: Dp,
     animatedHeight: State<Dp>,
     val contents: SnapshotStateMap<Int, DockContent>,
+    val steppers: SnapshotStateMap<Int, SongStepper>,
 ) {
     val height by animatedHeight
     val isSettled get() = height == target
@@ -82,5 +84,6 @@ internal fun rememberSongDock(
         target = target,
         animatedHeight = animateDpAsState(target),
         contents = remember { mutableStateMapOf() },
+        steppers = remember { mutableStateMapOf() },
     )
 }

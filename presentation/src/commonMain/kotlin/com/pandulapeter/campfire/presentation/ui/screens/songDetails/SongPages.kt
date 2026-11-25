@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.autoScroll.SongAutoScroller
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.DockContent
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.SongDockState
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.SongStepper
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.rememberRowSnapFlingBehavior
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongPlayingControls
@@ -81,7 +82,7 @@ import com.pandulapeter.campfire.presentation.ui.songView.SongModelBuild
  *   puts at the end of the one before it.
  * @param onCurrentPage Handed the scroll, the stepper, and the scroller of the page being read, which the keys, the
  *   step buttons, and the controls of a song that scrolls by itself drive.
- * @param dockContents What the dock draws for every page that is composed, by page, see [DockContent].
+ * @param dock Handed what it draws for every page that is composed ([DockContent]) and the page's stepper, by page.
  */
 @Composable
 internal fun SongPages(
@@ -99,7 +100,7 @@ internal fun SongPages(
     songs: List<Song>,
     pagerState: PagerState,
     pageScrollStates: SnapshotStateMap<Int, ScrollState>,
-    dockContents: SnapshotStateMap<Int, DockContent>,
+    dock: SongDockState,
     songTimings: SnapshotStateMap<String, SongTiming>,
     isReadOnly: Boolean,
     chordSpelling: UserPreferences.ChordSpelling,
@@ -146,13 +147,9 @@ internal fun SongPages(
     ) { page ->
         val song = songs[page]
         val scrollState = rememberScrollState()
-        DisposableEffect(page, scrollState) {
-            pageScrollStates[page] = scrollState
-            onDispose { if (pageScrollStates[page] === scrollState) pageScrollStates.remove(page) }
-        }
-        DisposableEffect(page) { onDispose { dockContents.remove(page) } }
         val flingBehavior = rememberRowSnapFlingBehavior(scrollState)
         val stepper = remember(scrollState, flingBehavior) { SongStepper(scrollState, flingBehavior) }
+        PageRegistrationEffect(page = page, scrollState = scrollState, stepper = stepper, pageScrollStates = pageScrollStates, dock = dock)
         val autoScroller = remember(scrollState, flingBehavior) { SongAutoScroller(scrollState, flingBehavior) }
         SideEffect { flingBehavior.isCapped = !isContinuous }
         DisposableEffect(song.fileName) { onDispose { songTimings.remove(song.fileName) } }
@@ -278,8 +275,29 @@ internal fun SongPages(
             turnsByColumn = !isContinuous && userPreferences?.pageTurn == PageTurn.COLUMN,
             onAddImage = rememberSongImageAdder(songTextStore, song.fileName, isWritable = !isReadOnly && importPreview == null),
             scaleSuggestions = remember(scaleSuggestions, shapeCapo) { scaleSuggestions?.copy(capo = shapeCapo) },
-            onDockContent = { content -> if (dockContents[page] != content) dockContents[page] = content },
+            onDockContent = { content -> if (dock.contents[page] != content) dock.contents[page] = content },
         )
+    }
+}
+
+/**
+ * Puts [page]'s [scrollState] in [pageScrollStates] and its [stepper] in the [dock]'s, for as long as the page is
+ * composed with them, and takes what the dock draws for it away with it.
+ */
+@Composable
+private fun PageRegistrationEffect(
+    page: Int,
+    scrollState: ScrollState,
+    stepper: SongStepper,
+    pageScrollStates: SnapshotStateMap<Int, ScrollState>,
+    dock: SongDockState,
+) = DisposableEffect(page, scrollState, stepper) {
+    pageScrollStates[page] = scrollState
+    dock.steppers[page] = stepper
+    onDispose {
+        if (pageScrollStates[page] === scrollState) pageScrollStates -= page
+        if (dock.steppers[page] === stepper) dock.steppers -= page
+        dock.contents -= page
     }
 }
 

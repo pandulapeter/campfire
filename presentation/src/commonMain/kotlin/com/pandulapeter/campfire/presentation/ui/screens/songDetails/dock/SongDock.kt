@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock
 
 import com.pandulapeter.campfire.presentation.ui.songView.rememberChordCells
 import androidx.compose.animation.Crossfade
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -29,6 +30,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -39,6 +42,9 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.pandulapeter.campfire.presentation.ui.chords.hasTooManySongChords
+import com.pandulapeter.campfire.presentation.ui.components.fadingHorizontalEdges
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.SongStepper
 
 /**
  * What left the song for the screen to hold, under the pages and outside the pager (this package's `CLAUDE.md`): one surface,
@@ -77,6 +83,7 @@ internal fun SongDock(
         Crossfade(targetState = targetPage) { page ->
             DockRowsOf(
                 content = dock.contents[page],
+                stepper = dock.steppers[page],
                 rows = dock.rows,
                 layout = layout,
                 horizontalPadding = horizontalPadding,
@@ -88,12 +95,15 @@ internal fun SongDock(
 /**
  * The dock's rows for one song's [content], laid out at the dock's full height whatever height it is animating through.
  * In [DockTier.CHORD_CHIPS], one row: what starts the dock ([DockStart]), the click's controls, the chord chips, and the
- * scale chips. Otherwise the diagrams have a row of their own ([DiagramRow]), ended by the click's controls, under a row
- * of the dock's start and the scale chips where there are scale suggestions, else starting with the dock's start itself.
+ * scale chips. Otherwise the diagrams have a row of their own ([DiagramRow]), under a row of the dock's start, the
+ * click's controls, and the scale chips where there are scale suggestions, else starting with the dock's start itself
+ * and ended by the click's controls.
+ * The diagrams follow the page the reader is headed for, which the page's [stepper] says.
  */
 @Composable
 private fun DockRowsOf(
     content: DockContent?,
+    stepper: SongStepper?,
     rows: DockRows,
     layout: DockLayout,
     horizontalPadding: PaddingValues,
@@ -121,16 +131,39 @@ private fun DockRowsOf(
         if (rows.hasScaleRow) {
             DockRow(height = layout.rowHeight, horizontalPadding = horizontalPadding) {
                 start()
-                if (content != null) DockScaleChips(content)
+                if (content != null) {
+                    // Here rather than at the diagrams' end while they are the stepper, Tap, and button, which would
+                    // leave a phone's diagrams a sliver: the tempo chip that takes their place stands there.
+                    DockClickControls(content)
+                    DockScaleChips(content)
+                }
             }
         }
+        val stripScroll = rememberScrollState()
         DiagramRow(
             height = layout.diagramRowHeight,
             horizontalPadding = horizontalPadding,
+            scrollState = stripScroll,
             start = start.takeUnless { rows.hasScaleRow },
             end = { if (content != null) DockClickControls(content) },
+            hasEnd = !rows.hasScaleRow && content?.shouldShowTempo == true,
         ) {
-            if (content != null) DockDiagramStrip(cells = cells, isSmall = layout.tier == DockTier.SMALL_DIAGRAMS, onChordClicked = onChordClicked)
+            if (content != null) {
+                val model = content.model
+                val names = remember(cells) { cells.mapTo(mutableSetOf()) { it.name } }
+                val headedChord by remember(stepper, model, names) {
+                    derivedStateOf { stepper?.headedSection?.let { section -> firstChordFrom(model.sections, section, names) } }
+                }
+                DockDiagramStrip(
+                    cells = cells,
+                    isSmall = layout.tier == DockTier.SMALL_DIAGRAMS,
+                    rowHeight = layout.diagramRowHeight,
+                    hasTooManyChords = remember(model) { cells.isEmpty() && model.shouldShowChords && hasTooManySongChords(model.song, model.notation) },
+                    scrollState = stripScroll,
+                    headedChord = headedChord,
+                    onChordClicked = onChordClicked,
+                )
+            }
         }
     }
 }
@@ -153,15 +186,18 @@ private fun DockStart(content: DockContent, height: Dp) {
 }
 
 /**
- * The row of the song's diagrams, [height] tall: [start] and [end] stand still at its two ends, and the [strip] between
- * them scrolls sideways by hand, running to the screen's edge where nothing stands at it.
+ * The row of the song's diagrams, [height] tall: [start] and [end] stand still at its two ends ([hasEnd] where [end]
+ * draws anything), and the [strip] between them scrolls sideways ([scrollState]), fading out where it meets either of
+ * them and running to the screen's edge, padded in from it, where nothing stands there.
  */
 @Composable
 private fun DiagramRow(
     height: Dp,
     horizontalPadding: PaddingValues,
+    scrollState: ScrollState,
     start: (@Composable () -> Unit)?,
     end: @Composable () -> Unit,
+    hasEnd: Boolean,
     strip: @Composable RowScope.() -> Unit,
 ) = Row(
     modifier = Modifier
@@ -184,17 +220,24 @@ private fun DiagramRow(
     Row(
         modifier = Modifier
             .weight(1f)
-            .horizontalScroll(rememberScrollState())
-            .padding(start = if (start == null) startPadding else DOCK_ITEM_GAP, end = DOCK_ITEM_GAP),
+            .fadingHorizontalEdges(
+                scrolledFromStart = if (start == null) null else { { scrollState.value } },
+                scrolledFromEnd = if (hasEnd) { { scrollState.maxValue - scrollState.value } } else null,
+                backgroundColor = MaterialTheme.colorScheme.surfaceContainer,
+            )
+            .horizontalScroll(scrollState)
+            .padding(start = if (start == null) startPadding else DOCK_ITEM_GAP, end = if (hasEnd) DOCK_ITEM_GAP else endPadding),
         horizontalArrangement = Arrangement.spacedBy(DOCK_ITEM_GAP),
         verticalAlignment = Alignment.CenterVertically,
         content = strip,
     )
-    Row(
-        modifier = Modifier.padding(end = endPadding),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        end()
+    if (hasEnd) {
+        Row(
+            modifier = Modifier.padding(end = endPadding),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            end()
+        }
     }
 }
 

@@ -312,7 +312,7 @@ internal fun SongDetailsScreen(
                     pagerState = pagerState,
                     pageStepper = pageStepper,
                     pageScrollStates = pageScrollStates,
-                    dockContents = dock.contents,
+                    dock = dock,
                     songTimings = songTimings,
                     isReadOnly = isReadOnly,
                     chordSpelling = chordSpelling,

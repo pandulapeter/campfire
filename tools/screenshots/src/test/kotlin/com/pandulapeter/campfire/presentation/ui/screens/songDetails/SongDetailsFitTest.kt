@@ -111,14 +111,19 @@ private fun songChords() = Regex("\\[([^\\]]+)]").findAll(demoSongText(HOUSE_OF_
 private fun AppTestScope.node(matcher: SemanticsMatcher) = onNode(matcher, useUnmergedTree = true).fetchSemanticsNode()
 
 /**
- * The song's controls: the smallest part of the screen that holds the key chip and the metronome button, which is the
- * dock, the song's chords with them.
+ * The song's controls: the smallest part of the screen that holds the key chip, the metronome button, and a diagram's
+ * name outside the song, which is the dock.
  */
 @OptIn(ExperimentalTestApi::class)
 private fun AppTestScope.controls(): SemanticsNode {
+    val song = checkNotNull(songViewport()) { "The song has no viewport." }
+    val chip = opening(string(Res.string.song_details_dock_playing))
+    val diagramName = onAllNodes(hasText(songChords().last()), useUnmergedTree = true).fetchSemanticsNodes()
+        .first { node -> node.ancestry().none { it.id == song.id || it.id == chip.id } }
     val anchors = listOf(
-        opening(string(Res.string.song_details_dock_playing)),
+        chip,
         node(hasContentDescription(string(Res.string.song_details_metronome_show), substring = true)),
+        diagramName,
     )
     return anchors.map { it.ancestry() }.reduce { common, ancestry -> common.filter { node -> ancestry.any { it.id == node.id } } }.first()
 }

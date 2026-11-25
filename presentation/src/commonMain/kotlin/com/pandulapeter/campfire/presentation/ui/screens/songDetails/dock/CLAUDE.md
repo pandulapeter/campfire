@@ -32,7 +32,7 @@ still to come (the tempo chip and sheet, the scale row), is `documentation/plans
   diagrams drawn on an instrument with shapes, the scale suggestions. No row, no dock. A song with nothing for a row
   leaves it empty, or for the diagrams says so.
 - **Its tier is the window's** (`dockLayoutOf`, tested). A short window (`SHORT_WINDOW_HEIGHT`, a phone on its side)
-  gets one row with a chip per chord until the side panel comes (the plan's step 13). Any other window gets two rows,
+  gets one row with a chip per chord until the side panel comes. Any other window gets two rows,
   the chords' diagrams in the second: at the Chords section's size where they fit the budget (`dockBudgetOf`: the
   share of the window that costs no page turn, as `PageCountTest` measured it on 360 × 640 dp, 80 dp turned by page, 60
   by column, 48 and 40 over a pager bar, the same share of a taller window), else smaller. The owner chose diagrams on
@@ -40,8 +40,9 @@ still to come (the tempo chip and sheet, the scale row), is `documentation/plans
   diagrams are as large as keep that: a 112 dp dock). Its padding is as thin as a chip allows.
 - The row height follows the system text size (`songControlHeight`), never the song's: the controls are drawn at the
   interface's size (`fontScale` 1).
-- Every row scrolls sideways by hand and runs to the screen's edges, padded in from them, so nothing fades yet: a fade
-  belongs only where a scrolling row meets something that does not.
+- Every row scrolls sideways by hand and runs to the screen's edges, padded in from them. A fade belongs only where a
+  scrolling row meets something that does not: the diagram strip's end where the click's controls stand
+  (`fadingHorizontalEdges`, as far as it can still scroll), and its start where the dock's start stands in its row.
 
 ## Its contents
 
@@ -57,9 +58,20 @@ still to come (the tempo chip and sheet, the scale row), is `documentation/plans
   instrument without shapes keeps its pill there, since it is what brings the diagrams back.
 - **In one row** (a short window): the start, the click's controls or read only mode's line of them
   (`DockClickControls`: tempo, Tap, time signature, metronome button), the chord chips (`DockChordChips`), the scale
-  chips (`DockScaleChips`). **In two**: the start and the scale chips, then the diagrams (`DockDiagramStrip`) ended by
-  the click's controls; without scale suggestions only the second, starting with the start. A chord chip or diagram
+  chips (`DockScaleChips`). **In two**: the start, the click's controls, and the scale chips, then the diagrams
+  (`DockDiagramStrip`); without scale suggestions only the second, between the start and the click's controls. The
+  tempo chip (the plan's step 7) ends the diagrams' row in both: the stepper, Tap, and button would leave them a sliver. A chord chip or diagram
   opens the chord's sheet where shapes may be picked (as the section's diagrams did), a scale chip its scale's sheet,
   read only mode included.
-- Breadcrumbs: `Dock: key chip` as the chip opens the sheet, and the sheet's `Playing sheet: transposition stepped`
-  (`capo`, `reset`), kinds only.
+- **The diagram strip** (`DockDiagramStrip`) is the Chords section's cells (`rememberChordCells`): every chord once,
+  first-played order, each key's group after a "Key: A♭" label where there are several, the degree or letters line
+  over the names where they are on. The diagrams take what the row's height leaves the lines of text, at most the
+  section's size (`dockDiagramSize`, tested), so the row stays the screen's; the keyboard's are wider. A changed shape
+  crossfades. A song of no chords says so, a songbook (`hasTooManySongChords`) that it has too many. A cell opens the
+  chord sheet as the section's did (not in performance mode, yes in an import preview).
+- **The strip scrolls itself only on a page turn**, never under a finger: to the first chord of the page the reader
+  is headed for (`SongStepper.headedSection`, `sectionAt`, `firstChordFrom`, tested; a key's first chord with its
+  label), each page's stepper handed to the dock by index (`SongDockState.steppers`). A strip swiped by hand stays
+  put until the next turn changes that chord.
+- Breadcrumbs (kinds only): `Dock: key chip`, `Dock: chord diagram`, `Dock: chord chip`, and the sheet's
+  `Playing sheet: transposition stepped` (`capo`, `reset`).

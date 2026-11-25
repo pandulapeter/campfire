@@ -17,8 +17,8 @@ hand-typed table first, a search for the rest).
 ### Instruments
 
 - Guitar (and the twelve-string, drawn as a guitar), ukulele, mandolin, banjo, and keyboard draw diagrams; the rest
-  draw none, as if Chord diagrams were off. The instrument pill starts song details' dock wherever diagrams are on,
-  even on an instrument without shapes, so the diagrams can be brought back.
+  draw none, as if Chord diagrams were off. The instrument pill is in song details' Playing sheet, and starts its dock
+  on an instrument without shapes, so the diagrams can be brought back.
 - **A chord is drawn as it is fingered** (`ui/playing/CLAUDE.md`): `SongChord.chord` is the sounding chord (notes,
   degree, scales), named as it sounds or, where the reader names shapes, as its shape (key headings too);
   `shapeChord` is the shape played above the capo, by which a shape is looked up, picked, and stored. A `{define}` is
@@ -55,8 +55,9 @@ hand-typed table first, a search for the rest).
 
 ### The Chords section
 
-Song details draws the diagrams in its dock instead (`screens/songDetails/dock`), the song starting at its first line;
-the section is the editor's preview's and the PDF's.
+Song details draws the diagrams in its dock instead (`screens/songDetails/dock`, the same cells in one sideways strip,
+a key's label before its group), the song starting at its first line; the section is the editor's preview's and the
+PDF's.
 
 - **Grouped by key** (`groupedByKey`, tested): where chords are in more than one key, the home key's first, then each
   key a key change reaches in order, every group starting a row under a "Key: A♭" line set as a label, not a chord (the

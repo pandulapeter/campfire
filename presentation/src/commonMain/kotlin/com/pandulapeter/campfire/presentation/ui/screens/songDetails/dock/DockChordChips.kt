@@ -41,7 +41,16 @@ internal fun DockChordChips(
             .defaultMinSize(minHeight = DOCK_ROW_HEIGHT)
             .clip(FilterChipDefaults.shape)
             .border(1.dp, MaterialTheme.colorScheme.outlineVariant, FilterChipDefaults.shape)
-            .then(if (onChordClicked == null) Modifier else Modifier.clickable(role = Role.Button) { onChordClicked(cell.name) })
+            .then(
+                if (onChordClicked == null) {
+                    Modifier
+                } else {
+                    Modifier.clickable(role = Role.Button) {
+                        println("Dock: chord chip")
+                        onChordClicked(cell.name)
+                    }
+                },
+            )
             .padding(horizontal = CHORD_CHIP_PADDING),
         contentAlignment = Alignment.Center,
     ) {
