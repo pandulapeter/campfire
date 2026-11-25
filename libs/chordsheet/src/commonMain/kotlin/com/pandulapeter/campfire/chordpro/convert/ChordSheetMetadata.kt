@@ -139,7 +139,7 @@ internal object ChordSheetMetadata {
         "key", "key of", "hangnem", "t\u00f3nina", "tom", "tono", "tonalidad", "tonart", "tonalit\u00e9", "tonalit\u00e0", "tonacja", "toonsoort",
         "tonalitate", "\u05d8\u05d5\u05e0\u05dc\u05d9\u05d5\u05ea",
     )
-    private val capoLabels = setOf(
+    internal val capoLabels = setOf(
         "capo", "capotraste", "cejilla", "kapodaster", "kapodastr", "capodastre", "kapo", "capodastru", "capotasto", "\u05e7\u05d0\u05e4\u05d5",
     )
 
@@ -224,7 +224,7 @@ internal object ChordSheetMetadata {
      * A capo's value saying there is none, in the app's languages: a word of none, alone or before the capo's own name
      * (`No capo`, `Sem capotraste`, `Kein Kapodaster`), never any other words, which an unreadable value keeps as text.
      */
-    private val noCapoValue = Regex(
+    internal val noCapoValue = Regex(
         "^(?:no|none|nincs|sin|senza|nessuno|ninguna|ninguno|sem|nenhum|nenhuma|ohne|kein|keiner|aucun|aucune|sans|\u017e\u00e1dn\u00fd|\u017caden|f\u0103r\u0103|fara|brak|bez|\u05dc\u05dc\u05d0|\u05d0\u05d9\u05df|-|\u2013|\u2014)" +
             "(?:\\s+(?:capo|capotraste|cejilla|capotasto|kapodaster|kapodastr|kapodastru|capodastre|capodastru|kapo|\u05e7\u05d0\u05e4\u05d5))?$",
         RegexOption.IGNORE_CASE,

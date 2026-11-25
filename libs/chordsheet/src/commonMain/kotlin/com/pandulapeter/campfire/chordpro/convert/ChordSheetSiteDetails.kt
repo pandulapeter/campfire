@@ -82,18 +82,47 @@ internal object ChordSheetSiteDetails {
     /**
      * The [lines] of a song without the site's chrome: its calls to action and controls ([isCallToAction]), and the
      * values that are the site's ([DETAIL]), where they stand before the song's first chord row, after its last, or
-     * alone between blank lines. Between two lyric lines a line of the same words is as likely sung, so it stays.
+     * alone between blank lines, and its capo picker and capo tip before the first chord row ([capoChrome]). Between two
+     * lyric lines a line of the same words is as likely sung, so it stays.
      */
     fun withoutChrome(lines: List<Rendered>): List<Rendered> {
         val chordRows = lines.indices.filter { lines[it].text.isNotBlank() && chordTokens(lines[it]) != null }
         val first = chordRows.firstOrNull() ?: return lines
         val last = chordRows.last()
+        val capoChrome = capoChrome(lines.map { it.text.trim() }, first)
         fun isBlank(index: Int) = lines.getOrNull(index)?.text?.isBlank() ?: true
         return lines.filterIndexed { index, line ->
             val isChrome = isCallToAction(line.text) || ChordSheetMetadata.metadata(line.text)?.first == DETAIL
-            !isChrome || index in first..last && !(isBlank(index - 1) && isBlank(index + 1))
+            index !in capoChrome && (!isChrome || index in first..last && !(isBlank(index - 1) && isBlank(index + 1)))
         }
     }
+
+    /**
+     * The indices, before the song's [first] chord row, of a site's capo picker and capo tip: an option of the picker on
+     * a line of its own, its fret with the unit word (`4. bund`, `2nd fret`; a crop may keep any few of them), the
+     * picker's bare `Capo` with the options under it (`nincs`, `1. bund`, …), and a tip offering an easier capo in a
+     * sentence opened by a word of easier (`Easier: capo on the 5th fret with Em shapes. Try it`). A bare `Capo` over a
+     * single value (`CAPO` over `2`, `None`, or `4th (optional)`) is a site's details field and stays, as does a capo
+     * named in any other sentence, which may well be the song's own.
+     */
+    private fun capoChrome(texts: List<String>, first: Int): Set<Int> {
+        val chrome = mutableSetOf<Int>()
+        fun isOption(index: Int) = texts.getOrNull(index)?.let { isCapoValue(it) } ?: false
+        for (index in 0 until first) {
+            val text = texts[index]
+            if (capoOption.matches(text.lowercase()) || capoTip.containsMatchIn(text.lowercase())) chrome += index
+            if (text.trimEnd(':', ' ').lowercase() !in ChordSheetMetadata.capoLabels) continue
+            val value = texts.getOrNull(index + 1).orEmpty()
+            if ((value.firstOrNull()?.isDigit() == true || isOption(index + 1)) && !isOption(index + 2)) continue
+            chrome += index
+            var option = index + 1
+            while (option < first && isOption(option)) chrome += option++
+        }
+        return chrome
+    }
+
+    private fun isCapoValue(text: String) =
+        capoValue.matches(text.lowercase()) || romanCapoValue.matches(text) || ChordSheetMetadata.noCapoValue.matches(text)
 
     /**
      * The [lines] with a details row whose last label has no value (`Tuning: E A D G B ECapo:`) joined to the line right
@@ -107,7 +136,7 @@ internal object ChordSheetSiteDetails {
         while (index < lines.size) {
             val row = lines[index]
             val value = lines.getOrNull(index + 1)
-            if (value != null && isValueOfLastLabel(row.text, value.text)) {
+            if (value != null && isValueOfLastLabel(row.text, value.text, lines.getOrNull(index + 2)?.text)) {
                 val text = value.text.trim()
                 val start = value.text.indexOf(text)
                 val space = (row.positions.lastOrNull() ?: 0.0) + 1.0
@@ -125,13 +154,16 @@ internal object ChordSheetSiteDetails {
         return joined
     }
 
-    private fun isValueOfLastLabel(row: String, value: String): Boolean {
+    /**
+     * Whether [value] is the value of [row]'s last label, given the line [after] it: a capo value followed by another
+     * one is the first option of a site's capo picker (`Capo:` over `nincs`, `1. bund`, …), not the song's capo.
+     */
+    private fun isValueOfLastLabel(row: String, value: String, after: String?): Boolean {
         val trimmed = row.trim()
         val label = emptyLabel.find(trimmed)?.groupValues?.get(1)?.takeIf { rowStart.containsMatchIn(trimmed) } ?: return false
         val candidate = value.trim()
         val isValue = when (ChordSheetMetadata.metadata("$label: $candidate")?.first) {
-            "capo" -> capoValue.matches(candidate.lowercase()) || romanCapoValue.matches(candidate)
-            ChordSheetMetadata.NO_CAPO -> true
+            "capo", ChordSheetMetadata.NO_CAPO -> isCapoValue(candidate) && after?.trim()?.let { isCapoValue(it) } != true
             "key" -> isChordOrLatinName(ascii(candidate))
             "tempo" -> tempoValue.matches(candidate)
             "time" -> timeValue.matches(candidate)
@@ -182,7 +214,20 @@ internal object ChordSheetSiteDetails {
     private val rowLabel = Regex("(?:$rowLabels)\\s*:")
     private val rowStart = Regex("^(?:$rowLabels)\\s*:", RegexOption.IGNORE_CASE)
     private val emptyLabel = Regex("($rowLabels)\\s*:$")
-    private val capoValue = Regex("^[0-9]{1,2}(?:st|nd|rd|th|\\.|ª|º|°)?(?:\\s+(?:frets?|traste|casa|tasto|bund|case|tastă|próg|pražec|שריג))?$")
+    private const val CAPO_FRET = "[0-9]{1,2}(?:st|nd|rd|th|\\.|ª|º|°)?"
+    private const val CAPO_UNIT = "(?:frets?|traste|casa|tasto|bund|case|tastă|próg|pražec|שריג)"
+    private val capoValue = Regex("^$CAPO_FRET(?:\\s+$CAPO_UNIT)?$")
+    private val capoOption = Regex("^$CAPO_FRET\\s+$CAPO_UNIT$")
+
+    /**
+     * A capo tip: a sentence opened by a word of easier in an app language, a colon within a few words, and a capo with
+     * a fret after it, lowercase.
+     */
+    private val capoTip = Regex(
+        "^(?:easier|könnyebb(?:en)?|mai u[șş]or|einfacher|leichter|más fácil|plus (?:facile|simple)|più (?:facile|semplice)|" +
+            "mais fácil|łatwiej|prościej|snadněji|snazší|jednodušeji|קל יותר)(?!\\p{L})[^:]{0,30}:.*" +
+            "(?<!\\p{L})(?:capo|kapo|cejilla|capotrast|kapodast|capodast|capotast|קאפו)\\p{L}*.*[0-9]",
+    )
     private val romanCapoValue = Regex("^(?:XII|XI|X|IX|IV|V?I{1,3}|V)$")
     private val tempoValue = Regex("^[0-9]{2,3}(?:\\s*BPM)?$", RegexOption.IGNORE_CASE)
     private val timeValue = Regex("^[0-9]{1,2}/[0-9]{1,2}$")

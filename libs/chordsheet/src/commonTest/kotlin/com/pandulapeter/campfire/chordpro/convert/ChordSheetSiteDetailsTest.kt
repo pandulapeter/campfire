@@ -190,6 +190,40 @@ class ChordSheetSiteDetailsTest {
     }
 
     @Test
+    fun `a site's capo picker and capo tip over the song are left out`() {
+        val song = "\n\n[Verse]\nG      C\nHello world"
+        val pickers = listOf(
+            "Capo\nnincs\n1. bund\n2. bund\n3. bund\nKönnyebben megy: capo a 5. bundon, Em fogásokkal. Kipróbálom",
+            "Capo\nNone\n1st fret\n2nd fret\nEasier: capo on the 5th fret with Em shapes. Try it",
+            // A crop keeps any few of the options, and a picker's label may carry a colon, which reads no capo from it.
+            "4. bund\n6. bund\n9. bund",
+            "Capo:\n1. bund\n2. bund",
+            "Capo:\nnincs\n1. bund",
+        )
+        for (picker in pickers) {
+            val result = convert("Riverlight\n$picker$song")
+            assertEquals("Riverlight", ChordProParser.parse(result).metadata.title, result)
+            assertEquals(null, ChordProParser.parse(result).metadata.capo, result)
+            for (word in listOf("Capo", "bund", "fret", "nincs", "None", "Easier")) assertFalse(word in result, "$word\n$result")
+        }
+    }
+
+    @Test
+    fun `a capo the song is played with is never taken for a site's picker or tip`() {
+        val song = "\n\n[Verse]\nG      C\nHello world"
+        // A details field printed as a label over its single value stays, as does a capo named in any other sentence.
+        for (details in listOf("CAPO\n2", "CAPO\nNone", "CAPO\n4th (optional)", "Play with a capo on the 3rd fret", "Standard tuning - capo on 3rd fret")) {
+            val result = convert("Riverlight\n$details$song")
+            for (line in details.lines()) assertTrue(line in result, "$line\n$result")
+        }
+        assertTrue("{capo: 2}" in convert("Riverlight\nCapo:\n2nd fret$song"))
+        // Between two lyrics the same words are as likely sung.
+        val verses = List(8) { "G      C\nHello world" }.joinToString("\n")
+        val sung = convert("$verses\nCapo\n2nd fret\nG      C\nHello again")
+        assertTrue("Capo\n2nd fret" in sung, sung)
+    }
+
+    @Test
     fun `the standard tuning is told from another`() {
         for (value in listOf("E A D G B E", "EADGBE", "Standard", "Standard (E A D G B E)", "Padrão", "E A D G B e")) {
             assertTrue(ChordSheetSiteDetails.isStandardTuning(value), value)
