@@ -139,8 +139,8 @@ cannot tell from no answer.
 
 - `OffscreenPageSource` is the common loop over a platform's `OffscreenBrowser`: a look (`PAGE_SNAPSHOT_SCRIPT`:
   `innerText` with `content-visibility` forced visible for the read, since a page never scrolled would leave out what it
-  skips, and a chord drawn above its syllable inline written as a chord row over its line, not glued into the word
-  (`PageSnapshotScript.kt`); title, address; per line, the structure marks the page model can read, found by aligning
+  skips, and a chord drawn above its syllable written as a chord row over its line, not glued into the word (inline) or
+  left a chunk a line (stacked over a block or flex item of its own) (`PageSnapshotScript.kt`); title, address; per line, the structure marks the page model can read, found by aligning
   the visible text nodes with `innerText`, decoded only for the look taken into `LoadedPage.Read.marks`, none where any
   is malformed) every 500 ms, taken once loaded and its text, title, and address unchanged for 1.5 s (a style changing
   alone changes only the marks), else the last readable look at 20 s;

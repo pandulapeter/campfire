@@ -98,7 +98,7 @@ extension (`iosApp/ShareExtension/`) and the widget extension (`iosApp/CampfireW
 - Files beat text in one share. A Campfire share link (by `isCampfireLink`, a hand copy of `ShareLinks`' regex), as a
   text or a URL attachment beside one-line texts, is written as the share's one text. A page shared from Safari arrives
   as `PageText.js`'s property list (`NSExtensionJavaScriptPreprocessingFile`: `innerText` with `content-visibility`
-  forced visible for the read and raised inline chords set as chord rows, the steps of `PageSnapshotScript.kt`; title,
+  forced visible for the read and raised chords (inline or stacked) set as chord rows, the steps of `PageSnapshotScript.kt`; title,
   address; each line's structure marks) and is written as the share's one text, its title the subject, its marks the
   manifest's `marks` (left out where they would pass the share's bounds), nothing
   loaded again (a Campfire page's address excepted, which is its link). Any other page's address (a URL attachment that is no file's, alone or beside one-line texts) is

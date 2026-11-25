@@ -12,8 +12,9 @@
 // the extension, so a page shared from Safari arrives as the text the reader sees, with nothing loaded again. The same
 // steps as PAGE_SNAPSHOT_SCRIPT in :data:source:remote:implementation (PageSnapshotScript.kt, which says why each is
 // there), answering the same fields: innerText, read with every element drawn even where content-visibility: auto
-// would skip it, and with a chord drawn above its syllable inline (Polish and Czech songbooks) written as a chord row
-// over its line instead of glued into the word, its title and address, and per line of it the structure marks the page
+// would skip it, and with a chord drawn above its syllable (inline, as Polish and Czech songbooks do, or stacked over a
+// chunk of its own) written as a chord row over its line instead of glued into the word or left a chunk a line, its
+// title and address, and per line of it the structure marks the page
 // model reads (a field the extension does not pass on yet).
 function readPage() {
     const shown = document.createElement('style');
@@ -43,7 +44,82 @@ function readPage() {
             }
             return null;
         };
+        // The first character drawn after an element, a space a chunk holds alone included, wherever it stands.
+        const below = (element) => {
+            const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+            walker.currentNode = element.lastChild || element;
+            for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+                const text = node.textContent;
+                if (element.contains(node) || !text.length) continue;
+                const range = document.createRange();
+                const at = text.trim() ? text.length - text.trimStart().length : 0;
+                range.setStart(node, at);
+                range.setEnd(node, at + 1);
+                const box = range.getBoundingClientRect();
+                if (box.height && (box.width || text.trim())) return {node: node, box: box};
+            }
+            return null;
+        };
+        // The run a stacked chord stands in: its highest ancestor no taller than the chord and its chunk (with room to
+        // spare), or a row of flex items each that short, which may wrap into several visual lines.
+        const rowOf = (element, height) => {
+            const fits = (at) => at.getBoundingClientRect().height <= height * 1.5;
+            const isRun = (at) => {
+                const style = getComputedStyle(at);
+                if (!/flex/.test(style.display) || style.flexDirection.slice(0, 3) !== 'row') return false;
+                for (let i = 0; i < at.children.length; i++) if (!fits(at.children[i])) return false;
+                return true;
+            };
+            let row = element;
+            for (let at = element.parentElement; at && at !== document.body && (fits(at) || isRun(at)); at = at.parentElement) row = at;
+            return row;
+        };
+        // A run's text, its visual lines one under the other, or null where it is not one: a piece drawn neither beside
+        // the last one nor under it, or no visual line made of more than one block (innerText already reads those whole).
+        const rowText = (row) => {
+            const walker = document.createTreeWalker(row, NodeFilter.SHOW_TEXT);
+            let text = '';
+            let pending = '';
+            let line = null;
+            let blocks = [];
+            let joined = false;
+            for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+                const parent = node.parentElement;
+                if (!parent || parent.closest('script, style, noscript, template')) continue;
+                if (stacked.has(parent)) { pending += '\uE000' + parent.textContent.trim() + '\uE001'; continue; }
+                const range = document.createRange();
+                range.selectNodeContents(node);
+                const box = range.getBoundingClientRect();
+                if (!box.height || !box.width) continue;
+                const style = getComputedStyle(parent);
+                let piece = node.textContent.replace(/\s+/g, ' ');
+                if (style.textTransform === 'uppercase') piece = piece.toUpperCase();
+                if (style.textTransform === 'lowercase') piece = piece.toLowerCase();
+                const blank = !piece.trim();
+                if (!blank && range.getClientRects().length !== 1) return null;
+                let gap = false;
+                if (line && Math.min(line.bottom, box.bottom) - Math.max(line.top, box.top) >= Math.min(line.bottom - line.top, box.height) / 2 && box.left >= line.right - 2) {
+                    gap = box.left - line.right > (parseFloat(style.fontSize) || 16) * 0.2;
+                    line.right = box.right;
+                } else if (!line || box.top >= line.bottom - 2) {
+                    if (text.length && text.slice(-1) !== '\n') text += '\n';
+                    line = {top: box.top, bottom: box.bottom, right: box.right};
+                    blocks = [];
+                } else if (blank) continue; else return null;
+                // Inside a visual line, a space a gap or the piece's own whitespace draws, never two, and the chords standing
+                // over the piece just before its first character.
+                const open = text.length && text.slice(-1) !== '\n' && text.slice(-1) !== ' ';
+                if (blank) { text += (open ? ' ' : '') + (pending ? pending + ' ' : ''); pending = ''; continue; }
+                text += (open && (gap || piece[0] === ' ') ? ' ' : '') + pending + piece.trimStart();
+                pending = '';
+                const owner = block(parent);
+                if (blocks.indexOf(owner) < 0) blocks.push(owner);
+                if (blocks.length > 1) joined = true;
+            }
+            return joined ? (text + pending).replace(/ +(?=\n|$)/g, '') : null;
+        };
         const raised = [];
+        const stacked = new Map();
         for (const element of document.body ? document.body.querySelectorAll('*') : []) {
             if (element.childElementCount || element.closest('pre, ruby, script, style, noscript, textarea')) continue;
             const name = element.textContent.trim();
@@ -57,16 +133,46 @@ function readPage() {
             const after = beside(element, false);
             const before = beside(element, true);
             const isAt = (line, back) => Math.abs((back ? line.right : line.left) - box.left) <= box.height;
-            if ((isOver(after) && isOver(before)) || (isOver(after) && isAt(after, false)) || (isOver(before) && isAt(before, true))) raised.push(element);
+            if ((isOver(after) && isOver(before)) || (isOver(after) && isAt(after, false)) || (isOver(before) && isAt(before, true))) { raised.push(element); continue; }
+            const under = below(element);
+            if (under && block(under.node.parentElement) !== block(element) && isOver(under.box) && isAt(under.box, false)) stacked.set(element, under.box.bottom - box.top);
         }
-        if (raised.length >= 2) for (const element of raised) {
-            const open = document.createTextNode('\uE000');
-            const close = document.createTextNode('\uE001');
-            element.insertBefore(open, element.firstChild);
-            element.appendChild(close);
-            sentinels.push(open, close);
+        // A chord stacked over a chunk that is a block or a flex item of its own reaches innerText a chunk a line. The run of
+        // such chunks it stands in is written again from what is drawn: the chunks of one visual line joined in their order,
+        // a space where a gap is drawn between two, each chord before the chunk under it.
+        const rows = [];
+        stacked.forEach((height, element) => {
+            const row = rowOf(element, height);
+            for (let i = 0; i < rows.length; i++) if (rows[i].element.contains(row) || row.contains(rows[i].element)) return;
+            const text = rowText(row);
+            if (text !== null) rows.push({element: row, text: text});
+        });
+        const inRow = (element) => { for (let i = 0; i < rows.length; i++) if (rows[i].element.contains(element)) return true; return false; };
+        const inline = [];
+        for (const element of raised) if (!inRow(element)) inline.push(element);
+        let chords = inline.length;
+        stacked.forEach((height, element) => { if (inRow(element)) chords++; });
+        if (chords >= 2) {
+            for (const element of inline) {
+                const open = document.createTextNode('\uE000');
+                const close = document.createTextNode('\uE001');
+                element.insertBefore(open, element.firstChild);
+                element.appendChild(close);
+                sentinels.push(open, close);
+            }
+            for (let i = 0; i < rows.length; i++) {
+                const open = document.createTextNode('\uE002' + i + '\uE002');
+                const close = document.createTextNode('\uE003');
+                rows[i].element.insertBefore(open, rows[i].element.firstChild);
+                rows[i].element.appendChild(close);
+                sentinels.push(open, close);
+            }
         }
-        const read = document.body ? document.body.innerText : '';
+        // Only what the run's own markers enclose is written again: a page may draw its own private-use characters (a
+        // music font's glyphs).
+        const read = (document.body ? document.body.innerText : '')
+            .replace(/\uE002(\d+)\uE002[^\uE003]*\uE003/g, (whole, index) => rows[+index].text);
+        for (const sentinel of sentinels) if (sentinel.data[0] === '\uE002' || sentinel.data === '\uE003') sentinel.remove();
         const lines = read.split('\n');
         const lineMarks = document.body ? marksOf(document.body, read) : [{}];
         if (!sentinels.length) return {text: read, title: document.title || '', address: document.location.href, marks: lineMarks};
