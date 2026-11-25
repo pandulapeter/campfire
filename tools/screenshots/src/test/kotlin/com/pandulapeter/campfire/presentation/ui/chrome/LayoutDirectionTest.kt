@@ -21,6 +21,7 @@ import com.pandulapeter.campfire.presentation.localization.AppLocale
 import com.pandulapeter.campfire.presentation.localization.LocalizedStrings
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.settings
+import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language_english
 import com.pandulapeter.campfire.presentation.resources.songs
 import com.pandulapeter.campfire.screenshots.AppTestScope
 import com.pandulapeter.campfire.screenshots.RISING_SUN_TITLE
@@ -49,6 +50,9 @@ internal class LayoutDirectionTest {
     @Test
     fun `choosing a language written from the right in Settings turns the layout at once`() = runAppTest {
         tap(hasText(string(Res.string.settings)) and hasClickAction())
+        // The language chip names the language the app is set to, and opens the list of every one.
+        onNode(hasText(string(Res.string.settings_user_interface_language_english)) and hasClickAction()).performScrollTo().performTouchInput { click() }
+        waitForIdle()
         onNode(hasText(HEBREW_OWN_NAME, substring = true) and hasClickAction()).performScrollTo().performTouchInput { click() }
         waitForIdle()
         val songs = LocalizedStrings.get(Res.string.songs, AppLocale.HE)

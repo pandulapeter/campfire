@@ -10,6 +10,9 @@
 package com.pandulapeter.campfire.presentation.ui.screens.settings
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.SizeTransform
@@ -17,8 +20,6 @@ import androidx.compose.animation.core.snap
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -41,9 +42,7 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_cloud
 import com.pandulapeter.campfire.presentation.resources.ic_delete
-import com.pandulapeter.campfire.presentation.resources.settings_group_all_links
 import com.pandulapeter.campfire.presentation.resources.settings_group_shared_links
-import com.pandulapeter.campfire.presentation.resources.settings_sharing_description
 import com.pandulapeter.campfire.presentation.resources.settings_sharing_nothing_shared
 import com.pandulapeter.campfire.presentation.resources.settings_sharing_stale
 import com.pandulapeter.campfire.presentation.resources.settings_sharing_stop_all
@@ -61,7 +60,6 @@ import com.pandulapeter.campfire.presentation.ui.navigation.SettingsTab
 import com.pandulapeter.campfire.presentation.ui.platform.isCopyConfirmedBySystem
 import com.pandulapeter.campfire.presentation.ui.platform.plainTextClipEntry
 import com.pandulapeter.campfire.presentation.ui.settingsPage.AnimatedSettingsRow
-import com.pandulapeter.campfire.presentation.ui.settingsPage.SECTION_GAP
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsMessage
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSection
 import com.pandulapeter.campfire.presentation.ui.share.ShareLinkController
@@ -74,9 +72,10 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * The Sharing tab: everything shared as a link from the connected account, on any device, or the invitation to connect
- * one. Its stages ([sharingStageOf]) crossfade, each a user's tap or the connection's answer to one, except the list
- * arriving over "Nothing shared yet", which is data arriving and is simply there.
+ * The Library tab's shared links: everything shared as a link from the connected account, on any device, there only
+ * while an account is connected, since the sync section above it is where one is. Its stages ([sharingStageOf]) crossfade,
+ * each a user's tap or the connection's answer to one, except the list arriving over "Nothing shared yet", which is
+ * data arriving and is simply there.
  *
  * The tab settling into view reads the account's list once per visit; until that lands, and where it cannot (offline),
  * the list this device last read is shown.
@@ -100,7 +99,7 @@ internal fun SharingSections(
     val isConnected by remember(syncState) { derivedStateOf { syncState.value is SyncState.Connected } }
     val stage by remember(syncState) { derivedStateOf { sharingStageOf(syncState.value, refreshFailure, shares) } }
     // The pager composes every tab with the screen, so the tab being composed is no sign of anybody looking at it.
-    val isShown = selectedTab() == SettingsTab.SHARING
+    val isShown = selectedTab() == SettingsTab.LIBRARY
     LaunchedEffect(isShown, isConnected) {
         if (!isConnected) refreshFailure = null else if (isShown) refreshFailure = controller.refresh()
     }
@@ -108,31 +107,27 @@ internal fun SharingSections(
     var shareIdAskedToStop by rememberSaveable { mutableStateOf<String?>(null) }
     var isStopEverythingAsked by rememberSaveable { mutableStateOf(false) }
     val completionPage = rememberAuthorizationCompletionPage()
-    AnimatedContent(
-        targetState = stage,
-        transitionSpec = {
-            if (initialState == SharingStage.NOTHING_SHARED && targetState == SharingStage.SHARED) {
-                EnterTransition.None togetherWith ExitTransition.None using SizeTransform(clip = false) { _, _ -> snap() }
-            } else {
-                fadeIn() togetherWith fadeOut() using SizeTransform(clip = false)
-            }
-        },
-    ) { shown ->
-        Column(verticalArrangement = Arrangement.spacedBy(SECTION_GAP)) {
+    // The stage the section leaves in, drawn while it shrinks away as the account is disconnected.
+    val lastStage = remember { LastSharingStage(stage) }
+    stage?.let { lastStage.value = it }
+    AnimatedVisibility(
+        visible = stage != null,
+        enter = fadeIn() + expandVertically(),
+        exit = fadeOut() + shrinkVertically(),
+    ) {
+        AnimatedContent(
+            targetState = stage ?: lastStage.value,
+            transitionSpec = {
+                if (initialState == SharingStage.NOTHING_SHARED && targetState == SharingStage.SHARED) {
+                    EnterTransition.None togetherWith ExitTransition.None using SizeTransform(clip = false) { _, _ -> snap() }
+                } else {
+                    fadeIn() togetherWith fadeOut() using SizeTransform(clip = false)
+                }
+            },
+        ) { shown ->
             SettingsSection(title = stringResource(Res.string.settings_group_shared_links)) {
                 when (shown) {
-                    SharingStage.NOT_CONNECTED -> {
-                        SettingsMessage(text = stringResource(Res.string.settings_sharing_description))
-                        DisconnectedSyncSettings(
-                            offeredSyncProvider = syncController.offeredSyncProvider,
-                            onConnectSyncProvider = onConnectSyncProvider,
-                            syncState = syncState.value,
-                        )
-                    }
-                    SharingStage.CONNECTING -> {
-                        SettingsMessage(text = stringResource(Res.string.settings_sharing_description))
-                        ConnectingSyncSettings(onCancel = syncController::cancelSyncConnection)
-                    }
+                    null -> Unit
                     SharingStage.CONNECT_AGAIN -> {
                         SettingsMessage(
                             text = stringResource(
@@ -164,10 +159,8 @@ internal fun SharingSections(
                 AnimatedSettingsRow(isVisible = isConnected && isStaleSharingList(refreshFailure)) {
                     SettingsMessage(text = stringResource(Res.string.settings_sharing_stale))
                 }
-            }
-            // Alone in its own section and last, as the Library tab keeps the rows that cannot be undone.
-            if (shown == SharingStage.SHARED) {
-                SettingsSection(title = stringResource(Res.string.settings_group_all_links)) {
+                // Last, under every link it stops, as the tab keeps the rows that cannot be undone at its end.
+                if (shown == SharingStage.SHARED) {
                     ActionListItem(
                         title = stringResource(Res.string.settings_sharing_stop_all),
                         icon = painterResource(Res.drawable.ic_delete),
@@ -202,6 +195,9 @@ internal fun SharingSections(
         )
     }
 }
+
+/** What [SharingSections] draws while it leaves. Not a state, since nothing is ever redrawn because of it. */
+private class LastSharingStage(var value: SharingStage?)
 
 /**
  * The list of shares, with what its menus do: Copy link as the export screen copies it, and Show QR code opening the

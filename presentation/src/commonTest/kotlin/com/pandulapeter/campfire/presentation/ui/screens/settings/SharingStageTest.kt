@@ -21,6 +21,7 @@ import com.pandulapeter.campfire.data.model.sync.SyncState
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -34,14 +35,11 @@ class SharingStageTest {
     )
 
     @Test
-    fun `without a working connection the tab invites to connect - whatever this device last read`() {
+    fun `without a working connection there are no shared links to show - whatever this device last read`() {
         val shares = listOf(share("aaaaaaaaaaaaaaaa"))
-        assertEquals(SharingStage.NOT_CONNECTED, sharingStageOf(SyncState.Disconnected, refreshFailure = null, shares = shares))
-        assertEquals(
-            SharingStage.NOT_CONNECTED,
-            sharingStageOf(SyncState.ConnectionFailed(SyncProviderId.DROPBOX, SyncFailureReason.NETWORK), refreshFailure = null, shares = shares),
-        )
-        assertEquals(SharingStage.CONNECTING, sharingStageOf(SyncState.Connecting(SyncProviderId.DROPBOX), refreshFailure = null, shares = shares))
+        assertNull(sharingStageOf(SyncState.Disconnected, refreshFailure = null, shares = shares))
+        assertNull(sharingStageOf(SyncState.ConnectionFailed(SyncProviderId.DROPBOX, SyncFailureReason.NETWORK), refreshFailure = null, shares = shares))
+        assertNull(sharingStageOf(SyncState.Connecting(SyncProviderId.DROPBOX), refreshFailure = null, shares = shares))
     }
 
     @Test

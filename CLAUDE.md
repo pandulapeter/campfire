@@ -290,7 +290,7 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
   `data/source/local/implementation`.
 - A rename reaches sync as delete + create, and an edit beats a deletion: `data/sync/implementation`.
 - A song or setlist is shared as a link (with a QR code) from the export screen, made in the user's Dropbox, listed
-  in Settings → Sharing, and opened into the import review on every platform: `ui/screens/export`,
+  in Settings → Library, and opened into the import review on every platform: `ui/screens/export`,
   `data/sync/implementation/shared`.
 
 ### Feature invariants (detail in the named files)

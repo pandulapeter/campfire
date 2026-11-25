@@ -1571,10 +1571,7 @@
     <string name="share_stopping">Zastavování sdílení…</string>
 
     <!-- Settings: sharing -->
-    <string name="settings_sharing">Sdílení</string>
     <string name="settings_group_shared_links">Sdílené odkazy</string>
-    <string name="settings_group_all_links">Všechny odkazy</string>
-    <string name="settings_sharing_description">Sdílej píseň nebo setlist jako odkaz, který může otevřít kdokoli, vytvořený z tvého Dropboxu. Připojením Dropboxu budeš mít zároveň celou knihovnu synchronizovanou na všech svých zařízeních.</string>
     <string name="settings_sharing_nothing_shared">Zatím nic nesdílíš. Při sdílení písně nebo setlistu vyber Odkaz.</string>
     <string name="settings_sharing_stale">Odkazy se z Dropboxu nepodařilo načíst. Tento seznam ukazuje, co toto zařízení vidělo naposledy.</string>
     <string name="settings_sharing_orphaned">Už není v knihovně</string>

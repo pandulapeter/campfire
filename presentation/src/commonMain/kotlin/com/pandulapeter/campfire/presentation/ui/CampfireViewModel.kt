@@ -811,7 +811,6 @@ class CampfireViewModel(
             syncConsentOriginOf(
                 topDestination = navigator.backStack.lastOrNull(),
                 visibleDialog = dialogHost.visibleDialog.value,
-                settingsTab = navigator.settingsTab,
             ),
         )
         syncController.connectSyncProvider(providerId, completionPage)

@@ -1520,10 +1520,7 @@
     <string name="share_stopping">Interruzione della condivisione…</string>
 
     <!-- Settings: sharing -->
-    <string name="settings_sharing">Condivisione</string>
     <string name="settings_group_shared_links">Link condivisi</string>
-    <string name="settings_group_all_links">Tutti i link</string>
-    <string name="settings_sharing_description">Condividi una canzone o una scaletta come link che chiunque può aprire, creato dal tuo Dropbox. Connettere Dropbox mantiene anche tutta la tua libreria sincronizzata con esso su tutti i tuoi dispositivi.</string>
     <string name="settings_sharing_nothing_shared">Ancora nulla di condiviso. Scegli Link quando condividi una canzone o una scaletta.</string>
     <string name="settings_sharing_stale">Impossibile leggere i link da Dropbox. Questo elenco è ciò che questo dispositivo ha visto per ultimo.</string>
     <string name="settings_sharing_orphaned">Non è più nella tua libreria</string>

@@ -1579,10 +1579,7 @@
     <string name="share_stopping">Se oprește partajarea…</string>
 
     <!-- Settings: sharing -->
-    <string name="settings_sharing">Partajare</string>
     <string name="settings_group_shared_links">Linkuri partajate</string>
-    <string name="settings_group_all_links">Toate linkurile</string>
-    <string name="settings_sharing_description">Partajează un cântec sau o listă ca link pe care îl poate deschide oricine, creat din Dropboxul tău. Conectarea Dropbox îți păstrează și întreaga bibliotecă sincronizată cu el pe toate dispozitivele.</string>
     <string name="settings_sharing_nothing_shared">Nimic partajat încă. Alege Link când partajezi un cântec sau o listă.</string>
     <string name="settings_sharing_stale">Linkurile nu au putut fi citite din Dropbox. Această listă arată ce a văzut ultima dată acest dispozitiv.</string>
     <string name="settings_sharing_orphaned">Nu mai este în biblioteca ta</string>

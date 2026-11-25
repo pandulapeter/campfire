@@ -1576,10 +1576,7 @@
     <string name="share_stopping">מפסיק את השיתוף…</string>
 
     <!-- Settings: sharing -->
-    <string name="settings_sharing">שיתוף</string>
     <string name="settings_group_shared_links">קישורי שיתוף</string>
-    <string name="settings_group_all_links">כל הקישורים</string>
-    <string name="settings_sharing_description">שתפו שיר או סט־ליסט כקישור שכל אחד יכול לפתוח, שנוצר מה-Dropbox שלכם. חיבור Dropbox גם שומר את כל הספרייה שלכם מסונכרנת איתו בכל המכשירים.</string>
     <string name="settings_sharing_nothing_shared">עדיין לא שותף כלום. בחרו “קישור” כשמשתפים שיר או סט־ליסט.</string>
     <string name="settings_sharing_stale">לא ניתן היה לקרוא את הקישורים מ-Dropbox. הרשימה הזו היא מה שהמכשיר ראה לאחרונה.</string>
     <string name="settings_sharing_orphaned">כבר לא בספרייה שלכם</string>

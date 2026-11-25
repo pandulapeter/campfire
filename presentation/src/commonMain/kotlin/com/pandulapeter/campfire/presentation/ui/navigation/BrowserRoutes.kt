@@ -350,18 +350,21 @@ internal object BrowserRoutes {
     private val SettingsTab.pathSegment get() = name.lowercase()
 
     /**
-     * The tab a path segment names, where the addresses of tabs since split into others are still in bookmarks: `songs`,
-     * how a song is read, is the Song tab's, and `preferences`, which held every page, General's.
+     * The tab a path segment names, where the addresses of tabs since split into others or folded into one are still in
+     * bookmarks: `songs`, how a song is read, is the Song tab's, `preferences`, which held every page, General's, and
+     * `sharing`, whose links are listed in the Library tab, Library's.
      */
     private fun settingsTabOf(segment: String) = SettingsTab.entries.firstOrNull { it.pathSegment == segment } ?: when (segment) {
         SONGS -> SettingsTab.SONG
         PREFERENCES -> SettingsTab.GENERAL
+        SHARING -> SettingsTab.LIBRARY
         else -> null
     }
 
     private const val ROOT = ""
     private const val SONGS = "songs"
     private const val PREFERENCES = "preferences"
+    private const val SHARING = "sharing"
     private const val SEARCH = "search"
     private const val SETLISTS = "setlists"
     private const val METRONOME = "metronome"

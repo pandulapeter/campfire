@@ -1519,10 +1519,7 @@
     <string name="share_stopping">Megosztás leállítása…</string>
 
     <!-- Settings: sharing -->
-    <string name="settings_sharing">Megosztás</string>
     <string name="settings_group_shared_links">Megosztott linkek</string>
-    <string name="settings_group_all_links">Összes link</string>
-    <string name="settings_sharing_description">Ossz meg egy dalt vagy listát linkként, amelyet bárki megnyithat, a saját Dropboxodból. A Dropbox csatlakoztatásával a teljes könyvtárad is szinkronban marad vele minden eszközödön.</string>
     <string name="settings_sharing_nothing_shared">Még nincs semmi megosztva. Egy dal vagy lista megosztásakor válaszd a Link lehetőséget.</string>
     <string name="settings_sharing_stale">Nem sikerült beolvasni a linkeket a Dropboxból. Ez a lista az, amit ez az eszköz legutóbb látott.</string>
     <string name="settings_sharing_orphaned">Már nincs a könyvtáradban</string>

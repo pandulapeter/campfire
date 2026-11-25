@@ -15,15 +15,16 @@ import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.print_format_pdf
 import com.pandulapeter.campfire.presentation.resources.print_section_page
 import com.pandulapeter.campfire.presentation.resources.settings
-import com.pandulapeter.campfire.presentation.resources.settings_sharing
+import com.pandulapeter.campfire.presentation.resources.settings_library
 import com.pandulapeter.campfire.presentation.resources.settings_sharing_actions
-import com.pandulapeter.campfire.presentation.resources.settings_sharing_description
+import com.pandulapeter.campfire.presentation.resources.settings_group_shared_links
 import com.pandulapeter.campfire.presentation.resources.settings_sharing_nothing_shared
 import com.pandulapeter.campfire.presentation.resources.settings_sharing_orphaned
 import com.pandulapeter.campfire.presentation.resources.settings_sharing_stop_all
@@ -47,26 +48,27 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 @OptIn(ExperimentalTestApi::class)
-internal class SharingTabTest {
+internal class SharedLinksTest {
 
     @Test
-    fun `without an account the sharing tab invites to connect and says the library syncs too`() = runAppTest(
+    fun `without an account the library tab lists no shared links, only the invitation to connect`() = runAppTest(
         window = WIDE_WINDOW,
         isSyncConnected = false,
+        preferenceFiles = mapOf("shared-links.json" to MIRROR),
     ) {
-        openSharingTab()
+        openLibraryTab()
 
-        onNodeWithText(string(Res.string.settings_sharing_description)).assertExists()
         onNode(hasText(string(Res.string.settings_sync_connect_dropbox)) and hasClickAction()).assertExists()
-        onNodeWithText(string(Res.string.settings_sharing_stop_all)).assertDoesNotExist()
+        onNodeWithText(string(Res.string.settings_group_shared_links)).assertDoesNotExist()
+        onNodeWithText(RISING_SUN_TITLE).assertDoesNotExist()
     }
 
     @Test
-    fun `the sharing tab lists what this device last read of the account's shares`() = runAppTest(
+    fun `the library tab lists what this device last read of the account's shares`() = runAppTest(
         window = WIDE_WINDOW,
         preferenceFiles = mapOf("shared-links.json" to MIRROR),
     ) {
-        openSharingTab()
+        openLibraryTab()
 
         onNodeWithText(RISING_SUN_TITLE).assertExists()
         onNodeWithText(GONE_SETLIST_TITLE).assertExists()
@@ -80,7 +82,7 @@ internal class SharingTabTest {
         window = WIDE_WINDOW,
         preferenceFiles = mapOf("shared-links.json" to MIRROR),
     ) {
-        openSharingTab()
+        openLibraryTab()
 
         // The row itself shows the code; its menu keeps copying the link.
         onAllNodes(hasContentDescription(string(Res.string.settings_sharing_actions)))[0].performTouchInput { click() }
@@ -108,7 +110,7 @@ internal class SharingTabTest {
 
         openQrCode()
         pressBack()
-        assertSharingTabUncovered()
+        assertLibraryTabUncovered()
 
         tap(hasText(string(Res.string.songs)) and hasClickAction())
         openSong()
@@ -140,7 +142,7 @@ internal class SharingTabTest {
     }
 
     @Test
-    fun `a back over the qr code closes the export screen and leaves the sharing tab as it was`() = runAppTest(
+    fun `a back over the qr code closes the export screen and leaves the library tab as it was`() = runAppTest(
         window = WIDE_WINDOW,
         preferenceFiles = mapOf("shared-links.json" to MIRROR),
     ) {
@@ -148,11 +150,11 @@ internal class SharingTabTest {
 
         pressBack()
 
-        assertSharingTabUncovered()
+        assertLibraryTabUncovered()
     }
 
     @Test
-    fun `a back gesture over the qr code closes the export screen and leaves the sharing tab as it was`() = runAppTest(
+    fun `a back gesture over the qr code closes the export screen and leaves the library tab as it was`() = runAppTest(
         window = WIDE_WINDOW,
         preferenceFiles = mapOf("shared-links.json" to MIRROR),
     ) {
@@ -160,23 +162,24 @@ internal class SharingTabTest {
 
         swipeBack()
 
-        assertSharingTabUncovered()
+        assertLibraryTabUncovered()
     }
 
     private fun AppTestScope.openQrCode() {
-        openSharingTab()
-        tap(hasText(RISING_SUN_TITLE) and hasClickAction())
+        openLibraryTab()
+        // Under the sync section, which a short window leaves the list below.
+        onNode(hasText(RISING_SUN_TITLE) and hasClickAction()).performScrollTo().performTouchInput { click() }
         waitUntil(timeoutMillis = 10_000) { onAllNodes(hasContentDescription(string(Res.string.share_qr_code))).fetchSemanticsNodes().isNotEmpty() }
     }
 
-    private fun AppTestScope.assertSharingTabUncovered() {
+    private fun AppTestScope.assertLibraryTabUncovered() {
         waitUntil(timeoutMillis = 10_000) { onAllNodes(hasContentDescription(string(Res.string.share_qr_code))).fetchSemanticsNodes().isEmpty() }
         onNode(hasText(string(Res.string.settings_sharing_stop_all)) and hasClickAction()).assertExists()
     }
 
-    private fun AppTestScope.openSharingTab() {
+    private fun AppTestScope.openLibraryTab() {
         tap(hasText(string(Res.string.settings)) and hasClickAction())
-        tap(hasText(string(Res.string.settings_sharing)) and hasClickAction())
+        tap(hasText(string(Res.string.settings_library)) and hasClickAction())
     }
 
     private companion object {

@@ -10,10 +10,10 @@
 
 # :presentation — ui/screens/settings
 
-Eight tabs under a tab row scrolling under the insets to the window's edges (the insets pad its ends) while the page
+Seven tabs under a tab row scrolling under the insets to the window's edges (the insets pad its ends) while the page
 is at most 740dp wide, else a category pane beside the selected page, each category with its icon (the Preferences'
 pages' own for theirs); the layouts crossfade across the breakpoint, as
-do the wide layout's pages. A build without sync leaves Sharing out.
+do the wide layout's pages.
 
 ## Tab contents
 
@@ -25,11 +25,12 @@ do the wide layout's pages. A build without sync leaves Sharing out.
 - **Library**: On this device last, since its rows can't be undone. Deleting the library wants `DELETE` typed in every
   language (into a capitalizing field). Its row's size is songs, setlists, and `library/files` (listed, never read;
   pictures by `IMAGE_EXTENSIONS`, the rest attachments), with a line naming the parts once two take up space.
-- **Sharing**: there while disconnected too. Stages crossfade, except the list arriving over "Nothing shared yet".
-  Settling into view (not being composed by the pager) reads the account's list once per visit; the mirror shows
-  meanwhile and offline, saying so once a read fails. A row being stopped (every row, for Stop sharing everything)
-  fades, its menu crossfading into a progress indicator until it shrinks in place, or back with a snackbar saying why
-  where the stop fails. Stop sharing everything is alone in the last section. A working share's line adds how many
+- **Shared links** (in Library, under Sync): there only while an account is connected, Sync being where one is
+  connected. Stages crossfade, except the list arriving over "Nothing shared yet". The Library tab settling into view
+  (not being composed by the pager) reads the account's list once per visit; the mirror shows meanwhile and offline,
+  saying so once a read fails. A row being stopped (every row, for Stop sharing everything) fades, its menu
+  crossfading into a progress indicator until it shrinks in place, or back with a snackbar saying why where the stop
+  fails. Stop sharing everything is the section's last row. A working share's line adds how many
   attachments its copy left out for their size (`leftOutAttachmentsText`, as the export screen says it).
 - **About**: Help starts with Keyboard shortcuts on a desktop or web build, elsewhere only while a keyboard is attached.
 - **Features**: a Screens group with one switch per tab in the navigation's order, an Extras group for the parts of the

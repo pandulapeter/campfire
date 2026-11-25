@@ -23,7 +23,6 @@ internal enum class SettingsTab {
     CHORDS,
     METRONOME,
     LIBRARY,
-    SHARING,
     FEATURES,
     ABOUT,
     ;

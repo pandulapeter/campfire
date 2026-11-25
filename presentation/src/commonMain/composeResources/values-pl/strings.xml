@@ -1566,10 +1566,7 @@
     <string name="share_stopping">Kończenie udostępniania…</string>
 
     <!-- Settings: sharing -->
-    <string name="settings_sharing">Udostępnianie</string>
     <string name="settings_group_shared_links">Udostępnione linki</string>
-    <string name="settings_group_all_links">Wszystkie linki</string>
-    <string name="settings_sharing_description">Udostępnij piosenkę lub setlistę jako link, który każdy może otworzyć, utworzony w twoim Dropboksie. Połączenie z Dropbox utrzymuje też całą twoją bibliotekę zsynchronizowaną na wszystkich urządzeniach.</string>
     <string name="settings_sharing_nothing_shared">Nic jeszcze nie udostępniono. Wybierz Link podczas udostępniania piosenki lub setlisty.</string>
     <string name="settings_sharing_stale">Nie udało się odczytać linków z Dropbox. Ta lista pokazuje to, co to urządzenie widziało ostatnio.</string>
     <string name="settings_sharing_orphaned">Nie ma już w bibliotece</string>

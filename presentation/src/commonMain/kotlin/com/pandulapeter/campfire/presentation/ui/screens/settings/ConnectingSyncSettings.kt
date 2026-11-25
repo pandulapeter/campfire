@@ -22,7 +22,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_sync_connecting
 import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
 import org.jetbrains.compose.resources.painterResource
 
-/** A connection waiting for its consent page, and the way out of it: the Sync section's, and the Sharing tab's. */
+/** A connection waiting for its consent page, and the way out of it, in the Sync section. */
 @Composable
 internal fun ConnectingSyncSettings(onCancel: () -> Unit) {
     ListItem(

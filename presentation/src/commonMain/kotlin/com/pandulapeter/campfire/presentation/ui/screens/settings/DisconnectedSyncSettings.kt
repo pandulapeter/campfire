@@ -25,7 +25,7 @@ import com.pandulapeter.campfire.presentation.ui.sync.connectionFailedMessage
 import com.pandulapeter.campfire.presentation.ui.sync.rememberAuthorizationCompletionPage
 import org.jetbrains.compose.resources.painterResource
 
-/** The invitation to connect, with the reason the last attempt failed under it: the Sync section's, and the Sharing tab's. */
+/** The invitation to connect, with the reason the last attempt failed under it, in the Sync section. */
 @Composable
 internal fun ColumnScope.DisconnectedSyncSettings(
     offeredSyncProvider: SyncProviderId?,

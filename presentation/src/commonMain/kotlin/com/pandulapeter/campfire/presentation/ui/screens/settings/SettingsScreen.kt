@@ -85,7 +85,7 @@ internal fun SettingsScreen(
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     // A tab that cannot work is left out, and an address that names it, or a tab whose feature is switched off while it
     // is open, opens the first tab.
-    val tabs = settingsTabs(hasSync = viewModel.syncController.syncProviders.isNotEmpty(), userPreferences = userPreferences)
+    val tabs = settingsTabs(userPreferences = userPreferences)
     LaunchedEffect(tabs) {
         snapshotFlow { viewModel.navigator.settingsTab }.collect { if (it !in tabs) viewModel.navigator.settingsTab = SettingsTab.HOME }
     }
@@ -247,6 +247,15 @@ private fun SettingsTabContent(
                     showDialog = viewModel.dialogHost::showDialog,
                     onConnectSyncProvider = viewModel::connectSyncProvider,
                 )
+                SharingSections(
+                    controller = viewModel.shareLinkController,
+                    syncController = viewModel.syncController,
+                    libraryState = viewModel.libraryState,
+                    showDialog = viewModel.dialogHost::showDialog,
+                    sendMessage = viewModel.messageSink::sendMessage,
+                    selectedTab = { viewModel.navigator.settingsTab },
+                    onConnectSyncProvider = viewModel::connectSyncProvider,
+                )
                 LibrarySections(
                     firstRunController = viewModel.firstRunController,
                     showDialog = viewModel.dialogHost::showDialog,
@@ -259,15 +268,6 @@ private fun SettingsTabContent(
                     isPerformanceModeEnabled = isPerformanceModeEnabled,
                 )
             }
-            SettingsTab.SHARING -> SharingSections(
-                controller = viewModel.shareLinkController,
-                syncController = viewModel.syncController,
-                libraryState = viewModel.libraryState,
-                showDialog = viewModel.dialogHost::showDialog,
-                sendMessage = viewModel.messageSink::sendMessage,
-                selectedTab = { viewModel.navigator.settingsTab },
-                onConnectSyncProvider = viewModel::connectSyncProvider,
-            )
             SettingsTab.FEATURES -> FeaturesSections(
                 preferencesController = viewModel.preferencesController,
                 userPreferences = userPreferences,

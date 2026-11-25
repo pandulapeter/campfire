@@ -1527,10 +1527,7 @@
     <string name="share_stopping">Arrêt du partage…</string>
 
     <!-- Settings: sharing -->
-    <string name="settings_sharing">Partage</string>
     <string name="settings_group_shared_links">Liens partagés</string>
-    <string name="settings_group_all_links">Tous les liens</string>
-    <string name="settings_sharing_description">Partage une chanson ou une setlist sous forme de lien que tout le monde peut ouvrir, créé depuis ton Dropbox. Connecter Dropbox garde aussi toute ta bibliothèque synchronisée avec lui sur tous tes appareils.</string>
     <string name="settings_sharing_nothing_shared">Rien n\'est encore partagé. Choisis Lien en partageant une chanson ou une setlist.</string>
     <string name="settings_sharing_stale">Impossible de lire les liens depuis Dropbox. Cette liste est ce que cet appareil a vu en dernier.</string>
     <string name="settings_sharing_orphaned">N\'est plus dans ta bibliothèque</string>

@@ -11,8 +11,7 @@
 # :presentation — ui/sync
 
 - A consent's answer is shown only onto a stack nobody has built on since start (home, Settings, or an owed onboarding
-  still on page one, moved to its Dropbox page), where Connect was tapped (`SyncConsentOrigin`; Settings' Sharing tab is
-  `Sharing`, since the tab Settings was left on lasts only the session). The export screen (`SyncConsentOrigin.Export`)
+  still on page one, moved to its Dropbox page), where Connect was tapped (`SyncConsentOrigin`). The export screen (`SyncConsentOrigin.Export`)
   is reopened on Link over whatever stack the start has, once the library holds the item. The origin is kept in the
   web's session storage, where every consent ends in a fresh start, and in the saved state, where Android restores the
   back stack but not the export screen, a dialog. The answer's screen is shown when the redirect is found, not when the
