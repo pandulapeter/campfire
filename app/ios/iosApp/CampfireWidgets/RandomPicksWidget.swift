@@ -183,9 +183,14 @@ struct RandomPicksView: View {
             Spacer()
             if canDrawAgain {
                 Button(intent: ShuffleIntent()) {
-                    Image(systemName: "shuffle")
-                        .font(.system(size: 13, weight: .semibold))
+                    // The app's dice (`ic_widget_shuffle.xml`'s path), whose 24-unit box keeps a margin around the glyph,
+                    // so the box is larger than the symbol it replaces for the dice to look as large.
+                    Image("Shuffle")
+                        .renderingMode(.template)
+                        .resizable()
+                        .frame(width: 20, height: 20)
                         .foregroundStyle(colors.accent)
+                        .widgetAccentable()
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(Text(verbatim: strings.drawNewPicks))
