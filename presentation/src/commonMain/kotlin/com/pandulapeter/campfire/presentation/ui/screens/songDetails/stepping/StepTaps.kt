@@ -103,7 +103,9 @@ internal fun Modifier.stepOnTap(
                 // inside takes the up, since the scroll and the pager only fling on it, so a consumed one is the
                 // cancellation Compose makes up when the system takes the pointer away: Android's home and back
                 // gestures start as an ordinary press and slide on the window, and are short enough to pass for a tap.
-                if (up.isConsumed) {
+                // During a step the scroll took the press, which it treats as a drag from the first pixel, and it takes
+                // the up too to fling to the nearest stop, so there an unmoved press with a consumed up is still a tap.
+                if (up.isConsumed && (isDragged || !isSteppingOn)) {
                     if (isDragged) logDroppedTap("cancelled by the system")
                     return@awaitEachGesture
                 }
