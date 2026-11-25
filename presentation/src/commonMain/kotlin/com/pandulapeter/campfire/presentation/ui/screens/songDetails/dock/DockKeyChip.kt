@@ -31,6 +31,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.pandulapeter.campfire.presentation.localization.isolatedLeftToRight
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.localization.textResource
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -97,7 +98,8 @@ internal fun DockKeyChip(
                         )
                         if (shownTransposition != null) {
                             Text(
-                                text = "($shownTransposition)",
+                                // Isolated, or a sentence read from the right would draw "(+2)" as "(2+)".
+                                text = "($shownTransposition)".isolatedLeftToRight(),
                                 style = MaterialTheme.typography.labelLarge,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 maxLines = 1,
