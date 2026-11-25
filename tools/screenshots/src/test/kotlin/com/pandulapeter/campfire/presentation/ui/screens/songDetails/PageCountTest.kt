@@ -20,11 +20,13 @@ import androidx.compose.ui.test.hasScrollToNodeAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.preferences.PageTurn
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.setlists
 import com.pandulapeter.campfire.screenshots.AppTestScope
 import com.pandulapeter.campfire.screenshots.RISING_SUN_TITLE
+import com.pandulapeter.campfire.screenshots.TestWindow
 import com.pandulapeter.campfire.screenshots.runAppTest
 import com.pandulapeter.campfire.screenshots.tap
 import kotlin.math.roundToInt
@@ -37,7 +39,8 @@ import kotlin.test.assertTrue
  * pages (turned by page) or steps (turned by column) than they did while the song started with its playing controls, its
  * chord diagrams, and its scale suggestions, which the dock under it now holds, its diagrams kept on an upright phone at
  * that cost. Counted by the step dots, as a reader would ("Page 1 of 8"), alone and in a setlist, whose pager bar takes
- * room of its own.
+ * room of its own. A phone on its side and two desktop windows take no more pages than they did with the dock's rows
+ * under the pages, as they were counted before its side panel.
  */
 @OptIn(ExperimentalTestApi::class)
 internal class PageCountTest {
@@ -54,10 +57,38 @@ internal class PageCountTest {
     @Test
     fun `a long strummed song takes at most two more column steps than it did`() = assertAtMost(LONG_SONG_TITLE, PageTurn.COLUMN, alone = 10, inSetlist = 10)
 
-    /** [alone] and [inSetlist] are the counts from before the dock. */
-    private fun assertAtMost(title: String, pageTurn: PageTurn, alone: Int, inSetlist: Int) {
-        listOf(false to alone + MOST_EXTRA_STEPS, true to inSetlist + MOST_EXTRA_STEPS).forEach { (isInSetlist, most) ->
-            runAppTest(songs = listOf(LONG_SONG_FILE), setlists = listOf(SETLIST_FILE), pageTurn = pageTurn) {
+    @Test
+    fun `the long songs on a phone on its side take no more pages than the dock's bottom row cost them`() =
+        assertWindow(TestWindow.PHONE_ON_ITS_SIDE, risingSun = 12 to 16, longSong = 12 to 16)
+
+    @Test
+    fun `the long songs in a small desktop window take no more pages than the dock's bottom row cost them`() =
+        assertWindow(TestWindow(width = 800.dp, height = 600.dp), risingSun = 4 to 5, longSong = 7 to 8)
+
+    @Test
+    fun `the long songs in a laptop's window take no more pages than the dock's bottom row cost them`() =
+        assertWindow(TestWindow.DESKTOP, risingSun = 3 to 3, longSong = 4 to 5)
+
+    /**
+     * Each of the two songs in [window], turned by page, alone and in a setlist, at most as many pages as [risingSun] and
+     * [longSong] say (alone to in a setlist), which are what they took with the dock's rows under the pages.
+     */
+    private fun assertWindow(window: TestWindow, risingSun: Pair<Int, Int>, longSong: Pair<Int, Int>) {
+        assertAtMost(RISING_SUN_TITLE, PageTurn.PAGE, alone = risingSun.first, inSetlist = risingSun.second, window = window, extraSteps = 0)
+        assertAtMost(LONG_SONG_TITLE, PageTurn.PAGE, alone = longSong.first, inSetlist = longSong.second, window = window, extraSteps = 0)
+    }
+
+    /** [alone] and [inSetlist] are the counts from before the dock, which [extraSteps] more are allowed past. */
+    private fun assertAtMost(
+        title: String,
+        pageTurn: PageTurn,
+        alone: Int,
+        inSetlist: Int,
+        window: TestWindow = TestWindow.PHONE,
+        extraSteps: Int = MOST_EXTRA_STEPS,
+    ) {
+        listOf(false to alone + extraSteps, true to inSetlist + extraSteps).forEach { (isInSetlist, most) ->
+            runAppTest(window = window, songs = listOf(LONG_SONG_FILE), setlists = listOf(SETLIST_FILE), pageTurn = pageTurn) {
                 if (isInSetlist) {
                     tap(hasText(string(Res.string.setlists)) and hasClickAction())
                     // A setlist's row is numbered, which its text starts with.
@@ -71,7 +102,7 @@ internal class PageCountTest {
                 waitUntil(timeoutMillis = OPEN_TIMEOUT_MILLIS) { stepCount() != null }
                 waitForIdle()
                 val count = checkNotNull(stepCount())
-                val case = "$title turned by ${pageTurn.name.lowercase()}${if (isInSetlist) " in a setlist" else ""}"
+                val case = "$title turned by ${pageTurn.name.lowercase()}${if (isInSetlist) " in a setlist" else ""} at ${window.width} × ${window.height}"
                 println("Page count: $case: $count")
                 assertTrue(count <= most, "$case takes $count steps, more than the $most it may.")
             }
