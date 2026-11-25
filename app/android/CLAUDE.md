@@ -72,8 +72,9 @@
 
 - Glance, over the snapshot the composition hands over (`ui/widget/CLAUDE.md`): `WidgetFilesImpl` writes
   `widget/snapshot.json` (files directory; skipped when unchanged, written beside it and renamed over it) on a process
-  scope, then refreshes both widgets, and the cover thumbnails in `widget/covers/` (`WidgetCoverFiles`). The widgets
-  read only those files (never Koin or the library) and call the common decisions (`randomPicksContent`,
+  scope, then refreshes both widgets, and the cover thumbnails in `widget/covers/` (`WidgetCoverFiles`), made only while
+  a widget is placed (`WidgetPlacementImpl`: the receivers' bound ids, asked again as they update or delete one). The
+  widgets read only those files (never Koin or the library) and call the common decisions (`randomPicksContent`,
   `setlistContent`); no snapshot yet (the app never ran) says to open the app.
 - **The file is read once per process, on IO** (`WidgetSnapshotFile.load` in `provideGlance`, then kept current by its
   `write`): Glance composes on the main thread, once per responsive size. Only the covers a widget draws at a size are

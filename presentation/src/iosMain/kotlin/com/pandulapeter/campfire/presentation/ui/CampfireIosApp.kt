@@ -39,6 +39,7 @@ import com.pandulapeter.campfire.presentation.ui.theme.appIconThemeColor
 import com.pandulapeter.campfire.presentation.ui.shortcuts.LauncherShortcuts
 import com.pandulapeter.campfire.presentation.ui.shortcuts.LauncherShortcutsEffect
 import com.pandulapeter.campfire.presentation.ui.widget.WidgetFiles
+import com.pandulapeter.campfire.presentation.ui.widget.WidgetPlacement
 import com.pandulapeter.campfire.presentation.ui.widget.WidgetSnapshotEffect
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -83,6 +84,7 @@ import org.koin.compose.viewmodel.koinViewModel
  *   the app module to set as the Home Screen quick actions ([LauncherShortcutsEffect]).
  * @param widgetFiles The App Group's container, where the widget extension reads the snapshot and its covers, which the
  *   app writes whenever what the widgets show changes ([WidgetSnapshotEffect]); none writes nothing.
+ * @param widgetPlacement Which widgets are on the Home Screen, which decides the covers made for them.
  */
 @Composable
 fun CampfireIosApp(
@@ -102,6 +104,7 @@ fun CampfireIosApp(
     onKeyCommandsChanged: (List<IosKeyCommand>) -> Unit = {},
     onLauncherShortcutsChanged: (LauncherShortcuts) -> Unit = {},
     widgetFiles: WidgetFiles? = null,
+    widgetPlacement: WidgetPlacement? = null,
 ) = CompositionLocalProvider(
     LocalFilePicker provides filePicker,
     LocalIosFileOpener provides fileOpener,
@@ -125,11 +128,12 @@ fun CampfireIosApp(
     }
     IosKeyCommandsEffect(viewModel = viewModel, onChanged = onKeyCommandsChanged)
     LauncherShortcutsEffect(preferencesController = viewModel.preferencesController, onChanged = onLauncherShortcutsChanged)
-    if (widgetFiles != null) {
+    if (widgetFiles != null && widgetPlacement != null) {
         WidgetSnapshotEffect(
             screenData = viewModel.libraryState.screenData,
             preferencesController = viewModel.preferencesController,
             files = widgetFiles,
+            placement = widgetPlacement,
             getCoverArt = koinInject(),
         )
     }

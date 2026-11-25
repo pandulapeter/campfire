@@ -44,7 +44,13 @@ final class ShortcutListingController: UIViewController {
             continuedImportTasks: continuedImportTasks,
             onKeyCommandsChanged: { [weak self] commands in self?.listedCommands = commands },
             // WidgetKit has no Objective-C API, so the Kotlin side that writes the widgets' snapshot asks through this.
-            reloadWidgetTimelines: { WidgetCenter.shared.reloadAllTimelines() }
+            reloadWidgetTimelines: { WidgetCenter.shared.reloadAllTimelines() },
+            // Which widgets are placed, so that covers are made only for them; none where WidgetKit cannot say.
+            readPlacedWidgetKinds: { answer in
+                WidgetCenter.shared.getCurrentConfigurations { result in
+                    answer((try? result.get())?.map(\.kind) ?? [])
+                }
+            }
         )
         addChild(content)
         content.view.frame = view.bounds

@@ -29,6 +29,10 @@ shells' (`app/android`'s Glance widgets, `app/ios`'s `CampfireWidgets` extension
   snapshot is written first with the thumbnails already there, then the unnamed ones are deleted and the missing ones
   made, and it is written again with them: a snapshot never names a file that is not there. The shells only write,
   list, and delete files.
+- **Only for placed widgets** (`WidgetPlacement`, `coverAddressesShownBy`): a Random picks widget anywhere covers every
+  song; Setlist widgets alone, the songs of every setlist (not only the ones they show now, since the next gig moves on
+  without the app); none placed, nothing is fetched and every thumbnail is deleted. Asked again at every return to the
+  front (`RESUMED`) and whenever the shell says the widgets changed (Android's receivers).
 - A counted text is a `Plural` of the language's template for each count from 0 to 199 (a larger count reads as the
   one past 100 with its last two digits), so neither platform needs the plural rules.
 - **Every tap is an app link** (`navigation/CLAUDE.md`), built here: a song's details, a setlist's first song in setlist

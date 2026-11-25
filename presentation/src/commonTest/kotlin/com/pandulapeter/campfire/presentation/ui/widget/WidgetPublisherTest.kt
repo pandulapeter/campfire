@@ -56,12 +56,14 @@ class WidgetPublisherTest {
         makeThumbnail = { it },
     )
 
+    private val everyWidget = PlacedWidgets(hasRandomPicks = true, hasSetlist = true)
+
     private fun WidgetSnapshot.coverOf(fileName: String) = songs.single { it.fileName == fileName }.cover
 
     @Test
     fun `the snapshot reaches the widgets first with the covers already made and again once the missing ones are`() = runTest {
         val files = FakeWidgetFiles(covers = setOf(widgetCoverName("https://covers/a.jpg")))
-        publisher(files).publish(snapshot = snapshot, coverAddresses = addresses + ("c.cho" to "https://covers/c.jpg"))
+        publisher(files).publish(snapshot = snapshot, allCoverAddresses = addresses + ("c.cho" to "https://covers/c.jpg"), placed = everyWidget)
         assertEquals(2, files.snapshots.size)
         assertEquals(widgetCoverName("https://covers/a.jpg"), files.snapshots.first().coverOf("a.cho"))
         assertNull(files.snapshots.first().coverOf("c.cho"))
@@ -71,7 +73,7 @@ class WidgetPublisherTest {
     @Test
     fun `a cover that cannot be had leaves its song without one`() = runTest {
         val files = FakeWidgetFiles()
-        publisher(files, failingUrls = setOf("https://covers/missing.jpg")).publish(snapshot = snapshot, coverAddresses = addresses)
+        publisher(files, failingUrls = setOf("https://covers/missing.jpg")).publish(snapshot = snapshot, allCoverAddresses = addresses, placed = everyWidget)
         val last = files.snapshots.last()
         assertEquals(widgetCoverName("https://covers/a.jpg"), last.coverOf("a.cho"))
         assertNull(last.coverOf("b.cho"))
@@ -81,8 +83,8 @@ class WidgetPublisherTest {
     @Test
     fun `covers no song names any more are deleted after the snapshot that stops naming them`() = runTest {
         val files = FakeWidgetFiles()
-        publisher(files).publish(snapshot = snapshot, coverAddresses = addresses)
-        publisher(files).publish(snapshot = snapshot, coverAddresses = emptyMap())
+        publisher(files).publish(snapshot = snapshot, allCoverAddresses = addresses, placed = everyWidget)
+        publisher(files).publish(snapshot = snapshot, allCoverAddresses = emptyMap(), placed = everyWidget)
         assertTrue(files.covers.isEmpty())
         assertTrue(files.snapshots.last().songs.all { it.cover == null })
     }
@@ -90,9 +92,21 @@ class WidgetPublisherTest {
     @Test
     fun `nothing is made again and the snapshot is written once where every cover is there`() = runTest {
         val files = FakeWidgetFiles()
-        publisher(files).publish(snapshot = snapshot, coverAddresses = addresses)
+        publisher(files).publish(snapshot = snapshot, allCoverAddresses = addresses, placed = everyWidget)
         files.snapshots.clear()
-        publisher(files).publish(snapshot = snapshot, coverAddresses = addresses)
+        publisher(files).publish(snapshot = snapshot, allCoverAddresses = addresses, placed = everyWidget)
         assertEquals(1, files.snapshots.size)
+    }
+
+    @Test
+    fun `with no widget placed nothing is fetched and every thumbnail is deleted`() = runTest {
+        val files = FakeWidgetFiles()
+        publisher(files).publish(snapshot = snapshot, allCoverAddresses = addresses, placed = everyWidget)
+        val fetched = mutableListOf<String>()
+        WidgetPublisher(files = files, getCoverArt = { fetched += it; CoverArtResult.Missing }, makeThumbnail = { it })
+            .publish(snapshot = snapshot, allCoverAddresses = addresses + ("c.cho" to "https://covers/c.jpg"), placed = PlacedWidgets(hasRandomPicks = false, hasSetlist = false))
+        assertTrue(fetched.isEmpty())
+        assertTrue(files.covers.isEmpty())
+        assertTrue(files.snapshots.last().songs.all { it.cover == null })
     }
 }

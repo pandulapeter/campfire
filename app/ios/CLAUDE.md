@@ -124,7 +124,8 @@ extension (`iosApp/ShareExtension/`) and the widget extension (`iosApp/CampfireW
 - `IosWidgetFiles.kt` writes them atomically on one IO thread, in order, skipping a snapshot equal to the file (every
   launch hands over one; WidgetKit budgets reloads), the `Widget/` folder excluded from backup. **The reload seam**:
   WidgetKit has no Objective-C API, so `CampfireViewController` takes `reloadWidgetTimelines`, which `ContentView.swift`
-  passes as `WidgetCenter.shared.reloadAllTimelines()`, called after each write.
+  passes as `WidgetCenter.shared.reloadAllTimelines()`, called after each write; likewise `readPlacedWidgetKinds`
+  (`getCurrentConfigurations`), which tells `IosWidgetPlacement` whether covers are wanted at all.
 - Random picks: 25 hourly entries, each drawn by the seed in the group's `UserDefaults` mixed with the hour (SplitMix64's
   finalizer, never added: an added hour slides the same draw along), ranking songs as `pickWidgetSongs` does, so a
   timeline rebuilt within the hour draws the same; Shuffle (`ShuffleIntent`) stores a new seed, shared by

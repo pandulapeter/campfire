@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.widget
 
+import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
 import androidx.glance.appwidget.GlanceAppWidget
@@ -24,6 +25,16 @@ import androidx.glance.appwidget.GlanceAppWidgetReceiver
 class SetlistWidgetReceiver : GlanceAppWidgetReceiver() {
 
     override val glanceAppWidget: GlanceAppWidget = SetlistWidget()
+
+    override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
+        super.onUpdate(context, appWidgetManager, appWidgetIds)
+        WidgetPlacementImpl.notifyChanged()
+    }
+
+    override fun onDeleted(context: Context, appWidgetIds: IntArray) {
+        super.onDeleted(context, appWidgetIds)
+        WidgetPlacementImpl.notifyChanged()
+    }
 
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action !in DAY_CHANGES && intent.action != Intent.ACTION_MY_PACKAGE_REPLACED) return super.onReceive(context, intent)

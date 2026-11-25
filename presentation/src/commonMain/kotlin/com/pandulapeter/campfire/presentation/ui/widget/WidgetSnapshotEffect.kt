@@ -16,7 +16,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.song.SongLanguage
 import com.pandulapeter.campfire.domain.api.catalogue.GetCoverArtUseCase
@@ -57,6 +60,8 @@ import com.pandulapeter.campfire.presentation.ui.platform.calendarLocale
 import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.onStart
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import org.jetbrains.compose.resources.PluralStringResource
@@ -66,7 +71,8 @@ import org.jetbrains.compose.resources.PluralStringResource
  * Setlists switches, the Cover art switch, the app's language, or its theme. Only a library read whole counts, never a
  * first read's batches or a failed read standing in as empty, which would show the widgets a library shrinking and growing
  * back. A change is handed over once it has held for a moment, since a sync run or an import changes the library file by
- * file; an unchanged snapshot is not handed over again. Its songs' covers come through [getCoverArt] ([WidgetPublisher]).
+ * file; an unchanged snapshot is not handed over again. Its songs' covers come through [getCoverArt] ([WidgetPublisher]),
+ * only for the widgets [placement] says are placed.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -74,6 +80,7 @@ internal fun WidgetSnapshotEffect(
     screenData: StateFlow<DataState<ScreenData>>,
     preferencesController: PreferencesController,
     files: WidgetFiles,
+    placement: WidgetPlacement,
     getCoverArt: GetCoverArtUseCase,
 ) {
     val state by screenData.collectAsStateWithLifecycle()
@@ -109,12 +116,18 @@ internal fun WidgetSnapshotEffect(
     val publisher = remember(files, getCoverArt) {
         WidgetPublisher(files = files, getCoverArt = getCoverArt::invoke, makeThumbnail = ::widgetCoverThumbnail)
     }
+    val lifecycleOwner = LocalLifecycleOwner.current
     // A newer snapshot cancels the covers still being made for the one before it: what was written stays, and the next
-    // publish names it.
-    LaunchedEffect(snapshot, coverAddresses) {
+    // publish names it. Published again at every return to the front and whenever the platform says the widgets changed,
+    // which is how a widget placed while the app was away gets its covers; an unchanged snapshot is not written again.
+    LaunchedEffect(snapshot, coverAddresses, placement, lifecycleOwner) {
         delay(SETTLE_MILLISECONDS)
         println("Widget snapshot published: ${snapshot.songs.size} songs, ${snapshot.setlists.size} setlists, ${coverAddresses.size} covers")
-        publisher.publish(snapshot = snapshot, coverAddresses = coverAddresses)
+        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            placement.changes.onStart { emit(Unit) }.collectLatest {
+                publisher.publish(snapshot = snapshot, allCoverAddresses = coverAddresses, placed = placement.placedWidgets())
+            }
+        }
     }
 }
 

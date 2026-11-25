@@ -79,12 +79,15 @@ private val metronomeNotifier by lazy { IosMetronomeNotifier(KoinPlatform.getKoi
  *   ([listedKeyCommands]), for the Swift controller around this one to list.
  * @param reloadWidgetTimelines Runs `WidgetCenter.shared.reloadAllTimelines()`, which only Swift can call, once a new
  *   widget snapshot has been written ([IosWidgetFiles]).
+ * @param readPlacedWidgetKinds Runs `WidgetCenter.shared.getCurrentConfigurations`, which only Swift can call, answering
+ *   the kind of every widget on the Home Screen ([IosWidgetPlacement]).
  */
 @Suppress("unused", "FunctionName")
 fun CampfireViewController(
     continuedImportTasks: ContinuedImportTasks?,
     onKeyCommandsChanged: (List<UIKeyCommand>) -> Unit,
     reloadWidgetTimelines: () -> Unit,
+    readPlacedWidgetKinds: ((List<String>) -> Unit) -> Unit,
 ): UIViewController {
     startProcess()
     if (processContinuedImportTasks == null) processContinuedImportTasks = continuedImportTasks
@@ -94,6 +97,7 @@ fun CampfireViewController(
     val filePicker = IosFilePicker { requireNotNull(controller) }
     val fileOpener = IosFileOpener { requireNotNull(controller) }
     val widgetFiles = IosWidgetFiles(reloadTimelines = reloadWidgetTimelines)
+    val widgetPlacement = IosWidgetPlacement(readPlacedKinds = readPlacedWidgetKinds)
     return ComposeUIViewController {
         CampfireIosApp(
             urlOpener = ::openUrl,
@@ -111,6 +115,7 @@ fun CampfireViewController(
             onKeyCommandsChanged = { onKeyCommandsChanged(listedKeyCommands(it)) },
             onLauncherShortcutsChanged = ::applyQuickActions,
             widgetFiles = widgetFiles,
+            widgetPlacement = widgetPlacement,
         )
     }.also { controller = it }
 }

@@ -50,6 +50,7 @@ import com.pandulapeter.campfire.presentation.ui.platform.rememberAndroidFilePic
 import com.pandulapeter.campfire.presentation.ui.shortcuts.LauncherShortcuts
 import com.pandulapeter.campfire.presentation.ui.shortcuts.LauncherShortcutsEffect
 import com.pandulapeter.campfire.presentation.ui.widget.WidgetFiles
+import com.pandulapeter.campfire.presentation.ui.widget.WidgetPlacement
 import com.pandulapeter.campfire.presentation.ui.widget.WidgetSnapshotEffect
 import com.pandulapeter.campfire.presentation.ui.theme.isDarkTheme
 import kotlinx.coroutines.flow.Flow
@@ -88,6 +89,7 @@ import org.koin.compose.viewmodel.koinViewModel
  *   activity to hand the launcher ([LauncherShortcutsEffect]).
  * @param widgetFiles Where the home screen widgets read their snapshot and its covers, which the app writes whenever
  *   what they show changes ([WidgetSnapshotEffect]); none writes nothing.
+ * @param widgetPlacement Which widgets are on the home screen, which decides the covers made for them.
  */
 @Composable
 fun CampfireAndroidApp(
@@ -105,6 +107,7 @@ fun CampfireAndroidApp(
     onKeyboardShortcutsChanged: (List<KeyboardShortcutGroup>) -> Unit = {},
     onLauncherShortcutsChanged: (LauncherShortcuts) -> Unit = {},
     widgetFiles: WidgetFiles? = null,
+    widgetPlacement: WidgetPlacement? = null,
     setlistWidgetPinner: SetlistWidgetPinner? = null,
 ) {
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
@@ -121,11 +124,12 @@ fun CampfireAndroidApp(
     SyncNotificationPermissionEffect(isSyncConnected = isSyncConnected)
     SystemKeyboardShortcutsEffect(viewModel = viewModel, onChanged = onKeyboardShortcutsChanged)
     LauncherShortcutsEffect(preferencesController = viewModel.preferencesController, onChanged = onLauncherShortcutsChanged)
-    if (widgetFiles != null) {
+    if (widgetFiles != null && widgetPlacement != null) {
         WidgetSnapshotEffect(
             screenData = viewModel.libraryState.screenData,
             preferencesController = viewModel.preferencesController,
             files = widgetFiles,
+            placement = widgetPlacement,
             getCoverArt = koinInject(),
         )
     }

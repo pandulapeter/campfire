@@ -22,8 +22,8 @@ Only these, all in `:data:source:remote:implementation`, the only module that ma
 - **Sync**, off until the user connects their own cloud folder in Settings; no Campfire server exists. While the app
   is in front it also holds one long poll open on the folder's change feed.
 - **Cover images**: downloaded once from the address a song file names (public `https` hosts only, never the local
-  network), then kept on the device; an address that answers with no cover is remembered as such. On Android and iOS
-  every song's cover is fetched so, for the home screen widgets' thumbnails (made from those copies).
+  network), then kept on the device; an address that answers with no cover is remembered as such. On Android and iOS,
+  once a home screen widget is placed, the covers of the songs it can show are fetched so, for its thumbnails.
 - **Cover search and song details lookup**: MusicBrainz and the iTunes Search API, only from the sheet the user opens
   for them; the "Cover art" and "Online song details" switches in Settings → Features remove them.
 - **Picture links**: a picture a song names by its `https` address (public hosts only, never the local network) is

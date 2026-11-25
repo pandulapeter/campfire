@@ -74,4 +74,31 @@ class WidgetCoversTest {
         assertEquals(1f, widgetCoverScale(60, 60))
         assertTrue(widgetCoverScale(8000, 8000) < 1f)
     }
+
+    @Test
+    fun `Random picks shows every song's cover while Setlist widgets alone show only the setlists' songs and no widget shows none`() {
+        val snapshot = WidgetSnapshot(
+            songs = listOf("a", "b").map { WidgetSnapshot.Song(fileName = "$it.cho", title = it, artist = "", link = "") },
+            setlists = listOf(
+                WidgetSnapshot.Setlist(
+                    fileName = "gig.setlist.json",
+                    title = "Gig",
+                    date = "2026-12-01",
+                    formattedDate = "",
+                    isArchived = true,
+                    songFileNames = listOf("b.cho"),
+                    link = "",
+                ),
+            ),
+            areSongsEnabled = true,
+            areSetlistsEnabled = true,
+            homeLink = "",
+            setlistsLink = "",
+            strings = WidgetTestStrings.strings,
+        )
+        val addresses = mapOf("a.cho" to "https://covers/a.jpg", "b.cho" to "https://covers/b.jpg")
+        assertEquals(addresses, snapshot.coverAddressesShownBy(PlacedWidgets(hasRandomPicks = true, hasSetlist = false), addresses))
+        assertEquals(mapOf("b.cho" to "https://covers/b.jpg"), snapshot.coverAddressesShownBy(PlacedWidgets(hasRandomPicks = false, hasSetlist = true), addresses))
+        assertEquals(emptyMap(), snapshot.coverAddressesShownBy(PlacedWidgets(hasRandomPicks = false, hasSetlist = false), addresses))
+    }
 }

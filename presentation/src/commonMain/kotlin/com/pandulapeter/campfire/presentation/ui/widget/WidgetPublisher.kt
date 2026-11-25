@@ -24,14 +24,17 @@ internal class WidgetPublisher(
 ) {
 
     /**
-     * Writes [snapshot] with the covers of [coverAddresses] (each song's address by its file name) that already have a
-     * thumbnail, so that it reaches the widgets at once; then deletes the thumbnails no song names any more, and makes the
-     * missing ones, writing the snapshot again with them where it made any.
+     * Writes [snapshot] with the covers of [allCoverAddresses] (each song's address by its file name) that a widget
+     * [placed] can show ([coverAddressesShownBy]) and that already have a thumbnail, so that it reaches the widgets at
+     * once; then deletes the thumbnails no such song names, and makes the missing ones, writing the snapshot again with
+     * them where it made any. With no widget placed, nothing is fetched and every thumbnail goes.
      *
      * The order keeps a widget from naming a file that is not there: a thumbnail is named only once it is written, and
      * deleted only once the snapshot that stops naming it has replaced the one before it.
      */
-    suspend fun publish(snapshot: WidgetSnapshot, coverAddresses: Map<String, String>) {
+    suspend fun publish(snapshot: WidgetSnapshot, allCoverAddresses: Map<String, String>, placed: PlacedWidgets) {
+        val coverAddresses = snapshot.coverAddressesShownBy(placed = placed, addresses = allCoverAddresses)
+        println("Widgets placed: Random picks ${placed.hasRandomPicks}, Setlist ${placed.hasSetlist}, ${coverAddresses.size} covers shown")
         val addressesByName = coverAddresses.values.associateBy(::widgetCoverName)
         val present = files.coverNames()
         val available = present.filterTo(mutableSetOf()) { it in addressesByName }

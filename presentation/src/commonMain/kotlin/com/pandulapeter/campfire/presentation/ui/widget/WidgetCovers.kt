@@ -31,6 +31,18 @@ internal fun widgetCoverAddresses(songs: List<Song>, isCoverArtEnabled: Boolean)
 }
 
 /**
+ * Those of [addresses] (each song's cover address by its file name) that a widget [placed] can show: every one where a
+ * Random picks widget is placed, which may draw any song; only the songs of the setlists where only Setlist widgets are,
+ * every setlist rather than the ones they show now, since the next gig moves on with the days without the app; none
+ * where no widget is placed.
+ */
+internal fun WidgetSnapshot.coverAddressesShownBy(placed: PlacedWidgets, addresses: Map<String, String>): Map<String, String> = when {
+    placed.hasRandomPicks -> addresses
+    placed.hasSetlist -> setlists.flatMapTo(mutableSetOf()) { it.songFileNames }.let { inSetlists -> addresses.filterKeys { it in inSetlists } }
+    else -> emptyMap()
+}
+
+/**
  * This snapshot with each song's [WidgetSnapshot.Song.cover] named where [addresses] gives it a cover whose thumbnail is
  * [available] in the covers folder, and none everywhere else: a snapshot never names a thumbnail the widgets cannot find.
  */
