@@ -62,7 +62,8 @@ app bar's metronome panel.
   alone too: the metronome panel has no room there). **Under them scroll** (`DockPanelRows`) the diagrams in a grid,
   fading under the controls and, only over a bottom inset, at the bottom, padded by the inset.
 - **Beside the panel the scale suggestions are one row under the song** (`SongDockState.rowsUnder`), the rows' own
-  scale row, over the bottom inset, its corner square where it meets the panel: in the panel, wrapped they broke into
+  scale row, over the bottom inset, its corner square where it meets the panel and fading out under it while there
+  is more to scroll that way: in the panel, wrapped they broke into
   ragged stacks, a chip a line pushed the diagrams down, and a row scrolling sideways showed too little. The setlist's
   pager bar stays the panel's last row.
 

@@ -119,6 +119,7 @@ private fun DockRowsBox(dock: SongDockState, metronome: DockMetronome, contentPa
                     rows = dock.rowsUnder,
                     layout = layout,
                     horizontalPadding = horizontalPadding,
+                    isBesidePanel = dock.isSidePanel,
                 )
             }
         }
@@ -133,7 +134,8 @@ private fun DockRowsBox(dock: SongDockState, metronome: DockMetronome, contentPa
  * dock's start and the tempo chip, both as tall as the diagrams (see [DockKeyAndTuner] and [DockTempoChip]), under a row of
  * the scale chips alone where there are scale suggestions. Whatever scrolls fades only where it meets what stands still. The click is the
  * screen's ([metronome]), whichever page the rows are drawn for.
- * The diagrams and the scale chips follow the page the reader is headed for, which the page's [stepper] says.
+ * The diagrams and the scale chips follow the page the reader is headed for, which the page's [stepper] says. Beside
+ * the side panel ([isBesidePanel]) the one row is the scale chips alone, fading where they scroll under the panel.
  */
 @Composable
 private fun DockRowsOf(
@@ -143,6 +145,7 @@ private fun DockRowsOf(
     rows: DockRows,
     layout: DockLayout,
     horizontalPadding: PaddingValues,
+    isBesidePanel: Boolean,
 ) = Column(
     modifier = Modifier
         .fillMaxWidth()
@@ -167,7 +170,14 @@ private fun DockRowsOf(
     val headedGroup = remember(scaleGroups, headedSection) { headedSection?.let { scaleGroupAt(scaleGroups, it) } }
     if (!hasDiagramRow) {
         val rowScroll = rememberScrollState()
-        DockScrollingRow(height = layout.rowHeight, horizontalPadding = horizontalPadding, scrollState = rowScroll, start = start, end = end) {
+        DockScrollingRow(
+            height = layout.rowHeight,
+            horizontalPadding = horizontalPadding,
+            scrollState = rowScroll,
+            start = start,
+            end = end,
+            fadesAtEnd = isBesidePanel,
+        ) {
             if (content != null) {
                 if (rows.hasChordRow) DockChordChips(cells = cells, onChordClicked = onChordClicked)
                 // The chord chips before them would throw the groups' places off, and they are a short window's and an import preview's alone.

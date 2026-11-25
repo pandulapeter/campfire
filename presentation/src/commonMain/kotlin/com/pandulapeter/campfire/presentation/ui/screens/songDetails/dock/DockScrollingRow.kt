@@ -34,7 +34,8 @@ import com.pandulapeter.campfire.presentation.ui.components.fadingHorizontalEdge
  * there), and the [content] between them scrolls sideways ([scrollState]), by hand or as the row's content scrolls it on
  * a page turn. The content fades out where it meets [start] or [end], as far as it can still scroll that way, and runs
  * to the screen's edge, padded in from it by [horizontalPadding], where nothing stands there: a fade belongs only where a
- * scrolling row meets something that does not scroll.
+ * scrolling row meets something that does not scroll, which is also what [fadesAtEnd] says stands past its end (the
+ * side panel the row under the song runs up to).
  */
 @Composable
 internal fun DockScrollingRow(
@@ -43,6 +44,7 @@ internal fun DockScrollingRow(
     scrollState: ScrollState,
     start: (@Composable () -> Unit)?,
     end: (@Composable () -> Unit)?,
+    fadesAtEnd: Boolean = false,
     content: @Composable RowScope.() -> Unit,
 ) = Row(
     modifier = Modifier
@@ -67,7 +69,7 @@ internal fun DockScrollingRow(
             .weight(1f)
             .fadingHorizontalEdges(
                 scrolledFromStart = if (start == null) null else { { scrollState.value } },
-                scrolledFromEnd = if (end == null) null else { { scrollState.maxValue - scrollState.value } },
+                scrolledFromEnd = if (end == null && !fadesAtEnd) null else { { scrollState.maxValue - scrollState.value } },
                 backgroundColor = MaterialTheme.colorScheme.surfaceContainer,
             )
             .horizontalScroll(scrollState)
