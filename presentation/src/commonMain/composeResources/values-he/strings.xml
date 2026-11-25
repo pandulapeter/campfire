@@ -547,7 +547,8 @@
     <string name="settings_songs_description_without_setlists">הלשונית “שירים”. כיבוי שלה משאיר את Campfire רק כמטרונום, טיונר ומדריך לאקורדים ולסולמות: השירים רק מוסתרים, אף אחד מהם לא נמחק.</string>
     <string name="settings_everything_off">הכול כבוי, אז Campfire הוא עכשיו אפליקציה לשינוי ההגדרות של Campfire. הפעילו משהו מחדש כדי שיהיה בו שוב תועלת.</string>
     <string name="settings_chords">אקורדים</string>
-    <string name="settings_chords_description">הצגת האקורדים לצד המילים, יחד עם הטונליות, העברת הטונליות והקאפו. כשהאפשרות כבויה, כל שיר מוצג עם מילים בלבד.</string>
+    <string name="settings_show_chords">הצגת אקורדים</string>
+    <string name="settings_chords_description">יחד עם הטונליות, העברת הטונליות והקאפו. כשהאפשרות כבויה, השירים מוצגים עם מילים בלבד.</string>
     <string name="settings_chord_diagrams">דיאגרמות אקורדים</string>
     <string name="settings_chord_diagrams_description">מציג איך מנגנים כל אקורד של השיר, לצד השיר וב-PDF שלו.</string>
     <string name="settings_chord_degrees">דרגות האקורדים</string>
@@ -578,7 +579,7 @@
     <string name="settings_page_links">דפים מקישורים</string>
     <string name="settings_page_links_description">קריאת הדף שאליו מוביל קישור ששותף או הודבק במכשיר הזה, ולקיחת השיר ממנו</string>
     <string name="settings_attachments_description">צירוף קבצים לשירים, כמו PDF של התווים או הקלטה, ופתיחתם מתוך השיר</string>
-    <string name="settings_group_song_page">עמוד השיר</string>
+    <string name="settings_group_song_page">קריאה</string>
     <string name="preferences_page_song">שיר</string>
     <string name="settings_group_diagrams">דיאגרמות</string>
     <string name="settings_group_chord_names">שמות</string>

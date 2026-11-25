@@ -507,7 +507,8 @@
     <string name="settings_songs_description_without_setlists">La scheda Canzoni. Disattivala per usare Campfire solo come metronomo, accordatore e prontuario di accordi e scale: le tue canzoni vengono solo nascoste, nessuna viene eliminata.</string>
     <string name="settings_everything_off">È tutto disattivato, quindi ora Campfire è un\'app per cambiare le impostazioni di Campfire. Riattiva qualcosa per renderla di nuovo utile.</string>
     <string name="settings_chords">Accordi</string>
-    <string name="settings_chords_description">Mostra gli accordi insieme al testo, con la tonalità, la trasposizione e il capotasto. Se disattivato, ogni canzone mostra solo il testo.</string>
+    <string name="settings_show_chords">Mostra accordi</string>
+    <string name="settings_chords_description">Insieme alla tonalità, alla trasposizione e al capotasto. Se disattivato, le canzoni mostrano solo il testo.</string>
     <string name="settings_chord_diagrams">Diagrammi degli accordi</string>
     <string name="settings_chord_diagrams_description">Mostra come si suona ogni accordo del brano, accanto al brano e nel suo PDF.</string>
     <string name="settings_chord_degrees">Gradi degli accordi</string>
@@ -538,7 +539,7 @@
     <string name="settings_page_links">Pagine dai link</string>
     <string name="settings_page_links_description">Legge su questo dispositivo la pagina a cui porta un link condiviso o incollato e ne prende la canzone</string>
     <string name="settings_attachments_description">Allega file alle canzoni, come un PDF dello spartito o una registrazione, e li apre dalla canzone</string>
-    <string name="settings_group_song_page">Pagina della canzone</string>
+    <string name="settings_group_song_page">Lettura</string>
     <string name="preferences_page_song">Canzone</string>
     <string name="settings_group_diagrams">Diagrammi</string>
     <string name="settings_group_chord_names">Nomi</string>

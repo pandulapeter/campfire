@@ -507,7 +507,8 @@
     <string name="settings_songs_description_without_setlists">Der Tab „Songs“. Schalte ihn aus, um Campfire nur als Metronom, Stimmgerät und Nachschlagewerk für Akkorde und Tonleitern zu nutzen: Deine Songs werden nur ausgeblendet, keiner wird gelöscht.</string>
     <string name="settings_everything_off">Alles ist ausgeschaltet, also ist Campfire jetzt eine App, mit der man die Einstellungen von Campfire ändert. Schalte etwas wieder ein, damit sie wieder nützlich wird.</string>
     <string name="settings_chords">Akkorde</string>
-    <string name="settings_chords_description">Zeigt die Akkorde über dem Text, dazu Tonart, Transposition und Kapodaster. Ausgeschaltet ist jeder Song nur Text.</string>
+    <string name="settings_show_chords">Akkorde anzeigen</string>
+    <string name="settings_chords_description">Zusammen mit Tonart, Transposition und Kapodaster. Ausgeschaltet zeigen Songs nur den Text.</string>
     <string name="settings_chord_diagrams">Akkorddiagramme</string>
     <string name="settings_chord_diagrams_description">Zeigt neben dem Song und in seinem PDF, wie jeder seiner Akkorde gegriffen wird.</string>
     <string name="settings_chord_degrees">Akkordstufen</string>
@@ -538,7 +539,7 @@
     <string name="settings_page_links">Seiten aus Links</string>
     <string name="settings_page_links_description">Liest die Seite, auf die ein geteilter oder eingefügter Link zeigt, auf diesem Gerät und übernimmt den Song daraus</string>
     <string name="settings_attachments_description">Hängt Dateien an Songs an, etwa ein PDF der Noten oder eine Aufnahme, und öffnet sie aus dem Song</string>
-    <string name="settings_group_song_page">Song-Seite</string>
+    <string name="settings_group_song_page">Lesen</string>
     <string name="preferences_page_song">Song</string>
     <string name="settings_group_diagrams">Diagramme</string>
     <string name="settings_group_chord_names">Namen</string>

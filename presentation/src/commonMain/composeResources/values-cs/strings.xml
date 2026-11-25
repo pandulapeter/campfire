@@ -543,7 +543,8 @@
     <string name="settings_songs_description_without_setlists">Karta Písně. Vypni ji, pokud chceš Campfire používat jen jako metronom, ladičku a příručku akordů a stupnic: písně se jen skryjí, žádná se nesmaže.</string>
     <string name="settings_everything_off">Všechno je vypnuté, takže Campfire je teď aplikace na změnu nastavení Campfire. Zapni zase něco, aby byla k užitku.</string>
     <string name="settings_chords">Akordy</string>
-    <string name="settings_chords_description">Zobrazovat akordy nad textem spolu s tóninou, transpozicí a kapodastrem. Když je vypnuto, je každá píseň jen text.</string>
+    <string name="settings_show_chords">Zobrazovat akordy</string>
+    <string name="settings_chords_description">Spolu s tóninou, transpozicí a kapodastrem. Když je vypnuto, písně ukazují jen text.</string>
     <string name="settings_chord_diagrams">Diagramy akordů</string>
     <string name="settings_chord_diagrams_description">Ukazuje, jak se hraje každý akord písně, vedle písně a v jejím PDF.</string>
     <string name="settings_chord_degrees">Stupně akordů</string>
@@ -574,7 +575,7 @@
     <string name="settings_page_links">Stránky z odkazů</string>
     <string name="settings_page_links_description">Načítat na tomto zařízení stránku, na kterou vede sdílený nebo vložený odkaz, a brát z ní píseň</string>
     <string name="settings_attachments_description">Přikládat k písním soubory, například PDF s notami nebo nahrávku, a otevírat je přímo z písně</string>
-    <string name="settings_group_song_page">Stránka písně</string>
+    <string name="settings_group_song_page">Čtení</string>
     <string name="preferences_page_song">Píseň</string>
     <string name="settings_group_diagrams">Diagramy</string>
     <string name="settings_group_chord_names">Názvy</string>

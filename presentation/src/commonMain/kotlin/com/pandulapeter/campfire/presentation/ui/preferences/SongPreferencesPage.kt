@@ -23,7 +23,7 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.metronome
 import com.pandulapeter.campfire.presentation.resources.settings_chord_diagrams
 import com.pandulapeter.campfire.presentation.resources.settings_chord_diagrams_description
-import com.pandulapeter.campfire.presentation.resources.settings_chords
+import com.pandulapeter.campfire.presentation.resources.settings_show_chords
 import com.pandulapeter.campfire.presentation.resources.settings_dock_metronome_description
 import com.pandulapeter.campfire.presentation.resources.settings_dock_tuner_description
 import com.pandulapeter.campfire.presentation.resources.settings_group_dock
@@ -108,7 +108,7 @@ private fun SongPageSection(
     }
     val areChordsEnabled = userPreferences?.areChordsEnabled != false
     SwitchListItem(
-        title = stringResource(Res.string.settings_chords),
+        title = stringResource(Res.string.settings_show_chords),
         description = stringResource(Res.string.settings_chords_description),
         isChecked = areChordsEnabled,
         onCheckedChange = preferencesController::setChordsEnabled,

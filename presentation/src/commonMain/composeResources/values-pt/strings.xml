@@ -509,7 +509,8 @@
     <string name="settings_songs_description_without_setlists">A aba Músicas. Desative-a para usar o Campfire só como metrônomo, afinador e referência de acordes e escalas: suas músicas ficam apenas ocultas, nenhuma é excluída.</string>
     <string name="settings_everything_off">Tudo está desativado, então agora o Campfire é um app para mudar as configurações do Campfire. Reative algo para que ele volte a ser útil.</string>
     <string name="settings_chords">Acordes</string>
-    <string name="settings_chords_description">Mostra os acordes junto com a letra, além do tom, da transposição e do capotraste. Desativado, todas as músicas mostram só a letra.</string>
+    <string name="settings_show_chords">Mostrar acordes</string>
+    <string name="settings_chords_description">Junto com o tom, a transposição e o capotraste. Desativado, as músicas mostram só a letra.</string>
     <string name="settings_chord_diagrams">Diagramas de acordes</string>
     <string name="settings_chord_diagrams_description">Mostra como se toca cada acorde da música, ao lado da música e no seu PDF.</string>
     <string name="settings_chord_degrees">Graus dos acordes</string>
@@ -540,7 +541,7 @@
     <string name="settings_page_links">Páginas de links</string>
     <string name="settings_page_links_description">Lê neste dispositivo a página para a qual um link compartilhado ou colado aponta e tira a música dela</string>
     <string name="settings_attachments_description">Anexa ficheiros às músicas, como um PDF da partitura ou uma gravação, e abre-os a partir da música</string>
-    <string name="settings_group_song_page">Página da música</string>
+    <string name="settings_group_song_page">Leitura</string>
     <string name="preferences_page_song">Música</string>
     <string name="settings_group_diagrams">Diagramas</string>
     <string name="settings_group_chord_names">Nomes</string>

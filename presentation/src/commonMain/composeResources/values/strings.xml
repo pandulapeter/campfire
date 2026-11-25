@@ -499,7 +499,7 @@
     <string name="settings_export_all">Export library as zip</string>
     <string name="settings_preferences">Preferences</string>
     <string name="settings_features">Features</string>
-    <string name="settings_group_performance">Performance</string>
+    <string name="settings_group_performance">On stage</string>
     <string name="settings_read_only_mode">Read only</string>
     <string name="settings_read_only_mode_description">Locks the app while you play: editing, deleting, reordering, and transposing are hidden, so nothing can be changed by accident</string>
     <string name="settings_read_only_mode_description_without_setlists">Locks the app while you play: editing, deleting, and transposing are hidden, so nothing can be changed by accident</string>
@@ -507,13 +507,14 @@
     <string name="settings_songs_description_without_setlists">The Songs tab. Switch it off to use Campfire only as a metronome, a tuner, and a chord and scale reference: your songs are only hidden, none is deleted.</string>
     <string name="settings_everything_off">Everything is switched off, so Campfire is now an app for changing the settings of Campfire. Switch something back on to make it useful again.</string>
     <string name="settings_chords">Chords</string>
-    <string name="settings_chords_description">Show the chords with the words, along with the key, the transposition, and the capo. Off, every song is lyrics only.</string>
+    <string name="settings_show_chords">Show chords</string>
+    <string name="settings_chords_description">Along with the key, the transposition, and the capo. Off, songs show their lyrics only.</string>
     <string name="settings_chord_diagrams">Chord diagrams</string>
     <string name="settings_chord_diagrams_description">Show how every chord of a song is played, beside the song and in its PDF.</string>
     <string name="settings_chord_degrees">Chord degrees</string>
     <string name="settings_chord_degrees_description">Name the step of the song's key each chord diagram stands on, such as V7 beside G7.</string>
     <string name="settings_chord_names">Chord names with a capo</string>
-    <string name="settings_chord_names_description">A song\'s chords are named by the shapes fingered above the capo, or by how they sound. The song\'s key always says how it sounds, and on a keyboard the chords do too.</string>
+    <string name="settings_chord_names_description">Name a capoed song\'s chords by the shapes you finger above the capo, or by how they sound. The key always says how the song sounds, and so do a keyboard\'s chords.</string>
     <string name="settings_chord_names_shapes">Shapes</string>
     <string name="settings_chord_names_sounding">Sounding</string>
     <string name="settings_capo_keeps_key">Capo keeps the key</string>
@@ -524,7 +525,7 @@
     <string name="settings_chord_library_description">The Chords tab: every chord the app knows, drawn on your instrument</string>
     <string name="settings_scale_suggestions">Scale suggestions</string>
     <string name="settings_scale_suggestions_description">Show the scales each part of a song can be played over, beside the song, and the scales for a chord in its sheet.</string>
-    <string name="settings_group_dock">Dock</string>
+    <string name="settings_group_dock">Toolbar</string>
     <string name="settings_dock_metronome_description">Show the song\'s tempo and its click. The Metronome tab keeps them either way.</string>
     <string name="settings_dock_tuner_description">Show a way to the tuner. Without it, the tuner is in the song\'s menu.</string>
     <string name="settings_setlists_description">The Setlists tab and adding songs to setlists. Off, they are only hidden: no setlist is deleted.</string>
@@ -538,7 +539,7 @@
     <string name="settings_page_links">Pages from links</string>
     <string name="settings_page_links_description">Read the page a shared or pasted link points to on this device, taking the song from it</string>
     <string name="settings_attachments_description">Attach files to songs, such as a PDF of the sheet music or a recording, and open them from the song</string>
-    <string name="settings_group_song_page">Song page</string>
+    <string name="settings_group_song_page">Reading</string>
     <string name="preferences_page_song">Song</string>
     <string name="settings_group_diagrams">Diagrams</string>
     <string name="settings_group_chord_names">Names</string>
@@ -558,9 +559,9 @@
     <string name="settings_number_sections">Number sections</string>
     <string name="settings_number_sections_description">Tell apart repeated sections that have no name of their own, such as Verse 1 and Verse 2</string>
     <string name="settings_song_layout">Layout</string>
-    <string name="settings_song_layout_description">Pages fit the most of a song on the screen at once. Continuous is one column that can scroll by itself at the song\'s pace.</string>
+    <string name="settings_song_layout_description">Pages show as much of a song as fits on the screen. Continuous is one column that can scroll by itself at the song\'s pace.</string>
     <string name="settings_page_turn">Turn by</string>
-    <string name="settings_page_turn_description">Matters only with several columns on screen: Column slides the song along by one column at a time, so the next one is always in view.</string>
+    <string name="settings_page_turn_description">With several columns on the screen, Column moves the song along one column at a time, so the next one is always in view.</string>
     <string name="settings_notation">Chord notation</string>
     <string name="settings_notation_description">How chords are written while you read and edit songs. Songs are always saved in standard notation, so they read the same in every app.</string>
     <string name="settings_notation_choose">Choose notation</string>
@@ -716,7 +717,7 @@
     <string name="metronome_subdivision">Subdivision</string>
     <string name="metronome_subdivision_description">Clicks per beat</string>
     <string name="metronome_change_timing">Tempo change</string>
-    <string name="metronome_change_timing_description">On reaching another song, or a change within one</string>
+    <string name="metronome_change_timing_description">When a new tempo takes over: at another song, or at a tempo change within one</string>
     <string name="metronome_change_next_bar">Next bar</string>
     <string name="metronome_change_next_beat">Next beat</string>
     <string name="metronome_sound">Sound</string>

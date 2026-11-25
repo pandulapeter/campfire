@@ -507,7 +507,8 @@
     <string name="settings_songs_description_without_setlists">A Dalok fül, ha csak metronómként, hangolóként, akkord- és skálatárként használnád. Kikapcsolva csak elrejti a dalokat, egyetlen dal sem törlődik.</string>
     <string name="settings_everything_off">Minden ki van kapcsolva, így a Campfire most egy alkalmazás a Campfire beállítására. Kapcsolj vissza valamit, hogy újra hasznos legyen.</string>
     <string name="settings_chords">Akkordok</string>
-    <string name="settings_chords_description">Az akkordok megjelenítése a szöveg fölött, a hangnemmel, a transzponálással és a capóval együtt. Kikapcsolva minden dalnak csak a szövege látszik.</string>
+    <string name="settings_show_chords">Akkordok mutatása</string>
+    <string name="settings_chords_description">A hangnemmel, a transzponálással és a capóval együtt. Kikapcsolva a dalokból csak a szöveg látszik.</string>
     <string name="settings_chord_diagrams">Akkordábrák</string>
     <string name="settings_chord_diagrams_description">Megmutatja, hogyan kell lefogni a dal minden akkordját, a dal mellett és a PDF-ben.</string>
     <string name="settings_chord_degrees">Akkordfokok</string>
@@ -538,7 +539,7 @@
     <string name="settings_page_links">Oldalak linkekből</string>
     <string name="settings_page_links_description">A megosztott vagy beillesztett link oldalának beolvasása ezen az eszközön, és a dal kiemelése belőle</string>
     <string name="settings_attachments_description">Fájlok csatolása a dalokhoz, például a kotta PDF-je vagy egy felvétel, és megnyitásuk a dalból</string>
-    <string name="settings_group_song_page">Daloldal</string>
+    <string name="settings_group_song_page">Olvasás</string>
     <string name="preferences_page_song">Dal</string>
     <string name="settings_group_diagrams">Ábrák</string>
     <string name="settings_group_chord_names">Nevek</string>

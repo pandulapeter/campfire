@@ -538,7 +538,8 @@
     <string name="settings_songs_description_without_setlists">Karta Piosenki. Wyłącz ją, aby używać Campfire tylko jako metronomu, tunera i ściągi z akordów i skal: piosenki zostaną jedynie ukryte, żadna nie zostanie usunięta.</string>
     <string name="settings_everything_off">Wszystko jest wyłączone, więc Campfire jest teraz aplikacją do zmieniania ustawień Campfire. Włącz coś z powrotem, aby znów była przydatna.</string>
     <string name="settings_chords">Akordy</string>
-    <string name="settings_chords_description">Pokazuj akordy nad tekstem, a do tego tonację, transpozycję i kapodaster. Po wyłączeniu każda piosenka to sam tekst.</string>
+    <string name="settings_show_chords">Pokazuj akordy</string>
+    <string name="settings_chords_description">Razem z tonacją, transpozycją i kapodastrem. Po wyłączeniu piosenki pokazują sam tekst.</string>
     <string name="settings_chord_diagrams">Diagramy akordów</string>
     <string name="settings_chord_diagrams_description">Pokazuje, jak gra się każdy akord utworu, obok utworu i w jego PDF-ie.</string>
     <string name="settings_chord_degrees">Stopnie akordów</string>
@@ -569,7 +570,7 @@
     <string name="settings_page_links">Strony z linków</string>
     <string name="settings_page_links_description">Odczytuj na tym urządzeniu stronę, do której prowadzi udostępniony lub wklejony link, i bierz z niej piosenkę</string>
     <string name="settings_attachments_description">Załączaj pliki do piosenek, na przykład PDF z nutami lub nagranie, i otwieraj je z poziomu piosenki</string>
-    <string name="settings_group_song_page">Strona piosenki</string>
+    <string name="settings_group_song_page">Czytanie</string>
     <string name="preferences_page_song">Piosenka</string>
     <string name="settings_group_diagrams">Diagramy</string>
     <string name="settings_group_chord_names">Nazwy</string>

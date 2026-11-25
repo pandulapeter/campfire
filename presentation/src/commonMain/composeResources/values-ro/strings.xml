@@ -548,7 +548,8 @@
     <string name="settings_songs_description_without_setlists">Fila Cântece. Dezactiveaz-o ca să folosești Campfire doar ca metronom, acordor și ghid de acorduri și game: cântecele tale sunt doar ascunse, niciunul nu este șters.</string>
     <string name="settings_everything_off">Totul este dezactivat, așa că Campfire e acum o aplicație pentru schimbarea setărilor lui Campfire. Activează ceva la loc ca să fie din nou util.</string>
     <string name="settings_chords">Acorduri</string>
-    <string name="settings_chords_description">Arată acordurile deasupra versurilor, împreună cu tonalitatea, transpunerea și capodastrul. Dezactivat, fiecare cântec are doar versuri.</string>
+    <string name="settings_show_chords">Arată acordurile</string>
+    <string name="settings_chords_description">Împreună cu tonalitatea, transpunerea și capodastrul. Dezactivat, cântecele arată doar versurile.</string>
     <string name="settings_chord_diagrams">Diagrame de acorduri</string>
     <string name="settings_chord_diagrams_description">Arată cum se cântă fiecare acord al cântecului, lângă cântec și în PDF-ul lui.</string>
     <string name="settings_chord_degrees">Treptele acordurilor</string>
@@ -579,7 +580,7 @@
     <string name="settings_page_links">Pagini din linkuri</string>
     <string name="settings_page_links_description">Citește pe acest dispozitiv pagina spre care duce un link partajat sau lipit și preia cântecul din ea</string>
     <string name="settings_attachments_description">Atașează fișiere la cântece, de exemplu un PDF cu partitura sau o înregistrare, și le deschide din cântec</string>
-    <string name="settings_group_song_page">Pagina cântecului</string>
+    <string name="settings_group_song_page">Citire</string>
     <string name="preferences_page_song">Cântec</string>
     <string name="settings_group_diagrams">Diagrame</string>
     <string name="settings_group_chord_names">Nume</string>
