@@ -77,7 +77,7 @@ import com.pandulapeter.campfire.presentation.ui.screens.rememberSongActionHandl
  * desktop and the web with Ctrl / Cmd + plus, minus and zero, which the window answers (`FontScaleController.zoomSongText`).
  *
  * When there is more than one song to page through, or the song is read from a setlist of any length, a
- * [SongPagerControls] bar under the lyrics offers the same paging as the swipe gesture, along with the name of the
+ * [SongPagerControls] row, the dock's last, offers the same paging as the swipe gesture, along with the name of the
  * setlist and the position of the current song in it.
  *
  * The arrow keys do both without either gesture, see [songKeyboardShortcuts].
@@ -169,7 +169,7 @@ internal fun SongDetailsScreen(
     // The scroll of every page that is composed, the ones beside the current page included, so that a step back from
     // the top of a song can put the one before it at its end before the pager gets there.
     val pageScrollStates = remember { mutableStateMapOf<Int, ScrollState>() }
-    val dock = rememberSongDock(userPreferences, chordDiagrams, hasPagerBar = hasPagerControls, bottomInset = contentPadding.calculateBottomPadding())
+    val dock = rememberSongDock(userPreferences, chordDiagrams, hasPagerBar = hasPagerControls, isImportPreview = isImportPreview, bottomInset = contentPadding.calculateBottomPadding())
     // The steps go on to the song beside this one at either end of it, worked out from the page being headed for like the
     // pager bar's buttons. Both are decided again at the time of the press.
     val hasPreviousSongToStepTo = canPage && pagerState.targetPage > 0
@@ -342,20 +342,20 @@ internal fun SongDetailsScreen(
             metronome = rememberDockMetronome(viewModel.metronomeController, viewModel.libraryState, viewModel.songTextStore),
             contentPadding = contentPadding,
             targetPage = pagerState.targetPage,
+            isUnderCard = importPreview != null,
+            lastRow = if (!hasPagerControls) null else ({
+                SongPagerControls(
+                    setlistTitle = setlist?.title, setlistSlots = setlistSlots,
+                    currentPage = pagerState.currentPage,
+                    targetPage = pagerState.targetPage,
+                    pageCount = songs.size,
+                    contentPadding = contentPadding,
+                    nextSongTitle = songs.getOrNull(pagerState.targetPage + 1)?.title?.takeIf { nextSongConfirmation.armedPage == pagerState.targetPage },
+                    onStep = pageStepper::step,
+                    onConfirmNextSong = { stepForwardAction(null) },
+                )
+            }),
         )
-        if (hasPagerControls) {
-            SongPagerControls(
-                setlistTitle = setlist?.title,
-                setlistSlots = setlistSlots,
-                currentPage = pagerState.currentPage,
-                targetPage = pagerState.targetPage,
-                pageCount = songs.size,
-                contentPadding = contentPadding,
-                nextSongTitle = songs.getOrNull(pagerState.targetPage + 1)?.title?.takeIf { nextSongConfirmation.armedPage == pagerState.targetPage },
-                onStep = pageStepper::step,
-                onConfirmNextSong = { stepForwardAction(null) },
-            )
-        }
     }
 }
 

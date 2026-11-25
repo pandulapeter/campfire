@@ -54,10 +54,10 @@ import com.pandulapeter.campfire.presentation.resources.song_details_up_next
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * The bar under the lyrics that steps through the songs of a setlist without swiping. Between the two buttons it
- * names the setlist being played and how far along it the current song is, or, while a step past the end of the song
- * waits for the press that confirms it ([NextSongConfirmation]), the song that press goes to: the bar is there in every
- * setlist and covers nothing of the song, and it turns the secondary container colour so the change is seen from a
+ * The dock's last row, on its surface (`SongDock`), that steps through the songs of a setlist without swiping. Between
+ * the two buttons it names the setlist being played and how far along it the current song is, or, while a step past the
+ * end of the song waits for the press that confirms it ([NextSongConfirmation]), the song that press goes to: the row is
+ * there in every setlist and covers nothing of the song, and it turns the secondary container colour so the change is seen from a
  * stand. Selecting it then goes on as that press would.
  *
  * @param setlistSlots Where each page sits in the setlist, which is what the label numbers it by; null where the

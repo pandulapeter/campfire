@@ -20,9 +20,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 /**
- * The pages, and the preview's card floating over their bottom ([bar], which brings its own margins and is nothing where
- * there is no card). The pages leave free under their last line the room the card takes from the bottom, or [baseBottom]
- * where there is no card, so that every line can still be read above it.
+ * The pages, and the preview's card over their bottom on the dock's surface ([bar], which brings its own room and is
+ * nothing where there is no card), so that the dock under the pages reads as rising to hold it. The pages leave free
+ * under their last line the room the card takes from the bottom, or [baseBottom] where there is no card, so that every
+ * line can still be read above it.
  *
  * The card is measured first, in the same pass as the pages, which get that room on their first frame: the lyrics are
  * flowed into columns against the height left to them, and a room arriving a frame later and animated would flow them

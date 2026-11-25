@@ -12,8 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
@@ -22,7 +21,11 @@ import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportController
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportReportState
 
-/** [ImportPreviewBar] where the song details screen puts it: a card over the bottom of the pages, kept off the edges. */
+/**
+ * [ImportPreviewBar] where the song details screen puts it: on the dock's surface over the bottom of the pages, which leave
+ * it its room, the card kept off the edges, and the room reaching down over whatever of the bottom inset nothing under
+ * it covers ([baseBottom]).
+ */
 @Composable
 internal fun SongDetailsPreviewBar(
     importController: ImportController,
@@ -34,13 +37,14 @@ internal fun SongDetailsPreviewBar(
     layoutDirection: LayoutDirection,
     baseBottom: Dp,
 ) = ImportPreviewBar(
-    modifier = Modifier
-        .padding(
-            start = contentPadding.calculateStartPadding(layoutDirection) + PREVIEW_BAR_MARGIN,
-            end = contentPadding.calculateEndPadding(layoutDirection) + PREVIEW_BAR_MARGIN,
-            bottom = baseBottom + PREVIEW_BAR_MARGIN,
-        )
-        .widthIn(max = PREVIEW_BAR_MAX_WIDTH),
+    modifier = Modifier.fillMaxWidth(),
+    roomPadding = PaddingValues(
+        start = contentPadding.calculateStartPadding(layoutDirection) + PREVIEW_CARD_MARGIN,
+        top = PREVIEW_CARD_MARGIN,
+        end = contentPadding.calculateEndPadding(layoutDirection) + PREVIEW_CARD_MARGIN,
+        // The dock's own padding above its first row is the rest of the gap under the card.
+        bottom = baseBottom + PREVIEW_CARD_MARGIN / 2,
+    ),
     importPreview = importPreview,
     currentPage = currentPage,
     isAddingToReview = isAddingToReview,
@@ -49,8 +53,5 @@ internal fun SongDetailsPreviewBar(
     onResolutionSelected = importReportState::setImportConflictResolution,
 )
 
-/** Between a preview's card and the edges around it, and between it and the last line of the song above it. */
-private val PREVIEW_BAR_MARGIN = 16.dp
-
-/** A preview's card stays a card, centred, rather than a strip across a wide window, whose message would sit far from its buttons. */
-private val PREVIEW_BAR_MAX_WIDTH = 720.dp
+/** Between a preview's card and the edges of the dock's surface it stands on. */
+private val PREVIEW_CARD_MARGIN = 8.dp

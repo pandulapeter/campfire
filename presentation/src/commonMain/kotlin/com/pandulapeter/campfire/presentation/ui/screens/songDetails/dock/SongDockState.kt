@@ -51,13 +51,15 @@ internal class SongDockState(
  * The dock as the switches in [userPreferences] and the window decide it, never the song: its rows (the playing controls
  * with the chords or the metronome on, the chords with [chordDiagrams] drawn on an instrument with shapes, the scale
  * suggestions), and how much room the reading mode and a setlist's pager bar ([hasPagerBar]) leave it
- * ([dockBudgetOf]) in a window that is not short. Without the pager bar it covers the [bottomInset] too.
+ * ([dockBudgetOf]) in a window that is not short and outside an import preview ([isImportPreview]), whose card takes the
+ * room of a second row. Without the pager bar it covers the [bottomInset] too.
  */
 @Composable
 internal fun rememberSongDock(
     userPreferences: UserPreferences?,
     chordDiagrams: ChordDiagrams?,
     hasPagerBar: Boolean,
+    isImportPreview: Boolean,
     bottomInset: Dp,
 ): SongDockState {
     val rows = DockRows(
@@ -70,11 +72,11 @@ internal fun rememberSongDock(
     val windowHeight = LocalWindowInfo.current.containerDpSize.height
     // The controls are drawn at the interface's text size, which a large system text size grows past a chip's.
     val rowHeight = maxOf(DOCK_ROW_HEIGHT, songControlHeight(MaterialTheme.typography.titleSmall))
-    val layout = remember(rows, windowHeight, turnsByColumn, hasPagerBar, rowHeight) {
+    val layout = remember(rows, windowHeight, turnsByColumn, hasPagerBar, isImportPreview, rowHeight) {
         dockLayoutOf(
             rows = rows,
             budget = dockBudgetOf(windowHeight = windowHeight, turnsByColumn = turnsByColumn, hasPagerBar = hasPagerBar),
-            isShortWindow = windowHeight < SHORT_WINDOW_HEIGHT,
+            isOneRow = windowHeight < SHORT_WINDOW_HEIGHT || isImportPreview,
             rowHeight = rowHeight,
         )
     }

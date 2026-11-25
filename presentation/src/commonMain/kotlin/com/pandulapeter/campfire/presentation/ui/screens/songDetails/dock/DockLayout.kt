@@ -64,16 +64,16 @@ internal fun dockBudgetOf(windowHeight: Dp, turnsByColumn: Boolean, hasPagerBar:
 
 /**
  * The dock for [rows] within [budget], its row of chips and controls [rowHeight] tall (taller than a chip at a large
- * system text size). A short window ([isShortWindow]: a phone on its side) keeps to one row, its chords as chips, since
- * its every line is a page's worth of room. Any other window gets diagrams: at their full size where they fit the
+ * system text size). [isOneRow] keeps it to one row, its chords as chips: a short window (a phone on its side), whose
+ * every line is a page's worth of room, and an import preview, whose card takes the dock's room. Any other gets diagrams: at their full size where they fit the
  * budget, else smaller ones however little room there is, a long song taking up to two pages more for them on an
  * upright phone. Null where there is no row at all, which is no dock.
  */
-internal fun dockLayoutOf(rows: DockRows, budget: Dp, isShortWindow: Boolean, rowHeight: Dp = DOCK_ROW_HEIGHT): DockLayout? {
+internal fun dockLayoutOf(rows: DockRows, budget: Dp, isOneRow: Boolean, rowHeight: Dp = DOCK_ROW_HEIGHT): DockLayout? {
     if (rows.isEmpty) return null
     val oneRow = DockLayout(DockTier.CHORD_CHIPS, height = DOCK_VERTICAL_PADDING * 2 + rowHeight, rowHeight = rowHeight)
     // The playing controls and the scale chips share the first row, so only the chords can ask for a second.
-    if (!rows.hasChordRow || isShortWindow) return oneRow
+    if (!rows.hasChordRow || isOneRow) return oneRow
     // Without scale suggestions, the key chip and the click's controls stand at the diagram row's ends instead.
     val firstRow = if (rows.hasScaleRow) rowHeight + DOCK_ROW_GAP else 0.dp
     val (full, small) = listOf(DockTier.FULL_DIAGRAMS to FULL_DIAGRAMS_PAST_ROW, DockTier.SMALL_DIAGRAMS to SMALL_DIAGRAMS_PAST_ROW).map { (tier, pastRow) ->

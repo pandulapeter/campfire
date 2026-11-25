@@ -18,9 +18,14 @@ had. The plan it follows, and what is still to come, is `documentation/plans/son
 ## Where it is
 
 - **Under the pages, outside the pager**, in the screen's column, so the pages are shorter rather than covered: no line
-  is ever under it, and a rested page's last line is unfaded. Above the setlist's pager bar, else over the bottom inset,
+  is ever under it, and a rested page's last line is unfaded. Over the setlist's pager bar, else over the bottom inset,
   which the pages then leave to it (`baseBottom`). One `surfaceContainer` surface, rounded at its top corners, never
   collapsed, with no divider or shadow.
+- **A setlist's pager bar is its last row** (`SongDock`'s `lastRow`), on the same surface, its "Up next … Step again"
+  state kept; read with the dock. **An import preview's card stands on the surface above its rows** (a room of it,
+  measured with the pages in `PagesAbovePreviewBar`), which squares the dock's own corners off while it is there; a
+  preview's dock is one row (its chords as chips, no tempo chip, a preview having no metronome), the card taking the
+  second's room.
 - **Its height is the screen's, never the song's** (`SongDockState`): a height that followed the song would lay the
   viewport out anew on every setlist page turn. Animated to a new one (a switch, a window resized), the pages' grid
   waiting for it as for the app bar (`isViewportSettled`).

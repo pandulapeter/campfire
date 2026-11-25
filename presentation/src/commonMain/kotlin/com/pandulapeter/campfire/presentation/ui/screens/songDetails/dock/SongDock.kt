@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock
 
 import com.pandulapeter.campfire.presentation.ui.songView.rememberChordCells
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -31,6 +32,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.isTraversalGroup
@@ -43,10 +45,12 @@ import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.So
 
 /**
  * What left the song for the screen to hold, under the pages and outside the pager (this package's `CLAUDE.md`): one surface,
- * rounded at its top corners, with no divider or shadow, as tall as [dock] says, the bottom inset included where there
- * is no setlist's pager bar under it to cover that. Its rows are the screen's ([SongDockState.rows]) and their contents
+ * rounded at its top corners, with no divider or shadow, its rows as tall as [dock] says, the bottom inset included where
+ * there is no [lastRow] under them to cover that. Its rows are the screen's ([SongDockState.rows]) and their contents
  * the song's that the pager is on or heading for ([targetPage], [SongDockState.contents]), crossfading as a page turns, as the app
- * bar's subtitle does. Read by screen readers after the app bar and before the song.
+ * bar's subtitle does. [lastRow] is a setlist's pager bar, on the same surface. Where an import preview's card stands on
+ * the surface above it ([isUnderCard]) its corners square off, the card's room rounding the surface's top instead. Read
+ * by screen readers after the app bar and before the song.
  */
 @Composable
 internal fun SongDock(
@@ -55,36 +59,48 @@ internal fun SongDock(
     metronome: DockMetronome,
     contentPadding: PaddingValues,
     targetPage: Int,
+    isUnderCard: Boolean,
+    lastRow: (@Composable () -> Unit)?,
 ) {
-    // Kept while the dock leaves, so that it shrinks away as it was rather than as nothing.
-    val lastLayout = remember { LastDockLayout() }
-    dock.layout?.let { lastLayout.value = it }
-    val layout = lastLayout.value ?: return
-    Box(
+    val corner by animateDpAsState(if (isUnderCard) 0.dp else DOCK_CORNER)
+    Column(
         modifier = modifier
             .fillMaxWidth()
-            .height(dock.height)
-            .clipToBounds()
-            .background(MaterialTheme.colorScheme.surfaceContainer, RoundedCornerShape(topStart = DOCK_CORNER, topEnd = DOCK_CORNER))
+            .clip(RoundedCornerShape(topStart = corner, topEnd = corner))
+            .background(MaterialTheme.colorScheme.surfaceContainer)
             .semantics {
                 isTraversalGroup = true
                 traversalIndex = DOCK_TRAVERSAL_INDEX
             },
     ) {
-        val layoutDirection = LocalLayoutDirection.current
-        val horizontalPadding = PaddingValues(
-            start = contentPadding.calculateStartPadding(layoutDirection) + DOCK_HORIZONTAL_PADDING,
-            end = contentPadding.calculateEndPadding(layoutDirection) + DOCK_HORIZONTAL_PADDING,
-        )
-        Crossfade(targetState = targetPage) { page ->
-            DockRowsOf(
-                content = dock.contents[page],
-                stepper = dock.steppers[page],
-                metronome = metronome,
-                rows = dock.rows,
-                layout = layout,
-                horizontalPadding = horizontalPadding,
+        DockRowsBox(dock = dock, metronome = metronome, contentPadding = contentPadding, targetPage = targetPage)
+        lastRow?.invoke()
+    }
+}
+
+/** The dock's rows, as tall as [dock] says, for the page the pager is on or heading for ([targetPage]). */
+@Composable
+private fun DockRowsBox(dock: SongDockState, metronome: DockMetronome, contentPadding: PaddingValues, targetPage: Int) {
+    // Kept while the dock leaves, so that it shrinks away as it was rather than as nothing.
+    val lastLayout = remember { LastDockLayout() }
+    dock.layout?.let { lastLayout.value = it }
+    lastLayout.value?.let { layout ->
+        Box(modifier = Modifier.fillMaxWidth().height(dock.height).clipToBounds()) {
+            val layoutDirection = LocalLayoutDirection.current
+            val horizontalPadding = PaddingValues(
+                start = contentPadding.calculateStartPadding(layoutDirection) + DOCK_HORIZONTAL_PADDING,
+                end = contentPadding.calculateEndPadding(layoutDirection) + DOCK_HORIZONTAL_PADDING,
             )
+            Crossfade(targetState = targetPage) { page ->
+                DockRowsOf(
+                    content = dock.contents[page],
+                    stepper = dock.steppers[page],
+                    metronome = metronome,
+                    rows = dock.rows,
+                    layout = layout,
+                    horizontalPadding = horizontalPadding,
+                )
+            }
         }
     }
 }
@@ -200,7 +216,7 @@ internal fun Modifier.readAfterDock() = semantics {
 /** The dock's layout as [SongDock] last drew it. Not a state. */
 private class LastDockLayout(var value: DockLayout? = null)
 
-private val DOCK_CORNER = 16.dp
+internal val DOCK_CORNER = 16.dp
 private val DOCK_HORIZONTAL_PADDING = 16.dp
 
 /** After the app bar's, which is the screen's first, and before the song's pages, which come after it. */

@@ -17,9 +17,10 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,11 +28,14 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedButton
@@ -69,6 +73,7 @@ import com.pandulapeter.campfire.presentation.resources.import_preview_shared_up
 import com.pandulapeter.campfire.presentation.resources.import_preview_title
 import com.pandulapeter.campfire.presentation.ui.components.controls.segmentShape
 import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.DOCK_CORNER
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportPreviewAction
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportPreviewPage
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportPreviewPageChoice
@@ -79,8 +84,10 @@ import com.pandulapeter.campfire.presentation.ui.state.importing.importPreviewPa
  * library: a card in the secondary container colour of the app's other notices (`WarningCard`), holding the message,
  * over the review the page's own choices (the same ones its row in the review offers), and the buttons that import.
  * The buttons sit at the card's end beside the message where the message keeps a readable width, and under it, still at
- * the end, where it would not. It goes away, sliding down, once the preview of one song has been imported and the screen
- * is the song's own. In a short window ([SHORT_WINDOW_HEIGHT]) it is compact: one line and the buttons, over the review
+ * the end, where it would not. It stands on the dock's surface rather than over the song: a room of that surface as wide
+ * as the screen, rounded at its top as the dock is, holds it, kept off the edges by [roomPadding] and at most
+ * [PREVIEW_CARD_MAX_WIDTH] wide. It goes away, sinking into the dock, once the preview of one song has been imported and
+ * the screen is the song's own. In a short window ([SHORT_WINDOW_HEIGHT]) it is compact: one line and the buttons, over the review
  * with the page's choices in [ImportPreviewChoicesMenu].
  *
  * @param importPreview Null once the screen is not a preview any more; the last one is drawn while the card leaves.
@@ -89,6 +96,7 @@ import com.pandulapeter.campfire.presentation.ui.state.importing.importPreviewPa
 @Composable
 internal fun ImportPreviewBar(
     modifier: Modifier = Modifier,
+    roomPadding: PaddingValues,
     importPreview: ImportPreviewState?,
     currentPage: Int,
     isAddingToReview: Boolean,
@@ -103,52 +111,80 @@ internal fun ImportPreviewBar(
     AnimatedVisibility(
         modifier = modifier,
         visible = importPreview != null,
-        enter = fadeIn() + slideInVertically { it },
-        exit = fadeOut() + slideOutVertically { it },
+        enter = fadeIn() + expandVertically(expandFrom = Alignment.Top),
+        exit = fadeOut() + shrinkVertically(shrinkTowards = Alignment.Top),
     ) {
         val shown = last ?: return@AnimatedVisibility
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            color = MaterialTheme.colorScheme.secondaryContainer,
-            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-            shape = MaterialTheme.shapes.large,
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.surfaceContainer, RoundedCornerShape(topStart = DOCK_CORNER, topEnd = DOCK_CORNER))
+                .padding(roomPadding),
+            contentAlignment = Alignment.Center,
         ) {
-            MessageBesideOrAboveButtons(
-                modifier = Modifier
-                    .animateContentSize(MaterialTheme.motionScheme.defaultSpatialSpec())
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                message = {
-                    AnimatedContent(
-                        targetState = isCompact,
-                        transitionSpec = { fadeIn() togetherWith fadeOut() },
-                    ) { compact ->
-                        if (compact) {
-                            CompactPreviewMessage(
-                                importPreview = shown,
-                                currentPage = currentPage,
-                                onChosenChange = onChosenChange,
-                                onResolutionSelected = onResolutionSelected,
-                            )
-                        } else {
-                            PreviewMessage(
-                                importPreview = shown,
-                                currentPage = currentPage,
-                                onChosenChange = onChosenChange,
-                                onResolutionSelected = onResolutionSelected,
-                            )
-                        }
-                    }
-                },
-                buttons = {
-                    ImportPreviewButtons(
-                        importPreview = shown,
-                        isAddingToReview = isAddingToReview,
-                        onAction = onAction,
-                    )
-                },
+            PreviewCard(
+                shown = shown,
+                currentPage = currentPage,
+                isCompact = isCompact,
+                isAddingToReview = isAddingToReview,
+                onAction = onAction,
+                onChosenChange = onChosenChange,
+                onResolutionSelected = onResolutionSelected,
             )
         }
     }
+}
+
+/** The card itself: the message, with the page's choices, beside or above the buttons. */
+@Composable
+private fun PreviewCard(
+    shown: ImportPreviewState,
+    currentPage: Int,
+    isCompact: Boolean,
+    isAddingToReview: Boolean,
+    onAction: (ImportPreviewAction) -> Unit,
+    onChosenChange: (ImportEntryKey, Boolean) -> Unit,
+    onResolutionSelected: (ImportEntryKey, ImportConflictResolution) -> Unit,
+) = Surface(
+    modifier = Modifier.widthIn(max = PREVIEW_CARD_MAX_WIDTH).fillMaxWidth(),
+    color = MaterialTheme.colorScheme.secondaryContainer,
+    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+    shape = MaterialTheme.shapes.large,
+) {
+    MessageBesideOrAboveButtons(
+        modifier = Modifier
+            .animateContentSize(MaterialTheme.motionScheme.defaultSpatialSpec())
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        message = {
+            AnimatedContent(
+                targetState = isCompact,
+                transitionSpec = { fadeIn() togetherWith fadeOut() },
+            ) { compact ->
+                if (compact) {
+                    CompactPreviewMessage(
+                        importPreview = shown,
+                        currentPage = currentPage,
+                        onChosenChange = onChosenChange,
+                        onResolutionSelected = onResolutionSelected,
+                    )
+                } else {
+                    PreviewMessage(
+                        importPreview = shown,
+                        currentPage = currentPage,
+                        onChosenChange = onChosenChange,
+                        onResolutionSelected = onResolutionSelected,
+                    )
+                }
+            }
+        },
+        buttons = {
+            ImportPreviewButtons(
+                importPreview = shown,
+                isAddingToReview = isAddingToReview,
+                onAction = onAction,
+            )
+        },
+    )
 }
 
 @Composable
@@ -413,3 +449,6 @@ private fun ResolutionChoice(
 
 /** The pill's room before the box, which the pill takes out of the card's own padding (16 dp) to keep the box aligned. */
 private val INCLUDE_TOGGLE_PADDING = 12.dp
+
+/** A preview's card stays a card, centred, rather than a strip across a wide window, whose message would sit far from its buttons. */
+private val PREVIEW_CARD_MAX_WIDTH = 720.dp
