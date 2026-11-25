@@ -17,8 +17,9 @@ tuning's strings directly (every stringed instrument, not only the five with sha
 
 - `InstrumentPill`: two halves (the tuning half only for an instrument with more than one), no chevrons, one line: the
   tuning's name is cut first, down to 40% of the pill, then the instrument's; on a tool's line with trailing controls
-  the pill takes the line to itself wherever it does not fit whole beside them (`pillSharesLine`). Always exactly
-  `songControlHeight`, matching the transposition stepper, touched 48 dp tall. In song details' Playing sheet
+  the pill takes the line to itself wherever it does not fit whole beside them (`pillSharesLine`). Exactly
+  `songControlHeight`, matching the transposition stepper, touched 48 dp tall, except on the Preferences' Chords page,
+  where it takes the picker chips' height (`PICKER_CHIP_HEIGHT`) among them. In song details' Playing sheet
   (and its dock in read only mode, since it changes a device preference, or for an instrument without shapes), Tuner, Chords, Scales, onboarding, and the Preferences' Chords page.
   A swap between two tools carries the pill (and between Chords and Scales the capo) over as one (`ui/chrome`).
 - The Chords and Scales tabs end the line with the Preferences button (`endAction`), outside the line's own layout, so

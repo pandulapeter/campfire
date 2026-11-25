@@ -66,12 +66,13 @@ import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
  * opening its own sheet: the instrument's name, and after it the tuning's ("Drop D", its note in the chord [notation])
  * for an instrument with more than one, so that the tuning is a choice in sight rather than one at the end of a long
  * list. Two choices rather than one, since diagrams for the wrong instrument or tuning look just as right as the ones for
- * the right one. It is exactly as tall as a song's playing controls set in [style] are (`songControlHeight`), so that on a
- * song's page it lines up with the transposition stepper under it, and keeps to one line: the tuning's name, the longer
+ * the right one. It is as tall as a song's playing controls set in [style] are (`songControlHeight`), so that on a
+ * song's page it lines up with the transposition stepper under it, unless a page of pickers gives it theirs ([height]), and keeps to one line: the tuning's name, the longer
  * of the two, is cut short first where the line is too narrow for both, down to a share of the pill, and then the
  * instrument's name (see [InstrumentPillMeasurePolicy]). The tuning half fades in and out with the instrument's
  * tunings and the pill resizes with it.
  *
+ * @param height How tall the pill is: a song's playing controls' height, or that of the picker chips it stands among.
  * @param isTabChromePart Whether it is the instrument pill of a tool's tab, which a tab swap carries over to the other
  *   tool's as one pill (see SharedTabChrome), drawing its container in its stead.
  * @param tuningVisibility Where the tuning half fades in and out, for a caller that measures the pill and so has to know
@@ -84,6 +85,7 @@ internal fun InstrumentPill(
     tuning: InstrumentTuning?,
     notation: ChordNotation,
     style: TextStyle = MaterialTheme.typography.titleSmall,
+    height: Dp = songControlHeight(style),
     isEnabled: Boolean = true,
     isTabChromePart: Boolean = false,
     tuningVisibility: MutableTransitionState<Boolean>? = null,
@@ -102,7 +104,7 @@ internal fun InstrumentPill(
     Surface(
         modifier = modifier
             .sharedTabChrome(chrome = chrome, zIndex = TOOL_LINE_Z_INDEX, isContainerDrawnOutsideSwaps = true)
-            .height(songControlHeight(style))
+            .height(height)
             .alpha(alpha),
         shape = CircleShape,
         color = chrome.drawnContainerColor(containerColor),

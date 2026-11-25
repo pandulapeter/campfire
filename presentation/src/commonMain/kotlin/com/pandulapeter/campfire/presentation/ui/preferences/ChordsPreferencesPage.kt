@@ -41,6 +41,7 @@ import com.pandulapeter.campfire.presentation.ui.chords.shownChordName
 import com.pandulapeter.campfire.presentation.mapper.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.components.SwitchListItem
 import com.pandulapeter.campfire.presentation.ui.components.list.LIST_ITEM_KEYLINE
+import com.pandulapeter.campfire.presentation.ui.components.controls.PICKER_CHIP_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.components.controls.PickerChip
 import com.pandulapeter.campfire.presentation.ui.components.controls.SegmentedChoice
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSubsection
@@ -84,6 +85,8 @@ private fun ChordDiagramsSection(
             instrument = userPreferences?.instrument ?: UserPreferences.Instrument.GUITAR,
             tuning = userPreferences?.instrumentTuning,
             notation = notation,
+            // As tall as the notation's and the language's picker chips, so the pills of the Preferences match.
+            height = PICKER_CHIP_HEIGHT,
             // Over this page's sheet rather than in its place, so that picking one comes back here (DialogStack).
             onInstrumentClicked = { showDialog(DialogType.Instrument) },
             onTuningClicked = { showDialog(DialogType.Tuning) },

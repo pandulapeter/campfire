@@ -18,9 +18,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -31,16 +29,12 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.ic_expand
-import org.jetbrains.compose.resources.painterResource
 
 /**
  * A choice made in a sheet, named by what is chosen now and opening the sheet that changes it: a tonal pill like the
- * steppers, [height] tall, its [text] in [style] and a chevron after it, which says that it is a choice rather than an
- * edit. The text crossfades as it changes and the pill resizes with it, and a text too long for the row is cut short
+ * steppers and the instrument pill, [PICKER_CHIP_HEIGHT] tall, its [text] in [style] and no chevron, as the instrument
+ * pill has none: the filled pill naming a value is what says it is a choice. The text crossfades as it changes and the pill resizes with it, and a text too long for the row is cut short
  * rather than wrapped. [onClickLabel] is what a screen reader says a tap does.
  */
 @Composable
@@ -48,14 +42,12 @@ internal fun PickerChip(
     modifier: Modifier = Modifier,
     text: String,
     onClickLabel: String,
-    height: Dp = 40.dp,
     style: TextStyle = MaterialTheme.typography.titleSmall,
-    chevronSize: Dp = 20.dp,
     isEnabled: Boolean = true,
     onClick: () -> Unit,
 ) = Surface(
     // Dimmed the way the list items of Settings are while their section is switched off.
-    modifier = modifier.height(height).alpha(if (isEnabled) 1f else 0.5f),
+    modifier = modifier.height(PICKER_CHIP_HEIGHT).alpha(if (isEnabled) 1f else 0.5f),
     shape = CircleShape,
     color = MaterialTheme.colorScheme.surfaceContainerHighest,
 ) {
@@ -63,7 +55,7 @@ internal fun PickerChip(
         modifier = Modifier
             .clickable(enabled = isEnabled, onClickLabel = onClickLabel, role = Role.Button, onClick = onClick)
             .animateContentSize(animationSpec = MaterialTheme.motionScheme.fastSpatialSpec())
-            .padding(start = PICKER_CHIP_START_PADDING, end = PICKER_CHIP_END_PADDING),
+            .padding(horizontal = PICKER_CHIP_HORIZONTAL_PADDING),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         val fadeSpec = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
@@ -80,15 +72,10 @@ internal fun PickerChip(
                 overflow = TextOverflow.Ellipsis,
             )
         }
-        Icon(
-            modifier = Modifier.padding(start = PICKER_CHIP_CHEVRON_GAP).size(chevronSize),
-            painter = painterResource(Res.drawable.ic_expand),
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
     }
 }
 
-private val PICKER_CHIP_START_PADDING = 12.dp
-private val PICKER_CHIP_END_PADDING = 8.dp
-private val PICKER_CHIP_CHEVRON_GAP = 2.dp
+/** How tall a [PickerChip] is, which the instrument pill among them takes too (the Preferences' Chords page). */
+internal val PICKER_CHIP_HEIGHT = 40.dp
+
+private val PICKER_CHIP_HORIZONTAL_PADDING = 16.dp
