@@ -102,7 +102,9 @@ app bar's metronome panel.
   accents with a round play / stop; not the time signature, which is the file's (Song defaults). Read only mode's opens
   nothing; the click still plays.
 - **The scale chips** are the Scales section's groups, the home one untitled, the rest under their titles ("Over E7").
-  None (a songbook, a song over `MAX_PLAYED_CHORDS` included) says so: the row is the screen's.
+  None (a songbook, a song over `MAX_PLAYED_CHORDS` included) says so: the row is the screen's. A group none of whose
+  sections (`SongScaleGroup.sections`) is on the screen is faded back as the diagrams are, title and chips, still opening
+  their sheets (`rememberScaleGroupsOnScreen`); the home group never, and nothing while no range is known.
 - **The diagram strip** (`DockDiagramStrip`) is the Chords section's cells (`rememberChordCells`), sized by what the
   row's height leaves (`dockDiagramSize`). The chords played on the screen are drawn as they are and the rest faded
   back to 60 %, well above a disabled control's 38 %, so no colour is spent on the mark and nothing looks unplayable;

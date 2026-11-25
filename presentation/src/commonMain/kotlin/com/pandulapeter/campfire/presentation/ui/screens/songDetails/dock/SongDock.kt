@@ -189,13 +189,13 @@ private fun DockRowsOf(
         ) {
             if (content != null) {
                 if (rows.hasChordRow) DockChordChips(cells = cells, onChordClicked = onChordClicked)
-                DockScaleChips(content = content)
+                DockScaleChips(content = content, stepper = stepper)
             }
         }
     } else {
         if (rows.hasScaleRow) {
             DockScrollingRow(height = layout.rowHeight, horizontalPadding = horizontalPadding, scrollState = rowScroll, start = null, end = null) {
-                if (content != null) DockScaleChips(content = content)
+                if (content != null) DockScaleChips(content = content, stepper = stepper)
             }
         }
         val stripScroll = rememberScrollState()

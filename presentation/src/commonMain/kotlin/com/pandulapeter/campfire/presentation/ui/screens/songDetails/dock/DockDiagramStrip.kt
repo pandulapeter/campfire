@@ -207,10 +207,10 @@ private val CELL_LINE_GAP = 2.dp
 private val CELL_HORIZONTAL_PADDING = 4.dp
 
 /**
- * How opaque a chord not played on the screen is drawn: faded back far enough for the screen's chords to stand out, and
- * clearly more than a disabled control's 38 %, so that it still reads as a chord to play.
+ * How opaque a chord not played on the screen, and a scale chip of a group not on it, is drawn: faded back far enough for
+ * the screen's to stand out, and clearly more than a disabled control's 38 %, so that it still reads as one to play.
  */
-private const val DIMMED_ALPHA = 0.6f
+internal const val DIMMED_ALPHA = 0.6f
 private val KEY_LABEL_WIDTH = 56.dp
 private val MIN_DIAGRAM_HEIGHT = 24.dp
 private val FRETTED_WIDTH = 56.dp
