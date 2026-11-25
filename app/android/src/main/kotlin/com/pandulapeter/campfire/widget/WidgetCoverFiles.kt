@@ -12,12 +12,6 @@ package com.pandulapeter.campfire.widget
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.graphics.BitmapShader
-import android.graphics.Canvas
-import android.graphics.Matrix
-import android.graphics.Paint
-import android.graphics.RectF
-import android.graphics.Shader
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import com.pandulapeter.campfire.presentation.ui.widget.WidgetSnapshot
@@ -73,41 +67,17 @@ internal object WidgetCoverFiles {
     }
 
     private fun decodeFile(file: File): Bitmap? = try {
-        BitmapFactory.decodeFile(file.path)?.let(::roundedSquareOf)
+        // A JPEG has no alpha, so half the memory of the default, against Android's limit on a widget's bitmaps.
+        BitmapFactory.decodeFile(file.path, BitmapFactory.Options().apply { inPreferredConfig = Bitmap.Config.RGB_565 })
     } catch (exception: OutOfMemoryError) {
         println("Could not decode a widget cover: out of memory")
         null
-    }
-
-    /**
-     * [source] cropped to its centered square, its corners rounded as the iOS widget's are (the same share of the side),
-     * drawn into the bitmap itself: a widget below Android 12 cannot clip an image, and `cornerRadius` from 12 on would
-     * round a different share on a launcher's own sizes. A thumbnail is a small JPEG, so its transparent corners cost
-     * little against Android's limit on a widget's bitmap memory.
-     */
-    private fun roundedSquareOf(source: Bitmap): Bitmap {
-        val side = minOf(source.width, source.height)
-        val left = (source.width - side) / 2f
-        val top = (source.height - side) / 2f
-        val rounded = Bitmap.createBitmap(side, side, Bitmap.Config.ARGB_8888)
-        val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG).apply {
-            shader = BitmapShader(source, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP).apply {
-                setLocalMatrix(Matrix().apply { setTranslate(-left, -top) })
-            }
-        }
-        val radius = side * CORNER_RADIUS_SHARE
-        Canvas(rounded).drawRoundRect(RectF(0f, 0f, side.toFloat(), side.toFloat()), radius, radius, paint)
-        source.recycle()
-        return rounded
     }
 
     private fun folder(context: Context) = File(File(context.filesDir, WIDGET_DIRECTORY_NAME), FOLDER_NAME)
 
     private const val FOLDER_NAME = "covers"
     private const val TEMPORARY_SUFFIX = ".tmp"
-
-    /** The iOS widget's 6 pt corners on its 28 pt cover. */
-    private const val CORNER_RADIUS_SHARE = 6f / 28f
 }
 
 /** The covers of the snapshot shown ([WidgetCoverFiles.bitmaps]), by the name its songs give them. */

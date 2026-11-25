@@ -18,6 +18,7 @@ import androidx.glance.GlanceTheme
 import androidx.glance.Image
 import androidx.glance.ImageProvider
 import androidx.glance.action.clickable
+import androidx.glance.appwidget.cornerRadius
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Column
 import androidx.glance.layout.ContentScale
@@ -110,12 +111,12 @@ private fun SongNumber(
 )
 
 /**
- * A song's cover, its rounded corners already in the bitmap ([WidgetCoverFiles]), since a widget below Android 12 cannot
- * clip. The cover is decoration beside the title, which says what the row is.
+ * A song's cover, cropped to a square with the songs list's rounded corners from Android 12, and square before it, as
+ * the widget itself is there. The cover is decoration beside the title, which says what the row is.
  */
 @Composable
 private fun SongCover(cover: Bitmap) = Image(
-    modifier = GlanceModifier.size(COVER_SIZE.dp),
+    modifier = GlanceModifier.size(COVER_SIZE.dp).cornerRadius(COVER_CORNER_RADIUS.dp),
     provider = ImageProvider(cover),
     contentDescription = null,
     contentScale = ContentScale.Crop,
@@ -127,6 +128,7 @@ private const val NUMBER_GAP = 8
 
 /** A little smaller than the songs list's two-line cover, to leave the rows packed as they are. */
 private const val COVER_SIZE = 36
+private const val COVER_CORNER_RADIUS = 8
 private const val COVER_GAP = 12
 private const val TITLE_SIZE = 14
 private const val ARTIST_SIZE = 12
