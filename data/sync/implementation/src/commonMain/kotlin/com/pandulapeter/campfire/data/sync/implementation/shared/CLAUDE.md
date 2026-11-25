@@ -91,7 +91,7 @@
   (`MAX_SHARED_ATTACHMENTS_SIZE`, 50 MiB, what an import reads), filled in the order the songs name them by
   `sharedCopyAttachments` (`:data:model`): one that does not fit is left out, never refusing the share, its lines
   taken out of the copy's songs, and the next tried. The entry records how many (`leftOutAttachments`, an unknown
-  member to older versions), which the export screen and Settings → Sharing say; the fingerprint names the
+  member to older versions), which the export screen and Settings → Library say; the fingerprint names the
   left-out ones as well, so an unchanged copy is not rebuilt for them.
 - **Accepted**: a 5.4.0 device and a current one rebuild a copy whose songs name files in turn, since they fingerprint it
   differently (5.4.0's copy carries no files): one upload per run of each until both are current. Left as it is.

@@ -258,11 +258,11 @@ folder to find by path.
 ### P2. Picker and switching
 
 - **Picker:** where a single Connect button is today (the Settings sync section while disconnected or after a failed
-  connection, the onboarding sync page, the export Link tab, and the Sharing tab while sync isn't connected), show one
-  button per provider in `SyncProviders`: "Connect Dropbox" and "Connect Google Drive". With one provider in the build
+  connection, the onboarding sync page, and the export Link tab; Library's shared links show only while connected), show
+  one button per provider in `SyncProviders`: "Connect Dropbox" and "Connect Google Drive". With one provider in the build
   (forks, debug builds without keys) it looks as today. No sheet; it isn't a text input, and two buttons fit. The
-  "connect again" paths (the Sharing tab and the Link tab asking for a lost permission) use the account's own provider
-  and need no picker.
+  "connect again" paths (Library's shared links and the Link tab asking for a lost permission) use the account's own
+  provider and need no picker.
 - **Switching** is Disconnect, then connect the other; there is no separate Switch action. The Disconnect confirmation
   gains:
   - while shares exist, a choice to **stop sharing everything first**. Links made in the old provider otherwise keep
@@ -274,12 +274,12 @@ folder to find by path.
   version keeps the name, and this device's becomes the ` (2)` copy. Add a `TwoDeviceSyncTest` case for "device
   switched providers, folder already populated".
 - **Strings:** 17 keys in each of `values[-hu]/strings.xml` name Dropbox, from `settings_sync_connect_dropbox` to the
-  `share_*` failures and the Sharing tab's descriptions. Turn the generic ones into `%1$s` strings with the provider's
+  `share_*` failures and the shared links section's descriptions (Settings → Library). Turn the generic ones into `%1$s` strings with the provider's
   display name, and keep the facts that differ per service as per-provider strings:
   - the folder: today "your Dropbox folder" (`settings_library_delete_confirmation_sync`) or "the cloud folder"; Drive's
     is "the Campfire folder in your Google Drive";
   - the link permission.
-- **Links without the capability:** the Link tab and Sharing tab explain it instead of offering a dead Connect.
+- **Links without the capability:** the Link tab and Library's shared links explain it instead of offering a dead Connect.
 
 ### P3. Share links v2
 

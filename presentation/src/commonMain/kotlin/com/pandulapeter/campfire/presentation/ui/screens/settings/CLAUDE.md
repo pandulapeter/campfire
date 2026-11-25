@@ -11,16 +11,17 @@
 # :presentation — ui/screens/settings
 
 Seven tabs under a tab row scrolling under the insets to the window's edges (the insets pad its ends) while the page
-is at most 740dp wide, else a category pane beside the selected page, each category with its icon (the Preferences'
-pages' own for theirs); the layouts crossfade across the breakpoint, as
-do the wide layout's pages.
+is at most `SETTINGS_TAB_ROW_MAX_WIDTH` + `SETTINGS_CATEGORY_PANE_WIDTH` wide (`settingsPage/PageWidthLayout.kt`), else
+a category pane beside the selected page, each category with its icon (the Preferences' pages' own for theirs); the
+layouts crossfade across the breakpoint, as do the wide layout's pages.
 
 ## Tab contents
 
 - **General**, **Song**, **Chords**, **Metronome**: the Preferences' pages (`ui/preferences/CLAUDE.md`), each the same
   component and name as in the Preferences sheet, so Settings has one tab row and nothing nested. General
   (`SettingsTab.HOME`) is what the screen opens on, read only mode its first row. Song and Metronome go with their
-  features (`settingsTabs`, tested); `settings/preferences` and `settings/songs` addresses open General and Song.
+  features (`settingsTabs`, tested); `settings/preferences` and `settings/songs` addresses open General and Song, and
+  `settings/sharing` (the old Sharing tab's) opens Library.
 - Set up Campfire again leads About's Help.
 - **Library**: Sync, Import / export, Shared links, then On this device, last since its rows can't be undone (Import /
   export comes before a shared links list that can grow long). Deleting the library wants `DELETE` typed in every
