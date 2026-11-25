@@ -15,7 +15,10 @@ import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.onFirst
+import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.tuner
 import com.pandulapeter.campfire.screenshots.AppTestScope
 import com.pandulapeter.campfire.screenshots.openSong
 import com.pandulapeter.campfire.screenshots.opensPlayingSheet
@@ -24,12 +27,12 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
-/** Where an upright phone puts the key chip of song details' dock: starting the chord diagrams' row, as tall as it. */
+/** Where an upright phone puts the key chip of song details' dock: over the tuner's pill, starting the chord diagrams' row. */
 @OptIn(ExperimentalTestApi::class)
 internal class DockRowsTest {
 
     @Test
-    fun `on an upright phone the key chip starts the diagrams' row as tall as the diagrams`() = runAppTest {
+    fun `on an upright phone the key chip stands over the tuner at the start of the diagrams' row`() = runAppTest {
         openSong()
         waitForIdle()
         assertKeyChipStartsDiagramRow()
@@ -44,13 +47,14 @@ internal class DockRowsTest {
         assertKeyChipStartsDiagramRow()
     }
 
-    /** The key chip stands before the diagram in its row, from its top to its bottom, so that a short key is not lost. */
+    /** The key chip and the tuner's pill under it stand before the diagram, within its row, so neither is lost. */
     private fun AppTestScope.assertKeyChipStartsDiagramRow() {
         val keyChip = keyChip()
+        val tuner = onNode(hasContentDescription(string(Res.string.tuner)) and hasClickAction()).fetchSemanticsNode().boundsInRoot
         val diagram = diagram()
         assertTrue(
-            diagram.left >= keyChip.right && keyChip.top <= diagram.top && keyChip.bottom >= diagram.bottom,
-            "The diagram at $diagram is not beside the key chip at $keyChip, as tall as it.",
+            diagram.left >= keyChip.right && keyChip.top >= diagram.top && tuner.top >= keyChip.bottom && tuner.bottom <= diagram.bottom,
+            "The key chip at $keyChip and the tuner at $tuner do not stand over each other before the diagram at $diagram.",
         )
     }
 

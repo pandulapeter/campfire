@@ -14,20 +14,26 @@ import androidx.compose.ui.unit.Dp
 
 /**
  * What starts the dock for one song's [content]: the instrument and the tuner where the key chip does not hold them
- * ([DockInstrumentTools]), then the key chip ([DockKeyChip]) where there is a [dockKey], [height] tall, the diagram row's
- * tall one where [isTall].
+ * ([DockInstrumentTools]), then the key chip ([DockKeyChip]) where there is a [dockKey], [height] tall. In the diagram
+ * row ([tallHeight], its height), a key chip that opens the Playing sheet stands over the tuner's pill
+ * ([DockKeyAndTuner]) where the tuner is on.
  */
 @Composable
-internal fun DockStart(content: DockContent, dockKey: DockKey?, height: Dp, isTall: Boolean = false) {
+internal fun DockStart(content: DockContent, dockKey: DockKey?, height: Dp, tallHeight: Dp? = null) {
     DockInstrumentTools(content = content, keyOpensPlaying = dockKey?.opensPlaying == true)
-    if (dockKey != null) {
-        DockKeyChip(
+    if (dockKey == null) return
+    val onPlayingClicked = content.playingControls?.onPlayingClicked?.takeIf { dockKey.opensPlaying }
+    val onTunerClicked = content.playingTools?.onTunerClicked
+    val chordDiagrams = content.chordDiagrams
+    if (tallHeight != null && onPlayingClicked != null && onTunerClicked != null && chordDiagrams != null) {
+        DockKeyAndTuner(
             dockKey = dockKey,
-            height = height,
-            isTall = isTall,
-            // Where the dock's start has no tuner button of its own (the key chip opens the Playing sheet).
-            onTunerClicked = content.playingTools?.onTunerClicked?.takeIf { isTall && dockKey.opensPlaying },
-            onClick = content.playingControls?.onPlayingClicked?.takeIf { dockKey.opensPlaying },
+            chordDiagrams = chordDiagrams,
+            height = tallHeight,
+            onPlayingClicked = onPlayingClicked,
+            onTunerClicked = onTunerClicked,
         )
+    } else {
+        DockKeyChip(dockKey = dockKey, height = height, onClick = onPlayingClicked)
     }
 }

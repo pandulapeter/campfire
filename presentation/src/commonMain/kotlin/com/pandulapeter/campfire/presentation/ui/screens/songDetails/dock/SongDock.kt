@@ -128,7 +128,7 @@ private fun DockRowsBox(dock: SongDockState, metronome: DockMetronome, contentPa
  * With the metronome all it holds, one row that is the metronome panel ([DockMetronomePanel]). In [DockTier.CHORD_CHIPS]
  * (a short window's and an import preview's), or without the diagrams, one row: what starts the dock ([DockStart]), then the chord chips and the scale chips
  * scrolling between it and the tempo chip ([DockTempoChip]). Otherwise the diagrams have a row of their own between the
- * dock's start and the tempo chip, both as tall as the diagrams (see [DockKeyChip] and [DockTempoChip]), under a row of
+ * dock's start and the tempo chip, both as tall as the diagrams (see [DockKeyAndTuner] and [DockTempoChip]), under a row of
  * the scale chips alone where there are scale suggestions. Whatever scrolls fades only where it meets what stands still. The click is the
  * screen's ([metronome]), whichever page the rows are drawn for.
  * The diagrams and the scale chips follow the page the reader is headed for, which the page's [stepper] says.
@@ -184,7 +184,7 @@ private fun DockRowsOf(
             height = layout.diagramRowHeight,
             horizontalPadding = horizontalPadding,
             scrollState = stripScroll,
-            start = startContent?.let { @Composable { DockStart(content = it, dockKey = dockKey, height = layout.diagramRowHeight, isTall = true) } },
+            start = startContent?.let { @Composable { DockStart(content = it, dockKey = dockKey, height = layout.rowHeight, tallHeight = layout.diagramRowHeight) } },
             end = tempo?.let { @Composable { DockTempoChip(tempo = it, metronome = metronome, height = layout.diagramRowHeight, isTall = true) } },
         ) {
             if (content != null) {
