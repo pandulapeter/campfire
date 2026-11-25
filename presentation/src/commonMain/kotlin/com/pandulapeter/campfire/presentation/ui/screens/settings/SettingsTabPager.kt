@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.screens.settings
 
 import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
@@ -30,6 +31,7 @@ import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedScro
 import com.pandulapeter.campfire.presentation.ui.navigation.Navigator
 import com.pandulapeter.campfire.presentation.ui.navigation.SettingsTab
 import com.pandulapeter.campfire.presentation.ui.components.bounceScrollableContent
+import com.pandulapeter.campfire.presentation.ui.components.holdingVerticalWheelScrolls
 import com.pandulapeter.campfire.presentation.ui.components.only
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filterNotNull
@@ -124,6 +126,10 @@ internal fun SettingsTabPager(
             state = pagerState,
             beyondViewportPageCount = tabs.size - 1,
             key = { tabs[it] },
-        ) { page(tabs[it]) }
+        ) {
+            // A page at the end of its scroll would hand a trackpad's vertical swipe to the pager, which turns pages by
+            // the swipe's sideways drift.
+            Box(modifier = Modifier.fillMaxSize().holdingVerticalWheelScrolls(), propagateMinConstraints = true) { page(tabs[it]) }
+        }
     }
 }

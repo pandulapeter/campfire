@@ -61,6 +61,8 @@ do the wide layout's pages.
 - Back from any other tab goes to General first: `navigateBack` for Escape, a screen-owned `NavigationBackHandler` for
   gestures and browser Back, so predictive back previews General (one pager scroll for the whole gesture; the wide
   layout seeks a `SeekableTransitionState`).
+- A wheel or trackpad scroll that runs mostly vertically stays in its page (`holdingVerticalWheelScrolls`): one the page
+  cannot use, at its end, would reach the pager, which turns pages by a trackpad swipe's sideways drift.
 - Scroll-to-top requests are collected with **`collectLatest`**: a touch interrupting the scroll throws
   `CancellationException`, which would end a plain `collect` and every later press.
 
