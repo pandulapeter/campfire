@@ -1348,7 +1348,7 @@
 
     <!-- Settings screen: sync -->
     <string name="settings_sync_unavailable">Această versiune de Campfire a fost creată fără date de acces pentru sincronizare, așa că nu ai la ce să te conectezi.</string>
-    <string name="settings_sync_description">Păstrează aceeași bibliotecă pe toate dispozitivele printr-un dosar în cloud care îți aparține, împreună cu felul în care transpui fiecare cântec, unde pui capodastrul și în ce tempo îl cânți. Campfire nu are server: fișierele circulă direct între dispozitivele tale și spațiul tău de stocare.</string>
+    <string name="settings_sync_description">Păstrează aceeași bibliotecă pe toate dispozitivele printr-un dosar în cloud care îți aparține, împreună cu felul în care transpui fiecare cântec, unde pui capodastrul și în ce tempo îl cânți. Campfire nu are server: fișierele circulă direct între dispozitivele tale și spațiul tău de stocare. Un dosar conectat îți permite și să partajezi cântece și liste ca linkuri pe care le poate deschide oricine.</string>
     <string name="settings_sync_connect_dropbox">Conectează Dropbox</string>
     <string name="settings_sync_connecting">Se conectează…</string>
     <string name="settings_sync_connection_failed_network">Serviciul nu poate fi accesat. Verifică conexiunea la internet și încearcă din nou.</string>

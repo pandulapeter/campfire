@@ -1338,7 +1338,7 @@
 
     <!-- Settings screen: sync -->
     <string name="settings_sync_unavailable">Ta wersja Campfire została zbudowana bez danych dostępowych do synchronizacji, więc nie ma się z czym połączyć.</string>
-    <string name="settings_sync_description">Utrzymuj tę samą bibliotekę na każdym urządzeniu dzięki własnemu folderowi w chmurze, razem z transpozycją, kapodasterem i tempem każdej piosenki. Campfire nie ma serwera: pliki trafiają prosto między twoimi urządzeniami a twoim własnym magazynem.</string>
+    <string name="settings_sync_description">Utrzymuj tę samą bibliotekę na każdym urządzeniu dzięki własnemu folderowi w chmurze, razem z transpozycją, kapodasterem i tempem każdej piosenki. Campfire nie ma serwera: pliki trafiają prosto między twoimi urządzeniami a twoim własnym magazynem. Połączony folder pozwala też udostępniać piosenki i setlisty jako linki, które każdy może otworzyć.</string>
     <string name="settings_sync_connect_dropbox">Połącz z Dropbox</string>
     <string name="settings_sync_connecting">Łączenie…</string>
     <string name="settings_sync_connection_failed_network">Nie można połączyć się z usługą. Sprawdź połączenie z internetem i spróbuj ponownie.</string>

@@ -1302,7 +1302,7 @@
 
     <!-- Settings screen: sync -->
     <string name="settings_sync_unavailable">Esta versão do Campfire foi gerada sem credenciais de sincronização, então não há nada a que conectar.</string>
-    <string name="settings_sync_description">Mantenha a biblioteca igual em todos os dispositivos por meio de uma pasta na nuvem que é sua, junto com a transposição, o capotraste e o andamento de cada música. O Campfire não tem servidor: os arquivos vão direto entre seus dispositivos e o seu próprio armazenamento.</string>
+    <string name="settings_sync_description">Mantenha a biblioteca igual em todos os dispositivos por meio de uma pasta na nuvem que é sua, junto com a transposição, o capotraste e o andamento de cada música. O Campfire não tem servidor: os arquivos vão direto entre seus dispositivos e o seu próprio armazenamento. Uma pasta conectada também permite compartilhar músicas e repertórios como links que qualquer pessoa pode abrir.</string>
     <string name="settings_sync_connect_dropbox">Conectar Dropbox</string>
     <string name="settings_sync_connecting">Conectando…</string>
     <string name="settings_sync_connection_failed_network">Não foi possível acessar o serviço. Verifique a conexão com a internet e tente de novo.</string>

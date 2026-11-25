@@ -1345,7 +1345,7 @@
 
     <!-- Settings screen: sync -->
     <string name="settings_sync_unavailable">גרסה זו של Campfire נבנתה בלי פרטי גישה לסנכרון, כך שאין למה להתחבר.</string>
-    <string name="settings_sync_description">הספרייה נשארת זהה בכל מכשיר דרך תיקיית ענן בבעלותכם, יחד עם הטרנספוזיציה, הקאפו והטמפו של כל שיר. ל-Campfire אין שרת: הקבצים עוברים ישירות בין המכשירים שלכם לאחסון שלכם.</string>
+    <string name="settings_sync_description">הספרייה נשארת זהה בכל מכשיר דרך תיקיית ענן בבעלותכם, יחד עם הטרנספוזיציה, הקאפו והטמפו של כל שיר. ל-Campfire אין שרת: הקבצים עוברים ישירות בין המכשירים שלכם לאחסון שלכם. תיקייה מחוברת מאפשרת גם לשתף שירים וסט־ליסטים כקישורים שכל אחד יכול לפתוח.</string>
     <string name="settings_sync_connect_dropbox">חיבור Dropbox</string>
     <string name="settings_sync_connecting">מתחבר…</string>
     <string name="settings_sync_connection_failed_network">אין גישה לשירות. בדקו את החיבור לאינטרנט ונסו שוב.</string>
