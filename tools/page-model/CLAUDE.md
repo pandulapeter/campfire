@@ -38,7 +38,8 @@ Two folders feed it, both named in `local.properties`:
 ## Steps, in order
 
 1. **Collect** (`collect.py <corpus>`): every page of `urls.tsv` rendered in headless Chrome into `pages/<id>.json`
-   (its text as the app's web views read it, by the app's own `PAGE_SNAPSHOT_SCRIPT`) and `printed/<id>.pdf`; `collect.tsv` says what each came
+   (its text as the app's web views read it, by the app's own `PAGE_SNAPSHOT_SCRIPT`, and that script's structure marks,
+   one per line) and `printed/<id>.pdf`; `collect.tsv` says what each came
    to. A rerun picks up where the last stopped; a page that turns the browser away is left out.
 2. **Label the pages** (`teacher.py prepare <corpus>`, then Claude, then `teacher.py merge <corpus>`): `prepare` writes
    each page as numbered lines and `teacher/INSTRUCTIONS.md`; Claude labels every page twice, independently, by those
