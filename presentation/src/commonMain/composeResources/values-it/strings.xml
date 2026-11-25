@@ -513,6 +513,7 @@
     <string name="settings_chord_diagrams_description">Mostra come si suona ogni accordo del brano, insieme al brano e nel suo PDF.</string>
     <string name="settings_chord_degrees">Gradi degli accordi</string>
     <string name="settings_chord_degrees_description">Indica il grado della tonalità della canzone su cui poggia ogni diagramma, ad esempio V7 accanto a G7.</string>
+    <string name="settings_chord_degrees_needs_diagrams">Per usarlo, attiva «Diagrammi degli accordi» nella pagina Canzone.</string>
     <string name="settings_chord_names">Nomi degli accordi con il capotasto</string>
     <string name="settings_chord_names_description">Gli accordi di un brano prendono il nome dalle diteggiature suonate sopra il capotasto o da come suonano. La tonalità del brano dice sempre come suona, e alla tastiera anche gli accordi.</string>
     <string name="settings_chord_names_shapes">Diteggiature</string>

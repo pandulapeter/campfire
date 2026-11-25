@@ -52,4 +52,5 @@ same setting**: a page is one component wherever it appears (the Metronome page 
 
 - The chord-writing rows are disabled only while nothing names a chord (songs with chords, the Chords or Scales tabs).
   Accidentals stay enabled under a numbering (they still spell its key). Examples are written in the picked notation,
-  never in the language. Diagrams and degrees are disabled with the songs or their chords off.
+  never in the language. Diagrams and degrees are disabled with the songs or their chords off. Degrees disabled by the
+  Song page's diagrams switch alone say so in place of their description, as that switch is on another page.

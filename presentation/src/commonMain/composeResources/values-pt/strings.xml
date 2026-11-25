@@ -515,6 +515,7 @@
     <string name="settings_chord_diagrams_description">Mostra como se toca cada acorde da música, junto com a música e no seu PDF.</string>
     <string name="settings_chord_degrees">Graus dos acordes</string>
     <string name="settings_chord_degrees_description">Indica em qual grau do tom da música cada diagrama de acorde está, como V7 ao lado de G7.</string>
+    <string name="settings_chord_degrees_needs_diagrams">Para usar isto, ative “Diagramas de acordes” na página Música.</string>
     <string name="settings_chord_names">Nomes dos acordes com capotraste</string>
     <string name="settings_chord_names_description">Os acordes de uma música são nomeados pelas formas feitas acima do capotraste ou pelo som real. O tom da música sempre indica como ela soa, e no teclado os acordes também.</string>
     <string name="settings_chord_names_shapes">Formas</string>

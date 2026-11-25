@@ -513,6 +513,7 @@
     <string name="settings_chord_diagrams_description">Zeigt beim Song und in seinem PDF, wie jeder seiner Akkorde gegriffen wird.</string>
     <string name="settings_chord_degrees">Akkordstufen</string>
     <string name="settings_chord_degrees_description">Nennt die Stufe der Tonart des Songs, auf der jedes Akkorddiagramm steht, etwa V7 neben G7.</string>
+    <string name="settings_chord_degrees_needs_diagrams">Schalte dazu auf der Seite „Song“ die „Akkorddiagramme“ ein.</string>
     <string name="settings_chord_names">Akkordnamen mit Capo</string>
     <string name="settings_chord_names_description">Die Akkorde eines Songs heißen nach den Griffen über dem Capo oder nach ihrem Klang. Die Tonart des Songs nennt immer den Klang, und auf dem Keyboard tun es auch die Akkorde.</string>
     <string name="settings_chord_names_shapes">Griffe</string>

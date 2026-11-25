@@ -513,6 +513,7 @@
     <string name="settings_chord_diagrams_description">Muestra cómo se toca cada acorde de la canción, con la canción y en su PDF.</string>
     <string name="settings_chord_degrees">Grados de los acordes</string>
     <string name="settings_chord_degrees_description">Indica el grado de la tonalidad de la canción sobre el que está cada diagrama de acorde, como V7 junto a G7.</string>
+    <string name="settings_chord_degrees_needs_diagrams">Para usarlo, activa «Diagramas de acordes» en la página Canción.</string>
     <string name="settings_chord_names">Nombres de los acordes con capo</string>
     <string name="settings_chord_names_description">Los acordes de una canción se nombran por las formas que se pisan sobre el capo o por cómo suenan. La tonalidad de la canción siempre dice cómo suena, y en un teclado también los acordes.</string>
     <string name="settings_chord_names_shapes">Formas</string>

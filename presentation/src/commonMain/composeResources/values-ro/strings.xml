@@ -554,6 +554,7 @@
     <string name="settings_chord_diagrams_description">Arată cum se cântă fiecare acord al cântecului, împreună cu cântecul și în PDF-ul lui.</string>
     <string name="settings_chord_degrees">Treptele acordurilor</string>
     <string name="settings_chord_degrees_description">Numește treapta din tonalitatea cântecului pe care stă fiecare diagramă de acord, de exemplu V7 lângă G7.</string>
+    <string name="settings_chord_degrees_needs_diagrams">Pentru asta, activează „Diagrame de acorduri” pe pagina Cântec.</string>
     <string name="settings_chord_names">Numele acordurilor cu capodastru</string>
     <string name="settings_chord_names_description">Acordurile unui cântec sunt numite după pozițiile luate deasupra capodastrului sau după cum sună. Tonalitatea cântecului spune mereu cum sună acesta, iar la claviatură și acordurile.</string>
     <string name="settings_chord_names_shapes">Poziții</string>

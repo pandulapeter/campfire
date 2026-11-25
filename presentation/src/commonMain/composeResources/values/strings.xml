@@ -513,6 +513,7 @@
     <string name="settings_chord_diagrams_description">Show how every chord of a song is played, with the song and in its PDF.</string>
     <string name="settings_chord_degrees">Chord degrees</string>
     <string name="settings_chord_degrees_description">Name the step of the song's key each chord diagram stands on, such as V7 beside G7.</string>
+    <string name="settings_chord_degrees_needs_diagrams">Turn on \"Chord diagrams\" on the Song page to use this.</string>
     <string name="settings_chord_names">Chord names with a capo</string>
     <string name="settings_chord_names_description">Name a capoed song\'s chords by the shapes you finger above the capo, or by how they sound. The key always says how the song sounds, and so do a keyboard\'s chords.</string>
     <string name="settings_chord_names_shapes">Shapes</string>

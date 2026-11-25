@@ -517,6 +517,7 @@
     <string name="settings_chord_diagrams_description">Montre comment se joue chaque accord du morceau, avec le morceau et dans son PDF.</string>
     <string name="settings_chord_degrees">Degrés des accords</string>
     <string name="settings_chord_degrees_description">Indique le degré de la tonalité de la chanson sur lequel repose chaque diagramme d\'accord, comme V7 à côté de G7.</string>
+    <string name="settings_chord_degrees_needs_diagrams">Pour l\'utiliser, active « Diagrammes d\'accords » dans la page Chanson.</string>
     <string name="settings_chord_names">Noms des accords avec un capo</string>
     <string name="settings_chord_names_description">Les accords d\'un morceau sont nommés d\'après les doigtés joués au-dessus du capo ou d\'après leur son. La tonalité du morceau dit toujours comment il sonne, et au clavier les accords aussi.</string>
     <string name="settings_chord_names_shapes">Doigtés</string>

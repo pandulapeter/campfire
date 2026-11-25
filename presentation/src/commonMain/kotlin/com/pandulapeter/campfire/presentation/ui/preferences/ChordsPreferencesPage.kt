@@ -29,6 +29,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_chord_names_sha
 import com.pandulapeter.campfire.presentation.resources.settings_chord_names_sounding
 import com.pandulapeter.campfire.presentation.resources.settings_chord_degrees
 import com.pandulapeter.campfire.presentation.resources.settings_chord_degrees_description
+import com.pandulapeter.campfire.presentation.resources.settings_chord_degrees_needs_diagrams
 import com.pandulapeter.campfire.presentation.resources.settings_group_chord_names
 import com.pandulapeter.campfire.presentation.resources.settings_group_diagrams
 import com.pandulapeter.campfire.presentation.resources.settings_instrument
@@ -99,12 +100,21 @@ private fun ChordDiagramsSection(
     // Chords tab), so it is disabled only where neither is drawn. A numbering already names a song's chords by their
     // degrees, so its diagrams carry none, while a scale sheet's chords keep their letters and their numerals.
     val isNumbering = userPreferences?.chordSpelling?.notation?.isNumbering == true
+    val isEnabled = (areSongsEnabled && areChordsEnabled && areChordDiagramsEnabled && !isNumbering) ||
+        (userPreferences.isChordLibraryEnabled && userPreferences.areScalesEnabled)
     SwitchListItem(
         title = stringResource(Res.string.settings_chord_degrees),
-        description = stringResource(Res.string.settings_chord_degrees_description),
+        // The diagrams switch is on another page, so the row says where it is when it alone is what disables this one;
+        // the songs, their chords, and a numbering are switched where their own rows say what they take.
+        description = stringResource(
+            if (!isEnabled && areSongsEnabled && areChordsEnabled && !isNumbering) {
+                Res.string.settings_chord_degrees_needs_diagrams
+            } else {
+                Res.string.settings_chord_degrees_description
+            },
+        ),
         isChecked = userPreferences?.areChordDegreesEnabled == true,
-        isEnabled = (areSongsEnabled && areChordsEnabled && areChordDiagramsEnabled && !isNumbering) ||
-            (userPreferences.isChordLibraryEnabled && userPreferences.areScalesEnabled),
+        isEnabled = isEnabled,
         onCheckedChange = preferencesController::setChordDegreesEnabled,
     )
 }

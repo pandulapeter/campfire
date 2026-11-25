@@ -553,6 +553,7 @@
     <string name="settings_chord_diagrams_description">מציג איך מנגנים כל אקורד של השיר, יחד עם השיר וב-PDF שלו.</string>
     <string name="settings_chord_degrees">דרגות האקורדים</string>
     <string name="settings_chord_degrees_description">ציון הדרגה בטונליות של השיר שעליה עומד כל אקורד בדיאגרמה, למשל V7 ליד G7.</string>
+    <string name="settings_chord_degrees_needs_diagrams">כדי להשתמש בזה, הפעילו את “דיאגרמות אקורדים” בעמוד שיר.</string>
     <string name="settings_chord_names">שמות האקורדים עם קאפו</string>
     <string name="settings_chord_names_description">האקורדים של שיר נקראים לפי הצורות שנלחצות מעל הקאפו או לפי איך שהם נשמעים. הטונליות של השיר תמיד אומרת איך הוא נשמע, ובקלידים גם האקורדים.</string>
     <string name="settings_chord_names_shapes">צורות</string>

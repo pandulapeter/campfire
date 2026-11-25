@@ -513,6 +513,7 @@
     <string name="settings_chord_diagrams_description">Megmutatja, hogyan kell lefogni a dal minden akkordját, a dalnál és a PDF-ben.</string>
     <string name="settings_chord_degrees">Akkordfokok</string>
     <string name="settings_chord_degrees_description">Minden akkordábrán megmutatja, a dal hangnemének hányadik fokán áll az akkord, például a G7 mellett azt, hogy V7.</string>
+    <string name="settings_chord_degrees_needs_diagrams">Ehhez kapcsold be az „Akkordábrák” kapcsolót a Dal oldalon.</string>
     <string name="settings_chord_names">Akkordnevek capóval</string>
     <string name="settings_chord_names_description">A dal akkordjai a capo fölött lefogott fogások vagy a hangzásuk szerint kapják a nevüket. A dal hangneme mindig azt mondja meg, hogyan szól, és billentyűn az akkordok is.</string>
     <string name="settings_chord_names_shapes">Fogások</string>

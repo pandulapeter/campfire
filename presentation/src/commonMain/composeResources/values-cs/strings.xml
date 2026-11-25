@@ -549,6 +549,7 @@
     <string name="settings_chord_diagrams_description">Ukazuje, jak se hraje každý akord písně, spolu s písní a v jejím PDF.</string>
     <string name="settings_chord_degrees">Stupně akordů</string>
     <string name="settings_chord_degrees_description">Uvádět, na kterém stupni tóniny písně stojí každý diagram akordu, například V7 vedle G7.</string>
+    <string name="settings_chord_degrees_needs_diagrams">Chceš-li to použít, zapni „Diagramy akordů“ na stránce Píseň.</string>
     <string name="settings_chord_names">Názvy akordů s kapodastrem</string>
     <string name="settings_chord_names_description">Akordy písně se pojmenují podle hmatů nad kapodastrem, nebo podle toho, jak znějí. Tónina písně vždy udává, jak zní, a na klávesách to platí i pro akordy.</string>
     <string name="settings_chord_names_shapes">Hmaty</string>

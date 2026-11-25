@@ -544,6 +544,7 @@
     <string name="settings_chord_diagrams_description">Pokazuje, jak gra się każdy akord utworu, razem z utworem i w jego PDF-ie.</string>
     <string name="settings_chord_degrees">Stopnie akordów</string>
     <string name="settings_chord_degrees_description">Podawaj stopień tonacji piosenki, na którym stoi każdy diagram akordu, np. V7 obok G7.</string>
+    <string name="settings_chord_degrees_needs_diagrams">Aby tego użyć, włącz „Diagramy akordów” na stronie Piosenka.</string>
     <string name="settings_chord_names">Nazwy akordów z kapodastrem</string>
     <string name="settings_chord_names_description">Akordy piosenki są nazywane według chwytów nad kapodastrem albo według tego, jak brzmią. Tonacja piosenki zawsze podaje brzmienie, a na klawiszach akordy też.</string>
     <string name="settings_chord_names_shapes">Chwyty</string>
