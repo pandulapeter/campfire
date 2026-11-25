@@ -25,8 +25,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 
 /**
- * What starts the dock for one song's [content]: the instrument and the tuner where the key chip does not hold them
- * ([DockInstrumentTools], the tuner as a round button beside a key chip that opens the Playing sheet in one row), then the key chip ([DockKeyChip]) where there is a [dockKey], [height] tall. In the diagram
+ * What starts the dock for one song's [content]: the key chip ([DockKeyChip]) where there is a [dockKey], [height] tall,
+ * always first, then the tuner and the instrument where the key chip does not hold them ([DockInstrumentTools], the tuner
+ * as a round button after a key chip that opens the Playing sheet in one row). In the diagram
  * row ([tallHeight], its height), a key chip that opens the Playing sheet stands over the tuner's pill
  * ([DockKeyAndTuner]) where the tuner is on. A change of which of these there are (read only mode switched, a switch
  * of the Dock section) crossfades as the start resizes; one that keeps them (a new key, another page) is drawn in place.
@@ -83,25 +84,20 @@ private data class DockStartLook(val content: DockContent, val dockKey: DockKey?
 }
 
 /**
- * The items of [DockStart]: the instrument and the tuner where the key chip does not hold them
- * ([DockInstrumentTools]), then the key chip ([DockKeyChip]) where there is a [dockKey], [height] tall. In the diagram
- * row ([tallHeight], its height), a key chip that opens the Playing sheet stands over the tuner's pill
- * ([DockKeyAndTuner]) where the tuner is on, both [pillWidth] wide where it is given; a key chip alone there is as tall
- * as the row, the capo on a line of its own. In the side panel the key chip leads, the instrument and the tuner under it.
+ * The items of [DockStart]: the key chip ([DockKeyChip]) where there is a [dockKey], [height] tall, then the tuner and
+ * the instrument where the key chip does not hold them ([DockInstrumentTools]), so that the key always reads first, in a
+ * row and in the side panel's column alike. In the diagram row ([tallHeight], its height), a key chip that opens the
+ * Playing sheet stands over the tuner's pill ([DockKeyAndTuner]) where the tuner is on, both [pillWidth] wide where it
+ * is given; a key chip alone there is as tall as the row, the capo on a line of its own.
  */
 @Composable
 private fun DockStartItems(content: DockContent, dockKey: DockKey?, height: Dp, tallHeight: Dp?, pillWidth: Dp?) {
     val keyOpensPlaying = dockKey?.opensPlaying == true
     val keyHoldsTuner = content.keyHoldsTuner(keyOpensPlaying = keyOpensPlaying, isTall = tallHeight != null)
-    if (pillWidth == null) {
-        DockInstrumentTools(content = content, keyOpensPlaying = keyOpensPlaying, keyHoldsTuner = keyHoldsTuner, pillWidth = null, pillHeight = height)
-    }
     if (dockKey != null) {
         DockStartKey(content = content, dockKey = dockKey, height = height, tallHeight = tallHeight, pillWidth = pillWidth, keyHoldsTuner = keyHoldsTuner)
     }
-    if (pillWidth != null) {
-        DockInstrumentTools(content = content, keyOpensPlaying = keyOpensPlaying, keyHoldsTuner = keyHoldsTuner, pillWidth = pillWidth, pillHeight = height)
-    }
+    DockInstrumentTools(content = content, keyOpensPlaying = keyOpensPlaying, keyHoldsTuner = keyHoldsTuner, pillWidth = pillWidth, pillHeight = height)
 }
 
 /** The key chip of [DockStartItems], over the tuner's pill where the diagram row has room for both ([DockKeyAndTuner]). */

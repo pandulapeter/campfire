@@ -88,9 +88,10 @@ app bar's metronome panel.
   ("Capo 2 (Am shapes)", `SongCapoControl.shapesKey`); never a key set large in a card. It opens
   the Playing sheet (`DialogType.Playing`): instrument and tuning, transposition and capo, their pending writes
   unchanged, and no tuner: wherever the key chip stands over no tuner pill (one row: a short window, no diagrams, an
-  instrument without shapes) the round tuner button stands before it (`DockInstrumentTools`, `keyHoldsTuner`), so the
-  Tuner switch on always leaves the tuner in the dock. Read only mode's opens nothing (it would write overrides) and
-  is left out with neither key nor capo; the instrument pill and tuner then start the dock, as
+  instrument without shapes) the round tuner button stands after it (`DockInstrumentTools`, `keyHoldsTuner`), so the
+  Tuner switch on always leaves the tuner in the dock. **The key chip is always the start's first item**, then the
+  tuner, then the instrument pill, in a row and in the panel's column alike. Read only mode's opens nothing (it would
+  write overrides) and is left out with neither key nor capo; the tuner and instrument pill then start the dock, as
   with the chords off or an instrument without shapes, whose pill is what brings the diagrams back. The tuner sheet has
   the instrument pill too, so the instrument is changed wherever a tuner is shown.
 - **The tempo chip** (`DockTempoChip`; never in an import preview, which has no metronome): the metronome mark swinging with the click (where the visual beat

@@ -64,7 +64,7 @@ internal class DockRowsTest {
     }
 
     @Test
-    fun `with an instrument without shapes the tuner stands beside the key chip in the one row`() = runAppTest(
+    fun `with an instrument without shapes the tuner stands after the key chip in the one row`() = runAppTest(
         extraPreferences = mapOf("instrument" to JsonPrimitive("violin")),
     ) {
         openSong()
@@ -72,8 +72,8 @@ internal class DockRowsTest {
         val keyChip = keyChip()
         val tuner = onNode(hasContentDescription(string(Res.string.tuner), substring = true) and hasClickAction()).fetchSemanticsNode().boundsInRoot
         assertTrue(
-            tuner.right <= keyChip.left && tuner.bottom > keyChip.top && tuner.top < keyChip.bottom,
-            "The tuner at $tuner does not stand before the key chip at $keyChip.",
+            tuner.left >= keyChip.right && tuner.bottom > keyChip.top && tuner.top < keyChip.bottom,
+            "The tuner at $tuner does not stand after the key chip at $keyChip.",
         )
     }
 

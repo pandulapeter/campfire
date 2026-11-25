@@ -22,16 +22,17 @@ import com.pandulapeter.campfire.presentation.ui.songView.songControlHeight
 import com.pandulapeter.campfire.presentation.ui.tuner.TunerButton
 
 /**
- * What starts the dock beside the key chip: the instrument and tuning pill where the diagrams are on and the key chip
- * opens no Playing sheet to hold it ([keyOpensPlaying] false: read only mode, or the chords switched off), and the tuner
- * wherever the key chip does not stand over its pill ([keyHoldsTuner], the diagram row's and the side panel's
- * [DockKeyAndTuner]), so that the tuner is never more than one press away, the Playing sheet having none. An instrument
- * without shapes keeps the pill here even beside a chip that opens the sheet, since it is what brings the diagrams back.
- * Emits nothing where neither is there.
+ * What follows the key chip at the dock's start (or starts it where there is none): the tuner, then the instrument and
+ * tuning pill. The pill is there where the diagrams are on and the key chip opens no Playing sheet to hold it
+ * ([keyOpensPlaying] false: read only mode, or the chords switched off), and the tuner wherever the key chip does not
+ * stand over its pill ([keyHoldsTuner], the diagram row's and the side panel's [DockKeyAndTuner]), so that the tuner is
+ * never more than one press away, the Playing sheet having none. An instrument without shapes keeps the pill here even
+ * beside a chip that opens the sheet, since it is what brings the diagrams back. Emits nothing where neither is there.
  *
- * In the side panel ([pillWidth], its controls' width) both are that wide and [pillHeight] tall, a column of controls
- * with the key chip over them: the tuner first, as the pill naming the tuning that stands under the key chip elsewhere
- * ([DockTunerPill]) rather than the round button, then the instrument pill.
+ * The tuner comes first, closest to the key chip, as its pill stands under the key chip in the diagram row, and the
+ * instrument pill, the widest, last, where it ends the start before what scrolls. In the side panel ([pillWidth], its
+ * controls' width) both are that wide and [pillHeight] tall, a column of controls under the key chip, the tuner as the
+ * pill naming the tuning ([DockTunerPill]) rather than the round button.
  */
 @Composable
 internal fun DockInstrumentTools(
@@ -80,13 +81,8 @@ internal fun DockInstrumentTools(
     } else {
         null
     }
-    if (pillWidth == null) {
-        instrumentPill?.invoke()
-        tuner?.invoke()
-    } else {
-        tuner?.invoke()
-        instrumentPill?.invoke()
-    }
+    tuner?.invoke()
+    instrumentPill?.invoke()
 }
 
 /**
