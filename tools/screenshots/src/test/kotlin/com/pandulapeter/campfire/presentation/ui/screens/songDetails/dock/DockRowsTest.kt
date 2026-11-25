@@ -24,30 +24,33 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
-/** Which of song details' dock rows an upright phone stacks the key chip and the chord diagrams in. */
+/** Where an upright phone puts the key chip of song details' dock: starting the chord diagrams' row, as tall as it. */
 @OptIn(ExperimentalTestApi::class)
 internal class DockRowsTest {
 
     @Test
-    fun `an upright phone has the key chip and the scale chips in a row over the chord diagrams`() = runAppTest {
+    fun `on an upright phone the key chip starts the diagrams' row as tall as the diagrams`() = runAppTest {
         openSong()
         waitForIdle()
-        val keyChip = keyChip()
-        val diagram = diagram()
-        assertTrue(diagram.top >= keyChip.bottom, "The diagram at $diagram is not in a row under the key chip at $keyChip.")
+        assertKeyChipStartsDiagramRow()
     }
 
     @Test
-    fun `without scale suggestions the key chip starts the diagrams' row`() = runAppTest(
+    fun `without scale suggestions the key chip still starts the diagrams' row`() = runAppTest(
         extraPreferences = mapOf("areScaleSuggestionsEnabled" to JsonPrimitive(false)),
     ) {
         openSong()
         waitForIdle()
+        assertKeyChipStartsDiagramRow()
+    }
+
+    /** The key chip stands before the diagram in its row, from its top to its bottom, so that a short key is not lost. */
+    private fun AppTestScope.assertKeyChipStartsDiagramRow() {
         val keyChip = keyChip()
         val diagram = diagram()
         assertTrue(
-            diagram.left >= keyChip.right && diagram.top < keyChip.bottom && keyChip.top < diagram.bottom,
-            "The diagram at $diagram is not in the key chip's row at $keyChip.",
+            diagram.left >= keyChip.right && keyChip.top <= diagram.top && keyChip.bottom >= diagram.bottom,
+            "The diagram at $diagram is not beside the key chip at $keyChip, as tall as it.",
         )
     }
 

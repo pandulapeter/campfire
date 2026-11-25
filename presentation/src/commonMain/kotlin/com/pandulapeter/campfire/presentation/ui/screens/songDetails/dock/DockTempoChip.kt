@@ -62,7 +62,7 @@ internal fun DockTempoChip(
     isTall: Boolean = false,
 ) = DockControlPill(
     modifier = modifier.height(height),
-    shape = if (isTall) RoundedCornerShape(TALL_CORNER) else CircleShape,
+    shape = if (isTall) RoundedCornerShape(DOCK_TALL_CORNER) else CircleShape,
     onClickLabel = stringResource(Res.string.song_details_dock_tempo),
     onClick = tempo.onClick,
 ) {
@@ -148,7 +148,6 @@ private val BEATS_WIDTH = 40.dp
 private val BEAT_HEIGHT = 16.dp
 private val BEAT_GAP = 2.dp
 
-private val TALL_CORNER = 16.dp
 private val TALL_GAP = 6.dp
 private val TALL_BEATS_WIDTH = 48.dp
 private val TALL_BEAT_HEIGHT = 12.dp

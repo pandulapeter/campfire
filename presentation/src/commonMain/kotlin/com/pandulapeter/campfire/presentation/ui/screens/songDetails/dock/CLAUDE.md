@@ -44,9 +44,9 @@ app bar's metronome panel.
   column, 48 and 40 over a pager bar), else smaller. The owner chose diagrams on an upright phone at the cost of up to
   two pages on a long song, and its 8 dp padding at one more in some cases, which `PageCountTest` holds.
 - **In one row** (a short window, an import preview, no diagrams): the start, chord and scale chips scrolling, the tempo
-  chip. **In two**: the start and the scale chips, then the diagrams and the tempo chip; without scale suggestions only
-  the second. The start and the tempo chip stand still (`DockScrollingRow`) and what scrolls fades only where it meets
-  them; at the screen's edge a row runs to it, padded instead, as far in as the step buttons are
+  chip. **In two**: the scale chips alone, then the start, the diagrams, and the tempo chip, the key and tempo chips as
+  tall as the diagrams; without scale suggestions only the second. The start and the tempo chip stand still
+  (`DockScrollingRow`) and what scrolls fades only where it meets them; at the screen's edge a row runs to it, padded instead, as far in as the step buttons are
   (`PAGE_HORIZONTAL_PADDING`, 8 dp past the insets) and the import preview's card; the rows are as far from the
   surface's top and, at a window's edge with no bottom inset, its bottom (`DOCK_VERTICAL_PADDING`); over an inset (a
   navigation bar) half that, the inset parting them from the edge (`dockBottomPaddingOf`).
@@ -60,7 +60,8 @@ app bar's metronome panel.
   chips (the song's) by their fill rather than by chevrons, the outline giving them contrast on the dock's surface; every part of one opens its sheet but play and stop.
 - **The key chip** (`DockKeyChip`, `dockKeyOf`) names what the transposition stepper names (the shapes' under `SHAPES`,
   the inferred key for a file naming none); **a capo other than zero is always on screen**, after a stepper's
-  divider. It opens the Playing sheet (`DialogType.Playing`): instrument and tuning, transposition and capo, then a
+  divider (in the diagram row set large over the capo, at least 64 dp wide, so a one-letter key is not lost). It opens
+  the Playing sheet (`DialogType.Playing`): instrument and tuning, transposition and capo, then a
   full-width Tuner button, their pending writes unchanged. Read only mode's opens nothing (it would write overrides) and
   is left out with neither key nor capo; the instrument pill and tuner then start the dock (`DockInstrumentTools`), as
   with the chords off or an instrument without shapes, whose pill is what brings the diagrams back. The tuner sheet has

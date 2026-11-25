@@ -16,6 +16,14 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.togetherWith
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
@@ -42,61 +50,85 @@ import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 /**
  * The key chip that starts the dock: one tonal pill ([DockControlPill], the dock's way of saying "this opens a sheet",
  * set apart from the outlined chord and scale chips that are the song's) naming the key the page's chords are in, in the
- * colour chords are written in, and after a stepper's divider the capo wherever it is not zero, so that a capo
- * is never out of sight. The whole pill opens the Playing sheet ([onClick]), none in read only mode, whose chip only
- * reads. A song naming no key that the chip still opens the sheet for is named by the sheet. A new key crossfades, and
- * the capo slides in and out with its divider.
+ * colour chords are written in, and the capo wherever it is not zero, so that a capo is never out of sight. The whole
+ * pill opens the Playing sheet ([onClick]), none in read only mode, whose chip only reads. A song naming no key that the
+ * chip still opens the sheet for is named by the sheet. A new key crossfades, and the capo slides in and out.
+ *
+ * [isTall] is the diagram row's, mirroring the tall tempo chip at the row's other end: as tall as the diagrams, the key
+ * set large over the capo, and never narrower than [TALL_KEY_MIN_WIDTH], so that a key of one letter still reads as the
+ * control it is. Otherwise it is as tall as a chip, the capo after the key beyond a stepper's divider.
  */
 @Composable
 internal fun DockKeyChip(
     modifier: Modifier = Modifier,
     dockKey: DockKey,
     height: Dp,
+    isTall: Boolean = false,
     onClick: (() -> Unit)?,
 ) {
     val playing = stringResource(Res.string.song_details_dock_playing)
     // Kept while it slides out, so that it leaves naming the capo it had.
     val lastCapo = remember { LastCapo() }
     dockKey.capo?.let { lastCapo.value = it }
+    val key = dockKey.key ?: playing.takeIf { onClick != null }
+    val capo = stringResource(Res.string.song_details_capo, lastCapo.value)
     DockControlPill(
         modifier = modifier.height(height),
+        shape = if (isTall) RoundedCornerShape(DOCK_TALL_CORNER) else CircleShape,
         onClickLabel = playing,
         onClick = onClick,
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            val key = dockKey.key ?: playing.takeIf { onClick != null }
+        val keyText = @Composable { style: TextStyle, keyModifier: Modifier ->
             if (key != null) {
                 val keyDescription = dockKey.key?.let { textResource(Res.string.song_details_key_change, it) } ?: playing
                 AnimatedContent(
-                    modifier = Modifier
-                        .padding(horizontal = KEY_CHIP_PADDING)
-                        .semantics { contentDescription = keyDescription },
+                    modifier = keyModifier.semantics { contentDescription = keyDescription },
                     targetState = key,
                     transitionSpec = { fadeIn() togetherWith fadeOut() },
                     contentAlignment = Alignment.Center,
                 ) { shownKey ->
                     Text(
                         text = shownKey,
-                        style = MaterialTheme.typography.labelLarge,
+                        style = style,
                         color = if (dockKey.key == null) MaterialTheme.colorScheme.onSurfaceVariant else LocalSecondAccentColor.current,
                         maxLines = 1,
                     )
                 }
             }
-            AnimatedVisibility(
-                modifier = Modifier.fillMaxHeight(),
-                visible = dockKey.capo != null,
-                enter = fadeIn() + expandHorizontally(),
-                exit = fadeOut() + shrinkHorizontally(),
+        }
+        if (isTall) {
+            Column(
+                modifier = Modifier.widthIn(min = TALL_KEY_MIN_WIDTH).padding(horizontal = KEY_CHIP_PADDING),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    if (key != null) StepperDivider()
-                    Text(
-                        modifier = Modifier.padding(horizontal = KEY_CHIP_PADDING),
-                        text = stringResource(Res.string.song_details_capo, lastCapo.value),
-                        style = MaterialTheme.typography.labelLarge,
-                        maxLines = 1,
-                    )
+                keyText(if (dockKey.key == null) MaterialTheme.typography.labelLarge else MaterialTheme.typography.titleLarge, Modifier)
+                AnimatedVisibility(
+                    visible = dockKey.capo != null,
+                    enter = fadeIn() + expandVertically(),
+                    exit = fadeOut() + shrinkVertically(),
+                ) {
+                    Text(text = capo, style = MaterialTheme.typography.labelMedium, maxLines = 1)
+                }
+            }
+        } else {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                keyText(MaterialTheme.typography.labelLarge, Modifier.padding(horizontal = KEY_CHIP_PADDING))
+                AnimatedVisibility(
+                    modifier = Modifier.fillMaxHeight(),
+                    visible = dockKey.capo != null,
+                    enter = fadeIn() + expandHorizontally(),
+                    exit = fadeOut() + shrinkHorizontally(),
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (key != null) StepperDivider()
+                        Text(
+                            modifier = Modifier.padding(horizontal = KEY_CHIP_PADDING),
+                            text = capo,
+                            style = MaterialTheme.typography.labelLarge,
+                            maxLines = 1,
+                        )
+                    }
                 }
             }
         }
@@ -107,3 +139,6 @@ internal fun DockKeyChip(
 private class LastCapo(var value: Int = 0)
 
 private val KEY_CHIP_PADDING = 12.dp
+
+/** As wide as the tall tempo chip's round button and its padding, so that one letter still fills a control's room. */
+private val TALL_KEY_MIN_WIDTH = 64.dp

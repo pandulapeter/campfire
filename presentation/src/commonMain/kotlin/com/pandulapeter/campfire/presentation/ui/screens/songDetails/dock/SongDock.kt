@@ -127,9 +127,9 @@ private fun DockRowsBox(dock: SongDockState, metronome: DockMetronome, contentPa
  * The dock's rows for one song's [content], laid out at the dock's full height whatever height it is animating through.
  * With the metronome all it holds, one row that is the metronome panel ([DockMetronomePanel]). In [DockTier.CHORD_CHIPS]
  * (a short window's and an import preview's), or without the diagrams, one row: what starts the dock ([DockStart]), then the chord chips and the scale chips
- * scrolling between it and the tempo chip ([DockTempoChip]). Otherwise the diagrams have a row of their own, ended by
- * the tempo chip at its height (tall, see [DockTempoChip]), under a row of the dock's start and the scale chips where
- * there are scale suggestions, else starting with the dock's start itself. Whatever scrolls fades only where it meets what stands still. The click is the
+ * scrolling between it and the tempo chip ([DockTempoChip]). Otherwise the diagrams have a row of their own between the
+ * dock's start and the tempo chip, both as tall as the diagrams (see [DockKeyChip] and [DockTempoChip]), under a row of
+ * the scale chips alone where there are scale suggestions. Whatever scrolls fades only where it meets what stands still. The click is the
  * screen's ([metronome]), whichever page the rows are drawn for.
  * The diagrams and the scale chips follow the page the reader is headed for, which the page's [stepper] says.
  */
@@ -152,9 +152,8 @@ private fun DockRowsOf(
     val onChordClicked = content?.chordDiagrams?.onChordClicked
     val hasDiagramRow = rows.hasChordRow && layout.tier != DockTier.CHORD_CHIPS
     val dockKey = remember(content?.playingControls, content?.model) { content?.let { dockKeyOf(it.playingControls, it.model) } }
-    val start = content?.takeIf { dockKey != null || it.hasInstrumentTools(keyOpensPlaying = dockKey?.opensPlaying == true) }?.let {
-        @Composable { DockStart(content = it, dockKey = dockKey, height = layout.rowHeight) }
-    }
+    val startContent = content?.takeIf { dockKey != null || it.hasInstrumentTools(keyOpensPlaying = dockKey?.opensPlaying == true) }
+    val start = startContent?.let { @Composable { DockStart(content = it, dockKey = dockKey, height = layout.rowHeight) } }
     val tempo = content?.tempo
     if (rows.isMetronomeOnly) {
         if (tempo != null) DockMetronomePanel(tempo = tempo, metronome = metronome, height = layout.rowHeight, start = start, horizontalPadding = horizontalPadding)
@@ -176,7 +175,7 @@ private fun DockRowsOf(
     } else {
         if (rows.hasScaleRow) {
             val scaleScroll = rememberScrollState()
-            DockScrollingRow(height = layout.rowHeight, horizontalPadding = horizontalPadding, scrollState = scaleScroll, start = start, end = null) {
+            DockScrollingRow(height = layout.rowHeight, horizontalPadding = horizontalPadding, scrollState = scaleScroll, start = null, end = null) {
                 if (content != null) DockScaleChips(content = content, scrollState = scaleScroll, headedGroup = headedGroup)
             }
         }
@@ -185,7 +184,7 @@ private fun DockRowsOf(
             height = layout.diagramRowHeight,
             horizontalPadding = horizontalPadding,
             scrollState = stripScroll,
-            start = start.takeUnless { rows.hasScaleRow },
+            start = startContent?.let { @Composable { DockStart(content = it, dockKey = dockKey, height = layout.diagramRowHeight, isTall = true) } },
             end = tempo?.let { @Composable { DockTempoChip(tempo = it, metronome = metronome, height = layout.diagramRowHeight, isTall = true) } },
         ) {
             if (content != null) {

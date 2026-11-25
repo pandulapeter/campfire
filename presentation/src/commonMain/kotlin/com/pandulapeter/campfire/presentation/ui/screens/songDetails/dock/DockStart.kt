@@ -14,15 +14,17 @@ import androidx.compose.ui.unit.Dp
 
 /**
  * What starts the dock for one song's [content]: the instrument and the tuner where the key chip does not hold them
- * ([DockInstrumentTools]), then the key chip ([DockKeyChip]) where there is a [dockKey], [height] tall.
+ * ([DockInstrumentTools]), then the key chip ([DockKeyChip]) where there is a [dockKey], [height] tall, the diagram row's
+ * tall one where [isTall].
  */
 @Composable
-internal fun DockStart(content: DockContent, dockKey: DockKey?, height: Dp) {
+internal fun DockStart(content: DockContent, dockKey: DockKey?, height: Dp, isTall: Boolean = false) {
     DockInstrumentTools(content = content, keyOpensPlaying = dockKey?.opensPlaying == true)
     if (dockKey != null) {
         DockKeyChip(
             dockKey = dockKey,
             height = height,
+            isTall = isTall,
             onClick = content.playingControls?.onPlayingClicked?.takeIf { dockKey.opensPlaying },
         )
     }

@@ -54,3 +54,6 @@ internal fun DockControlPill(
         }
     }
 }
+
+/** The corners of the dock's tall controls, the diagram row's key and tempo chips, which a pill's would make round. */
+internal val DOCK_TALL_CORNER = 16.dp
