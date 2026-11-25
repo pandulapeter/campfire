@@ -510,7 +510,7 @@
     <string name="settings_show_chords">Akkorde anzeigen</string>
     <string name="settings_chords_description">Zusammen mit Tonart, Transposition und Kapodaster. Ausgeschaltet zeigen Songs nur den Text.</string>
     <string name="settings_chord_diagrams">Akkorddiagramme</string>
-    <string name="settings_chord_diagrams_description">Zeigt neben dem Song und in seinem PDF, wie jeder seiner Akkorde gegriffen wird.</string>
+    <string name="settings_chord_diagrams_description">Zeigt beim Song und in seinem PDF, wie jeder seiner Akkorde gegriffen wird.</string>
     <string name="settings_chord_degrees">Akkordstufen</string>
     <string name="settings_chord_degrees_description">Nennt die Stufe der Tonart des Songs, auf der jedes Akkorddiagramm steht, etwa V7 neben G7.</string>
     <string name="settings_chord_names">Akkordnamen mit Capo</string>
@@ -524,9 +524,9 @@
     <string name="settings_scales_description">Der Tab „Tonleitern“: alle Tonleitern und Modi, die die App kennt, auf deinem Instrument dargestellt</string>
     <string name="settings_chord_library_description">Der Tab „Akkorde“: alle Akkorde, die die App kennt, auf deinem Instrument dargestellt</string>
     <string name="settings_scale_suggestions">Tonleiter-Vorschläge</string>
-    <string name="settings_scale_suggestions_description">Zeigt neben dem Song die Tonleitern, über die sich jeder Teil spielen lässt, und im Akkordblatt die Tonleitern zu einem Akkord.</string>
+    <string name="settings_scale_suggestions_description">Zeigt die Tonleitern, über die sich jeder Teil eines Songs spielen lässt, und im Akkordblatt die Tonleitern zu diesem Akkord.</string>
     <string name="settings_group_dock">Werkzeugleiste</string>
-    <string name="settings_dock_metronome_description">Zeigt das Tempo des Songs und seinen Klick. Der Metronom-Tab behält beides.</string>
+    <string name="settings_dock_metronome_description">Zeigt das Tempo des Songs und spielt seinen Klick direkt beim Song. Der Metronom-Tab bleibt davon unberührt.</string>
     <string name="settings_dock_tuner_description">Zeigt einen Weg zum Stimmgerät. Ohne ihn ist das Stimmgerät im Menü des Songs.</string>
     <string name="settings_setlists_description">Der Tab „Setlists“ und das Hinzufügen von Songs zu Setlists. Ausgeschaltet werden sie nur ausgeblendet: Keine Setlist wird gelöscht.</string>
     <string name="settings_random_picks_description">Fünf zufällige Songs oben in einer Liste mit mehr als 20, jede Stunde neue</string>

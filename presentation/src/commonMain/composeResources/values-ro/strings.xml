@@ -551,7 +551,7 @@
     <string name="settings_show_chords">Arată acordurile</string>
     <string name="settings_chords_description">Împreună cu tonalitatea, transpunerea și capodastrul. Dezactivat, cântecele arată doar versurile.</string>
     <string name="settings_chord_diagrams">Diagrame de acorduri</string>
-    <string name="settings_chord_diagrams_description">Arată cum se cântă fiecare acord al cântecului, lângă cântec și în PDF-ul lui.</string>
+    <string name="settings_chord_diagrams_description">Arată cum se cântă fiecare acord al cântecului, împreună cu cântecul și în PDF-ul lui.</string>
     <string name="settings_chord_degrees">Treptele acordurilor</string>
     <string name="settings_chord_degrees_description">Numește treapta din tonalitatea cântecului pe care stă fiecare diagramă de acord, de exemplu V7 lângă G7.</string>
     <string name="settings_chord_names">Numele acordurilor cu capodastru</string>
@@ -565,9 +565,9 @@
     <string name="settings_scales_description">Fila Game: toate gamele și modurile cunoscute de aplicație, desenate pe instrumentul tău</string>
     <string name="settings_chord_library_description">Fila Acorduri: toate acordurile cunoscute de aplicație, desenate pe instrumentul tău</string>
     <string name="settings_scale_suggestions">Sugestii de game</string>
-    <string name="settings_scale_suggestions_description">Arată gamele peste care se poate cânta fiecare parte a cântecului, lângă cântec, și gamele unui acord în fișa lui.</string>
+    <string name="settings_scale_suggestions_description">Arată gamele peste care se poate cânta fiecare parte a cântecului, iar în fișa unui acord, gamele pentru acel acord.</string>
     <string name="settings_group_dock">Panou de unelte</string>
-    <string name="settings_dock_metronome_description">Arată tempoul cântecului și metronomul lui. Fila Metronom le păstrează oricum.</string>
+    <string name="settings_dock_metronome_description">Arată tempoul cântecului și pornește metronomul lui din cântec. Fila Metronom nu este afectată.</string>
     <string name="settings_dock_tuner_description">Arată o cale spre acordor. Fără ea, acordorul este în meniul cântecului.</string>
     <string name="settings_setlists_description">Fila Liste și adăugarea cântecelor în liste. Dezactivate, listele sunt doar ascunse: niciuna nu este ștearsă.</string>
     <string name="settings_random_picks_description">Cinci cântece aleatorii în capul unei liste de peste 20, noi în fiecare oră</string>

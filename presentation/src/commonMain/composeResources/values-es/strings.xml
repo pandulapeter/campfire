@@ -510,7 +510,7 @@
     <string name="settings_show_chords">Mostrar acordes</string>
     <string name="settings_chords_description">Junto con la tonalidad, la transposición y el capo. Si se desactiva, las canciones muestran solo la letra.</string>
     <string name="settings_chord_diagrams">Diagramas de acordes</string>
-    <string name="settings_chord_diagrams_description">Muestra cómo se toca cada acorde de la canción, junto a la canción y en su PDF.</string>
+    <string name="settings_chord_diagrams_description">Muestra cómo se toca cada acorde de la canción, con la canción y en su PDF.</string>
     <string name="settings_chord_degrees">Grados de los acordes</string>
     <string name="settings_chord_degrees_description">Indica el grado de la tonalidad de la canción sobre el que está cada diagrama de acorde, como V7 junto a G7.</string>
     <string name="settings_chord_names">Nombres de los acordes con capo</string>
@@ -524,9 +524,9 @@
     <string name="settings_scales_description">La pestaña Escalas: todas las escalas y modos que conoce la app, dibujados en tu instrumento</string>
     <string name="settings_chord_library_description">La pestaña Acordes: todos los acordes que conoce la app, dibujados en tu instrumento</string>
     <string name="settings_scale_suggestions">Sugerencias de escalas</string>
-    <string name="settings_scale_suggestions_description">Muestra las escalas sobre las que se puede tocar cada parte de la canción, junto a la canción, y las escalas de un acorde en su hoja.</string>
+    <string name="settings_scale_suggestions_description">Muestra las escalas sobre las que se puede tocar cada parte de una canción y, en la hoja de un acorde, las escalas de ese acorde.</string>
     <string name="settings_group_dock">Panel de herramientas</string>
-    <string name="settings_dock_metronome_description">Muestra el tempo de la canción y su clic. La pestaña Metrónomo los conserva de todos modos.</string>
+    <string name="settings_dock_metronome_description">Muestra el tempo de la canción y reproduce su clic desde la canción. La pestaña Metrónomo no se ve afectada.</string>
     <string name="settings_dock_tuner_description">Muestra un acceso al afinador. Sin él, el afinador está en el menú de la canción.</string>
     <string name="settings_setlists_description">La pestaña Repertorios y la opción de añadir canciones a repertorios. Si se desactiva, solo se ocultan: no se elimina ningún repertorio.</string>
     <string name="settings_random_picks_description">Cinco canciones al azar al principio de una lista de más de 20, nuevas cada hora</string>

@@ -541,7 +541,7 @@
     <string name="settings_show_chords">Pokazuj akordy</string>
     <string name="settings_chords_description">Razem z tonacją, transpozycją i kapodastrem. Po wyłączeniu piosenki pokazują sam tekst.</string>
     <string name="settings_chord_diagrams">Diagramy akordów</string>
-    <string name="settings_chord_diagrams_description">Pokazuje, jak gra się każdy akord utworu, obok utworu i w jego PDF-ie.</string>
+    <string name="settings_chord_diagrams_description">Pokazuje, jak gra się każdy akord utworu, razem z utworem i w jego PDF-ie.</string>
     <string name="settings_chord_degrees">Stopnie akordów</string>
     <string name="settings_chord_degrees_description">Podawaj stopień tonacji piosenki, na którym stoi każdy diagram akordu, np. V7 obok G7.</string>
     <string name="settings_chord_names">Nazwy akordów z kapodastrem</string>
@@ -555,9 +555,9 @@
     <string name="settings_scales_description">Karta Skale: każda skala i modus znane aplikacji, rozrysowane na twoim instrumencie</string>
     <string name="settings_chord_library_description">Karta Akordy: każdy akord znany aplikacji, rozrysowany na twoim instrumencie</string>
     <string name="settings_scale_suggestions">Podpowiedzi skal</string>
-    <string name="settings_scale_suggestions_description">Pokazuje skale, na których można grać każdą część utworu, obok utworu, oraz skale akordu na jego karcie.</string>
+    <string name="settings_scale_suggestions_description">Pokazuje skale, na których można grać każdą część utworu, a na karcie akordu skale dla tego akordu.</string>
     <string name="settings_group_dock">Panel narzędzi</string>
-    <string name="settings_dock_metronome_description">Pokazuje tempo utworu i jego klik. Karta Metronom zachowuje je tak czy inaczej.</string>
+    <string name="settings_dock_metronome_description">Pokazuje tempo utworu i odtwarza jego klik przy utworze. Karta Metronom pozostaje bez zmian.</string>
     <string name="settings_dock_tuner_description">Pokazuje drogę do stroika. Bez niej stroik jest w menu utworu.</string>
     <string name="settings_setlists_description">Karta Setlisty i dodawanie piosenek do setlist. Po wyłączeniu są tylko ukryte: żadna setlista nie zostanie usunięta.</string>
     <string name="settings_random_picks_description">Pięć losowych piosenek na początku listy liczącej ponad 20, nowe co godzinę</string>

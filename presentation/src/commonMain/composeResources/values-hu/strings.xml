@@ -510,7 +510,7 @@
     <string name="settings_show_chords">Akkordok mutatása</string>
     <string name="settings_chords_description">A hangnemmel, a transzponálással és a capóval együtt. Kikapcsolva a dalokból csak a szöveg látszik.</string>
     <string name="settings_chord_diagrams">Akkordábrák</string>
-    <string name="settings_chord_diagrams_description">Megmutatja, hogyan kell lefogni a dal minden akkordját, a dal mellett és a PDF-ben.</string>
+    <string name="settings_chord_diagrams_description">Megmutatja, hogyan kell lefogni a dal minden akkordját, a dalnál és a PDF-ben.</string>
     <string name="settings_chord_degrees">Akkordfokok</string>
     <string name="settings_chord_degrees_description">Minden akkordábrán megmutatja, a dal hangnemének hányadik fokán áll az akkord, például a G7 mellett azt, hogy V7.</string>
     <string name="settings_chord_names">Akkordnevek capóval</string>
@@ -524,9 +524,9 @@
     <string name="settings_scales_description">A Skálák fül: minden skála és modus, amit az app ismer, a hangszereden ábrázolva</string>
     <string name="settings_chord_library_description">Az Akkordok fül: minden akkord, amit az app ismer, a hangszereden ábrázolva</string>
     <string name="settings_scale_suggestions">Skálajavaslatok</string>
-    <string name="settings_scale_suggestions_description">Megmutatja, milyen skálákon játszhatók a dal egyes részei, a dal mellett, és egy akkord lapján a hozzá illő skálákat.</string>
+    <string name="settings_scale_suggestions_description">Megmutatja, milyen skálákon játszhatók a dal egyes részei, egy akkord lapján pedig az akkordhoz illő skálákat.</string>
     <string name="settings_group_dock">Eszköztár</string>
-    <string name="settings_dock_metronome_description">Megmutatja a dal tempóját és kattogását. A Metronóm fül mindkettőt megtartja.</string>
+    <string name="settings_dock_metronome_description">Megmutatja a dal tempóját, és a dalból indítható a kattogása. A Metronóm fület nem érinti.</string>
     <string name="settings_dock_tuner_description">Utat mutat a hangolóhoz. Nélküle a hangoló a dal menüjében érhető el.</string>
     <string name="settings_setlists_description">A Listák fül és a dalok listákhoz adása. Kikapcsolva csak elrejti őket, egyetlen lista sem törlődik.</string>
     <string name="settings_random_picks_description">Öt véletlen dal a 20-nál hosszabb listák elején, óránként újak</string>
