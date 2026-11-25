@@ -9,7 +9,6 @@
 -->
 # Plan: the page model sees the page's structure
 
-**Status:** the first gate runs are in (below); the corpus is growing on Ultimate Guitar and the sites a search for a
 song's chords turns up, and the gate runs again over it.
 When the app reads a web page itself, it hands the page model each line's structure too: whether the line is a link or
 a button, whether it starts a new card or section, and how it is set. The crop can then drop calls to action and
@@ -129,6 +128,28 @@ that gap closes, on a corpus with more sites. So the corpus grew on 2026-11-25:
   leaves out until they scroll into view: the app's link read and Safari's share read them without the song. Both now
   draw every element for the moment of the read, and so does `page-marks.js`; the corpus pages of the ten hosts that
   hide text this way were read again and labelled again.
+
+## Third gate runs: the marks earn their place
+
+Over the grown corpus (882 pages, 695 with a song), pages only, the `unsure` crop with the staff rule (`CropRule.kt`),
+the 613 song pages every run scores. *Paste* is the marks model given the same pages without marks:
+
+| Folds | Model | Mean line F1 | Pages losing a song line | Song lines lost | Clutter kept |
+|---|---|---|---|---|---|
+| page | today | 0.912 | 53 | 328 | 6,634 |
+| page | every mark | 0.928 | 50 | 248 | 5,561 |
+| page | every mark, paste | 0.920 | 68 | 596 | 6,133 |
+| page | link, new block, landmark | 0.926 | 70 | 368 | 5,415 |
+| site | today | 0.869 | 95 | 1,765 | 11,360 |
+| site | every mark | 0.894 | 69 | 678 | 8,723 |
+| site | every mark, paste | 0.875 | 70 | 640 | 11,185 |
+| site | link, new block, landmark | 0.882 | 61 | 577 | 9,937 |
+
+On Ultimate Guitar's 81 song pages (page-grouped), every mark takes the line F1 from 0.976 to 0.983, the song lines
+lost from 79 to 44, and the clutter kept from 372 to 242; site-grouped, from 0.892 to 0.974. The gap the second runs
+found has closed: on a site never seen, every mark now loses fewer song lines on fewer pages than today. **Every mark
+ships.** The paste case's extra losses are half one page (lecarnetdenotes.com's *La Bohème*, 251 of 515 lines against
+3), the rest even with today's.
 
 ## Steps
 
