@@ -25,7 +25,7 @@ import com.pandulapeter.campfire.presentation.resources.ic_campfire
 import com.pandulapeter.campfire.presentation.resources.ic_cloud
 import com.pandulapeter.campfire.presentation.resources.ic_palette
 import com.pandulapeter.campfire.presentation.resources.ic_songs
-import com.pandulapeter.campfire.presentation.resources.ic_tune
+import com.pandulapeter.campfire.presentation.resources.ic_toggle_on
 import com.pandulapeter.campfire.presentation.resources.ic_tuner
 import com.pandulapeter.campfire.presentation.ui.navigation.OnboardingStep
 import org.jetbrains.compose.resources.DrawableResource
@@ -120,7 +120,7 @@ private val OnboardingStep.markIcon
         OnboardingStep.WELCOME -> Res.drawable.ic_campfire
         OnboardingStep.LOOK -> Res.drawable.ic_palette
         OnboardingStep.INSTRUMENT -> Res.drawable.ic_tuner
-        OnboardingStep.FEATURES -> Res.drawable.ic_tune
+        OnboardingStep.FEATURES -> Res.drawable.ic_toggle_on
         OnboardingStep.NOTATION -> Res.drawable.ic_songs
         OnboardingStep.SYNC -> Res.drawable.ic_cloud
     }

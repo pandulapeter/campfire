@@ -14,7 +14,7 @@ import androidx.compose.runtime.Composable
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_folder
 import com.pandulapeter.campfire.presentation.resources.ic_info
-import com.pandulapeter.campfire.presentation.resources.ic_widgets
+import com.pandulapeter.campfire.presentation.resources.ic_toggle_on
 import com.pandulapeter.campfire.presentation.ui.navigation.SettingsTab
 import com.pandulapeter.campfire.presentation.ui.preferences.PreferencesPage
 import com.pandulapeter.campfire.presentation.ui.preferences.PreferencesPageIcon
@@ -37,6 +37,6 @@ internal fun SettingsTabIcon(
     SettingsTab.CHORDS -> PreferencesPageIcon(page = PreferencesPage.CHORDS, isKeyboard = isKeyboard)
     SettingsTab.METRONOME -> PreferencesPageIcon(page = PreferencesPage.METRONOME, isKeyboard = isKeyboard)
     SettingsTab.LIBRARY -> Icon(painter = painterResource(Res.drawable.ic_folder), contentDescription = null)
-    SettingsTab.FEATURES -> Icon(painter = painterResource(Res.drawable.ic_widgets), contentDescription = null)
+    SettingsTab.FEATURES -> Icon(painter = painterResource(Res.drawable.ic_toggle_on), contentDescription = null)
     SettingsTab.ABOUT -> Icon(painter = painterResource(Res.drawable.ic_info), contentDescription = null)
 }

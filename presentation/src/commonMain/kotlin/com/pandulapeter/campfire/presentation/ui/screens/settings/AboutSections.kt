@@ -14,7 +14,7 @@ import com.pandulapeter.campfire.presentation.CAMPFIRE_VERSION_NAME
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_campfire
-import com.pandulapeter.campfire.presentation.resources.ic_restart
+import com.pandulapeter.campfire.presentation.resources.ic_tour
 import com.pandulapeter.campfire.presentation.resources.settings_onboarding
 import com.pandulapeter.campfire.presentation.resources.settings_onboarding_description
 import com.pandulapeter.campfire.presentation.resources.ic_help
@@ -179,7 +179,7 @@ private fun HelpSection(
     LinkListItem(
         title = stringResource(Res.string.settings_onboarding),
         description = stringResource(Res.string.settings_onboarding_description),
-        icon = painterResource(Res.drawable.ic_restart),
+        icon = painterResource(Res.drawable.ic_tour),
         onClick = onOnboardingClicked,
     )
     // A desktop or a web build always lists them, the keyboard being how it is used; a phone or a tablet only while one
