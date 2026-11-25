@@ -144,4 +144,5 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
 - M starts and stops the click and T taps the tempo wherever the dock's tempo chip is (the metronome on, not an import
   preview; T not in read only mode, where it would write an override).
 - U opens the tuner sheet wherever the Tuner feature is on (the way to it in the dock, the app bar, or with the Dock's
-  tuner off the menu, whose entry names the key; not an import preview), leaving a `Keyboard: tuner` breadcrumb.
+  tuner off the menu, whose entry names the key; not an import preview), leaving a `Keyboard: tuner` breadcrumb, and U
+  again closes it (`closeShortcut`, after a field or a stepper's typed value has had its letter).

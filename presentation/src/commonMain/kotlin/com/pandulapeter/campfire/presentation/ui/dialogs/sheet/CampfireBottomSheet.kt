@@ -71,6 +71,7 @@ import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
 import com.pandulapeter.campfire.presentation.localization.currentLanguage
 import com.pandulapeter.campfire.presentation.localization.layoutDirection
 import com.pandulapeter.campfire.presentation.ui.components.saveShortcut
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
@@ -122,6 +123,7 @@ internal fun sheetContainerColor() = MaterialTheme.colorScheme.background.let { 
  * @param onTopMoved Where the sheet's top edge is on the screen, on every frame it moves: for what is drawn behind the
  *   sheet and has to stay in the part of it the sheet leaves uncovered. Screen coordinates rather than the window's, since
  *   on Android the sheet is a window of its own.
+ * @param closeShortcut The key that opened the sheet, which puts it away again ([closeShortcut]), as its close button does.
  * @param onDismiss Has to dismiss this sheet's own dialog and nothing else (`DialogHost.dismissSheet`): it is
  *   called from the end of a hide animation, by which time another dialog may have taken the sheet's place.
  * @param content Can close the sheet ([BottomSheetContentScope.close]), for a sheet with a button of its own that is
@@ -137,6 +139,7 @@ internal fun CampfireBottomSheet(
     actions: (@Composable RowScope.(close: () -> Unit) -> Unit)? = null,
     isDismissibleByTouch: Boolean = true,
     onTopMoved: ((topOnScreen: Float) -> Unit)? = null,
+    closeShortcut: KeyShortcut? = null,
     onDismiss: () -> Unit,
     content: @Composable BottomSheetContentScope.(contentPadding: PaddingValues) -> Unit,
 ) {
@@ -148,13 +151,12 @@ internal fun CampfireBottomSheet(
     val coroutineScope = rememberCoroutineScope()
     val windowHeight = LocalWindowInfo.current.containerDpSize.height
     val scrollState = rememberScrollState()
-    // Hiding the sheet by hand does not count as dismissing it, so the dialog state is cleared once it is gone: left
-    // as it was, the invisible sheet's modal layer would stay over the screen, swallowing the next tap. The close
-    // button's hide only counts when it ran to its end: one cut short by a finger taking hold of the sheet leaves the
-    // sheet where Material settles it, with the draft still in it, and one cut short by another dialog replacing the
-    // sheet has nothing left to dismiss.
-    // Set as the tap is handled, so the second tap of the same frame already reads it; Material's own hide (a swipe,
-    // the scrim) shows up as the sheet's target becoming Hidden while it is still on screen.
+    // Hiding the sheet by hand does not count as dismissing it, so the dialog state is cleared once it is gone: left as it
+    // was, the invisible sheet's modal layer would stay over the screen, swallowing the next tap. The close button's hide
+    // only counts when it ran to its end: one cut short by a finger taking hold of the sheet leaves the sheet where
+    // Material settles it, with the draft still in it, and one cut short by another dialog replacing the sheet has nothing
+    // left to dismiss. Set as the tap is handled, so the second tap of the same frame already reads it; Material's own
+    // hide (a swipe, the scrim) shows up as the sheet's target becoming Hidden while it is still on screen.
     var isCloseRequested by remember { mutableStateOf(false) }
     // Set by a close that follows something the sheet has already done - a Save, a Create, a Delete. Such a hide is
     // never taken back: the sheet's gestures are off for the slide, and a hide cut short anyway is finished from where
@@ -233,7 +235,7 @@ internal fun CampfireBottomSheet(
                 modifier = Modifier.fillMaxWidth()
                     .keepSheetFromWheelScrolls().endingValueTypingOnPress()
                     .onGloballyPositioned { onTopMoved?.invoke(it.positionOnScreen().y) }
-                    .saveShortcut { saveShortcut.action?.invoke() }
+                    .saveShortcut { saveShortcut.action?.invoke() }.closeShortcut(closeShortcut, onClose = cancel)
                     .then(sheetFocusTarget)
                     .then(
                         if (isCompactKeyboard) {

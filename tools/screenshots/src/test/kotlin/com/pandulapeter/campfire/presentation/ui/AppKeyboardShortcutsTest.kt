@@ -12,6 +12,8 @@ package com.pandulapeter.campfire.presentation.ui
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.onLast
+import androidx.compose.ui.test.isRoot
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.hasSetTextAction
@@ -92,6 +94,18 @@ internal class AppKeyboardShortcutsTest {
         waitForIdle()
         onRoot().performKeyInput { pressKey(Key.U) }
         waitUntil { viewModel.dialogHost.visibleDialog.value is DialogType.Tuner }
+    }
+
+    @Test
+    fun `U again closes the tuner sheet it opened`() = runAppTest {
+        openSong()
+        waitForIdle()
+        onRoot().performKeyInput { pressKey(Key.U) }
+        waitUntil { viewModel.dialogHost.visibleDialog.value is DialogType.Tuner }
+        waitForIdle()
+        // The sheet is a layer of its own, with the focus in it.
+        onAllNodes(isRoot()).onLast().performKeyInput { pressKey(Key.U) }
+        waitUntil { viewModel.dialogHost.visibleDialog.value == null }
     }
 
     @Test

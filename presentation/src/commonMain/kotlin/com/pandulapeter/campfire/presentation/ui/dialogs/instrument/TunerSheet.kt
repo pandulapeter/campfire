@@ -58,6 +58,7 @@ import com.pandulapeter.campfire.presentation.ui.tuner.TunerNoticeCard
 import com.pandulapeter.campfire.presentation.ui.tuner.TunerStringsSetting
 import com.pandulapeter.campfire.presentation.ui.tuner.TunerInputIssueMessage
 import com.pandulapeter.campfire.presentation.ui.tuner.canListenWithoutTap
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
 import com.pandulapeter.campfire.presentation.ui.tuner.tunerNoticeOf
 import com.pandulapeter.campfire.tuner.api.model.TunerListening
 import com.pandulapeter.campfire.data.model.preferences.TunerSettings
@@ -108,6 +109,7 @@ internal fun TunerSheet(
     )
     CampfireBottomSheet(
         title = stringResource(Res.string.tuner),
+        closeShortcut = KeyShortcut.TUNER,
         actions = {
             // The keyboard and Other are read note by note either way.
             AnimatedVisibility(
