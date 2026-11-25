@@ -1244,6 +1244,9 @@
     <string name="song_details_dock_playing">Játék</string>
     <string name="song_details_dock_tempo">Tempó</string>
     <string name="song_details_dock_transposition">Transzponálás: %1$s</string>
+    <string name="song_details_dock_open_playing">Játékbeállítások megnyitása</string>
+    <string name="song_details_dock_open_tempo">Tempóbeállítások megnyitása</string>
+    <string name="song_details_dock_open_tuner">Hangoló megnyitása</string>
     <plurals name="song_details_dock_too_many_chords">
         <item quantity="one">Több mint %1$d akkord, túl sok ahhoz, hogy itt megjelenjen</item>
         <item quantity="other">Több mint %1$d akkord, túl sok ahhoz, hogy itt megjelenjen</item>

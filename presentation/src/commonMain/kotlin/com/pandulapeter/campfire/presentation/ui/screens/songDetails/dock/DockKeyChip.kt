@@ -35,6 +35,7 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.localization.textResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.song_details_capo
+import com.pandulapeter.campfire.presentation.resources.song_details_dock_open_playing
 import com.pandulapeter.campfire.presentation.resources.song_details_dock_playing
 import com.pandulapeter.campfire.presentation.resources.song_details_dock_transposition
 import com.pandulapeter.campfire.presentation.resources.song_details_key_change
@@ -63,7 +64,7 @@ internal fun DockKeyChip(
     dockKey.capo?.let { lastCapo.value = it }
     DockControlPill(
         modifier = modifier.height(height),
-        onClickLabel = playing,
+        onClickLabel = stringResource(Res.string.song_details_dock_open_playing),
         onClick = onClick,
     ) {
         val key = dockKey.key ?: playing.takeIf { onClick != null }

@@ -1245,6 +1245,9 @@
     <string name="song_details_dock_playing">Playing</string>
     <string name="song_details_dock_tempo">Tempo</string>
     <string name="song_details_dock_transposition">Transposition: %1$s</string>
+    <string name="song_details_dock_open_playing">Open playing settings</string>
+    <string name="song_details_dock_open_tempo">Open tempo settings</string>
+    <string name="song_details_dock_open_tuner">Open the tuner</string>
     <plurals name="song_details_dock_too_many_chords">
         <item quantity="one">More than %1$d chord, too many to draw here</item>
         <item quantity="other">More than %1$d chords, too many to draw here</item>

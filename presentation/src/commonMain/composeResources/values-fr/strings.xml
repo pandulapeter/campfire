@@ -1250,6 +1250,9 @@
     <string name="song_details_dock_playing">Jeu</string>
     <string name="song_details_dock_tempo">Tempo</string>
     <string name="song_details_dock_transposition">Transposition : %1$s</string>
+    <string name="song_details_dock_open_playing">Ouvrir les réglages de jeu</string>
+    <string name="song_details_dock_open_tempo">Ouvrir les réglages de tempo</string>
+    <string name="song_details_dock_open_tuner">Ouvrir l\'accordeur</string>
     <plurals name="song_details_dock_too_many_chords">
         <item quantity="one">Plus de %1$d accord, trop pour les afficher ici</item>
         <item quantity="other">Plus de %1$d accords, trop pour les afficher ici</item>

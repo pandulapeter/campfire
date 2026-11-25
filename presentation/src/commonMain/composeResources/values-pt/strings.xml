@@ -1247,6 +1247,9 @@
     <string name="song_details_dock_playing">Execução</string>
     <string name="song_details_dock_tempo">Andamento</string>
     <string name="song_details_dock_transposition">Transposição: %1$s</string>
+    <string name="song_details_dock_open_playing">Abrir as definições de execução</string>
+    <string name="song_details_dock_open_tempo">Abrir as definições de andamento</string>
+    <string name="song_details_dock_open_tuner">Abrir o afinador</string>
     <plurals name="song_details_dock_too_many_chords">
         <item quantity="one">Mais de %1$d acorde, demais para mostrar aqui</item>
         <item quantity="other">Mais de %1$d acordes, demais para mostrar aqui</item>

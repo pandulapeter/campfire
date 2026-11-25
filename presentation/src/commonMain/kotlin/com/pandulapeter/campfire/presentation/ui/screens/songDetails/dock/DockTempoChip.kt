@@ -42,7 +42,7 @@ import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.song_details_dock_tempo
+import com.pandulapeter.campfire.presentation.resources.song_details_dock_open_tempo
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo
 import com.pandulapeter.campfire.presentation.ui.components.controls.StepperDivider
 import com.pandulapeter.campfire.presentation.ui.metronome.BeatRow
@@ -73,7 +73,7 @@ internal fun DockTempoChip(
 ) = DockControlPill(
     modifier = modifier.height(height),
     shape = if (isTall) RoundedCornerShape(DOCK_TALL_CORNER) else CircleShape,
-    onClickLabel = stringResource(Res.string.song_details_dock_tempo),
+    onClickLabel = stringResource(Res.string.song_details_dock_open_tempo),
     onClick = tempo.onClick,
 ) {
     val panel = metronome.panel

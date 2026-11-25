@@ -33,6 +33,7 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_tuner
 import com.pandulapeter.campfire.presentation.resources.instrument_tuning_standard
+import com.pandulapeter.campfire.presentation.resources.song_details_dock_open_tuner
 import com.pandulapeter.campfire.presentation.resources.tuner
 import com.pandulapeter.campfire.presentation.ui.instrument.instrumentLabel
 import com.pandulapeter.campfire.presentation.ui.instrument.isStandard
@@ -73,7 +74,7 @@ private fun DockTunerPill(
     onClick: () -> Unit,
 ) = DockControlPill(
     modifier = modifier.height(height),
-    onClickLabel = stringResource(Res.string.tuner),
+    onClickLabel = stringResource(Res.string.song_details_dock_open_tuner),
     onClick = onClick,
 ) {
     val tuning = chordDiagrams.instrumentTuning

@@ -1291,6 +1291,9 @@
     <string name="song_details_dock_playing">Interpretare</string>
     <string name="song_details_dock_tempo">Tempo</string>
     <string name="song_details_dock_transposition">Transpunere: %1$s</string>
+    <string name="song_details_dock_open_playing">Deschide setările de interpretare</string>
+    <string name="song_details_dock_open_tempo">Deschide setările de tempo</string>
+    <string name="song_details_dock_open_tuner">Deschide acordorul</string>
     <plurals name="song_details_dock_too_many_chords">
         <item quantity="one">Peste %1$d acord, prea multe pentru a fi afișate aici</item>
         <item quantity="few">Peste %1$d acorduri, prea multe pentru a fi afișate aici</item>
