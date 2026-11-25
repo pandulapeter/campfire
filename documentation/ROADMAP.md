@@ -13,18 +13,18 @@ What's planned for Campfire, grouped by area.
 
 ## In progress
 
+- **Song details as a reading surface with a dock**: the song starts at its first line; taps on it only step; the key
+  (and capo), chord diagrams, scale suggestions, and tempo with its click live in a dock under it (a side panel on short
+  and wide windows). Plan: [song-details-dock.md](plans/song-details-dock.md)
 - **Very large screens**: check how every screen behaves on a very wide or tall window (a 4K or ultrawide monitor, a TV),
   now that the Chords and Scales tabs fill the whole width and the Metronome and Tuner are centered under a width cap
 - **The page model sees the page's structure.** A page the app reads itself (a link, a Safari share)
   hands the model which lines are links, buttons, new cards, or headings, so a song's crop leaves out the calls to
   action and partner cards around it. Plan: [page-structure-signals.md](plans/page-structure-signals.md)
-- **A more readable sync folder**: consider organizing it in a more user-readable way (subfolders for artists), as an
-  option
 
 ## Short-term
 
 - Add Slovak, Ukrainian and Dutch translations
-- Add an option to pin chord diagrams / scales. In once-column mode, with enough horizontal space, chord diagrams could be displayed on the side.
 - Add ability to make notes / markups on music
 - **External monitor support**: an audience screen (a projector, a TV, or a monitor) showing the song in big text,
   with the app as the controller. Plan: [audience-screen.md](plans/audience-screen.md)
