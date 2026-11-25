@@ -75,6 +75,9 @@ heuristics and near misses are pinned in `ChordSheetConverterTest` and its sibli
   credit, an album).
 - Chord shapes listed one a line become `{define}` lines (`ChordSheetDefinitions`), except a chord listed both plain
   and starred (`Bb`, `Bb*`): the star is dropped where the chord is played, so one definition would stand for both.
+- The ChordPro program's plain text (`ChordProTextExport`): `-- Start of verse` / `-- End of verse` markers, a `-- Title:`
+  line, and a literal `{chorus}` recall, which would otherwise make it pass for ChordPro, are read as headings, the title,
+  and a recall.
 - What the ChordPro app prints is read back too: margin section labels (`ChordSheetMarginLabels`, only where every
   other line of their column starts right of them, so a lyric against the left edge keeps its first word) and
   header lines printed in left, centre, and right parts (`ChordSheetHeaderParts`).

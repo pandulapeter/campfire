@@ -222,9 +222,11 @@ public object ChordSheetConverter {
      * A file that holds a single directive ChordPro defines, or a chord in brackets written against the syllable it is
      * sung on (`[G]Hello`), is ChordPro: neither occurs in a chord-over-lyrics sheet or in prose, and treating such a
      * file as prose would escape every chord in it. Brackets that stand apart from the words only count in a majority
-     * of the lines, since a `[C]` in prose is as likely a footnote or an annotation.
+     * of the lines, since a `[C]` in prose is as likely a footnote or an annotation. The ChordPro program's own text
+     * export ([ChordProTextExport]) holds a directive and is no ChordPro.
      */
     private fun isChordPro(text: String): Boolean {
+        if (ChordProTextExport.isExport(text)) return false
         val lines = text.lines().filter { it.isNotBlank() }
         if (lines.any { line ->
                 ChordProDirectives.isKnownDirective(line.trim()) || ChordProDirectives.brackets(line).any {

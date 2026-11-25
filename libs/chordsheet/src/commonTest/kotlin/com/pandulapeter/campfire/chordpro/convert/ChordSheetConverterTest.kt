@@ -88,6 +88,19 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `the ChordPro program's text export is read as the chord sheet it is`() {
+        val text = "-- Title: Oh! Susanna\n\n-- Start of verse\n  G          D\nI come from Alabama\n-- End of verse\n\n" +
+            "-- Start of chorus\nC          G\nOh, Susanna\n-- End of chorus\n\n{chorus}"
+        val result = convert(text)
+        assertTrue(result.startsWith("{title: Oh! Susanna}\n"), result)
+        assertTrue(result.contains("{start_of_verse"), result)
+        assertTrue(result.contains("I [G]come from [D]Alabama"), result)
+        assertTrue(result.contains("{start_of_chorus"), result)
+        assertTrue(result.trimEnd().endsWith("{chorus}"), result)
+        assertFalse(result.contains("--"), result)
+    }
+
+    @Test
     fun `sections metadata and recalls become directives`() {
         val text = "Capo: 3rd fret\nHangnem: G\n120 BPM\nTime: 4/4\nEl\u0151ad\u00f3: Someone\n\u00a9 1900\nVerse 2:\nAm C\nHello world\n[Refr\u00e9n]\nAm F\nSing along\n\nRef."
         val result = convert(text)
