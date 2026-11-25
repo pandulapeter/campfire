@@ -72,7 +72,7 @@ import kotlinx.coroutines.launch
  * what makes a held arrow scroll continuously.
  *
  * Space plays and stops a song that scrolls by itself ([onToggleAutoScroll]), once a press, as a step key steps once.
- * Home goes back to the top of the song ([onBackToTop]), as its menu's entry does.
+ * Home goes back to the top of the song ([onBackToTop]), as a long press on the step back button does.
  *
  * Ctrl / Cmd + E opens the editor, the way the overflow menu's Edit does, so not in performance mode, where there is none.
  * Not with Alt held, since AltGr arrives as Ctrl + Alt on Windows and the web and types a character on some layouts.

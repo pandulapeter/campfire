@@ -105,7 +105,7 @@ internal enum class KeyShortcut(
     SONG_PAGE_UP(KeyChord.plain(Key.PageUp, label = null), ShortcutScope.SONG),
     SONG_PAGE_DOWN(KeyChord.plain(Key.PageDown, label = null), ShortcutScope.SONG),
 
-    /** Back to the top of the song, as its menu's entry and a long press on its previous step button go. */
+    /** Back to the top of the song, as a long press on its previous step button goes. */
     SONG_HOME(KeyChord.plain(Key.MoveHome, label = null), ShortcutScope.SONG),
 
     /**

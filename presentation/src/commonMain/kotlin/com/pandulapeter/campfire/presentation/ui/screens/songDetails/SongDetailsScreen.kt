@@ -221,13 +221,11 @@ internal fun SongDetailsScreen(
             // Nothing is fetched for a song that is not in the library.
             isCoverArtEnabled = isCoverArtEnabled && !isImportPreview,
             chordSpelling = chordSpelling,
-            currentPageScrollState = { steps.current.scrollState },
             openCurrentSongInfo = openCurrentSongInfo,
             songs = songs,
             settledWidth = settledWidth,
             scrollBehavior = if (isCompactHeight) appBarScrollBehavior else null,
             contentPadding = contentPadding,
-            coroutineScope = steps.coroutineScope,
             onBack = onBack,
         )
         // The paging bar, or the dock without one, sits below the pager and covers the bottom inset for it, so the pages

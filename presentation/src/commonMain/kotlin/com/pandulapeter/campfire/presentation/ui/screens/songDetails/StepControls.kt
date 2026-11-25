@@ -86,7 +86,7 @@ import org.jetbrains.compose.resources.painterResource
  * in the direction a strip reads, and a strip's arrows point the way it moves.
  *
  * A long press on the previous one goes back to the top of the song ([onBackToTop]) wherever there is song above to go
- * back to, as the menu's entry and the Home key do; it shows no tooltip there.
+ * back to, as the Home key does; it shows no tooltip there.
  *
  * A song that scrolls by itself ([isNudging]) keeps the buttons, which nudge it there and still go on to the songs beside
  * it, but not the dots, whose room the controls of the scroll take (`AutoScrollControls`).

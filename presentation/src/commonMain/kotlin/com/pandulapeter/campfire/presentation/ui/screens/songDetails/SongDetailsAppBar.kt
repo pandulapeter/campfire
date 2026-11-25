@@ -11,7 +11,6 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
 import com.pandulapeter.campfire.presentation.ui.components.CampfireIconButton
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongPlayingTools
-import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
@@ -46,7 +45,6 @@ import com.pandulapeter.campfire.presentation.ui.preferences.PreferencesContext
 import com.pandulapeter.campfire.presentation.ui.preferences.PreferencesPage
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.screens.rememberSongActionHandler
-import kotlinx.coroutines.CoroutineScope
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -54,9 +52,6 @@ import org.jetbrains.compose.resources.painterResource
  * actions. A composable of its own because [SongDetailsScreen] recomposes on every
  * page change: what only the bar reads is collected and decided here, so that a change of it recomposes the bar rather
  * than the whole screen.
- *
- * @param currentPageScrollState Read where it is used rather than handed down as a value: by the menu's Back to the top,
- *   only while the menu is open.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -80,13 +75,11 @@ internal fun SongDetailsAppBar(
     areSetlistsEnabled: Boolean,
     isCoverArtEnabled: Boolean,
     chordSpelling: UserPreferences.ChordSpelling,
-    currentPageScrollState: () -> ScrollState?,
     openCurrentSongInfo: (() -> Unit)?,
     songs: List<Song>,
     settledWidth: Dp,
     scrollBehavior: TopAppBarScrollBehavior?,
     contentPadding: PaddingValues,
-    coroutineScope: CoroutineScope,
     onBack: () -> Unit,
 ) {
     val songActions = rememberSongActionHandler(editorSession, songFilesController, dialogHost)
@@ -150,10 +143,6 @@ internal fun SongDetailsAppBar(
                 areSetlistsEnabled = areSetlistsEnabled,
                 showsFontScaleInBar = showsFontScaleInBar,
                 showsSetlistAssignmentsInBar = showsSetlistAssignmentsInBar,
-                backToTopAction = backToTopAction(
-                    canGoBack = { (currentPageScrollState()?.value ?: 0) > 0 },
-                    onClick = { coroutineScope.scrollBackToTop(currentPageScrollState(), "the menu") },
-                ),
                 aboutSongAction = openCurrentSongInfo?.let { aboutSongAction(onClick = it) },
                 tunerAction = tunerAction,
                 preferencesAction = preferencesAction(onClick = { openPreferences(PreferencesPage.SONG) }),
