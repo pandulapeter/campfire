@@ -43,6 +43,7 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.data.model.preferences.AppLanguage
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSubsection
 import com.pandulapeter.campfire.presentation.ui.components.SwitchListItem
 import com.pandulapeter.campfire.presentation.ui.components.preferences.ThemeColorChoice
@@ -140,7 +141,8 @@ private fun LanguageSection(
     showDialog: (DialogType) -> Unit,
 ) = SettingsSection(title = stringResource(Res.string.settings_user_interface_language)) {
     PickerChip(
-        modifier = Modifier.padding(horizontal = LIST_ITEM_KEYLINE),
+        // The room a list item keeps around itself, so the chip sits under the title as the other sections' rows do.
+        modifier = Modifier.padding(horizontal = LIST_ITEM_KEYLINE, vertical = 12.dp),
         text = appLanguageName(userPreferences?.language ?: AppLanguage.SYSTEM_DEFAULT),
         onClickLabel = stringResource(Res.string.settings_language_choose),
         // Over this page's sheet rather than in its place, so that picking one comes back here (DialogStack).

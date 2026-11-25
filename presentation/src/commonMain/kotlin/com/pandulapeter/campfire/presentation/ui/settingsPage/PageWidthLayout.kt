@@ -85,5 +85,8 @@ internal val PAGE_TOP_PADDING = 8.dp
 /** The page width the tabs want before the wide layout trades them for a category pane beside the page. */
 internal val SETTINGS_TAB_ROW_MAX_WIDTH = MAX_COLUMN_WIDTH
 
-/** Leaves a full [MAX_COLUMN_WIDTH] for a page as soon as the tab row reaches its width cap. */
-internal val SETTINGS_CATEGORY_PANE_WIDTH = 180.dp
+/**
+ * Leaves a full [MAX_COLUMN_WIDTH] for a page as soon as the tab row reaches its width cap, and is wide enough for each
+ * category's icon beside its longest name ("Fonctionnalités", "Metronome").
+ */
+internal val SETTINGS_CATEGORY_PANE_WIDTH = 220.dp

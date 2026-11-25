@@ -30,6 +30,7 @@ import com.pandulapeter.campfire.presentation.ui.settingsPage.SETTINGS_CATEGORY_
  * page next to it: the way a tab is chosen where a row of tabs would be four words spread across the window. It is
  * [SETTINGS_CATEGORY_PANE_WIDTH] wide, so that the page beside it can be told how much room it has left.
  *
+ * @param isKeyboard Whether the Chords category's icon is the keyboard's, as the Chords screen's is.
  * @param badgedTab A tab holding something that waits for an answer, marked with a dot the way [SettingsTabRow] does.
  */
 @Composable
@@ -38,7 +39,7 @@ internal fun SettingsCategoryPane(
     tabs: List<SettingsTab>,
     selectedTab: SettingsTab,
     badgedTab: SettingsTab?,
-    label: @Composable (SettingsTab) -> String,
+    isKeyboard: Boolean,
     onTabSelected: (SettingsTab) -> Unit,
 ) = Column(
     modifier = modifier.width(SETTINGS_CATEGORY_PANE_WIDTH).padding(start = TOOL_PAGE_PADDING, end = 12.dp, top = PAGE_TOP_PADDING, bottom = PAGE_TOP_PADDING),
@@ -46,7 +47,8 @@ internal fun SettingsCategoryPane(
 ) {
     tabs.forEach { tab ->
         NavigationDrawerItem(
-            label = { Text(text = label(tab), maxLines = 1, overflow = TextOverflow.Ellipsis) },
+            label = { Text(text = tab.label(), maxLines = 1, overflow = TextOverflow.Ellipsis) },
+            icon = { SettingsTabIcon(tab = tab, isKeyboard = isKeyboard) },
             selected = tab == selectedTab,
             onClick = { onTabSelected(tab) },
             badge = if (tab == badgedTab) ({ Badge() }) else null,

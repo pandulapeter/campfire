@@ -11,7 +11,8 @@
 # :presentation — ui/screens/settings
 
 Eight tabs under a tab row scrolling under the insets to the window's edges (the insets pad its ends) while the page
-is at most 740dp wide, else a category pane beside the selected page; the layouts crossfade across the breakpoint, as
+is at most 740dp wide, else a category pane beside the selected page, each category with its icon (the Preferences'
+pages' own for theirs); the layouts crossfade across the breakpoint, as
 do the wide layout's pages. A build without sync leaves Sharing out.
 
 ## Tab contents

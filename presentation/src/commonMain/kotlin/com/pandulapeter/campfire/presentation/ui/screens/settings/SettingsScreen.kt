@@ -157,7 +157,7 @@ internal fun SettingsScreen(
                     tabs = tabs,
                     selectedTab = viewModel.navigator.settingsTab,
                     badgedTab = badgedTab,
-                    label = { it.label() },
+                    isKeyboard = userPreferences?.instrument == UserPreferences.Instrument.KEYBOARD,
                     onTabSelected = { if (it == viewModel.navigator.settingsTab) scrollTabToTop(it) else viewModel.navigator.settingsTab = it },
                 )
                 // Seekable, so that a back gesture can hold the fade to the first tab at the fraction the finger has
