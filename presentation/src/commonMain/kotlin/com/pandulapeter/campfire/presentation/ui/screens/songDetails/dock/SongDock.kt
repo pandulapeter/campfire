@@ -52,6 +52,7 @@ import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.So
 internal fun SongDock(
     modifier: Modifier = Modifier,
     dock: SongDockState,
+    metronome: DockMetronome,
     contentPadding: PaddingValues,
     targetPage: Int,
 ) {
@@ -79,6 +80,7 @@ internal fun SongDock(
             DockRowsOf(
                 content = dock.contents[page],
                 stepper = dock.steppers[page],
+                metronome = metronome,
                 rows = dock.rows,
                 layout = layout,
                 horizontalPadding = horizontalPadding,
@@ -89,16 +91,19 @@ internal fun SongDock(
 
 /**
  * The dock's rows for one song's [content], laid out at the dock's full height whatever height it is animating through.
- * In [DockTier.CHORD_CHIPS], or without the diagrams, one row: what starts the dock ([DockStart]), then the chord chips
- * and the scale chips scrolling between it and the click's controls. Otherwise the diagrams have a row of their own,
- * ended by the click's controls, under a row of the dock's start and the scale chips where there are scale
- * suggestions, else starting with the dock's start itself. Whatever scrolls fades only where it meets what stands still.
+ * With the metronome all it holds, one row that is the metronome panel ([DockMetronomePanel]). In [DockTier.CHORD_CHIPS],
+ * or without the diagrams, one row: what starts the dock ([DockStart]), then the chord chips and the scale chips
+ * scrolling between it and the tempo chip ([DockTempoChip]). Otherwise the diagrams have a row of their own, ended by
+ * the tempo chip, under a row of the dock's start and the scale chips where there are scale suggestions, else starting
+ * with the dock's start itself. Whatever scrolls fades only where it meets what stands still. The click is the
+ * screen's ([metronome]), whichever page the rows are drawn for.
  * The diagrams and the scale chips follow the page the reader is headed for, which the page's [stepper] says.
  */
 @Composable
 private fun DockRowsOf(
     content: DockContent?,
     stepper: SongStepper?,
+    metronome: DockMetronome,
     rows: DockRows,
     layout: DockLayout,
     horizontalPadding: PaddingValues,
@@ -116,7 +121,12 @@ private fun DockRowsOf(
     val start = content?.takeIf { dockKey != null || it.hasInstrumentTools(keyOpensPlaying = dockKey?.opensPlaying == true) }?.let {
         @Composable { DockStart(content = it, dockKey = dockKey, height = layout.rowHeight) }
     }
-    val end = content?.takeIf { it.shouldShowTempo }?.let { @Composable { DockClickControls(it) } }
+    val tempo = content?.tempo
+    if (rows.isMetronomeOnly) {
+        if (tempo != null) DockMetronomePanel(tempo = tempo, metronome = metronome, height = layout.rowHeight, start = start, horizontalPadding = horizontalPadding)
+        return@Column
+    }
+    val end = tempo?.let { @Composable { DockTempoChip(tempo = it, metronome = metronome, height = layout.rowHeight) } }
     val headedSection by remember(stepper) { derivedStateOf { stepper?.headedSection } }
     val scaleGroups = content?.model?.scaleGroups.orEmpty()
     val headedGroup = remember(scaleGroups, headedSection) { headedSection?.let { scaleGroupAt(scaleGroups, it) } }
@@ -132,9 +142,7 @@ private fun DockRowsOf(
     } else {
         if (rows.hasScaleRow) {
             val scaleScroll = rememberScrollState()
-            // The stepper, Tap, and button stand here rather than at the diagrams' end, where they would leave a phone's
-            // diagrams a sliver.
-            DockScrollingRow(height = layout.rowHeight, horizontalPadding = horizontalPadding, scrollState = scaleScroll, start = start, end = end) {
+            DockScrollingRow(height = layout.rowHeight, horizontalPadding = horizontalPadding, scrollState = scaleScroll, start = start, end = null) {
                 if (content != null) DockScaleChips(content = content, scrollState = scaleScroll, headedGroup = headedGroup)
             }
         }
@@ -144,7 +152,7 @@ private fun DockRowsOf(
             horizontalPadding = horizontalPadding,
             scrollState = stripScroll,
             start = start.takeUnless { rows.hasScaleRow },
-            end = end.takeUnless { rows.hasScaleRow },
+            end = end,
         ) {
             if (content != null) {
                 val model = content.model

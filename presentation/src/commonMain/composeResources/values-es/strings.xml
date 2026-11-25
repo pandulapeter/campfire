@@ -1122,8 +1122,6 @@
     </plurals>
     <string name="song_details_playing_tempo">Tempo (BPM)</string>
     <string name="song_details_playing_range">De %1$d a %2$d</string>
-    <string name="song_details_metronome_show">Mostrar metrónomo</string>
-    <string name="song_details_metronome_hide">Ocultar metrónomo</string>
     <string name="song_details_scroll_to_top">Volver al principio</string>
     <string name="song_details_text_size_increase">Aumentar el tamaño del texto</string>
     <string name="song_details_text_size_decrease">Reducir el tamaño del texto</string>
@@ -1240,6 +1238,7 @@
     <string name="song_details_dock_no_chords">Esta canción no tiene acordes</string>
     <string name="song_details_dock_no_scales">No hay sugerencias de escalas para esta canción</string>
     <string name="song_details_dock_playing">Cómo se toca</string>
+    <string name="song_details_dock_tempo">Tempo</string>
     <plurals name="song_details_dock_too_many_chords">
         <item quantity="one">Más de %1$d acorde, demasiados para mostrarlos aquí</item>
         <item quantity="other">Más de %1$d acordes, demasiados para mostrarlos aquí</item>

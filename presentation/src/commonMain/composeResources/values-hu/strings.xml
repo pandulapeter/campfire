@@ -1121,8 +1121,6 @@
     </plurals>
     <string name="song_details_playing_tempo">Tempó (BPM)</string>
     <string name="song_details_playing_range">%1$d és %2$d között</string>
-    <string name="song_details_metronome_show">Metronóm megjelenítése</string>
-    <string name="song_details_metronome_hide">Metronóm elrejtése</string>
     <string name="song_details_scroll_to_top">Görgetés az elejére</string>
     <string name="song_details_text_size_increase">Szöveg nagyítása</string>
     <string name="song_details_text_size_decrease">Szöveg kicsinyítése</string>
@@ -1239,6 +1237,7 @@
     <string name="song_details_dock_no_chords">Ebben a dalban nincsenek akkordok</string>
     <string name="song_details_dock_no_scales">Ehhez a dalhoz nincsenek skálajavaslatok</string>
     <string name="song_details_dock_playing">Játék</string>
+    <string name="song_details_dock_tempo">Tempó</string>
     <plurals name="song_details_dock_too_many_chords">
         <item quantity="one">Több mint %1$d akkord, túl sok ahhoz, hogy itt megjelenjen</item>
         <item quantity="other">Több mint %1$d akkord, túl sok ahhoz, hogy itt megjelenjen</item>

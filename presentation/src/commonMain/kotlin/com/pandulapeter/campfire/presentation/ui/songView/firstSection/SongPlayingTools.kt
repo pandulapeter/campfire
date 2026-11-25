@@ -12,11 +12,6 @@ package com.pandulapeter.campfire.presentation.ui.songView.firstSection
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.remember
-import com.pandulapeter.campfire.metronome.api.model.MetronomeBeat
-import com.pandulapeter.campfire.metronome.api.model.MetronomePlayback
-import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeController
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.StateFlow
 
 /**
  * The tools a song is played with, as buttons of the song's own first section rather than of the app bar: the tuner next
@@ -39,51 +34,37 @@ internal class SongPlayingTools(
     val metronome: SongMetronomeTool?,
 )
 
-/** What the metronome button of [SongPlayingTools] draws, see `MetronomeButton`. */
+/**
+ * What song details' tempo chip says and opens: [bpm], the tempo of the stretch the page is in, and [onTempoClicked], the
+ * Tempo sheet, null in read only mode, whose chip opens nothing.
+ */
 @Immutable
 internal class SongMetronomeTool(
-    val isPanelShown: Boolean,
     val bpm: Int,
-    val isFlashEnabled: Boolean,
-    val playback: StateFlow<MetronomePlayback>,
-    val beats: Flow<MetronomeBeat>,
-    val onClick: () -> Unit,
+    val onTempoClicked: (() -> Unit)?,
 )
 
 /**
- * The tools of one page of the song details pager, [bpm] being the tempo a click started from that page would play at.
+ * The tools of one page of the song details pager, [bpm] being the tempo of the stretch the page is in.
  *
  * @return Null where both are switched off.
  */
 @Composable
 internal fun rememberSongPlayingTools(
-    metronomeController: MetronomeController,
     onTunerClicked: () -> Unit,
     bpm: Int,
     isMetronomeEnabled: Boolean,
     isTunerEnabled: Boolean,
     isTunerSheetShown: Boolean,
-    isMetronomePanelShown: Boolean,
-    isBeatFlashEnabled: Boolean,
-): SongPlayingTools? = remember(metronomeController, onTunerClicked, bpm, isMetronomeEnabled, isTunerEnabled, isTunerSheetShown, isMetronomePanelShown, isBeatFlashEnabled) {
+    onTempoClicked: (() -> Unit)?,
+): SongPlayingTools? = remember(onTunerClicked, bpm, isMetronomeEnabled, isTunerEnabled, isTunerSheetShown, onTempoClicked) {
     if (!isMetronomeEnabled && !isTunerEnabled) {
         null
     } else {
         SongPlayingTools(
             onTunerClicked = if (isTunerEnabled) onTunerClicked else null,
             isTunerSheetShown = isTunerSheetShown,
-            metronome = if (isMetronomeEnabled) {
-                SongMetronomeTool(
-                    isPanelShown = isMetronomePanelShown,
-                    bpm = bpm,
-                    isFlashEnabled = isBeatFlashEnabled,
-                    playback = metronomeController.metronomePlayback,
-                    beats = metronomeController.metronomeBeats,
-                    onClick = metronomeController::toggleMetronomePanel,
-                )
-            } else {
-                null
-            },
+            metronome = if (isMetronomeEnabled) SongMetronomeTool(bpm = bpm, onTempoClicked = onTempoClicked) else null,
         )
     }
 }

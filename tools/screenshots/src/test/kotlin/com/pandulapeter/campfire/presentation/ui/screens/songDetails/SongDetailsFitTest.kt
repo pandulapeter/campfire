@@ -17,7 +17,6 @@ import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
-import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextMeasurer
@@ -26,7 +25,7 @@ import androidx.compose.ui.unit.TextUnit
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.instrument_choose
 import com.pandulapeter.campfire.presentation.resources.instrument_tuning_choose
-import com.pandulapeter.campfire.presentation.resources.song_details_metronome_show
+import com.pandulapeter.campfire.presentation.resources.song_details_dock_tempo
 import com.pandulapeter.campfire.presentation.resources.song_details_dock_playing
 import com.pandulapeter.campfire.screenshots.APP_LANGUAGES
 import com.pandulapeter.campfire.screenshots.AppTestScope
@@ -111,7 +110,7 @@ private fun songChords() = Regex("\\[([^\\]]+)]").findAll(demoSongText(HOUSE_OF_
 private fun AppTestScope.node(matcher: SemanticsMatcher) = onNode(matcher, useUnmergedTree = true).fetchSemanticsNode()
 
 /**
- * The song's controls: the smallest part of the screen that holds the key chip, the metronome button, and a diagram's
+ * The song's controls: the smallest part of the screen that holds the key chip, the tempo chip, and a diagram's
  * name outside the song, which is the dock.
  */
 @OptIn(ExperimentalTestApi::class)
@@ -122,7 +121,7 @@ private fun AppTestScope.controls(): SemanticsNode {
         .first { node -> node.ancestry().none { it.id == song.id || it.id == chip.id } }
     val anchors = listOf(
         chip,
-        node(hasContentDescription(string(Res.string.song_details_metronome_show), substring = true)),
+        opening(string(Res.string.song_details_dock_tempo)),
         diagramName,
     )
     return anchors.map { it.ancestry() }.reduce { common, ancestry -> common.filter { node -> ancestry.any { it.id == node.id } } }.first()

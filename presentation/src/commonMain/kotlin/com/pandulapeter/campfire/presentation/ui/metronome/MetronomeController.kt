@@ -176,7 +176,7 @@ internal class MetronomeController(
 
     /**
      * The keyboard's way to the Metronome tab's Tap segment, T, under the same rules as [toggleMetronomeByKey]. Song details
-     * hears its own T, where its tempo stepper is (`songKeyboardShortcuts`), so this answers only the tab.
+     * hears its own T, wherever its tempo chip is (`songKeyboardShortcuts`), so this answers only the tab.
      */
     fun tapTempoByKey(): Boolean {
         val overlayState = dialogHost.overlayState
@@ -186,40 +186,14 @@ internal class MetronomeController(
         return true
     }
 
-    /**
-     * Starts a click for whatever is on screen - the song, or the Metronome tab's own pattern - or stops the one
-     * playing. A click started while a song is being read opens the panel with it, so that stopping it again from there
-     * leaves the instrument up, see [toggleMetronomePanel].
-     */
+    /** Starts a click for whatever is on screen - the song, or the Metronome tab's own pattern - or stops the one playing. */
     fun toggleMetronome() {
         if (metronome.playback.value is MetronomePlayback.Playing) {
             metronome.stop()
         } else {
-            val context = metronomeContext
-            metronome.start(currentMetronomePattern(context))
-            if (backStack.lastOrNull() is CampfireDestination.SongDetails) showMetronomePanel(isShown = true)
+            metronome.start(currentMetronomePattern(metronomeContext))
         }
     }
-
-    /**
-     * The song details screen's metronome button, which is about the panel rather than about the click: the panel is
-     * what the click is started and stopped from there, so stopping one leaves the instrument up for the next and only
-     * this takes it away. Opening it starts nothing, and closing it stops a click that is playing, since a click is
-     * never left with nothing on screen to stop it with.
-     *
-     * Whether it is up is a preference (`MetronomeSettings.isSongPanelShown`), so a player who reads to a click finds
-     * the panel on the next song as well; a click that is playing is only ever playing with the panel up.
-     */
-    fun toggleMetronomePanel() {
-        if (metronomeSettings.value.isSongPanelShown || metronome.playback.value is MetronomePlayback.Playing) {
-            showMetronomePanel(isShown = false)
-            metronome.stop()
-        } else {
-            showMetronomePanel(isShown = true)
-        }
-    }
-
-    private fun showMetronomePanel(isShown: Boolean) = updateMetronomeSettings { copy(isSongPanelShown = isShown) }
 
     fun stopMetronome() = metronome.stop()
 

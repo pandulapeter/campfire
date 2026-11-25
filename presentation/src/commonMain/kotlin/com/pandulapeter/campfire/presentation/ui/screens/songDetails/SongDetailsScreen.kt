@@ -12,13 +12,13 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.autoScroll.rememberSongAutoScrolling
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.readAfterDock
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.SongDock
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.rememberDockMetronome
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.rememberSongDock
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.PageStepper
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.SongStepper
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongPlayingControls
 import com.pandulapeter.campfire.presentation.ui.songView.model.ChordDiagrams
 import com.pandulapeter.campfire.presentation.ui.songView.grid.pageCount
-import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -54,8 +54,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.preferences.SongLayout
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.data.model.song.Song
-import com.pandulapeter.campfire.metronome.api.model.MetronomePlayback
-import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeController
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
 import com.pandulapeter.campfire.presentation.ui.metronome.SongTiming
@@ -160,8 +158,6 @@ internal fun SongDetailsScreen(
     )
     val chordSpelling = userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default
     val layoutDirection = LocalLayoutDirection.current
-    val metronomeSettings by viewModel.metronomeController.metronomeSettings.collectAsStateWithLifecycle()
-    val isMetronomePanelShown = isMetronomePanelShown(viewModel.metronomeController, metronomeSettings.isSongPanelShown)
     val coroutineScope = rememberCoroutineScope()
     val pageStepper = remember(pagerState, coroutineScope) { PageStepper(pagerState, coroutineScope) }
     // The arrow keys scroll the song the reader is looking at, and the pages each scroll on their own, so the one
@@ -211,11 +207,9 @@ internal fun SongDetailsScreen(
 
     val isCompactHeight = LocalWindowInfo.current.containerDpSize.height < SHORT_WINDOW_HEIGHT
     val appBarScrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(canScroll = { isCompactHeight })
-    val isMetronomePanelVisible = isMetronomePanelShown && isMetronomeEnabled && !isImportPreview
-    val metronomePanelState = remember { MutableTransitionState(isMetronomePanelVisible) }
-    // The room above the pages changes on every frame the bar collapses or comes back and the panel opens or closes, so
-    // the pages decide their grid only once both are at rest, see SongDetailsPage's isViewportSettled.
-    val isViewportSettled = { (!isCompactHeight || isAppBarSettled(appBarScrollBehavior.state.collapsedFraction)) && metronomePanelState.isIdle && dock.isSettled }
+    // The room the pages have changes on every frame the bar collapses or comes back and the dock grows or shrinks, so the
+    // pages decide their grid only once both are at rest, see SongDetailsPage's isViewportSettled.
+    val isViewportSettled = { (!isCompactHeight || isAppBarSettled(appBarScrollBehavior.state.collapsedFraction)) && dock.isSettled }
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -249,7 +243,6 @@ internal fun SongDetailsScreen(
             songRenderer = viewModel.songRenderer,
             libraryState = viewModel.libraryState,
             fontScaleController = viewModel.fontScaleController,
-            metronomeController = viewModel.metronomeController,
             onTunerClicked = viewModel::openTunerSheet,
             destination = destination,
             currentSong = currentSong,
@@ -266,8 +259,6 @@ internal fun SongDetailsScreen(
             openCurrentSongInfo = openCurrentSongInfo,
             songs = songs,
             settledWidth = settledWidth,
-            isMetronomePanelVisible = isMetronomePanelVisible,
-            metronomePanelState = metronomePanelState,
             scrollBehavior = if (isCompactHeight) appBarScrollBehavior else null,
             contentPadding = contentPadding,
             coroutineScope = coroutineScope,
@@ -303,7 +294,6 @@ internal fun SongDetailsScreen(
                     fontScaleController = viewModel.fontScaleController,
                     songRenderer = viewModel.songRenderer,
                     dialogHost = viewModel.dialogHost,
-                    metronomeController = viewModel.metronomeController,
                     onTunerClicked = viewModel::openTunerSheet,
                     destination = destination,
                     importPreview = importPreview,
@@ -320,8 +310,6 @@ internal fun SongDetailsScreen(
                     isMetronomeEnabled = isMetronomeEnabled,
                     isTunerEnabled = isTunerEnabled,
                     isTunerSheetShown = visibleDialog is DialogType.Tuner,
-                    isMetronomePanelShown = isMetronomePanelShown,
-                    isBeatFlashEnabled = metronomeSettings.isVisualBeatEnabled,
                     canPage = canPage,
                     settledWidth = settledWidth,
                     pageContentPadding = PaddingValues(
@@ -349,7 +337,12 @@ internal fun SongDetailsScreen(
                 )
             }
         }
-        SongDock(dock = dock, contentPadding = contentPadding, targetPage = pagerState.targetPage)
+        SongDock(
+            dock = dock,
+            metronome = rememberDockMetronome(viewModel.metronomeController, viewModel.libraryState, viewModel.songTextStore),
+            contentPadding = contentPadding,
+            targetPage = pagerState.targetPage,
+        )
         if (hasPagerControls) {
             SongPagerControls(
                 setlistTitle = setlist?.title,
@@ -426,17 +419,6 @@ private fun SongDetailsEffects(
     } else if (!isImportPreview) {
         LoadSongTexts(songTextStore = viewModel.songTextStore, songs = songs, currentPage = currentPage, songTexts = songTexts)
     }
-}
-
-/**
- * Whether the metronome panel is up over the song. A click can only play here while the panel is up, which is what starts
- * and stops it; the preference ([isSongPanelShown]) is read beside it anyway, since a click stopped from the panel leaves
- * it where it was, see [MetronomeController.toggleMetronomePanel].
- */
-@Composable
-private fun isMetronomePanelShown(metronomeController: MetronomeController, isSongPanelShown: Boolean): Boolean {
-    val metronomePlayback by metronomeController.metronomePlayback.collectAsStateWithLifecycle()
-    return isSongPanelShown || metronomePlayback is MetronomePlayback.Playing
 }
 
 /**

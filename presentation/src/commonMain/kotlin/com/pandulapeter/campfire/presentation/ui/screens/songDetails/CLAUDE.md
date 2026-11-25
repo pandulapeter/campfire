@@ -122,8 +122,8 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
   Forward).
 - Ctrl/Cmd + E opens the editor, not in performance mode, which has no Edit.
 - Where the song has its playing controls (not read only), Ctrl / Cmd + Shift + Up and Down step its transposition
-  (chords on, a song with chords) wherever the key chip is, the Playing sheet shut, and T taps its tempo (metronome on),
-  whether or not the steppers are in sight.
+  (chords on, a song with chords) wherever the key chip is, the Playing sheet shut, and T taps its tempo (metronome on)
+  wherever the tempo chip is.
 - In one column (`autoScroll/`) the step buttons and step keys nudge it, and Space plays and stops it.
-- The metronome button only shows the panel (opening starts nothing, closing stops a click); M toggles the click from
-  anywhere on the song, opening the panel with it.
+- M starts and stops the click and T taps the tempo wherever the dock's tempo chip is (the metronome on, not an import
+  preview; T not in read only mode, where it would write an override).

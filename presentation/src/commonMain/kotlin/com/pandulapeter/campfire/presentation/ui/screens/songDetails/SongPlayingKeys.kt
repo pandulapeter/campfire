@@ -12,11 +12,11 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 import com.pandulapeter.campfire.presentation.ui.playing.PlayingOverrides
 
 /**
- * What the keys that press the song's playing controls need (Ctrl / Cmd + Shift + Up and Down, T), given only where the
- * song has those controls: not read only, where its four values are a line of text.
+ * What the keys that set how the song is played need (Ctrl / Cmd + Shift + Up and Down, T), given only where the dock's
+ * chips set it: not read only, where they only read.
  *
- * @param areChordsShown Whether the transposition stepper can be there, which the song's own chords then decide.
- * @param isTempoShown Whether the tempo stepper and its Tap segment are, which the metronome switch decides.
+ * @param areChordsShown Whether the key chip transposes, which the song's own chords then decide.
+ * @param isTempoShown Whether the tempo chip is there, which the metronome switch decides.
  */
 internal class SongPlayingKeys(
     val overrides: PlayingOverrides,

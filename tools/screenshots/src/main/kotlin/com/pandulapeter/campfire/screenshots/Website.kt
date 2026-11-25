@@ -57,7 +57,7 @@ internal val websiteShots: List<Triple<String, Device, Shot>> by lazy {
             Shot(
                 id = "phone-metronome",
                 uiMode = UserPreferences.UiMode.DARK,
-                preferences = { metronome(isSongPanelShown = false) },
+                preferences = { metronome() },
                 drive = { viewModel.selectTopLevelDestination(CampfireDestination.Metronome) },
             ),
         ),
@@ -84,7 +84,7 @@ internal val websiteShots: List<Triple<String, Device, Shot>> by lazy {
             Shot(
                 id = "tablet-song-tuner",
                 uiMode = UserPreferences.UiMode.DARK,
-                preferences = { tuner + metronome(isSongPanelShown = true) + ("fontScale" to JsonPrimitive(UPTOWN_GIRL_FONT_SCALE)) },
+                preferences = { tuner + metronome() + ("fontScale" to JsonPrimitive(UPTOWN_GIRL_FONT_SCALE)) },
                 drive = {
                     openSong(UPTOWN_GIRL)
                     viewModel.dialogHost.showDialog(DialogType.Tuner)
@@ -171,7 +171,7 @@ internal val websiteShots: List<Triple<String, Device, Shot>> by lazy {
         *playing(
             "tablet-song-metronome",
             Device.IPAD,
-            song("tablet-song-metronome", UPTOWN_GIRL, fontScale = UPTOWN_GIRL_FONT_SCALE, extra = metronome(isSongPanelShown = true)),
+            song("tablet-song-metronome", UPTOWN_GIRL, fontScale = UPTOWN_GIRL_FONT_SCALE, extra = metronome()),
         ),
         // A song exported as a two-column A4 PDF, every option ticked.
         Triple(
@@ -271,11 +271,10 @@ private fun playing(name: String, device: Device, shot: Shot): Array<Triple<Stri
 
 private const val BEATS_PER_BAR = 4
 
-private fun metronome(isSongPanelShown: Boolean): Map<String, JsonElement> = mapOf(
+private fun metronome(): Map<String, JsonElement> = mapOf(
     "metronomeSettings" to buildJsonObject {
         put("bpm", 120)
         put("timeSignature", "4/4")
-        put("isSongPanelShown", isSongPanelShown)
     },
 )
 

@@ -230,7 +230,6 @@ class UpgradeFrom520Test {
                 beatLevels = mapOf("7/8" to listOf("accent", "normal", "accent", "normal", "accent", "normal", "normal")),
                 bpm = 132,
                 timeSignature = "7/8",
-                isSongPanelShown = true,
             ),
             tunerSettings = TunerSettings(mode = TunerSettings.Mode.CHROMATIC, referencePitch = 432, hasTurnedOnMicrophone = true),
             seenWhatsNewVersions = setOf("5.1.0", "5.2.0"),

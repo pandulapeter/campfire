@@ -139,7 +139,12 @@ internal data class PrintSettingsDocument(
     val exportsAsPlayed: Boolean = true,
 )
 
-/** The ids are the metronome's own and are checked where they are read into its types, in `:presentation`. */
+/**
+ * The ids are the metronome's own and are checked where they are read into its types, in `:presentation`.
+ *
+ * Whether song details opened with the metronome panel in its app bar was once kept under `isSongPanelShown`. The panel
+ * is gone, so the key is no longer read or written; an older version still reads what it wrote there.
+ */
 @Serializable
 internal data class MetronomeSettingsDocument(
     val sound: String = "click",
@@ -150,7 +155,6 @@ internal data class MetronomeSettingsDocument(
     val beatLevels: Map<String, List<String>> = emptyMap(),
     val bpm: Int = 120,
     val timeSignature: String = "4/4",
-    val isSongPanelShown: Boolean = false,
     val isChangeOnNextBar: Boolean = true,
 )
 

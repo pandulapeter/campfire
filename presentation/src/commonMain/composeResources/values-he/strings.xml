@@ -1164,8 +1164,6 @@
     </plurals>
     <string name="song_details_playing_tempo">טמפו (BPM)</string>
     <string name="song_details_playing_range">%1$d עד %2$d</string>
-    <string name="song_details_metronome_show">הצגת המטרונום</string>
-    <string name="song_details_metronome_hide">הסתרת המטרונום</string>
     <string name="song_details_scroll_to_top">גלילה להתחלה</string>
     <string name="song_details_text_size_increase">הגדלת הטקסט</string>
     <string name="song_details_text_size_decrease">הקטנת הטקסט</string>
@@ -1283,6 +1281,7 @@
     <string name="song_details_dock_no_chords">אין אקורדים בשיר הזה</string>
     <string name="song_details_dock_no_scales">אין הצעות לסולמות לשיר הזה</string>
     <string name="song_details_dock_playing">נגינה</string>
+    <string name="song_details_dock_tempo">טמפו</string>
     <plurals name="song_details_dock_too_many_chords">
         <item quantity="one">יותר מאקורד אחד, יותר מדי כדי להציג כאן</item>
         <item quantity="two">יותר משני אקורדים, יותר מדי כדי להציג כאן</item>

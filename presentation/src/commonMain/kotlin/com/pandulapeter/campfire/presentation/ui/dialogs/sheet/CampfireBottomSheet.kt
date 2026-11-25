@@ -231,7 +231,7 @@ internal fun CampfireBottomSheet(
         SheetMessages(isClosing = isClosing) {
             Column(
                 modifier = Modifier.fillMaxWidth()
-                    .keepSheetFromWheelScrolls()
+                    .keepSheetFromWheelScrolls().endingValueTypingOnPress()
                     .onGloballyPositioned { onTopMoved?.invoke(it.positionOnScreen().y) }
                     .saveShortcut { saveShortcut.action?.invoke() }
                     .then(sheetFocusTarget)

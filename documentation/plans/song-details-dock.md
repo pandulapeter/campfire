@@ -9,7 +9,7 @@
 -->
 # Plan: song details as a reading surface with a dock
 
-**Status:** steps 1 to 6 and 8 done; step 7 next. The gate decided the dock scales to the room (below). The mockups this plan was agreed on (360 × 640 dp, dark):
+**Status:** steps 1 to 8 done; step 9 next. The gate decided the dock scales to the room (below). The mockups this plan was agreed on (360 × 640 dp, dark):
 https://claude.ai/artifact/PDMZvTbTcRH6CSQGQPJrra. `ui/` is
 `presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/`, as in the root `CLAUDE.md`.
 

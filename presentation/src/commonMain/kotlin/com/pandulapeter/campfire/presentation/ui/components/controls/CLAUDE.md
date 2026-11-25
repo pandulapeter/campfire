@@ -27,8 +27,9 @@
   error color and sets nothing, never clamped (415..466 is typed through 4 and 44). A tap on its value starts typing, so
   only the icon resets it. A unit (` Hz`) is drawn beside the field, so only digits are selected.
 - A focused field counts in `OverlayState.isValueBeingTyped`, so the song's keys leave it alone; it is no overlay to the
-  back stack or the web's history. **A press anywhere outside its pill ends typing** (`CampfireApp`'s root, initial
-  pass, never consumed), since nothing else takes the focus from it; inside the pill typing continues on touch.
+  back stack or the web's history. **A press anywhere outside its pill ends typing** (`CampfireApp`'s root, and a
+  sheet's own, `endingValueTypingOnPress`, whose presses never reach the root's; initial pass, never consumed), since
+  nothing else takes the focus from it; inside the pill typing continues on touch.
 - `LabeledControlRow`: the label sits beside a wide control while its longest word fits, else above. The form never
   changes with the value (`decidingLabel` measures the widest label), and a row that stacked at a width stays stacked
   (tested), so nothing moves under a dragging finger. Not animated.

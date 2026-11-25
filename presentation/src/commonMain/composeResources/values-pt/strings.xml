@@ -1124,8 +1124,6 @@
     </plurals>
     <string name="song_details_playing_tempo">Andamento (BPM)</string>
     <string name="song_details_playing_range">%1$d a %2$d</string>
-    <string name="song_details_metronome_show">Mostrar metrônomo</string>
-    <string name="song_details_metronome_hide">Ocultar metrônomo</string>
     <string name="song_details_scroll_to_top">Rolar até o topo</string>
     <string name="song_details_text_size_increase">Aumentar o texto</string>
     <string name="song_details_text_size_decrease">Diminuir o texto</string>
@@ -1242,6 +1240,7 @@
     <string name="song_details_dock_no_chords">Esta música não tem acordes</string>
     <string name="song_details_dock_no_scales">Nenhuma sugestão de escalas para esta música</string>
     <string name="song_details_dock_playing">Execução</string>
+    <string name="song_details_dock_tempo">Andamento</string>
     <plurals name="song_details_dock_too_many_chords">
         <item quantity="one">Mais de %1$d acorde, demais para mostrar aqui</item>
         <item quantity="other">Mais de %1$d acordes, demais para mostrar aqui</item>

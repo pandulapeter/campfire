@@ -109,7 +109,7 @@ The song renderer, drawn by song details and the editor's preview; `model/` buil
 - A continuation piece shows no header. Chorus cards are drawn behind the chunks, one per piece; page dividers are drawn
   by the layout, not composed.
 - **Motion**: a single change glides every section, card, and divider from its old place to its new (`SectionGlides`);
-  continuous changes (pinch, resize, title row collapse, metronome panel) follow directly, only a new grid's jump
+  continuous changes (pinch, resize, title row collapse, the dock) follow directly, only a new grid's jump
   glided. **Only places are animated, never sizes** (no `animateBounds`): content is arranged once at its new size, not
   re-wrapped every frame. One spring for all (`SongMotionSpec`). Controls, diagrams, and scale chips travel to a new row
   arrangement too, except during a pinch. **A tune's first rendering is data arriving**: that pass places everything at

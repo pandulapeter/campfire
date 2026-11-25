@@ -1157,8 +1157,6 @@
     </plurals>
     <string name="song_details_playing_tempo">Tempo (BPM)</string>
     <string name="song_details_playing_range">Od %1$d do %2$d</string>
-    <string name="song_details_metronome_show">Pokaż metronom</string>
-    <string name="song_details_metronome_hide">Ukryj metronom</string>
     <string name="song_details_scroll_to_top">Przewiń na górę</string>
     <string name="song_details_text_size_increase">Powiększ tekst</string>
     <string name="song_details_text_size_decrease">Pomniejsz tekst</string>
@@ -1276,6 +1274,7 @@
     <string name="song_details_dock_no_chords">Ta piosenka nie ma akordów</string>
     <string name="song_details_dock_no_scales">Brak podpowiedzi skal dla tej piosenki</string>
     <string name="song_details_dock_playing">Granie</string>
+    <string name="song_details_dock_tempo">Tempo</string>
     <plurals name="song_details_dock_too_many_chords">
         <item quantity="one">Ponad %1$d akord, za dużo, by je tu pokazać</item>
         <item quantity="few">Ponad %1$d akordy, za dużo, by je tu pokazać</item>

@@ -120,7 +120,7 @@ internal enum class KeyShortcut(
      */
     METRONOME(KeyChord.plain(Key.M, "M"), ShortcutScope.METRONOME),
 
-    /** The Tap segment of the tempo stepper, wherever [METRONOME] works and the stepper is there. */
+    /** Taps the tempo: the Metronome tab's Tap segment, and on a song wherever its dock's tempo chip is, which [METRONOME] starts. */
     TAP_TEMPO(KeyChord.plain(Key.T, "T"), ShortcutScope.METRONOME),
 
     /** The print preview's pages: the previous and the next, the first and the last, and the one lying either way. */

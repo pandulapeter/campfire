@@ -227,7 +227,6 @@ internal fun MetronomeSettingsDocument.toModel() = MetronomeSettings(
     beatLevels = beatLevels,
     bpm = bpm.coerceIn(MetronomeSettings.TEMPO_RANGE),
     timeSignature = timeSignature,
-    isSongPanelShown = isSongPanelShown,
     isChangeOnNextBar = isChangeOnNextBar,
 )
 
@@ -240,7 +239,6 @@ internal fun MetronomeSettings.toDocument() = MetronomeSettingsDocument(
     beatLevels = beatLevels,
     bpm = bpm,
     timeSignature = timeSignature,
-    isSongPanelShown = isSongPanelShown,
     isChangeOnNextBar = isChangeOnNextBar,
 )
 

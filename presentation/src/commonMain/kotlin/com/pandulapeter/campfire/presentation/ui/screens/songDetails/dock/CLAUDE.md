@@ -12,8 +12,8 @@
 
 What left the song on song details: its first section (instrument pill, tuner, transposition, capo, tempo, Tap, time
 signature, metronome button), its Chords section, and its Scales section, which the song no longer starts with
-(`SongLyrics.showsPlayingSections`; the editor's preview and the PDF keep them). The plan it follows, and what is
-still to come (the tempo chip and sheet), is `documentation/plans/song-details-dock.md`.
+(`SongLyrics.showsPlayingSections`; the editor's preview and the PDF keep them), and the metronome panel the app bar
+had. The plan it follows, and what is still to come, is `documentation/plans/song-details-dock.md`.
 
 ## Where it is
 
@@ -29,7 +29,10 @@ still to come (the tempo chip and sheet), is `documentation/plans/song-details-d
 ## Its rows
 
 - **Decided by the switches** (`DockRows`): the playing controls with the chords or the metronome on, the chords with
-  diagrams drawn on an instrument with shapes, the scale suggestions. No row, no dock. A song with nothing for a row
+  diagrams drawn on an instrument with shapes, the scale suggestions. No row, no dock. With the metronome alone (the
+  chords off) the one row is the metronome panel (`DockMetronomePanel`): what starts the dock, the tempo stepper with
+  Tap, the bar as wide as the rest leaves with its accents tapped in place, and play / stop (read only mode: the number
+  alone, and the accents untappable, both being writes). A song with nothing for a row
   leaves it empty, or for the diagrams says so.
 - **Its tier is the window's** (`dockLayoutOf`, tested). A short window (`SHORT_WINDOW_HEIGHT`, a phone on its side)
   gets one row with a chip per chord until the side panel comes. Any other window gets two rows,
@@ -40,9 +43,7 @@ still to come (the tempo chip and sheet), is `documentation/plans/song-details-d
   diagrams are as large as keep that: a 112 dp dock). Its padding is as thin as a chip allows.
 - The row height follows the system text size (`songControlHeight`), never the song's: the controls are drawn at the
   interface's size (`fontScale` 1).
-- Every row scrolls sideways by hand and runs to the screen's edges, padded in from them. A fade belongs only where a
-  scrolling row meets something that does not: the diagram strip's end where the click's controls stand
-  (`fadingHorizontalEdges`, as far as it can still scroll), and its start where the dock's start stands in its row.
+- Every row scrolls sideways by hand and runs to the screen's edges, padded in from them.
 
 ## Its contents
 
@@ -57,13 +58,19 @@ still to come (the tempo chip and sheet), is `documentation/plans/song-details-d
   and the tuner then start the dock (`DockInstrumentTools`), as they do with the chords off, which takes the chip. An
   instrument without shapes keeps its pill there, since it is what brings the diagrams back.
 - **In one row** (a short window, or no diagrams): the start, then the chord chips (`DockChordChips`) and the scale
-  chips (`DockScaleChips`) scrolling, then the click's controls or read only mode's line of them (`DockClickControls`:
-  tempo, Tap, time signature, metronome button). **In two**: the start, the scale chips, and the click's controls, then
-  the diagrams (`DockDiagramStrip`); without scale suggestions only the second, between the start and the click's
-  controls. The start and the click's controls stand still (`DockScrollingRow`), and what scrolls between them fades
-  where it meets them. The tempo chip (the plan's step 7) ends the diagrams' row in both: the stepper, Tap, and button
-  would leave them a sliver. A chord chip or diagram opens the chord's sheet where shapes may be picked (as the
-  section's diagrams did), a scale chip its scale's sheet, read only mode included.
+  chips (`DockScaleChips`) scrolling, then the tempo chip. **In two**: the start and the scale chips, then the diagrams
+  (`DockDiagramStrip`) and the tempo chip; without scale suggestions only the second, the start before the diagrams.
+  The start and the tempo chip stand still (`DockScrollingRow`), and what scrolls between them fades where it meets
+  them, as far as it can still scroll. A chord chip or diagram opens the chord's sheet where shapes may be picked, a
+  scale chip its scale's sheet, read only mode included.
+- **The tempo chip** (`DockTempoChip`, with the metronome on, never in an import preview, which has no metronome): the
+  tempo of the stretch the page is in (`SongTiming.bpm`, a later `{tempo}`'s with an override scaled in), as wide as
+  the widest tempo, a small beat row that only shows the bar (lit while the click plays, a playing stretch's own accents
+  until its bar ends), and play / stop (`DockPlayStop`, M), which stay in place whatever the number. The click is the
+  screen's (`DockMetronome`), not a page's. The number opens the **Tempo sheet** (`DialogType.Tempo`,
+  `dialogs/playing/TempoSheet`): the tempo stepper with Tap, writing the override as the first section's did, and the
+  song's accents, tapped there; not the time signature, which is the file's (Song defaults). Read only mode's opens
+  nothing and has no chevron; the click still plays.
 - **The scale chips** are the Scales section's rows: the home group's untitled, then each group and each chord worth a
   scale of its own under its title ("Over E7"). A song with none says so ("No scale suggestions for this song"), a
   songbook and a song over `MAX_PLAYED_CHORDS` included, whose scales are never worked out: the row is the screen's.
@@ -80,5 +87,5 @@ still to come (the tempo chip and sheet), is `documentation/plans/song-details-d
   blocks each section was made of), each page's stepper handed to the dock by index (`SongDockState.steppers`). A row
   swiped by hand stays put until the next turn changes its target. A short window's row, whose chord chips come first,
   does not scroll to a group.
-- Breadcrumbs (kinds only): `Dock: key chip`, `Dock: chord diagram`, `Dock: chord chip`, `Dock: scale chip`, and the sheet's
-  `Playing sheet: transposition stepped` (`capo`, `reset`).
+- Breadcrumbs (kinds only): `Dock: …` for every chip, the click, its accents, and the panel's stepper; `Tempo sheet: …`
+  and `Playing sheet: …` for every step, reset, and accent.

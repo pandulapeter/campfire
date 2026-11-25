@@ -16,7 +16,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeButton
 import com.pandulapeter.campfire.presentation.ui.tuner.TunerButton
 
 /**
@@ -33,33 +32,18 @@ internal fun SongPlayingToolButtons(
     fontScale: Float,
 ) {
     val onTunerClicked = tools.onTunerClicked?.takeIf { places.tuner == place }
-    val metronome = tools.metronome?.takeIf { places.metronome == place }
-    if (onTunerClicked != null || metronome != null) {
+    if (onTunerClicked != null) {
         Row(
             modifier = modifier,
             horizontalArrangement = Arrangement.spacedBy(PLAYING_TOOL_GAP),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            if (onTunerClicked != null) {
-                TunerButton(
-                    isSheetShown = tools.isTunerSheetShown,
-                    height = height,
-                    fontScale = fontScale,
-                    onClick = onTunerClicked,
-                )
-            }
-            if (metronome != null) {
-                MetronomeButton(
-                    isPanelShown = metronome.isPanelShown,
-                    playback = metronome.playback,
-                    bpm = metronome.bpm,
-                    beats = metronome.beats,
-                    isFlashEnabled = metronome.isFlashEnabled,
-                    height = height,
-                    fontScale = fontScale,
-                    onClick = metronome.onClick,
-                )
-            }
+            TunerButton(
+                isSheetShown = tools.isTunerSheetShown,
+                height = height,
+                fontScale = fontScale,
+                onClick = onTunerClicked,
+            )
         }
     }
 }

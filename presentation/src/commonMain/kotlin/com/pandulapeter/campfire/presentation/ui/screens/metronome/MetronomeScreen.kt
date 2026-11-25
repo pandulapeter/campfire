@@ -30,7 +30,6 @@ import com.pandulapeter.campfire.presentation.resources.metronome_group_rhythm
 import com.pandulapeter.campfire.presentation.resources.metronome_time_signature
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ScrollPosition
-import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
 import com.pandulapeter.campfire.presentation.ui.navigation.ScrollToTopOnRequest
 import com.pandulapeter.campfire.presentation.ui.components.appBar.NEW_ITEM_BUTTON_TOP_INSET
 import com.pandulapeter.campfire.presentation.ui.components.only
@@ -93,9 +92,6 @@ internal fun MetronomeScreen(
             isFlashEnabled = panel.isFlashEnabled,
             onBeatLevelsChanged = { levels -> viewModel.metronomeController.setBeatLevels(panel.timeSignature, levels) },
             onPlayStop = viewModel.metronomeController::toggleMetronome,
-            playShortcut = KeyShortcut.METRONOME,
-            isVisible = true,
-            isProminent = true,
             // As wide as the page under it and centered as it is, so that the bar starts and ends where the rows it heads do.
             pageMaxWidth = layout.animatedPageMaxWidth(sections = 2),
             contentPadding = contentPadding.only(start = true, end = true),

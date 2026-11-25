@@ -149,7 +149,6 @@ internal val promoShots: List<PromoShot> by lazy {
                         "metronomeSettings" to buildJsonObject {
                             put("bpm", VIDEO_BPM)
                             put("timeSignature", "4/4")
-                            put("isSongPanelShown", false)
                         },
                     )
                 },

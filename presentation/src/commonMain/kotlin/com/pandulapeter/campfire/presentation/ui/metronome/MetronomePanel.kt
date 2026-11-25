@@ -9,14 +9,6 @@
  */
 package com.pandulapeter.campfire.presentation.ui.metronome
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.EnterExitState
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.MutableTransitionState
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
@@ -27,11 +19,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.TransformOrigin
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -53,36 +41,24 @@ import com.pandulapeter.campfire.presentation.ui.components.tabChrome.TabChromeE
 import com.pandulapeter.campfire.presentation.ui.components.tabChrome.drawnContainerColor
 import com.pandulapeter.campfire.presentation.ui.components.tabChrome.rememberSharedTabChrome
 import com.pandulapeter.campfire.presentation.ui.components.tabChrome.sharedTabChrome
-import com.pandulapeter.campfire.presentation.ui.settingsPage.MAX_COLUMN_WIDTH
-import com.pandulapeter.campfire.presentation.ui.settingsPage.SECTION_GAP
 import kotlinx.coroutines.flow.Flow
 
 /**
  * The least of a metronome that is still one - the bar as it is heard, with its accents tapped on it, and play and stop
- * at the end of the row, where the thumb holding the phone reaches it - and the one shape the click takes on both
- * screens that have one, so that it is started, stopped and accented the same way on either.
+ * at the end of the row, where the thumb holding the phone reaches it - as the Metronome tab's header, pinned above
+ * everything else the tab sets, so that the click can be stopped wherever the page has been scrolled to. Song details'
+ * dock draws the same bar and the same button in its own way (`DockTempoChip`, `DockMetronomePanel`).
  *
- * On the song details screen it is a panel inside the app bar, under its title row, that the bar's own button shows and
- * hides (`MetronomeController.toggleMetronomePanel`): the click is something a song is played to there, the tempo is
- * already in the song's own first section right under the bar, and being part of the bar rather than something floating
- * under it, it stays where it is while the song is read and covers none of it. On the Metronome tab it is the header,
- * pinned above everything else the tab sets and never hidden ([isVisible] always true), so that the click can be
- * stopped wherever the page has been scrolled to.
+ * The accents and the button are as tall as each other, the accents starting and ending where the rows of the page
+ * under them do. The button is the list screens' New button in size, mark, and place at the window's end, the one other
+ * filled circle a top level screen leads with, so that the two read as the same kind of control.
  *
  * @param beatLevels The bar the click counts as it is accented, see [metronomeTimeSignatureOf].
  * @param beats One item per click as it is heard, which the flash follows.
  * @param onBeatLevelsChanged Called with the bar's accents once one of its beats is tapped.
- * @param onPlayStop Starts or stops the click.
- * @param playShortcut The key that does the same where the panel is.
- * @param isProminent Draws the accents as tall as the button rather than inside a bar's own row, starting at a settings
- * page's margin and the button where the list screens keep their New button: the tab's, where the panel is what the
- * screen is for and heads the rows under it.
- * @param pageMaxWidth How wide the page a prominent panel heads grows at most, its insets left out: the accents are as
- *   wide as its rows and centered over them, while the button keeps to the end of the window, as the New button does.
- *   A song's panel, which heads no page, keeps its accents as wide as the Metronome tab's widest.
- * @param visibleState Where the panel's showing and hiding is followed, for a caller that has to know when it has
- *   come to rest: the song details screen, whose pages decide their grid only once the room the panel leaves them has
- *   stopped changing. Its target is kept at [isVisible] here.
+ * @param onPlayStop Starts or stops the click, as M does.
+ * @param pageMaxWidth How wide the page the panel heads grows at most, its insets left out: the accents are as wide as
+ *   its rows and centered over them, while the button keeps to the end of the window, as the New button does.
  */
 @Composable
 internal fun MetronomePanel(
@@ -93,88 +69,49 @@ internal fun MetronomePanel(
     isFlashEnabled: Boolean,
     onBeatLevelsChanged: (List<BeatLevel>) -> Unit,
     onPlayStop: () -> Unit,
-    playShortcut: KeyShortcut,
-    isVisible: Boolean,
-    isProminent: Boolean = false,
-    pageMaxWidth: Dp = MAX_COLUMN_WIDTH * 2 + SECTION_GAP,
+    pageMaxWidth: Dp,
     contentPadding: PaddingValues,
-    visibleState: MutableTransitionState<Boolean>? = null,
-) = AnimatedVisibility(
-    modifier = modifier,
-    visibleState = rememberPanelVisibleState(given = visibleState, isVisible = isVisible),
-    // The bar grows a row rather than something sliding out from behind it, and its edge never passes over the
-    // controls: they are squashed towards the top on the very spec the height follows, so at every frame they are
-    // exactly as tall as the room the bar has for them. A spring would not do here, since the size's and the scale's
-    // would settle against different thresholds and drift apart.
-    enter = expandVertically(
-        animationSpec = tween(PANEL_ANIMATION_DURATION, easing = FastOutSlowInEasing),
-        expandFrom = Alignment.Top,
-    ),
-    exit = shrinkVertically(
-        animationSpec = tween(PANEL_ANIMATION_DURATION, easing = FastOutSlowInEasing),
-        shrinkTowards = Alignment.Top,
-    ),
 ) {
-    val contentProgress = transition.animateFloat(
-        transitionSpec = { tween(PANEL_ANIMATION_DURATION, easing = FastOutSlowInEasing) },
-        label = "songMetronomePanelContent",
-    ) { state -> if (state == EnterExitState.Visible) 1f else 0f }
     val layoutDirection = LocalLayoutDirection.current
-    val startPadding = if (isProminent) PROMINENT_PANEL_HORIZONTAL_PADDING else PANEL_START_PADDING
-    val endPadding = if (isProminent) NEW_ITEM_BUTTON_END_INSET else PANEL_END_PADDING
-    val height = if (isProminent) PROMINENT_PANEL_HEIGHT else PANEL_HEIGHT
     MetronomePanelRow(
-        modifier = Modifier
-            .graphicsLayer {
-                alpha = contentProgress.value
-                scaleY = contentProgress.value
-                transformOrigin = TransformOrigin(pivotFractionX = 0.5f, pivotFractionY = 0f)
-            }
+        modifier = modifier
             .fillMaxWidth()
             .padding(
-                start = contentPadding.calculateStartPadding(layoutDirection) + startPadding,
-                end = contentPadding.calculateEndPadding(layoutDirection) + endPadding,
-                // A prominent panel heads a settings page, whose own top padding and first title already part it from the rows.
-                bottom = if (isProminent) 0.dp else PANEL_BOTTOM_PADDING,
+                start = contentPadding.calculateStartPadding(layoutDirection) + PANEL_HORIZONTAL_PADDING,
+                end = contentPadding.calculateEndPadding(layoutDirection) + NEW_ITEM_BUTTON_END_INSET,
             )
-            .height(height),
-        // As wide as the rows of the page under a prominent panel, inside the page's margins on both sides.
-        beatsMaxWidth = pageMaxWidth - PROMINENT_PANEL_HORIZONTAL_PADDING * 2,
-        gap = PANEL_PADDING,
-        startPadding = startPadding,
-        endPadding = endPadding,
+            .height(PANEL_HEIGHT),
+        // As wide as the rows of the page under the panel, inside the page's margins on both sides.
+        beatsMaxWidth = pageMaxWidth - PANEL_HORIZONTAL_PADDING * 2,
+        gap = PANEL_GAP,
+        startPadding = PANEL_HORIZONTAL_PADDING,
+        endPadding = NEW_ITEM_BUTTON_END_INSET,
         beats = {
             BeatRow(
                 beatLevels = beatLevels,
                 beats = beats,
                 isPlaying = isPlaying,
                 isFlashEnabled = isFlashEnabled,
-                blockHeight = if (isProminent) PROMINENT_PANEL_HEIGHT else PANEL_BEAT_HEIGHT,
-                blockGap = if (isProminent) PROMINENT_PANEL_BEAT_GAP else PANEL_BEAT_GAP,
+                blockHeight = PANEL_HEIGHT,
+                blockGap = PANEL_BEAT_GAP,
                 onBeatLevelsChanged = onBeatLevelsChanged,
             )
         },
     ) {
         val label = stringResource(if (isPlaying) Res.string.metronome_stop else Res.string.metronome_start)
-        CampfireTooltip(label = label, shortcut = playShortcut) {
-            // The tab's button stands on the New button's spot, so a tab swap carries it over as that button: one
-            // container, only the icon crossing (see SharedTabChrome), which draws the container in its stead.
+        CampfireTooltip(label = label, shortcut = KeyShortcut.METRONOME) {
+            // The button stands on the New button's spot, so a tab swap carries it over as that button: one container,
+            // only the icon crossing (see SharedTabChrome), which draws the container in its stead.
             val colors = IconButtonDefaults.filledIconButtonColors()
-            val chrome = if (isProminent) {
-                rememberSharedTabChrome(
-                    element = TabChromeElement.NEW_BUTTON,
-                    containerColor = colors.containerColor,
-                    content = if (isPlaying) TabChromeContent.STOP else TabChromeContent.PLAY,
-                )
-            } else {
-                null
-            }
+            val chrome = rememberSharedTabChrome(
+                element = TabChromeElement.NEW_BUTTON,
+                containerColor = colors.containerColor,
+                content = if (isPlaying) TabChromeContent.STOP else TabChromeContent.PLAY,
+            )
             FilledIconButton(
                 modifier = Modifier
                     .sharedTabChrome(chrome = chrome, zIndex = NEW_BUTTON_Z_INDEX, isContainerDrawnOutsideSwaps = true)
-                    .then(if (isProminent) Modifier.size(PROMINENT_PANEL_HEIGHT) else Modifier)
-                    // The row already squashes it vertically, so this is what keeps the button round as it scales down.
-                    .graphicsLayer { scaleX = contentProgress.value }
+                    .size(PANEL_HEIGHT)
                     .semantics { contentDescription = label },
                 onClick = onPlayStop,
                 colors = colors.copy(containerColor = chrome.drawnContainerColor(colors.containerColor)),
@@ -188,41 +125,8 @@ internal fun MetronomePanel(
     }
 }
 
-/** The [given] state, or one of the panel's own where there is none, either way headed for [isVisible]. */
-@Composable
-private fun rememberPanelVisibleState(given: MutableTransitionState<Boolean>?, isVisible: Boolean): MutableTransitionState<Boolean> {
-    // Remembered whether or not it is used, so that the slots stay the same whichever state is given.
-    val own = remember { MutableTransitionState(isVisible) }
-    return (given ?: own).apply { targetState = isVisible }
-}
-
-private const val PANEL_ANIMATION_DURATION = 250
-private val PANEL_HEIGHT = 48.dp
-private val PANEL_PADDING = 12.dp
-private val PANEL_BOTTOM_PADDING = 4.dp
-
-/**
- * The panel's margins in the song details screen's app bar, which put the beats where the song's own text starts and
- * the button's circle on the keyline of the step buttons under it, 8dp from the end of the screen: the button is a
- * 48dp touch target around a 40dp circle, so its end padding is what leaves the other 4dp.
- */
-private val PANEL_START_PADDING = 8.dp
-private val PANEL_END_PADDING = 4.dp
-
-/**
- * How tall an accent is drawn here, which is also the column each beat is tapped in: as much of the panel's own height
- * as the row can take while the blocks still read as something inside a bar rather than as the bar itself.
- */
-private val PANEL_BEAT_HEIGHT = 32.dp
-private val PANEL_BEAT_GAP = 3.dp
+private val PANEL_HEIGHT = NEW_ITEM_BUTTON_SIZE
+private val PANEL_HORIZONTAL_PADDING = 16.dp
+private val PANEL_GAP = 12.dp
+private val PANEL_BEAT_GAP = 6.dp
 private val PLAY_MARK_SIZE = 24.dp
-
-/**
- * The panel as the Metronome tab's header: the accents and the button as tall as each other, the accents starting and
- * ending where the rows of the page under them do. The button is the list screens' New button in size, mark, and place
- * at the window's end, the one other filled circle a top level screen leads with, so that the two read as the same kind
- * of control.
- */
-private val PROMINENT_PANEL_HEIGHT = NEW_ITEM_BUTTON_SIZE
-private val PROMINENT_PANEL_HORIZONTAL_PADDING = 16.dp
-private val PROMINENT_PANEL_BEAT_GAP = 6.dp

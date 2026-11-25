@@ -26,6 +26,7 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.instrument.ChordReferen
 import com.pandulapeter.campfire.presentation.ui.dialogs.scales.ScaleSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.instrument.ChordShapeSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.playing.PlayingSheet
+import com.pandulapeter.campfire.presentation.ui.dialogs.playing.TempoSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.instrument.InstrumentSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.instrument.NotationSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.slotKey
@@ -191,7 +192,7 @@ private fun CampfireDialog(
 
         is DialogType.SongInfo -> SongInfoDialog(viewModel = viewModel, dialog = dialog, onDismiss = dismissSheet, urlOpener = urlOpener)
 
-        is DialogType.ChordShape, is DialogType.Playing -> SongPlayingDialog(viewModel = viewModel, dialog = dialog)
+        is DialogType.ChordShape, is DialogType.Playing, is DialogType.Tempo -> SongPlayingDialog(viewModel = viewModel, dialog = dialog)
 
         is DialogType.ChordReference -> ChordReferenceSheet(preferencesController = preferencesController, dialogHost = dialogHost, dialog = dialog)
 
@@ -378,7 +379,7 @@ private fun SongFiltersDialog(viewModel: CampfireViewModel) = SongFiltersSheet(
     onDismiss = { viewModel.dialogHost.dismissSheet(DialogType.SongFilters) },
 )
 
-/** The sheets about how a song is played where it is read: one of its chords, and its Playing sheet. */
+/** The sheets about how a song is played where it is read: one of its chords, its Playing sheet, and its Tempo sheet. */
 @Composable
 private fun SongPlayingDialog(
     viewModel: CampfireViewModel,
@@ -402,6 +403,16 @@ private fun SongPlayingDialog(
             songRenderer = viewModel.songRenderer,
             dialogHost = viewModel.dialogHost,
             onTunerClicked = viewModel::openTunerSheet,
+            dialog = dialog,
+        )
+        is DialogType.Tempo -> TempoSheet(
+            libraryState = viewModel.libraryState,
+            songTextStore = viewModel.songTextStore,
+            preferencesController = viewModel.preferencesController,
+            overrides = viewModel.overrides,
+            songRenderer = viewModel.songRenderer,
+            metronomeController = viewModel.metronomeController,
+            dialogHost = viewModel.dialogHost,
             dialog = dialog,
         )
         else -> Unit

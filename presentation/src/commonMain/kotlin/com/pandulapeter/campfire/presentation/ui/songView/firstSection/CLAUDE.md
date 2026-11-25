@@ -11,10 +11,10 @@
 
 # :presentation — ui/songView/firstSection
 
-The song's first section in the editor's preview. Song details draws the same `SongMetadataSection` in its dock
-(`screens/songDetails/dock`) for the tempo and time signature alone: on one line in a row that scrolls sideways (an
-unbounded width puts every group on it), at the interface's text size rather than the song's. Its transposition and
-capo steppers are in the Playing sheet (`dialogs/playing`), named by the dock's key chip.
+The song's first section in the editor's preview. Song details draws none of it: its dock (`screens/songDetails/dock`)
+names the key and capo on its key chip, whose Playing sheet (`dialogs/playing`) holds the transposition and capo
+steppers (`TranspositionControls`, `CapoControls`), and the tempo on its tempo chip, whose Tempo sheet holds the tempo
+stepper (`metronome/TempoStepper`); the steppers' values come from here (`rememberSongPlayingControls`).
 
 - Flows through the same rows and columns, never cut. Controls come in groups kept whole where they fit on a line
   (instrument and tuning pill; key and capo; tempo and time signature), sharing a line where they fit; one too wide

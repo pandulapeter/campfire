@@ -1127,8 +1127,6 @@
     </plurals>
     <string name="song_details_playing_tempo">Tempo (BPM)</string>
     <string name="song_details_playing_range">De %1$d à %2$d</string>
-    <string name="song_details_metronome_show">Afficher le métronome</string>
-    <string name="song_details_metronome_hide">Masquer le métronome</string>
     <string name="song_details_scroll_to_top">Remonter en haut</string>
     <string name="song_details_text_size_increase">Agrandir le texte</string>
     <string name="song_details_text_size_decrease">Réduire le texte</string>
@@ -1245,6 +1243,7 @@
     <string name="song_details_dock_no_chords">Cette chanson n\'a pas d\'accords</string>
     <string name="song_details_dock_no_scales">Aucune suggestion de gammes pour cette chanson</string>
     <string name="song_details_dock_playing">Jeu</string>
+    <string name="song_details_dock_tempo">Tempo</string>
     <plurals name="song_details_dock_too_many_chords">
         <item quantity="one">Plus de %1$d accord, trop pour les afficher ici</item>
         <item quantity="other">Plus de %1$d accords, trop pour les afficher ici</item>

@@ -72,10 +72,12 @@ import kotlin.math.roundToInt
  * swapped: the blocks it gains grow in at its end and the ones it loses shrink away there, one after another, while the
  * blocks it keeps narrow or widen to make room.
  *
- * It is the same row and the same editor wherever it is drawn, the song details panel's included: the accents belong to
- * the bar rather than to the screen they are tapped on, so the two cannot disagree about what is accented in 4/4.
+ * It is the same row and the same editor wherever it is drawn, song details' Tempo sheet and dock included: the accents
+ * belong to the bar rather than to the screen they are tapped on, so the two cannot disagree about what is accented in 4/4.
  *
  * @param blockHeight How tall an accent is drawn, and how tall a column each beat is tapped in.
+ * @param onBeatLevelsChanged Null for a row that only shows the bar, whose beats then take no press: song details' tempo
+ *   chip, whose accents are tapped in the Tempo sheet, where a beat is large enough to hit.
  */
 @Composable
 internal fun BeatRow(
@@ -86,7 +88,7 @@ internal fun BeatRow(
     isFlashEnabled: Boolean,
     blockHeight: Dp,
     blockGap: Dp,
-    onBeatLevelsChanged: (List<BeatLevel>) -> Unit,
+    onBeatLevelsChanged: ((List<BeatLevel>) -> Unit)?,
 ) {
     var litBeat by remember { mutableIntStateOf(-1) }
     val flash = remember { Animatable(0f) }
@@ -136,7 +138,11 @@ internal fun BeatRow(
                     maxHeight = blockHeight,
                     isLeaving = isLeaving,
                     flash = { if (litBeat == index) flash.value else 0f },
-                    onClick = { currentOnBeatLevelsChanged(currentLevels.toMutableList().apply { set(index, level.next()) }) },
+                    onClick = if (onBeatLevelsChanged == null) {
+                        null
+                    } else {
+                        { currentOnBeatLevelsChanged?.invoke(currentLevels.toMutableList().apply { set(index, level.next()) }) }
+                    },
                 )
             }
         },
@@ -173,7 +179,7 @@ private fun BeatBlock(
     maxHeight: Dp,
     isLeaving: Boolean,
     flash: () -> Float,
-    onClick: () -> Unit,
+    onClick: (() -> Unit)?,
 ) {
     val height by animateDpAsState(
         when (level) {
@@ -205,19 +211,25 @@ private fun BeatBlock(
     val changeLabel = stringResource(Res.string.metronome_beat_change)
     val shape = RoundedCornerShape(minOf(8.dp, maxHeight / 6))
     // The press belongs to the whole column rather than to the block drawn in it: a muted beat is a sliver less than a
-    // third as tall as an accent, and in the song details panel's small row it would be a few millimeters of a target.
+    // third as tall as an accent, and in a small row it would be a few millimeters of a target.
     // The ripple is the block's, though, so that what lights up under the finger is the beat that changes.
     val interactionSource = remember { MutableInteractionSource() }
     Box(
         modifier = modifier
             .height(maxHeight)
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null,
-                enabled = !isLeaving,
-                onClickLabel = changeLabel,
-                role = Role.Button,
-                onClick = onClick,
+            .then(
+                if (onClick == null) {
+                    Modifier
+                } else {
+                    Modifier.clickable(
+                        interactionSource = interactionSource,
+                        indication = null,
+                        enabled = !isLeaving,
+                        onClickLabel = changeLabel,
+                        role = Role.Button,
+                        onClick = onClick,
+                    )
+                },
             )
             .then(
                 if (isLeaving) {

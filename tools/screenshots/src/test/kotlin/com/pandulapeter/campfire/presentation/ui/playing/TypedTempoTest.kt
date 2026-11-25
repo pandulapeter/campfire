@@ -27,12 +27,13 @@ import androidx.compose.ui.test.performMouseInput
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.pressKey
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.back
+import com.pandulapeter.campfire.presentation.resources.metronome_accent_hint
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo_increase
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo_reset
 import com.pandulapeter.campfire.presentation.ui.components.controls.STEPPER_BUTTON_LENGTH
 import com.pandulapeter.campfire.screenshots.AppTestScope
 import com.pandulapeter.campfire.screenshots.openSong
+import com.pandulapeter.campfire.screenshots.openTempoSheet
 import com.pandulapeter.campfire.screenshots.runAppTest
 import com.pandulapeter.campfire.screenshots.scrollIntoView
 import com.pandulapeter.campfire.screenshots.tap
@@ -45,14 +46,14 @@ internal class TypedTempoTest {
 
     @Test
     fun `a tempo typed into the stepper is the one the song plays at with no key to confirm it`() = runAppTest {
-        openSong()
+        openSongTempo()
         typeTempo("132")
         assertEquals("132", tempo())
     }
 
     @Test
     fun `a tempo typed a digit at a time keeps the digits a number of the range on the way has set`() = runAppTest {
-        openSong()
+        openSongTempo()
         typeTempo("3")
         typeMore("0")
         assertEquals("30", tempo())
@@ -62,7 +63,7 @@ internal class TypedTempoTest {
 
     @Test
     fun `a typed number outside the range sets nothing and leaving the field puts the tempo back`() = runAppTest {
-        openSong()
+        openSongTempo()
         typeTempo("1")
         assertEquals(FILE_TEMPO, tempo())
         tempoField().performKeyInput { pressKey(Key.Enter) }
@@ -72,19 +73,19 @@ internal class TypedTempoTest {
     }
 
     @Test
-    fun `Escape puts back the tempo the field was focused at without leaving the song`() = runAppTest {
-        openSong()
+    fun `Escape puts back the tempo the field was focused at without closing the sheet`() = runAppTest {
+        openSongTempo()
         typeTempo("99")
         assertEquals("99", tempo())
         tempoField().performKeyInput { pressKey(Key.Escape) }
         waitForIdle()
         assertEquals(FILE_TEMPO, tempo())
-        onNodeWithContentDescription(string(Res.string.back)).assertExists()
+        tempoField().assertExists()
     }
 
     @Test
     fun `a changed tempo is reset from the icon after its value`() = runAppTest {
-        openSong()
+        openSongTempo()
         tapScrolledTo(hasContentDescription(string(Res.string.song_details_tempo_increase)))
         assertEquals("237", tempo())
         tapScrolledTo(hasContentDescription(string(Res.string.song_details_tempo_reset)) and hasClickAction())
@@ -93,7 +94,7 @@ internal class TypedTempoTest {
 
     @Test
     fun `the reset icon takes a press as wide as the buttons and its showing leaves the pill as long`() = runAppTest {
-        openSong()
+        openSongTempo()
         val increase = hasContentDescription(string(Res.string.song_details_tempo_increase))
         scrollIntoView(increase)
         val increaseLeftBefore = onNode(increase).getBoundsInRoot().left
@@ -106,17 +107,17 @@ internal class TypedTempoTest {
 
     @Test
     fun `a press outside the stepper ends typing and keeps the typed tempo`() = runAppTest {
-        openSong()
+        openSongTempo()
         typeTempo("132")
-        // The song's first comment, plain text near the stepper that takes the press without acting on it.
-        tap(hasText("Pick the strings one at a time", substring = true))
+        // The sheet's hint under the accents, plain text near the stepper that takes the press without acting on it.
+        tap(hasText(string(Res.string.metronome_accent_hint)))
         tempoField().assertIsNotFocused()
         assertEquals("132", tempo())
     }
 
     @Test
     fun `a step while typing steps from the typed tempo`() = runAppTest {
-        openSong()
+        openSongTempo()
         typeTempo("132")
         tapScrolledTo(hasContentDescription(string(Res.string.song_details_tempo_increase)))
         assertEquals("133", tempo())
@@ -124,7 +125,7 @@ internal class TypedTempoTest {
 
     @Test
     fun `a click on the tempo selects the number so that typing replaces it`() = runAppTest {
-        openSong()
+        openSongTempo()
         scrollIntoView(tempoFieldMatcher())
         tempoField().performMouseInput {
             moveTo(center)
@@ -137,6 +138,12 @@ internal class TypedTempoTest {
         tempoField().performTextInput("132")
         waitForIdle()
         assertEquals("132", tempo())
+    }
+
+    /** Opens the song and its Tempo sheet, where the stepper is. */
+    private fun AppTestScope.openSongTempo() {
+        openSong()
+        openTempoSheet()
     }
 
     private fun AppTestScope.tempoFieldMatcher() = hasSetTextAction() and hasContentDescription("BPM", substring = true)

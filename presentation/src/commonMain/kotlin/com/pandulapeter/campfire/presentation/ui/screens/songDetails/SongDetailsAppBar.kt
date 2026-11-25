@@ -10,9 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
 import com.pandulapeter.campfire.presentation.ui.components.CampfireIconButton
-import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongPlayingTools
-import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
@@ -34,7 +32,6 @@ import com.pandulapeter.campfire.presentation.resources.back
 import com.pandulapeter.campfire.presentation.resources.ic_back
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.fontScale.FontScaleController
-import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeController
 import com.pandulapeter.campfire.presentation.ui.playing.PlayingOverridesSnapshot
 import com.pandulapeter.campfire.presentation.ui.rendering.SongRenderer
 import com.pandulapeter.campfire.presentation.ui.state.LibraryState
@@ -43,27 +40,23 @@ import com.pandulapeter.campfire.presentation.ui.state.songText.SongTextStore
 import com.pandulapeter.campfire.presentation.ui.state.songs.SongFilesController
 import kotlinx.coroutines.flow.StateFlow
 import com.pandulapeter.campfire.presentation.ui.components.appBar.CampfireTopAppBar
-import com.pandulapeter.campfire.presentation.ui.metronome.MetronomePanel
 import com.pandulapeter.campfire.presentation.ui.tuner.tunerAction
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.preferences.PreferencesContext
 import com.pandulapeter.campfire.presentation.ui.preferences.PreferencesPage
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
-import com.pandulapeter.campfire.presentation.ui.metronome.rememberMetronomePanelState
 import com.pandulapeter.campfire.presentation.ui.screens.rememberSongActionHandler
 import kotlinx.coroutines.CoroutineScope
 import org.jetbrains.compose.resources.painterResource
 
 /**
  * The song details screen's app bar: the way back, the title block that opens the sheet of what the song is, the song's
- * actions and the metronome panel under them. A composable of its own because [SongDetailsScreen] recomposes on every
+ * actions. A composable of its own because [SongDetailsScreen] recomposes on every
  * page change: what only the bar reads is collected and decided here, so that a change of it recomposes the bar rather
  * than the whole screen.
  *
  * @param currentPageScrollState Read where it is used rather than handed down as a value, so that passing the top
  *   recomposes the title alone.
- * @param metronomePanelState Created by the screen, whose pages read whether the panel is at rest, see
- *   SongDetailsPage's isViewportSettled.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -76,7 +69,6 @@ internal fun SongDetailsAppBar(
     songRenderer: SongRenderer,
     libraryState: LibraryState,
     fontScaleController: FontScaleController,
-    metronomeController: MetronomeController,
     onTunerClicked: () -> Unit,
     destination: CampfireDestination.SongDetails,
     currentSong: Song?,
@@ -92,8 +84,6 @@ internal fun SongDetailsAppBar(
     openCurrentSongInfo: (() -> Unit)?,
     songs: List<Song>,
     settledWidth: Dp,
-    isMetronomePanelVisible: Boolean,
-    metronomePanelState: MutableTransitionState<Boolean>,
     scrollBehavior: TopAppBarScrollBehavior?,
     contentPadding: PaddingValues,
     coroutineScope: CoroutineScope,
@@ -116,9 +106,8 @@ internal fun SongDetailsAppBar(
     val showsCoverInBar = isCoverArtEnabled && appBarButtons.isCoverShown
     val showsFontScaleInBar = appBarButtons.isFontScaleShown
     val showsSetlistAssignmentsInBar = areSetlistsEnabled && appBarButtons.isSetlistAssignmentsShown
-    // The metronome and the tuner are buttons of the dock (SongPlayingTools), which is there wherever the chords or the
-    // metronome are switched on; with both off there is nothing to put the tuner next to, so the menu
-    // holds it then.
+    // The tuner is the dock's, which is there wherever the chords or the metronome are switched on; with both off there
+    // is no dock to put it in, so the menu holds it then.
     val openPreferences = { page: PreferencesPage -> dialogHost.showDialog(DialogType.Preferences(PreferencesContext.SONG_DETAILS, page)) }
     val tunerAction = if (isTunerEnabled && !shouldShowChords && !isMetronomeEnabled) {
         tunerAction(isAlwaysInMenu = isReadOnly, onClick = onTunerClicked)
@@ -167,21 +156,6 @@ internal fun SongDetailsAppBar(
                 tunerAction = tunerAction,
                 preferencesAction = preferencesAction(onClick = { openPreferences(PreferencesPage.SONG) }),
                 onReadOnlyMarkClicked = { openPreferences(PreferencesPage.GENERAL) },
-            )
-        },
-        bottomContent = {
-            val panel = rememberMetronomePanelState(metronomeController, libraryState, songTextStore)
-            MetronomePanel(
-                isPlaying = panel.isPlaying,
-                beatLevels = panel.beatLevels,
-                beats = metronomeController.metronomeBeats,
-                isFlashEnabled = panel.isFlashEnabled,
-                onBeatLevelsChanged = { levels -> metronomeController.setBeatLevels(panel.timeSignature, levels) },
-                onPlayStop = metronomeController::toggleMetronome,
-                playShortcut = KeyShortcut.METRONOME,
-                isVisible = isMetronomePanelVisible,
-                contentPadding = contentPadding,
-                visibleState = metronomePanelState,
             )
         },
     )

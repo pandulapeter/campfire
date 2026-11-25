@@ -314,8 +314,8 @@ internal val shots = listOf(
         },
         drive = { openSong(HOUSE_OF_THE_RISING_SUN) },
     ),
-    // The tools a song is played with: the public domain Amazing Grace on a guitar, its metronome panel open under the
-    // title at the song's 80 BPM in 3/4, and the tuner sheet over it, the A string heard a little flat. The click is not
+    // The tools a song is played with: the public domain Amazing Grace on a guitar, its dock's tempo chip at the song's
+    // 80 BPM in 3/4, and the tuner sheet over it, the A string heard a little flat. The click is not
     // playing, since opening the tuner sheet stops it. The sheet covers most of the screen, so what is left of the song
     // shows what the other shots do not: the Chords and Scales sections are folded, and a phone, whose first page would
     // be nothing but the song's controls above the sheet, reads the song as one scrolling column moved on so that its
@@ -333,7 +333,6 @@ internal val shots = listOf(
                         put("hasTurnedOnMicrophone", true)
                     },
                 )
-                put("metronomeSettings", buildJsonObject { put("isSongPanelShown", true) })
                 put(
                     "foldedSections",
                     buildJsonObject {

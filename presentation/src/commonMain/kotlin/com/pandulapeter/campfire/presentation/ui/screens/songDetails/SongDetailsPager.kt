@@ -17,27 +17,23 @@ import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.Pa
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.SongStepper
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.stepOnTap
 import com.pandulapeter.campfire.presentation.ui.songView.model.ChordDiagrams
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.preferences.PageTurn
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.fontScale.FontScaleController
-import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeController
 import com.pandulapeter.campfire.presentation.ui.playing.PlayingOverrides
 import com.pandulapeter.campfire.presentation.ui.rendering.SongRenderer
 import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
@@ -67,7 +63,6 @@ internal fun SongDetailsPager(
     fontScaleController: FontScaleController,
     songRenderer: SongRenderer,
     dialogHost: DialogHost,
-    metronomeController: MetronomeController,
     onTunerClicked: () -> Unit,
     destination: CampfireDestination.SongDetails,
     importPreview: ImportPreviewState?,
@@ -84,8 +79,6 @@ internal fun SongDetailsPager(
     isMetronomeEnabled: Boolean,
     isTunerEnabled: Boolean,
     isTunerSheetShown: Boolean,
-    isMetronomePanelShown: Boolean,
-    isBeatFlashEnabled: Boolean,
     canPage: Boolean,
     settledWidth: Dp,
     pageContentPadding: PaddingValues,
@@ -122,9 +115,7 @@ internal fun SongDetailsPager(
         ),
 ) {
     val layoutDirection = LocalLayoutDirection.current
-    val isMetronomePanelVisible = isMetronomePanelShown && isMetronomeEnabled && importPreview == null
-    val topPadding by animateDpAsState(if (isMetronomePanelVisible) 0.dp else PAGE_TOP_PADDING_UNDER_APP_BAR)
-    val pagePadding = pageContentPadding.only(start = true, end = true, bottom = true, extraTop = topPadding)
+    val pagePadding = pageContentPadding.only(start = true, end = true, bottom = true, extraTop = PAGE_TOP_PADDING_UNDER_APP_BAR)
     SongPages(
         songTextStore = songTextStore,
         overrides = overrides,
@@ -132,7 +123,6 @@ internal fun SongDetailsPager(
         fontScaleController = fontScaleController,
         songRenderer = songRenderer,
         dialogHost = dialogHost,
-        metronomeController = metronomeController,
         onTunerClicked = onTunerClicked,
         destination = destination,
         importPreview = importPreview,
@@ -148,8 +138,6 @@ internal fun SongDetailsPager(
         isMetronomeEnabled = isMetronomeEnabled,
         isTunerEnabled = isTunerEnabled,
         isTunerSheetShown = isTunerSheetShown,
-        isMetronomePanelShown = isMetronomePanelShown,
-        isBeatFlashEnabled = isBeatFlashEnabled,
         canPage = canPage,
         settledWidth = settledWidth,
         pageContentPadding = pagePadding,

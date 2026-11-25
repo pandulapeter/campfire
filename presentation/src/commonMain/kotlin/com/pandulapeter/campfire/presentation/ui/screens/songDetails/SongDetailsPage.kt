@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 import com.pandulapeter.campfire.presentation.ui.notation.NotationChordSpelling
 import com.pandulapeter.campfire.presentation.mapper.toPreferFlats
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.DockContent
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.DockTempo
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.ReadingWindow
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.RowSnapFlingBehavior
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.SongStepper
@@ -97,7 +98,7 @@ import org.jetbrains.compose.resources.painterResource
  * @param buildsModelInPlace Whether the first rendering of the text is built while composing rather than in the
  *   background, see [buildsModelInPlace] and [rememberSongLyricsModel].
  * @param modelBuild Where the model is taken from when it was built before, and kept once built, see [SongModelBuild].
- * @param isViewportSettled Whether the app bar and the metronome panel above the pager are at rest, read while
+ * @param isViewportSettled Whether the app bar above the pager and the dock under it are at rest, read while
  *   composing: the grid is decided against the height the page has then, see [settledHeight].
  * @param followsViewport Whether the page follows the viewport's height frame by frame: the page being read and the one
  *   a swipe is heading to; the others keep the height it last rested at, see [pageViewportHeight].
@@ -299,7 +300,7 @@ internal fun SongDetailsPage(
             modifier = Modifier.fillMaxSize()
         ) {
             val currentFontScale = fontScale()
-            // The grid is decided against the height the page has with the app bar and the metronome panel at rest,
+            // The grid is decided against the height the page has with the app bar and the dock at rest,
             // since every pixel either moves would otherwise search it again, on all three composed pages; the rows
             // are still padded to the live height, so what is on screen follows the bar frame by frame. Reading whether
             // they are at rest is what recomposes this once they come to rest.
@@ -311,8 +312,8 @@ internal fun SongDetailsPage(
             // A single change - a window maximised, a stepper tapped - springs the sections to their new place; a burst
             // of them, from a pinch or a window edge being dragged, is followed, gliding only over the grid's jumps. The
             // viewport's height is one of them, since every row is padded to it: a bottom edge dragged, the short window's
-            // title row collapsing over the frames of a scroll and the metronome panel opening or closing above the
-            // pager are bursts of height changes alike, and the grid they settle into glides too.
+            // title row collapsing over the frames of a scroll and the dock growing or shrinking under the pager are
+            // bursts of height changes alike, and the grid they settle into glides too.
             val isChangingContinuously = rememberContinuousChange(maxWidth, viewportHeight, currentFontScale)
             // Of those bursts only a pinch resizes the playing controls on every frame; the others leave them their sizes,
             // so they still travel where one of them rearranges them.
@@ -389,15 +390,14 @@ internal fun SongDetailsPage(
     }
 }
 
-/** What the dock draws for the song this frame shows, with the tuner and metronome buttons of [playingTools]. */
+/** What the dock draws for the song this frame shows, with the tuner and tempo chip of [playingTools]. */
 private fun SongFrame.dockContent(playingTools: SongPlayingTools?) = DockContent(
     model = model,
     playingControls = playingControls,
     playingTools = playingTools,
-    // Read only, the dock is the one place left that says how the song is played, so a capo of none and the tempo and the
-    // time the click starts at are said rather than left to be guessed from nothing.
-    readsDefaults = playingControls == null,
-    shouldShowTempo = shouldShowTempo,
+    tempo = playingTools?.metronome?.takeIf { shouldShowTempo }?.let { tool ->
+        DockTempo(bpm = tool.bpm, control = playingControls?.tempo, onClick = tool.onTempoClicked)
+    },
     chordDiagrams = chordDiagrams,
     scaleSuggestions = scaleSuggestions,
 )
@@ -433,7 +433,7 @@ private fun buildSongLyrics(songRenderer: SongRenderer, inputs: SongLyricsInputs
 /**
  * The viewport a page's rows are placed in, its height the extent of the scroll: across, for a strip scrolled sideways
  * ([isAcross]), so a viewport taller or shorter lays the strip out anew, as a resize would, rather than being followed
- * the way a panel opening above a song read down is.
+ * the way the dock growing under a song read down is.
  */
 internal fun scrolledViewport(width: Int, height: Int, isAcross: Boolean) = if (isAcross) IntSize(height, width) else IntSize(width, height)
 

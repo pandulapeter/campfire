@@ -23,12 +23,15 @@ internal enum class DockTier { FULL_DIAGRAMS, SMALL_DIAGRAMS, CHORD_CHIPS }
  * The rows the dock has, decided by the screen's switches and never by the song, so that its height stays the same as a
  * setlist's pages turn: the playing controls ([hasPlayingRow]: the chords or the metronome on), the song's chords
  * ([hasChordRow]: chord diagrams on, on an instrument with shapes), and its scale suggestions ([hasScaleRow]).
+ * [isMetronomeOnly] where the click is all the playing controls hold (the chords off), which makes the one row the
+ * metronome panel.
  */
 @Immutable
 internal data class DockRows(
     val hasPlayingRow: Boolean,
     val hasChordRow: Boolean,
     val hasScaleRow: Boolean,
+    val isMetronomeOnly: Boolean = false,
 ) {
     val isEmpty get() = !hasPlayingRow && !hasChordRow && !hasScaleRow
 }

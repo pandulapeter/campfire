@@ -16,6 +16,7 @@ import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.So
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.rememberRowSnapFlingBehavior
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongPlayingControls
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.rememberSongPlayingControls
+import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongPlayingTools
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.rememberSongPlayingTools
 import com.pandulapeter.campfire.presentation.ui.songView.model.ChordDiagrams
 import com.pandulapeter.campfire.presentation.ui.songView.model.buildsModelInPlace
@@ -51,7 +52,6 @@ import com.pandulapeter.campfire.presentation.ui.preferences.SongSections
 import com.pandulapeter.campfire.presentation.ui.songView.model.ScaleSuggestions
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.fontScale.FontScaleController
-import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeController
 import com.pandulapeter.campfire.presentation.ui.playing.PlayingOverrides
 import com.pandulapeter.campfire.presentation.ui.playing.SongPlayback
 import com.pandulapeter.campfire.presentation.ui.rendering.SongRenderer
@@ -92,7 +92,6 @@ internal fun SongPages(
     fontScaleController: FontScaleController,
     songRenderer: SongRenderer,
     dialogHost: DialogHost,
-    metronomeController: MetronomeController,
     onTunerClicked: () -> Unit,
     destination: CampfireDestination.SongDetails,
     importPreview: ImportPreviewState?,
@@ -108,8 +107,6 @@ internal fun SongPages(
     isMetronomeEnabled: Boolean,
     isTunerEnabled: Boolean,
     isTunerSheetShown: Boolean,
-    isMetronomePanelShown: Boolean,
-    isBeatFlashEnabled: Boolean,
     canPage: Boolean,
     settledWidth: Dp,
     pageContentPadding: PaddingValues,
@@ -234,15 +231,17 @@ internal fun SongPages(
                 shouldShowTempo = isMetronomeEnabled,
                 inferredKey = inferredKeys[song.fileName],
             ),
-            playingTools = rememberSongPlayingTools(
-                metronomeController = metronomeController,
+            playingTools = rememberPagePlayingTools(
+                dialogHost = dialogHost,
                 onTunerClicked = onTunerClicked,
-                bpm = tempo.bpm,
+                song = song,
+                setlistFileName = destination.setlistFileName,
+                // The stretch the page is in, a later {tempo} included, as the click plays it.
+                bpm = songTimings[song.fileName]?.bpm ?: tempo.bpm,
+                isReadOnly = isReadOnly,
                 isMetronomeEnabled = isMetronomeEnabled,
                 isTunerEnabled = isTunerEnabled,
                 isTunerSheetShown = isTunerSheetShown,
-                isMetronomePanelShown = isMetronomePanelShown,
-                isBeatFlashEnabled = isBeatFlashEnabled,
             ).takeIf { importPreview == null },
             shouldShowChords = shouldShowChords,
             shouldShowTempo = isMetronomeEnabled,
@@ -299,6 +298,42 @@ private fun PageRegistrationEffect(
         if (dock.steppers[page] === stepper) dock.steppers -= page
         dock.contents -= page
     }
+}
+
+/**
+ * The tuner and the tempo chip of [song]'s page ([rememberSongPlayingTools]), whose chip opens its Tempo sheet; not in
+ * read only mode, whose chip only reads.
+ */
+@Composable
+private fun rememberPagePlayingTools(
+    dialogHost: DialogHost,
+    onTunerClicked: () -> Unit,
+    song: Song,
+    setlistFileName: String?,
+    bpm: Int,
+    isReadOnly: Boolean,
+    isMetronomeEnabled: Boolean,
+    isTunerEnabled: Boolean,
+    isTunerSheetShown: Boolean,
+): SongPlayingTools? {
+    val onTempoClicked = remember(dialogHost, song, setlistFileName, isReadOnly) {
+        if (isReadOnly) {
+            null
+        } else {
+            {
+                println("Dock: tempo chip")
+                dialogHost.showDialog(DialogType.Tempo(song = song, setlistFileName = setlistFileName))
+            }
+        }
+    }
+    return rememberSongPlayingTools(
+        onTunerClicked = onTunerClicked,
+        bpm = bpm,
+        isMetronomeEnabled = isMetronomeEnabled,
+        isTunerEnabled = isTunerEnabled,
+        isTunerSheetShown = isTunerSheetShown,
+        onTempoClicked = onTempoClicked,
+    )
 }
 
 /**

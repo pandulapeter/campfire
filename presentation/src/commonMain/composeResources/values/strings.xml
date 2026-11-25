@@ -1122,8 +1122,6 @@
     </plurals>
     <string name="song_details_playing_tempo">Tempo (BPM)</string>
     <string name="song_details_playing_range">%1$d to %2$d</string>
-    <string name="song_details_metronome_show">Show metronome</string>
-    <string name="song_details_metronome_hide">Hide metronome</string>
     <string name="song_details_scroll_to_top">Scroll to the top</string>
     <string name="song_details_text_size_increase">Increase text size</string>
     <string name="song_details_text_size_decrease">Decrease text size</string>
@@ -1240,6 +1238,7 @@
     <string name="song_details_dock_no_chords">No chords in this song</string>
     <string name="song_details_dock_no_scales">No scale suggestions for this song</string>
     <string name="song_details_dock_playing">Playing</string>
+    <string name="song_details_dock_tempo">Tempo</string>
     <plurals name="song_details_dock_too_many_chords">
         <item quantity="one">More than %1$d chord, too many to draw here</item>
         <item quantity="other">More than %1$d chords, too many to draw here</item>

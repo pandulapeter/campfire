@@ -64,5 +64,5 @@ Pedal stepping and snapping, over the `SongRows` the layout reports (`ui/songVie
   for 250 ms it scrolls there, snapped. Anchors are taken at rest and after each frame a song scrolls by itself, never
   from its own moves nor while a new layout waits to be followed, so a pinch through many layouts returns to the
   starting row.
-- A height-only change (metronome panel, title row collapse, the dock animating) only changes row trailing padding, so
+- A height-only change (title row collapse, the dock animating) only changes row trailing padding, so
   it is followed in the same layout pass, before the scroll places the song: the divider never slides into view.

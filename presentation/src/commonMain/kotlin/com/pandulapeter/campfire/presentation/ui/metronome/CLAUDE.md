@@ -41,21 +41,22 @@ on Android with Vibrate on and a beat not muted (iOS has no background haptics).
   says so, `MetronomeSettings.isChangeOnNextBar`), anything else from the next beat; a rebuilt view model does not stop
   a playing click.
 - Only the tab's or a song's taps, with the feature on, may open the web's audio device (`Metronome.setStartable`).
-- Starting over a song opens its panel. A click that stops on its own is a snackbar naming why.
+- A click that stops on its own is a snackbar naming why.
 - Space (tab) and M (tab and song, not an import preview) toggle it on desktop and web, under no dialog or menu, only on
   a held key's first press. T taps the tempo under the same rules: the tab's through `tapTempoByKey`, a song's through
-  its own screen, where its tempo stepper is.
+  its own screen, wherever its dock's tempo chip is.
 
-### The panel
+### The panel and the song's tempo chip
 
-- **On song details it is inside the app bar**, so it moves with the screen and covers none of the song. Only the beat
-  row and play / stop, at the end because the phone is held there; the tempo is in the dock under the song, sound,
-  subdivision, and volume are the Playback section's (the tab's and the Preferences' Metronome page). A lit beat
-  also swells, since in the light theme an accent at rest is already half the lit color.
-- **Whether it is up is a preference**, written by the song's button and by a click started there, left alone when the
-  screen is left, so the next song and launch keep it. Opening it starts nothing; closing it stops a playing click;
-  stopping the click leaves it up. Performance mode keeps the play button.
-- The pulsing mark tints from a table of filters at 32 pulse steps, keyed on its two colors, so a playing click makes no
+- **The tab's header is the panel** (`MetronomePanel`): the beat row and play / stop, at the end because the phone is
+  held there. Sound, subdivision, and volume are the Playback section's (the tab's and the Preferences' Metronome page).
+  A lit beat also swells, since in the light theme an accent at rest is already half the lit color.
+- **A song's click is in its dock** (`screens/songDetails/dock`): the tempo chip (the number, a small beat row that only
+  shows the bar, play / stop in place) ends it, and its number opens the Tempo sheet, where the stepper, Tap, and the
+  song's accents are; with the chords off the dock is a panel of its own. Nothing about it is a preference: the app bar's
+  panel and `MetronomeSettings.isSongPanelShown` are gone (an older document's key is ignored). Performance mode keeps
+  play / stop; its number opens nothing.
+- The pulsing mark (the navigation's Metronome icon) tints from a table of filters at 32 pulse steps, keyed on its two colors, so a playing click makes no
   filter per frame. Not a second draw at the pulse's alpha: that blends in sRGB where `lerp` mixes in Oklab.
 
 ### Accents

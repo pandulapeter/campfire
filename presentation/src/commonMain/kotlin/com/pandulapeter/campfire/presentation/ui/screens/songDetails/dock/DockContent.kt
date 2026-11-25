@@ -21,10 +21,11 @@ import com.pandulapeter.campfire.presentation.ui.songView.model.SongLyricsModel
  * the song's [model] as the page drew it, and what the song's first, Chords, and Scales sections were drawn with before
  * they left the song for the dock.
  *
- * @param playingControls What sets the key, the capo, the tempo, and the time signature, null in read only mode, which
- *   reads them as a line of text instead ([readsDefaults] then names the ones the file leaves out).
- * @param playingTools The tuner and metronome buttons, null in an import preview.
- * @param shouldShowTempo False with the metronome switched off.
+ * @param playingControls What sets the key, the capo, the tempo, and the time signature, null in read only mode, whose
+ *   key chip reads them from the song instead.
+ * @param playingTools The tuner, null in an import preview.
+ * @param tempo What the tempo chip says and opens, null with the metronome switched off and in an import preview, which
+ *   has no metronome.
  * @param chordDiagrams What the diagrams are drawn with, and the instrument pill, null with the diagrams off.
  * @param scaleSuggestions What the scale chips open, null with the scale suggestions off.
  */
@@ -33,8 +34,7 @@ internal data class DockContent(
     val model: SongLyricsModel,
     val playingControls: SongPlayingControls?,
     val playingTools: SongPlayingTools?,
-    val readsDefaults: Boolean,
-    val shouldShowTempo: Boolean,
+    val tempo: DockTempo?,
     val chordDiagrams: ChordDiagrams?,
     val scaleSuggestions: ScaleSuggestions?,
 )

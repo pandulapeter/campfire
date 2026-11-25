@@ -73,7 +73,7 @@ internal class DarkThemeContrastTest {
     @Test
     fun `a song is readable in the dark theme`() = runAppTest(appearance = DARK) {
         openSong()
-        // The dock's row scrolls sideways, and the chords' chips come after its controls.
+        // The dock's diagrams scroll sideways, fading under the tempo chip at their end, so C is brought clear of it.
         onNode(hasText(DOCK_CHORD), useUnmergedTree = true).performScrollTo()
         waitForIdle()
         val firstScreen = listOf(

@@ -174,6 +174,12 @@ sealed interface DialogType {
     data class Playing(val song: Song, val setlistFileName: String?) : DialogType
 
     /**
+     * The tempo [song] is played at where it is read, as [Playing] is for the rest, and its own accents, opened from the
+     * tempo chip of song details' dock.
+     */
+    data class Tempo(val song: Song, val setlistFileName: String?) : DialogType
+
+    /**
      * The tuner over the song being read, opened from the Playing sheet, the song's tuner button where the dock has no key
      * chip, or its overflow menu; it listens while it is up.
      */

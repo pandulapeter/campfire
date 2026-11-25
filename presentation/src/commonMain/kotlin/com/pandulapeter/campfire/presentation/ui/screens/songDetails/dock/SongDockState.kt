@@ -64,6 +64,7 @@ internal fun rememberSongDock(
         hasPlayingRow = userPreferences?.areChordsEnabled != false || userPreferences.isMetronomeEnabled,
         hasChordRow = chordDiagrams?.tuning != null,
         hasScaleRow = SongSections.of(userPreferences).areScaleSuggestionsShown,
+        isMetronomeOnly = userPreferences?.areChordsEnabled == false && userPreferences.isMetronomeEnabled,
     )
     val turnsByColumn = userPreferences?.songLayout != SongLayout.CONTINUOUS && userPreferences?.pageTurn == PageTurn.COLUMN
     val windowHeight = LocalWindowInfo.current.containerDpSize.height

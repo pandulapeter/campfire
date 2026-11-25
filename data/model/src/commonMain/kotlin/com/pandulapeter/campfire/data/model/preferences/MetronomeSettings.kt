@@ -22,9 +22,6 @@ package com.pandulapeter.campfire.data.model.preferences
  *   (`UserPreferences.beatLevels`).
  * @param bpm The Metronome tab's own tempo.
  * @param timeSignature The Metronome tab's own, as written ("4/4").
- * @param isSongPanelShown Whether the song details screen opens with the metronome panel in its app bar: a player who
- *   reads every song to a click wants it there for the next song too, so it is a preference rather than something each
- *   screen asks for again.
  * @param isChangeOnNextBar Whether a playing click moved to another song, or to a later `{tempo}` or `{time}` of one,
  *   finishes the bar it is in and starts the new one on beat one, as a band does, rather than taking the new tempo
  *   from the next beat, as a player keeping one count across the change wants.
@@ -38,7 +35,6 @@ data class MetronomeSettings(
     val beatLevels: Map<String, List<String>> = emptyMap(),
     val bpm: Int = 120,
     val timeSignature: String = "4/4",
-    val isSongPanelShown: Boolean = false,
     val isChangeOnNextBar: Boolean = true,
 ) {
 

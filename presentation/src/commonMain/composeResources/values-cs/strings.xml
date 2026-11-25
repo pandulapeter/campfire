@@ -1162,8 +1162,6 @@
     </plurals>
     <string name="song_details_playing_tempo">Tempo (BPM)</string>
     <string name="song_details_playing_range">%1$d až %2$d</string>
-    <string name="song_details_metronome_show">Zobrazit metronom</string>
-    <string name="song_details_metronome_hide">Skrýt metronom</string>
     <string name="song_details_scroll_to_top">Posunout na začátek</string>
     <string name="song_details_text_size_increase">Zvětšit text</string>
     <string name="song_details_text_size_decrease">Zmenšit text</string>
@@ -1281,6 +1279,7 @@
     <string name="song_details_dock_no_chords">Tato píseň nemá akordy</string>
     <string name="song_details_dock_no_scales">Pro tuto píseň nejsou žádné návrhy stupnic</string>
     <string name="song_details_dock_playing">Hraní</string>
+    <string name="song_details_dock_tempo">Tempo</string>
     <plurals name="song_details_dock_too_many_chords">
         <item quantity="one">Více než %1$d akord, příliš mnoho na zobrazení</item>
         <item quantity="few">Více než %1$d akordy, příliš mnoho na zobrazení</item>

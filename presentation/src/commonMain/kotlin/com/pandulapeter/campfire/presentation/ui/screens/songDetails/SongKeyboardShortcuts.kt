@@ -77,7 +77,8 @@ import kotlinx.coroutines.launch
  * Not with Alt held, since AltGr arrives as Ctrl + Alt on Windows and the web and types a character on some layouts.
  *
  * Ctrl / Cmd + Shift + Up and Down step the transposition ([onTranspose]) as its stepper does, a held key repeating as
- * the held button does; T taps the tempo ([onTapTempo]) once a press, as Space plays once.
+ * the held button does; T taps the tempo ([onTapTempo]) once a press, as Space plays once, wherever the dock's tempo chip
+ * is. M, which starts and stops the click, is heard by the app's root (`MetronomeController.toggleMetronomeByKey`).
  *
  * @param onToggleAutoScroll Plays or stops the song scrolling by itself, null where it is laid out in pages; Space is
  *   then left alone.

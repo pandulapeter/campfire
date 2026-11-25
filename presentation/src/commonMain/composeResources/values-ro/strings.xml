@@ -1167,8 +1167,6 @@
     </plurals>
     <string name="song_details_playing_tempo">Tempo (BPM)</string>
     <string name="song_details_playing_range">de la %1$d la %2$d</string>
-    <string name="song_details_metronome_show">Arată metronomul</string>
-    <string name="song_details_metronome_hide">Ascunde metronomul</string>
     <string name="song_details_scroll_to_top">Derulează la început</string>
     <string name="song_details_text_size_increase">Mărește textul</string>
     <string name="song_details_text_size_decrease">Micșorează textul</string>
@@ -1286,6 +1284,7 @@
     <string name="song_details_dock_no_chords">Acest cântec nu are acorduri</string>
     <string name="song_details_dock_no_scales">Nicio sugestie de game pentru acest cântec</string>
     <string name="song_details_dock_playing">Interpretare</string>
+    <string name="song_details_dock_tempo">Tempo</string>
     <plurals name="song_details_dock_too_many_chords">
         <item quantity="one">Peste %1$d acord, prea multe pentru a fi afișate aici</item>
         <item quantity="few">Peste %1$d acorduri, prea multe pentru a fi afișate aici</item>
