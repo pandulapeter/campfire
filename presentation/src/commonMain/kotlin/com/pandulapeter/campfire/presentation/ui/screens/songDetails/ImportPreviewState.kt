@@ -138,7 +138,7 @@ internal fun CloseImportPreviewWithoutReview(
 private class LastReview(var review: ImportReport.Review? = null)
 
 /**
- * Works out the key the chords of the page being read and of those beside it are in, which the read only line names for
+ * Works out the key the chords of the page being read and of those beside it are in, which read only mode's key chip names for
  * a song whose text names none, as the library's songs have it worked out as their text is read (`InferredSongKeys`).
  * Keeps the keys of one review's pages at most, and none once that review is over.
  */

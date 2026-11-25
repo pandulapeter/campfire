@@ -23,7 +23,7 @@ import com.pandulapeter.campfire.presentation.ui.rendering.SongRenderer
  * @property capo The semitones the names are below what sounds, never 0.
  * @property shapesKey The key the shapes are in, in the reader's notation; null where the song names none and none was
  *   found in its chords.
- * @property soundingKey The key the song sounds in, in the reader's notation, which the page's line of values and the PDF
+ * @property soundingKey The key the song sounds in, in the reader's notation, which the shown song (`shownSongOf`) and the PDF
  *   name in place of the key its chords are written in.
  * @property inferredChordsKey The key a song naming none is counted from in a numbering, in the frame of the shapes and
  *   in the standard notation (`SongRenderer.movedKey`).

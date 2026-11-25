@@ -45,7 +45,6 @@ internal fun SongSectionItem(
     section: RenderSection,
     items: IntRange,
     notation: ChordNotation,
-    isSongInfoShown: Boolean,
     songInfoEditing: SongInfoEditing?,
     animatesRows: Boolean,
     chordDiagrams: ChordDiagrams?,
@@ -69,11 +68,7 @@ internal fun SongSectionItem(
         SongMetadataSection(
             modifier = modifier,
             metadata = section.metadata,
-            isSongInfoShown = isSongInfoShown,
             songInfoEditing = songInfoEditing,
-            readsDefaults = section.readsDefaults,
-            shapesKey = section.shapesKey,
-            lyricsStyle = sentenceStyle,
             fontScale = fontScale,
             instrumentPill = chordDiagrams?.onInstrumentClicked?.takeIf { section.instrumentPill != null }?.let { onInstrumentClicked ->
                 {

@@ -166,7 +166,6 @@ internal fun SongPreview(
             fontScale = fontScale,
             sectionMotion = SectionMotion.NONE,
             isSingleColumn = isSingleColumn,
-            isSongInfoShown = true,
             songInfoEditing = songInfoEditing,
             // Whatever the two switches and the instrument in Settings say: what is being written is what is shown.
             chordDiagrams = remember { ChordDiagrams(tuning = ChordTuning.GUITAR, showsDefinitionsOnly = true, notation = notation.toChordNotation()) },

@@ -9,14 +9,15 @@
  */
 package com.pandulapeter.campfire.presentation.ui.songView
 
-import com.pandulapeter.campfire.presentation.ui.songView.firstSection.PLAYING_VALUE_SEPARATOR
-import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongPlayingValues
 import com.pandulapeter.campfire.presentation.ui.songView.model.RenderSection
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo
 import com.pandulapeter.campfire.presentation.resources.song_details_time
@@ -24,8 +25,8 @@ import com.pandulapeter.campfire.presentation.resources.song_details_timing
 import com.pandulapeter.campfire.presentation.localization.textResource
 
 /**
- * How the song is played from a change of tempo or time signature on, set as the line of the song's first section is
- * in read only mode, since it is that line again for the rest of the song: read only, as the click plays it.
+ * How the song is played from a change of tempo or time signature on, one line in the style of the interface's own
+ * sentences: read only, as the click plays it.
  */
 @Composable
 internal fun SongTimingLine(
@@ -33,14 +34,18 @@ internal fun SongTimingLine(
     timing: RenderSection.Timing,
     style: TextStyle,
 ) {
-    val values = listOfNotNull(
-        timing.tempo?.let { textResource(Res.string.song_details_tempo, it) to false },
-        textResource(Res.string.song_details_time, timing.time) to false,
-    )
-    val description = textResource(Res.string.song_details_timing, values.joinToString(PLAYING_VALUE_SEPARATOR) { it.first })
-    SongPlayingValues(
-        modifier = modifier.semantics { contentDescription = description },
-        values = values,
+    val text = listOfNotNull(
+        timing.tempo?.let { textResource(Res.string.song_details_tempo, it) },
+        textResource(Res.string.song_details_time, timing.time),
+    ).joinToString(TIMING_VALUE_SEPARATOR)
+    val description = textResource(Res.string.song_details_timing, text)
+    Text(
+        modifier = modifier
+            .semantics { contentDescription = description }
+            .padding(horizontal = 12.dp),
+        text = text,
         style = style,
     )
 }
+
+private const val TIMING_VALUE_SEPARATOR = "  •  "

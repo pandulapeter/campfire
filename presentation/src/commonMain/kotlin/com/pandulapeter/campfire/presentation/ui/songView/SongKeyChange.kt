@@ -21,8 +21,7 @@ import com.pandulapeter.campfire.presentation.localization.textResource
 import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 
 /**
- * The key a `{transpose}` further down the song takes it to, set as the chords are: it is what they are in from there on,
- * and the line the song's first section reads its opening key in is set the same way.
+ * The key a `{transpose}` further down the song takes it to, set as the chords are: it is what they are in from there on.
  */
 @Composable
 internal fun SongKeyChange(

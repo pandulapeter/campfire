@@ -105,7 +105,6 @@ internal class UnitHeightPastWidestTest {
                                     section = section,
                                     items = items,
                                     notation = ChordNotation.STANDARD,
-                                    isSongInfoShown = false,
                                     songInfoEditing = null,
                                     animatesRows = false,
                                     chordDiagrams = null,

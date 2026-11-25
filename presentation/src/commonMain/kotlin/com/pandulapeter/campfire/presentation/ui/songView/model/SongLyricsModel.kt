@@ -54,9 +54,9 @@ import kotlinx.coroutines.withContext
  * heads the song's first section then ([RenderSection.Metadata.instrumentPill]), since it is what brings the diagrams
  * back.
  * @param notationChords How the chords over the lyrics are named, which an engraved ABC tune's chord symbols follow.
- * @param shapesKey The key of the shapes the page names its chords by under a capo, which the line of values names after
- * the capo ("Capo 2, Em shapes"); null where the chords are named as they sound (see `ShapeNames`).
- * @param isCapoShown False where the line of values leaves the capo out, see `SongPlayback.isCapoShownFor`.
+ * @param shapesKey The key of the shapes the page names its chords by under a capo, which the dock's key chip names
+ * ("Em", "Capo 2"); null where the chords are named as they sound (see `ShapeNames`).
+ * @param isCapoShown False where the key chip leaves the capo out, see `SongPlayback.isCapoShownFor`.
  * @param textDirection The one direction the song's body is laid out in, whatever the interface's (see
  * `ChordProSong.textDirection`): a walk over its lyrics, so made with the model, off the main thread, rather than per frame.
  */
@@ -123,7 +123,7 @@ internal class SongLyricsModel(
  * ([namedAsShapes]), as are the chords the Scales section names; everything else of a chord, its notes, its shape, and
  * its degree, and the scales themselves stay the sounding song's.
  * @param namedInferredKey [inferredKey] in the frame of [namedSong].
- * @param shapesKey The key of the shapes the page names, which the line of values names after the capo, see
+ * @param shapesKey The key of the shapes the page names, which the dock's key chip names, see
  * [SongLyricsModel.shapesKey].
  * @param isCapoShown See [SongLyricsModel.isCapoShown].
  * @param searchesShapes False to leave the shapes only the search finds for [SongLyricsModel.withSearchedShapes], for a

@@ -108,14 +108,14 @@ import org.jetbrains.compose.resources.painterResource
  * @param scrollState Owned by the pager rather than by the page, so that the arrow keys can reach the scroll of the
  *   song being read, and so that a page keeps where it was left while its text is loaded again.
  * @param tempoOverride The tempo the song plays at here where that is not its own, which the tempo line then shows,
- *   the way the key line shows the transposed key, so that the page never contradicts the metronome.
+ *   the way the key chip shows the transposed key, so that the page never contradicts the metronome.
  * @param transposition The semitones the file's chords are moved by to the ones that sound, the capo played counted
  *   in (`SongPlayback.soundingTransposition`): what the dock's diagrams and scales are read from, and the page's names
  *   too unless [shapeNames] names the shapes instead.
  * @param tabCapo How many of [transposition]'s semitones a tab's frets are not moved by, see `SongPlayback.tabCapoFor`.
  * @param capoOverride The fret this setlist (or this device) capos the song at where that is not its own, shown the
  *   same way as [tempoOverride].
- * @param isCapoShown False where the line of values leaves the capo out (`SongPlayback.isCapoShownFor`).
+ * @param isCapoShown False where the key chip leaves the capo out (`SongPlayback.isCapoShownFor`).
  * @param shapeCapo The fret the dock's diagrams' shapes are fingered above (`SongPlayback.shapeCapoFor`), none on the
  *   keyboard.
  * @param shapeNames How the page names its chords where they are the shapes fingered above the capo, see [ShapeNames];
@@ -123,8 +123,8 @@ import org.jetbrains.compose.resources.painterResource
  * @param inferredChordsKey The key the song's chords were found in (`InferredSongKeys`) for a file that names none, in the
  *   standard notation and in the frame of the chords `SongRenderer.transposedSong` gives (`SongRenderer.movedKey`): what a numbering
  *   counts them from, the dock's diagrams' and scales' names included.
- * @param inferredKey The sounding key the song's chords were found in (`InferredSongKeys`), named by the read only line of
- *   a file that names none; null where the playing controls are drawn, which name it themselves.
+ * @param inferredKey The sounding key the song's chords were found in (`InferredSongKeys`), named by read only mode's key chip
+ *   for a file that names none; null where the playing controls are drawn, which name it themselves.
  * @param playingControls What sets the key, the capo, the tempo and the time signature from the dock, null in read only
  *   mode, see [SongPlayingControls].
  * @param playingTools The tuner and metronome buttons beside them, in read only mode too, see [SongPlayingTools].

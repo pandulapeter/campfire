@@ -213,7 +213,7 @@ internal fun SongPages(
             inferredChordsKey = inferredKeys[song.fileName]?.takeIf { song.key.isNullOrBlank() }?.let {
                 songRenderer.movedKey(inferredKey = it, transposition = playback.soundingTransposition, spelling = chordSpelling)
             },
-            // Only the read only line needs it, as the controls name the key otherwise.
+            // Only read only mode's key chip needs it, as the playing controls name the key otherwise.
             inferredKey = inferredKeys[song.fileName]?.takeIf { isReadOnly && song.key.isNullOrBlank() }?.let {
                 songRenderer.renderKey(key = it, transpose = 0, transposition = playback.soundingTransposition, spelling = chordSpelling)
             },

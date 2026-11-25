@@ -101,12 +101,8 @@ import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
  * [SongSectionContent]), which are saved per song, and [onFoldToggled] is handed each key a fold toggles to save it.
  * Null where nothing folds: the editor's preview, there to show what is being written, where a section folded on the
  * details screen would hide the lines being typed into it, and performance mode, where nothing may go missing on stage.
- * @param isSongInfoShown Whether the song's first section is the card of what the song is (see
- * [SongMetadataSection]), its Song defaults tiles in place of the line, which the editor's preview does; the song
- * details screen opens it as a sheet instead.
- * @param songInfoEditing The edit buttons of that card, null for none.
- * @param readsDefaults Whether that line names the capo, the tempo and the time signature where the file names none,
- * which read only mode on the song details screen asks for, see [withMetadataSection].
+ * @param songInfoEditing The edit buttons of the song's first section, the card of what the song is (see
+ * [SongMetadataSection]), null for none.
  * @param shouldShowTempo False with the metronome switched off, which leaves the tempo and the time signature out of
  * the song's first section, see [withMetadataSection]. The chords' own switch is the model's, since it shapes the lyrics.
  * @param onRowsPlaced Handed the rows of the song ([SongRows]: where a scroll comes to rest on each - the
@@ -152,9 +148,7 @@ internal fun SongLyrics(
     fontScale: Float = 1f,
     foldedSections: Set<String> = emptySet(),
     onFoldToggled: ((key: String) -> Unit)? = null,
-    isSongInfoShown: Boolean = false,
     songInfoEditing: SongInfoEditing? = null,
-    readsDefaults: Boolean = false,
     shouldShowTempo: Boolean = true,
     onRowsPlaced: ((SongRows) -> Unit)? = null,
     rowViewportHeight: () -> Dp = { Dp.Unspecified },
@@ -194,9 +188,7 @@ internal fun SongLyrics(
         scaleSuggestions = scaleSuggestions,
         instrumentPill = instrumentPill,
         shouldShowTempo = shouldShowTempo,
-        isSongInfoShown = isSongInfoShown,
         isSongInfoEditable = isSongInfoEditable,
-        readsDefaults = readsDefaults,
     )
     val glideScope = rememberCoroutineScope()
     val sectionGlides = if (sectionMotion == SectionMotion.NONE) null else remember(glideScope) { SectionGlides(glideScope, SongMotionSpec) }
@@ -223,7 +215,7 @@ internal fun SongLyrics(
     // Every lyric line is a paragraph in the song's one direction rather than its own content's or the app's, so that in
     // a Hebrew or Arabic song a line opening with a Latin word, or holding only chords, still starts at the right edge
     // with the chords above it hanging leftwards, as the lines around it do. The interface's own sentences in the song
-    // (the first section's line of values, a change of tempo) take their direction from their text instead. Chord
+    // (a change of tempo) take their direction from their text instead. Chord
     // names, and the annotations in their row, are music, read from the left whatever the song or the app.
     // Remembered, so that every comparison of them below and in the sections is one of identity (TextStyle.equals checks
     // that first) rather than a deep one on every composition.
@@ -350,7 +342,6 @@ internal fun SongLyrics(
                         placesAtOnce = isResizing || isNotationArriving,
                         isTextScaling = isTextScaling,
                         notation = model.notation,
-                        isSongInfoShown = isSongInfoShown,
                         songInfoEditing = songInfoEditing,
                         chordDiagrams = chordDiagrams,
                         scaleSuggestions = scaleSuggestions,

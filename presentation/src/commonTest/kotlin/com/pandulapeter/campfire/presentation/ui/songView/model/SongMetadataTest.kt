@@ -26,22 +26,22 @@ class SongMetadataTest {
         val metadata = ChordProMetadata(album = "Album", tags = listOf("Folk"), languages = listOf("en", "hu"))
         val body = listOf(verse, RenderSection.Comment(text = "Chorus", style = CommentStyle.PLAIN))
 
-        assertEquals(listOf(RenderSection.Metadata(metadata)) + body, withMetadataSection(body, metadata, shouldShowChords = true, isSongInfoShown = true))
+        assertEquals(listOf(RenderSection.Metadata(metadata)) + body, withMetadataSection(body, metadata, shouldShowChords = true))
     }
 
     @Test
     fun `playing metadata is the metadata section on its own`() {
         val metadata = ChordProMetadata(key = "G", capo = 2, tempo = "96", time = "6/8")
 
-        assertEquals(listOf(RenderSection.Metadata(metadata), verse), withMetadataSection(listOf(verse), metadata, shouldShowChords = true, isSongInfoShown = true))
+        assertEquals(listOf(RenderSection.Metadata(metadata), verse), withMetadataSection(listOf(verse), metadata, shouldShowChords = true))
     }
 
     @Test
     fun `a cover - a capo of zero and blank values create no section`() {
         val body = listOf(verse)
 
-        assertSame(body, withMetadataSection(body, ChordProMetadata(coverArt = "https://example.com/cover.jpg", capo = 0), shouldShowChords = true, isSongInfoShown = true))
-        assertSame(body, withMetadataSection(body, ChordProMetadata(album = " ", composer = "", key = " "), shouldShowChords = true, isSongInfoShown = true))
+        assertSame(body, withMetadataSection(body, ChordProMetadata(coverArt = "https://example.com/cover.jpg", capo = 0), shouldShowChords = true))
+        assertSame(body, withMetadataSection(body, ChordProMetadata(album = " ", composer = "", key = " "), shouldShowChords = true))
     }
 
     @Test
@@ -51,20 +51,8 @@ class SongMetadataTest {
             ChordProMetadata(languages = listOf("en", "hu")),
             ChordProMetadata(links = listOf(ChordProLink("https://example.com"))),
         ).forEach { metadata ->
-            assertEquals(listOf(RenderSection.Metadata(metadata)), withMetadataSection(emptyList(), metadata, shouldShowChords = true, isSongInfoShown = true))
+            assertEquals(listOf(RenderSection.Metadata(metadata)), withMetadataSection(emptyList(), metadata, shouldShowChords = true))
         }
-    }
-
-    @Test
-    fun `what the song is creates no section where its card is not shown`() {
-        val body = listOf(verse)
-        val info = ChordProMetadata(album = "Album", tags = listOf("Folk"), links = listOf(ChordProLink("https://example.com")))
-
-        assertSame(body, withMetadataSection(body, info, shouldShowChords = true, isSongInfoShown = false))
-        assertEquals(
-            listOf(RenderSection.Metadata(info.copy(key = "G")), verse),
-            withMetadataSection(body, info.copy(key = "G"), shouldShowChords = true, isSongInfoShown = false),
-        )
     }
 
     @Test
@@ -73,9 +61,8 @@ class SongMetadataTest {
 
         assertEquals(
             listOf(RenderSection.Metadata(ChordProMetadata()), verse),
-            withMetadataSection(body, ChordProMetadata(), shouldShowChords = true, isSongInfoShown = true, isSongInfoEditable = true),
+            withMetadataSection(body, ChordProMetadata(), shouldShowChords = true, isSongInfoEditable = true),
         )
-        assertSame(body, withMetadataSection(body, ChordProMetadata(), shouldShowChords = true, isSongInfoShown = false, isSongInfoEditable = true))
     }
 
     @Test
@@ -83,10 +70,10 @@ class SongMetadataTest {
         val playing = ChordProMetadata(key = "G", capo = 2, tempo = "96", time = "6/8")
         val body = listOf(verse)
 
-        assertSame(body, withMetadataSection(body, playing, shouldShowChords = false, shouldShowTempo = false, isSongInfoShown = true))
+        assertSame(body, withMetadataSection(body, playing, shouldShowChords = false, shouldShowTempo = false))
         assertEquals(
             listOf(RenderSection.Metadata(ChordProMetadata(album = "Album")), verse),
-            withMetadataSection(body, playing.copy(album = "Album"), shouldShowChords = false, shouldShowTempo = false, isSongInfoShown = true),
+            withMetadataSection(body, playing.copy(album = "Album"), shouldShowChords = false, shouldShowTempo = false),
         )
     }
 
@@ -97,72 +84,37 @@ class SongMetadataTest {
 
         assertEquals(
             listOf(RenderSection.Metadata(ChordProMetadata(tempo = "96", time = "6/8")), verse),
-            withMetadataSection(body, playing, shouldShowChords = false, isSongInfoShown = true),
+            withMetadataSection(body, playing, shouldShowChords = false),
         )
         assertEquals(
             listOf(RenderSection.Metadata(ChordProMetadata(key = "G", capo = 2)), verse),
-            withMetadataSection(body, playing, shouldShowChords = true, shouldShowTempo = false, isSongInfoShown = true),
-        )
-        assertEquals(
-            listOf(RenderSection.Metadata(metadata = ChordProMetadata(tempo = "120", time = "4/4"), readsDefaults = true), verse),
-            withMetadataSection(body, ChordProMetadata(), shouldShowChords = false, isSongInfoShown = false, readsDefaults = true),
+            withMetadataSection(body, playing, shouldShowChords = true, shouldShowTempo = false),
         )
     }
 
     @Test
-    fun `read only mode names a capo of none and the default tempo and time where the file names none`() {
-        val body = listOf(verse)
-
+    fun `a capo not shown is left out of the card`() {
         assertEquals(
-            listOf(RenderSection.Metadata(metadata = ChordProMetadata(capo = 0, tempo = "120", time = "4/4"), readsDefaults = true), verse),
-            withMetadataSection(body, ChordProMetadata(), shouldShowChords = true, isSongInfoShown = false, readsDefaults = true),
-        )
-        assertEquals(
-            listOf(RenderSection.Metadata(metadata = ChordProMetadata(capo = 3, tempo = "96", time = "6/8"), readsDefaults = true), verse),
-            withMetadataSection(body, ChordProMetadata(capo = 3, tempo = "96", time = "6/8"), shouldShowChords = true, isSongInfoShown = false, readsDefaults = true),
-        )
-        assertSame(body, withMetadataSection(body, ChordProMetadata(), shouldShowChords = false, shouldShowTempo = false, isSongInfoShown = false, readsDefaults = true))
-    }
-
-    @Test
-    fun `a capo not shown is left out of the line - read only mode's capo of none too`() {
-        val body = listOf(verse)
-        assertEquals(
-            listOf(RenderSection.Metadata(metadata = ChordProMetadata(tempo = "96", time = "4/4"), readsDefaults = true), verse),
-            withMetadataSection(body, ChordProMetadata(capo = 3, tempo = "96"), shouldShowChords = true, isCapoShown = false, isSongInfoShown = false, readsDefaults = true),
+            listOf(RenderSection.Metadata(ChordProMetadata(tempo = "96")), verse),
+            withMetadataSection(listOf(verse), ChordProMetadata(capo = 3, tempo = "96"), shouldShowChords = true, isCapoShown = false),
         )
     }
 
-    @Test
-    fun `the line names the key of the shapes after a capo and nothing of them without one`() {
-        val body = listOf(verse)
-        assertEquals(
-            listOf(RenderSection.Metadata(metadata = ChordProMetadata(key = "F#m", capo = 2), shapesKey = "Em"), verse),
-            withMetadataSection(body, ChordProMetadata(key = "F#m", capo = 2), shouldShowChords = true, isSongInfoShown = false, shapesKey = "Em"),
-        )
-        assertEquals(
-            listOf(RenderSection.Metadata(metadata = ChordProMetadata(key = "Em", capo = 0, tempo = "120", time = "4/4"), readsDefaults = true), verse),
-            withMetadataSection(body, ChordProMetadata(key = "Em"), shouldShowChords = true, isSongInfoShown = false, readsDefaults = true, shapesKey = "Em"),
-        )
-    }
-
-    private fun shownMetadata(metadata: ChordProMetadata, readsDefaults: Boolean = false) =
-        (withMetadataSection(emptyList(), metadata, shouldShowChords = true, isSongInfoShown = false, readsDefaults = readsDefaults)
+    private fun shownMetadata(metadata: ChordProMetadata) =
+        (withMetadataSection(emptyList(), metadata, shouldShowChords = true)
             .firstOrNull() as? RenderSection.Metadata)?.metadata
 
-    /** The line says what the click plays, so a tempo is read as the click reads it. */
+    /** The card says what the click plays, so a tempo is read as the click reads it. */
     @Test
     fun `the tempo is the number the click plays`() {
         assertEquals("120", shownMetadata(ChordProMetadata(tempo = "120 bpm"))?.tempo)
         assertEquals("300", shownMetadata(ChordProMetadata(tempo = "400"))?.tempo)
         assertNull(shownMetadata(ChordProMetadata(tempo = "fast")))
-        assertEquals("120", shownMetadata(ChordProMetadata(tempo = "fast"), readsDefaults = true)?.tempo)
     }
 
     @Test
     fun `the time signature is the one the click counts`() {
         assertEquals("4/4", shownMetadata(ChordProMetadata(time = "C"))?.time)
-        assertEquals("4/4", shownMetadata(ChordProMetadata(time = "7/9"), readsDefaults = true)?.time)
         assertNull(shownMetadata(ChordProMetadata(time = "7/9")))
     }
 
@@ -170,6 +122,5 @@ class SongMetadataTest {
     fun `the capo is held to the neck`() {
         assertEquals(12, shownMetadata(ChordProMetadata(capo = 15))?.capo)
         assertNull(shownMetadata(ChordProMetadata(capo = -1)))
-        assertEquals(0, shownMetadata(ChordProMetadata(capo = -1), readsDefaults = true)?.capo)
     }
 }
