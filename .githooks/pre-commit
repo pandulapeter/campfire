@@ -11,31 +11,19 @@
 # the branch and waits there for a nightly run or a release to fail. Enabled once per clone with
 # `git config core.hooksPath .githooks`.
 set -e
-python3 .github/scripts/check_license_headers.py
-python3 .github/scripts/check_sizes.py
-python3 .github/scripts/check_layers.py
-python3 .github/scripts/check_sync_seams.py
-python3 .github/scripts/check_store_listings.py
-python3 .github/scripts/store_listings.py --check
-python3 .github/scripts/check_doc_names.py --staged
-python3 .github/scripts/check_regexes.py
-python3 .github/scripts/check_test_names.py
-# The IDE drops the shared iOS run configuration now and then, and a commit staging everything has carried that deletion
-# along several times.
-if git diff --cached --name-only --diff-filter=D | grep -qx '.run/iOS.run.xml'; then
-    echo "The commit deletes .run/iOS.run.xml; restore it with git restore --staged --worktree .run/iOS.run.xml." >&2
-    exit 1
-fi
+. "$(dirname "$0")/lib.sh"
+fast_checks
 # Spotless and the unit tests need Gradle, so they run only when the commit stages more than Markdown. Gradle reruns only
-# the modules a change reaches: a few seconds when none, under a minute for :presentation. Both read the working tree,
-# which is what the staged files are unless a commit stages part of a file. The UI tests take minutes and stay in CI.
-# A version bump alone skips them too: it changes no code or test, yet invalidates the configuration cache and the
-# generated version constants, which reran every test downstream of them.
-staged_code=$(git diff --cached --name-only --diff-filter=ACMRD | grep -vE '\.md$' || true)
-if [ "$staged_code" = "gradle.properties" ] && ! git diff --cached -U0 -- gradle.properties |
-    grep -E '^[+-]' | grep -vE '^(\+\+\+|---) ' | grep -qvE '^[+-]campfire\.(versionName|buildNumber)='; then
-    staged_code=""
-fi
-if [ -n "$staged_code" ]; then
-    ./gradlew spotlessCheck desktopTest --quiet
+# the modules a change reaches: a few seconds when none, under a minute for :presentation. The UI tests take minutes and
+# stay in CI. Git holds the checkout's index lock for as long as this hook runs, so a tree .githooks/verify already
+# checked is not built again: the lock is then held for seconds rather than for a build. Anything else is built here,
+# reading the working tree, which is what the staged files are unless a commit stages part of a file.
+if [ -n "$(staged_code)" ]; then
+    tree=$(git write-tree)
+    record="$(verified_trees)/$tree"
+    if [ -e "$record" ]; then
+        rm -f "$record"
+    else
+        gradle_queued spotlessCheck desktopTest --quiet
+    fi
 fi
