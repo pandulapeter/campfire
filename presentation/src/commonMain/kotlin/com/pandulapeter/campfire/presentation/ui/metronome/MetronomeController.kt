@@ -340,6 +340,13 @@ internal class MetronomeController(
         ).distinctUntilChanged().collect(metronome::setStartable)
     }
 
+    /** Stops a song's click as its toolbar's metronome is switched off over it, which takes away the way to stop it. */
+    private fun startSongClickRule() = scope.launch {
+        combine(snapshotFlow { backStack.lastOrNull() }, userPreferences, ::isSongClickRemoved).distinctUntilChanged().collect { isRemoved ->
+            if (isRemoved) metronome.stop()
+        }
+    }
+
     private companion object {
         const val SILENT_CLICK_GRACE_MILLIS = 3_000L
     }
@@ -348,5 +355,6 @@ internal class MetronomeController(
         startFollowingPattern()
         startReportingStops()
         startStartableRule()
+        startSongClickRule()
     }
 }

@@ -39,6 +39,12 @@ class PreferencesPagesTest {
     }
 
     @Test
+    fun `the metronome page goes with the song's own click taken out of its toolbar`() = assertEquals(
+        listOf(PreferencesPage.GENERAL, PreferencesPage.SONG, PreferencesPage.CHORDS),
+        preferencesPages(context = PreferencesContext.SONG_DETAILS, userPreferences = testPreferences().copy(isDockMetronomeEnabled = false)),
+    )
+
+    @Test
     fun `preferences not yet read show every page`() {
         assertEquals(PreferencesPage.entries, preferencesPages(context = PreferencesContext.SONG_DETAILS, userPreferences = null))
     }

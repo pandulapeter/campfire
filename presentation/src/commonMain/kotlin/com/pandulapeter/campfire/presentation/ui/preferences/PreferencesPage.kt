@@ -37,7 +37,8 @@ enum class PreferencesContext(
 
 /**
  * The pages [context] shows, without the ones whose feature is switched off in Settings → Features: the Song page goes
- * with the songs, the Metronome page with the metronome. General always stays, and so does the Chords page, since the
+ * with the songs, the Metronome page with the metronome, and with the song's own click taken out of its toolbar, as only
+ * song details has the page and then plays no click to set up. General always stays, and so does the Chords page, since the
  * Chords and the Scales tabs name chords too.
  */
 internal fun preferencesPages(
@@ -47,6 +48,6 @@ internal fun preferencesPages(
     when (page) {
         PreferencesPage.GENERAL, PreferencesPage.CHORDS -> true
         PreferencesPage.SONG -> userPreferences?.areSongsEnabled != false
-        PreferencesPage.METRONOME -> userPreferences?.isMetronomeEnabled != false
+        PreferencesPage.METRONOME -> userPreferences?.isMetronomeEnabled != false && userPreferences?.isDockMetronomeEnabled != false
     }
 }

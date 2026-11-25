@@ -39,7 +39,7 @@ same setting**: a page is one component wherever it appears (the Metronome page 
 
 - A page that changes nothing on the screen the sheet is opened from is hidden, never disabled: song details has
   every page, the Chords and Scales tabs General and Chords. A page whose feature is off goes (Song
-  with the songs, Metronome with the metronome); General and Chords always stay.
+  with the songs, Metronome with the metronome or with the song's toolbar metronome, the sheet's only click); General and Chords always stay.
 - The sheet opens on the page its caller names (`DialogType.Preferences.page`): Song from song details' menu, General
   from the read only mark, Chords from the Chords and Scales tabs, whose way in is a one-button pill floating on the New
   button's spot (`PreferencesPill`, the list screens' `FloatingPill`), staying put while the page scrolls under it; their

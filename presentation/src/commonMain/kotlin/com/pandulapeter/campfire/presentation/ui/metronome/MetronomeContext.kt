@@ -15,6 +15,7 @@ import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
 import com.pandulapeter.campfire.metronome.api.model.MetronomePlayback
 import com.pandulapeter.campfire.metronome.api.model.TimeSignature
 import com.pandulapeter.campfire.presentation.mapper.timeSignatureOrDefault
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 
 /**
@@ -73,6 +74,13 @@ internal fun isMetronomeScreenLeft(previousTop: CampfireDestination?, top: Campf
  */
 internal fun isMetronomeStartable(top: CampfireDestination?, isMetronomeEnabled: Boolean) =
     isMetronomeEnabled && (top == CampfireDestination.Metronome || top is CampfireDestination.SongDetails)
+
+/**
+ * Whether a song is on top whose click [preferences] have taken away, the feature or its toolbar's metronome switched off
+ * (in the Preferences sheet over it), which leaves a click played there no way to be stopped.
+ */
+internal fun isSongClickRemoved(top: CampfireDestination?, preferences: UserPreferences?) =
+    top is CampfireDestination.SongDetails && preferences != null && !(preferences.isMetronomeEnabled && preferences.isDockMetronomeEnabled)
 
 /**
  * Whether [context] is another song than [last] rather than the same one under the name a rename gave it, or another

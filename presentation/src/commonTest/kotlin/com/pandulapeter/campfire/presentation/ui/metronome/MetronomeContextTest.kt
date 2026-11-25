@@ -16,6 +16,7 @@ import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
 import com.pandulapeter.campfire.metronome.api.model.MetronomePlayback
 import com.pandulapeter.campfire.metronome.api.model.TimeSignature
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
+import com.pandulapeter.campfire.presentation.ui.playing.testPreferences
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -188,5 +189,14 @@ class MetronomeContextTest {
             listOf(BeatLevel.ACCENT, BeatLevel.MUTED, BeatLevel.NORMAL, BeatLevel.MUTED),
             List(barBeingLeft.timeSignature.beats) { index -> barBeingLeft.beatLevel(index) },
         )
+    }
+
+    @Test
+    fun `a song's click is taken away with its toolbar's metronome or the feature - never before the preferences are read`() {
+        assertFalse(isSongClickRemoved(songDetails, testPreferences()))
+        assertTrue(isSongClickRemoved(songDetails, testPreferences().copy(isDockMetronomeEnabled = false)))
+        assertTrue(isSongClickRemoved(songDetails, testPreferences().copy(isMetronomeEnabled = false)))
+        assertFalse(isSongClickRemoved(CampfireDestination.Metronome, testPreferences().copy(isDockMetronomeEnabled = false)))
+        assertFalse(isSongClickRemoved(songDetails, preferences = null))
     }
 }
