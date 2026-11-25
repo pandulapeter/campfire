@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -55,7 +56,9 @@ internal fun DockPanelRows(
         val names = remember(cells) { cells.mapTo(mutableSetOf()) { it.name } }
         val headedChord = remember(model, names, headedSection) { headedSection?.let { section -> firstChordFrom(model.sections, section, names) } }
         FlowRow(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = DOCK_PANEL_PADDING),
+            // As wide as its widest line, centred as a block under the centred controls, so that an odd last chord
+            // stays in its column rather than being centred on a line of its own.
+            modifier = Modifier.fillMaxWidth().padding(horizontal = DOCK_PANEL_PADDING).wrapContentWidth(),
             horizontalArrangement = Arrangement.spacedBy(DOCK_ITEM_GAP),
             verticalArrangement = Arrangement.spacedBy(DOCK_ITEM_GAP),
             itemVerticalAlignment = Alignment.CenterVertically,
