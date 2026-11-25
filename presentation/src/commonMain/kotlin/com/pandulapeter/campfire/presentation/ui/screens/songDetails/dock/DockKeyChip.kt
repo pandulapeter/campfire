@@ -59,6 +59,7 @@ import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
  * [isTall] where it stands alone at the start of the diagram row, as tall as the tempo chip at its end: its text keeps
  * its size, the capo on a line of its own under the key, centred, naming the key of the shapes fingered above it where
  * the key names what sounds ("Capo 2 (Am shapes)"), and growing in and shrinking away as the capo comes and goes.
+ * [isOutlined] false for the app bar's (`AppBarPlayingTools`), which stands beside the text size stepper, not on the dock.
  */
 @Composable
 internal fun DockKeyChip(
@@ -67,6 +68,7 @@ internal fun DockKeyChip(
     height: Dp,
     onClick: (() -> Unit)?,
     isTall: Boolean = false,
+    isOutlined: Boolean = true,
 ) {
     // A song whose key is not known is still named for what the chip opens with "Key", muted, rather than "Playing",
     // which beside the tempo chip's play and stop read as a state.
@@ -81,6 +83,7 @@ internal fun DockKeyChip(
         modifier = modifier.height(height),
         onClickLabel = stringResource(Res.string.song_details_dock_open_playing),
         onClick = onClick,
+        isOutlined = isOutlined,
     ) {
         val key = dockKey.key ?: keyLabel.takeIf { onClick != null }
         val capoLine = capoLineOf(lastCapo)

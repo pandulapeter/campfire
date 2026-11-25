@@ -52,13 +52,17 @@ internal fun appBarButtons(appBarWidth: Dp, hasCover: Boolean, isReadOnly: Boole
  * dock (`AppBarPlayingTools`). The chip is reserved by a constant rather than measured: what it says differs from page
  * to page (a key, its semitones, a capo), and the bar decides for every page at once, so a width that followed the page
  * would send the cover and the buttons into the menu and back as a setlist's pages turn. [KEY_CHIP_ROOM] holds a key
- * with its semitones ("F#m (+11)"); a chip that also names a capo takes the rest from the title, which is cut short.
+ * with its semitones ("F#m (+11)"); a chip that also names a capo takes the rest from the title, which is cut short. The
+ * tuner reaches into the button after it, as the bar's other buttons do.
  */
 internal fun appBarPlayingToolsWidth(hasKeyChip: Boolean, hasTuner: Boolean) =
-    (if (hasKeyChip) KEY_CHIP_ROOM else 0.dp) + if (hasTuner) APP_BAR_ACTION_WIDTH else 0.dp
+    (if (hasKeyChip) KEY_CHIP_ROOM else 0.dp) + if (hasTuner) APP_BAR_OVERLAPPING_ACTION_WIDTH else 0.dp
 
-/** A key chip naming a key and its semitones at the interface's text size, with the gaps parting it from its neighbours. */
-private val KEY_CHIP_ROOM = 96.dp
+/**
+ * A key chip naming a key and its semitones at the interface's text size (88 dp), and the gap that parts it from the text
+ * size stepper before it ([APP_BAR_PILL_GAP]).
+ */
+private val KEY_CHIP_ROOM = 88.dp + APP_BAR_PILL_GAP
 
 private val APP_BAR_NAVIGATION_WIDTH = 52.dp // The 48dp button and the 4dp the bar pads its start by.
 private val APP_BAR_END_PADDING = 4.dp

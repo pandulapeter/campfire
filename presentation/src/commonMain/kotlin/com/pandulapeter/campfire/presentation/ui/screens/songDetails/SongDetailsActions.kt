@@ -45,11 +45,13 @@ import kotlinx.coroutines.flow.StateFlow
 /**
  * The song details screen's app bar actions: the text size where the bar has room for it, the key chip and the tuner
  * where the bar holds them in place of the dock ([playingTools]), then read only mode's mark and menu, or the song's
- * setlists and the song's menu, which holds what the bar has no room for.
+ * setlists and the song's menu, which holds what the bar has no room for. The overflow button reaches into the tuner's
+ * button ([isAfterTuner]) as into the star or the lock, where it stands right after it.
  */
 @Composable
 internal fun RowScope.SongDetailsActions(
     playingTools: @Composable () -> Unit,
+    isAfterTuner: Boolean,
     fontScaleController: FontScaleController,
     songFileNamesInSetlistsFlow: StateFlow<Set<String>>,
     songActions: SongActionHandler,
@@ -111,7 +113,7 @@ internal fun RowScope.SongDetailsActions(
                 }
                 // Read only mode's menu: nothing in it changes the library, and nothing in it is ever let out as a button.
                 ActionsMenu(
-                    isAfterButton = showsReadOnlyMark,
+                    isAfterButton = showsReadOnlyMark || isAfterTuner,
                     menuFooter = fontScaleMenuFooter,
                     items = { listOfNotNull(aboutSongAction, tunerAction, preferencesAction) },
                 )
@@ -125,6 +127,7 @@ internal fun RowScope.SongDetailsActions(
                         isReadOnly = isReadOnly,
                         areSetlistsEnabled = areSetlistsEnabled,
                         showsSetlistAssignmentsInBar = showsSetlistAssignmentsInBar,
+                        isAfterTuner = isAfterTuner,
                         aboutSongAction = aboutSongAction,
                         tunerAction = tunerAction,
                         preferencesAction = preferencesAction,
@@ -156,6 +159,7 @@ private fun SongActionsWithSetlists(
     isReadOnly: Boolean,
     areSetlistsEnabled: Boolean,
     showsSetlistAssignmentsInBar: Boolean,
+    isAfterTuner: Boolean,
     aboutSongAction: ActionsMenuItem?,
     tunerAction: ActionsMenuItem?,
     preferencesAction: ActionsMenuItem,
@@ -183,7 +187,7 @@ private fun SongActionsWithSetlists(
         isDeletable = setlistFileName == null,
         isEditAndExportOnly = isReadOnly,
         setlistFileName = setlistFileName,
-        isAfterButton = showsSetlistAssignmentsInBar,
+        isAfterButton = showsSetlistAssignmentsInBar || isAfterTuner,
         editShortcut = KeyShortcut.EDIT,
         exportShortcut = KeyShortcut.SAVE,
         leadingItems = {

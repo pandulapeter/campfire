@@ -39,7 +39,6 @@ import com.pandulapeter.campfire.presentation.ui.state.songText.SongTextStore
 import com.pandulapeter.campfire.presentation.ui.state.songs.SongFilesController
 import kotlinx.coroutines.flow.StateFlow
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.DockContent
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.dockRowHeight
 import com.pandulapeter.campfire.presentation.ui.components.appBar.CampfireTopAppBar
 import com.pandulapeter.campfire.presentation.ui.tuner.tunerAction
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
@@ -142,12 +141,13 @@ internal fun SongDetailsAppBar(
                 playingTools = {
                     AppBarPlayingTools(
                         isShown = isKeyInBar,
+                        isAfterStepper = showsFontScaleInBar,
                         contents = dockContents,
                         targetPage = targetPage,
-                        chipHeight = dockRowHeight(),
                         onTunerClicked = onTunerClicked.takeIf { isTunerInBar },
                     )
                 },
+                isAfterTuner = isKeyInBar && isTunerInBar,
                 fontScaleController = fontScaleController,
                 songFileNamesInSetlistsFlow = libraryState.songFileNamesInSetlists,
                 songActions = songActions,

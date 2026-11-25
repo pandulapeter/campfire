@@ -84,8 +84,12 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
   mark, the mode or not: only Import makes it editable, and the mark comes with its song's screen. **The overflow button
   is always the bar's last.**
 - **Where the dock would hold only the key chip** (`DockRows.isKeyOnly`, an import preview's too) the bar holds it
-  instead, chip-high, and with the dock's tuner on a tuner icon button, both after the text size stepper and before the
-  setlists' star, the read only mark, and the overflow button (`AppBarPlayingTools`): the same chip, opening the same
+  instead, and with the dock's tuner on a tuner icon button, both after the text size stepper and before the setlists'
+  star, the read only mark, and the overflow button (`AppBarPlayingTools`), so the stepper, the first to leave for the
+  menu as the bar narrows, moves nothing after it. The chip is the stepper's sibling there: as tall, tonal with no
+  outline (the dock's outline is for the dock's surface), 12dp after it, the room an icon button's touch target leaves
+  around its glyph, so every action of the group is as far from the next; the tuner reaches into the button after it as
+  the bar's buttons do, and the overflow button into the tuner. The same chip, opening the same
   sheet (nothing in read only mode), left out with neither key nor capo, for the page the pager is on or heading for,
   crossfading as the subtitle does, which drops its key meanwhile. They come and go fading and growing as the dock
   shrinks away or returns. Their room is taken before the cover's and the buttons' (`appBarPlayingToolsWidth`): the
