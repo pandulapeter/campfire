@@ -27,6 +27,7 @@ import com.pandulapeter.campfire.presentation.ui.songView.model.ChordDiagrams
 import com.pandulapeter.campfire.presentation.ui.songView.model.ScaleSuggestions
 import com.pandulapeter.campfire.presentation.ui.songView.model.RenderSection
 import com.pandulapeter.campfire.presentation.ui.songView.model.SongLyricsInputs
+import com.pandulapeter.campfire.presentation.ui.songView.model.SongLyricsModel
 import com.pandulapeter.campfire.presentation.ui.songView.model.buildsModelInPlace
 import com.pandulapeter.campfire.presentation.ui.songView.model.prepareSongLyrics
 import androidx.compose.animation.AnimatedContent
@@ -230,30 +231,7 @@ internal fun SongDetailsPage(
             imageSizes = rememberSongImageSizes(songText),
         )
         val built = rememberSongLyricsModel(inputs = lyricsInputs, buildsInPlace = buildsModelInPlace, build = modelBuild) { inputs, searchesShapes ->
-            // The scales are read from the song as its file capos it, the capo saying only which shapes the file is written
-            // in; the page names the capo it is played at.
-            val reading = songRenderer.songReadingOf(inputs.text, inputs.transposition, inputs.tabCapo, inputs.spelling, inputs.tabs, inputs.shapeNames, inputs.inferredChordsKey)
-            prepareSongLyrics(
-                song = songRenderer.shownSongOf(reading, inputs.spelling, inputs.tempoOverride, inputs.capoOverride, inputs.inferredKey),
-                standardSong = reading.transposed,
-                namedSong = reading.named,
-                nameCapo = reading.nameCapo,
-                namedInferredKey = reading.namedInferredKey,
-                shapesKey = reading.shapeNames?.shapesKey,
-                inferredKey = inputs.inferredChordsKey,
-                shapeCapo = inputs.shapeCapo,
-                shouldShowChords = inputs.shouldShowChords,
-                isCapoShown = inputs.isCapoShown,
-                labels = inputs.labels,
-                showsTiming = inputs.showsTiming,
-                chordTuning = inputs.chordTuning,
-                notation = inputs.spelling.notation.toChordNotation(),
-                searchesShapes = searchesShapes,
-                suggestsScales = inputs.suggestsScales,
-                showsDegrees = inputs.showsDegrees,
-                notationChords = notationChordsOf(inputs, transpose = reading.named.metadata.transpose, nameCapo = reading.nameCapo),
-                imageSizes = inputs.imageSizes,
-            )
+            buildSongLyrics(songRenderer, inputs, searchesShapes)
         }
         if (built == null) {
             // A page beside the one being read whose first rendering is still being built in the background. Nobody is
@@ -409,6 +387,34 @@ internal fun SongDetailsPage(
             }
         }
     }
+}
+
+/** The model of the song [inputs] give, as [SongDetailsPage] builds it, see [rememberSongLyricsModel]. */
+private fun buildSongLyrics(songRenderer: SongRenderer, inputs: SongLyricsInputs, searchesShapes: Boolean): SongLyricsModel {
+    // The scales are read from the song as its file capos it, the capo saying only which shapes the file is written
+    // in; the page names the capo it is played at.
+    val reading = songRenderer.songReadingOf(inputs.text, inputs.transposition, inputs.tabCapo, inputs.spelling, inputs.tabs, inputs.shapeNames, inputs.inferredChordsKey)
+    return prepareSongLyrics(
+        song = songRenderer.shownSongOf(reading, inputs.spelling, inputs.tempoOverride, inputs.capoOverride, inputs.inferredKey),
+        standardSong = reading.transposed,
+        namedSong = reading.named,
+        nameCapo = reading.nameCapo,
+        namedInferredKey = reading.namedInferredKey,
+        shapesKey = reading.shapeNames?.shapesKey,
+        inferredKey = inputs.inferredChordsKey,
+        shapeCapo = inputs.shapeCapo,
+        shouldShowChords = inputs.shouldShowChords,
+        isCapoShown = inputs.isCapoShown,
+        labels = inputs.labels,
+        showsTiming = inputs.showsTiming,
+        chordTuning = inputs.chordTuning,
+        notation = inputs.spelling.notation.toChordNotation(),
+        searchesShapes = searchesShapes,
+        suggestsScales = inputs.suggestsScales,
+        showsDegrees = inputs.showsDegrees,
+        notationChords = notationChordsOf(inputs, transpose = reading.named.metadata.transpose, nameCapo = reading.nameCapo),
+        imageSizes = inputs.imageSizes,
+    )
 }
 
 /**
