@@ -9,8 +9,9 @@
 -->
 # Plan: the page model sees the page's structure
 
-**Status:** the experiment is done and every mark earns its place (third gate runs). Next: find out why a plain
-retrain on the grown corpus lost ground on other sites, then port the marks (*Next session*, at the end).
+**Status:** the experiment is done and every mark earns its place (third gate runs). Under way (2026-11-25): step 1's
+two diagnostic gates (`.runs/diag-seed11/` and `.runs/diag-nostaves/`, both variant, `gate.py --out`) and step 2's
+script merge (*Next session*, at the end).
 When the app reads a web page itself, it hands the page model each line's structure too: whether the line is a link or
 a button, whether it starts a new card or section, and how it is set. The crop can then drop calls to action and
 partner cards next to a song, which text alone cannot tell apart from the song's own notes.
