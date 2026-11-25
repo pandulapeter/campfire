@@ -129,6 +129,19 @@ class ChordSheetSiteDetailsTest {
     }
 
     @Test
+    fun `a transcriber's credit before the song is the site's and is left out in every language the app ships`() {
+        val song = "\n\nG      C\nHello world"
+        for (credit in listOf("Tabbed: Someone (someone@example.com)", "Transcribed by: Someone", "Transkription: Jemand", "Lejegyezte: Valaki", "Přepis: Někdo")) {
+            val result = convert("Riverlight\nSomeone\n$credit$song")
+            assertEquals("Riverlight", ChordProParser.parse(result).metadata.title, result)
+            assertFalse(credit.substringBefore(':') in result, result)
+        }
+        // Between two lyric lines past the header's reach the same words are as likely sung.
+        val verses = List(8) { "G      C\nHello world" }.joinToString("\n")
+        assertTrue(convert("$verses\nTabbed: once more\nG      C\nHello again").contains("Tabbed: once more"))
+    }
+
+    @Test
     fun `glued counters and the save and interactive tab buttons over the song are left out`() {
         val result = convert("6,799 views201 saves\nSave\nInteractive tab\n\nG      C\nHello world\nSave\nG      C\nHello again")
         assertEquals("[G]Hello [C]world\nSave\n[G]Hello [C]again\n", result)

@@ -93,7 +93,8 @@ heuristics and near misses are pinned in `ChordSheetConverterTest` and its sibli
   site's name): a details block whose labels the copy glued onto the values before them (`Tuning: E A D G B EKey: G`)
   is cut back into a row, and one whose last label's value fell onto the next line (`…Capo:` over `2nd fret`) gets it
   back where that line is only a value of the field's shape (a capo, key, tempo, or time); a tuning is
-  `{meta: tuning …}` unless standard, a CCLI song number `{meta: ccli …}`, a capo of none nothing. Values that are the site's (difficulty, a transcriber's credit that counts its contributors) and whole
+  `{meta: tuning …}` unless standard, a CCLI song number `{meta: ccli …}`, a capo of none nothing. Values that are the site's (difficulty, a transcriber's credit by its label, `Tabbed:` or `Transcribed by:`, or
+  by counting its contributors) and whole
   lines that are its controls or calls to action (`Autoscroll`, `1,234 views`) are left out only before the first chord
   row, after the last, or alone between blank lines: between two lyrics they are as likely sung. `Author:` alone stays,
   and goes only glued into a row beside a site's value (`52Difficulty:`). A list of the chords the song plays, one a

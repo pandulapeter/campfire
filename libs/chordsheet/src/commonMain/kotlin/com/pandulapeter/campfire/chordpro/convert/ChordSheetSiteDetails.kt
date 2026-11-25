@@ -151,10 +151,15 @@ internal object ChordSheetSiteDetails {
         "strojenie", "ladění", "כיוונון",
     )
     private val detailLabels = setOf(
-        "difficulty", "rating", "views", "last update", "last updated", "last edit", "speed", "autoscroll", "tabbed by",
-        "transcribed by", "submitted by", "contributed by", "uploaded by", "dificuldade", "colaboração e revisão",
-        "dificultad", "schwierigkeit", "schwierigkeitsgrad", "difficulté", "difficoltà", "nehézség", "dificultate",
-        "trudność", "poziom trudności", "obtížnost", "רמת קושי",
+        "difficulty", "rating", "views", "last update", "last updated", "last edit", "speed", "autoscroll", "dificuldade",
+        "colaboração e revisão", "dificultad", "schwierigkeit", "schwierigkeitsgrad", "difficulté", "difficoltà", "nehézség",
+        "dificultate", "trudność", "poziom trudności", "obtížnost", "רמת קושי",
+        // Who wrote the tab or the chart down for the site, which no song file of its own credits.
+        "tabbed", "tabbed by", "tab by", "tabs by", "transcribed", "transcribed by", "transcription", "transcription by",
+        "transcriber", "submitted by", "contributed by", "uploaded by", "transkription", "transkribiert von", "transcrit par",
+        "transcripción", "transcrito por", "transcrição", "trascrizione", "trascritto da", "lejegyezte", "lejegyzés",
+        "transcriere", "transcris de", "transkrypcja", "przepisał", "přepis", "přepsal", "transkripce", "הועלה על ידי",
+        "תומלל על ידי",
     )
     private val authorLabels = setOf("author", "autor", "auteur", "autore", "szerző")
     private val transcriberWords = Regex("contributors?\\b|last edit", RegexOption.IGNORE_CASE)
