@@ -91,6 +91,7 @@ internal fun rememberSongDock(
     val endInset = contentPadding.calculateEndPadding(layoutDirection)
     val panelWidth = dockPanelWidthOf(tempoChipWidth = dockTempoChipWidth())
     val isSidePanel = isDockSidePanel(
+        rows = rows,
         windowWidth = windowSize.width,
         sideInsets = contentPadding.calculateStartPadding(layoutDirection) + endInset,
         panelWidth = panelWidth,

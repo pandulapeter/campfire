@@ -101,8 +101,18 @@ internal class DockLayoutTest {
 
     @Test
     fun `a song in one column counts the window's side insets against the room beside the panel`() {
-        assertTrue(isDockSidePanel(windowWidth = 720.dp, sideInsets = 0.dp, panelWidth = PANEL_WIDTH, isContinuous = true))
-        assertFalse(isDockSidePanel(windowWidth = 720.dp, sideInsets = 96.dp, panelWidth = PANEL_WIDTH, isContinuous = true))
+        assertTrue(isDockSidePanel(rows = everyRow, windowWidth = 720.dp, sideInsets = 0.dp, panelWidth = PANEL_WIDTH, isContinuous = true))
+        assertFalse(isDockSidePanel(rows = everyRow, windowWidth = 720.dp, sideInsets = 96.dp, panelWidth = PANEL_WIDTH, isContinuous = true))
+    }
+
+    @Test
+    fun `a dock without diagrams keeps its row under the song in any window`() {
+        val withoutDiagrams = DockRows(hasPlayingRow = true, hasChordRow = false, hasScaleRow = true)
+        val metronomeOnly = DockRows(hasPlayingRow = true, hasChordRow = false, hasScaleRow = false, isMetronomeOnly = true)
+        listOf(withoutDiagrams, metronomeOnly).forEach { rows ->
+            assertFalse(isDockSidePanel(rows = rows, windowWidth = 1280.dp, sideInsets = 0.dp, panelWidth = PANEL_WIDTH, isContinuous = false))
+            assertFalse(isDockSidePanel(rows = rows, windowWidth = 1280.dp, sideInsets = 0.dp, panelWidth = PANEL_WIDTH, isContinuous = true))
+        }
     }
 
     @Test
@@ -131,6 +141,10 @@ internal class DockLayoutTest {
 
 private val PANEL_WIDTH = dockPanelWidthOf(tempoChipWidth = 130.dp)
 
-private fun isPagedSidePanel(windowWidth: Dp) = isDockSidePanel(windowWidth = windowWidth, sideInsets = 0.dp, panelWidth = PANEL_WIDTH, isContinuous = false)
+private val WITH_DIAGRAMS = DockRows(hasPlayingRow = true, hasChordRow = true, hasScaleRow = true)
 
-private fun isContinuousSidePanel(windowWidth: Dp) = isDockSidePanel(windowWidth = windowWidth, sideInsets = 0.dp, panelWidth = PANEL_WIDTH, isContinuous = true)
+private fun isPagedSidePanel(windowWidth: Dp) =
+    isDockSidePanel(rows = WITH_DIAGRAMS, windowWidth = windowWidth, sideInsets = 0.dp, panelWidth = PANEL_WIDTH, isContinuous = false)
+
+private fun isContinuousSidePanel(windowWidth: Dp) =
+    isDockSidePanel(rows = WITH_DIAGRAMS, windowWidth = windowWidth, sideInsets = 0.dp, panelWidth = PANEL_WIDTH, isContinuous = true)

@@ -22,7 +22,8 @@ app bar's metronome panel.
 - **Its height is the screen's, never the song's** (`SongDockState`): one that followed the song would lay the viewport
   out anew on every setlist page turn. A new height animates, the grid waiting for it as for the app bar.
 - **A side panel** at the song's end (`DockSidePanel`, `isDockSidePanel`), the step buttons between them; the grid is
-  searched without its width. **In pages**, a wide window's (`WindowSize.EXPANDED`, 840 dp and wider, whatever its
+  searched without its width. **Only with the diagrams**, which fill it: without them it held only two chips, and with
+  the metronome alone it lost the metronome panel's stepper and accents, so those keep their row under the song. **In pages**, a wide window's (`WindowSize.EXPANDED`, 840 dp and wider, whatever its
   height); narrower ones keep the rows: beside a panel a phone on its side wraps a long-lined song's lines
   (`PageCountTest`, 640 × 360: 13 pages under the row, 17 beside a panel). **In one column scrolling by itself**, any
   window holding the narrowest column (`MIN_COLUMN_WIDTH`) and the step buttons beside the panel, its side insets left
@@ -59,8 +60,7 @@ app bar's metronome panel.
   surface's top and, at a window's edge with no bottom inset, its bottom (`DOCK_VERTICAL_PADDING`); over an inset (a
   navigation bar) half that, the inset parting them from the edge (`dockBottomPaddingOf`).
 - **The panel's controls stay put** (`DockPanelControls`): the key chip over the tuner's pill naming the tuning, as in
-  the diagram row, then the tempo chip, all three a row tall and stretched to the panel's width (with the metronome
-  alone too: the metronome panel has no room there). **Under them scroll** (`DockPanelRows`) the diagrams in a grid,
+  the diagram row, then the tempo chip, all three a row tall and stretched to the panel's width. **Under them scroll** (`DockPanelRows`) the diagrams in a grid,
   fading under the controls and, only over a bottom inset, at the bottom, padded by the inset.
 - **Beside the panel the scale suggestions are one row under the song** (`SongDockState.rowsUnder`), the rows' own
   scale row, over the bottom inset, its corner square where it meets the panel and fading out under it while there

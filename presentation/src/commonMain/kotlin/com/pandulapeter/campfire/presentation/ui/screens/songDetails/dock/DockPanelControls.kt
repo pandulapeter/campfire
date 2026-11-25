@@ -23,8 +23,7 @@ import androidx.compose.ui.Modifier
  * ([DockPanelRows]): what starts the dock ([DockStart]) over the tempo chip ([DockTempoChip]), centred. The key chip
  * stands over the tuner's pill naming the tuning, as at the start of the rows' diagram row ([DockKeyAndTuner]), each a
  * row tall and stretched to the panel's content width ([dockPanelContentWidthOf]) with the tempo chip, so the three read
- * as one column of controls. With the metronome all it holds the tempo chip is there too: the metronome panel the rows
- * under the song get has no room here.
+ * as one column of controls.
  */
 @Composable
 internal fun DockPanelControls(

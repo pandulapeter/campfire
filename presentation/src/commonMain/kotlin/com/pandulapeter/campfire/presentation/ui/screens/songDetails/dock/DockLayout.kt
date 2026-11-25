@@ -104,6 +104,10 @@ internal fun dockLayoutOf(
 /**
  * Whether the dock is a side panel at the end of the song rather than rows under it, never decided by the song.
  *
+ * Only where its [rows] have the diagrams ([DockRows.hasChordRow]), which are what fill a panel as tall as the song:
+ * without them it would hold only the key chip and the tempo chip, and with the metronome alone it would lose the
+ * stepper and the accents of the metronome panel under the song, so those keep the one row under the song.
+ *
  * Laid out in pages, only in a wide window ([WindowSize.EXPANDED], 840 dp and wider, where the editor's split panes
  * start), whatever its height, whose song has width to spare beside the panel and keeps all of its height. A narrower
  * window keeps the rows, a short one (a phone on its side) their one row: the panel would take a width its columns need,
@@ -114,7 +118,7 @@ internal fun dockLayoutOf(
  * [panelWidth] wide, between the step buttons: a phone on its side included, whose rows would take a seventh of its
  * height.
  */
-internal fun isDockSidePanel(windowWidth: Dp, sideInsets: Dp, panelWidth: Dp, isContinuous: Boolean) = if (isContinuous) {
+internal fun isDockSidePanel(rows: DockRows, windowWidth: Dp, sideInsets: Dp, panelWidth: Dp, isContinuous: Boolean) = rows.hasChordRow && if (isContinuous) {
     windowWidth - sideInsets - panelWidth >= CONTINUOUS_COLUMN_ROOM
 } else {
     WindowSize.fromWidth(windowWidth) == WindowSize.EXPANDED
