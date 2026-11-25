@@ -25,6 +25,8 @@ internal fun DockStart(content: DockContent, dockKey: DockKey?, height: Dp, isTa
             dockKey = dockKey,
             height = height,
             isTall = isTall,
+            // Where the dock's start has no tuner button of its own (the key chip opens the Playing sheet).
+            onTunerClicked = content.playingTools?.onTunerClicked?.takeIf { isTall && dockKey.opensPlaying },
             onClick = content.playingControls?.onPlayingClicked?.takeIf { dockKey.opensPlaying },
         )
     }

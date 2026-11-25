@@ -69,7 +69,7 @@ internal fun DockRoundPlayStop(
     CampfireTooltip(modifier = modifier, label = label, shortcut = KeyShortcut.METRONOME) {
         FilledIconButton(
             modifier = Modifier
-                .size(ROUND_PLAY_STOP_SIZE)
+                .size(DOCK_ROUND_BUTTON_SIZE)
                 .semantics { contentDescription = label },
             onClick = onClick,
         ) {
@@ -79,6 +79,5 @@ internal fun DockRoundPlayStop(
 }
 
 private val PLAY_STOP_PADDING = 8.dp
-private val ROUND_PLAY_STOP_SIZE = 44.dp
 private val ROUND_PLAY_STOP_MARK_SIZE = 20.dp
 private val PLAY_STOP_SIZE = 18.dp

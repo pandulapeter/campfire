@@ -57,3 +57,9 @@ internal fun DockControlPill(
 
 /** The corners of the dock's tall controls, the diagram row's key and tempo chips, which a pill's would make round. */
 internal val DOCK_TALL_CORNER = 16.dp
+
+/** The round buttons at the inner ends of the tall key and tempo chips: the tuner and play and stop. */
+internal val DOCK_ROUND_BUTTON_SIZE = 44.dp
+
+/** Keeps a tall chip's round button as far from its end as from its top and bottom in a row of small diagrams. */
+internal val TALL_BUTTON_PADDING = 10.dp

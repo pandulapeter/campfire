@@ -151,6 +151,3 @@ private val BEAT_GAP = 2.dp
 private val TALL_GAP = 6.dp
 private val TALL_BEATS_WIDTH = 48.dp
 private val TALL_BEAT_HEIGHT = 12.dp
-
-/** Keeps the round button as far from the pill's end as from its top and bottom in a row of small diagrams. */
-private val TALL_BUTTON_PADDING = 10.dp
