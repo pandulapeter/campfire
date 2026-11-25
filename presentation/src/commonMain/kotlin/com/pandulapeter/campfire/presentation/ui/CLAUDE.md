@@ -85,8 +85,8 @@ The view model facade, the composition root, and the product rules every screen 
   while the songs are on; with the songs off it is off in effect, `isReadOnlyInEffect`, the preference kept). Song
   details' bar shows a mark while it is on, opening the Preferences on General.
 - Hides every way to change the library: both "New" buttons, song menus (and their long press / right click), setlist
-  header actions, reorder handles and row menus, "Add to setlist", "Choose songs", Edit song file, and the four playing
-  controls, which is every way into the editor. Search, sorting, filters, text size, and the chords switch stay.
+  header actions, reorder handles and row menus, "Add to setlist", "Choose songs", and Edit song file, which is every way into
+  the editor, and the Playing and Tempo sheets the dock's chips open. Search, sorting, filters, text size, and the chords switch stay.
 - Folds nothing: every section is shown whole and no fold toggle is offered, so nothing goes missing on stage; the
   saved folds are kept, and come back once the mode is off.
 - Settings keeps every row; its two library actions are disabled, not hidden.
@@ -158,7 +158,7 @@ Features (Settings → Features):
   atop it (as do setlists with Setlists off, `ImportFeatureWarning`), but no preview or editor starts
   (`ImportController`'s `areSongsEnabled`).
 - **Random picks** (`isRandomPicksEnabled`, disabled with the songs off): also answers the question under them.
-- **Metronome**: its tab, the click button and panel, the M key, and tempo and time wherever a song is read.
+- **Metronome**: its tab, a song's tempo chip and Tempo sheet, the M and T keys, and tempo and time wherever a song is read.
 - **Tuner**: its tab and the sheet's entry, and with them every way to ask for the microphone.
 - **Chords** (`isChordLibraryEnabled`): the Chords tab and the scale sheet's chord rows, whatever songs show.
 - **Scales** (`areScalesEnabled`): the Scales tab and the scale sheet, and with them the scale suggestions.

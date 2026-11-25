@@ -66,7 +66,7 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
   crossfaded content was composed for, since a page change draws two. Chords off drop the key. No tempo (the dock
   says it) and no duration.
 - **A file with no `{key}` is named by the key its chords are in** (`inferredKeyOf`), shown and moved as a written key
-  is everywhere (bar, Transposition control, read only line, numbering, the dock's chords and scales, chord shape
+  is everywhere (bar, key chip, Transposition control, numbering, the dock's chords and scales, chord shape
   sheet, editor preview, PDF). It is worked out off the main thread as the text is read, before handing it on, and kept by
   file name for the view model's life: a song reopened names it on its first frame; one never read gets it with its
   lyrics, crossfading in. The list cards never parse a file, so they name only a written key.

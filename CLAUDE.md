@@ -185,9 +185,9 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
 - A song is read in pages turned by hand or pedal, a page or a column at a time (Preferences' Turn by, a strip sliding
   sideways), or (Preferences' Layout, asked once) in one column scrolling at its own pace, a speed per song; pedals and
   taps only nudge it: `ui/screens/songDetails/autoScroll`, `ui/songView/grid`.
-- Song details starts a song at its first line: its playing controls, chords, and scale suggestions are in a dock
-  under it, its rows decided by the switches and its height by the window and the reading mode, never by the song:
-  `ui/screens/songDetails/dock`.
+- Song details starts a song at its first line, a tap on it only stepping: its playing controls, chords, and scale
+  suggestions are in a dock under it (beside it from 840 dp wide), its rows decided by the switches and its height by
+  the window and the reading mode, never by the song: `ui/screens/songDetails/dock`.
 - Selection mode starts from a song's menu, lives while Songs is on top, never deletes in bulk: `ui/screens/songs`.
 - Tags, languages, cover, and links are ChordPro directives in the song file, so they travel with it: `ui`.
 - Pictures (`{image: src=…}`) are library files named by their content (PNG, JPEG, GIF, WebP, at most 8 MB; one the

@@ -41,7 +41,7 @@ Three independent preferences: `themeColor` (palette), `backgroundWarmth` (sepia
 - The default palette: purple primary tinting every neutral, orange as tertiary and **second accent**. Material has no
   role for it, so `ColorSchemePair` carries `lightSecondAccent` / `darkSecondAccent` (the primary in every other
   palette), provided as `LocalSecondAccentColor`, faded on the same progress. It draws what is played (chords, a row's
-  key, the read only line's key and capo) and the lists' sticky `SectionHeader`s; every other title and control uses the
+  key, the dock's key chip) and the lists' sticky `SectionHeader`s; every other title and control uses the
   primary.
 - The one gradient in the interface is the app's own disc (and ring) in the color choice; everything else is flat.
 - `MaterialColorSchemes.kt`: seeds run through Material's tonal spot mapping and pasted in; a new color is a seed.

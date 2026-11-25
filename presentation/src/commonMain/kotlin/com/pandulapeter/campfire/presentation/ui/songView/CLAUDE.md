@@ -67,7 +67,7 @@ The song renderer, drawn by song details and the editor's preview; `model/` buil
 ### The first, Chords, and Scales sections
 
 - Only where `SongLyrics.showsPlayingSections` (the editor's preview); song details draws what they hold in its dock
-  (`screens/songDetails/dock`), so a song there starts at its first line. Neither folds.
+  (`screens/songDetails/dock`), so a song there starts at its first line. None of them folds.
 
 ### The Scales section
 
