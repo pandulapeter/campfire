@@ -53,7 +53,10 @@ function readPage() {
             const box = glyphs.getBoundingClientRect();
             if (!box.height) continue;
             const isOver = (line) => line !== null && (box.top + box.bottom) / 2 <= line.top && box.bottom >= line.top - line.height;
-            if (isOver(beside(element, false)) || isOver(beside(element, true))) raised.push(element);
+            const after = beside(element, false);
+            const before = beside(element, true);
+            const isAt = (line, back) => Math.abs((back ? line.right : line.left) - box.left) <= box.height;
+            if ((isOver(after) && isOver(before)) || (isOver(after) && isAt(after, false)) || (isOver(before) && isAt(before, true))) raised.push(element);
         }
         if (raised.length >= 2) for (const element of raised) {
             const open = document.createTextNode('\uE000');

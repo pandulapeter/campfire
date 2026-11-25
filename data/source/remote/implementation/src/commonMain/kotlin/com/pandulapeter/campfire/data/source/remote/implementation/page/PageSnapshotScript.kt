@@ -22,7 +22,9 @@ package com.pandulapeter.campfire.data.source.remote.implementation.page
  * A chord a page sets inline, in an element of its own drawn above the syllable it falls on (moved up by its style, as
  * Polish and Czech songbooks do), would reach `innerText` glued into the word (`potrzeDbuję`), losing the chord and the
  * word both. Such an element is told by what is drawn, never by a site's class name: it holds a chord's name alone,
- * and its middle sits above the top of the text beside it on the same line of the same block (a `<br>` or a kept
+ * and its middle sits above the top of the text on both sides of it, or of the text on one side that starts where it
+ * does (or ends just before it), on the same line of the same block (a word ending a line the page wrapped is level with
+ * the word before it, and not over the next line's first one; a `<br>` or a kept
  * line break between them is another line, which is how a chord row over its lyric in a `<pre>` or a block of its own
  * stays as it is). Where the page has two or more, each line holding them is written as a chord row, every chord at
  * the column of the character it was drawn over, above the line's words, which is the shape the import reads a
@@ -68,7 +70,10 @@ internal const val PAGE_SNAPSHOT_SCRIPT = """
             const box = glyphs.getBoundingClientRect();
             if (!box.height) continue;
             const isOver = (line) => line !== null && (box.top + box.bottom) / 2 <= line.top && box.bottom >= line.top - line.height;
-            if (isOver(beside(element, false)) || isOver(beside(element, true))) raised.push(element);
+            const after = beside(element, false);
+            const before = beside(element, true);
+            const isAt = (line, back) => Math.abs((back ? line.right : line.left) - box.left) <= box.height;
+            if ((isOver(after) && isOver(before)) || (isOver(after) && isAt(after, false)) || (isOver(before) && isAt(before, true))) raised.push(element);
         }
         if (raised.length >= 2) for (const element of raised) {
             const open = document.createTextNode('\uE000');
