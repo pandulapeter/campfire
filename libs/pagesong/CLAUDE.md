@@ -29,7 +29,9 @@ weights' bytes to `PageSong`, which only answers line indices and never changes 
   reads it, so convolutions past a line's end are not zero.
 - **The crop** (`CropRule.kt`) is `gate.py`'s `unsure` rule: a line is kept when its likeliest label is `SONG` or
   `METADATA`, or its chance of either (rounded to four decimals) is at least 2%; the lines hold a song when at least 4
-  kept lines are likeliest `SONG`, else every line is kept. Blank lines (Python's `strip()` empties them) are left out
+  kept lines are likeliest `SONG`, else every line is kept. Where it holds one, every tab staff string after its first
+  `SONG` line (`staffLinesOf`, looser than the model's feature) and the up to 8 lines between two are kept too, whatever
+  the model says: a long tab between players' notes loses its sense of where the song goes on. Blank lines (Python's `strip()` empties them) are left out
   of all of it, as the gate leaves them out (the model was not trained on them); the caller puts back those between kept
   lines. The title and artist are the surest of the printed lines likeliest so; `headerLines` are those of them heading
   the song (before its first printed `SONG` line, not running straight into it, and not kept), which no gate scored: the

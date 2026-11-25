@@ -174,4 +174,12 @@ class CropRuleTest {
 
     private fun scores(junk: Float = 0f, song: Float = 0f, title: Float = 0f, artist: Float = 0f, metadata: Float = 0f) =
         PageLineScores(floatArrayOf(junk, song, title, artist, metadata))
+
+    @Test
+    fun `a tab staff after the song's first line is kept whatever the model says and one before it is not`() {
+        val texts = listOf("e|---0---0---|---------|", "Intro", "Verse", "words", "words", "words", "e|---0---0---|---------|", "(Guitar 2)", "A|-2s7--[2]~~|~~~~~~~~|", "Share")
+        val crop = PageCrop.of(listOf(junk, junk, song, song, song, song, junk, junk, junk, junk), blankLines = emptySet(), texts = texts)
+        assertEquals(listOf(2, 3, 4, 5, 6, 7, 8), crop.keptLines)
+        assertEquals(listOf(0, 1, 2), PageCrop.of(listOf(junk, junk, song), blankLines = emptySet(), texts = texts.take(3)).keptLines)
+    }
 }

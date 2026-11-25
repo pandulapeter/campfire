@@ -35,7 +35,7 @@ public class PageSong(
      */
     public fun crop(lines: List<PageLine>, source: PageLineSource): PageCrop {
         val read = lines.take(MAX_LINES)
-        return cropOf(scores = logitsOf(read, source).map(::scoresOf), lineCount = lines.size, blankLines = blankLinesOf(read))
+        return cropOf(scores = logitsOf(read, source).map(::scoresOf), lineCount = lines.size, blankLines = blankLinesOf(read), staffLines = staffLinesOf(read.map { it.text }))
     }
 
     internal fun logitsOf(lines: List<PageLine>, source: PageLineSource) = model.logitsOf(lines, source)

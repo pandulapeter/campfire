@@ -41,7 +41,8 @@ internal object ChordSheetSongCrop {
         if (origins.isEmpty() || origins.any { it !in scores.indices }) return song
         val printed = song.filter { it.origin != null && it.text.isNotBlank() }.mapTo(mutableSetOf()) { it.origin }
         val blankLines = origins.indices.filterTo(mutableSetOf()) { origins[it] !in printed }
-        val crop = PageCrop.of(origins.map { scores[it] }, blankLines)
+        val texts = origins.map { origin -> song.firstOrNull { it.origin == origin }?.text.orEmpty() }
+        val crop = PageCrop.of(origins.map { scores[it] }, blankLines, texts)
         if (!crop.holdsSong) return song
         val firstSongLine = crop.scores.indices.first { it !in blankLines && crop.scores[it].label == PageLineLabel.SONG }
         val header = crop.scores.indices.filter { it !in blankLines && isHeader(crop.scores[it], isAboveSong = it < firstSongLine) }

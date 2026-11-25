@@ -26,6 +26,7 @@ import glob
 import json
 import os
 import random
+import re
 import sys
 import time
 
@@ -57,8 +58,24 @@ def load(corpus):
         else:
             with open(os.path.join(corpus, "documents", labelled["id"] + ".json"), encoding="utf-8") as file:
                 lines = json.load(file)["lines"]
-        examples.append({"id": labelled["id"], "source": labelled["source"], "lines": lines, "labels": labelled["labels"], "noSong": labelled.get("noSong", False), "group": labelled.get("group", labelled["id"]), "isSynthetic": labelled["id"].startswith("synthetic__")})
+        labels = staves_ignored(lines, labelled["labels"])
+        examples.append({"id": labelled["id"], "source": labelled["source"], "lines": lines, "labels": labels, "noSong": labelled.get("noSong", False), "group": labelled.get("group", labelled["id"]), "isSynthetic": labelled["id"].startswith("synthetic__")})
     return examples
+
+
+def staves_ignored(lines, labels):
+    """
+    The labels with each staff string after the song's first line that the teacher called clutter made `IGNORE`: the crop
+    keeps such a line whatever the model says (`tab_lines`), and a page printing its tab twice, one copy labelled
+    clutter, would otherwise teach the model that a staff deep in a page is clutter, which costs a long tab its second half.
+    """
+    first = next((index for index, label in enumerate(labels) if label == "SONG"), None)
+    if first is None:
+        return labels
+    return [
+        "IGNORE" if index > first and label == "JUNK" and index < len(lines) and is_staff(lines[index]["text"]) else label
+        for index, label in enumerate(labels)
+    ]
 
 
 def tensors(example):
@@ -116,6 +133,25 @@ def cropped(prediction, printed, rule):
     return found
 
 
+STAFF_GAP = 8
+STAFF_START = re.compile(r"^[ \t]*[A-Ga-g][#b]?[ \t]*\|")
+
+
+def is_staff(text):
+    """A tab staff's string, whatever its playing marks: a string's name, a bar line, and a run of dashes or tildes."""
+    return bool(STAFF_START.match(text)) and sum(text.count(mark) for mark in "-~") >= 8 and text.count("|") >= 2
+
+
+def tab_lines(lines, printed, first_song_line):
+    """
+    What the `unsure` crop keeps of a tab whatever the model says (`CropRule.kt`): every staff string after the song's
+    first line, and the printed lines between two of them, `STAFF_GAP` at most (a part's name, a player's note).
+    """
+    staves = sorted(index for index, line in enumerate(lines) if index > first_song_line and is_staff(line["text"]))
+    between = {index for a, b in zip(staves, staves[1:]) if b - a - 1 <= STAFF_GAP for index in range(a + 1, b)}
+    return (set(staves) | between) & printed
+
+
 def score(example, prediction, rule="line"):
     """The crop against the converter alone on one page; lines with no text and lines the teacher disagreed on are left out."""
     printed = [index for index, line in enumerate(example["lines"]) if line["text"].strip() and example["labels"][index] != "IGNORE"]
@@ -126,6 +162,8 @@ def score(example, prediction, rule="line"):
     is_song = sum(1 for index in found if predicted[index] == "SONG") >= MIN_SONG_LINES
     # Where the model does not see a song, nothing is cropped and the converter has the whole page, as today.
     kept = found if is_song else set(printed)
+    if is_song and rule == "unsure":
+        kept |= tab_lines(example["lines"], set(printed), min(index for index in found if predicted[index] == "SONG"))
 
     def f1(chosen):
         if not truth:

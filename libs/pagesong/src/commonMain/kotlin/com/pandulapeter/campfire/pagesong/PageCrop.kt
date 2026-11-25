@@ -41,8 +41,10 @@ public data class PageCrop(
         /**
          * The crop of lines the model has already scored, by the same rule as [PageSong.crop]: for a part of a longer
          * page read whole, such as one song of a document, whose lines the model judged in the whole document's context.
-         * [blankLines] are the indices into [scores] of the lines printing nothing, which the crop leaves to the caller.
+         * [blankLines] are the indices into [scores] of the lines printing nothing, which the crop leaves to the caller;
+         * [texts], the lines' own, tell the tab staves the crop keeps after the song's first line whatever the model says.
          */
-        public fun of(scores: List<PageLineScores>, blankLines: Set<Int>): PageCrop = cropOf(scores, scores.size, blankLines)
+        public fun of(scores: List<PageLineScores>, blankLines: Set<Int>, texts: List<String> = emptyList()): PageCrop =
+            cropOf(scores, scores.size, blankLines, staffLinesOf(texts))
     }
 }
