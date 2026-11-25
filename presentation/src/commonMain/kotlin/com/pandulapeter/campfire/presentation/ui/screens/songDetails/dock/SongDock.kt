@@ -99,12 +99,22 @@ internal fun SongDock(
 /** The dock's rows, as tall as [dock] says, for the page the pager is on or heading for ([targetPage]). */
 @Composable
 private fun DockRowsBox(dock: SongDockState, metronome: DockMetronome, contentPadding: PaddingValues, targetPage: Int) {
-    // Kept while the dock leaves, so that it shrinks away as it was rather than as nothing.
-    val lastLayout = remember { LastDockLayout() }
-    dock.layout?.let { lastLayout.value = it }
+    // Rows the dock loses (the window widened past the side panel's breakpoint, a switch turned off, the dock leaving)
+    // are kept, laid out as they were, until the height has shrunk to the new one, so that they shrink away as they were
+    // rather than vanishing at once over an emptied surface. Rows it gains, or the same rows laid out anew, are drawn at
+    // once, their full height clipped to the height growing into it.
+    val shown = remember { ShownDockRows() }
+    dock.layout?.let { layout ->
+        val shownLayout = shown.layout
+        if (shownLayout == null || shown.rows == dock.rowsUnder || layout.height >= shownLayout.height || dock.isHeightSettled) {
+            shown.rows = dock.rowsUnder
+            shown.layout = layout
+        }
+    }
     // Gone once it has shrunk away, so that nothing of it is still read or found under the pages.
     if (dock.layout == null && dock.height == 0.dp) return
-    lastLayout.value?.let { layout ->
+    val rows = shown.rows ?: return
+    shown.layout?.let { layout ->
         Box(modifier = Modifier.fillMaxWidth().height(dock.height).clipToBounds()) {
             val layoutDirection = LocalLayoutDirection.current
             val horizontalPadding = PaddingValues(
@@ -116,7 +126,7 @@ private fun DockRowsBox(dock: SongDockState, metronome: DockMetronome, contentPa
                     content = dock.contents[page],
                     stepper = dock.steppers[page],
                     metronome = metronome,
-                    rows = dock.rowsUnder,
+                    rows = rows,
                     layout = layout,
                     horizontalPadding = horizontalPadding,
                     isBesidePanel = dock.isSidePanel,
@@ -153,6 +163,9 @@ private fun DockRowsOf(
         .padding(top = DOCK_VERTICAL_PADDING, bottom = layout.bottomPadding),
     verticalArrangement = Arrangement.spacedBy(DOCK_ROW_GAP),
 ) {
+    // The first row's in either layout, so that the scale chips keep their place as the rows switch between one row and
+    // two (the side panel coming or going).
+    val rowScroll = rememberScrollState()
     val cells = content?.let { rememberChordCells(it.model, it.chordDiagrams) }.orEmpty()
     val onChordClicked = content?.chordDiagrams?.onChordClicked
     val hasDiagramRow = rows.hasChordRow && layout.tier != DockTier.CHORD_CHIPS
@@ -169,7 +182,6 @@ private fun DockRowsOf(
     val scaleGroups = content?.model?.scaleGroups.orEmpty()
     val headedGroup = remember(scaleGroups, headedSection) { headedSection?.let { scaleGroupAt(scaleGroups, it) } }
     if (!hasDiagramRow) {
-        val rowScroll = rememberScrollState()
         DockScrollingRow(
             height = layout.rowHeight,
             horizontalPadding = horizontalPadding,
@@ -186,9 +198,8 @@ private fun DockRowsOf(
         }
     } else {
         if (rows.hasScaleRow) {
-            val scaleScroll = rememberScrollState()
-            DockScrollingRow(height = layout.rowHeight, horizontalPadding = horizontalPadding, scrollState = scaleScroll, start = null, end = null) {
-                if (content != null) DockScaleChips(content = content, scrollState = scaleScroll, headedGroup = headedGroup)
+            DockScrollingRow(height = layout.rowHeight, horizontalPadding = horizontalPadding, scrollState = rowScroll, start = null, end = null) {
+                if (content != null) DockScaleChips(content = content, scrollState = rowScroll, headedGroup = headedGroup)
             }
         }
         val stripScroll = rememberScrollState()
@@ -227,8 +238,8 @@ internal fun Modifier.readAfterDock() = semantics {
     traversalIndex = DOCK_TRAVERSAL_INDEX + 1f
 }
 
-/** The dock's layout as [SongDock] last drew it. Not a state. */
-private class LastDockLayout(var value: DockLayout? = null)
+/** The dock's rows and their layout as [SongDock] last drew them. Not a state. */
+private class ShownDockRows(var rows: DockRows? = null, var layout: DockLayout? = null)
 
 /** The dock's last row as [SongDock] last drew it. Not a state. */
 private class LastRow(var value: (@Composable () -> Unit)? = null)

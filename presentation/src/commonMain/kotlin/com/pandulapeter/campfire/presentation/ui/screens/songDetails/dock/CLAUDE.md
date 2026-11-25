@@ -30,7 +30,8 @@ app bar's metronome panel.
   nothing. **As wide as the chip-high tempo chip** (`dockTempoChipWidth`, measured at the interface's text size) or two
   full-size guitar diagrams with 8 dp to spare, whichever is wider, within 8 dp each side (`dockPanelWidthOf`); past
   176 dp a 1024 × 720 window's songs take a page more (`PageCountTest`).
-  The switch travels: the rows shrink away as the panel slides in, the end inset passing between them
+  The switch travels: the rows shrink away as the panel slides in (drawn as they were until the height settles, then
+  swapped for the row under the song, whose scale chips keep their scroll), the end inset passing between them
   (`PaddingBesidePanel`) so the song's start never moves.
 - **A setlist's pager bar is its last row** (`lastRow`), stacked at the panel's foot (`isStacked`). **An import
   preview's card stands on the surface above its one row** (measured with the pages, `PagesAbovePreviewBar`), at the

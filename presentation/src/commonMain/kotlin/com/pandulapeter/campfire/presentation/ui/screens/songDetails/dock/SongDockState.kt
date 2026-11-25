@@ -57,7 +57,8 @@ internal class SongDockState(
     val height by animatedHeight
     val panelWidth by animatedPanelWidth
     val isSidePanel get() = panelLayout != null
-    val isSettled get() = height == target && panelWidth == panelTarget
+    val isHeightSettled get() = height == target
+    val isSettled get() = isHeightSettled && panelWidth == panelTarget
 }
 
 /**
