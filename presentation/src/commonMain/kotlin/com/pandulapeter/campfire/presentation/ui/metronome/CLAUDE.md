@@ -42,7 +42,8 @@ on Android with Vibrate on and a beat not muted (iOS has no background haptics).
 - **A new song or stretch takes effect from beat one of the next bar** (from the next beat where the tab's Tempo change
   says so, `MetronomeSettings.isChangeOnNextBar`), anything else from the next beat; a rebuilt view model does not stop
   a playing click.
-- Only the tab's or a song's taps, with the feature on, may open the web's audio device (`Metronome.setStartable`).
+- Only the tab's or a song's taps, with the feature on (a song's also with its toolbar's metronome), may open the web's
+  audio device (`Metronome.setStartable`).
 - A click that stops on its own is a snackbar naming why.
 - Space (tab) and M (tab and song, not an import preview) toggle it on desktop and web, under no dialog or menu, only on
   a held key's first press. T taps the tempo under the same rules: the tab's through `tapTempoByKey`, a song's through

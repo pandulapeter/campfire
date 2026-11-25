@@ -69,11 +69,15 @@ internal fun isMetronomeScreenLeft(previousTop: CampfireDestination?, top: Campf
     (top !is CampfireDestination.SongDetails && top != CampfireDestination.Metronome) || top.contentKey != previousTop?.contentKey
 
 /**
- * Whether a screen that can start a click is on top - the Metronome tab or a song, with the feature on - which is
- * where the web's audio output listens for the presses that allow a page's audio to start (`Metronome.setStartable`).
+ * Whether a screen that can start a click is on top - the Metronome tab, or a song whose toolbar keeps its metronome,
+ * with the feature on - which is where the web's audio output listens for the presses that allow a page's audio to start
+ * (`Metronome.setStartable`). Preferences not yet read count as the defaults, every switch on.
  */
-internal fun isMetronomeStartable(top: CampfireDestination?, isMetronomeEnabled: Boolean) =
-    isMetronomeEnabled && (top == CampfireDestination.Metronome || top is CampfireDestination.SongDetails)
+internal fun isMetronomeStartable(top: CampfireDestination?, preferences: UserPreferences?) =
+    preferences?.isMetronomeEnabled != false && (
+        top == CampfireDestination.Metronome ||
+            (top is CampfireDestination.SongDetails && preferences?.isDockMetronomeEnabled != false)
+        )
 
 /**
  * Whether a song is on top whose click [preferences] have taken away, the feature or its toolbar's metronome switched off

@@ -333,11 +333,7 @@ internal class MetronomeController(
         // Where the web's audio output listens for the presses that allow a page's audio to start, so that tapping
         // around the rest of the app never opens the audio device; a no-op on the other platforms. The screen
         // composes before the tap that starts a click, so the listener is there in time.
-        combine(
-            snapshotFlow { backStack.lastOrNull() },
-            userPreferences.map { it?.isMetronomeEnabled != false },
-            ::isMetronomeStartable,
-        ).distinctUntilChanged().collect(metronome::setStartable)
+        combine(snapshotFlow { backStack.lastOrNull() }, userPreferences, ::isMetronomeStartable).distinctUntilChanged().collect(metronome::setStartable)
     }
 
     /** Stops a song's click as its toolbar's metronome is switched off over it, which takes away the way to stop it. */

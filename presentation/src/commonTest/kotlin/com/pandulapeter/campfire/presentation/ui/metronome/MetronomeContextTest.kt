@@ -144,9 +144,18 @@ class MetronomeContextTest {
             CampfireDestination.SongEditor(fileName = "a.cho"),
             CampfireDestination.ImportReport,
         )
-        startable.forEach { assertTrue(isMetronomeStartable(it, isMetronomeEnabled = true), it.toString()) }
-        others.forEach { assertFalse(isMetronomeStartable(it, isMetronomeEnabled = true), it.toString()) }
-        (startable + others).forEach { assertFalse(isMetronomeStartable(it, isMetronomeEnabled = false), it.toString()) }
+        startable.forEach { assertTrue(isMetronomeStartable(it, testPreferences()), it.toString()) }
+        startable.forEach { assertTrue(isMetronomeStartable(it, preferences = null), it.toString()) }
+        others.forEach { assertFalse(isMetronomeStartable(it, testPreferences()), it.toString()) }
+        (startable + others).forEach { assertFalse(isMetronomeStartable(it, testPreferences().copy(isMetronomeEnabled = false)), it.toString()) }
+    }
+
+    @Test
+    fun `a song whose toolbar metronome is off cannot start a click while the metronome tab still can`() {
+        val preferences = testPreferences().copy(isDockMetronomeEnabled = false)
+        val songDetails = CampfireDestination.SongDetails(songFileNames = listOf("a.cho"), setlistFileName = null, initialIndex = 0)
+        assertFalse(isMetronomeStartable(songDetails, preferences))
+        assertTrue(isMetronomeStartable(CampfireDestination.Metronome, preferences))
     }
 
     @Test
