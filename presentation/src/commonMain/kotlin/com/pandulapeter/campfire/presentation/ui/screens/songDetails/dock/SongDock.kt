@@ -189,22 +189,6 @@ private fun DockRowsOf(
 }
 
 /**
- * What starts the dock for one song's [content]: the instrument and the tuner where the key chip does not hold them
- * ([DockInstrumentTools]), then the key chip ([DockKeyChip]) where there is a [dockKey], [height] tall.
- */
-@Composable
-private fun DockStart(content: DockContent, dockKey: DockKey?, height: Dp) {
-    DockInstrumentTools(content = content, keyOpensPlaying = dockKey?.opensPlaying == true)
-    if (dockKey != null) {
-        DockKeyChip(
-            dockKey = dockKey,
-            height = height,
-            onClick = content.playingControls?.onPlayingClicked?.takeIf { dockKey.opensPlaying },
-        )
-    }
-}
-
-/**
  * Puts what it is applied to after the dock in the order a screen reader takes the screen in: the song's pages, which
  * are drawn above the dock but read after it.
  */
