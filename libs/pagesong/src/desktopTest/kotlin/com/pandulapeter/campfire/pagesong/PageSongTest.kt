@@ -69,10 +69,20 @@ class PageSongTest {
     }
 
     @Test
+    fun `a page reads its lines' marks and never a layout, and a document the reverse`() {
+        val layout = PageLineLayout(page = 3, column = 1, size = 2f, isBold = true, isItalic = true, isMonospace = true, indent = 0.5f, isHeading = true)
+        val marks = PageLineMarks(size = 2f, isBold = true, isItalic = false, isMonospace = false, isHeading = false, isLink = true, isNewBlock = true, isLandmark = false)
+
+        assertEquals(lineFeaturesOf(PageLine("Sign in", marks = marks), PageLineSource.PAGE).toList(), lineFeaturesOf(PageLine("Sign in", layout, marks), PageLineSource.PAGE).toList())
+        assertEquals(lineFeaturesOf(PageLine("Sign in", layout), PageLineSource.DOCUMENT).toList(), lineFeaturesOf(PageLine("Sign in", layout, marks), PageLineSource.DOCUMENT).toList())
+        assertEquals(lineFeaturesOf(PageLine("Sign in"), PageLineSource.PAGE).toList(), lineFeaturesOf(PageLine("Sign in", layout), PageLineSource.PAGE).toList())
+    }
+
+    @Test
     fun `weights of another format or version or size are refused`() {
         assertFailsWith<IllegalArgumentException> { PageSong(ByteArray(0)) }
         assertFailsWith<IllegalArgumentException> { PageSong(weights.copyOf().also { it[0] = 'X'.code.toByte() }) }
-        assertFailsWith<IllegalArgumentException> { PageSong(weights.copyOf().also { it[4] = 2 }) }
+        assertFailsWith<IllegalArgumentException> { PageSong(weights.copyOf().also { it[4] = 1 }) }
         assertFailsWith<IllegalArgumentException> { PageSong(weights.copyOf(weights.size - 1)) }
         assertFailsWith<IllegalArgumentException> { PageSong(weights.copyOf(weights.size + 1)) }
     }

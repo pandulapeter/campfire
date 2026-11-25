@@ -14,61 +14,36 @@ import com.pandulapeter.campfire.domain.api.importing.PageSongLines
 import com.pandulapeter.campfire.pagesong.PageLine
 import com.pandulapeter.campfire.pagesong.PageLineScores
 import com.pandulapeter.campfire.pagesong.PageLineSource
-import com.pandulapeter.campfire.pagesong.PageSong
 import com.pandulapeter.campfire.presentation.resources.Res
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Single
 
 /**
- * The page model (`:libs:pagesong`) over the weights shipped in `composeResources/files`. They are a few megabytes, so
- * they are read and parsed on the first page cropped rather than at launch, once per process: a read that fails is not
- * tried again, and every page is then converted whole, as it was before the model ([songLinesOf] throws, since its null
+ * The page models (`:libs:pagesong`, [PageModels]) over the weights shipped in `composeResources/files`: a page whose
+ * lines came with their structure marks is cropped by the model trained with them, everything else by the plain one.
+ * Where no model can run, every page is converted whole, as it was before the model ([songLinesOf] throws, since its null
  * means a page with no song).
  *
  * The title and artist lines are answered apart from the song, for the import to read as its header (`PageTextCrop`).
- * A document's lines are only scored here, as a whole; the converter crops each of its songs by the scores
- * (`ChordSheetSongCrop`).
+ * A document's lines are only scored here, as a whole, always by the plain model; the converter crops each of its songs
+ * by the scores (`ChordSheetSongCrop`).
  */
 @Single
 internal class PageCropperImpl : PageCropper {
 
-    private val mutex = Mutex()
-    private var pageSong: PageSong? = null
-    private var isRead = false
+    private val models = PageModels(readWeights = Res::readBytes)
 
     private val memo = PageSongLinesMemo { lines ->
         // No model is no reason to say a page holds no song, which would refuse a page read from its address.
-        val pageSong = pageSong() ?: throw IllegalStateException("The page model is not there")
-        PageSongLines.of(withContext(Dispatchers.Default) { pageSong.crop(lines.map(::PageLine), PageLineSource.PAGE) })
+        val (pageSong, read) = models.forPage(lines) ?: throw IllegalStateException("The page model is not there")
+        PageSongLines.of(withContext(Dispatchers.Default) { pageSong.crop(read, PageLineSource.PAGE) })
     }
 
-    override suspend fun songLinesOf(lines: List<String>): PageSongLines? = memo.songLinesOf(lines)
+    override suspend fun songLinesOf(lines: List<PageLine>): PageSongLines? = memo.songLinesOf(lines)
 
     override suspend fun documentScoresOf(lines: List<PageLine>): List<PageLineScores>? {
-        val pageSong = pageSong() ?: return null
+        val pageSong = models.plain() ?: return null
         return withContext(Dispatchers.Default) { pageSong.crop(lines, PageLineSource.DOCUMENT).scores }
-    }
-
-    private suspend fun pageSong() = mutex.withLock {
-        if (!isRead) {
-            pageSong = try {
-                withContext(Dispatchers.Default) { PageSong(Res.readBytes(WEIGHTS)) }
-            } catch (exception: CancellationException) {
-                throw exception
-            } catch (exception: Exception) {
-                println("Could not read the page model: ${exception.message}")
-                null
-            }
-            isRead = true
-        }
-        pageSong
-    }
-
-    private companion object {
-        const val WEIGHTS = "files/page-model.bin"
     }
 }

@@ -59,7 +59,7 @@ internal class OffscreenPageSource(
                         break
                     }
                     val snapshot = look.snapshot ?: continue
-                    quietFor = if (look.isLoaded && snapshot.isReadable && snapshot == latest) quietFor + POLL_INTERVAL else Duration.ZERO
+                    quietFor = if (look.isLoaded && snapshot.isReadable && snapshot.readsAs(latest)) quietFor + POLL_INTERVAL else Duration.ZERO
                     latest = snapshot
                     if (quietFor >= QUIET_PERIOD) break
                 }

@@ -15,9 +15,11 @@ import com.pandulapeter.campfire.chordpro.convert.ChordSheet
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetConverter
 import com.pandulapeter.campfire.chordpro.convert.PageTitle
 import com.pandulapeter.campfire.data.model.Logger
+import com.pandulapeter.campfire.data.model.importing.PageLineMarks
 import com.pandulapeter.campfire.data.model.library.normalizedToNfc
 import com.pandulapeter.campfire.domain.api.importing.PageCropper
 import com.pandulapeter.campfire.domain.api.importing.PageSongLines
+import com.pandulapeter.campfire.domain.api.importing.pageTextLinesOf
 import kotlinx.coroutines.CancellationException
 
 /** A page's text cropped to its song by a [PageCropper], before the chord sheet converter reads it. */
@@ -60,11 +62,20 @@ internal object PageTextCrop {
      * The title and artist lines are kept with the song, except that a body is also made without the ones that head it
      * ([com.pandulapeter.campfire.domain.api.importing.PageSongLines.headerLines]): any other stays in both, since it may
      * be a line of the song the model misjudged, and a misjudged song line must never be lost.
+     *
+     * [marks] are the structure marks of the page's lines where the app read it itself, read only where they are those
+     * of [text]'s lines (`pageTextLinesOf`); [logger] hears whether there were any and how many lines took them.
      */
-    suspend fun cropped(text: String, cropper: PageCropper, logger: Logger): CroppedPage? {
-        val lines = text.lines()
+    suspend fun cropped(text: String, marks: List<PageLineMarks?>?, cropper: PageCropper, logger: Logger): CroppedPage? {
+        val pageLines = pageTextLinesOf(text, marks)
+        val lines = pageLines.map { it.text }
+        if (marks == null) {
+            logger.log("Page crop: ${lines.size} lines, no structure marks")
+        } else {
+            logger.log("Page crop: ${lines.size} lines, structure marks for ${marks.size}, ${pageLines.count { it.marks != null }} aligned")
+        }
         val found = try {
-            cropper.songLinesOf(lines)
+            cropper.songLinesOf(pageLines)
         } catch (exception: CancellationException) {
             throw exception
         } catch (exception: Exception) {

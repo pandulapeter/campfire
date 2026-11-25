@@ -25,6 +25,7 @@ import com.pandulapeter.campfire.domain.implementation.testSetlist
 import com.pandulapeter.campfire.chordpro.convert.ChordSheet
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
+import com.pandulapeter.campfire.data.model.importing.PageLineMarks
 import com.pandulapeter.campfire.data.model.importing.StagingRefusedException
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.setlist.ParsedSetlist
@@ -272,6 +273,18 @@ class PrepareImportUseCaseImplTest {
         assertTrue("river light" in song.text && "morning" in song.text)
         assertTrue("Sign in" !in song.text && "Great song" !in song.text)
         assertTrue(song.wholePageText.orEmpty().let { "Great song" in it && "river light" in it })
+    }
+
+    @Test
+    fun `a page read with structure marks is cropped with them`() = runTest {
+        val marks = PAGE.split('\n').map { line ->
+            PageLineMarks(size = 1f, isBold = false, isItalic = false, isMonospace = false, isHeading = false, isLink = line == "Sign in", isNewBlock = false, isLandmark = false)
+        }
+        val cropper = FakePageCropper { songLines(3, 4, 6, 7) }
+
+        prepare(pageCropper = cropper)(listOf(page(PAGE).copy(pageMarks = marks)))
+
+        assertEquals(marks.map { it.isLink }, cropper.askedLines.single().map { it.marks?.isLink })
     }
 
     @Test

@@ -9,9 +9,12 @@
  */
 package com.pandulapeter.campfire.presentation.ui.platform
 
+import com.pandulapeter.campfire.data.model.importing.PageLineMarks
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.decodeFromJsonElement
 
 /**
  * The `share.json` the iOS share extension writes into each share's folder of its inbox (`app/ios/CLAUDE.md`). Decoded
@@ -20,6 +23,9 @@ import kotlinx.serialization.json.Json
  * @param files The shared files, as paths relative to the share's folder.
  * @param texts The shared texts, each a UTF-8 file, as paths relative to the share's folder. Empty where the share holds
  *   a file: a text next to one is its caption.
+ * @param marks Where the share is a page Safari read (`PageText.js`), its one text's structure marks, one per line split
+ *   at `\n`, as the script wrote them; absent from any other share and from an older extension's, which needs no new
+ *   [version] since a manifest without them is read as before.
  */
 @Serializable
 data class ShareInboxManifest(
@@ -27,6 +33,7 @@ data class ShareInboxManifest(
     val subject: String? = null,
     val files: List<String> = emptyList(),
     val texts: List<String> = emptyList(),
+    val marks: JsonArray? = null,
 ) {
 
     /**
@@ -41,6 +48,18 @@ data class ShareInboxManifest(
      * nothing of the share is left, which then goes whole.
      */
     fun withoutFile(path: String) = copy(files = files - path).takeIf { it.files.isNotEmpty() || it.texts.isNotEmpty() }
+
+    /**
+     * [marks] decoded as `PageSnapshot` decodes the app's own page read's (keep the two in step): null for a line with
+     * nothing printed or one the script could not align, and null for all of them where any is not what it writes.
+     */
+    fun pageMarks(): List<PageLineMarks?>? = try {
+        marks?.let { manifestJson.decodeFromJsonElement<List<SharedLineMarks>>(it).map(SharedLineMarks::toPageLineMarks) }
+    } catch (_: SerializationException) {
+        null
+    } catch (_: IllegalArgumentException) {
+        null
+    }
 
     companion object {
         const val VERSION = 1
@@ -59,3 +78,32 @@ fun encodeShareInboxManifest(manifest: ShareInboxManifest): String = manifestJso
 
 /** A field a newer extension adds is not a reason to refuse the share; [ShareInboxManifest.version] is. */
 private val manifestJson = Json { ignoreUnknownKeys = true }
+
+/** One line's marks as `PageText.js` writes them: numbers, each flag 0 or 1. */
+@Serializable
+private data class SharedLineMarks(
+    val size: Double? = null,
+    val unaligned: Int = 0,
+    val link: Int = 0,
+    val newBlock: Int = 0,
+    val landmark: Int = 0,
+    val bold: Int = 0,
+    val italic: Int = 0,
+    val monospace: Int = 0,
+    val heading: Int = 0,
+) {
+    fun toPageLineMarks() = if (size == null || unaligned != 0) {
+        null
+    } else {
+        PageLineMarks(
+            size = size.toFloat(),
+            isBold = bold != 0,
+            isItalic = italic != 0,
+            isMonospace = monospace != 0,
+            isHeading = heading != 0,
+            isLink = link != 0,
+            isNewBlock = newBlock != 0,
+            isLandmark = landmark != 0,
+        )
+    }
+}

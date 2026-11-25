@@ -26,7 +26,8 @@ enum ShareOutcome {
 ///
 /// Each share is one folder, `ShareInbox/<time>-<UUID>`, written under a `.partial` name and renamed only once
 /// everything is in it, so the app never reads half a share. In it, `files/<n>/<name>` per file, `texts/<n>.txt` per
-/// text and `share.json`, which `decodeShareInboxManifest` in `:presentation` reads; keep the two in step.
+/// text and `share.json`, which `decodeShareInboxManifest` in `:presentation` reads; keep the two in step. A page Safari
+/// read adds its text's structure marks (`PageText.js`) to the manifest as `marks`, for the app's page model.
 struct ShareInboxWriter {
 
     /// Nil in a build signed without the App Group, where there is nowhere to write to.
@@ -43,6 +44,7 @@ struct ShareInboxWriter {
         let links = attachments.compactMap { if case let .link(provider) = $0 { return provider } else { return nil } }
         let pages = attachments.compactMap { if case let .page(provider) = $0 { return provider } else { return nil } }
         var texts: [String] = []
+        var marks: [Any]?
         var subject = Self.subject(of: items)
         // A text next to a file is its caption - the file's name, a "sent from" line - as it is on Android.
         if files.isEmpty, let page = await firstPage(pages) {
@@ -53,6 +55,7 @@ struct ShareInboxWriter {
                 // Safari's own text of the page (PageText.js): the app crops it as a pasted page, nothing loaded again.
                 if Int64(page.text.utf8.count) > ShareLimits.maxTextSize { return .tooLarge }
                 texts = [page.text]
+                marks = page.marks
                 subject = subject ?? page.title
             }
         } else if files.isEmpty {
@@ -100,7 +103,7 @@ struct ShareInboxWriter {
         if waiting.count >= Self.maxWaitingShares { return .inboxFull }
         let name = "\(Self.timestamp())-\(UUID().uuidString)"
         let partial = inbox.appendingPathComponent(name + Self.partialSuffix, isDirectory: true)
-        let outcome = await writeShare(files: files, texts: texts, subject: subject, id: name, into: partial, waitingBytes: waiting.bytes)
+        let outcome = await writeShare(files: files, texts: texts, marks: marks, subject: subject, id: name, into: partial, waitingBytes: waiting.bytes)
         guard case .saved = outcome else {
             try? fileManager.removeItem(at: partial)
             return outcome
@@ -121,7 +124,7 @@ struct ShareInboxWriter {
         CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), CFNotificationName(notificationName as CFString), nil, nil, true)
     }
 
-    private func writeShare(files: [(NSItemProvider, String)], texts: [String], subject: String?, id: String, into folder: URL, waitingBytes: Int64) async -> ShareOutcome {
+    private func writeShare(files: [(NSItemProvider, String)], texts: [String], marks: [Any]?, subject: String?, id: String, into folder: URL, waitingBytes: Int64) async -> ShareOutcome {
         let fileManager = FileManager.default
         var remaining = ShareLimits.maxShareSize
         var filePaths: [String] = []
@@ -149,9 +152,16 @@ struct ShareInboxWriter {
                 try data.write(to: folder.appendingPathComponent(path))
                 textPaths.append(path)
             }
+            // The marks only help the crop, so a share without room for them (or with marks the page broke) goes without.
+            var markedLines: [Any]?
+            if let marks, JSONSerialization.isValidJSONObject(marks), let data = try? JSONSerialization.data(withJSONObject: marks), Int64(data.count) <= remaining {
+                remaining -= Int64(data.count)
+                markedLines = marks
+            }
             if waitingBytes + ShareLimits.maxShareSize - remaining > ShareLimits.maxWaitingBytes { return .inboxFull }
             var manifest: [String: Any] = ["version": Self.manifestVersion, "files": filePaths, "texts": textPaths]
             manifest["subject"] = subject
+            manifest["marks"] = markedLines
             try JSONSerialization.data(withJSONObject: manifest).write(to: folder.appendingPathComponent("share.json"))
             let name: SharedName = fileNames.count > 1 ? .files(fileNames.count) : (fileNames.first ?? subject).map(SharedName.titled) ?? .unnamed
             return .saved(SavedShare(id: id, name: name))
@@ -233,6 +243,8 @@ struct ShareInboxWriter {
         let text: String
         let title: String?
         let address: String
+        /// One per line of [text] split at `\n`, as `PageText.js` wrote them; nil where it wrote none.
+        let marks: [Any]?
     }
 
     /// The first page Safari read for the extension (`PageText.js`, under `NSExtensionJavaScriptPreprocessingResultsKey`)
@@ -247,7 +259,8 @@ struct ShareInboxWriter {
                     }
                     let title = (results?["title"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines)
                     let address = (results?["address"] as? String) ?? ""
-                    continuation.resume(returning: SharedPage(text: text, title: title?.isEmpty == false ? title : nil, address: address))
+                    let marks = results?["marks"] as? [Any]
+                    continuation.resume(returning: SharedPage(text: text, title: title?.isEmpty == false ? title : nil, address: address, marks: marks))
                 }
             }
             if let page { return page }

@@ -83,7 +83,7 @@ class ImportCorpusTest {
         .toList()
 
     /**
-     * Exactly the import's path: a document through the extraction, the shipped page model's scores of its lines (as
+     * Exactly the import's path: a document through the extraction, the shipped plain page model's scores of its lines (as
      * `PageCropperImpl` gives them; none where the weights are missing), and the app's mapping, a text as a pasted sheet,
      * which a file's text is, so it is never cropped. A text
      * with an `.html` of the same name beside it is one clipboard's two flavours, read as the app's paste reads them

@@ -10,11 +10,12 @@
 package com.pandulapeter.campfire.pagesong
 
 /** How many numbers [lineFeaturesOf] gives a line: `FEATURES` in `tools/page-model/lines.py`. */
-internal const val FEATURE_COUNT = 19
+internal const val FEATURE_COUNT = 22
 
 /**
  * The line's numbers beside its characters, in `lines.py`'s `features` order and with its clamps: what the line reads as,
- * its length, and, for a document, its layout. Computed in doubles, as Python does, before the model's floats.
+ * its length, and how it is set: a document line's layout, or a page line's [PageLineMarks]. Computed in doubles, as
+ * Python does, before the model's floats.
  */
 internal fun lineFeaturesOf(line: PageLine, source: PageLineSource): FloatArray {
     val text = visibleTextOf(line.text)
@@ -38,23 +39,45 @@ internal fun lineFeaturesOf(line: PageLine, source: PageLineSource): FloatArray 
         start.toDouble() / maxOf(codePoints.size, 1),
         flag(LineRules.hasAddress(stripped.text)),
         flag(LineRules.hasDigit(stripped.text)),
-    ) + layoutFeaturesOf(if (source == PageLineSource.DOCUMENT) line.layout ?: BODY_TEXT else null)
+    ) + if (source == PageLineSource.DOCUMENT) layoutFeaturesOf(line.layout ?: BODY_TEXT) else marksFeaturesOf(line.marks)
     return FloatArray(values.size) { values[it].toFloat() }
 }
 
-/** A page's text carries no layout, so its layout inputs are zero and the source flag tells the two apart. */
-private fun layoutFeaturesOf(layout: PageLineLayout?) = if (layout == null) {
-    DoubleArray(8)
+/** A document line's layout, then three zeros: a document has no links, cards, or landmarks to mark. */
+private fun layoutFeaturesOf(layout: PageLineLayout) = doubleArrayOf(
+    minOf(layout.size.toDouble(), 3.0) / 3.0,
+    flag(layout.isBold),
+    flag(layout.isItalic),
+    flag(layout.isMonospace),
+    layout.indent.toDouble().coerceIn(0.0, 1.0),
+    ((layout.column ?: -1) + 1) / 4.0,
+    minOf(layout.page, 20) / 20.0,
+    flag(layout.isHeading),
+    0.0,
+    0.0,
+    0.0,
+)
+
+/**
+ * A page line's marks in the layout inputs that say the same of a document (never a page, column, or indent), then the
+ * three only a page has. A line without marks has every one zero, as training saw each marked page a second time without
+ * them, and the source flag tells pages and documents apart.
+ */
+private fun marksFeaturesOf(marks: PageLineMarks?) = if (marks == null) {
+    DoubleArray(11)
 } else {
     doubleArrayOf(
-        minOf(layout.size.toDouble(), 3.0) / 3.0,
-        flag(layout.isBold),
-        flag(layout.isItalic),
-        flag(layout.isMonospace),
-        layout.indent.toDouble().coerceIn(0.0, 1.0),
-        ((layout.column ?: -1) + 1) / 4.0,
-        minOf(layout.page, 20) / 20.0,
-        flag(layout.isHeading),
+        minOf(marks.size.toDouble(), 3.0) / 3.0,
+        flag(marks.isBold),
+        flag(marks.isItalic),
+        flag(marks.isMonospace),
+        0.0,
+        0.0,
+        0.0,
+        flag(marks.isHeading),
+        flag(marks.isLink),
+        flag(marks.isNewBlock),
+        flag(marks.isLandmark),
     )
 }
 

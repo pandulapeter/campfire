@@ -141,7 +141,9 @@ cannot tell from no answer.
   `innerText` with `content-visibility` forced visible for the read, since a page never scrolled would leave out what it
   skips, and a chord drawn above its syllable inline written as a chord row over its line, not glued into the word
   (`PageSnapshotScript.kt`); title, address; per line, the structure marks the page model can read, found by aligning
-  the visible text nodes with `innerText`, not yet decoded) every 500 ms, taken once loaded and unchanged for 1.5 s, else the last readable look at 20 s;
+  the visible text nodes with `innerText`, decoded only for the look taken into `LoadedPage.Read.marks`, none where any
+  is malformed) every 500 ms, taken once loaded and its text, title, and address unchanged for 1.5 s (a style changing
+  alone changes only the marks), else the last readable look at 20 s;
   a bot check (`PageSnapshot.isBotCheck`, short pages only) is waited past, never taken. The view is let go of
   however the read ends. Nothing read is `UNREACHABLE` where the load failed for the network (`PageLook.isUnreachable`)
   or the page was still loading with nothing readable at 20 s, which trying again may get past; else `UNREADABLE` (a

@@ -153,7 +153,7 @@ internal class PageModelWeights(
 
     private companion object {
         const val MAGIC = "CFPM"
-        const val VERSION = 1
+        const val VERSION = 2
         const val HEADER_SIZE = 4 + 4 + 8 * 4
         const val MAX_DIMENSION = 1 shl 16
     }

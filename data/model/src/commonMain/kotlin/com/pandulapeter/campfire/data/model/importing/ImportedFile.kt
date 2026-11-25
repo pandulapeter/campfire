@@ -39,6 +39,8 @@ import com.pandulapeter.campfire.data.model.library.LibraryFiles
  *
  * [isPageText] marks a text that came from a web page or another app as one new song (a paste, a drop, a share), whose
  * page clutter the import crops before it converts the text (`PageCropper`); a text file picked or opened is read whole.
+ * [pageMarks] are the structure marks of such a text's lines where the app read the page itself (see
+ * [LoadedPage.Read.marks]), null for a paste or a drop.
  */
 data class ImportedFile(
     val name: String,
@@ -50,6 +52,7 @@ data class ImportedFile(
     val receiving: ReceivingArchive? = null,
     val setlistSongTitles: Map<String, String> = emptyMap(),
     val isPageText: Boolean = false,
+    val pageMarks: List<PageLineMarks?>? = null,
 ) {
 
     /**
@@ -78,12 +81,12 @@ data class ImportedFile(
         other is ImportedFile && name == other.name && isTooLarge == other.isTooLarge &&
             isPlainTextByContent == other.isPlainTextByContent && bytes.contentEquals(other.bytes) && images == other.images &&
             staged == other.staged && receiving == other.receiving && setlistSongTitles == other.setlistSongTitles &&
-            isPageText == other.isPageText
+            isPageText == other.isPageText && pageMarks == other.pageMarks
         )
 
     override fun hashCode() =
         31 * (31 * (31 * (31 * (31 * name.hashCode() + isTooLarge.hashCode()) + isPlainTextByContent.hashCode()) + bytes.contentHashCode()) + images.hashCode()) +
-            31 * (31 * staged.hashCode() + receiving.hashCode()) + 31 * setlistSongTitles.hashCode() + isPageText.hashCode()
+            31 * (31 * staged.hashCode() + receiving.hashCode()) + 31 * setlistSongTitles.hashCode() + 31 * isPageText.hashCode() + pageMarks.hashCode()
 
     companion object {
 

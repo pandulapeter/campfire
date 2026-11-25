@@ -9,9 +9,10 @@
 """
 Trains the page model the app ships on every labelled page and document (no fold held out: the gate has already judged
 the recipe) and writes it in the format `:libs:pagesong` reads, then the fixtures its tests check the Kotlin forward
-pass and line features against.
+pass and line features against. The app ships two: one trained with the pages' structure marks, for a page it read
+itself, and one with `--no-marks`, for a paste and a document, which the marked one crops worse.
 
-    .venv/bin/python -I tools/page-model/export.py <corpus folder> --synthetic <import corpus> --weights <file>
+    .venv/bin/python -I tools/page-model/export.py <corpus folder> --synthetic <import corpus> --weights <file> [--no-marks]
     .venv/bin/python -I tools/page-model/export.py --fixtures <folder>
 
 The weights file, little-endian: the magic `CFPM`, the format version, then the shape (buckets, characters a line,
@@ -36,7 +37,7 @@ from lines import FEATURES, LABELS, features  # noqa: E402
 from model import MAX_CHARS, PageModel, hashed  # noqa: E402
 
 MAGIC = b"CFPM"
-VERSION = 1
+VERSION = 2
 
 
 def quantized(matrix):
@@ -90,7 +91,8 @@ def write(model, path):
 
 
 # Lines written for the fixtures: a chord sheet with its page's clutter, every script the app's languages use, chord
-# rows, a tab staff, headings, labelled details, and layout for a document.
+# rows, a tab staff, headings, labelled details, structure marks for a page (by line, as the app's page read writes
+# them: several combinations, a blank line's `{}`, and an unaligned line), and layout for a document.
 FIXTURE_PAGE = [
     "Home  Songs  Artists  Log in", "Accept all cookies", "", "Amazing Grace chords by John Newton", "Key: G   Capo: 2",
     "[Verse 1]", "G           G7        C        G", "Amazing grace, how sweet the sound", "      G               D",
@@ -107,6 +109,20 @@ FIXTURE_PAGE = [
     "\U00020000\U00020001 CJK", "\U0001f3f4\U000e0067\U000e0062\U000e0073\U000e0063\U000e0074\U000e007f flag", "\u00ad",
     "   ", "\t\tG\tD",
 ]
+FIXTURE_PAGE_MARKS = {
+    0: {"link": 1, "newBlock": 1, "landmark": 1, "size": 0.88, "bold": 0, "italic": 0, "monospace": 0, "heading": 0},
+    1: {"link": 1, "newBlock": 1, "landmark": 0, "size": 1, "bold": 1, "italic": 0, "monospace": 0, "heading": 0},
+    2: {},
+    3: {"link": 0, "newBlock": 1, "landmark": 0, "size": 2.13, "bold": 1, "italic": 0, "monospace": 0, "heading": 1},
+    4: {"link": 0, "newBlock": 0, "landmark": 0, "size": 1, "bold": 0, "italic": 1, "monospace": 0, "heading": 0},
+    5: {"link": 0, "newBlock": 1, "landmark": 0, "size": 1, "bold": 1, "italic": 0, "monospace": 1, "heading": 0},
+    6: {"link": 0, "newBlock": 0, "landmark": 0, "size": 1.07, "bold": 1, "italic": 0, "monospace": 1, "heading": 0},
+    7: {"link": 0, "newBlock": 0, "landmark": 0, "size": 1.07, "bold": 0, "italic": 0, "monospace": 1, "heading": 0},
+    8: {"unaligned": 1, "covered": 0.42},
+    9: {"link": 0, "newBlock": 0, "landmark": 0, "size": 4.5, "bold": 0, "italic": 1, "monospace": 1, "heading": 1},
+    24: {"link": 1, "newBlock": 0, "landmark": 1, "size": 0.75, "bold": 0, "italic": 0, "monospace": 0, "heading": 0},
+    25: {"link": 1, "newBlock": 1, "landmark": 0, "size": 0.9, "bold": 1, "italic": 1, "monospace": 0, "heading": 0},
+}
 FIXTURE_DOCUMENT = [
     {"text": "AMAZING GRACE", "page": 0, "column": -1, "size": 1.8, "bold": True, "italic": False, "monospace": False, "indent": 0.3, "heading": True},
     {"text": "John Newton", "page": 0, "column": -1, "size": 1.1, "bold": False, "italic": True, "monospace": False, "indent": 0.35, "heading": False},
@@ -129,7 +145,8 @@ def fixtures(folder):
         write(tiny, os.path.join(folder, "tiny.bin"))
     tiny.eval()
     examples = []
-    for source, lines in (("page", [{"text": text} for text in FIXTURE_PAGE]), ("document", FIXTURE_DOCUMENT)):
+    page = [{"text": text, **({"marks": FIXTURE_PAGE_MARKS[index]} if index in FIXTURE_PAGE_MARKS else {})} for index, text in enumerate(FIXTURE_PAGE)]
+    for source, lines in (("page", page), ("document", FIXTURE_DOCUMENT)):
         values = [features(line, source) for line in lines]
         with torch.no_grad():
             logits = tiny(torch.tensor([hashed(line["text"], buckets) for line in lines]), torch.tensor(values, dtype=torch.float32))
@@ -148,17 +165,15 @@ def main():
     parser.add_argument("--epochs", type=int, default=12)
     parser.add_argument("--seed", type=int, default=7)
     parser.add_argument("--fixtures", metavar="FOLDER")
+    parser.add_argument("--no-marks", action="store_true", help="leave the pages' structure marks out: the model for pastes and documents")
     arguments = parser.parse_args()
     if arguments.fixtures:
         fixtures(arguments.fixtures)
         return
-    from gate import load, train  # noqa: E402
-    from synthetic import synthetic_pages  # noqa: E402
+    from gate import load, train, training_set  # noqa: E402
 
     torch.set_num_threads(max(1, (os.cpu_count() or 2) - 2))
-    examples = load(arguments.corpus)
-    if arguments.synthetic:
-        examples += synthetic_pages(arguments.synthetic, [e for e in examples if e["source"] == "page"], set(), seed=arguments.seed)
+    examples = training_set(load(arguments.corpus, use_marks=not arguments.no_marks), arguments.synthetic, set(), arguments.seed)
     model = train(examples, arguments.epochs, arguments.seed)
     model.eval()
     with torch.no_grad():

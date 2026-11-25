@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.source.remote.implementation.page
 
 import com.pandulapeter.campfire.data.model.importing.LoadedPage
+import com.pandulapeter.campfire.data.model.importing.PageLineMarks
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -74,6 +75,41 @@ class PageSnapshotTest {
         assertNull(PageSnapshot.decode(null))
         assertNull(PageSnapshot.decode("not json"))
         assertNull(PageSnapshot.decode("[]"))
+    }
+
+    @Test
+    fun `a line's marks are decoded but a blank or unaligned line has none`() {
+        val snapshot = PageSnapshot.decode(
+            """{"text":"Sign in\n\nEm7\nToday","title":"t","address":"https://x.example.com/","marks":[
+            {"link":1,"newBlock":1,"landmark":1,"size":0.88,"bold":0,"italic":0,"monospace":0,"heading":0},{},
+            {"link":0,"newBlock":1,"landmark":0,"size":1,"bold":1,"italic":0,"monospace":1,"heading":0},{"unaligned":1,"covered":0.42}]}""",
+        )
+
+        assertEquals(
+            listOf(
+                PageLineMarks(size = 0.88f, isBold = false, isItalic = false, isMonospace = false, isHeading = false, isLink = true, isNewBlock = true, isLandmark = true),
+                null,
+                PageLineMarks(size = 1f, isBold = true, isItalic = false, isMonospace = true, isHeading = false, isLink = false, isNewBlock = true, isLandmark = false),
+                null,
+            ),
+            (snapshot?.toLoadedPage() as LoadedPage.Read).marks,
+        )
+    }
+
+    @Test
+    fun `marks a page broke leave its text read without them`() {
+        val snapshot = PageSnapshot.decode("""{"text":"Em7\nToday","title":"t","address":"https://x.example.com/","marks":[1,"two"]}""")
+
+        assertEquals(LoadedPage.Read(text = "Em7\nToday", title = "t", address = "https://x.example.com/", marks = null), snapshot?.toLoadedPage())
+    }
+
+    @Test
+    fun `a look reads as another of the same text whatever its marks`() {
+        val look = PageSnapshot.decode("""{"text":"Em7","title":"t","address":"https://x.example.com/","marks":[{"size":1}]}""")
+        val restyled = PageSnapshot.decode("""{"text":"Em7","title":"t","address":"https://x.example.com/","marks":[{"size":1.2}]}""")
+
+        assertTrue(restyled!!.readsAs(look))
+        assertFalse(restyled.readsAs(look!!.copy(text = "Em")))
     }
 
     private companion object {

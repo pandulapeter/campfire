@@ -59,7 +59,7 @@ tasks.named<Test>("desktopTest") {
     val pageCorpus = project.property("campfire.pageCorpus").toString()
     systemProperty("campfire.pageCorpus", pageCorpus)
     inputs.property("pageCorpus", pageCorpus)
-    // The weights :presentation ships, which ImportCorpusTest crops the corpus's documents with.
+    // The plain model :presentation ships, which ImportCorpusTest crops the corpus's documents with as the app does.
     val pageModelWeights = rootProject.file("presentation/src/commonMain/composeResources/files/page-model.bin")
     systemProperty("pageModelWeights", pageModelWeights.absolutePath)
     inputs.files(pageModelWeights).withPropertyName("pageModelWeights")

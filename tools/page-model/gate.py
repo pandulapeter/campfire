@@ -12,12 +12,16 @@ The page model's gate (step 6 of `tools/page-model/CLAUDE.md`): trains the page 
 by a model that never saw it, and compares each crop with the converter alone, which keeps every line of the page.
 
     .venv/bin/python -I tools/page-model/gate.py <corpus folder> [--synthetic <import corpus>] [--epochs N]
-        [--variants both] [--seed N] [--out <folder>] [--rescore]
+        [--variants both] [--seed N] [--group-by site] [--no-marks] [--out <folder>] [--rescore]
 
 The report goes to `<corpus>/.runs/gate.txt` (or `--out`'s folder, so two runs can go side by side) and the scores per page to `gate.tsv`: for each source and variant, how
 many pages the crop beats keeping everything on (line F1 of the song's lines, its metadata included), how many lose a
 song line (and how many lines), how pages with no song are told, and how often the title and artist lines are hit.
 Each variant's predictions are kept in `predictions.json`, so `--rescore` tries the crop rules again without training.
+A page read with structure marks (`pages/<id>.json`'s `marks`) trains twice, with and without them, and is scored both
+ways: as itself, and as an `unmarked page`, the way a paste of the same text reaches the model, which must hold up
+against the last model there too. `--no-marks` leaves every mark out (the model before them); `--group-by site` holds
+out a whole site a fold instead of a song, for how the model does on a site it never saw.
 A song line shown as the title or artist is not counted lost, since the app shows those lines too.
 """
 
@@ -46,8 +50,16 @@ SHOWN = {"SONG", "METADATA", "TITLE", "ARTIST"}
 WEIGHTS = torch.tensor([1.0, 1.0, 4.0, 4.0, 2.0])
 
 
-def load(corpus):
+def host(address):
+    from urllib.parse import urlparse
+    name = urlparse(address).hostname or address
+    return name[4:] if name.startswith("www.") else name
+
+
+def load(corpus, use_marks=True):
+    """Every labelled page and document; a page's lines carry its marks where it has one a line (and `use_marks`)."""
     examples = []
+    sites = {}
     for path in sorted(glob.glob(os.path.join(corpus, "labels", "*.json"))):
         with open(path, encoding="utf-8") as file:
             labelled = json.load(file)
@@ -55,12 +67,40 @@ def load(corpus):
             with open(os.path.join(corpus, "pages", labelled["id"] + ".json"), encoding="utf-8") as file:
                 page = json.load(file)
             lines = [{"text": text} for text in page["lines"][: len(labelled["labels"])]]
+            marks = page.get("marks")
+            if use_marks and marks and len(marks) == len(page["lines"]):
+                for line, mark in zip(lines, marks):
+                    line["marks"] = mark
+            sites[labelled["id"]] = host(page.get("finalUrl") or page["url"])
         else:
             with open(os.path.join(corpus, "documents", labelled["id"] + ".json"), encoding="utf-8") as file:
                 lines = json.load(file)["lines"]
         labels = staves_ignored(lines, labelled["labels"])
         examples.append({"id": labelled["id"], "source": labelled["source"], "lines": lines, "labels": labels, "noSong": labelled.get("noSong", False), "group": labelled.get("group", labelled["id"]), "isSynthetic": labelled["id"].startswith("synthetic__")})
+    for example in examples:
+        group = example["group"]
+        example["site"] = "site:" + sites[group[5:]] if group.startswith("page:") and group[5:] in sites else group
     return examples
+
+
+def is_marked(example):
+    return any("marks" in line for line in example["lines"])
+
+
+def unmarked(example):
+    """The page as a paste of its text hands it over: the same lines and labels with no marks."""
+    return {**example, "id": example["id"] + "~unmarked", "source": "unmarked page", "lines": [{"text": line["text"]} for line in example["lines"]]}
+
+
+def training_set(examples, synthetic, held_groups, seed):
+    """
+    What one model trains on: the examples, every marked page a second time without its marks (so a paste does not get
+    worse), and, with `synthetic`, pages made up of the import corpus's songs around the unmarked pages' clutter.
+    """
+    training = examples + [unmarked(e) for e in examples if is_marked(e)]
+    if synthetic and any(e["source"] == "page" for e in examples):
+        training += synthetic_pages(synthetic, [e for e in examples if e["source"] == "page"], held_groups, seed=seed)
+    return training
 
 
 def staves_ignored(lines, labels):
@@ -191,12 +231,12 @@ def score(example, prediction, rule="line"):
     }
 
 
-def folds(examples, seed):
-    """Groups of held-out examples, a song's group whole in one, so no fold trains on a song it scores in another form."""
-    groups = sorted({example["group"] for example in examples})
+def folds(examples, seed, key="group"):
+    """Groups of held-out examples, a song's group (or a site) whole in one, so no fold trains on what it scores in another form."""
+    groups = sorted({example[key] for example in examples})
     random.Random(seed).shuffle(groups)
     fold_of = {group: index % FOLDS for index, group in enumerate(groups)}
-    return [[example for example in examples if fold_of[example["group"]] == fold] for fold in range(FOLDS)]
+    return [[example for example in examples if fold_of[example[key]] == fold] for fold in range(FOLDS)]
 
 
 def summary(name, scores):
@@ -236,14 +276,16 @@ def main():
     parser.add_argument("--seed", type=int, default=7)
     parser.add_argument("--variants", default="pages only,documents only,both", help="comma-separated variants to run")
     parser.add_argument("--rescore", action="store_true", help="score the predictions the last run saved instead of training")
+    parser.add_argument("--group-by", default="group", choices=["group", "site"], help="hold out songs (default) or whole sites")
+    parser.add_argument("--no-marks", action="store_true", help="leave the pages' structure marks out")
     parser.add_argument("--out", help="the folder the report and predictions go to, `<corpus>/.runs` by default")
     arguments = parser.parse_args()
     torch.set_num_threads(max(1, (os.cpu_count() or 2) - 2))
-    examples = load(arguments.corpus)
+    examples = load(arguments.corpus, use_marks=not arguments.no_marks)
     scored = [e for e in examples if not e["isSynthetic"]]
     print(f"{sum(1 for e in scored if e['source'] == 'page')} pages, {sum(1 for e in scored if e['source'] == 'document')} documents, "
           f"{sum(1 for e in examples if e['isSynthetic'])} made-up documents")
-    held_folds = folds(scored, arguments.seed)
+    held_folds = folds(scored, arguments.seed, arguments.group_by)
     variants = {"pages only": {"page"}, "documents only": {"document"}, "both": {"page", "document"}}
     chosen = [name.strip() for name in arguments.variants.split(",")]
     runs = arguments.out or os.path.join(arguments.corpus, ".runs")
@@ -254,6 +296,7 @@ def main():
         with open(saved_path, encoding="utf-8") as file:
             saved = json.load(file)
     by_id = {e["id"]: e for e in scored}
+    by_id.update({u["id"]: u for u in (unmarked(e) for e in scored if is_marked(e))})
     report, rows, lost = [], [], []
     for variant in chosen:
         sources = variants[variant]
@@ -265,19 +308,22 @@ def main():
             for fold in range(FOLDS):
                 held = held_folds[fold]
                 held_groups = {e["group"] for e in held}
-                training = [e for e in examples if e["source"] in sources and e["group"] not in held_groups]
-                if arguments.synthetic and "page" in sources:
-                    training += synthetic_pages(arguments.synthetic, [e for e in training if e["source"] == "page"], held_groups, seed=arguments.seed + fold)
-                model = train(training, arguments.epochs, arguments.seed + fold)
+                held_keys = {e[arguments.group_by] for e in held}
+                chosen_examples = [e for e in examples if e["source"] in sources and e["group"] not in held_groups and e[arguments.group_by] not in held_keys]
+                model = train(training_set(chosen_examples, arguments.synthetic, held_groups, arguments.seed + fold), arguments.epochs, arguments.seed + fold)
                 for example in held:
                     predictions[example["id"]] = predict(model, example)
+                    if example["source"] == "page" and is_marked(example):
+                        predictions[example["id"] + "~unmarked"] = predict(model, unmarked(example))
             saved[variant] = predictions
             with open(saved_path, "w", encoding="utf-8") as file:
                 json.dump(saved, file)
         for rule in RULES:
             scores = [score(by_id[identity], predicted, rule) for identity, predicted in saved[variant].items() if identity in by_id]
-            for source in ("page", "document"):
+            for source in ("page", "unmarked page", "document"):
                 part = [s for s in scores if s["source"] == source]
+                if not part:
+                    continue
                 name = f"{variant}, {rule} crop"
                 report.append(summary(f"{name}, scored on {source}s", part))
                 lost += [f"## {name}: {s['id']}\n" + "\n".join(f"{index}\t{label}\t{text}" for index, text, label in s["lost"]) for s in part if s["lost"]]

@@ -60,7 +60,8 @@ Web: `createImageBitmap` and a canvas, outside the Wasm heap; HEIC only in Safar
 
 - `ShareInboxManifest` is the iOS share extension's `share.json` (`app/ios`), decoded here so the test runs on the
   desktop: unknown fields ignored, a newer `version` left in the inbox, anything else null. Keep it in step with the
-  extension's Swift.
+  extension's Swift. A Safari page's `marks` (optional, so no new version) reach the import as `SharedTextPayload.marks`,
+  decoded as `PageSnapshot` decodes the app's own page read's.
 - `saveFile` returns false for a dismissed dialog and throws for a failed write.
 - `shareText` exists only where `canShare`. `canShareFile` asks per kind of file, since a browser shares only its own
   list (Chrome: PDF, PNG, `.txt`; no zip or `.cho`); the web downloads a share the browser refuses (a press more than a

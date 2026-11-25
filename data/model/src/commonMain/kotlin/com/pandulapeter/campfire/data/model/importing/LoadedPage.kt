@@ -13,10 +13,16 @@ package com.pandulapeter.campfire.data.model.importing
 sealed interface LoadedPage {
 
     /**
-     * The page as a reader saw it once it settled: its body's `innerText`, its title (null where it has none), and the
-     * address it ended up at after its redirects.
+     * The page as a reader saw it once it settled: its body's `innerText`, its title (null where it has none), the
+     * address it ended up at after its redirects, and [marks], one for each line of [text] split at `\n` (null where the
+     * read gave none), which the page model reads only where their count is that of the text's lines.
      */
-    data class Read(val text: String, val title: String?, val address: String) : LoadedPage
+    data class Read(
+        val text: String,
+        val title: String?,
+        val address: String,
+        val marks: List<PageLineMarks?>? = null,
+    ) : LoadedPage
 
     /** No page to convert, for [reason], which decides what the user is told to do about it. */
     data class NotRead(val reason: Reason) : LoadedPage {

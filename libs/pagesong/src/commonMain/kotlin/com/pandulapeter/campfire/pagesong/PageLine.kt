@@ -16,8 +16,12 @@ package com.pandulapeter.campfire.pagesong
  * ignored by the model, never removed from what the caller keeps.
  * @param layout how a document set the line; null for a web page's text, and read only when the source is
  * [PageLineSource.DOCUMENT] (a document line without one is read as body text in no column on the first page).
+ * @param marks what a web page's structure says of the line, where the app read the page itself; read only when the
+ * source is [PageLineSource.PAGE], and a page line without them (a paste, a line the read could not align) is read as
+ * the model was trained on such lines, every one of those inputs zero.
  */
 public data class PageLine(
     val text: String,
     val layout: PageLineLayout? = null,
+    val marks: PageLineMarks? = null,
 )

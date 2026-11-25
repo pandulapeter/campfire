@@ -12,7 +12,7 @@ package com.pandulapeter.campfire.pagesong
 /** Where a page's lines came from, which the model reads as one of its inputs. */
 public enum class PageLineSource {
 
-    /** A web page's text (a share, a paste, a loaded link): no layout. */
+    /** A web page's text (a share, a paste, a loaded link): no layout, and each line's [PageLineMarks] where it has them. */
     PAGE,
 
     /** A PDF's or a Word file's placed lines, each with its [PageLineLayout]. */

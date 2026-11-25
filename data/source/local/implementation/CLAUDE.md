@@ -152,8 +152,8 @@ it; iOS marks the folder) and no sync, and is emptied of other sessions' names o
   `SongKeys.capoChartKeyOf`); the leading `{transpose}` travels with the key; tags are NFC-composed and merged. The scan
   publishes in batches. Unreadable or oversized files are skipped; an unlistable *directory* throws, so an unreachable
   library never looks empty.
-- Documents: 16 MiB limit. `ImportCorpusTest` (desktop) scores the import (documents cropped by the shipped page
-  model, as the app crops them) against the private corpus that `campfire.importCorpus` names, writing its report into
+- Documents: 16 MiB limit. `ImportCorpusTest` (desktop) scores the import (documents cropped by the shipped plain page
+  model, `page-model.bin`, as the app crops them) against the private corpus that `campfire.importCorpus` names, writing its report into
   the corpus's `.runs/`; blank skips it.
 - `ArchiveImportTest` (desktop) imports archives as the app does, each staged into an empty library of its own
   over the app's whole data and domain graph (`ImportApp`), twice, which must give the same plan, result, and

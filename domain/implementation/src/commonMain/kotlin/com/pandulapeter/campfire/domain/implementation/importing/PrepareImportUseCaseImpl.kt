@@ -226,7 +226,7 @@ internal class PrepareImportUseCaseImpl(
                     // A page's clutter is cropped before the converter reads it, but never from ChordPro, which the
                     // converter hands back untouched: that text is a song somebody wrote, not a page around one. A crop
                     // the converter finds nothing in is no crop either, so the whole page stands.
-                    val cropped = if (file.isPageText && whole != listOf(original)) PageTextCrop.cropped(original, pageCropper, logger) else null
+                    val cropped = if (file.isPageText && whole != listOf(original)) PageTextCrop.cropped(original, file.pageMarks, pageCropper, logger) else null
                     cropped?.let(PageTextCrop::converted)?.also { wholePage = whole; croppedPage = it }?.songs ?: whole
                 }
                 else -> listOf(original!!)

@@ -120,7 +120,10 @@ private suspend fun importShare(folderPath: String) {
     if (files.isNotEmpty() || texts.isNotEmpty()) {
         val share = InboxShare(
             files = files,
-            texts = texts.takeIf { files.isEmpty() }?.let { SharedTextPayload(texts = it, subject = manifest.subject) },
+            texts = texts.takeIf { files.isEmpty() }?.let {
+                // A page Safari read is its one text, and its marks are that text's lines'.
+                SharedTextPayload(texts = it, subject = manifest.subject, marks = manifest.pageMarks().takeIf { manifest.texts.size == 1 })
+            },
             taken = CompletableDeferred(),
         )
         pendingShares.send(share)

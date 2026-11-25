@@ -24,11 +24,14 @@ internal class FakePageCropper(
 ) : PageCropper {
 
     val asked = mutableListOf<List<String>>()
+    val askedLines = mutableListOf<List<PageLine>>()
     val askedDocuments = mutableListOf<List<PageLine>>()
 
-    override suspend fun songLinesOf(lines: List<String>): PageSongLines? {
-        asked += lines
-        return songLinesOf.invoke(lines)
+    override suspend fun songLinesOf(lines: List<PageLine>): PageSongLines? {
+        val texts = lines.map { it.text }
+        asked += texts
+        askedLines += lines
+        return songLinesOf.invoke(texts)
     }
 
     override suspend fun documentScoresOf(lines: List<PageLine>): List<PageLineScores>? {

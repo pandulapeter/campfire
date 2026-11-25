@@ -19,18 +19,21 @@ import com.pandulapeter.campfire.pagesong.PageSong
  * calls to action around it, or a document's running headers and page numbers. It only ever answers which lines to keep
  * or how sure it is of each, never a line's text, so nothing it decides can change what the song says.
  *
- * Provided by `:presentation`, which ships the page model's weights (`:libs:pagesong`) as a resource the domain cannot
- * read. The weights are large, so an implementation reads them once, on its first call, and never on the main thread.
+ * Provided by `:presentation`, which ships the page models' weights (`:libs:pagesong`) as resources the domain cannot
+ * read: one trained with structure marks, for lines that came with them, and one trained without, for everything else.
+ * The weights are large, so an implementation reads each once, on its first need, and never on the main thread.
  */
 interface PageCropper {
 
     /**
-     * Which of [lines] are the song, its details, and the lines naming its title and artist. Null where the lines hold no
-     * song as far as the model can tell, which a page read from its address is refused for. Throws where the model cannot
-     * run (its weights could not be read) or fails, never answering null for it, so that a page is then converted whole,
-     * as a paste is, rather than refused: a crop must never cost the song its own text.
+     * Which of [lines] are the song, its details, and the lines naming its title and artist. Each line is read with its
+     * structure marks where the app read the page itself ([pageTextLinesOf]); only a line's [PageLine.marks] are read,
+     * never a layout. Null where the lines hold no song as far as the model can tell, which a page read from its address
+     * is refused for. Throws where the model cannot run (its weights could not be read) or fails, never answering null
+     * for it, so that a page is then converted whole, as a paste is, rather than refused: a crop must never cost the song
+     * its own text.
      */
-    suspend fun songLinesOf(lines: List<String>): PageSongLines?
+    suspend fun songLinesOf(lines: List<PageLine>): PageSongLines?
 
     /**
      * The model's scores of a document's [lines] (`ChordSheetPageLines`, with their layout), one for each of the first

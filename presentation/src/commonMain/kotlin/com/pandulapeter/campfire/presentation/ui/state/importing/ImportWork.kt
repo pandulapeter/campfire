@@ -22,6 +22,7 @@ import com.pandulapeter.campfire.data.model.importing.StagedFile
 import com.pandulapeter.campfire.data.model.importing.StagingRefusedException
 import com.pandulapeter.campfire.data.model.isOutOfSpace
 import com.pandulapeter.campfire.data.model.importing.IncomingContent
+import com.pandulapeter.campfire.domain.api.importing.pageTextLinesOf
 import com.pandulapeter.campfire.presentation.ApplicationScope
 import com.pandulapeter.campfire.presentation.ui.platform.sharedTextsToImportedFiles
 import kotlinx.coroutines.CancellationException
@@ -344,11 +345,12 @@ class ImportWork(
      * menu. A model that throws is no
      * reason to refuse the page, nor one that cannot run (no weights, which `PageCropper.songLinesOf` throws for): the page
      * is then converted whole, as a paste is, with nothing offered back. A page that came with no title of its own
-     * (a share's subject) is titled by the page's.
+     * (a share's subject) is titled by the page's. Its structure marks go with its text, for the crop to read where they
+     * are still its lines'.
      */
     private suspend fun pageFiles(request: ImportRequest, page: LoadedPage.Read): List<ImportedFile>? {
         val holdsSong = try {
-            useCases.pageCropper.songLinesOf(page.text.lines()) != null
+            useCases.pageCropper.songLinesOf(pageTextLinesOf(page.text, page.marks)) != null
         } catch (exception: CancellationException) {
             throw exception
         } catch (exception: Exception) {
@@ -357,7 +359,7 @@ class ImportWork(
         }
         if (!holdsSong) return null
         if (request.suggestion == null) request.suggestion = PageTitle.of(page.title)
-        return sharedTextsToImportedFiles(listOf(page.text), page.title).map { it.copy(isPageText = true) }
+        return sharedTextsToImportedFiles(listOf(page.text), page.title).map { it.copy(isPageText = true, pageMarks = page.marks) }
     }
 
     /**

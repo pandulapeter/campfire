@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.state.importing
 
 import com.pandulapeter.campfire.chordpro.convert.PageTitle
+import com.pandulapeter.campfire.data.model.importing.PageLineMarks
 import com.pandulapeter.campfire.data.model.share.SharedLink
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
@@ -88,10 +89,13 @@ internal class PastedSongController(
      *   it says "<title> Chords by <artist>", for what the text does not declare.
      * @return Completed once the text has settled: at once where it is answered with a message alone.
      */
-    fun newSongFromText(text: String, subject: String? = null) = newSongFromText(text = text, subject = subject, onlyLinks = Message.PastedOnlyLinks)
+    fun newSongFromText(text: String, subject: String? = null) = newSongFromText(text = text, subject = subject, onlyLinks = Message.PastedOnlyLinks, marks = null)
 
-    /** [newSongFromText], [onlyLinks] saying why a text of addresses alone is no song where its page is not read. */
-    private fun newSongFromText(text: String, subject: String?, onlyLinks: Message): Deferred<Unit> {
+    /**
+     * [newSongFromText], [onlyLinks] saying why a text of addresses alone is no song where its page is not read, and
+     * [marks] the structure marks of its lines where it is a page the system's browser read (`SharedTextPayload.marks`).
+     */
+    private fun newSongFromText(text: String, subject: String?, onlyLinks: Message, marks: List<PageLineMarks?>?): Deferred<Unit> {
         sharedLinkIn(text)?.let { return importSharedLink(it) }
         val pageAddress = pageAddressIn(text)
         return when {
@@ -103,13 +107,16 @@ internal class PastedSongController(
             pageAddress != null && isPageLoadingEnabled() -> enqueueImport(ImportSource.Page(pageAddress), true, PageTitle.of(subject))
             text.isOnlyLinks() || text.isLinkWithTitle() -> answered(onlyLinks)
             !text.fitsImport() -> answered(Message.PastedTextTooLarge)
-            else -> pageTextImport(text = text, subject = subject)
+            else -> pageTextImport(text = text, subject = subject, marks = marks)
         }
     }
 
     /** From a web page or another app, so its page clutter is cropped (`ImportedFile.isPageText`). */
-    private fun pageTextImport(text: String, subject: String?) =
-        enqueueImport(ImportSource.Files(sharedTextsToImportedFiles(listOf(text), subject).map { it.copy(isPageText = true) }), true, PageTitle.of(subject))
+    private fun pageTextImport(text: String, subject: String?, marks: List<PageLineMarks?>?) = enqueueImport(
+        ImportSource.Files(sharedTextsToImportedFiles(listOf(text), subject).map { it.copy(isPageText = true, pageMarks = marks) }),
+        true,
+        PageTitle.of(subject),
+    )
 
     /**
      * Texts shared to Campfire from another app. One text is a song to make, as a paste is, or the link's import where it
@@ -124,7 +131,12 @@ internal class PastedSongController(
         val texts = payload.texts.filter { it.isNotBlank() }
         return when {
             texts.isEmpty() -> enqueueImport(ImportSource.Files(sharedTextsToImportedFiles(payload.texts, payload.subject)), false, null)
-            texts.size == 1 -> newSongFromText(text = texts.single(), subject = payload.subject, onlyLinks = Message.SharedLinkNotImported)
+            texts.size == 1 -> newSongFromText(
+                text = texts.single(),
+                subject = payload.subject,
+                onlyLinks = Message.SharedLinkNotImported,
+                marks = payload.marks.takeIf { payload.texts.size == 1 },
+            )
             texts.all { it.isOnlyLinks() || it.isLinkWithTitle() } -> answered(Message.SharedLinkNotImported)
             else -> enqueueImport(ImportSource.Files(sharedTextsToImportedFiles(texts, payload.subject)), false, null)
         }
@@ -175,7 +187,7 @@ internal class PastedSongController(
             }
             println("Copied page pasted")
             onAccepted()
-            pageTextImport(text = text, subject = null)
+            pageTextImport(text = text, subject = null, marks = null)
         }
     }
 

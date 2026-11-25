@@ -61,14 +61,16 @@
   converter would read its note groups (`[CEG]`) as chords; ChordPro holding an ABC block is no ABC. ChordPro extensions
   never go through the converter. A page's text (`ImportedFile.isPageText`: a paste, a drop, or a share that is one
   text; never a file, nor ChordPro, which the converter hands back untouched) is cropped first (`PageTextCrop`, through
-  `:domain:api`'s `PageCropper`): only the lines the model keeps, with the blank lines between them; no song, a crop
+  `:domain:api`'s `PageCropper`, each line with its structure marks where the app read the page itself,
+  `ImportedFile.pageMarks`, and only where they count the text's lines, `pageTextLinesOf`; such a page is read by the
+  model trained with marks, any other by the plain one): only the lines the model keeps, with the blank lines between them; no song, a crop
   keeping everything, one the converter finds nothing in, or a failure converts the whole text. The title and artist
   lines that head the song (`PageSongLines.headerLines`) are kept for the converter's own header reading, which wins;
   where it reads no title and the page is one song, the crop is converted again without them and guessing no title
   (which could then only be a lyric), and their `PageTitle` reading is `SongEntry.pageTitle` / `pageArtist`, which the
   editor suggests ahead of the share's subject. A cropped page that is one song carries the whole page's conversion
   (`SongEntry.wholePageText`) for the editor. No readable text is `unreadableDocumentFileNames`, not unsupported. A PDF
-  or Word document's lines are scored by the same `PageCropper` (`PageDocumentCrop`), and the converter crops each of
+  or Word document's lines are scored by the same `PageCropper`'s plain model (`PageDocumentCrop`), and the converter crops each of
   its songs by them; no model or a failure converts it whole. Its review offers no whole page. All incoming songs are
   prettified after conversion, splitting, and notation normalization. No origin info survives in the library.
 

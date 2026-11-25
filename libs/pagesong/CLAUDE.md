@@ -15,9 +15,15 @@ weights' bytes to `PageSong`, which only answers line indices and never changes 
 
 - **Labels**, in the model's output order: `JUNK`, `SONG`, `TITLE`, `ARTIST`, `METADATA` (`PageLineLabel`).
 - **Inputs**: each line's first 160 visible code points (format characters, category Cf, dropped), hashed into the
-  weights' bucket count; 19 features (`LineFeatures.kt`, `LineRules.kt`); and the source, page or document. A page's
-  layout inputs are zero; a document line's come from its `PageLineLayout`, capped as in training (`page`, `size`,
-  `indent`; not `column`).
+  weights' bucket count; 22 features (`LineFeatures.kt`, `LineRules.kt`); and the source, page or document. A document
+  line's layout inputs come from its `PageLineLayout`, capped as in training (`page`, `size`, `indent`; not `column`),
+  and its three page-only ones are zero. A page line's come from its `PageLineMarks` (the app's page read: size, bold,
+  italic, monospace, heading, then link, new block, landmark; page, column, and indent zero), and are all zero without
+  them (a paste, a line the read could not align), as training also saw every marked page without its marks.
+- **Two weights files, one format**: the app ships a model trained with the marks, for a page read with them, and one
+  trained without (`export.py --no-marks`), for everything else, since the marked one crops pastes and documents worse
+  (`PageCropperImpl` in `:presentation` chooses). The plain one's mark inputs were zero in all its training, so it is
+  never handed marks.
 - **Python is the definition.** `tools/page-model/lines.py` (`visible`, `features`, its patterns) and `model.py`
   (`hashed`, `PageModel`) are what the model was trained on; a change there is ported here in the same change and the
   fixtures regenerated (`export.py --fixtures`, then copied into `src/desktopTest/resources`). Lengths are code points

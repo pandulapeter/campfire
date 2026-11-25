@@ -87,6 +87,7 @@ class PageModelGoldenTest {
 
         fun floatsOf(row: List<Double>) = FloatArray(row.size) { row[it].toFloat() }
 
+        @Suppress("UNCHECKED_CAST")
         fun lineOf(line: Map<String, Any?>) = PageLine(
             text = line["text"] as String,
             layout = (line["page"] as Double?)?.let { page ->
@@ -101,6 +102,23 @@ class PageModelGoldenTest {
                     isHeading = line["heading"] as Boolean,
                 )
             },
+            marks = (line["marks"] as Map<String, Any?>?)?.let(::marksOf),
         )
+
+        /** The page read's marks as the app decodes them: none for a blank line (`{}`) or an unaligned one. */
+        fun marksOf(marks: Map<String, Any?>): PageLineMarks? {
+            val size = marks["size"] as Double?
+            if (size == null || marks["unaligned"] == 1.0) return null
+            return PageLineMarks(
+                size = size.toFloat(),
+                isBold = marks["bold"] == 1.0,
+                isItalic = marks["italic"] == 1.0,
+                isMonospace = marks["monospace"] == 1.0,
+                isHeading = marks["heading"] == 1.0,
+                isLink = marks["link"] == 1.0,
+                isNewBlock = marks["newBlock"] == 1.0,
+                isLandmark = marks["landmark"] == 1.0,
+            )
+        }
     }
 }

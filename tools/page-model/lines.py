@@ -104,8 +104,12 @@ def is_labelled(text):
 
 def features(line, source):
     """
-    The line's numbers beside its characters, all in about 0..1: what it reads as, its length, and, for a document, its
-    layout. A page's text carries no layout, so those inputs are zero for it and the source flag tells the two apart.
+    The line's numbers beside its characters, all in about 0..1: what it reads as, its length, and how it is set. A
+    document's layout comes from its reader; a page's from the structure marks the app's page read writes beside its
+    text (`marks`, `PAGE_SNAPSHOT_SCRIPT`): the same inputs where the page says the same thing (its size over the body's,
+    bold, italic, monospace, a heading; never a page, column, or indent), then whether it is all link or button, starts
+    a new card, or sits in a landmark (a document's are zero). A page with no marks (a paste) or a line they could not be
+    aligned to has every one zero, and the source flag tells pages and documents apart.
     """
     text = visible(line["text"])
     stripped = text.strip()
@@ -133,10 +137,27 @@ def features(line, source):
             (line.get("column", -1) + 1) / 4.0,
             min(line.get("page", 0), 20) / 20.0,
             1.0 if line.get("heading") else 0.0,
+            0.0,
+            0.0,
+            0.0,
         ]
-    else:
-        values += [0.0] * 8
-    return values
+        return values
+    marks = line.get("marks") or {}
+    if "size" not in marks or marks.get("unaligned"):
+        return values + [0.0] * 11
+    return values + [
+        min(marks["size"], 3.0) / 3.0,
+        1.0 if marks.get("bold") else 0.0,
+        1.0 if marks.get("italic") else 0.0,
+        1.0 if marks.get("monospace") else 0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0 if marks.get("heading") else 0.0,
+        1.0 if marks.get("link") else 0.0,
+        1.0 if marks.get("newBlock") else 0.0,
+        1.0 if marks.get("landmark") else 0.0,
+    ]
 
 
-FEATURES = 19
+FEATURES = 22

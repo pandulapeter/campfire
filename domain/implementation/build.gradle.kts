@@ -33,8 +33,11 @@ tasks.named<Test>("desktopTest") {
     systemProperty("campfire.pageCorpus", pageCorpus)
     inputs.property("pageCorpus", pageCorpus)
     if (pageCorpus.isNotBlank()) inputs.files(fileTree(pageCorpus) { include("pages/**", "labels/**") }).withPropertyName("pageCorpusPages")
-    // The weights :presentation ships, which PageCorpusTest runs over the corpus's labelled pages.
+    // The two models :presentation ships, which PageCorpusTest runs over the corpus's labelled pages as the app chooses them.
     val pageModelWeights = rootProject.file("presentation/src/commonMain/composeResources/files/page-model.bin")
     systemProperty("pageModelWeights", pageModelWeights.absolutePath)
     inputs.files(pageModelWeights).withPropertyName("pageModelWeights")
+    val pageModelMarkedWeights = rootProject.file("presentation/src/commonMain/composeResources/files/page-model-marked.bin")
+    systemProperty("pageModelMarkedWeights", pageModelMarkedWeights.absolutePath)
+    inputs.files(pageModelMarkedWeights).withPropertyName("pageModelMarkedWeights")
 }

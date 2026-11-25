@@ -29,7 +29,7 @@ object PresentationStandIns {
 
     @Single
     fun pageCropper(): PageCropper = object : PageCropper {
-        override suspend fun songLinesOf(lines: List<String>): PageSongLines? = null
+        override suspend fun songLinesOf(lines: List<PageLine>): PageSongLines? = null
 
         override suspend fun documentScoresOf(lines: List<PageLine>): List<PageLineScores>? = null
     }

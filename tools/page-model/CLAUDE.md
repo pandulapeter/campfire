@@ -61,22 +61,27 @@ Two folders feed it, both named in `local.properties`:
    memory; that script has no command). A staff string after a song's first line labelled clutter trains as `IGNORE`,
    since the crop keeps it anyway (`tab_lines`, `CropRule.kt`'s staff rule, which the gate scores with). Writes `.runs/gate.txt`, `gate.tsv`, `lost.txt` (each song line a crop lost),
    and `predictions.json`, which `--rescore` scores again without training.
-7. **Export** (`export.py <corpus> --synthetic <import corpus> --weights
-   presentation/src/commonMain/composeResources/files/page-model.bin`): the gate's recipe trained once on every
-   labelled page and document, its weights quantized and written where the app reads them (`PageCropperImpl`, read once
-   on the first page cropped).
+7. **Export**, twice: `export.py <corpus> --synthetic <import corpus> --weights
+   presentation/src/commonMain/composeResources/files/page-model.bin --no-marks`, the plain model, and the same with
+   `--weights …/files/page-model-marked.bin` and no `--no-marks`, the marked one: the gate's recipe trained once on
+   every labelled page and document, its weights quantized and written where the app reads them (`PageCropperImpl`,
+   each read once on its first need). A model trained with marks crops pages read with them better but pastes and
+   documents worse, so the app crops a page that came with marks by the marked model and everything else by the plain
+   one. The plain model shipped with the marks is the one before them, carried into the 22-feature format with its
+   three new inputs' weights zero (it answers exactly as before: `ImportCorpusTest` unchanged); its next retrain is
+   gated with `--no-marks` against it.
 8. **Check the shipped weights** (`./gradlew :domain:implementation:desktopTest --tests '*PageCorpusTest'`, also part
    of `desktopTest` while the property is set): the import's own crop (`PageTextCrop`), over the labelled pages, against
-   keeping every line. `ImportCorpusTest` crops
-   documents with the same weights.
+   keeping every line, a page with marks by the marked model and one without by the plain one, as the app chooses, and
+   every page again by the plain model as a paste. `ImportCorpusTest` crops documents with the plain weights.
 
 ## How a model is judged
 
 - **The gate decides** (`libs/pagesong/CLAUDE.md`): a retrain ships only when its held-out scores on pages and on
-  documents hold up against the last model's: how many song pages the crop beats keeping everything on, mean line F1,
+  documents hold up against the last model's (the plain one's gated with `--no-marks`, the marked one's without): how many song pages the crop beats keeping everything on, mean line F1,
   pages and lines of the song lost, pages with no song told as such, and title and artist hits. Its `unsure` crop is
   the rule the app runs (`CropRule.kt`). Each run overwrites `.runs/`, so keep the last report aside to compare.
-- `PageCorpusTest` (`:domain:implementation`) shows what the shipped model does, held out only for pages added after
+- `PageCorpusTest` (`:domain:implementation`) shows what the shipped models do, held out only for pages added after
   it was trained, and fails only on loose sanity bounds.
 - The golden tests in `:libs:pagesong` prove only that Kotlin computes what PyTorch does.
 

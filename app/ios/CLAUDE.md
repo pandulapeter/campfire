@@ -99,7 +99,8 @@ extension (`iosApp/ShareExtension/`) and the widget extension (`iosApp/CampfireW
   text or a URL attachment beside one-line texts, is written as the share's one text. A page shared from Safari arrives
   as `PageText.js`'s property list (`NSExtensionJavaScriptPreprocessingFile`: `innerText` with `content-visibility`
   forced visible for the read and raised inline chords set as chord rows, the steps of `PageSnapshotScript.kt`; title,
-  address) and is written as the share's one text, its title the subject, nothing
+  address; each line's structure marks) and is written as the share's one text, its title the subject, its marks the
+  manifest's `marks` (left out where they would pass the share's bounds), nothing
   loaded again (a Campfire page's address excepted, which is its link). Any other page's address (a URL attachment that is no file's, alone or beside one-line texts) is
   written as a text of that address, which the app reads itself (`presentation/CLAUDE.md`): a web view does not fit in
   the extension's memory, and the extension never opens the app.

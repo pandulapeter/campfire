@@ -31,7 +31,7 @@ package com.pandulapeter.campfire.data.source.remote.implementation.page
  * chord sheet in. A ruby's reading and a `<pre>`'s text are never taken for one.
  *
  * Beside the text, `marks` holds one object per line of it (split at `\n`), what the page model can learn of the line's
- * structure that `innerText` drops (`documentation/plans/page-structure-signals.md`): `{}` for a line with nothing
+ * structure that `innerText` drops (`tools/page-model`, `lines.py`'s `features`): `{}` for a line with nothing
  * printed, `{unaligned: 1, covered}` for one under 90% of whose printed characters were found, else `link` (every
  * character inside a link, a button, or a form control), `newBlock` (its card differs from the previous printed line's),
  * `landmark` (inside `nav`, `header`, `footer`, `aside`, or `form`), `size` (its font size over the body's), `bold`,

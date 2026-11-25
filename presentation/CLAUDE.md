@@ -39,8 +39,9 @@ which the script checks; everything else is handed the holders, state, and callb
 
 - A pasted, dropped, or shared text goes down the import as a `.txt` (`isNewSongFromText`), marked as a page's
   (`ImportedFile.isPageText`) where it is one text, so its page clutter is cropped on the device before it is converted
-  (`PageCropperImpl`: the page model's weights, `files/page-model.bin`, read once on the first page, off the main thread;
-  any failure, unreadable weights included, keeps the whole text; a PDF's or Word file's lines are scored there too, for the converter to crop each
+  (`PageCropperImpl`: two page models, each read once on its first need, off the main thread: `files/page-model-marked.bin`
+  for a page that came with its lines' structure marks, `files/page-model.bin` for everything else, and for such a page
+  too, its marks left out, where the marked one cannot be read; any failure, unreadable weights included, keeps the whole text; a PDF's or Word file's lines are scored there too, for the converter to crop each
   song). Several shared texts are not cropped. One song the library does not hold (a taken name included) opens the editor on it, unwritten (`EditorSession.openNewSongEditor`), read only mode too when shared,
   with a snackbar saying how the text was read (chords over lyrics, ChordPro, lyrics only, or an ABC tune's or block's
   notation kept), and **Use the whole page** where the crop left lines out; one the library holds is opened; anything
@@ -65,7 +66,8 @@ which the script checks; everything else is handed the holders, state, and callb
 - **A shared link is read once on the device when the switch allows it**: a text that is one page's address
   (`pageAddressIn`: alone, or among at most three short lines of a call to action or a title; never Campfire's own
   site) is `ImportSource.Page`, read by `LoadPageUseCase` (an offscreen web view, `PageSource`) with the import screen's
-  loading stage up ("Reading the page…", Cancel), then cropped and converted as a pasted page, titled by the share's
+  loading stage up ("Reading the page…", Cancel), then cropped and converted as a pasted page (but with its lines'
+  structure marks, `LoadedPage.Read.marks`, as a Safari page shared on iOS has too), titled by the share's
   subject, else the page's title; its song's editor takes the loading screen's place. A page that never arrived (no
   network, a host not answering, nothing drawn in time) is the failure stage's `PAGE_UNREACHABLE` sentence (check the
   connection); one not read otherwise (a bot check, an empty page), or one the page model finds no song on (asked before

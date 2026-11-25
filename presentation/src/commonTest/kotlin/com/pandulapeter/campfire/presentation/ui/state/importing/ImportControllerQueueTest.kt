@@ -24,6 +24,7 @@ import com.pandulapeter.campfire.data.model.importing.ImportResult
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.importing.IncomingContent
 import com.pandulapeter.campfire.data.model.importing.LoadedPage
+import com.pandulapeter.campfire.data.model.importing.PageLineMarks
 import com.pandulapeter.campfire.data.model.importing.ReceivedArchive
 import com.pandulapeter.campfire.data.model.importing.ReceivingArchive
 import com.pandulapeter.campfire.data.model.importing.StagedFile
@@ -225,7 +226,7 @@ class ImportControllerQueueTest {
                     override fun invoke() = true
                 },
                 pageCropper = object : PageCropper {
-                    override suspend fun songLinesOf(lines: List<String>) = pageSongLines()
+                    override suspend fun songLinesOf(lines: List<PageLine>) = pageSongLines()
 
                     override suspend fun documentScoresOf(lines: List<PageLine>): List<PageLineScores>? = null
                 },
@@ -984,6 +985,21 @@ class ImportControllerQueueTest {
         assertTrue(backStack.none { it == CampfireDestination.ImportReport })
         assertTrue(settled.isCompleted)
         assertEquals(0, importCount)
+    }
+
+    @Test
+    fun `a page read with structure marks hands them to the import with its text`() = runTest {
+        plannedSongs = listOf(songEntry("new.cho", text = "[G]Hello"))
+        val marks = listOf(
+            PageLineMarks(size = 1f, isBold = false, isItalic = false, isMonospace = false, isHeading = false, isLink = true, isNewBlock = true, isLandmark = true),
+            null,
+            null,
+        )
+        loadedPage = LoadedPage.Read(text = "Menu\nG\nHello", title = "Example", address = PAGE, marks = marks)
+        startController()
+        enqueuePage()
+        runCurrent()
+        assertEquals(marks, preparedFiles.single().single().pageMarks)
     }
 
     @Test

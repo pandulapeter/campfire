@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.platform
 
+import com.pandulapeter.campfire.data.model.importing.PageLineMarks
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -56,6 +57,34 @@ class ShareInboxManifestTest {
     fun `a share whose last file was taken is nothing`() {
         assertNull(ShareInboxManifest(version = 1, files = listOf("files/0/library.zip")).withoutFile("files/0/library.zip"))
         assertNotNull(ShareInboxManifest(version = 1, files = listOf("files/0/a.zip"), texts = listOf("texts/0.txt")).withoutFile("files/0/a.zip"))
+    }
+
+    @Test
+    fun `a page's marks are decoded with a blank or unaligned line's as none and none without them`() {
+        val manifest = assertNotNull(
+            decodeShareInboxManifest(
+                """{"version": 1, "texts": ["texts/0.txt"], "marks": [{"link": 1, "newBlock": 1, "landmark": 0, "size": 0.9, "bold": 1,
+                "italic": 0, "monospace": 0, "heading": 0}, {}, {"unaligned": 1, "covered": 0.5}]}""",
+            ),
+        )
+
+        assertEquals(
+            listOf(
+                PageLineMarks(size = 0.9f, isBold = true, isItalic = false, isMonospace = false, isHeading = false, isLink = true, isNewBlock = true, isLandmark = false),
+                null,
+                null,
+            ),
+            manifest.pageMarks(),
+        )
+        assertNull(assertNotNull(decodeShareInboxManifest("""{"version": 1, "texts": ["texts/0.txt"]}""")).pageMarks())
+    }
+
+    @Test
+    fun `marks the page broke leave the share read without them`() {
+        val manifest = assertNotNull(decodeShareInboxManifest("""{"version": 1, "texts": ["texts/0.txt"], "marks": [{"size": "big"}]}"""))
+
+        assertEquals(listOf("texts/0.txt"), manifest.texts)
+        assertNull(manifest.pageMarks())
     }
 
     @Test
