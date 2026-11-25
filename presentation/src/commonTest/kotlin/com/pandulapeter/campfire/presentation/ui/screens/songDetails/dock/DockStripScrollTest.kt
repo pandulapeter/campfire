@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock
 
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.CommentStyle
+import com.pandulapeter.campfire.chordpro.model.GridToken
 import com.pandulapeter.campfire.presentation.ui.songView.model.RenderSection
 import com.pandulapeter.campfire.presentation.ui.songView.model.SectionPart
 import com.pandulapeter.campfire.presentation.ui.songView.model.SongScaleGroup
@@ -38,6 +39,23 @@ internal class DockStripScrollTest {
     @Test
     fun `the chords on the screen are every chord its sections play`() =
         assertEquals(setOf("Am", "C", "D", "F"), chordsOnScreen(sections, 0..2, names))
+
+    @Test
+    fun `a grid's cells are chords on the screen too`() {
+        val grid = RenderSection.Lines(
+            header = "Intro",
+            foldKey = "intro",
+            parts = listOf(
+                SectionPart.Lines(
+                    lines = listOf(
+                        ChordProLine.Grid(tokens = listOf(GridToken.Bar("|"), GridToken.Chord("E"), GridToken.Bar("|"), GridToken.Chord("C~D"), GridToken.Bar("|"))),
+                    ),
+                ),
+            ),
+            isOnCard = false,
+        )
+        assertEquals(setOf("E", "C", "D"), chordsOnScreen(listOf(grid), 0..0, names))
+    }
 
     @Test
     fun `a screen of no chords marks the chord it is headed by`() = assertEquals(setOf("F"), chordsOnScreen(sections, 1..1, names))

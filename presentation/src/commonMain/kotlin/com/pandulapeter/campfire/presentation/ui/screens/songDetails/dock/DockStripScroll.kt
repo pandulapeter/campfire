@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock
 
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
+import com.pandulapeter.campfire.chordpro.model.GridToken
 import com.pandulapeter.campfire.presentation.ui.songView.model.RenderSection
 import com.pandulapeter.campfire.presentation.ui.songView.model.SongScaleGroup
 
@@ -35,11 +36,21 @@ internal fun chordsOnScreen(sections: List<RenderSection>, onScreen: IntRange, n
     return played.ifEmpty { setOfNotNull(firstChordFrom(sections, onScreen.first, names)) }
 }
 
-/** The chords of [names] the section at [index] plays, in order, annotations and marks left out. */
+/**
+ * The chords of [names] the section at [index] plays, in order: over its lyrics (annotations and marks left out) and in
+ * its grids' cells, a cell of several chords ("C~G") giving each.
+ */
 private fun List<RenderSection>.chordsOf(index: Int, names: Set<String>) = (this[index] as? RenderSection.Lines)?.lines.orEmpty().asSequence()
-    .flatMap { line -> (line as? ChordProLine.Lyrics)?.chords.orEmpty() }
-    .filter { !it.isAnnotation && !it.isMark && it.name in names }
-    .map { it.name }
+    .flatMap { line ->
+        when (line) {
+            is ChordProLine.Lyrics -> line.chords.asSequence().filter { !it.isAnnotation && !it.isMark }.map { it.name }
+            is ChordProLine.Grid -> line.tokens.asSequence().filterIsInstance<GridToken.Chord>().flatMap { it.name.split(GRID_CELL_CHORD_SEPARATOR) }
+            else -> emptySequence()
+        }
+    }
+    .filter { it in names }
+
+private const val GRID_CELL_CHORD_SEPARATOR = '~'
 
 /**
  * The group of [groups] (by index) the dock's row of scales scrolls to for a page whose first section is [section]: the
