@@ -19,6 +19,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
@@ -56,8 +57,14 @@ internal fun SectionTitle(
     // The chevron's place is kept in an unnamed pill that has none, which would otherwise be a sliver.
     if (toggle == null && header == UNNAMED_SECTION_HEADER) Spacer(modifier = Modifier.size(chevronSize))
     toggle?.let {
+        val change = LocalSongChange.current
         FoldChevron(
-            modifier = Modifier.padding(start = if (header == UNNAMED_SECTION_HEADER) 0.dp else FOLD_CHEVRON_GAP).size(chevronSize).then(chevronModifier),
+            modifier = Modifier
+                .padding(start = if (header == UNNAMED_SECTION_HEADER) 0.dp else FOLD_CHEVRON_GAP)
+                .size(chevronSize)
+                // Read only mode takes the chevrons away and brings them back as a staged change of the song (SongChange).
+                .graphicsLayer { alpha = foldChevronAlpha(change) }
+                .then(chevronModifier),
             kind = null,
             isExpanded = it.isExpanded,
             tint = MaterialTheme.colorScheme.primary,

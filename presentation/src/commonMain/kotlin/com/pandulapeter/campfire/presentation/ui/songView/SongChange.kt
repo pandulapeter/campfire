@@ -22,7 +22,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 
 /**
- * A change of how a song is shown (a song preference switched: chords, their diagrams, scale suggestions, the metronome)
+ * A change of how a song is shown (a song preference switched: chords, their diagrams, scale suggestions, the metronome,
+ * read only mode)
  * narrated in three steps rather than all at once, since it moves nearly everything on the page in one go, and leaving,
  * moving, and arriving at the same time read as chaos:
  *
@@ -43,6 +44,9 @@ internal class SongChange {
 
     /** Whether the change puts the chords back over the lyrics, which then fade in with [arrivingAlpha]. */
     var areChordsArriving by mutableStateOf(false)
+
+    /** Whether the change brings back the chevrons that fold the sections (read only mode left), fading in with [arrivingAlpha]. */
+    var areFoldChevronsArriving by mutableStateOf(false)
 
     /** How opaque what is leaving is drawn, which is state: read it where it is drawn. */
     val leavingAlpha = Animatable(1f)
@@ -72,9 +76,11 @@ internal data class LeavingParts(
     val instrumentPill: Boolean,
     /** The changes of the tempo and the time signature further down the song. */
     val timing: Boolean,
+    /** The chevrons that fold the sections, which read only mode takes away. */
+    val foldChevrons: Boolean = false,
 ) {
 
-    val isEmpty get() = !chords && !chordsSection && !scalesSection && !instrumentPill && !timing
+    val isEmpty get() = !chords && !chordsSection && !scalesSection && !instrumentPill && !timing && !foldChevrons
 }
 
 /** The [SongChange] of the song being drawn, one that is never under way where nobody drives one (the editor's preview). */
@@ -111,4 +117,11 @@ private fun SectionItem.isChordsOnly() = when (this) {
         is ChordProLine.Tab, is ChordProLine.Grid, is ChordProLine.Verbatim -> true
         ChordProLine.Blank -> false
     }
+}
+
+/** How opaque a section's fold chevron is drawn under [change], which is state: read it where it is drawn. */
+internal fun foldChevronAlpha(change: SongChange) = when {
+    change.leaving?.foldChevrons == true -> change.leavingAlpha.value
+    change.areFoldChevronsArriving -> change.arrivingAlpha.value
+    else -> 1f
 }

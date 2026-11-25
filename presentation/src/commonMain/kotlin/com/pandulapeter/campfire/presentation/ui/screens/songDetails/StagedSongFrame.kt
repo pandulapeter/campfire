@@ -35,9 +35,14 @@ internal class SongFrame(
     val chordDiagrams: ChordDiagrams?,
     val scaleSuggestions: ScaleSuggestions?,
     val shouldShowTempo: Boolean,
+    val foldedSections: Set<String>,
+    val onFoldToggled: ((key: String) -> Unit)?,
 )
 
-/** How a song is shown: the song preferences, and the metronome, whose switching is narrated as a [SongChange]. */
+/**
+ * How a song is shown: the song preferences, the metronome, and whether its sections fold ([isFoldable], not in read only
+ * mode, which also unfolds them), whose switching is narrated as a [SongChange].
+ */
 internal data class SongLook(
     val shouldShowChords: Boolean,
     val hasChordDiagrams: Boolean,
@@ -46,6 +51,7 @@ internal data class SongLook(
     val chordSpelling: UserPreferences.ChordSpelling,
     val shouldNumberSections: Boolean,
     val shouldShowTempo: Boolean,
+    val isFoldable: Boolean,
 )
 
 /** What a change from the [shown] look to the [target] one takes off the page. */
@@ -55,10 +61,12 @@ internal fun leavingPartsOf(shown: SongLook, target: SongLook) = LeavingParts(
     scalesSection = shown.hasScaleSuggestions && !target.hasScaleSuggestions,
     instrumentPill = shown.hasChordDiagrams && !target.hasChordDiagrams,
     timing = shown.shouldShowTempo && !target.shouldShowTempo,
+    foldChevrons = shown.isFoldable && !target.isFoldable,
 )
 
 /**
- * The [frame] to draw, staging every change of its [look] as the [change] says: the frame before it is held while what
+ * The [frame] to draw, staging every change of its look ([SongLook]: what the frame holds, and how it is written with
+ * [shouldShowChords], [showsDegrees], [chordSpelling], and [shouldNumberSections]) as the [change] says: the frame before it is held while what
  * the change takes away fades out, the new one is drawn once its model is built ([isModelBuilt]) and glides into place,
  * and what it brings fades in after. Any other change of the frame is drawn at once, as is a change of the look that
  * comes back to the one shown before it got under way.
@@ -66,10 +74,23 @@ internal fun leavingPartsOf(shown: SongLook, target: SongLook) = LeavingParts(
 @Composable
 internal fun rememberStagedSongFrame(
     frame: SongFrame,
-    look: SongLook,
+    shouldShowChords: Boolean,
+    showsDegrees: Boolean,
+    chordSpelling: UserPreferences.ChordSpelling,
+    shouldNumberSections: Boolean,
     isModelBuilt: Boolean,
     change: SongChange,
 ): SongFrame {
+    val look = SongLook(
+        shouldShowChords = shouldShowChords,
+        hasChordDiagrams = frame.chordDiagrams != null,
+        hasScaleSuggestions = frame.scaleSuggestions != null,
+        showsDegrees = showsDegrees,
+        chordSpelling = chordSpelling,
+        shouldNumberSections = shouldNumberSections,
+        shouldShowTempo = frame.shouldShowTempo,
+        isFoldable = frame.onFoldToggled != null,
+    )
     val stage = remember { SongStage(look, frame) }
     val isHolding = look != stage.shownLook
     if (!isHolding) stage.frame = frame
@@ -80,6 +101,7 @@ internal fun rememberStagedSongFrame(
         change.leavingAlpha.snapTo(1f)
         change.arrivingAlpha.snapTo(1f)
         change.areChordsArriving = false
+        change.areFoldChevronsArriving = false
         change.leaving = null
         change.phase = SongChange.Phase.IDLE
         if (look == stage.shownLook) return@LaunchedEffect
@@ -92,6 +114,7 @@ internal fun rememberStagedSongFrame(
         // arrived with the change, so it waits to fade in.
         change.arrivingAlpha.snapTo(0f)
         change.areChordsArriving = !stage.shownLook.shouldShowChords && look.shouldShowChords
+        change.areFoldChevronsArriving = !stage.shownLook.isFoldable && look.isFoldable
         change.leaving = null
         change.phase = SongChange.Phase.MOVING
         stage.shownLook = look
@@ -100,6 +123,7 @@ internal fun rememberStagedSongFrame(
         change.phase = SongChange.Phase.ARRIVING
         change.arrivingAlpha.animateTo(1f, arrivingSpec)
         change.areChordsArriving = false
+        change.areFoldChevronsArriving = false
         change.phase = SongChange.Phase.IDLE
     }
     return if (isHolding) stage.frame else frame

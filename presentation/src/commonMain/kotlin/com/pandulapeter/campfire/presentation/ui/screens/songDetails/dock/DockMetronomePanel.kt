@@ -9,6 +9,11 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -51,31 +56,38 @@ internal fun DockMetronomePanel(
     verticalAlignment = Alignment.CenterVertically,
 ) {
     start?.invoke()
-    val control = tempo.control
-    if (control != null) {
-        TempoStepper(
-            bpm = control.tempo.bpm,
-            isDefault = control.tempo.isDefault,
-            height = height,
-            onStep = { delta ->
-                println("Dock: tempo stepped")
-                control.onStep(delta)
-            },
-            onSet = { bpm ->
-                println("Dock: tempo set")
-                control.onSet(bpm)
-            },
-            onReset = {
-                println("Dock: tempo reset")
-                control.onReset()
-            },
-        )
-    } else {
-        Text(
-            text = stringResource(Res.string.song_details_tempo, tempo.bpm.toString()),
-            style = MaterialTheme.typography.labelLarge,
-            maxLines = 1,
-        )
+    // Read only mode's number, which sets nothing, and the stepper crossfade into each other as the mode is switched.
+    AnimatedContent(
+        targetState = tempo.control,
+        contentKey = { it != null },
+        transitionSpec = { fadeIn() togetherWith fadeOut() using SizeTransform(clip = false) },
+        contentAlignment = Alignment.CenterStart,
+    ) { control ->
+        if (control != null) {
+            TempoStepper(
+                bpm = control.tempo.bpm,
+                isDefault = control.tempo.isDefault,
+                height = height,
+                onStep = { delta ->
+                    println("Dock: tempo stepped")
+                    control.onStep(delta)
+                },
+                onSet = { bpm ->
+                    println("Dock: tempo set")
+                    control.onSet(bpm)
+                },
+                onReset = {
+                    println("Dock: tempo reset")
+                    control.onReset()
+                },
+            )
+        } else {
+            Text(
+                text = stringResource(Res.string.song_details_tempo, tempo.bpm.toString()),
+                style = MaterialTheme.typography.labelLarge,
+                maxLines = 1,
+            )
+        }
     }
     val panel = metronome.panel
     BeatRow(
@@ -86,7 +98,7 @@ internal fun DockMetronomePanel(
         isFlashEnabled = panel.isFlashEnabled,
         blockHeight = height - BEATS_INSET * 2,
         blockGap = BEAT_GAP,
-        onBeatLevelsChanged = metronome.onBeatLevelsChanged.takeIf { control != null },
+        onBeatLevelsChanged = metronome.onBeatLevelsChanged.takeIf { tempo.control != null },
     )
     DockPlayStop(isPlaying = panel.isPlaying, onClick = metronome.onPlayStop)
 }

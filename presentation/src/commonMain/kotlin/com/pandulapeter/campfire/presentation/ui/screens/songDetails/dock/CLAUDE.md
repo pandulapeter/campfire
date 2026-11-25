@@ -45,8 +45,10 @@ app bar's metronome panel.
   two pages on a long song, and its 8 dp padding at one more in some cases, which `PageCountTest` holds.
 - **In one row** (a short window, an import preview, no diagrams): the start, chord and scale chips scrolling, the tempo
   chip. **In two**: the scale chips alone, then the start, the diagrams, and the tempo chip, the key and tuner pills
-  and the tempo chip as tall as the diagrams; without scale suggestions only the second. The start and the tempo chip stand still
-  (`DockScrollingRow`) and what scrolls fades only where it meets them; at the screen's edge a row runs to it, padded instead, as far in as the step buttons are
+  and the tempo chip as tall as the diagrams; without scale suggestions only the second. The start crossfades and
+  resizes where what it holds changes (read only mode, a Dock switch), never for a new key or page (`DockStart`). The
+  start and the tempo chip stand still (`DockScrollingRow`) and what scrolls fades only where it meets them; at the
+  screen's edge a row runs to it, padded instead, as far in as the step buttons are
   (`PAGE_HORIZONTAL_PADDING`, 8 dp past the insets) and the import preview's card; the rows are as far from the
   surface's top and, at a window's edge with no bottom inset, its bottom (`DOCK_VERTICAL_PADDING`); over an inset (a
   navigation bar) half that, the inset parting them from the edge (`dockBottomPaddingOf`).

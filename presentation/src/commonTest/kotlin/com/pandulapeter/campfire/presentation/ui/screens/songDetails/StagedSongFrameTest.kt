@@ -25,6 +25,7 @@ class StagedSongFrameTest {
         chordSpelling = UserPreferences.ChordSpelling(accidentals = UserPreferences.Accidentals.ORIGINAL, notation = Notation.STANDARD),
         shouldNumberSections = false,
         shouldShowTempo = true,
+        isFoldable = true,
     )
 
     @Test
@@ -43,7 +44,7 @@ class StagedSongFrameTest {
 
     @Test
     fun `switching something on takes nothing away`() {
-        val shown = everything.copy(shouldShowChords = false, hasChordDiagrams = false, hasScaleSuggestions = false, shouldShowTempo = false)
+        val shown = everything.copy(shouldShowChords = false, hasChordDiagrams = false, hasScaleSuggestions = false, shouldShowTempo = false, isFoldable = false)
         assertTrue(leavingPartsOf(shown, everything).isEmpty)
     }
 
@@ -51,5 +52,12 @@ class StagedSongFrameTest {
     fun `a change of spelling takes nothing away`() {
         val parts = leavingPartsOf(everything, everything.copy(chordSpelling = everything.chordSpelling.copy(accidentals = UserPreferences.Accidentals.FLATS)))
         assertTrue(parts.isEmpty)
+    }
+
+    @Test
+    fun `read only mode takes the fold chevrons away and nothing else`() {
+        val parts = leavingPartsOf(everything, everything.copy(isFoldable = false))
+        assertTrue(parts.foldChevrons)
+        assertTrue(parts.copy(foldChevrons = false).isEmpty)
     }
 }

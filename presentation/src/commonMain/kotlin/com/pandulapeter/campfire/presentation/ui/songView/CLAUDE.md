@@ -123,6 +123,7 @@ The song renderer, drawn by song details and the editor's preview; `model/` buil
 - **A section is keyed by what it is, not what it shows** (`sectionKeysOf`), so it glides rather than being composed
   afresh; it is followed by its first baseline, so words a chord row grows over glide from where they were. A chunk or
   control coming with any other single change fades in where it lands.
-- **A change of how the song is shown is staged** (`SongChange`, `songDetails/StagedSongFrame.kt`): what it takes away
+- **A change of how the song is shown is staged** (`SongChange`, `songDetails/StagedSongFrame.kt`; read only mode
+  too, its fold chevrons leaving and arriving and its unfolded sections held until the page moves): what it takes away
   fades out while the page is held, then the new page glides, then what it brings fades in.
 - Each section is a traversal group indexed in song order, or screen readers read across the columns.

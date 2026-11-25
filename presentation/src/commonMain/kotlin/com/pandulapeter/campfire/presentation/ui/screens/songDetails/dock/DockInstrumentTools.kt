@@ -57,7 +57,9 @@ internal fun DockInstrumentTools(
 /** Whether [DockInstrumentTools] draws anything for this content beside a key chip that does or does not open the Playing sheet. */
 internal fun DockContent.hasInstrumentTools(keyOpensPlaying: Boolean) = showsInstrumentPill(keyOpensPlaying) || showsTuner(keyOpensPlaying)
 
-private fun DockContent.showsInstrumentPill(keyOpensPlaying: Boolean) =
+/** Whether [DockInstrumentTools] draws the instrument pill beside a key chip that does or does not open the Playing sheet. */
+internal fun DockContent.showsInstrumentPill(keyOpensPlaying: Boolean) =
     chordDiagrams?.onInstrumentClicked != null && (!keyOpensPlaying || chordDiagrams.tuning == null)
 
-private fun DockContent.showsTuner(keyOpensPlaying: Boolean) = playingTools?.onTunerClicked != null && !keyOpensPlaying
+/** Whether [DockInstrumentTools] draws the tuner button beside a key chip that does or does not open the Playing sheet. */
+internal fun DockContent.showsTuner(keyOpensPlaying: Boolean) = playingTools?.onTunerClicked != null && !keyOpensPlaying

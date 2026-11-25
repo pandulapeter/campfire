@@ -255,16 +255,13 @@ internal fun SongDetailsPage(
                 chordDiagrams = chordDiagrams,
                 scaleSuggestions = scaleSuggestions,
                 shouldShowTempo = shouldShowTempo,
+                foldedSections = foldedSections,
+                onFoldToggled = onFoldToggled,
             ),
-            look = SongLook(
-                shouldShowChords = shouldShowChords,
-                hasChordDiagrams = chordDiagrams != null,
-                hasScaleSuggestions = scaleSuggestions != null,
-                showsDegrees = showsDegrees,
-                chordSpelling = chordSpelling,
-                shouldNumberSections = shouldNumberSections,
-                shouldShowTempo = shouldShowTempo,
-            ),
+            shouldShowChords = shouldShowChords,
+            showsDegrees = showsDegrees,
+            chordSpelling = chordSpelling,
+            shouldNumberSections = shouldNumberSections,
             isModelBuilt = built.first == lyricsInputs,
             change = songChange,
         )
@@ -361,8 +358,8 @@ internal fun SongDetailsPage(
                     sectionMotion = if (isChangingContinuously) SectionMotion.GLIDE else SectionMotion.SPRING,
                     isTextScaling = isTextScaling,
                     fontScale = currentFontScale,
-                    foldedSections = foldedSections,
-                    onFoldToggled = onFoldToggled,
+                    foldedSections = frame.foldedSections,
+                    onFoldToggled = frame.onFoldToggled,
                     shouldShowTempo = frame.shouldShowTempo,
                     // The padding is inside the scroll, so a row is at the top of the viewport once the song is scrolled by
                     // its position plus the padding above it - all but the first, which is read at the top of the song.
