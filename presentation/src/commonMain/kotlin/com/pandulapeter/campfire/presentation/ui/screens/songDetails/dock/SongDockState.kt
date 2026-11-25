@@ -77,7 +77,8 @@ internal fun rememberSongDock(
     isImportPreview: Boolean,
     contentPadding: PaddingValues,
 ): SongDockState {
-    val isMetronomeShown = userPreferences?.isMetronomeEnabled != false && userPreferences?.isDockMetronomeEnabled != false
+    // An import preview has no metronome, so its click would leave the playing row empty with the chords off.
+    val isMetronomeShown = userPreferences?.isMetronomeEnabled != false && userPreferences?.isDockMetronomeEnabled != false && !isImportPreview
     val rows = DockRows(
         hasPlayingRow = userPreferences?.areChordsEnabled != false || isMetronomeShown,
         hasChordRow = chordDiagrams?.tuning != null,
