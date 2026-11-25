@@ -14,17 +14,17 @@ import com.pandulapeter.campfire.presentation.CAMPFIRE_VERSION_NAME
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_campfire
+import com.pandulapeter.campfire.presentation.resources.ic_restart
 import com.pandulapeter.campfire.presentation.resources.settings_onboarding
 import com.pandulapeter.campfire.presentation.resources.settings_onboarding_description
-import com.pandulapeter.campfire.presentation.resources.ic_bug
-import com.pandulapeter.campfire.presentation.resources.ic_campfire
+import com.pandulapeter.campfire.presentation.resources.ic_help
 import com.pandulapeter.campfire.presentation.resources.ic_coffee
 import com.pandulapeter.campfire.presentation.resources.ic_git_hub
 import com.pandulapeter.campfire.presentation.resources.ic_keyboard
 import com.pandulapeter.campfire.presentation.resources.keyboard_shortcuts
 import com.pandulapeter.campfire.presentation.resources.ic_license
 import com.pandulapeter.campfire.presentation.resources.ic_log
-import com.pandulapeter.campfire.presentation.resources.ic_phone
+import com.pandulapeter.campfire.presentation.resources.ic_devices
 import com.pandulapeter.campfire.presentation.resources.ic_privacy_policy
 import com.pandulapeter.campfire.presentation.resources.ic_share
 import com.pandulapeter.campfire.presentation.resources.ic_star
@@ -129,7 +129,7 @@ private fun AppSection(
     LinkListItem(
         title = stringResource(Res.string.settings_distributions_all),
         description = stringResource(Res.string.settings_distributions_all_description),
-        icon = painterResource(Res.drawable.ic_phone),
+        icon = painterResource(Res.drawable.ic_devices),
         onClick = { urlOpener("$WEBSITE_URL#download") },
     )
     platformStore?.let { store ->
@@ -179,7 +179,7 @@ private fun HelpSection(
     LinkListItem(
         title = stringResource(Res.string.settings_onboarding),
         description = stringResource(Res.string.settings_onboarding_description),
-        icon = painterResource(Res.drawable.ic_campfire),
+        icon = painterResource(Res.drawable.ic_restart),
         onClick = onOnboardingClicked,
     )
     // A desktop or a web build always lists them, the keyboard being how it is used; a phone or a tablet only while one
@@ -195,7 +195,7 @@ private fun HelpSection(
     LinkListItem(
         title = stringResource(Res.string.settings_help),
         description = stringResource(Res.string.settings_help_description),
-        icon = painterResource(Res.drawable.ic_bug),
+        icon = painterResource(Res.drawable.ic_help),
         onClick = { urlOpener("${WEBSITE_URL}support/") },
     )
     LinkListItem(
