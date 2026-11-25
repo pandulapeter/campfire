@@ -9,7 +9,8 @@
 -->
 # Plan: the page model sees the page's structure
 
-**Status:** the marks earn their place over the grown corpus (third gate runs, below); the port and plumbing are next.
+**Status:** the experiment is done and every mark earns its place (third gate runs). Next: find out why a plain
+retrain on the grown corpus lost ground on other sites, then port the marks (*Next session*, at the end).
 When the app reads a web page itself, it hands the page model each line's structure too: whether the line is a link or
 a button, whether it starts a new card or section, and how it is set. The crop can then drop calls to action and
 partner cards next to a song, which text alone cannot tell apart from the song's own notes.
@@ -151,23 +152,83 @@ found has closed: on a site never seen, every mark now loses fewer song lines on
 ships.** The paste case's extra losses are half one page (lecarnetdenotes.com's *La Bohème*, 251 of 515 lines against
 3), the rest even with today's.
 
-## Steps
+## A plain retrain on the grown corpus (2026-11-25): not shipped
 
-1. **The model**, first as an experiment on copies of the scripts, outside the repository: `lines.py` reads the marks
-   into the page's layout inputs and the new features, `synthetic.py`'s made-up pages get zero marks, and the gate
-   trains on marked pages and their zeroed copies. Gate against today's report (`.runs/gate.txt`, kept aside first),
-   adding the unmarked-pages score; drop any mark that does not earn its place. The gate also scores with folds grouped
-   by site, since `teacher.py` makes each page its own group and a held-out page's siblings from the same site are
-   otherwise trained on: marks are mostly a site's template, so only the site-grouped score says how they carry to a
-   site never seen (the corpus has 174 sites, 85 with one page). Where it falls well below the page-grouped one, the
-   corpus needs more sites before the marks ship. If the marks hold up: `collect.py` takes the script and writes
-   `marks` into `pages/<id>.json`, and `marked/` replaces `pages/` and `labels/`, the old ones kept aside.
-2. **The port**: `LineFeatures.kt` and `LineRules.kt` follow `lines.py`, `PageModelWeights` accepts the new feature
+Today's recipe (no marks), with the staff rule and the staves `IGNORE` training below, gated on the grown corpus (887
+pages, 767 documents; both variant, `.runs/gate-official2.txt` and `.tsv`) and compared with the shipped model's report
+(`.runs/gate-shipped.txt` and `.tsv`) on the 466 song pages whose text and labels have not changed since:
+
+| Pages | Model | Mean line F1 | Pages losing a song line | Song lines lost | Clutter kept |
+|---|---|---|---|---|---|
+| Ultimate Guitar (25) | shipped | 0.975 | 0 | 0 | 91 |
+| Ultimate Guitar (25) | retrained | 0.980 | 0 | 0 | 81 |
+| other sites (441) | shipped | 0.886 | 37 | 150 | 5,427 |
+| other sites (441) | retrained | 0.874 | 45 | 193 | 6,242 |
+
+Documents held (line F1 0.903 against 0.904). Other sites lost more than one seed's noise, so the weights were not
+exported. Not yet known why; the candidates are seed noise, the staves `IGNORE` training, and the grown corpus itself
+(its 242 new pages lean to Ultimate Guitar and a few large sites). The shipped report has only the both variant, so the
+pages-only experiments above cannot be set against it.
+
+## Done along the way (committed)
+
+- **Long tabs keep their second half** (Ultimate Guitar's *Nothing Else Matters* lost 107 of 478 song lines): the crop
+  keeps every tab staff after the song's first line and up to 8 lines between two staves, whatever the model says
+  (`CropRule.kt`'s staff rule, the gate's `tab_lines`); with the shipped weights that page loses 10, and the corpus 517
+  song lines instead of 614. A staff labelled clutter after a song's start trains as `IGNORE` (`gate.py`'s
+  `staves_ignored`): some Ultimate Guitar pages print the tab twice, one copy clutter. That half ships with the next
+  retrain.
+- **Raised inline chords** (spiewnik.wywrota.pl, chords-and-tabs.net, kytaristka.cz, beausoleil.free.fr): the page read
+  finds chord elements set above a lyric's baseline by their geometry and writes each such line as a chord row over its
+  words (`PageSnapshotScript.kt`, `PageText.js`, and `collect.py`, which now reads the app's script). Those sites' 33
+  pages were read again and 26 relabelled. gitarkotta.com's chords sit on the baseline, in red, and stay glued.
+- **`content-visibility`** is forced visible for the moment of the read (link read, Safari's share, and the corpus).
+- Converter rules from a measurement of the hand-written line rules over the import corpus (1.3% of lines wrong; not
+  worth labels on the GRU): a trailing `[2x]` on a chord row, the ChordPro program's plain-text export, numbered verses
+  starting at 2 or written `1.Word`, and a songbook's contents page dropped as a song.
+
+## Where things are
+
+- **Corpus** (`campfire.pageCorpus`): `pages/` and `labels/` are what today's gate, export, and `PageCorpusTest` read.
+  `marked/` holds the marked copies (its `README.md`): 899 pages with `marks`, `marked/labels/` the labels moved onto
+  them. 16 labelled pages have no marked copy, and the 33 raised-chord pages' marked copies predate the raised-chord
+  read (five moved aside to `.runs/before-raised/marked/`): read those again with the merged script.
+- **The experiment** (`marked/spike/experiment/`, outside git): the gate, `lines.py`, `model.py`, and `synthetic.py`
+  with marks (`gate.py --marks size,bold,italic,monospace,heading,link,newBlock,landmark --group-by page|site --out
+  <run> --variants "pages only"`, run from that folder; each marked page also trains unmarked, so a run takes about
+  twice the plain one, 3 to 5.5 hours here), `rescore.py` (scores a run's predictions with the repository's current
+  gate), `compare.py` and `sitescore.py` (pages every run scores; per site, Ultimate Guitar first), the six runs' reports
+  (A3/B3/E3 page-grouped, C3/D3/F3 site-grouped: none, every mark, link/new block/landmark), `collect_marked.py` and
+  the teacher helpers that grew the corpus, and `raised-chords.js`.
+- **The marks script** is `marked/spike/page-marks.js`; the app's read is `PageSnapshotScript.kt` (the same as
+  `PageText.js`). They are separate scripts today.
+- The experiment's `lines.py` adds three features (22 in all) and fills the page's eight layout inputs from the marks:
+  `size` (over the body's, capped at 3, divided by 3), `bold`, `italic`, `monospace`, three zeros (`page`, `column`,
+  `indent`), `heading`, then `link`, `newBlock`, and `landmark`. A line `unaligned` or with no marks gets zeros.
+
+## Next session
+
+1. **Explain the plain retrain's loss on other sites** before anything ships: two both-variant gates side by side on
+   the current corpus, today's recipe with `--seed 11`, and the same without `staves_ignored`. Compare each with
+   `gate-official2` and `gate-shipped` on the unchanged pages (Ultimate Guitar apart). If the grown corpus is the
+   cause, balance it (for example weight sites so the large ones do not dominate) before the marks.
+2. **The script**: merge `page-marks.js` into `PAGE_SNAPSHOT_SCRIPT` after the raised-chord rewrite (a line split into
+   a chord row and its words gives both halves its marks), the same into `PageText.js`; `collect.py` writes `marks`
+   into `pages/<id>.json`. Read the corpus again with it, carry the labels over as `marked/` did, and let `pages/` and
+   `labels/` take the result, the old ones kept aside.
+3. **The model in the repository**: the experiment's `lines.py` and gate changes into `tools/page-model` (marked pages
+   trained twice, the gate scoring unmarked pages too).
+4. **The gate that decides**: both variant, three models on the same corpus (no marks, every mark, every mark given
+   unmarked pages), each against `gate-shipped` on unchanged pages, Ultimate Guitar first, by the rule in *Which pages
+   count most*.
+5. **The port**: `LineFeatures.kt` and `LineRules.kt` follow `lines.py`, `PageModelWeights` accepts the new feature
    count with `export.py`'s `VERSION` bumped, the fixtures are regenerated (`export.py --fixtures`), and the weights
    are exported.
-3. **The plumbing**: the shared script into `PAGE_SNAPSHOT_SCRIPT` and `PageText.js` (the iOS share inbox only gains
-   a field), `PageSnapshot` and `LoadedPage.Read` carry the marks, and `PageCropper.songLinesOf` and `PageTextCrop` take
-   them as each line's `PageLineLayout` and new marks. Breadcrumbs say whether a page came with marks and how many
-   lines aligned (never its text).
-4. **Check**: `PageCorpusTest` reads the marks from the corpus pages, the import of the gitartab.hu page loses its
-   partner card, and the documents' scores are unchanged.
+6. **The plumbing**: `PageSnapshot` and `LoadedPage.Read` carry the marks (the iOS share inbox only gains a field), and
+   `PageCropper.songLinesOf` and `PageTextCrop` take them as each line's `PageLineLayout` and new marks. Breadcrumbs say
+   whether a page came with marks and how many lines aligned (never its text).
+7. **Check**: `PageCorpusTest` reads the marks from the corpus pages, the import of the gitartab.hu page loses its
+   partner card, and `ImportCorpusTest` is unchanged.
+
+Open on the side: lecarnetdenotes.com's *La Bohème* (`2b9396b6433a`) loses half its song lines in some runs, and a
+ChordPro modern3 PDF (*Danny Boy*) interleaves its margin chord diagrams with the song.
