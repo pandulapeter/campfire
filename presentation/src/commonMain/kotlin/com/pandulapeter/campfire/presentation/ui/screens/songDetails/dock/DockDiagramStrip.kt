@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock
 
 import androidx.compose.animation.Crossfade
-import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.clickable
@@ -32,7 +32,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalDensity
@@ -157,8 +156,9 @@ private fun DiagramCell(
 ) = Column(
     modifier = modifier
         .clip(MaterialTheme.shapes.small)
-        // A tint rather than a dimming of the rest, which would read as chords that cannot be played.
-        .background(animateColorAsState(if (isMarked) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent).value)
+        // A tint rather than a dimming of the rest, which would read as chords that cannot be played. Its alpha fades rather
+        // than its colour, since a colour animated to Transparent (transparent black) passes through grey on a light theme.
+        .background(MaterialTheme.colorScheme.secondaryContainer.copy(alpha = animateFloatAsState(if (isMarked) 1f else 0f).value))
         .then(
             if (onClick == null) {
                 Modifier
