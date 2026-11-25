@@ -9,11 +9,22 @@
  */
 package com.pandulapeter.campfire.widget
 
+import android.content.Context
+import android.content.Intent
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
 
-/** The random picks widget's provider, named in the manifest with `xml/widget_random_picks`. */
+/**
+ * The random picks widget's provider, named in the manifest with `xml/widget_random_picks`. The app's update redraws it
+ * ([refreshAllAsync]).
+ */
 class RandomPicksWidgetReceiver : GlanceAppWidgetReceiver() {
 
     override val glanceAppWidget: GlanceAppWidget = RandomPicksWidget()
+
+    override fun onReceive(context: Context, intent: Intent) {
+        if (intent.action != Intent.ACTION_MY_PACKAGE_REPLACED) return super.onReceive(context, intent)
+        println("Random picks widgets redrawn after the app's update")
+        refreshAllAsync(context)
+    }
 }

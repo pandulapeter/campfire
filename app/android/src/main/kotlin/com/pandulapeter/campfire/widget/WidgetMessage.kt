@@ -10,12 +10,14 @@
 package com.pandulapeter.campfire.widget
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
 import androidx.glance.layout.fillMaxSize
+import androidx.glance.layout.padding
 import androidx.glance.text.Text
 import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
@@ -23,7 +25,7 @@ import androidx.glance.text.TextStyle
 /** A sentence instead of songs, in the space they would take. */
 @Composable
 internal fun WidgetMessage(text: String) = Box(
-    modifier = GlanceModifier.fillMaxSize(),
+    modifier = GlanceModifier.fillMaxSize().padding(horizontal = WIDGET_PADDING.dp),
     contentAlignment = Alignment.Center,
 ) {
     Text(

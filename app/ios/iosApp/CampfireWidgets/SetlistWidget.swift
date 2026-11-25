@@ -11,8 +11,9 @@ import AppIntents
 import SwiftUI
 import WidgetKit
 
-/// The next gig, or a setlist the user chose, and how far away its day is. The whole widget is one tap, which opens the
-/// setlist's first song read from it (or the setlists screen, where there is no setlist to show).
+/// The next gig, or a setlist the user chose, and how far away its day is, over its songs listed as Random picks lists its
+/// picks (medium and large). A song opens the setlist at it; the rest of the widget, the setlist's first song read from it
+/// (or the setlists screen, where there is no setlist to show).
 struct SetlistWidget: Widget {
     var body: some WidgetConfiguration {
         AppIntentConfiguration(kind: "Setlist", intent: SetlistConfigurationIntent.self, provider: SetlistProvider()) { entry in
@@ -20,7 +21,8 @@ struct SetlistWidget: Widget {
         }
         .configurationDisplayName("Setlist")
         .description("Your next gig, or a setlist you choose, and how many days are left.")
-        .supportedFamilies([.systemSmall, .systemMedium, .accessoryRectangular])
+        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge, .accessoryRectangular])
+        .contentMarginsDisabled()
     }
 }
 
@@ -61,12 +63,14 @@ struct SetlistProvider: AppIntentTimelineProvider {
 /// What the widget shows on its entry's day: the same rules as the Android widget's (`:presentation`'s
 /// `WidgetContent.kt`), written again here, since the extension links no Kotlin.
 enum SetlistContent {
-    case shown(title: String, date: String, relativeDay: String, songCount: String, songs: [Song], link: String)
+    case shown(title: String, relativeDay: String, songs: [Song], link: String)
     case message(text: String, link: String)
 
-    /// A song of the setlist shown, and the link that opens the setlist at it.
+    /// A song of the setlist shown, its number in it (from 1), and the link that opens the setlist at it.
     struct Song {
+        let number: Int
         let title: String
+        let artist: String
         let link: String
     }
 
@@ -91,15 +95,15 @@ enum SetlistContent {
             }
             setlist = next
         }
-        let titles = Dictionary(snapshot.songs.map { ($0.fileName, $0.title) }, uniquingKeysWith: { first, _ in first })
+        let library = Dictionary(snapshot.songs.map { ($0.fileName, $0) }, uniquingKeysWith: { _, last in last })
         self = .shown(
             title: setlist.title,
-            date: setlist.formattedDate,
             relativeDay: Self.relativeDay(from: date, to: setlist.date, strings: strings),
-            songCount: strings.songCount.format(setlist.songFileNames.count),
             songs: setlist.songFileNames.enumerated().compactMap { index, fileName in
                 // A snapshot from before the songs had links of their own opens the setlist at its first.
-                titles[fileName].map { Song(title: $0, link: setlist.songLinks?[safe: index] ?? setlist.link) }
+                library[fileName].map { song in
+                    Song(number: index + 1, title: song.title, artist: song.artist, link: setlist.songLinks?[safe: index] ?? setlist.link)
+                }
             },
             link: setlist.link
         )
@@ -107,7 +111,7 @@ enum SetlistContent {
 
     var link: String {
         switch self {
-        case .shown(_, _, _, _, _, let link), .message(_, let link): link
+        case .shown(_, _, _, let link), .message(_, let link): link
         }
     }
 
@@ -150,9 +154,7 @@ enum SetlistContent {
 struct SetlistWidgetView: View {
     let entry: SetlistEntry
     @Environment(\.widgetFamily) private var family
-
-    /// Its own, since the theme is put in the environment of the view it draws rather than its own.
-    private var colors: WidgetColors { WidgetColors(theme: entry.snapshot?.theme) }
+    @Environment(\.widgetContentMargins) private var margins
 
     var body: some View {
         if let snapshot = entry.snapshot {
@@ -170,30 +172,31 @@ struct SetlistWidgetView: View {
         switch content {
         case .message(let text, _):
             if family == .accessoryRectangular {
-                Text(verbatim: text).font(InterFont.medium(14)).frame(maxWidth: .infinity, alignment: .leading)
+                Text(verbatim: text).font(InterFont.medium(14)).padding(margins).frame(maxWidth: .infinity, alignment: .leading)
             } else {
                 WidgetMessage(text: text)
             }
-        case .shown(let title, let date, let relativeDay, let songCount, let songs, _):
+        case .shown(let title, let relativeDay, let songs, _):
             switch family {
             case .accessoryRectangular:
                 VStack(alignment: .leading, spacing: 0) {
                     Text(verbatim: title).font(InterFont.bold(15)).lineLimit(2).widgetAccentable()
                     Text(verbatim: relativeDay).font(InterFont.regular(14))
                 }
+                .padding(margins)
                 .frame(maxWidth: .infinity, alignment: .leading)
-            case .systemMedium:
-                HStack(alignment: .top, spacing: 16) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        RelativeDayText(text: relativeDay)
-                        Text(verbatim: title).font(InterFont.bold(17)).lineLimit(2)
-                        Text(verbatim: date).font(InterFont.regular(13, relativeTo: .caption)).foregroundStyle(colors.secondaryText)
-                        Spacer(minLength: 0)
-                        Text(verbatim: songCount).font(InterFont.regular(13, relativeTo: .caption)).foregroundStyle(colors.secondaryText)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    SongTitles(songs: songs)
+            case .systemMedium, .systemLarge:
+                let count = family == .systemLarge ? 5 : 3
+                VStack(alignment: .leading, spacing: 4) {
+                    SetlistHeader(title: title, relativeDay: relativeDay)
+                        .padding(.leading, margins.leading)
+                        .padding(.trailing, margins.trailing)
+                    WidgetSongRows(count: count, rows: songs.prefix(count).map { song in
+                        WidgetSongRow(title: song.title, artist: song.artist, link: song.link, number: song.number)
+                    })
                 }
+                .padding(.top, margins.top)
+                .padding(.bottom, margins.bottom)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             default:
                 VStack(alignment: .leading, spacing: 4) {
@@ -201,8 +204,32 @@ struct SetlistWidgetView: View {
                     Text(verbatim: title).font(InterFont.bold(17)).lineLimit(3)
                     Spacer(minLength: 0)
                 }
+                .padding(margins)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             }
+        }
+    }
+}
+
+/// What tells the widget from Random picks: the setlist's title where Random picks has its own, and how far away its day
+/// is where Random picks has its button. The day itself is left out, since how far away it is already says it.
+private struct SetlistHeader: View {
+    let title: String
+    let relativeDay: String
+    @Environment(\.widgetColors) private var colors
+
+    var body: some View {
+        HStack {
+            Text(verbatim: title)
+                .font(InterFont.bold(15))
+                .foregroundStyle(colors.accent)
+                .widgetAccentable()
+                .lineLimit(1)
+            Spacer(minLength: 8)
+            Text(verbatim: relativeDay)
+                .font(InterFont.medium(13, relativeTo: .caption))
+                .foregroundStyle(colors.secondaryText)
+                .lineLimit(1)
         }
     }
 }
@@ -216,26 +243,6 @@ private struct RelativeDayText: View {
             .font(InterFont.bold(13, relativeTo: .caption))
             .foregroundStyle(colors.accent)
             .widgetAccentable()
-    }
-}
-
-/// The first songs of the setlist, in order, as many as fit, each opening the setlist at it.
-private struct SongTitles: View {
-    let songs: [SetlistContent.Song]
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            ForEach(Array(songs.prefix(5).enumerated()), id: \.offset) { index, song in
-                Link(destination: appLink(song.link)) {
-                    Text(verbatim: "\(index + 1). \(song.title)")
-                        .font(InterFont.regular(13, relativeTo: .caption))
-                        .lineLimit(1)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-            }
-            Spacer(minLength: 0)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 

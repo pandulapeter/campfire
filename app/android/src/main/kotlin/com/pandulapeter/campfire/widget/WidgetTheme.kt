@@ -121,13 +121,16 @@ private fun paletteColors(day: WidgetSnapshot.Palette, night: WidgetSnapshot.Pal
     )
 }
 
-/** The widget's whole area, in the system's widget shape and background. */
+/**
+ * The widget's whole area, in the system's widget shape and background, padded above and below only: the song rows span
+ * it from edge to edge, so each part of the content carries the side padding ([WIDGET_PADDING]) itself.
+ */
 @Composable
 internal fun GlanceModifier.widgetBackground() = fillMaxSize()
     .appWidgetBackground()
     .background(GlanceTheme.colors.widgetBackground)
     .let { if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) it.cornerRadius(android.R.dimen.system_app_widget_background_radius) else it }
-    .padding(WIDGET_PADDING.dp)
+    .padding(vertical = WIDGET_PADDING.dp)
 
 /** The space around a widget's content, in dp. */
 internal const val WIDGET_PADDING = 12

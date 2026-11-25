@@ -19,7 +19,8 @@ import kotlinx.datetime.LocalDate
 /**
  * The snapshot of [screenData], a library read whole, under the [features] switches: the songs in the songs screen's
  * order with the filters left out, and the setlists in the setlists screen's, each with the songs of it the library
- * holds and the app link a tap opens. [formatDate] writes a setlist's day in the app's language.
+ * holds and the app link a tap opens, and the library's tags and languages for a random picks widget's filter.
+ * [formatDate] writes a setlist's day in the app's language, and [languageName] a language's name in it.
  */
 internal fun widgetSnapshot(
     screenData: ScreenData,
@@ -27,6 +28,7 @@ internal fun widgetSnapshot(
     strings: WidgetSnapshot.Strings,
     theme: WidgetSnapshot.Theme,
     formatDate: (LocalDate) -> String,
+    languageName: (String) -> String,
 ): WidgetSnapshot {
     val songFileNames = screenData.unfilteredSongs.mapTo(mutableSetOf()) { it.fileName }
     // The sorted list is left empty by a library read before it was built; the songs are still all there, unsorted.
@@ -38,6 +40,8 @@ internal fun widgetSnapshot(
                 title = song.title,
                 artist = song.artist,
                 link = AppLinks.of(BrowserRoutes.songPathOf(song.fileName)),
+                tags = song.tags,
+                languages = song.languages,
             )
         },
         setlists = screenData.setlists.map { setlist ->
@@ -60,5 +64,7 @@ internal fun widgetSnapshot(
         setlistsLink = AppLinks.of(BrowserRoutes.pathOf(CampfireDestination.Setlists)),
         strings = strings,
         theme = theme,
+        tags = screenData.libraryTags.map { it.name },
+        languages = screenData.libraryLanguages.map { WidgetSnapshot.Language(code = it.code, name = languageName(it.code)) },
     )
 }

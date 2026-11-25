@@ -11,18 +11,19 @@ import AppIntents
 import SwiftUI
 import WidgetKit
 
-/// A few songs drawn from the library, drawn again every hour and by the Shuffle button. Its own draw, not the songs
-/// list's random picks: neither ever changes the other's.
+/// A few songs drawn from the library, or from the tags and languages Edit Widget chose, drawn again every hour and by
+/// the Shuffle button. Its own draw, not the songs list's random picks: neither ever changes the other's.
 struct RandomPicksWidget: Widget {
     nonisolated static let kind = "RandomPicks"
 
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: Self.kind, provider: RandomPicksProvider()) { entry in
+        AppIntentConfiguration(kind: Self.kind, intent: RandomPicksConfigurationIntent.self, provider: RandomPicksProvider()) { entry in
             RandomPicksView(entry: entry)
         }
         .configurationDisplayName("Random picks")
         .description("A few random songs from your library, new ones every hour.")
         .supportedFamilies([.systemMedium, .systemLarge])
+        .contentMarginsDisabled()
     }
 }
 
@@ -31,35 +32,45 @@ struct RandomPicksEntry: TimelineEntry {
     let snapshot: WidgetSnapshot?
     /// What this entry's draw is made by: the seed Shuffle last stored, mixed with the hour.
     let seed: UInt64
+    /// The header's title from Edit Widget, nil for the snapshot's.
+    let title: String?
+    let filter: RandomPicksFilter
 }
 
 /// A day of hourly entries, each its own draw, and a new timeline once they are used up. The seed of an hour is the
 /// stored seed mixed with the hour's number, so a timeline asked for again within the hour (a snapshot written) draws
 /// the same songs from the same library.
-struct RandomPicksProvider: TimelineProvider {
+struct RandomPicksProvider: AppIntentTimelineProvider {
     func placeholder(in context: Context) -> RandomPicksEntry {
-        RandomPicksEntry(date: Date(), snapshot: nil, seed: 0)
+        RandomPicksEntry(date: Date(), snapshot: nil, seed: 0, title: nil, filter: RandomPicksFilter())
     }
 
-    func getSnapshot(in context: Context, completion: @escaping (RandomPicksEntry) -> Void) {
-        completion(entry(at: Date(), snapshot: WidgetSnapshot.load()))
+    func snapshot(for configuration: RandomPicksConfigurationIntent, in context: Context) async -> RandomPicksEntry {
+        entry(at: Date(), configuration: configuration, snapshot: WidgetSnapshot.load())
     }
 
-    func getTimeline(in context: Context, completion: @escaping (Timeline<RandomPicksEntry>) -> Void) {
+    func timeline(for configuration: RandomPicksConfigurationIntent, in context: Context) async -> Timeline<RandomPicksEntry> {
         let snapshot = WidgetSnapshot.load()
         let now = Date()
         let hour = floor(now.timeIntervalSince1970 / 3600) * 3600
-        let entries = [entry(at: now, snapshot: snapshot)] + (1...24).map { offset in
-            entry(at: Date(timeIntervalSince1970: hour + Double(offset) * 3600), snapshot: snapshot)
+        let entries = [entry(at: now, configuration: configuration, snapshot: snapshot)] + (1...24).map { offset in
+            entry(at: Date(timeIntervalSince1970: hour + Double(offset) * 3600), configuration: configuration, snapshot: snapshot)
         }
-        completion(Timeline(entries: entries, policy: snapshot == nil ? WidgetSnapshot.retryPolicy : .atEnd))
+        return Timeline(entries: entries, policy: snapshot == nil ? WidgetSnapshot.retryPolicy : .atEnd)
     }
 
-    private func entry(at date: Date, snapshot: WidgetSnapshot?) -> RandomPicksEntry {
+    private func entry(at date: Date, configuration: RandomPicksConfigurationIntent, snapshot: WidgetSnapshot?) -> RandomPicksEntry {
         let hour = UInt64(max(0, Int64(date.timeIntervalSince1970 / 3600)))
+        let title = configuration.title?.trimmingCharacters(in: .whitespacesAndNewlines)
         // Mixed, not added: a seed one increment of the generator's own on would start the same stream one value later,
         // so each hour would show nearly the picks of the hour before it.
-        return RandomPicksEntry(date: date, snapshot: snapshot, seed: SplitMix.mix(ShuffleSeed.current ^ hour))
+        return RandomPicksEntry(
+            date: date,
+            snapshot: snapshot,
+            seed: SplitMix.mix(ShuffleSeed.current ^ hour),
+            title: title?.isEmpty == false ? title : nil,
+            filter: configuration.filter
+        )
     }
 }
 
@@ -101,6 +112,7 @@ enum SplitMix {
 struct RandomPicksView: View {
     let entry: RandomPicksEntry
     @Environment(\.widgetFamily) private var family
+    @Environment(\.widgetContentMargins) private var margins
 
     /// Its own, since the theme is put in the environment of the view it draws rather than its own.
     private var colors: WidgetColors { WidgetColors(theme: entry.snapshot?.theme) }
@@ -115,24 +127,32 @@ struct RandomPicksView: View {
         }
     }
 
+    /// The most songs the widget lists (`:presentation`'s `RANDOM_PICKS_MAX_ROWS`): Shuffle shows only where there are
+    /// more to draw from, so it never only reorders the same songs.
+    private static let maxRows = 5
+
     @ViewBuilder
     private func content(_ snapshot: WidgetSnapshot) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            header(snapshot.strings)
+        let songs = entry.filter.songs(of: snapshot)
+        VStack(alignment: .leading, spacing: 4) {
+            header(snapshot.strings, canDrawAgain: snapshot.areSongsEnabled && songs.count > Self.maxRows)
+                .padding(.leading, margins.leading)
+                .padding(.trailing, margins.trailing)
             if !snapshot.areSongsEnabled {
                 WidgetMessage(text: snapshot.strings.songsOff)
             } else if snapshot.songs.isEmpty {
                 WidgetMessage(text: snapshot.strings.emptyLibrary)
+            } else if songs.isEmpty {
+                WidgetMessage(text: snapshot.strings.noMatchingSongs.flatMap { $0.isEmpty ? nil : $0 } ?? snapshot.strings.emptyLibrary)
             } else {
-                let picks = draw(snapshot.songs, count: family == .systemLarge ? 5 : 3)
-                VStack(alignment: .leading, spacing: family == .systemLarge ? 10 : 6) {
-                    ForEach(Array(picks.enumerated()), id: \.offset) { _, song in
-                        SongRow(song: song)
-                    }
-                }
-                Spacer(minLength: 0)
+                let count = family == .systemLarge ? Self.maxRows : 3
+                WidgetSongRows(count: count, rows: draw(songs, count: count).map { song in
+                    WidgetSongRow(title: song.title, artist: song.artist, link: song.link)
+                })
             }
         }
+        .padding(.top, margins.top)
+        .padding(.bottom, margins.bottom)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
@@ -149,14 +169,15 @@ struct RandomPicksView: View {
         return SplitMix.mix(hash ^ seed)
     }
 
-    private func header(_ strings: WidgetSnapshot.Strings) -> some View {
+    private func header(_ strings: WidgetSnapshot.Strings, canDrawAgain: Bool) -> some View {
         HStack {
-            Text(verbatim: strings.randomPicks)
+            Text(verbatim: entry.title ?? strings.randomPicks)
                 .font(InterFont.bold(15))
                 .foregroundStyle(colors.accent)
                 .widgetAccentable()
+                .lineLimit(1)
             Spacer()
-            if entry.snapshot?.areSongsEnabled == true, entry.snapshot?.songs.isEmpty == false {
+            if canDrawAgain {
                 Button(intent: ShuffleIntent()) {
                     Image(systemName: "shuffle")
                         .font(.system(size: 13, weight: .semibold))
@@ -165,29 +186,6 @@ struct RandomPicksView: View {
                 .buttonStyle(.plain)
                 .accessibilityLabel(Text(verbatim: strings.drawNewPicks))
             }
-        }
-    }
-}
-
-/// A song's title and artist, opening its details screen.
-private struct SongRow: View {
-    let song: WidgetSnapshot.Song
-    @Environment(\.widgetColors) private var colors
-
-    var body: some View {
-        Link(destination: appLink(song.link)) {
-            VStack(alignment: .leading, spacing: 1) {
-                Text(verbatim: song.title)
-                    .font(InterFont.medium(14))
-                    .lineLimit(1)
-                if !song.artist.isEmpty {
-                    Text(verbatim: song.artist)
-                        .font(InterFont.regular(12, relativeTo: .caption))
-                        .foregroundStyle(colors.secondaryText)
-                        .lineLimit(1)
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 }

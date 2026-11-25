@@ -563,8 +563,9 @@
 
         <!--
           The home screen widgets, drawn by Glance from the snapshot the app writes (widget/WidgetSnapshotPublisher):
-          random picks, and a setlist. The setlist widget also hears the date, the clock, and the time zone change, since
-          its relative day and its next gig follow today.
+          random picks, and a setlist. Both hear the app's update, which leaves them in their loading layout until drawn
+          again; the setlist widget also hears the date, the clock, and the time zone change, since its relative day and
+          its next gig follow today.
         -->
         <receiver
             android:name=".widget.RandomPicksWidgetReceiver"
@@ -572,6 +573,7 @@
             android:label="@string/widget_random_picks_name">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
@@ -586,6 +588,7 @@
                 <action android:name="android.intent.action.DATE_CHANGED" />
                 <action android:name="android.intent.action.TIME_SET" />
                 <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
@@ -604,6 +607,16 @@
         -->
         <activity
             android:name=".widget.SetlistWidgetConfigurationActivity"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:taskAffinity="">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
+        <!-- The random picks widget's title and filter, as the setlist widget's setlist above. -->
+        <activity
+            android:name=".widget.RandomPicksWidgetConfigurationActivity"
             android:excludeFromRecents="true"
             android:exported="true"
             android:taskAffinity="">

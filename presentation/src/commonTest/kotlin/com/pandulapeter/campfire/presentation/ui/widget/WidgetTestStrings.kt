@@ -31,6 +31,6 @@ internal object WidgetTestStrings {
         yesterday = "Yesterday",
         inDays = plural("In %1\$d day", "In %1\$d days"),
         daysAgo = plural("%1\$d day ago", "%1\$d days ago"),
-        songCount = plural("%1\$d song", "%1\$d songs"),
+        noMatchingSongs = "No match",
     )
 }

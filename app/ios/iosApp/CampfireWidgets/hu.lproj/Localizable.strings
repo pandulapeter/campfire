@@ -16,3 +16,9 @@
 "Choose which setlist the widget shows." = "Válaszd ki, melyik listát mutassa a widget.";
 "Draw new picks" = "Új válogatás";
 "Open Campfire to fill this widget." = "Nyisd meg a Campfire-t a widget kitöltéséhez.";
+"Title" = "Cím";
+"Tags" = "Címkék";
+"Languages" = "Nyelvek";
+"Tag" = "Címke";
+"Language" = "Nyelv";
+"Choose the widget's title, and the tags and languages its picks come from. With none chosen in a group, that group leaves every song in." = "Válaszd ki a widget címét, és hogy mely címkéjű és nyelvű dalokból készüljön a válogatás. Ahol egy csoportban semmi sincs kijelölve, az a csoport minden dalt megtart.";

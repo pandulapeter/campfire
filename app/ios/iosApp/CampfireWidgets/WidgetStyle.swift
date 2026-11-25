@@ -104,16 +104,80 @@ extension View {
     }
 }
 
-/// A sentence in place of the widget's content, centered.
+/// A song both widgets list: its title and artist, after its number in a setlist where it has one, opening `link`. Both
+/// widgets turn the system's content margins off so that the row, and with it its pressed look, spans the widget from edge
+/// to edge; it puts the side margins back inside itself. It takes the height it is given, so a widget's rows share it.
+struct WidgetSongRow: View {
+    let title: String
+    let artist: String
+    let link: String
+    var number: Int?
+    @Environment(\.widgetColors) private var colors
+    @Environment(\.widgetContentMargins) private var margins
+
+    var body: some View {
+        Link(destination: appLink(link)) {
+            // On the title's baseline rather than centered on the two lines, so the number reads as the title's.
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                if let number {
+                    // Right-aligned in a column wide enough for two digits, so 1 and 10 end in one place.
+                    Text(verbatim: String(number))
+                        .font(InterFont.bold(14))
+                        .monospacedDigit()
+                        .foregroundStyle(colors.accent)
+                        .widgetAccentable()
+                        .frame(minWidth: 18, alignment: .trailing)
+                }
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(verbatim: title)
+                        .font(InterFont.medium(14))
+                        .lineLimit(1)
+                    if !artist.isEmpty {
+                        Text(verbatim: artist)
+                            .font(InterFont.regular(12, relativeTo: .caption))
+                            .foregroundStyle(colors.secondaryText)
+                            .lineLimit(1)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .padding(.leading, margins.leading)
+            .padding(.trailing, margins.trailing)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .contentShape(Rectangle())
+        }
+    }
+}
+
+/// `count` slots of equal height, the first ones `rows`' songs, the rest left empty, so that a song keeps the height of a
+/// full list's however few there are.
+struct WidgetSongRows<Row: View>: View {
+    let count: Int
+    let rows: [Row]
+
+    var body: some View {
+        VStack(spacing: 0) {
+            ForEach(0..<count, id: \.self) { index in
+                if index < rows.count { rows[index] } else { Color.clear.frame(maxWidth: .infinity, maxHeight: .infinity) }
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+/// A sentence in place of the widget's content, centered between the side margins.
 struct WidgetMessage: View {
     let text: String
     @Environment(\.widgetColors) private var colors
+    @Environment(\.widgetContentMargins) private var margins
 
     var body: some View {
         Text(verbatim: text)
             .font(InterFont.medium(15))
             .multilineTextAlignment(.center)
             .foregroundStyle(colors.secondaryText)
+            .padding(.leading, margins.leading)
+            .padding(.trailing, margins.trailing)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
@@ -121,11 +185,14 @@ struct WidgetMessage: View {
 /// What a widget says before the app has ever written its snapshot: the extension's own string, in the system's
 /// language, since the app's choice of language is in the snapshot too.
 struct NoSnapshotMessage: View {
+    @Environment(\.widgetContentMargins) private var margins
+
     var body: some View {
         Text("Open Campfire to fill this widget.")
             .font(InterFont.medium(15))
             .multilineTextAlignment(.center)
             .foregroundStyle(.secondary)
+            .padding(margins)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }

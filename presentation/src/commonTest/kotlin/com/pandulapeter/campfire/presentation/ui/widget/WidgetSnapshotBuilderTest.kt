@@ -20,6 +20,8 @@ import com.pandulapeter.campfire.presentation.ui.navigation.FeatureSwitches
 import com.pandulapeter.campfire.presentation.ui.navigation.NavigationState
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.navigation.SettingsTab
+import com.pandulapeter.campfire.data.model.song.SongLanguage
+import com.pandulapeter.campfire.data.model.song.Tag
 import kotlinx.datetime.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -27,14 +29,14 @@ import kotlin.test.assertFalse
 
 class WidgetSnapshotBuilderTest {
 
-    private fun song(fileName: String, title: String) = Song(
+    private fun song(fileName: String, title: String, tags: List<String> = emptyList(), languages: List<String> = emptyList()) = Song(
         fileName = fileName,
         title = title,
         artist = "Artist",
         key = null,
         transpose = 0,
-        tags = emptyList(),
-        languages = emptyList(),
+        tags = tags,
+        languages = languages,
         coverArtUrl = null,
         hasChords = true,
         canUpdateFileName = false,
@@ -42,7 +44,7 @@ class WidgetSnapshotBuilderTest {
         size = 0,
     )
 
-    private val a = song("a.cho", "A")
+    private val a = song("a.cho", "A", tags = listOf("Folk"), languages = listOf("en"))
     private val b = song("ünnep és más.cho", "B")
 
     private fun setlist(fileName: String, vararg songs: String) = Setlist(
@@ -62,6 +64,8 @@ class WidgetSnapshotBuilderTest {
         tags = emptyList(),
         languages = emptyList(),
         unfilteredSongs = listOf(a, b),
+        libraryTags = listOf(Tag(name = "Folk", songCount = 1)),
+        libraryLanguages = listOf(SongLanguage(code = "en", songCount = 1), SongLanguage(code = SongLanguage.UNKNOWN, songCount = 1)),
         sortedSongs = listOf(b, a),
     )
 
@@ -73,6 +77,7 @@ class WidgetSnapshotBuilderTest {
         strings = strings,
         theme = widgetTheme(uiMode = null, colors = null),
         formatDate = { "on $it" },
+        languageName = { "name of $it" },
     )
 
     private val home = NavigationState(backStack = listOf(CampfireDestination.Songs), isSongsSearchOpen = false, isSetlistsSearchOpen = false, settingsTab = SettingsTab.HOME)
@@ -93,6 +98,16 @@ class WidgetSnapshotBuilderTest {
     @Test
     fun `every song is in the snapshot in the songs screen's order whatever the filters hide`() =
         assertEquals(listOf("B", "A"), build().songs.map { it.title })
+
+    @Test
+    fun `the snapshot carries the library's tags and named languages and each song's for the random picks filter`() {
+        val snapshot = build()
+        assertEquals(listOf("Folk"), snapshot.tags)
+        assertEquals(listOf(WidgetSnapshot.Language("en", "name of en"), WidgetSnapshot.Language(SongLanguage.UNKNOWN, "name of ${SongLanguage.UNKNOWN}")), snapshot.languages)
+        val song = snapshot.songs.single { it.fileName == a.fileName }
+        assertEquals(listOf("Folk"), song.tags)
+        assertEquals(listOf("en"), song.languages)
+    }
 
     @Test
     fun `a song's link opens its details screen`() = build().songs.forEach { song ->

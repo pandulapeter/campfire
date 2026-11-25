@@ -16,3 +16,9 @@
 "Choose which setlist the widget shows." = "Vyber, který setlist widget zobrazí.";
 "Draw new picks" = "Vylosovat nový výběr";
 "Open Campfire to fill this widget." = "Otevři Campfire, aby se tento widget naplnil.";
+"Title" = "Název";
+"Tags" = "Štítky";
+"Languages" = "Jazyky";
+"Tag" = "Štítek";
+"Language" = "Jazyk";
+"Choose the widget's title, and the tags and languages its picks come from. With none chosen in a group, that group leaves every song in." = "Vyberte název widgetu a štítky a jazyky, ze kterých výběr pochází. Skupina bez výběru ponechá všechny písně.";

@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.widget
 
+import com.pandulapeter.campfire.data.model.song.SongLanguage
+import com.pandulapeter.campfire.data.model.song.tagKey
 import com.pandulapeter.campfire.presentation.ui.components.RelativeDay
 import com.pandulapeter.campfire.presentation.ui.components.relativeDay
 import kotlinx.datetime.LocalDate
@@ -16,16 +18,27 @@ import kotlinx.datetime.LocalDate
 /** What the random picks widget shows: the songs drawn, or a sentence where there is nothing to draw from. */
 sealed interface RandomPicksContent {
 
-    /** The [songs] drawn, which a widget lists in this order. */
-    data class Picks(val songs: List<WidgetSnapshot.Song>) : RandomPicksContent
+    /**
+     * The [songs] drawn, which a widget lists in this order, and whether drawing again can change them ([canDrawAgain]):
+     * only where there are more songs to draw from than the largest widget lists, so Shuffle never only reorders them.
+     */
+    data class Picks(
+        val songs: List<WidgetSnapshot.Song>,
+        val canDrawAgain: Boolean,
+    ) : RandomPicksContent
 
     /** [text] instead of songs, the whole widget opening the app. */
     data class Message(val text: String) : RandomPicksContent
 }
 
-/** A song of the setlist a setlist widget shows: its [title], and the app link that opens the setlist at it. */
+/**
+ * A song of the setlist a setlist widget shows: its [number] in the setlist (from 1), its [title] and [artist] (blank for
+ * none), and the app link that opens the setlist at it.
+ */
 data class SetlistWidgetSong(
+    val number: Int,
     val title: String,
+    val artist: String,
     val link: String,
 )
 
@@ -35,14 +48,12 @@ sealed interface SetlistWidgetContent {
     val link: String
 
     /**
-     * The setlist [title], on [date] ([WidgetSnapshot.Setlist.formattedDate]), [relativeDay] from today ("In 3 days"),
-     * with [songCount] ("12 songs") and its [songs] in order, each opening the setlist at that song.
+     * The setlist [title], [relativeDay] from today ("In 3 days", its day alone saying nothing more), and its [songs] in
+     * order, each opening the setlist at that song.
      */
     data class Shown(
         val title: String,
-        val date: String,
         val relativeDay: String,
-        val songCount: String,
         val songs: List<SetlistWidgetSong>,
         override val link: String,
     ) : SetlistWidgetContent
@@ -55,14 +66,40 @@ sealed interface SetlistWidgetContent {
 }
 
 /**
- * Up to [count] songs drawn from the library by [seed]: the same seed draws the same songs from the same library, in
- * whatever order it is sorted, so a widget keeps its picks by keeping the seed, and draws again by taking a new one.
- * Every song can be drawn, however few: a library of three shows all three.
+ * What a random picks widget draws from, as the songs screen's filter selects (any of a group's, and both groups): the
+ * songs with any of [tags], matched without regard to case, and in any of [languages] ([SongLanguage.UNKNOWN] for those
+ * naming none). An empty group, or one whose every value the library no longer has, leaves the songs as they are.
  */
-fun WidgetSnapshot.randomPicksContent(count: Int, seed: Long): RandomPicksContent = when {
-    !areSongsEnabled -> RandomPicksContent.Message(strings.songsOff)
-    songs.isEmpty() -> RandomPicksContent.Message(strings.emptyLibrary)
-    else -> RandomPicksContent.Picks(pickWidgetSongs(songs = songs, count = count, seed = seed))
+data class RandomPicksFilter(
+    val tags: Set<String> = emptySet(),
+    val languages: Set<String> = emptySet(),
+)
+
+/**
+ * Up to [count] songs drawn by [seed] from the library's songs [filter] leaves: the same seed draws the same songs from
+ * the same library, in whatever order it is sorted, so a widget keeps its picks by keeping the seed, and draws again by
+ * taking a new one. Every song can be drawn, however few: a library of three shows all three.
+ */
+fun WidgetSnapshot.randomPicksContent(count: Int, seed: Long, filter: RandomPicksFilter = RandomPicksFilter()): RandomPicksContent {
+    if (!areSongsEnabled) return RandomPicksContent.Message(strings.songsOff)
+    if (songs.isEmpty()) return RandomPicksContent.Message(strings.emptyLibrary)
+    val filtered = filteredSongs(filter)
+    if (filtered.isEmpty()) return RandomPicksContent.Message(strings.noMatchingSongs.ifEmpty { strings.emptyLibrary })
+    return RandomPicksContent.Picks(
+        songs = pickWidgetSongs(songs = filtered, count = count, seed = seed),
+        canDrawAgain = filtered.size > RANDOM_PICKS_MAX_ROWS,
+    )
+}
+
+private fun WidgetSnapshot.filteredSongs(filter: RandomPicksFilter): List<WidgetSnapshot.Song> {
+    val libraryTags = tags.mapTo(mutableSetOf(), ::tagKey)
+    val selectedTags = filter.tags.map(::tagKey).filterTo(mutableSetOf()) { it in libraryTags }
+    val libraryLanguages = languages.mapTo(mutableSetOf()) { it.code }
+    val selectedLanguages = filter.languages.filterTo(mutableSetOf()) { it in libraryLanguages }
+    return songs.filter { song ->
+        (selectedTags.isEmpty() || song.tags.any { tagKey(it) in selectedTags }) &&
+            (selectedLanguages.isEmpty() || song.languages.ifEmpty { listOf(SongLanguage.UNKNOWN) }.any { it in selectedLanguages })
+    }
 }
 
 /**
@@ -78,19 +115,27 @@ fun WidgetSnapshot.setlistContent(pinnedFileName: String?, todayEpochDay: Long):
     } else {
         setlists.firstOrNull { it.fileName == pinnedFileName } ?: return SetlistWidgetContent.Message(text = strings.setlistMissing, link = setlistsLink)
     }
-    val titles = songs.associate { it.fileName to it.title }
+    val library = songs.associateBy { it.fileName }
     return SetlistWidgetContent.Shown(
         title = setlist.title,
-        date = setlist.formattedDate,
         relativeDay = LocalDate.parseOrNull(setlist.date)?.let { strings.relativeDayText(date = it, today = today) }.orEmpty(),
-        songCount = strings.songCount.format(setlist.songFileNames.size),
         songs = setlist.songFileNames.mapIndexedNotNull { index, fileName ->
             // A snapshot from before the songs had links of their own opens the setlist at its first.
-            titles[fileName]?.let { SetlistWidgetSong(title = it, link = setlist.songLinks.getOrNull(index) ?: setlist.link) }
+            library[fileName]?.let { song ->
+                SetlistWidgetSong(
+                    number = index + 1,
+                    title = song.title,
+                    artist = song.artist,
+                    link = setlist.songLinks.getOrNull(index) ?: setlist.link,
+                )
+            }
         },
         link = setlist.link,
     )
 }
+
+/** The most songs a random picks widget lists, on either platform. */
+const val RANDOM_PICKS_MAX_ROWS = 5
 
 /**
  * Up to [count] of [songs]: those whose file names, mixed with [seed], rank first. A song's rank is its own name's alone,

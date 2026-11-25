@@ -16,3 +16,9 @@
 "Choose which setlist the widget shows." = "Alege ce listă arată widgetul.";
 "Draw new picks" = "Alege altele";
 "Open Campfire to fill this widget." = "Deschide Campfire ca să completezi acest widget.";
+"Title" = "Titlu";
+"Tags" = "Etichete";
+"Languages" = "Limbi";
+"Tag" = "Etichetă";
+"Language" = "Limbă";
+"Choose the widget's title, and the tags and languages its picks come from. With none chosen in a group, that group leaves every song in." = "Alege titlul widgetului și etichetele și limbile din care vin alegerile. Un grup fără nimic selectat păstrează toate cântecele.";

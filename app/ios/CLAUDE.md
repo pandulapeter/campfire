@@ -127,7 +127,13 @@ extension (`iosApp/ShareExtension/`) and the widget extension (`iosApp/CampfireW
 - Random picks: 25 hourly entries, each drawn by the seed in the group's `UserDefaults` mixed with the hour (SplitMix64's
   finalizer, never added: an added hour slides the same draw along), ranking songs as `pickWidgetSongs` does, so a
   timeline rebuilt within the hour draws the same; Shuffle (`ShuffleIntent`) stores a new seed, shared by
-  every such widget. Setlist: an entry now and at each of the week's midnights; the choice is a `SetlistEntity`
+  every such widget, and shows only past five songs to draw from. Edit Widget (`RandomPicksConfiguration.swift`) gives
+  it a title of its own and the tags and languages it draws from (`TagEntity`, `LanguageEntity`, listed from the
+  snapshot), filtered as `WidgetContent.kt`'s `RandomPicksFilter` does; a widget from before has none, so no filter.
+  Both list songs in `WidgetSongRow` (`WidgetStyle.swift`), edge to edge: the widgets turn the
+  content margins off (`contentMarginsDisabled`) and each part puts back the `widgetContentMargins` it needs. Setlist
+  (medium and large like Random picks, small and the Lock Screen's its title and day only): an entry now and at each
+  of the week's midnights; the choice is a `SetlistEntity`
   (`next-gig`, else a setlist's file name) listed from the snapshot, a missing one kept until changed.
 - What a widget shows comes from the snapshot, in the app's language and direction. The gallery's names and
   descriptions, Edit Widget's words, and the line shown before the app has written a snapshot are the extension's

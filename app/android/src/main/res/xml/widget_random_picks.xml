@@ -9,7 +9,9 @@
 -->
 <!--
   The random picks widget (RandomPicksWidgetReceiver). The hourly update is what draws new picks once the last draw is an
-  hour old (RandomPicksWidget); the widget lists as many songs as its height has room for, up to five.
+  hour old (RandomPicksWidget); the widget lists as many songs as its height has room for, up to five. Adding it asks for
+  its title and filter (RandomPicksWidgetConfigurationActivity, named in full as the setlist widget's is), and so does
+  its reconfiguration from the launcher.
 -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
@@ -25,4 +27,6 @@
     android:targetCellHeight="3"
     android:updatePeriodMillis="3600000"
     android:widgetCategory="home_screen"
+    android:configure="com.pandulapeter.campfire.widget.RandomPicksWidgetConfigurationActivity"
+    android:widgetFeatures="reconfigurable"
     tools:ignore="UnusedAttribute" />

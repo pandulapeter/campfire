@@ -79,17 +79,25 @@
 - **A refresh moves `REFRESHED_AT` in each widget's Glance state before `update`**: a composition still alive is only
   recomposed by an update, and not at all for a state that did not change, so `rememberWidgetSnapshot` reads it, and
   the day is read again.
+- Both widgets list songs in one row (`WidgetSongRow`: title, artist, and in a setlist its number), spanning the
+  widget edge to edge so its touch feedback does: `widgetBackground` pads only above and below, and every other part
+  pads its own sides. The headers tell the widgets apart.
 - The Setlist's songs are a `LazyColumn` (scrolling, so any number; a plain container draws only its first ten
   children), each song opening the setlist at it.
 - Random picks: `SizeMode.Responsive`, one layout per row count (up to five). The draw is a seed in the widget's own
   state, drawn again by Shuffle (`ShuffleAction`, public: Glance's R8 rules keep only public `ActionCallback`s) and by
   `provideGlance` once 55 minutes old (the hourly `updatePeriodMillis` alarm repeats from itself, not from the draw).
+  Its own title and tag and language filter are in its state too, set by `RandomPicksWidgetConfigurationActivity`.
+- **The setup screens** (`WidgetConfigurationActivity`, `android:configure`, `reconfigurable`; own task affinity, out of
+  Recents, so they never raise the app) show `:presentation`'s `SetlistWidgetSetup` and `RandomPicksWidgetSetup`; only
+  their Done writes the widget's state. A snapshot without the setup texts (none yet, or an older app's) adds the widget
+  as it is.
+- **An app update leaves every placed widget in its loading layout**, and the snapshot it then writes is usually the
+  file as it was, so both receivers hear `MY_PACKAGE_REPLACED` and redraw (`refreshAllAsync`).
 - **Add to home screen** (a setlist's menu, `SetlistWidgetPinner` from `:presentation`'s `ui/platform`, offered where
   `isRequestPinAppWidgetSupported`): `SetlistWidgetPinning` asks the launcher, whose popup places the widget without
   the configuration screen, and `SetlistWidgetPinnedReceiver` (its mutable callback, given the new widget's id) pins it.
-- Setlist: `SetlistWidgetConfigurationActivity` (`android:configure`, `reconfigurable`; own task affinity, out of
-  Recents, so it never raises the app) shows `SetlistWidgetChooser` from `:presentation` and keeps the file name (none
-  for Next gig) in the widget's state. Today is `LocalDate.now()`; the receiver also hears `DATE_CHANGED`, `TIME_SET`, and
+- Setlist: `SetlistWidgetConfigurationActivity` keeps the file name (none for Next gig) in the widget's state. Today is `LocalDate.now()`; the receiver also hears `DATE_CHANGED`, `TIME_SET`, and
   `TIMEZONE_CHANGED` (the date's isn't exempt from the background limits everywhere; the hourly update covers it).
 - A launcher lays a widget out in the system's direction, so one in an app language written the other way is mirrored
   by hand (`isMirrored`: lines aligned to their end, the header's button first).

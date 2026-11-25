@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.widget
 
+import com.pandulapeter.campfire.data.model.song.SongLanguage
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
@@ -27,6 +28,8 @@ import kotlinx.serialization.json.Json
  * @property homeLink The app link that opens the app on its home screen.
  * @property setlistsLink The app link that opens the setlists screen.
  * @property strings Every text the widgets show, already in the app's language rather than the system's.
+ * @property tags Every tag of the library, as the songs screen's filter lists them, for a random picks widget's filter.
+ * @property languages Every language of the library, [SongLanguage.UNKNOWN] for the songs that name none, for the same.
  */
 @Serializable
 data class WidgetSnapshot(
@@ -38,15 +41,29 @@ data class WidgetSnapshot(
     val setlistsLink: String,
     val strings: Strings,
     val theme: Theme? = null,
+    val tags: List<String> = emptyList(),
+    val languages: List<Language> = emptyList(),
 ) {
 
-    /** A song, with the app link ([link]) that opens its details screen. */
+    /**
+     * A song, with the app link ([link]) that opens its details screen, its [tags] as the file writes them, and its
+     * [languages] as lowercase ISO codes, empty where it names none.
+     */
     @Serializable
     data class Song(
         val fileName: String,
         val title: String,
         val artist: String,
         val link: String,
+        val tags: List<String> = emptyList(),
+        val languages: List<String> = emptyList(),
+    )
+
+    /** A language of the library by its [code], and its [name] in the app's language. */
+    @Serializable
+    data class Language(
+        val code: String,
+        val name: String,
     )
 
     /**
@@ -74,7 +91,8 @@ data class WidgetSnapshot(
 
     /**
      * The widgets' texts. A counted one is a [Plural]; [isRightToLeft] is whether the app's language is written from the
-     * right.
+     * right. The setup screens' texts, from [setUpWidget] on, are empty in a snapshot written before they were part of
+     * it ([hasSetupTexts]).
      */
     @Serializable
     data class Strings(
@@ -94,8 +112,18 @@ data class WidgetSnapshot(
         val yesterday: String,
         val inDays: Plural,
         val daysAgo: Plural,
-        val songCount: Plural,
-    )
+        val noMatchingSongs: String = "",
+        val setUpWidget: String = "",
+        val done: String = "",
+        val title: String = "",
+        val tags: String = "",
+        val languages: String = "",
+        val randomPicksFilterDescription: String = "",
+    ) {
+
+        /** Whether the setup screens' texts are there to show. */
+        val hasSetupTexts get() = setUpWidget.isNotEmpty()
+    }
 
     /**
      * How the widgets are painted: in the app's theme rather than the system's, so that they look like the app.

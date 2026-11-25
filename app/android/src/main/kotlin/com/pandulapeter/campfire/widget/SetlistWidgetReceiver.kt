@@ -13,32 +13,22 @@ import android.content.Context
 import android.content.Intent
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 /**
  * The setlist widget's provider, named in the manifest with `xml/widget_setlist`. Besides the hourly update, the day
  * changing (or the clock or the time zone being set) redraws it at once, since "Tomorrow" becomes "Today" and a next gig
  * whose day has passed gives way to the next one. Android delivers the time and time zone broadcasts to a manifest
  * receiver; the date's is not among those it exempts from the background limits on every version, which the hourly
- * update covers.
+ * update covers. The app's update redraws it too ([refreshAllAsync]).
  */
 class SetlistWidgetReceiver : GlanceAppWidgetReceiver() {
 
     override val glanceAppWidget: GlanceAppWidget = SetlistWidget()
 
     override fun onReceive(context: Context, intent: Intent) {
-        if (intent.action !in DAY_CHANGES) return super.onReceive(context, intent)
+        if (intent.action !in DAY_CHANGES && intent.action != Intent.ACTION_MY_PACKAGE_REPLACED) return super.onReceive(context, intent)
         println("Setlist widgets redrawn for ${intent.action}")
-        val pendingResult = goAsync()
-        CoroutineScope(Dispatchers.Default).launch {
-            try {
-                glanceAppWidget.refreshAll(context)
-            } finally {
-                pendingResult.finish()
-            }
-        }
+        refreshAllAsync(context)
     }
 
     private companion object {

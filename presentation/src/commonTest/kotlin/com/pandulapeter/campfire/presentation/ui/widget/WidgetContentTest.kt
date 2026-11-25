@@ -9,9 +9,10 @@
  */
 package com.pandulapeter.campfire.presentation.ui.widget
 
+import com.pandulapeter.campfire.data.model.song.SongLanguage
 import com.pandulapeter.campfire.presentation.localization.AppLocale
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.widget_song_count
+import com.pandulapeter.campfire.presentation.resources.import_review_songs
 import kotlinx.datetime.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -25,7 +26,8 @@ class WidgetContentTest {
 
     private val strings = WidgetTestStrings.strings
 
-    private fun song(name: String) = WidgetSnapshot.Song(fileName = "$name.cho", title = name.uppercase(), artist = "", link = "campfire://song/$name")
+    private fun song(name: String, tags: List<String> = emptyList(), languages: List<String> = emptyList()) =
+        WidgetSnapshot.Song(fileName = "$name.cho", title = name.uppercase(), artist = "", link = "campfire://song/$name", tags = tags, languages = languages)
 
     private fun setlist(name: String, date: LocalDate, isArchived: Boolean = false, songs: List<String> = emptyList()) = WidgetSnapshot.Setlist(
         fileName = "$name.setlist.json",
@@ -95,6 +97,33 @@ class WidgetContentTest {
     }
 
     @Test
+    fun `random picks draw only from the songs with a selected tag in a selected language`() {
+        val library = snapshot(
+            songs = listOf(song("a", tags = listOf("Folk"), languages = listOf("en")), song("b", tags = listOf("folk")), song("c", languages = listOf("en"))),
+        ).copy(tags = listOf("Folk"), languages = listOf(WidgetSnapshot.Language("en", "English"), WidgetSnapshot.Language(SongLanguage.UNKNOWN, "Unknown")))
+        fun drawn(filter: RandomPicksFilter) = assertIs<RandomPicksContent.Picks>(library.randomPicksContent(count = 5, seed = 0, filter = filter)).songs.map { it.title }.toSet()
+        assertEquals(setOf("A", "B"), drawn(RandomPicksFilter(tags = setOf("FOLK"))))
+        assertEquals(setOf("A"), drawn(RandomPicksFilter(tags = setOf("Folk"), languages = setOf("en"))))
+        assertEquals(setOf("B"), drawn(RandomPicksFilter(languages = setOf(SongLanguage.UNKNOWN))))
+        assertEquals(setOf("A", "B", "C"), drawn(RandomPicksFilter(tags = setOf("Gone"))))
+    }
+
+    @Test
+    fun `random picks say so where the filter leaves no song`() {
+        val library = snapshot(songs = listOf(song("a", languages = listOf("en")))).copy(tags = listOf("Folk"), languages = listOf(WidgetSnapshot.Language("en", "English")))
+        assertEquals(RandomPicksContent.Message("No match"), library.randomPicksContent(count = 5, seed = 0, filter = RandomPicksFilter(tags = setOf("Folk"))))
+    }
+
+    @Test
+    fun `random picks can be drawn again only from more songs than the largest widget lists`() {
+        fun canDrawAgain(songCount: Int) = assertIs<RandomPicksContent.Picks>(
+            snapshot(songs = (1..songCount).map { song("s$it") }).randomPicksContent(count = 3, seed = 0),
+        ).canDrawAgain
+        assertEquals(false, canDrawAgain(RANDOM_PICKS_MAX_ROWS))
+        assertEquals(true, canDrawAgain(RANDOM_PICKS_MAX_ROWS + 1))
+    }
+
+    @Test
     fun `the next gig is the earliest day from today on`() {
         val past = setlist("past", today.minusDays(1))
         val later = setlist("later", today.plusDays(10))
@@ -126,9 +155,17 @@ class WidgetContentTest {
         val library = snapshot(songs = listOf(song("a"), song("b")), setlists = listOf(setlist("gig", today.plusDays(3), songs = listOf("b", "a"))))
         val content = assertIs<SetlistWidgetContent.Shown>(library.setlistContent(pinnedFileName = null, todayEpochDay = today.toEpochDays()))
         assertEquals("In 3 days", content.relativeDay)
-        assertEquals("2 songs", content.songCount)
         assertEquals(listOf("B", "A"), content.songs.map { it.title })
+        assertEquals(listOf(1, 2), content.songs.map { it.number })
         assertEquals("campfire://setlist/gig", content.link)
+    }
+
+    @Test
+    fun `a song shows its artist and keeps its number in the setlist past one the library lacks`() {
+        val library = snapshot(songs = listOf(song("a").copy(artist = "Artist")), setlists = listOf(setlist("gig", today, songs = listOf("gone", "a"))))
+        val song = assertIs<SetlistWidgetContent.Shown>(library.setlistContent(pinnedFileName = null, todayEpochDay = today.toEpochDays())).songs.single()
+        assertEquals(2, song.number)
+        assertEquals("Artist", song.artist)
     }
 
     @Test
@@ -171,7 +208,7 @@ class WidgetContentTest {
 
     @Test
     fun `a counted text follows the language's rule past the counts it holds`() {
-        val polish = widgetPlural(Res.plurals.widget_song_count, AppLocale.PL)
+        val polish = widgetPlural(Res.plurals.import_review_songs, AppLocale.PL)
         assertEquals("22 piosenki", polish.format(22))
         assertEquals("25 piosenek", polish.format(25))
         assertEquals("1 piosenka", polish.format(1))

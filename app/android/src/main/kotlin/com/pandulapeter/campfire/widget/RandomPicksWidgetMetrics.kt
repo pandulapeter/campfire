@@ -9,10 +9,11 @@
  */
 package com.pandulapeter.campfire.widget
 
+import com.pandulapeter.campfire.presentation.ui.widget.RANDOM_PICKS_MAX_ROWS
+
 /** How many songs the random picks widget lists at a height, all in dp. */
 internal object RandomPicksWidgetMetrics {
 
-    const val MAX_ROWS = 5
     const val HEADER_HEIGHT = 40
     const val ROW_HEIGHT = 44
 
@@ -20,5 +21,5 @@ internal object RandomPicksWidgetMetrics {
     fun heightFor(rows: Int) = 2 * WIDGET_PADDING + HEADER_HEIGHT + rows * ROW_HEIGHT
 
     /** How many songs fit [height], at least one, so that a widget squeezed below one row still shows a song. */
-    fun rowsFitting(height: Float) = ((height - 2 * WIDGET_PADDING - HEADER_HEIGHT) / ROW_HEIGHT).toInt().coerceIn(1, MAX_ROWS)
+    fun rowsFitting(height: Float) = ((height - 2 * WIDGET_PADDING - HEADER_HEIGHT) / ROW_HEIGHT).toInt().coerceIn(1, RANDOM_PICKS_MAX_ROWS)
 }

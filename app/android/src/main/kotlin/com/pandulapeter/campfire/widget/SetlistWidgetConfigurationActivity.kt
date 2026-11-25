@@ -9,90 +9,27 @@
  */
 package com.pandulapeter.campfire.widget
 
-import android.appwidget.AppWidgetManager
-import android.content.Intent
-import android.content.res.Configuration
-import android.graphics.Color
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.datastore.preferences.core.Preferences
-import androidx.glance.GlanceId
-import androidx.glance.appwidget.GlanceAppWidgetManager
-import androidx.glance.appwidget.state.getAppWidgetState
-import androidx.glance.appwidget.state.updateAppWidgetState
-import androidx.lifecycle.lifecycleScope
-import com.pandulapeter.campfire.presentation.ui.widget.SetlistWidgetChooser
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import androidx.glance.appwidget.GlanceAppWidget
+import com.pandulapeter.campfire.presentation.ui.widget.SetlistWidgetSetup
+import com.pandulapeter.campfire.presentation.ui.widget.WidgetSnapshot
 
-/**
- * Asks which setlist a setlist widget shows, as it is added and whenever it is reconfigured (`widgetFeatures`): Next gig
- * or one of the snapshot's setlists ([SetlistWidgetChooser]). Leaving without a choice cancels, which as the widget is
- * added means it is not added. Before the app has ever written a snapshot there is nothing to choose from, so the widget
- * is set to Next gig at once, and says to open the app.
- */
-class SetlistWidgetConfigurationActivity : ComponentActivity() {
+/** Asks which setlist a setlist widget shows: Next gig or one of the snapshot's setlists ([SetlistWidgetSetup]). */
+class SetlistWidgetConfigurationActivity : WidgetConfigurationActivity() {
 
-    private var isChosen = false
+    override val widget: GlanceAppWidget = SetlistWidget()
+    override val logName = "Setlist"
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        val appWidgetId = intent?.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID) ?: AppWidgetManager.INVALID_APPWIDGET_ID
-        val result = Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
-        setResult(RESULT_CANCELED, result)
-        if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
-            println("Setlist widget configuration opened without a widget")
-            finish()
-            return
-        }
-        // As the main activity does: the automatic styles would ask for a scrim under a three-button navigation bar.
-        val barStyle = if (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES) {
-            SystemBarStyle.dark(Color.TRANSPARENT)
-        } else {
-            SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
-        }
-        enableEdgeToEdge(statusBarStyle = barStyle, navigationBarStyle = barStyle)
-        lifecycleScope.launch {
-            // Throws for an id no widget of the app has: one removed while this was open, or a stranger's, since the
-            // launcher has to be able to start this.
-            val glanceId = try {
-                GlanceAppWidgetManager(this@SetlistWidgetConfigurationActivity).getGlanceIdBy(appWidgetId)
-            } catch (_: IllegalArgumentException) {
-                println("Setlist widget configuration opened for a widget that does not exist")
-                finish()
-                return@launch
-            }
-            val snapshot = withContext(Dispatchers.IO) { WidgetSnapshotFile.read(this@SetlistWidgetConfigurationActivity) }
-            if (snapshot == null) {
-                println("Setlist widget configured before the app wrote a snapshot")
-                choose(glanceId = glanceId, fileName = null, result = result)
-                return@launch
-            }
-            val pinnedFileName = SetlistWidget().getAppWidgetState<Preferences>(this@SetlistWidgetConfigurationActivity, glanceId)[WidgetState.PINNED_SETLIST]
-            setContent {
-                SetlistWidgetChooser(
-                    snapshot = snapshot,
-                    chosenFileName = pinnedFileName,
-                    onChosen = { fileName -> lifecycleScope.launch { choose(glanceId = glanceId, fileName = fileName, result = result) } },
-                )
-            }
-        }
-    }
-
-    /** Keeps [fileName] (null for Next gig) as the widget's setlist, draws the widget, and closes, a second choice ignored. */
-    private suspend fun choose(glanceId: GlanceId, fileName: String?, result: Intent) {
-        if (isChosen) return
-        isChosen = true
-        updateAppWidgetState(this, glanceId) { state ->
-            if (fileName == null) state.remove(WidgetState.PINNED_SETLIST) else state[WidgetState.PINNED_SETLIST] = fileName
-        }
-        SetlistWidget().update(this, glanceId)
-        println("Setlist widget configured: ${if (fileName == null) "next gig" else "pinned setlist"}")
-        setResult(RESULT_OK, result)
-        finish()
+    override fun showSetup(snapshot: WidgetSnapshot, state: Preferences) = setContent {
+        SetlistWidgetSetup(
+            snapshot = snapshot,
+            initialFileName = state[WidgetState.PINNED_SETLIST],
+            onDone = { fileName ->
+                apply(logDescription = if (fileName == null) "next gig" else "pinned setlist") { widgetState ->
+                    if (fileName == null) widgetState.remove(WidgetState.PINNED_SETLIST) else widgetState[WidgetState.PINNED_SETLIST] = fileName
+                }
+            },
+        )
     }
 }

@@ -41,9 +41,9 @@ import com.pandulapeter.campfire.presentation.ui.widget.WidgetSnapshot
 import com.pandulapeter.campfire.presentation.ui.widget.setlistContent
 
 /**
- * The setlist widget: the setlist's title, its date and how far away it is, its song count, and its songs in a list that
- * scrolls, each opening the setlist at it; or the snapshot's sentence saying why there is no setlist. The rest of the
- * widget opens the content's link (the app, before it ever wrote a snapshot).
+ * The setlist widget: the setlist's title and how far away its day is, and its songs in a list that scrolls, as the
+ * random picks widget lists its picks, each opening the setlist at it; or the snapshot's sentence saying why there is no
+ * setlist. The rest of the widget opens the content's link (the app, before it ever wrote a snapshot).
  */
 @Composable
 internal fun SetlistWidgetLayout(
@@ -57,7 +57,7 @@ internal fun SetlistWidgetLayout(
             is SetlistWidgetContent.Shown -> Setlist(
                 content = content,
                 label = snapshot.strings.nextGig.takeIf { pinnedFileName == null },
-                textAlign = textAlignOf(snapshot.isMirrored()),
+                isMirrored = snapshot.isMirrored(),
             )
             is SetlistWidgetContent.Message -> WidgetMessage(text = content.text)
             null -> WidgetMessage(text = LocalContext.current.getString(R.string.widget_open_app))
@@ -65,37 +65,18 @@ internal fun SetlistWidgetLayout(
     }
 }
 
-/** [content], under [label] (Next gig, where the widget is not pinned to the setlist). */
+/**
+ * [content]: its header, the part that tells it from the random picks widget (its title under [label], Next gig where the
+ * widget is not pinned to the setlist, then how far away its day is, the day itself adding nothing), over its songs in the
+ * random picks widget's rows, each numbered by its place in the setlist.
+ */
 @Composable
 private fun ColumnScope.Setlist(
     content: SetlistWidgetContent.Shown,
     label: String?,
-    textAlign: TextAlign,
+    isMirrored: Boolean,
 ) {
-    Text(
-        modifier = GlanceModifier.fillMaxWidth(),
-        text = label.orEmpty(),
-        maxLines = 1,
-        style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 12.sp, fontWeight = FontWeight.Medium, textAlign = textAlign),
-    )
-    Text(
-        modifier = GlanceModifier.fillMaxWidth(),
-        text = content.title,
-        maxLines = 1,
-        style = TextStyle(color = GlanceTheme.colors.primary, fontSize = 16.sp, fontWeight = FontWeight.Bold, textAlign = textAlign),
-    )
-    Text(
-        modifier = GlanceModifier.fillMaxWidth(),
-        text = listOf(content.relativeDay, content.date).filter { it.isNotBlank() }.joinToString(" · "),
-        maxLines = 1,
-        style = TextStyle(color = GlanceTheme.colors.onSurface, fontSize = 14.sp, textAlign = textAlign),
-    )
-    Text(
-        modifier = GlanceModifier.fillMaxWidth(),
-        text = content.songCount,
-        maxLines = 1,
-        style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 12.sp, textAlign = textAlign),
-    )
+    SetlistHeader(content = content, label = label, textAlign = textAlignOf(isMirrored))
     if (content.songs.isNotEmpty()) {
         Box(modifier = GlanceModifier.fillMaxWidth().defaultWeight()) {
             LazyColumn(modifier = GlanceModifier.fillMaxSize()) {
@@ -104,17 +85,42 @@ private fun ColumnScope.Setlist(
                 // under them at rest.
                 item { Spacer(modifier = GlanceModifier.height(EDGE_FADE_HEIGHT.dp)) }
                 items(content.songs) { song ->
-                    Text(
-                        modifier = GlanceModifier.fillMaxWidth().padding(vertical = 3.dp).clickable(openLinkAction(song.link)),
-                        text = song.title,
-                        maxLines = 1,
-                        style = TextStyle(color = GlanceTheme.colors.onSurface, fontSize = 13.sp, textAlign = textAlign),
-                    )
+                    WidgetSongRow(title = song.title, artist = song.artist, number = song.number, link = song.link, isMirrored = isMirrored)
                 }
                 item { Spacer(modifier = GlanceModifier.height(EDGE_FADE_HEIGHT.dp)) }
             }
             EdgeFades()
         }
+    }
+}
+
+@Composable
+private fun SetlistHeader(
+    content: SetlistWidgetContent.Shown,
+    label: String?,
+    textAlign: TextAlign,
+) = Column(modifier = GlanceModifier.fillMaxWidth().padding(horizontal = WIDGET_PADDING.dp)) {
+    if (label != null) {
+        Text(
+            modifier = GlanceModifier.fillMaxWidth(),
+            text = label,
+            maxLines = 1,
+            style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 12.sp, fontWeight = FontWeight.Medium, textAlign = textAlign),
+        )
+    }
+    Text(
+        modifier = GlanceModifier.fillMaxWidth(),
+        text = content.title,
+        maxLines = 1,
+        style = TextStyle(color = GlanceTheme.colors.primary, fontSize = 16.sp, fontWeight = FontWeight.Bold, textAlign = textAlign),
+    )
+    if (content.relativeDay.isNotBlank()) {
+        Text(
+            modifier = GlanceModifier.fillMaxWidth(),
+            text = content.relativeDay,
+            maxLines = 1,
+            style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 12.sp, textAlign = textAlign),
+        )
     }
 }
 

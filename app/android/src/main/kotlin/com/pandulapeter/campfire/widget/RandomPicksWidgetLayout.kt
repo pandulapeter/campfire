@@ -25,36 +25,42 @@ import androidx.glance.layout.Column
 import androidx.glance.layout.Row
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
+import androidx.glance.layout.padding
 import androidx.glance.layout.size
 import androidx.glance.text.FontWeight
-import androidx.glance.text.TextAlign
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.presentation.ui.widget.RandomPicksContent
+import com.pandulapeter.campfire.presentation.ui.widget.RandomPicksFilter
 import com.pandulapeter.campfire.presentation.ui.widget.WidgetSnapshot
 import com.pandulapeter.campfire.presentation.ui.widget.randomPicksContent
 
 /**
- * The random picks widget: a header with the button that draws again, then as many songs drawn by [seed] as the height
- * has room for, or the snapshot's sentence where there is nothing to draw from. Anywhere but a song opens the app.
+ * The random picks widget: a header with its [title] (the snapshot's Random picks where it has none of its own) and the
+ * button that draws again where that can change the picks, then as many songs drawn by [seed] from those [filter] leaves
+ * as the height has room for, or the snapshot's sentence where there is nothing to draw from. Anywhere but a song opens
+ * the app.
  */
 @Composable
 internal fun RandomPicksWidgetLayout(
     snapshot: WidgetSnapshot?,
     seed: Long,
+    title: String?,
+    filter: RandomPicksFilter,
 ) {
     val rows = RandomPicksWidgetMetrics.rowsFitting(LocalSize.current.height.value)
-    val content = snapshot?.randomPicksContent(count = rows, seed = seed)
-    val textAlign = textAlignOf(snapshot.isMirrored())
+    val content = snapshot?.randomPicksContent(count = rows, seed = seed, filter = filter)
     Column(modifier = GlanceModifier.widgetBackground().clickable(openLinkAction(snapshot?.homeLink))) {
         Header(
-            title = snapshot?.strings?.randomPicks ?: LocalContext.current.getString(R.string.widget_random_picks_name),
-            shuffleDescription = snapshot?.strings?.drawNewPicks.takeIf { content is RandomPicksContent.Picks },
+            title = title?.takeIf { it.isNotBlank() } ?: snapshot?.strings?.randomPicks ?: LocalContext.current.getString(R.string.widget_random_picks_name),
+            shuffleDescription = snapshot?.strings?.drawNewPicks.takeIf { (content as? RandomPicksContent.Picks)?.canDrawAgain == true },
             isMirrored = snapshot.isMirrored(),
         )
         when (content) {
-            is RandomPicksContent.Picks -> content.songs.forEach { SongRow(song = it, textAlign = textAlign) }
+            is RandomPicksContent.Picks -> content.songs.forEach { song ->
+                WidgetSongRow(title = song.title, artist = song.artist, number = null, link = song.link, isMirrored = snapshot.isMirrored())
+            }
             is RandomPicksContent.Message -> WidgetMessage(text = content.text)
             null -> WidgetMessage(text = LocalContext.current.getString(R.string.widget_open_app))
         }
@@ -71,7 +77,7 @@ private fun Header(
     shuffleDescription: String?,
     isMirrored: Boolean,
 ) = Row(
-    modifier = GlanceModifier.fillMaxWidth().height(RandomPicksWidgetMetrics.HEADER_HEIGHT.dp),
+    modifier = GlanceModifier.fillMaxWidth().height(RandomPicksWidgetMetrics.HEADER_HEIGHT.dp).padding(horizontal = WIDGET_PADDING.dp),
     verticalAlignment = Alignment.CenterVertically,
 ) {
     if (isMirrored) ShuffleButton(shuffleDescription)
@@ -94,33 +100,6 @@ private fun ShuffleButton(description: String?) {
             onClick = actionRunCallback<ShuffleAction>(),
             backgroundColor = null,
             contentColor = GlanceTheme.colors.primary,
-        )
-    }
-}
-
-@Composable
-private fun SongRow(
-    song: WidgetSnapshot.Song,
-    textAlign: TextAlign,
-) = Column(
-    modifier = GlanceModifier
-        .fillMaxWidth()
-        .height(RandomPicksWidgetMetrics.ROW_HEIGHT.dp)
-        .clickable(openLinkAction(song.link)),
-    verticalAlignment = Alignment.CenterVertically,
-) {
-    Text(
-        modifier = GlanceModifier.fillMaxWidth(),
-        text = song.title,
-        maxLines = 1,
-        style = TextStyle(color = GlanceTheme.colors.onSurface, fontSize = 14.sp, fontWeight = FontWeight.Medium, textAlign = textAlign),
-    )
-    if (song.artist.isNotBlank()) {
-        Text(
-            modifier = GlanceModifier.fillMaxWidth(),
-            text = song.artist,
-            maxLines = 1,
-            style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 12.sp, textAlign = textAlign),
         )
     }
 }

@@ -23,12 +23,26 @@ struct WidgetSnapshot: Decodable {
     let strings: Strings
     /// Absent from a snapshot an app from before it wrote, which leaves the widget in the system's colors.
     let theme: Theme?
+    /// Every tag of the library, for a Random picks widget's filter; absent from a snapshot an app from before it wrote.
+    let tags: [String]?
+    /// Every language of the library (`und` for the songs naming none), for the same; absent likewise.
+    let languages: [Language]?
 
     struct Song: Decodable {
         let fileName: String
         let title: String
         let artist: String
         let link: String
+        /// Its tags as the file writes them; absent from a snapshot an app from before it wrote.
+        let tags: [String]?
+        /// Its languages as lowercase ISO codes, empty where it names none; absent likewise.
+        let languages: [String]?
+    }
+
+    /// A language of the library by its code, and its name in the app's language.
+    struct Language: Decodable {
+        let code: String
+        let name: String
     }
 
     struct Setlist: Decodable {
@@ -36,8 +50,6 @@ struct WidgetSnapshot: Decodable {
         /// Its day as `yyyy-MM-dd`.
         let date: String
         let title: String
-        /// The same day as the app writes it, in its language.
-        let formattedDate: String
         let isArchived: Bool
         let songFileNames: [String]
         let link: String
@@ -77,7 +89,8 @@ struct WidgetSnapshot: Decodable {
         let yesterday: String
         let inDays: Plural
         let daysAgo: Plural
-        let songCount: Plural
+        /// Absent from a snapshot an app from before it wrote, which says the library is empty instead.
+        let noMatchingSongs: String?
     }
 
     /// A counted text as the app's language reads each count, so that no plural rule is needed here: past the list, a

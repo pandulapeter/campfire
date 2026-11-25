@@ -29,7 +29,9 @@ shells' (`app/android`'s Glance widgets, `app/ios`'s `CampfireWidgets` extension
   setlist at that song.
 - The decisions are pure and tested here (`WidgetContent.kt`), Android's widgets calling them: the draw (up to the
   count, by a seed the widget keeps, each song ranked by its file name's hash alone so the library's order never
-  changes it; no 20-song threshold, the songs list's Random picks switch does not apply), the
+  changes it; no 20-song threshold, the songs list's Random picks switch does not apply) from the songs the widget's
+  filter leaves (`RandomPicksFilter`: the songs screen's tag and language rule, any of a group, a value the library
+  lost ignored), Shuffle only over more songs than the largest widget lists, the
   next gig (not archived, earliest day from today, ties in the setlists screen's order), and the relative day. iOS
   writes the same few rules in Swift.
 - Songs switched off, both widgets say so; Setlists off, the setlist widget does. An empty library says to add songs, no

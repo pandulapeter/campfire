@@ -19,6 +19,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.DataState
+import com.pandulapeter.campfire.data.model.song.SongLanguage
 import com.pandulapeter.campfire.domain.api.library.ScreenData
 import com.pandulapeter.campfire.presentation.localization.AppLocale
 import com.pandulapeter.campfire.presentation.localization.currentLanguage
@@ -26,22 +27,30 @@ import com.pandulapeter.campfire.presentation.localization.layoutDirection
 import com.pandulapeter.campfire.presentation.localization.pluralTemplate
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.done
 import com.pandulapeter.campfire.presentation.resources.setlists_countdown_days_ago
 import com.pandulapeter.campfire.presentation.resources.setlists_countdown_in_days
 import com.pandulapeter.campfire.presentation.resources.setlists_countdown_today
 import com.pandulapeter.campfire.presentation.resources.setlists_countdown_tomorrow
 import com.pandulapeter.campfire.presentation.resources.setlists_countdown_yesterday
+import com.pandulapeter.campfire.presentation.resources.songs_languages
+import com.pandulapeter.campfire.presentation.resources.songs_languages_unknown
+import com.pandulapeter.campfire.presentation.resources.songs_new_song_title
 import com.pandulapeter.campfire.presentation.resources.songs_random_picks
 import com.pandulapeter.campfire.presentation.resources.songs_random_picks_refresh
+import com.pandulapeter.campfire.presentation.resources.songs_tags
 import com.pandulapeter.campfire.presentation.resources.widget_choose_setlist
 import com.pandulapeter.campfire.presentation.resources.widget_empty_library
 import com.pandulapeter.campfire.presentation.resources.widget_next_gig
 import com.pandulapeter.campfire.presentation.resources.widget_next_gig_description
+import com.pandulapeter.campfire.presentation.resources.widget_no_matching_songs
 import com.pandulapeter.campfire.presentation.resources.widget_no_upcoming_setlist
+import com.pandulapeter.campfire.presentation.resources.widget_random_picks_filter_description
+import com.pandulapeter.campfire.presentation.resources.widget_set_up
 import com.pandulapeter.campfire.presentation.resources.widget_setlist_missing
 import com.pandulapeter.campfire.presentation.resources.widget_setlists_off
-import com.pandulapeter.campfire.presentation.resources.widget_song_count
 import com.pandulapeter.campfire.presentation.resources.widget_songs_off
+import com.pandulapeter.campfire.presentation.ui.components.labels.namedLanguageLabel
 import com.pandulapeter.campfire.presentation.ui.navigation.FeatureSwitches
 import com.pandulapeter.campfire.presentation.ui.platform.calendarLocale
 import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
@@ -77,7 +86,8 @@ internal fun WidgetSnapshotEffect(
     // snapshot otherwise.
     val features = FeatureSwitches.of(preferences)
     val theme = rememberWidgetTheme(preferences)
-    val snapshot = remember(library, features, strings, theme, locale) {
+    val unknownLanguage = stringResource(Res.string.songs_languages_unknown)
+    val snapshot = remember(library, features, strings, theme, locale, unknownLanguage) {
         widgetSnapshot(
             screenData = library,
             features = features,
@@ -88,6 +98,7 @@ internal fun WidgetSnapshotEffect(
                 // before or after it on one side of UTC.
                 dateFormatter.formatDate(day.atStartOfDayIn(TimeZone.UTC).toEpochMilliseconds(), locale) ?: day.toString()
             },
+            languageName = { code -> if (code == SongLanguage.UNKNOWN) unknownLanguage else namedLanguageLabel(code = code, appLanguageCode = languageCode) },
         )
     }
     val latestOnChanged by rememberUpdatedState(onChanged)
@@ -118,7 +129,13 @@ private fun widgetStrings(): WidgetSnapshot.Strings {
         yesterday = stringResource(Res.string.setlists_countdown_yesterday),
         inDays = remember(locale) { widgetPlural(Res.plurals.setlists_countdown_in_days, locale) },
         daysAgo = remember(locale) { widgetPlural(Res.plurals.setlists_countdown_days_ago, locale) },
-        songCount = remember(locale) { widgetPlural(Res.plurals.widget_song_count, locale) },
+        noMatchingSongs = stringResource(Res.string.widget_no_matching_songs),
+        setUpWidget = stringResource(Res.string.widget_set_up),
+        done = stringResource(Res.string.done),
+        title = stringResource(Res.string.songs_new_song_title),
+        tags = stringResource(Res.string.songs_tags),
+        languages = stringResource(Res.string.songs_languages),
+        randomPicksFilterDescription = stringResource(Res.string.widget_random_picks_filter_description),
     )
 }
 

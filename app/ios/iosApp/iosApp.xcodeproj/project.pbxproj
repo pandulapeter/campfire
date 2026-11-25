@@ -32,6 +32,7 @@
 		C4F3000A2E80000000000007 /* RandomPicksWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4F3000A2E80000000000008 /* RandomPicksWidget.swift */; };
 		C4F3000A2E80000000000009 /* SetlistWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4F3000A2E8000000000000A /* SetlistWidget.swift */; };
 		C4F3000A2E8000000000000B /* SetlistEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4F3000A2E8000000000000C /* SetlistEntity.swift */; };
+		C4F3000A2E8000000000003A /* RandomPicksConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4F3000A2E8000000000003B /* RandomPicksConfiguration.swift */; };
 		C4F3000A2E8000000000000D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C4F3000A2E8000000000000E /* Assets.xcassets */; };
 		C4F3000A2E8000000000000F /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = C4F3000A2E80000000000010 /* PrivacyInfo.xcprivacy */; };
 		C4F3000A2E80000000000011 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = C4F3000A2E80000000000012 /* Localizable.strings */; };
@@ -136,6 +137,7 @@
 		C4F3000A2E80000000000008 /* RandomPicksWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RandomPicksWidget.swift; sourceTree = "<group>"; };
 		C4F3000A2E8000000000000A /* SetlistWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetlistWidget.swift; sourceTree = "<group>"; };
 		C4F3000A2E8000000000000C /* SetlistEntity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetlistEntity.swift; sourceTree = "<group>"; };
+		C4F3000A2E8000000000003B /* RandomPicksConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RandomPicksConfiguration.swift; sourceTree = "<group>"; };
 		C4F3000A2E8000000000000E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C4F3000A2E80000000000010 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		C4F3000A2E8000000000001B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -278,6 +280,7 @@
 				C4F3000A2E80000000000004 /* WidgetSnapshot.swift */,
 				C4F3000A2E80000000000006 /* WidgetStyle.swift */,
 				C4F3000A2E80000000000008 /* RandomPicksWidget.swift */,
+				C4F3000A2E8000000000003B /* RandomPicksConfiguration.swift */,
 				C4F3000A2E8000000000000A /* SetlistWidget.swift */,
 				C4F3000A2E8000000000000C /* SetlistEntity.swift */,
 			);
@@ -554,6 +557,7 @@
 				C4F3000A2E80000000000003 /* WidgetSnapshot.swift in Sources */,
 				C4F3000A2E80000000000005 /* WidgetStyle.swift in Sources */,
 				C4F3000A2E80000000000007 /* RandomPicksWidget.swift in Sources */,
+				C4F3000A2E8000000000003A /* RandomPicksConfiguration.swift in Sources */,
 				C4F3000A2E80000000000009 /* SetlistWidget.swift in Sources */,
 				C4F3000A2E8000000000000B /* SetlistEntity.swift in Sources */,
 			);
