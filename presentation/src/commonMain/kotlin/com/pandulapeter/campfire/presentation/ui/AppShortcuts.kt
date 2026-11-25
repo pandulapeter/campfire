@@ -131,8 +131,8 @@ private val CampfireViewModel.isUncovered get() = dialogHost.visibleDialog.value
 private val CampfireViewModel.top get() = navigator.backStack.lastOrNull()
 
 /**
- * The tuner sheet over song details, wherever it shows a way to the tuner (the Tuner feature and the Dock's tuner on, in
- * the dock or the app bar), never in an import preview, which has no tuner; under the same rules as M
+ * The tuner sheet over song details, which shows a way to the tuner wherever the Tuner feature is on (the dock's, the app
+ * bar's, or with the Dock's tuner off the menu's), never in an import preview, which has no tuner; under the same rules as M
  * (`MetronomeController.toggleMetronomeByKey`), and left alone while a field is typed in, which the desktop and iOS type
  * the `u` of after its key-down reached here.
  */
@@ -141,7 +141,7 @@ internal fun CampfireViewModel.openTunerByKey(): Boolean {
     if (!isUncovered || overlayState.isValueBeingTyped || overlayState.isTextBeingTyped) return false
     val song = top as? CampfireDestination.SongDetails ?: return false
     val userPreferences = preferencesController.userPreferences.value
-    if (song.importPreview != null || userPreferences?.let { it.isTunerEnabled && it.isDockTunerEnabled } == false) return false
+    if (song.importPreview != null || userPreferences?.isTunerEnabled == false) return false
     println("Keyboard: tuner")
     openTunerSheet()
     return true

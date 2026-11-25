@@ -34,8 +34,8 @@ internal data class ShortcutRow(val shortcuts: List<KeyShortcut>) {
 
 /**
  * What the features switched on leave of the table, since the sheet lists only keys that do something: no song's keys
- * with the songs off, no click's with the metronome off, no tuner's without a way to it on a song ([isTunerEnabled]: the
- * Tuner feature and the Dock's tuner), nothing that changes the library, a song's transposition, or
+ * with the songs off, no click's with the metronome off, no tuner's with the Tuner feature off ([isTunerEnabled]; a song
+ * shows a way to it otherwise, in the dock, the app bar, or the menu), nothing that changes the library, a song's transposition, or
  * the selection in read only mode, which hides their controls, and no auto-scroll unless a song is read in one
  * scrolling column ([SongStep.NUDGE]), the only layout it plays in.
  *

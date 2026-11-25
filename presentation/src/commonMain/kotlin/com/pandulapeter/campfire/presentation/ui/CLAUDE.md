@@ -67,8 +67,8 @@ The view model facade, the composition root, and the product rules every screen 
   under a dialog or menu), since keys travel only along the focus path. A held key acts once; the keys held are
   forgotten as a dialog, a sheet, or a menu comes or goes, since their release reaches its window instead. Each asks the
   view model whether the screen on top offers what it presses (New only outside read only mode and the selection,
-  Ctrl / Cmd + 1 to 7 only over a main screen, the shortcuts sheet over no dialog, U only over song details where it
-  shows a way to the tuner), and is left unconsumed where it does not. `?` and U are left alone while a field is being
+  Ctrl / Cmd + 1 to 7 only over a main screen, the shortcuts sheet over no dialog, U only over song details with the Tuner
+  feature on), and is left unconsumed where it does not. `?` and U are left alone while a field is being
   typed in (an open text input session, counted by
   `InterceptPlatformTextInput` in `CampfireApp`): the desktop and iOS type a character from an event after its key-down,
   which reaches the root.

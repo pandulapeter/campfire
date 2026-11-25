@@ -35,7 +35,6 @@ import com.pandulapeter.campfire.screenshots.openSong
 import com.pandulapeter.campfire.screenshots.runAppTest
 import kotlinx.serialization.json.JsonPrimitive
 import kotlin.test.Test
-import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 @OptIn(ExperimentalTestApi::class)
@@ -96,14 +95,13 @@ internal class AppKeyboardShortcutsTest {
     }
 
     @Test
-    fun `U opens nothing over a song with the dock's tuner switched off`() = runAppTest(
+    fun `U opens the tuner sheet over a song whose menu holds the tuner`() = runAppTest(
         extraPreferences = mapOf("isDockTunerEnabled" to JsonPrimitive(false)),
     ) {
         openSong()
         waitForIdle()
         onRoot().performKeyInput { pressKey(Key.U) }
-        waitForIdle()
-        assertNull(viewModel.dialogHost.visibleDialog.value)
+        waitUntil { viewModel.dialogHost.visibleDialog.value is DialogType.Tuner }
     }
 
     private fun AppTestScope.pressQuestionMark() = onRoot().performKeyInput { withKeyDown(Key.ShiftLeft) { pressKey(Key.Slash) } }

@@ -15,6 +15,7 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_tuner
 import com.pandulapeter.campfire.presentation.resources.tuner
 import com.pandulapeter.campfire.presentation.ui.components.menu.ActionsMenuItem
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -30,6 +31,7 @@ internal fun tunerAction(isAlwaysInMenu: Boolean, onClick: () -> Unit) = Actions
     icon = painterResource(Res.drawable.ic_tuner),
     isAlwaysInMenu = isAlwaysInMenu,
     key = TUNER_ACTION_KEY,
+    shortcut = KeyShortcut.TUNER,
     onClick = onClick,
 )
 

@@ -26,7 +26,7 @@ internal fun shortcutFeatures(preferencesController: PreferencesController): Sho
     return ShortcutFeatures(
         areSongsEnabled = userPreferences?.areSongsEnabled != false,
         isMetronomeEnabled = userPreferences?.isMetronomeEnabled != false,
-        isTunerEnabled = userPreferences?.let { it.isTunerEnabled && it.isDockTunerEnabled } != false,
+        isTunerEnabled = userPreferences?.isTunerEnabled != false,
         isReadOnly = isReadOnly,
         songStep = when {
             userPreferences?.songLayout == SongLayout.CONTINUOUS -> SongStep.NUDGE
