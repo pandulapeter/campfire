@@ -57,4 +57,7 @@ the next share a height, so any motion takes away what is still to be read.
   `NavigationBackHandler`, so a predictive one turns the button to play while dragged (and back if cancelled); Escape
   reaches it through `Navigator.navigateBack` (`AutoScrollPlayback`), the web's Back through a history entry of its own
   (`BrowserRoutes`). The app bar's arrow is not a step back but a press to leave: it pops the screen at once.
-- The layout is asked over the first song opened (never by the onboarding), as the song details notes say.
+- The layout is asked over the first song opened (never by the onboarding), as the song details notes say. Until it is
+  answered, the layout follows the window's shape (one column for a window taller than wide, else pages,
+  `ui/preferences/FitUnchosenSongLayoutToWindow`), so the question opens with that one picked and the song under it
+  already laid out so; never while the question is shown, so a turned phone never takes a pick back.

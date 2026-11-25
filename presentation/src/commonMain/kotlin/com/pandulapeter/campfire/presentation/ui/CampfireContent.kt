@@ -40,6 +40,7 @@ import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeController
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeIconBeat
 import com.pandulapeter.campfire.presentation.ui.metronome.rememberMetronomeIconBeat
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
+import com.pandulapeter.campfire.presentation.ui.preferences.FitUnchosenSongLayoutToWindow
 import com.pandulapeter.campfire.presentation.ui.screens.export.ExportTransition
 import com.pandulapeter.campfire.presentation.ui.screens.onboarding.OnboardingCelebration
 import kotlinx.coroutines.flow.first
@@ -90,6 +91,7 @@ internal fun CampfireContent(
     val isCoverArtEnabled by remember(userPreferences) { derivedStateOf { userPreferences.value?.isCoverArtEnabled != false } }
     val isKeyboard by remember(userPreferences) { derivedStateOf { userPreferences.value?.instrument == UserPreferences.Instrument.KEYBOARD } }
     val songColumnWidth = minSongColumnWidth(isCoverArtEnabled = isCoverArtEnabled)
+    FitUnchosenSongLayoutToWindow(preferencesController = viewModel.preferencesController, dialogHost = viewModel.dialogHost)
 
     // How many items each rail holds at the reader's text size, from the window's height less the rail's insets, which
     // are the system bars' and never the keyboard's, so that the grouping of the tools does not flip while typing
