@@ -12,29 +12,30 @@ package com.pandulapeter.campfire.widget
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.util.LruCache
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import com.pandulapeter.campfire.presentation.ui.widget.WidgetSnapshot
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import androidx.compose.runtime.produceState
+import androidx.glance.LocalContext
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.IOException
 
 /**
  * `widget/covers/` in the app's files directory: the thumbnails of the covers the snapshot's songs name, written and
- * deleted by the app (`:presentation`'s `WidgetPublisher`), and decoded here for the widgets. Outside the backup rules'
- * allow-list with the snapshot, as everything under `widget/` is.
+ * deleted by the app (`:presentation`'s `WidgetPublisher`), and decoded here for the widgets, only those they draw.
+ * Outside the backup rules' allow-list with the snapshot, as everything under `widget/` is.
  */
 internal object WidgetCoverFiles {
 
-    private val _bitmaps = MutableStateFlow<Map<String, Bitmap>>(emptyMap())
-
     /**
-     * The covers of the snapshot last [decode]d, by name. One bitmap for each, shared by every size and row that draws it:
-     * the widget's views carry their bitmaps along, and the same bitmap is carried once.
+     * The covers decoded lately, by name, bounded: one bitmap for each, shared by every size, widget, and row that draws
+     * it, since a widget's views carry their bitmaps along and the same bitmap is carried once. One no longer drawn is let
+     * go once newer ones push it out, or at once where the snapshot stops naming it ([forgetAllBut]).
      */
-    val bitmaps: StateFlow<Map<String, Bitmap>> = _bitmaps.asStateFlow()
+    private val cache = object : LruCache<String, Bitmap>(MAX_CACHE_BYTES) {
+        override fun sizeOf(key: String, value: Bitmap) = value.allocationByteCount
+    }
 
     fun names(context: Context): Set<String> = folder(context).list()?.filterNot { it.endsWith(TEMPORARY_SUFFIX) }?.toSet().orEmpty()
 
@@ -54,17 +55,21 @@ internal object WidgetCoverFiles {
         File(folder(context), name).delete()
     }
 
+    /** Those of [names] already decoded, read without touching a file, for a widget's first drawing. */
+    fun cached(names: Set<String>): Map<String, Bitmap> = names.mapNotNull { name -> cache.get(name)?.let { name to it } }.toMap()
+
     /**
-     * Decodes the covers [snapshot] names that are not decoded yet, and forgets those it no longer names; off the main
-     * thread, before the snapshot is shown. A cover that cannot be read leaves its song without one.
+     * The covers [names] name, decoded off the main thread where they are not yet: only what a widget draws, never every
+     * cover the snapshot names. A cover that cannot be read leaves its song without one.
      */
-    fun decode(context: Context, snapshot: WidgetSnapshot?) {
-        val decoded = _bitmaps.value
-        val names = snapshot?.songs?.mapNotNullTo(mutableSetOf()) { it.cover }.orEmpty()
-        _bitmaps.value = names.mapNotNull { name ->
-            (decoded[name] ?: decodeFile(File(folder(context), name)))?.let { name to it }
+    suspend fun load(context: Context, names: Set<String>): Map<String, Bitmap> = withContext(Dispatchers.IO) {
+        names.mapNotNull { name ->
+            (cache.get(name) ?: decodeFile(File(folder(context), name))?.also { cache.put(name, it) })?.let { name to it }
         }.toMap()
     }
+
+    /** Lets go of every decoded cover but those of [names], the covers the snapshot written names. */
+    fun forgetAllBut(names: Set<String>) = cache.snapshot().keys.filterNot { it in names }.forEach { cache.remove(it) }
 
     private fun decodeFile(file: File): Bitmap? = try {
         // A JPEG has no alpha, so half the memory of the default, against Android's limit on a widget's bitmaps.
@@ -78,8 +83,19 @@ internal object WidgetCoverFiles {
 
     private const val FOLDER_NAME = "covers"
     private const val TEMPORARY_SUFFIX = ".tmp"
+
+    /** Room for a few dozen 120 px thumbnails, well within Android's limit on a widget's bitmap memory. */
+    private const val MAX_CACHE_BYTES = 2 * 1024 * 1024
 }
 
-/** The covers of the snapshot shown ([WidgetCoverFiles.bitmaps]), by the name its songs give them. */
+/**
+ * The covers [names] name (those of the songs a widget draws at its size), by name: what is decoded already at once, the
+ * rest once [WidgetCoverFiles.load] has read them.
+ */
 @Composable
-internal fun rememberWidgetCovers(): Map<String, Bitmap> = WidgetCoverFiles.bitmaps.collectAsState().value
+internal fun rememberWidgetCovers(names: Set<String>): Map<String, Bitmap> {
+    val context = LocalContext.current
+    return produceState(initialValue = WidgetCoverFiles.cached(names), names) {
+        value = WidgetCoverFiles.load(context = context, names = names)
+    }.value
+}

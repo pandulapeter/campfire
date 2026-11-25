@@ -35,10 +35,10 @@ internal object WidgetSnapshotFile {
     /** What the file holds, once [load]ed in this process, kept current by [write]. */
     val snapshot: StateFlow<WidgetSnapshot?> = _snapshot.asStateFlow()
 
-    /** Reads the file into [snapshot], and the covers it names, unless this process already has, off the main thread. */
+    /** Reads the file into [snapshot] unless this process already has, off the main thread. */
     suspend fun load(context: Context) = mutex.withLock {
         if (!isLoaded) {
-            _snapshot.value = withContext(Dispatchers.IO) { read(context).also { WidgetCoverFiles.decode(context = context, snapshot = it) } }
+            _snapshot.value = withContext(Dispatchers.IO) { read(context) }
             isLoaded = true
         }
     }
@@ -58,7 +58,7 @@ internal object WidgetSnapshotFile {
      */
     suspend fun write(context: Context, snapshot: WidgetSnapshot): Boolean = mutex.withLock {
         val isWritten = write(context = context, json = snapshot.encode())
-        WidgetCoverFiles.decode(context = context, snapshot = snapshot)
+        WidgetCoverFiles.forgetAllBut(snapshot.songs.mapNotNullTo(mutableSetOf()) { it.cover })
         _snapshot.value = snapshot
         isLoaded = true
         isWritten

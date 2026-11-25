@@ -76,9 +76,9 @@
   read only those files (never Koin or the library) and call the common decisions (`randomPicksContent`,
   `setlistContent`); no snapshot yet (the app never ran) says to open the app.
 - **The file is read once per process, on IO** (`WidgetSnapshotFile.load` in `provideGlance`, then kept current by its
-  `write`): Glance composes on the main thread, once per responsive size. The covers it names are decoded with it
-  (`RGB_565`), one `Bitmap` per cover kept across snapshots: a widget's views carry their bitmaps, the same one once,
-  within Android's limit on a widget's bitmap memory.
+  `write`): Glance composes on the main thread, once per responsive size. Only the covers a widget draws at a size are
+  decoded (`rememberWidgetCovers`, on IO, `RGB_565`), into a 2 MB `LruCache` shared by every size and widget: a widget's
+  views carry their bitmaps, the same one once, within Android's limit on a widget's bitmap memory.
 - **A refresh moves `REFRESHED_AT` in each widget's Glance state before `update`**: a composition still alive is only
   recomposed by an update, and not at all for a state that did not change, so `rememberWidgetSnapshot` reads it, and
   the day is read again.
