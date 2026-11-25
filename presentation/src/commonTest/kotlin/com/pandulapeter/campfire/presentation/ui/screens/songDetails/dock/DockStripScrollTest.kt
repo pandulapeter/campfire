@@ -58,6 +58,24 @@ internal class DockStripScrollTest {
     }
 
     @Test
+    fun `a tab's line of chord names is chords on the screen but its staff is not`() {
+        val tab = RenderSection.Lines(
+            header = "Picking pattern",
+            foldKey = "tab",
+            parts = listOf(
+                SectionPart.Lines(
+                    lines = listOf(
+                        ChordProLine.Tab(text = "  Am            C             E"),
+                        ChordProLine.Tab(text = "e|-------------|-------------|-------------|", continuesEnvironment = true),
+                    ),
+                ),
+            ),
+            isOnCard = false,
+        )
+        assertEquals(setOf("Am", "C", "E"), chordsOnScreen(listOf(tab), 0..0, names))
+    }
+
+    @Test
     fun `a screen of no chords marks the chord it is headed by`() = assertEquals(setOf("F"), chordsOnScreen(sections, 1..1, names))
 
     @Test

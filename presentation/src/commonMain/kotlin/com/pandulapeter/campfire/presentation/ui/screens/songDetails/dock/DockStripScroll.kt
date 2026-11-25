@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock
 
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.GridToken
+import com.pandulapeter.campfire.chordpro.tabs.ChordProTabWrapper
 import com.pandulapeter.campfire.presentation.ui.songView.model.RenderSection
 import com.pandulapeter.campfire.presentation.ui.songView.model.SongScaleGroup
 
@@ -37,14 +38,20 @@ internal fun chordsOnScreen(sections: List<RenderSection>, onScreen: IntRange, n
 }
 
 /**
- * The chords of [names] the section at [index] plays, in order: over its lyrics (annotations and marks left out) and in
- * its grids' cells, a cell of several chords ("C~G") giving each.
+ * The chords of [names] the section at [index] plays, in order: over its lyrics (annotations and marks left out), in
+ * its grids' cells, a cell of several chords ("C~G") giving each, and on a tab's lines of chord names.
  */
 private fun List<RenderSection>.chordsOf(index: Int, names: Set<String>) = (this[index] as? RenderSection.Lines)?.lines.orEmpty().asSequence()
     .flatMap { line ->
         when (line) {
             is ChordProLine.Lyrics -> line.chords.asSequence().filter { !it.isAnnotation && !it.isMark }.map { it.name }
             is ChordProLine.Grid -> line.tokens.asSequence().filterIsInstance<GridToken.Chord>().flatMap { it.name.split(GRID_CELL_CHORD_SEPARATOR) }
+            // A line of chord names over a tab's bars, which the page draws as chords.
+            is ChordProLine.Tab -> if (ChordProTabWrapper.isChordLine(line.text)) {
+                line.text.split(' ', '\t').asSequence().map { it.trim('(', ')') }
+            } else {
+                emptySequence()
+            }
             else -> emptySequence()
         }
     }
