@@ -567,7 +567,7 @@
     <string name="settings_chord_library_description">Fila Acorduri: toate acordurile cunoscute de aplicație, desenate pe instrumentul tău</string>
     <string name="settings_scale_suggestions">Sugestii de game</string>
     <string name="settings_scale_suggestions_description">Arată gamele peste care se poate cânta fiecare parte a cântecului, iar în fișa unui acord, gamele pentru acel acord.</string>
-    <string name="settings_group_dock">Panou de unelte</string>
+    <string name="settings_group_dock">Dock</string>
     <string name="settings_dock_metronome_description">Arată tempoul cântecului și pornește metronomul lui din cântec. Fila Metronom nu este afectată.</string>
     <string name="settings_dock_tuner_description">Arată o cale spre acordor. Fără ea, acordorul este în meniul cântecului.</string>
     <string name="settings_setlists_description">Fila Liste și adăugarea cântecelor în liste. Dezactivate, listele sunt doar ascunse: niciuna nu este ștearsă.</string>

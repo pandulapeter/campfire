@@ -526,7 +526,7 @@
     <string name="settings_chord_library_description">Az Akkordok fül: minden akkord, amit az app ismer, a hangszereden ábrázolva</string>
     <string name="settings_scale_suggestions">Skálajavaslatok</string>
     <string name="settings_scale_suggestions_description">Megmutatja, milyen skálákon játszhatók a dal egyes részei, egy akkord lapján pedig az akkordhoz illő skálákat.</string>
-    <string name="settings_group_dock">Eszköztár</string>
+    <string name="settings_group_dock">Dokk</string>
     <string name="settings_dock_metronome_description">Megmutatja a dal tempóját, és a dalból indítható a kattogása. A Metronóm fület nem érinti.</string>
     <string name="settings_dock_tuner_description">Utat mutat a hangolóhoz. Nélküle a hangoló a dal menüjében érhető el.</string>
     <string name="settings_setlists_description">A Listák fül és a dalok listákhoz adása. Kikapcsolva csak elrejti őket, egyetlen lista sem törlődik.</string>

@@ -526,7 +526,7 @@
     <string name="settings_chord_library_description">Der Tab „Akkorde“: alle Akkorde, die die App kennt, auf deinem Instrument dargestellt</string>
     <string name="settings_scale_suggestions">Tonleiter-Vorschläge</string>
     <string name="settings_scale_suggestions_description">Zeigt die Tonleitern, über die sich jeder Teil eines Songs spielen lässt, und im Akkordblatt die Tonleitern zu diesem Akkord.</string>
-    <string name="settings_group_dock">Werkzeugleiste</string>
+    <string name="settings_group_dock">Dock</string>
     <string name="settings_dock_metronome_description">Zeigt das Tempo des Songs und spielt seinen Klick direkt beim Song. Der Metronom-Tab bleibt davon unberührt.</string>
     <string name="settings_dock_tuner_description">Zeigt einen Weg zum Stimmgerät. Ohne ihn ist das Stimmgerät im Menü des Songs.</string>
     <string name="settings_setlists_description">Der Tab „Setlists“ und das Hinzufügen von Songs zu Setlists. Ausgeschaltet werden sie nur ausgeblendet: Keine Setlist wird gelöscht.</string>

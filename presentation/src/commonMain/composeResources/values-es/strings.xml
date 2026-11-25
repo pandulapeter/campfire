@@ -526,7 +526,7 @@
     <string name="settings_chord_library_description">La pestaña Acordes: todos los acordes que conoce la app, dibujados en tu instrumento</string>
     <string name="settings_scale_suggestions">Sugerencias de escalas</string>
     <string name="settings_scale_suggestions_description">Muestra las escalas sobre las que se puede tocar cada parte de una canción y, en la hoja de un acorde, las escalas de ese acorde.</string>
-    <string name="settings_group_dock">Panel de herramientas</string>
+    <string name="settings_group_dock">Dock</string>
     <string name="settings_dock_metronome_description">Muestra el tempo de la canción y reproduce su clic desde la canción. La pestaña Metrónomo no se ve afectada.</string>
     <string name="settings_dock_tuner_description">Muestra un acceso al afinador. Sin él, el afinador está en el menú de la canción.</string>
     <string name="settings_setlists_description">La pestaña Repertorios y la opción de añadir canciones a repertorios. Si se desactiva, solo se ocultan: no se elimina ningún repertorio.</string>

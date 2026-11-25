@@ -528,7 +528,7 @@
     <string name="settings_chord_library_description">A aba Acordes: todos os acordes que o app conhece, desenhados no seu instrumento</string>
     <string name="settings_scale_suggestions">Sugestões de escalas</string>
     <string name="settings_scale_suggestions_description">Mostra as escalas sobre as quais cada parte de uma música pode ser tocada e, na folha de um acorde, as escalas desse acorde.</string>
-    <string name="settings_group_dock">Painel de ferramentas</string>
+    <string name="settings_group_dock">Dock</string>
     <string name="settings_dock_metronome_description">Mostra o andamento da música e toca o seu clique a partir da música. A aba Metrônomo não é afetada.</string>
     <string name="settings_dock_tuner_description">Mostra um acesso ao afinador. Sem ele, o afinador fica no menu da música.</string>
     <string name="settings_setlists_description">A aba Repertórios e a adição de músicas a repertórios. Desativados, eles ficam apenas ocultos: nenhum repertório é excluído.</string>

@@ -566,7 +566,7 @@
     <string name="settings_chord_library_description">הלשונית “אקורדים”: כל האקורדים שהאפליקציה מכירה, מוצגים על הכלי שלכם</string>
     <string name="settings_scale_suggestions">הצעות לסולמות</string>
     <string name="settings_scale_suggestions_description">מציג את הסולמות שעליהם אפשר לנגן כל חלק של שיר, ובגיליון של אקורד, את הסולמות של אותו אקורד.</string>
-    <string name="settings_group_dock">סרגל כלים</string>
+    <string name="settings_group_dock">מעגן</string>
     <string name="settings_dock_metronome_description">מציג את הטמפו של השיר ומשמיע את הקליק שלו מתוך השיר. לשונית המטרונום לא מושפעת.</string>
     <string name="settings_dock_tuner_description">מציג דרך אל הטיונר. בלעדיה, הטיונר נמצא בתפריט של השיר.</string>
     <string name="settings_setlists_description">הלשונית “סט־ליסטים” והוספת שירים לסט־ליסטים. כשהאפשרות כבויה הם רק מוסתרים: אף סט־ליסט לא נמחק.</string>
