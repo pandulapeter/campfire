@@ -125,6 +125,19 @@ class SoundLifetimeTest {
         assertEquals(1, scaleStops)
     }
 
+    @Test
+    fun `the tuner sheet goes on listening under its instrument's choice and stops once both are closed`() = runTest {
+        val (_, dialogHost) = soundLifetime(backgroundScope)
+        dialogHost.showDialog(DialogType.Tuner)
+        val tunerStopsWhileOpen = tunerStops
+        dialogHost.showDialog(DialogType.Instrument)
+        dialogHost.dismissDialog()
+        assertEquals(DialogType.Tuner, dialogHost.visibleDialog.value)
+        assertEquals(tunerStopsWhileOpen, tunerStops)
+        dialogHost.dismissDialog()
+        assertEquals(true, tunerStops > tunerStopsWhileOpen)
+    }
+
     private fun song() = CampfireDestination.SongDetails(songFileNames = listOf("song.cho"), setlistFileName = null, initialIndex = 0)
 
     /** A metronome that only counts how often it was stopped. */

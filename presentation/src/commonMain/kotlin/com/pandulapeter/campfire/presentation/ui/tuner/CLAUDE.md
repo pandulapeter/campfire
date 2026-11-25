@@ -18,9 +18,9 @@ What the Tuner tab and song details' tuner sheet share.
 - Listens for the player's instrument and tuning (the keyboard and Other read every note) plus the reference pitch,
   following changes made on any screen. `hasTurnedOnMicrophone` is device-only, never exported or synced.
 - **Nothing of the tuner outlives its screen** (`metronome/SoundLifetime.kt`): it stops whenever the top of the back
-  stack changes, whenever the tuner sheet stops being the visible dialog, and on exit; `TunerListeningEffect` follows
-  the screen's lifecycle (app hidden, screen locked, required update drawn over), so the recording indicator is lit
-  exactly while a tuner shows.
+  stack changes, whenever neither the tuner sheet nor the instrument or tuning choice over it is the visible dialog, and on
+  exit; `TunerListeningEffect` follows the screen's lifecycle (app hidden, screen locked, required update drawn over),
+  so the recording indicator is lit exactly while a tuner shows.
 - The scale sheet's play steps through its notes as tones, each replacing the last; it ends with its sheet and with
   `stopTuner`; a note the platform refuses ends the run.
 
@@ -57,8 +57,8 @@ What the Tuner tab and song details' tuner sheet share.
   Paired-string instruments get a second row of partners; a unison pair is one note, so its segments act together. None
   for the keyboard and Other. Another instrument's strings crossfade in while their room resizes unclipped; a row
   leaving is drawn as it was but plays nothing.
-- **The tab alone** offers the instrument pill. Both offer the reference pitch (`ReferencePitchControls`) and the
-  Strings / Chromatic toggle,
+- Both offer the instrument pill (the sheet's at its top, its choices standing over it while it listens), the reference
+  pitch (`ReferencePitchControls`), and the Strings / Chromatic toggle,
   stored as `mode` (an older document's `isChromatic` is a dropped switch's, ignored). Chromatic dims the pill without
   changing the instrument, which the diagrams and scales share. The toggle is hidden for the keyboard and Other (pill
   never dimmed); on the tab it only fades, keeping its line, so the display never moves. Without microphone permission

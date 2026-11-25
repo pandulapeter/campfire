@@ -34,7 +34,7 @@ private val DialogType.kindName get() = this::class.simpleName.orEmpty()
  * lookup over the metadata form it fills, each only over a parent about the same text; and a scale over the chord sheet
  * it is suggested in, and a chord over the scale sheet it is a chord of; and the notation's, the instrument's, and the
  * tuning's choices over the Preferences sheet their chips are in, the last two and the tuner over a song's Playing sheet
- * too; and an open-source license over the list it is an entry of.
+ * too, and the same two over the tuner sheet; and an open-source license over the list it is an entry of.
  */
 internal fun DialogType.stacksOver(parent: DialogType) = when (this) {
     is DialogType.SongMetadata, is DialogType.SongTags, is DialogType.SongLinks, is DialogType.SongLanguages,
@@ -47,7 +47,7 @@ internal fun DialogType.stacksOver(parent: DialogType) = when (this) {
     is DialogType.Scale -> parent is DialogType.ChordShape || parent is DialogType.ChordReference
     is DialogType.ChordReference -> parent is DialogType.Scale
     is DialogType.Notation -> parent is DialogType.Preferences
-    is DialogType.Instrument, is DialogType.Tuning -> parent is DialogType.Preferences || parent is DialogType.Playing
+    is DialogType.Instrument, is DialogType.Tuning -> parent is DialogType.Preferences || parent is DialogType.Playing || parent is DialogType.Tuner
     is DialogType.Tuner -> parent is DialogType.Playing
     is DialogType.OpenSourceLicense -> parent is DialogType.OpenSourceLicenses
     else -> false

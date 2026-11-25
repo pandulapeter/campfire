@@ -53,17 +53,22 @@ app bar's metronome panel.
 
 - Each page hands up what it drew the song with (`DockContent`, by page index); the dock shows the page the pager is on
   or heading for, crossfading as it turns, as the bar's subtitle does.
+- **The key chip and the tempo chip are tonal pills** (`DockControlPill`), set apart from the outlined chord and scale
+  chips (the song's) by their fill rather than by chevrons; every part of one opens its sheet but play and stop.
 - **The key chip** (`DockKeyChip`, `dockKeyOf`) names what the transposition stepper names (the shapes' under `SHAPES`,
-  the inferred key for a file naming none); **a capo other than zero is always on screen** as its orange half. It opens
-  the Playing sheet (`DialogType.Playing`): instrument and tuning, tuner, transposition and capo, their pending writes
-  unchanged. Read only mode's opens nothing (it would write overrides) and is left out with neither key nor capo; the
-  instrument pill and tuner then start the dock (`DockInstrumentTools`), as with the chords off or an instrument without
-  shapes, whose pill is what brings the diagrams back.
+  the inferred key for a file naming none); **a capo other than zero is always on screen**, in orange after a stepper's
+  divider. It opens the Playing sheet (`DialogType.Playing`): instrument and tuning, transposition and capo, then a
+  full-width Tuner button, their pending writes unchanged. Read only mode's opens nothing (it would write overrides) and
+  is left out with neither key nor capo; the instrument pill and tuner then start the dock (`DockInstrumentTools`), as
+  with the chords off or an instrument without shapes, whose pill is what brings the diagrams back. The tuner sheet has
+  the instrument pill too, so the instrument is changed wherever a tuner is shown.
 - **The tempo chip** (`DockTempoChip`; never in an import preview, which has no metronome): the tempo of the page's
-  stretch (`SongTiming.bpm`), as wide as the widest tempo so play / stop (`DockPlayStop`, M) never moves, and a beat row
-  lit while the click plays. The click is the screen's (`DockMetronome`), not a page's. The number opens the Tempo sheet
-  (`DialogType.Tempo`): stepper with Tap and the song's accents; not the time signature, which is the file's (Song
-  defaults). Read only mode's opens nothing; the click still plays.
+  stretch (`SongTiming.bpm`), as wide as the widest tempo so play / stop (M) never moves, and a beat row lit while the
+  click plays. In the diagram row it is as tall as the diagrams, the number over the beats and a round play / stop
+  (`DockRoundPlayStop`); elsewhere chip-high, play / stop after a divider (`DockPlayStop`). The click is the screen's
+  (`DockMetronome`), not a page's. It opens the Tempo sheet (`DialogType.Tempo`): stepper with Tap, and the song's
+  accents with a round play / stop; not the time signature, which is the file's (Song defaults). Read only mode's opens
+  nothing; the click still plays.
 - **The scale chips** are the Scales section's groups, the home one untitled, the rest under their titles ("Over E7").
   None (a songbook, a song over `MAX_PLAYED_CHORDS` included) says so: the row is the screen's.
 - **The diagram strip** (`DockDiagramStrip`) is the Chords section's cells (`rememberChordCells`), sized by what the

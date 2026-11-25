@@ -12,19 +12,26 @@ package com.pandulapeter.campfire.presentation.ui.dialogs.playing
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.metronome_accent_hint
+import com.pandulapeter.campfire.presentation.resources.metronome_start
+import com.pandulapeter.campfire.presentation.resources.metronome_stop
 import com.pandulapeter.campfire.presentation.resources.song_details_dock_tempo
 import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
@@ -33,7 +40,10 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.CampfireBottomSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.sheetContainerColor
 import com.pandulapeter.campfire.presentation.ui.dialogs.songLabel
+import com.pandulapeter.campfire.presentation.ui.components.CampfireTooltip
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
 import com.pandulapeter.campfire.presentation.ui.metronome.BeatRow
+import com.pandulapeter.campfire.presentation.ui.metronome.PlayStopMark
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeController
 import com.pandulapeter.campfire.presentation.ui.metronome.TempoStepper
 import com.pandulapeter.campfire.presentation.ui.metronome.rememberMetronomePanelState
@@ -49,7 +59,7 @@ import com.pandulapeter.campfire.presentation.ui.state.songText.SongTextStore
  * The tempo of a song where it is read, opened from the tempo chip of song details' dock: the tempo stepper with Tap,
  * writing the same override the same way the song's first section's did, so the chip and a playing click follow every
  * step, then the bar the click counts, whose accents are tapped here for this song alone (`UserPreferences.beatLevels`,
- * removed once tapped back to the signature's). The time signature is not here: it is written into the file, so it is
+ * removed once tapped back to the signature's), with play and stop at its end, so that both are judged by ear here. The time signature is not here: it is written into the file, so it is
  * Song defaults'. Nothing to save: its close button only closes it.
  */
 @Composable
@@ -95,7 +105,7 @@ internal fun TempoSheet(
                 .bounceVerticalScroll(scrollState)
                 .padding(contentPadding)
                 .padding(horizontal = 16.dp)
-                .padding(bottom = 8.dp),
+                .padding(top = 12.dp, bottom = 8.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             if (tempo != null) {
@@ -116,23 +126,53 @@ internal fun TempoSheet(
                     },
                 )
             }
-            BeatRow(
-                beatLevels = panel.beatLevels,
-                beats = metronomeController.metronomeBeats,
-                isPlaying = panel.isPlaying,
-                isFlashEnabled = panel.isFlashEnabled,
-                blockHeight = ACCENT_HEIGHT,
-                blockGap = ACCENT_GAP,
-                onBeatLevelsChanged = { levels ->
-                    println("Tempo sheet: accent tapped")
-                    metronomeController.setBeatLevels(panel.timeSignature, levels)
-                },
-            )
-            Text(
-                text = stringResource(Res.string.metronome_accent_hint),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                BeatRow(
+                    modifier = Modifier.weight(1f),
+                    beatLevels = panel.beatLevels,
+                    beats = metronomeController.metronomeBeats,
+                    isPlaying = panel.isPlaying,
+                    isFlashEnabled = panel.isFlashEnabled,
+                    blockHeight = ACCENT_HEIGHT,
+                    blockGap = ACCENT_GAP,
+                    onBeatLevelsChanged = { levels ->
+                        println("Tempo sheet: accent tapped")
+                        metronomeController.setBeatLevels(panel.timeSignature, levels)
+                    },
+                )
+                TempoPlayStopButton(
+                    isPlaying = panel.isPlaying,
+                    onClick = {
+                        println("Tempo sheet: click toggled")
+                        metronomeController.toggleMetronome()
+                    },
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Play and stop for the click as a round floating button at the end of the bar, as the Metronome tab's stands at the end
+ * of its own: the stepper and the accents are best judged by ear, so the click is started and stopped right here.
+ */
+@Composable
+private fun TempoPlayStopButton(isPlaying: Boolean, onClick: () -> Unit) {
+    val label = stringResource(if (isPlaying) Res.string.metronome_stop else Res.string.metronome_start)
+    CampfireTooltip(label = label, shortcut = KeyShortcut.METRONOME) {
+        FloatingActionButton(
+            modifier = Modifier.semantics { contentDescription = label },
+            shape = CircleShape,
+            // Filled as the dock's and the Metronome tab's play buttons are, so the three read as one control.
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary,
+            elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp),
+            onClick = onClick,
+        ) {
+            PlayStopMark(isPlaying = isPlaying)
         }
     }
 }

@@ -16,9 +16,15 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.Icon
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
@@ -35,10 +41,14 @@ import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.mapper.toChordNotation
+import com.pandulapeter.campfire.presentation.resources.ic_tuner
+import com.pandulapeter.campfire.presentation.resources.settings_instrument
 import com.pandulapeter.campfire.presentation.resources.song_details_dock_playing
+import com.pandulapeter.campfire.presentation.resources.tuner
 import com.pandulapeter.campfire.presentation.resources.song_details_transposition
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_capo
 import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
+import com.pandulapeter.campfire.presentation.ui.components.controls.STEPPER_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
@@ -53,16 +63,15 @@ import com.pandulapeter.campfire.presentation.ui.rendering.SongRenderer
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.CapoControls
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.TranspositionControls
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.rememberSongPlayingControls
-import com.pandulapeter.campfire.presentation.ui.songView.songControlHeight
 import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
 import com.pandulapeter.campfire.presentation.ui.state.songText.SongTextStore
-import com.pandulapeter.campfire.presentation.ui.tuner.TunerButton
 import kotlinx.coroutines.flow.StateFlow
+import org.jetbrains.compose.resources.painterResource
 
 /**
  * How a song is played where it is read, opened from the key chip of song details' dock: the instrument in the player's
- * hands and its tuning with the tuner beside them ([PlayingInstrumentLine]), then the transposition and the capo
- * ([PlayingStepperRow]), the very steppers the song's first section had, writing the same overrides the same way (held
+ * hands and its tuning ([PlayingInstrumentRow]), then the transposition and the capo ([PlayingStepperRow]), and last the
+ * tuner ([PlayingTunerButton]), the very steppers the song's first section had, writing the same overrides the same way (held
  * pending, written once they rest, see `PendingWrites`), so the song behind it follows every step. Nothing to save: its
  * close button only closes it. The transposition and the capo leave with the chords; the instrument stays, as the tuner
  * and the keyboard's names read it.
@@ -110,14 +119,13 @@ internal fun PlayingSheet(
                 .bounceVerticalScroll(scrollState)
                 .padding(contentPadding)
                 .padding(horizontal = 16.dp)
-                .padding(bottom = 8.dp),
+                .padding(top = 12.dp, bottom = 8.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            PlayingInstrumentLine(
+            PlayingInstrumentRow(
                 userPreferences = userPreferences,
                 onInstrumentClicked = { dialogHost.showDialog(DialogType.Instrument) },
                 onTuningClicked = { dialogHost.showDialog(DialogType.Tuning) },
-                onTunerClicked = onTunerClicked.takeIf { userPreferences?.isTunerEnabled != false },
             )
             AnimatedPlayingRow(value = controls?.key) { key ->
                 PlayingStepperRow(label = stringResource(Res.string.song_details_transposition)) {
@@ -154,46 +162,60 @@ internal fun PlayingSheet(
                     )
                 }
             }
+            AnimatedPlayingRow(value = onTunerClicked.takeIf { userPreferences?.isTunerEnabled != false }) { onClick ->
+                PlayingTunerButton(onClick = onClick)
+            }
         }
     }
 }
 
 /**
- * The instrument in the player's hands and its tuning ([InstrumentPill]), each half opening its sheet over this one, and
- * the tuner after them ([onTunerClicked], null with the tuner switched off), which tunes the strings the pill names.
+ * The instrument in the player's hands and its tuning ([InstrumentPill]) as a setting of the sheet, each half opening its
+ * sheet over this one, lined up with the steppers under it.
  */
 @Composable
-private fun PlayingInstrumentLine(
+private fun PlayingInstrumentRow(
     userPreferences: UserPreferences?,
     onInstrumentClicked: () -> Unit,
     onTuningClicked: () -> Unit,
-    onTunerClicked: (() -> Unit)?,
-) = FlowRow(
-    horizontalArrangement = Arrangement.spacedBy(8.dp),
-    verticalArrangement = Arrangement.spacedBy(8.dp),
-    itemVerticalAlignment = Alignment.CenterVertically,
+) = Row(
+    modifier = Modifier.fillMaxWidth(),
+    verticalAlignment = Alignment.CenterVertically,
 ) {
-    val style = MaterialTheme.typography.titleSmall
+    Text(
+        modifier = Modifier.padding(end = 16.dp),
+        text = stringResource(Res.string.settings_instrument),
+        style = MaterialTheme.typography.bodyLarge,
+    )
+    Spacer(modifier = Modifier.weight(1f))
     InstrumentPill(
+        // As tall as the steppers under it, with whatever room the label leaves, which the pill's own layout cuts its
+        // names short to fit where it is not enough.
+        modifier = Modifier.height(STEPPER_HEIGHT),
         instrument = userPreferences?.instrument ?: UserPreferences.Instrument.GUITAR,
         tuning = userPreferences?.instrumentTuning,
         notation = (userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default).notation.toChordNotation(),
-        style = style,
         onInstrumentClicked = onInstrumentClicked,
         onTuningClicked = onTuningClicked,
     )
-    AnimatedVisibility(
-        visible = onTunerClicked != null,
-        enter = fadeIn(),
-        exit = fadeOut(),
-    ) {
-        TunerButton(
-            isSheetShown = false,
-            height = songControlHeight(style),
-            fontScale = 1f,
-            onClick = { onTunerClicked?.invoke() },
-        )
-    }
+}
+
+/**
+ * The way to the tuner, which tunes the strings the instrument row names: a full-width tonal button saying what it opens,
+ * since the sheet has the room a bare icon was saving, last, as it is what a player reaches for once the rest is set.
+ */
+@Composable
+private fun PlayingTunerButton(onClick: () -> Unit) = FilledTonalButton(
+    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+    onClick = onClick,
+) {
+    Icon(
+        modifier = Modifier.size(ButtonDefaults.IconSize),
+        painter = painterResource(Res.drawable.ic_tuner),
+        contentDescription = null,
+    )
+    Spacer(modifier = Modifier.width(ButtonDefaults.IconSpacing))
+    Text(text = stringResource(Res.string.tuner))
 }
 
 /** A setting of the sheet: its [label] at the start and its [stepper] at the end. */

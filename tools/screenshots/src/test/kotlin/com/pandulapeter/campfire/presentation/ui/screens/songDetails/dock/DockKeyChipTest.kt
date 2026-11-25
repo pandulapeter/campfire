@@ -43,7 +43,7 @@ internal class DockKeyChipTest {
     }
 
     @Test
-    fun `a capo put on shows on the key chip as a half of its own, and taken off leaves it`() = runAppTest {
+    fun `a capo put on shows on the key chip after its key, and taken off leaves it`() = runAppTest {
         openSong()
         val capoTwo = hasText(string(Res.string.song_details_capo, 2)) and hasAnyAncestor(opensPlayingSheet())
         onNode(capoTwo, useUnmergedTree = true).assertDoesNotExist()

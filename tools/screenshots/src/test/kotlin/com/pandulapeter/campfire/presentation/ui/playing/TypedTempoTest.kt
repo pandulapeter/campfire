@@ -27,7 +27,7 @@ import androidx.compose.ui.test.performMouseInput
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.pressKey
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.metronome_accent_hint
+import com.pandulapeter.campfire.presentation.resources.song_details_dock_tempo
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo_increase
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo_reset
 import com.pandulapeter.campfire.presentation.ui.components.controls.STEPPER_BUTTON_LENGTH
@@ -109,8 +109,8 @@ internal class TypedTempoTest {
     fun `a press outside the stepper ends typing and keeps the typed tempo`() = runAppTest {
         openSongTempo()
         typeTempo("132")
-        // The sheet's hint under the accents, plain text near the stepper that takes the press without acting on it.
-        tap(hasText(string(Res.string.metronome_accent_hint)))
+        // The sheet's title, plain text above the stepper that takes the press without acting on it.
+        tap(hasText(string(Res.string.song_details_dock_tempo)))
         tempoField().assertIsNotFocused()
         assertEquals("132", tempo())
     }

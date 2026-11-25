@@ -49,6 +49,10 @@ import com.pandulapeter.campfire.presentation.ui.tuner.TunerAskOnOpenEffect
 import com.pandulapeter.campfire.presentation.ui.tuner.TunerDisplay
 import com.pandulapeter.campfire.presentation.ui.tuner.TunerListeningEffect
 import com.pandulapeter.campfire.presentation.ui.tuner.TunerModeToggle
+import com.pandulapeter.campfire.presentation.ui.instrument.InstrumentPill
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
+import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.presentation.ui.instrument.instrumentTuning
 import com.pandulapeter.campfire.presentation.ui.tuner.TunerNoticeCard
 import com.pandulapeter.campfire.presentation.ui.tuner.TunerStringsSetting
@@ -56,22 +60,23 @@ import com.pandulapeter.campfire.presentation.ui.tuner.TunerInputIssueMessage
 import com.pandulapeter.campfire.presentation.ui.tuner.canListenWithoutTap
 import com.pandulapeter.campfire.presentation.ui.tuner.tunerNoticeOf
 import com.pandulapeter.campfire.tuner.api.model.TunerListening
+import com.pandulapeter.campfire.data.model.preferences.TunerSettings
 
 /**
- * The tuner over the song being read, opened from the tuner button of the song's first section (or its overflow menu,
- * where the chords and the metronome are both switched off and that section is not there), so that a string that went
- * flat between two songs is tuned without leaving the setlist, laid out as the Tuner tab is: its display at full size
- * (compact only in a short window, as on the tab), giving way to its notice the same way, and under them the strings of
- * the instrument in the player's hands, with whether it reads them or every note ([TunerModeToggle]) in the header,
- * all of it scrolling under the sheet's header. The instrument is the app's one, set from the instrument chip of
- * the Tuner tab, the Chords tab, Settings, the onboarding, or the chips at the top of the song's first section,, and last,
- * scrolling with the rest since it is set once, the reference pitch ([ReferencePitchControls]) the tab offers. It listens while it is up and the app is in front,
- * and the view model stops it as the sheet closes.
+ * The tuner over the song being read, opened from the Playing sheet, the dock's tuner button, or the overflow menu, so
+ * that a string that went flat between two songs is tuned without leaving the setlist, laid out as the Tuner tab is: the
+ * instrument in the player's hands first ([InstrumentPill], its halves opening the instrument's and the tuning's sheets
+ * over this one, under which it goes on listening), then its display at full size (compact only in a short window, as on
+ * the tab), giving way to its notice the same way, and under them the strings of that instrument, with whether it reads
+ * them or every note ([TunerModeToggle]) in the header, all of it scrolling under the sheet's header; last, scrolling
+ * with the rest since it is set once, the reference pitch ([ReferencePitchControls]) the tab offers. It listens while it
+ * is up and the app is in front, and the view model stops it as the sheet closes.
  */
 @Composable
 internal fun TunerSheet(
     tunerController: TunerController,
     userPreferencesFlow: StateFlow<UserPreferences?>,
+    dialogHost: DialogHost,
     onDismiss: () -> Unit,
 ) {
     // The state changes with every reading, thirty times a second, so it is handed down as a State for the display to
@@ -131,6 +136,15 @@ internal fun TunerSheet(
                 .padding(contentPadding)
                 .padding(bottom = 8.dp),
         ) {
+            TunerSheetInstrument(
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+                userPreferences = userPreferences,
+                notation = notation,
+                // As on the Tuner tab: chromatic reads every note whatever is picked, so the pick is dimmed then, but never
+                // where the mode cannot be changed back (no strings, or no microphone), which would leave no way out.
+                isEnabled = mode == TunerSettings.Mode.STRINGS || userPreferences?.instrumentTuning == null || notice?.isMissingPermission == true,
+                dialogHost = dialogHost,
+            )
             AnimatedVisibility(
                 visible = notice == null,
                 enter = fadeIn() + expandVertically(),
@@ -175,3 +189,21 @@ internal fun TunerSheet(
         }
     }
 }
+
+/** The instrument in the player's hands and its tuning, each half opening its choice over the sheet. */
+@Composable
+private fun TunerSheetInstrument(
+    modifier: Modifier = Modifier,
+    userPreferences: UserPreferences?,
+    notation: ChordNotation,
+    isEnabled: Boolean,
+    dialogHost: DialogHost,
+) = InstrumentPill(
+    modifier = modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+    instrument = userPreferences?.instrument ?: UserPreferences.Instrument.GUITAR,
+    tuning = userPreferences?.instrumentTuning,
+    notation = notation,
+    isEnabled = isEnabled,
+    onInstrumentClicked = { dialogHost.showDialog(DialogType.Instrument) },
+    onTuningClicked = { dialogHost.showDialog(DialogType.Tuning) },
+)

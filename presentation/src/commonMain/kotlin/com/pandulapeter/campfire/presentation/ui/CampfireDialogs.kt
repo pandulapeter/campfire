@@ -207,7 +207,7 @@ private fun CampfireDialog(
         DialogType.Instrument, DialogType.Tuning, DialogType.Notation, is DialogType.Preferences, DialogType.SongLayout, is DialogType.ChordNames,
         -> PreferenceDialog(viewModel = viewModel, dialog = dialog, dismissSheet = dismissSheet)
 
-        DialogType.Tuner -> TunerSheet(tunerController = viewModel.tunerController, userPreferencesFlow = viewModel.userPreferences, onDismiss = dismissSheet)
+        DialogType.Tuner -> TunerSheet(tunerController = viewModel.tunerController, userPreferencesFlow = viewModel.userPreferences, dialogHost = dialogHost, onDismiss = dismissSheet)
 
         DialogType.AppLanguage -> AppLanguageSheet(preferencesController = preferencesController, onDismiss = dismissSheet)
         DialogType.KeyboardShortcuts -> KeyboardShortcutsSheet(preferencesController = preferencesController, onDismiss = dismissSheet)

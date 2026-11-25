@@ -13,6 +13,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -30,7 +32,7 @@ import com.pandulapeter.campfire.presentation.ui.metronome.PlayStopMark
 
 /**
  * Play and stop for the click, as the end of the dock's tempo chip and of its metronome panel: the mark turning between
- * the two, taking the press over the row's whole height, M said as its key.
+ * the two, taking the press over the row's whole height, M said as its key. The tall tempo chip's is [DockRoundPlayStop].
  */
 @Composable
 internal fun DockPlayStop(
@@ -53,5 +55,30 @@ internal fun DockPlayStop(
     }
 }
 
+/**
+ * Play and stop for the click as a round filled button, as the Metronome tab's is: the end of the tall tempo chip beside
+ * the diagrams, where there is room for a button a finger finds without looking.
+ */
+@Composable
+internal fun DockRoundPlayStop(
+    modifier: Modifier = Modifier,
+    isPlaying: Boolean,
+    onClick: () -> Unit,
+) {
+    val label = stringResource(if (isPlaying) Res.string.metronome_stop else Res.string.metronome_start)
+    CampfireTooltip(modifier = modifier, label = label, shortcut = KeyShortcut.METRONOME) {
+        FilledIconButton(
+            modifier = Modifier
+                .size(ROUND_PLAY_STOP_SIZE)
+                .semantics { contentDescription = label },
+            onClick = onClick,
+        ) {
+            PlayStopMark(isPlaying = isPlaying, size = ROUND_PLAY_STOP_MARK_SIZE)
+        }
+    }
+}
+
 private val PLAY_STOP_PADDING = 8.dp
+private val ROUND_PLAY_STOP_SIZE = 44.dp
+private val ROUND_PLAY_STOP_MARK_SIZE = 20.dp
 private val PLAY_STOP_SIZE = 18.dp

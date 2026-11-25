@@ -115,11 +115,11 @@ Tags, languages, cover, and links are directives in the song file, so they trave
 ## How a song is played
 
 - Song details' dock under the song (`screens/songDetails/dock`) starts with the key chip: the key of the page's chords
-  and, wherever it is not zero, the capo as an orange half. It opens the **Playing sheet** (`dialogs/playing`: the
-  instrument and tuning, the tuner, and the transposition and capo steppers, `songView/firstSection`'s), read only mode's
-  opening nothing. The **tempo chip** ends it: the page's tempo, the bar lit while the click plays, and play and stop; the
-  number opens the **Tempo sheet** (`dialogs/playing`: the tempo stepper ending in Tap, and the song's accents), read only
-  mode's opening nothing. With the chords off the dock is the metronome panel itself. The dock and the sheets are drawn
+  and, wherever it is not zero, the capo in orange. It opens the **Playing sheet** (`dialogs/playing`: the instrument
+  and tuning, the transposition and capo steppers, `songView/firstSection`'s, and the tuner), read only mode's opening
+  nothing. The **tempo chip** ends it: the page's tempo, the bar lit while the click plays, and play and stop; the
+  chip opens the **Tempo sheet** (`dialogs/playing`: the tempo stepper ending in Tap, the song's accents, and play and
+  stop), read only mode's opening nothing. With the chords off the dock is the metronome panel itself. The dock and the sheets are drawn
   at the interface's text size, never the song's; the editor's preview shows the four values in its About the song
   tiles.
 - Transposition, capo, and tempo are overridden per setlist or per device (`ui/playing`); **only the time signature is
