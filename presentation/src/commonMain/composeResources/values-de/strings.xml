@@ -1244,6 +1244,7 @@
     <string name="song_details_dock_no_scales">Keine Tonleiter-Vorschläge für dieses Lied</string>
     <string name="song_details_dock_playing">Spielweise</string>
     <string name="song_details_dock_tempo">Tempo</string>
+    <string name="song_details_dock_key">Tonart</string>
     <string name="song_details_dock_transposition">Transposition: %1$s</string>
     <string name="song_details_dock_open_playing">Spielweise-Einstellungen öffnen</string>
     <string name="song_details_dock_open_tempo">Tempo-Einstellungen öffnen</string>

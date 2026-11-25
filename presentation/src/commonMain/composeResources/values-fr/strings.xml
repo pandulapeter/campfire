@@ -1249,6 +1249,7 @@
     <string name="song_details_dock_no_scales">Aucune suggestion de gammes pour cette chanson</string>
     <string name="song_details_dock_playing">Jeu</string>
     <string name="song_details_dock_tempo">Tempo</string>
+    <string name="song_details_dock_key">Tonalité</string>
     <string name="song_details_dock_transposition">Transposition : %1$s</string>
     <string name="song_details_dock_open_playing">Ouvrir les réglages de jeu</string>
     <string name="song_details_dock_open_tempo">Ouvrir les réglages de tempo</string>

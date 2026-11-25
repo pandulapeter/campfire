@@ -1285,6 +1285,7 @@
     <string name="song_details_dock_no_scales">Pro tuto píseň nejsou žádné návrhy stupnic</string>
     <string name="song_details_dock_playing">Hraní</string>
     <string name="song_details_dock_tempo">Tempo</string>
+    <string name="song_details_dock_key">Tónina</string>
     <string name="song_details_dock_transposition">Transpozice: %1$s</string>
     <string name="song_details_dock_open_playing">Otevřít nastavení hraní</string>
     <string name="song_details_dock_open_tempo">Otevřít nastavení tempa</string>

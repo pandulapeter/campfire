@@ -36,8 +36,8 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.localization.textResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.song_details_capo
+import com.pandulapeter.campfire.presentation.resources.song_details_dock_key
 import com.pandulapeter.campfire.presentation.resources.song_details_dock_open_playing
-import com.pandulapeter.campfire.presentation.resources.song_details_dock_playing
 import com.pandulapeter.campfire.presentation.resources.song_details_dock_transposition
 import com.pandulapeter.campfire.presentation.resources.song_details_key_change
 import com.pandulapeter.campfire.presentation.ui.components.controls.StepperDivider
@@ -49,7 +49,7 @@ import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
  * colour chords are written in, a moved song's semitones after it in parentheses ("Bm (+2)"), and after a stepper's
  * divider the capo wherever it is not zero, so that a capo
  * is never out of sight. The whole pill opens the Playing sheet ([onClick]), none in read only mode, whose chip only
- * reads. A song naming no key that the chip still opens the sheet for is named by the sheet. A new key crossfades, and
+ * reads. A song with no key that the chip still opens the sheet for reads "Key", muted. A new key crossfades, and
  * the capo slides in and out with its divider.
  */
 @Composable
@@ -59,7 +59,9 @@ internal fun DockKeyChip(
     height: Dp,
     onClick: (() -> Unit)?,
 ) {
-    val playing = stringResource(Res.string.song_details_dock_playing)
+    // A song whose key is not known is still named for what the chip opens with "Key", muted, rather than "Playing",
+    // which beside the tempo chip's play and stop read as a state.
+    val keyLabel = stringResource(Res.string.song_details_dock_key)
     // Kept while it slides out, so that it leaves naming the capo it had.
     val lastCapo = remember { LastCapo() }
     dockKey.capo?.let { lastCapo.value = it }
@@ -68,7 +70,7 @@ internal fun DockKeyChip(
         onClickLabel = stringResource(Res.string.song_details_dock_open_playing),
         onClick = onClick,
     ) {
-        val key = dockKey.key ?: playing.takeIf { onClick != null }
+        val key = dockKey.key ?: keyLabel.takeIf { onClick != null }
         // One description for the whole pill: the clickable merges its children, and a description of the key alone
         // would hide the transposition and the capo from a screen reader.
         val description = listOfNotNull(
