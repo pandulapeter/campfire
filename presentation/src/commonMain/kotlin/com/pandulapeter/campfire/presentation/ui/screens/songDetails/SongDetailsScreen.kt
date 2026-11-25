@@ -10,17 +10,13 @@
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.autoScroll.autoScrollCoverOf
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.autoScroll.rememberSongAutoScrolling
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.readAfterDock
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.SongDock
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.rememberDockMetronome
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.rememberSongDock
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.PageStepper
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.SongStepper
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongPlayingControls
 import com.pandulapeter.campfire.presentation.ui.songView.model.ChordDiagrams
 import com.pandulapeter.campfire.presentation.ui.songView.grid.pageCount
-import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
@@ -39,10 +35,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalWindowInfo
@@ -52,7 +45,6 @@ import androidx.compose.ui.keepScreenOn
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.pandulapeter.campfire.data.model.preferences.SongLayout
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
@@ -159,52 +151,18 @@ internal fun SongDetailsScreen(
     )
     val chordSpelling = userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default
     val layoutDirection = LocalLayoutDirection.current
-    val coroutineScope = rememberCoroutineScope()
-    val pageStepper = remember(pagerState, coroutineScope) { PageStepper(pagerState, coroutineScope) }
-    // The arrow keys scroll the song the reader is looking at, and the pages each scroll on their own, so the one
-    // that is current hands its state up here for them to drive.
-    var currentPageScrollState by remember { mutableStateOf<ScrollState?>(null) }
-    // The step buttons, and the keys that press them, step between the sections or the rows of the song being read, for
-    // the same reason.
-    var currentPageStepper by remember { mutableStateOf<SongStepper?>(null) }
-    // The scroll of every page that is composed, the ones beside the current page included, so that a step back from
-    // the top of a song can put the one before it at its end before the pager gets there.
-    val pageScrollStates = remember { mutableStateMapOf<Int, ScrollState>() }
     val dock = rememberSongDock(userPreferences, chordDiagrams, hasPagerBar = hasPagerControls, isImportPreview = isImportPreview, bottomInset = contentPadding.calculateBottomPadding())
-    // The steps go on to the song beside this one at either end of it, worked out from the page being headed for like the
-    // pager bar's buttons. Both are decided again at the time of the press.
-    val hasPreviousSongToStepTo = canPage && pagerState.targetPage > 0
-    val hasNextSongToStepTo = canPage && pagerState.targetPage < songs.lastIndex
-    // A song in one column scrolls by itself, and the step buttons, their keys, and a tap only nudge it there.
-    val isContinuous = userPreferences?.songLayout == SongLayout.CONTINUOUS
     val isUncovered = isSongDetailsUncovered(visibleDialog, viewModel.navigator.backStack.lastOrNull())
-    val autoScrolling = rememberSongAutoScrolling(
+    val steps = rememberSongDetailsSteps(
+        pagerState = pagerState,
+        songs = songs,
+        currentSong = currentSong,
         userPreferences = userPreferences,
         cover = autoScrollCoverOf(visibleDialog, viewModel.navigator.backStack.lastOrNull()),
         playback = viewModel.navigator.autoScrollPlayback,
-        currentPage = pagerState.currentPage,
-        songFileName = currentSong?.fileName,
         writeSpeed = viewModel.preferencesController::setAutoScrollSpeed,
+        isNextSongAsked = destination.setlistFileName != null && !isImportPreview,
     )
-    val canStepBackInSong = if (isContinuous) autoScrolling.scroller?.canNudge(-1) == true else currentPageStepper?.canStepBack == true
-    val canStepForwardInSong = if (isContinuous) autoScrolling.scroller?.canNudge(1) == true else currentPageStepper?.canStepForward == true
-    val nextSongConfirmation = rememberNextSongConfirmation(
-        isAsked = destination.setlistFileName != null && !isImportPreview,
-        targetPage = pagerState.targetPage,
-        canStepForwardInSong = canStepForwardInSong,
-    )
-    val stepActions = SongStepActions(
-        coroutineScope = coroutineScope,
-        pagerState = pagerState,
-        pageStepper = pageStepper,
-        pageScrollStates = pageScrollStates,
-        stepper = currentPageStepper,
-        continuousScrolling = autoScrolling.takeIf { isContinuous },
-        lastPage = songs.lastIndex,
-        nextSongConfirmation = nextSongConfirmation,
-    )
-    val stepBackAction = rememberLatestStep(stepActions) { from -> stepBack(from) }
-    val stepForwardAction = rememberLatestStep(stepActions) { from -> stepForward(from) }
 
     val isCompactHeight = LocalWindowInfo.current.containerDpSize.height < SHORT_WINDOW_HEIGHT
     val appBarScrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(canScroll = { isCompactHeight })
@@ -217,16 +175,16 @@ internal fun SongDetailsScreen(
             .nestedScroll(appBarScrollBehavior.nestedScrollConnection)
             .keepScreenOn()
             .songDetailsKeyboardShortcuts(
-                currentPageScrollState = { currentPageScrollState },
-                coroutineScope = coroutineScope,
-                pageStepper = pageStepper,
-                canStepBack = canStepBackInSong || hasPreviousSongToStepTo,
-                canStepForward = canStepForwardInSong || hasNextSongToStepTo,
+                currentPageScrollState = { steps.current.scrollState },
+                coroutineScope = steps.coroutineScope,
+                pageStepper = steps.pageStepper,
+                canStepBack = steps.canStepBackInSong || steps.hasPreviousSongToStepTo,
+                canStepForward = steps.canStepForwardInSong || steps.hasNextSongToStepTo,
                 hasPreviousSong = canPage && pagerState.targetPage > 0,
                 hasNextSong = canPage && pagerState.targetPage < songs.lastIndex,
                 isUncovered = isUncovered,
-                stepActions = stepActions,
-                onToggleAutoScroll = autoScrolling::togglePlaying.takeIf { isContinuous },
+                stepActions = steps.stepActions,
+                onToggleAutoScroll = steps.autoScrolling::togglePlaying.takeIf { steps.isContinuous },
                 songActions = rememberSongActionHandler(viewModel.editorSession, viewModel.songFilesController, viewModel.dialogHost),
                 librarySong = currentSong?.takeIf { !isPerformanceModeEnabled && !isImportPreview },
                 setlistFileName = destination.setlistFileName,
@@ -256,13 +214,13 @@ internal fun SongDetailsScreen(
             // Nothing is fetched for a song that is not in the library.
             isCoverArtEnabled = isCoverArtEnabled && !isImportPreview,
             chordSpelling = chordSpelling,
-            currentPageScrollState = { currentPageScrollState },
+            currentPageScrollState = { steps.current.scrollState },
             openCurrentSongInfo = openCurrentSongInfo,
             songs = songs,
             settledWidth = settledWidth,
             scrollBehavior = if (isCompactHeight) appBarScrollBehavior else null,
             contentPadding = contentPadding,
-            coroutineScope = coroutineScope,
+            coroutineScope = steps.coroutineScope,
             onBack = onBack,
         )
         // The paging bar, or the dock without one, sits below the pager and covers the bottom inset for it, so the pages
@@ -301,8 +259,8 @@ internal fun SongDetailsScreen(
                     pageKey = pageKey,
                     songs = songs,
                     pagerState = pagerState,
-                    pageStepper = pageStepper,
-                    pageScrollStates = pageScrollStates,
+                    pageStepper = steps.pageStepper,
+                    pageScrollStates = steps.pageScrollStates,
                     dock = dock,
                     songTimings = songTimings,
                     isReadOnly = isReadOnly,
@@ -320,20 +278,20 @@ internal fun SongDetailsScreen(
                     ),
                     chordDiagrams = chordDiagrams,
                     isViewportSettled = isViewportSettled,
-                    currentPageScrollState = { currentPageScrollState },
-                    currentPageStepper = { currentPageStepper },
-                    canStepBackInSong = canStepBackInSong,
-                    canStepForwardInSong = canStepForwardInSong,
-                    hasPreviousSongToStepTo = hasPreviousSongToStepTo,
-                    hasNextSongToStepTo = hasNextSongToStepTo,
-                    stepBack = stepBackAction,
-                    stepForward = stepForwardAction,
-                    isContinuous = isContinuous,
-                    autoScrolling = autoScrolling,
+                    currentPageScrollState = { steps.current.scrollState },
+                    currentPageStepper = { steps.current.stepper },
+                    canStepBackInSong = steps.canStepBackInSong,
+                    canStepForwardInSong = steps.canStepForwardInSong,
+                    hasPreviousSongToStepTo = steps.hasPreviousSongToStepTo,
+                    hasNextSongToStepTo = steps.hasNextSongToStepTo,
+                    stepBack = steps.stepBack,
+                    stepForward = steps.stepForward,
+                    isContinuous = steps.isContinuous,
+                    autoScrolling = steps.autoScrolling,
                     onCurrentPage = { scrollState, stepper, autoScroller ->
-                        currentPageScrollState = scrollState
-                        currentPageStepper = stepper
-                        autoScrolling.scroller = autoScroller
+                        steps.current.scrollState = scrollState
+                        steps.current.stepper = stepper
+                        steps.autoScrolling.scroller = autoScroller
                     },
                 )
             }
@@ -351,9 +309,9 @@ internal fun SongDetailsScreen(
                     targetPage = pagerState.targetPage,
                     pageCount = songs.size,
                     contentPadding = contentPadding,
-                    nextSongTitle = songs.getOrNull(pagerState.targetPage + 1)?.title?.takeIf { nextSongConfirmation.armedPage == pagerState.targetPage },
-                    onStep = pageStepper::step,
-                    onConfirmNextSong = { stepForwardAction(null) },
+                    nextSongTitle = songs.getOrNull(pagerState.targetPage + 1)?.title?.takeIf { steps.nextSongConfirmation.armedPage == pagerState.targetPage },
+                    onStep = steps.pageStepper::step,
+                    onConfirmNextSong = { steps.stepForward(null) },
                 )
             }),
         )
