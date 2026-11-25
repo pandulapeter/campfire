@@ -35,4 +35,25 @@ internal class HeadedSectionTest {
 
     @Test
     fun `a song not laid out yet heads nothing`() = assertNull(sectionAt(0, SongRows()))
+
+    @Test
+    fun `a column of lines shows the sections of every line starting on the screen`() {
+        val rows = SongRows(lineTops = listOf(0, 40, 80, 120), lineBottoms = listOf(40, 80, 120, 160), lineSections = listOf(0, 0, 1, 2))
+        assertEquals(0..1, sectionsOnScreen(0, 100, rows))
+        assertEquals(1..2, sectionsOnScreen(80, 100, rows))
+    }
+
+    @Test
+    fun `a page shows the sections of its stops up to the next stop's`() {
+        val rows = SongRows(stepOffsets = listOf(0, 300, 600), stepSections = listOf(0, 3, 5))
+        assertEquals(0..2, sectionsOnScreen(0, 300, rows))
+        assertEquals(5..Int.MAX_VALUE, sectionsOnScreen(600, 300, rows, maxValue = 600))
+    }
+
+    @Test
+    fun `a section split over two pages is on both`() {
+        val rows = SongRows(stepOffsets = listOf(0, 300, 600), stepSections = listOf(0, 0, 2))
+        assertEquals(0..0, sectionsOnScreen(0, 300, rows))
+        assertEquals(0..1, sectionsOnScreen(300, 300, rows))
+    }
 }

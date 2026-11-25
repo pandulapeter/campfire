@@ -20,14 +20,26 @@ import com.pandulapeter.campfire.presentation.ui.songView.model.SongScaleGroup
  * chord before it. Null where the song plays none of them.
  */
 internal fun firstChordFrom(sections: List<RenderSection>, section: Int, names: Set<String>): String? {
-    fun chordsOf(index: Int) = (sections[index] as? RenderSection.Lines)?.lines.orEmpty().asSequence()
-        .flatMap { line -> (line as? ChordProLine.Lyrics)?.chords.orEmpty() }
-        .filter { !it.isAnnotation && !it.isMark && it.name in names }
-        .map { it.name }
     val from = section.coerceIn(0, sections.size)
-    return (from until sections.size).firstNotNullOfOrNull { chordsOf(it).firstOrNull() }
-        ?: (from - 1 downTo 0).firstNotNullOfOrNull { chordsOf(it).lastOrNull() }
+    return (from until sections.size).firstNotNullOfOrNull { sections.chordsOf(it, names).firstOrNull() }
+        ?: (from - 1 downTo 0).firstNotNullOfOrNull { sections.chordsOf(it, names).lastOrNull() }
 }
+
+/**
+ * The chords of [names] (the strip's) that the sections of [onScreen] play, which the dock's diagram strip marks as the
+ * page's. A page of no chords (an instrumental's comment, a picture) marks the chord it is headed by ([firstChordFrom]),
+ * so that one is always marked.
+ */
+internal fun chordsOnScreen(sections: List<RenderSection>, onScreen: IntRange, names: Set<String>): Set<String> {
+    val played = (onScreen.first.coerceAtLeast(0)..minOf(onScreen.last, sections.lastIndex)).flatMapTo(mutableSetOf()) { sections.chordsOf(it, names) }
+    return played.ifEmpty { setOfNotNull(firstChordFrom(sections, onScreen.first, names)) }
+}
+
+/** The chords of [names] the section at [index] plays, in order, annotations and marks left out. */
+private fun List<RenderSection>.chordsOf(index: Int, names: Set<String>) = (this[index] as? RenderSection.Lines)?.lines.orEmpty().asSequence()
+    .flatMap { line -> (line as? ChordProLine.Lyrics)?.chords.orEmpty() }
+    .filter { !it.isAnnotation && !it.isMark && it.name in names }
+    .map { it.name }
 
 /**
  * The group of [groups] (by index) the dock's row of scales scrolls to for a page whose first section is [section]: the

@@ -60,7 +60,8 @@ app bar's metronome panel.
   chips (the song's) by their fill rather than by chevrons, the outline giving them contrast on the dock's surface; every part of one opens its sheet but play and stop.
 - **The key chip** (`DockKeyChip`, `dockKeyOf`) names what the transposition stepper names (the shapes' under `SHAPES`,
   the inferred key for a file naming none); **a capo other than zero is always on screen**, after a stepper's
-  divider (in the diagram row set large over the capo, at least 64 dp wide, so a one-letter key is not lost). It opens
+  divider (in the diagram row set large over the capo, beside a round tuner button where the start has no tuner of
+  its own, mirroring the tempo chip's play; at least 64 dp wide without it). It opens
   the Playing sheet (`DialogType.Playing`): instrument and tuning, transposition and capo, then a
   full-width Tuner button, their pending writes unchanged. Read only mode's opens nothing (it would write overrides) and
   is left out with neither key nor capo; the instrument pill and tuner then start the dock (`DockInstrumentTools`), as
@@ -76,7 +77,8 @@ app bar's metronome panel.
 - **The scale chips** are the Scales section's groups, the home one untitled, the rest under their titles ("Over E7").
   None (a songbook, a song over `MAX_PLAYED_CHORDS` included) says so: the row is the screen's.
 - **The diagram strip** (`DockDiagramStrip`) is the Chords section's cells (`rememberChordCells`), sized by what the
-  row's height leaves (`dockDiagramSize`). A chord chip or diagram opens the chord sheet, not in performance mode (it
+  row's height leaves (`dockDiagramSize`). The chords played on the screen the reader is headed for are tinted
+  (`rememberChordsOnScreen`: `SongStepper.headedSections`, `chordsOnScreen`), the rest left as they are, never dimmed. A chord chip or diagram opens the chord sheet, not in performance mode (it
   writes the player's pick), yes in an import preview; a scale chip its sheet, read only mode included.
 - **Rows scroll themselves only on a page turn**, never under a finger (`ScrollToOnPageTurn`): the strip to the headed
   page's first chord (`firstChordFrom`), the scale row to its group (`scaleGroupAt`), from each page's stepper

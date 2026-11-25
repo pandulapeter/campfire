@@ -80,6 +80,7 @@ internal fun DockPanelRows(
                 hasTooManyChords = remember(model) { cells.isEmpty() && model.shouldShowChords && hasTooManySongChords(model.song, model.notation) },
                 scrollState = scrollState,
                 headedChord = headedChord,
+                markedChords = rememberChordsOnScreen(stepper, model.sections, names),
                 onChordClicked = content.chordDiagrams?.onChordClicked,
                 isGrid = true,
             )

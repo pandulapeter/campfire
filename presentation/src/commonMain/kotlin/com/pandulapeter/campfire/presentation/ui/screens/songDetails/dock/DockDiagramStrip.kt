@@ -10,6 +10,8 @@
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock
 
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.background
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.relocation.BringIntoViewRequester
@@ -30,6 +32,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalDensity
@@ -64,6 +67,9 @@ import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
  * songbook ([hasTooManyChords]) that it has too many, so that the row, which the screen's switches give the dock rather
  * than the song, is not left looking broken.
  *
+ * The chords played on the screen the reader is headed for ([markedChords], `rememberChordsOnScreen`) are tinted, the
+ * rest drawn as they are, so that the page's chords are found at a glance without the others looking unplayable.
+ *
  * The strip ([scrollState], its row's) scrolls itself to [headedChord], the first chord of the page the reader is
  * headed for, whenever that changes, and only then: a strip swiped by hand stays where it was left until the next turn.
  * In a grid ([isGrid], the side panel's, which wraps the cells) [scrollState] is the panel's, scrolled on a page turn
@@ -77,6 +83,7 @@ internal fun DockDiagramStrip(
     hasTooManyChords: Boolean,
     scrollState: ScrollState,
     headedChord: String?,
+    markedChords: Set<String>,
     onChordClicked: ((chordName: String) -> Unit)?,
     isGrid: Boolean = false,
 ) {
@@ -122,6 +129,7 @@ internal fun DockDiagramStrip(
             DiagramCell(
                 modifier = Modifier.onPlaced { positions.record(cell.name, it.positionInParent().x, it.size.width) }.headed(cell.name),
                 cell = cell,
+                isMarked = cell.name in markedChords,
                 nameStyle = nameStyle,
                 glossHeight = glossHeight,
                 diagramSize = dockDiagramSize(isFretted = cell.tuning.instrument.isFretted, maxHeight = diagramHeight),
@@ -136,11 +144,12 @@ internal fun DockDiagramStrip(
     }
 }
 
-/** One chord of [DockDiagramStrip]: its gloss (or the room for one), its name, and its diagram, crossfading as its shape changes. */
+/** One chord of [DockDiagramStrip], tinted where it [isMarked] as played on the screen: its gloss (or the room for one), its name, and its diagram, crossfading as its shape changes. */
 @Composable
 private fun DiagramCell(
     modifier: Modifier,
     cell: ChordCell,
+    isMarked: Boolean,
     nameStyle: TextStyle,
     glossHeight: Dp,
     diagramSize: DpSize,
@@ -148,6 +157,8 @@ private fun DiagramCell(
 ) = Column(
     modifier = modifier
         .clip(MaterialTheme.shapes.small)
+        // A tint rather than a dimming of the rest, which would read as chords that cannot be played.
+        .background(animateColorAsState(if (isMarked) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent).value)
         .then(
             if (onClick == null) {
                 Modifier

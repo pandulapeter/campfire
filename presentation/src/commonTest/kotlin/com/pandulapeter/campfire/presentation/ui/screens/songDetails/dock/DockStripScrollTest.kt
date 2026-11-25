@@ -36,6 +36,13 @@ internal class DockStripScrollTest {
     }
 
     @Test
+    fun `the chords on the screen are every chord its sections play`() =
+        assertEquals(setOf("Am", "C", "D", "F"), chordsOnScreen(sections, 0..2, names))
+
+    @Test
+    fun `a screen of no chords marks the chord it is headed by`() = assertEquals(setOf("F"), chordsOnScreen(sections, 1..1, names))
+
+    @Test
     fun `a section of no chords is headed by the next chord played`() = assertEquals("F", firstChordFrom(sections, 1, names))
 
     @Test

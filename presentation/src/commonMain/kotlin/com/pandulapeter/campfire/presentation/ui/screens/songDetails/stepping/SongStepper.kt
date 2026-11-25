@@ -78,6 +78,9 @@ internal class SongStepper(
     /** The section the reader is headed for at the top of the screen ([sectionAt]), null where [headedOffset] is. */
     val headedSection get() = headedOffset?.let { sectionAt(it, flingBehavior.rows, scrollState.maxValue) }
 
+    /** The sections on the screen the reader is headed for ([sectionsOnScreen]), null where [headedOffset] is. */
+    val headedSections get() = headedOffset?.let { sectionsOnScreen(it, scrollState.viewportSize, flingBehavior.rows, scrollState.maxValue) }
+
     /** Whether there is anything to step to in [direction] from [from], or from [origin] where it is null. */
     fun canStep(direction: Int, from: Int? = null) = when {
         from != null -> stepTargetFrom(from, direction) != null
