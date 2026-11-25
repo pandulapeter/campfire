@@ -18,7 +18,7 @@ applied). A page already saved is skipped, so a run picks up where the last one 
     .venv/bin/python -I tools/page-model/collect.py <corpus folder>
 
 `urls.tsv` in the corpus folder holds one page a row: `kind` (`song`, or `none` for a page with no song), language, and
-address, tab-separated. What each page came to is written to `collect.tsv`: `ok`, `blocked` (a bot challenge, or next
+address, tab-separated. What each page came to is written to `collect.tsv`: `ok`, `blocked` (a bot challenge or a rate limit's refusal, or next
 to no text), or the error. The browser says it is headless Chrome and a page that turns it away is left out, never
 worked around.
 """
@@ -35,7 +35,7 @@ PARALLEL = 4
 TIMEOUT_MS = 30_000
 SETTLE_MS = 2_500
 SCRIPT_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "data", "source", "remote", "implementation", "src", "commonMain", "kotlin", "com", "pandulapeter", "campfire", "data", "source", "remote", "implementation", "page", "PageSnapshotScript.kt")
-CHALLENGES = ("just a moment", "attention required", "access denied", "are you a robot", "verify you are human", "captcha")
+CHALLENGES = ("just a moment", "attention required", "access denied", "are you a robot", "verify you are human", "captcha", "403 error", "page forbidden", "too many requests")
 
 
 def snapshot_script():
