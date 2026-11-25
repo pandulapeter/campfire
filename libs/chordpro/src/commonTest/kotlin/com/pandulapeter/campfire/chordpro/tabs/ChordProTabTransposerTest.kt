@@ -88,6 +88,18 @@ class ChordProTabTransposerTest {
     }
 
     @Test
+    fun `a starred chord over a tab is the chord with its star kept after it`() {
+        val lines = listOf("G  Am7  G/B*  Am7", "e|--3--0--|")
+
+        assertEquals(
+            listOf("A  Bm7 A/C#*  Bm7", "e|--5--2--|"),
+            ChordProTabTransposer.transpose(lines, 2) { name -> ChordProTransposer.transposeChord(name, 2, preferFlats = false) },
+        )
+        assertEquals(listOf("G", "Am7", "G/B", "Am7"), ChordProTabTransposer.chordNames(lines))
+        assertEquals(listOf("*Slowly G"), ChordProTabTransposer.rewriteChordNames(listOf("*Slowly G")) { "X" })
+    }
+
+    @Test
     fun `a fret that grows a digit widens its column on every string`() {
         assertEquals(
             listOf("e|-15-17-|", "B|-------|"),

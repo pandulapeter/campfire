@@ -18,6 +18,14 @@ public object ChordProChordNames {
     public fun isChordName(word: String): Boolean = read(word, reader = null)
 
     /**
+     * [word] without the stars a sheet writes after a chord name to say it is a second shape of that chord (`G/B*`,
+     * `Am7**`), or [word] itself. The name before them is the chord a row reads, transposes, and renames, the stars
+     * staying after it as written; a leading star is no such mark but a ChordPro annotation (`[*text]`), and a word of
+     * stars alone is no name.
+     */
+    public fun withoutShapeMark(word: String): String = word.trimEnd(SHAPE_MARK).takeIf { it.isNotEmpty() && !it.startsWith(SHAPE_MARK) } ?: word
+
+    /**
      * Walks a chord name, handing each part of it to [reader] in the order it is written, and answers whether the
      * whole of it was a chord name. [isChordName] is this walk with nobody listening, and [ChordProChords.parse] is it
      * with a reader that collects the notes, which is what keeps the two from ever disagreeing about a name: a part is
@@ -247,6 +255,7 @@ public object ChordProChordNames {
     )
     private const val LATIN_INITIALS = "DRMFSL"
     private const val LATIN_SECOND_LETTERS = "oeiaOEIAóéáÓÉÁ"
+    private const val SHAPE_MARK = '*'
 }
 
 /**

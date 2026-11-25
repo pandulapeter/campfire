@@ -58,14 +58,14 @@ internal class DockStripScrollTest {
     }
 
     @Test
-    fun `a tab's line of chord names is chords on the screen but its staff is not`() {
+    fun `a tab's line of chord names is chords on the screen without a second shape's star but its staff is not`() {
         val tab = RenderSection.Lines(
             header = "Picking pattern",
             foldKey = "tab",
             parts = listOf(
                 SectionPart.Lines(
                     lines = listOf(
-                        ChordProLine.Tab(text = "  Am            C             E"),
+                        ChordProLine.Tab(text = "  Am            C*            E"),
                         ChordProLine.Tab(text = "e|-------------|-------------|-------------|", continuesEnvironment = true),
                     ),
                 ),

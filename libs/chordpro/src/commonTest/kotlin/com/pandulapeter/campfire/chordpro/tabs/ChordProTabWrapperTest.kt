@@ -460,6 +460,13 @@ class ChordProTabWrapperTest {
         )
     }
 
+    @Test
+    fun `a line of chord names with a second shape's star is a line of chords but a starred word alone is not`() {
+        assertTrue(ChordProTabWrapper.isChordLine("       G              Am7           G/B*          Am7"))
+        assertFalse(ChordProTabWrapper.isChordLine("*Slowly"))
+        assertFalse(ChordProTabWrapper.isChordLine("G* the end"))
+    }
+
     /** The rows' lines as text, which is what most of these tests are about. */
     private fun wrap(lines: List<String>, maxColumns: Int) = ChordProTabWrapper.wrapLines(lines, maxColumns).map { row -> row.map { it.text } }
 }

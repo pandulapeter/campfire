@@ -163,10 +163,11 @@ public object ChordProTabWrapper {
     /**
      * Whether [word] is a chord name as a page shows it, in parentheses of its own (`(G)`) or opening or closing a group of
      * them written across words (`(G`, `D)`) — the parentheses inside a name kept, since they are part of it (`5(7)`, a
-     * numbered extension, and `C(add9)`).
+     * numbered extension, and `C(add9)`) — and the stars marking a second shape of it left out (`G/B*`).
      */
-    internal fun isChordWord(word: String) =
-        ChordProChordNames.isDisplayedChordName(word.trim('(', ')')) || ChordProChordNames.isDisplayedChordName(withoutUnmatchedParentheses(word))
+    internal fun isChordWord(word: String) = ChordProChordNames.withoutShapeMark(word).let { name ->
+        ChordProChordNames.isDisplayedChordName(name.trim('(', ')')) || ChordProChordNames.isDisplayedChordName(withoutUnmatchedParentheses(name))
+    }
 
     /** [word] without the `(` it starts with or the `)` it ends with where nothing in it closes or opens them. */
     internal fun withoutUnmatchedParentheses(word: String): String {

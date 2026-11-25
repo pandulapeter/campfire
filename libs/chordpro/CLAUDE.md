@@ -70,6 +70,9 @@ dependencies at all**, not even Koin: stateless `object`s called directly. Every
 - **A chord row's repeat counts, bar lines, and beat dots are marks** (`ChordProRowMarks`), written back as their bare
   text; a sung line, and a line of a mark alone, keep them as lyrics. A word is never one: `twice` is written
   `[*twice]`.
+- **A star after a chord name over a tab marks a second shape** (`G/B*`, `ChordProChordNames.withoutShapeMark`): the row
+  reads, transposes, renames, and lists the name before it, the star staying after it. `isChordName` itself stays false
+  for it, and a leading star is an annotation (`[*text]`).
 - **`{image}`** is a block where it stands, cutting a section as a break does; a song may be a header and a picture
   alone. Every attribute is kept in `Image.attributes`, only size, scale, alignment, and title are read; any anchor is
   read as `float`. An `id` with a `src` and nothing else only defines an asset, as ChordPro says; one with more also

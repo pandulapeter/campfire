@@ -32,6 +32,14 @@ class ChordProChordNamesTest {
     }
 
     @Test
+    fun `a star after a name marks a second shape of the chord but a star before it does not`() {
+        assertEquals("G/B", ChordProChordNames.withoutShapeMark("G/B*"))
+        assertEquals("Am7", ChordProChordNames.withoutShapeMark("Am7**"))
+        listOf("*G", "*", "**", "G").forEach { assertEquals(it, ChordProChordNames.withoutShapeMark(it)) }
+        assertFalse(ChordProChordNames.isChordName("G/B*"))
+    }
+
+    @Test
     fun `the bass follows the last slash`() {
         assertEquals(listOf("B6/9", "F#"), ChordProChordNames.notes("B6/9/F#"))
         assertEquals("(bm7/f#)", ChordProChordNames.rewriteNotes("(Bm7/F#)") { it.lowercase() })

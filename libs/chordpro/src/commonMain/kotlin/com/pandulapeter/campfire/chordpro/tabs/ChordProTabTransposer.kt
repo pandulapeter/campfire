@@ -137,13 +137,14 @@ internal object ChordProTabTransposer {
      * draws as chords ([ChordProTabWrapper.isChordLine]), steps of the key aside, since the file is never written in a
      * numbering. A marker is a word with no letter or digit (bar lines, `.`, `%`, `/`, `~`, dashes), a volta, a repeat
      * count (`x2`, `2x`, `(4x)`, or a bare number, which is how a count line of markers alone is no chord row), or `N.C.`.
-     * A name opening or closing a group across words (`(G`, `D)`) is the name alone, its range too, so that a rename
-     * leaves the parenthesis where it is.
+     * A name opening or closing a group across words (`(G`, `D)`) or marked as a second shape (`G/B*`, see
+     * [ChordProChordNames.withoutShapeMark]) is the name alone, its range too, so that a rename leaves the parenthesis
+     * or the star where it is.
      */
     internal fun chordWords(line: String): List<ChordProTokens.Word>? {
         val chordWords = mutableListOf<ChordProTokens.Word>()
         ChordProTokens.words(line).forEach { word ->
-            val name = ChordProTabWrapper.withoutUnmatchedParentheses(word.value)
+            val name = ChordProTabWrapper.withoutUnmatchedParentheses(ChordProChordNames.withoutShapeMark(word.value))
             when {
                 isChordName(word.value) -> chordWords += word
                 isMarker(word.value) -> Unit
