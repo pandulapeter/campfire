@@ -24,6 +24,13 @@ import androidx.compose.ui.test.InternalTestApi
 import androidx.compose.ui.test.SkikoComposeUiTest
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.platform.WindowInfo
+import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.navigationevent.DirectNavigationEventInput
 import androidx.navigationevent.NavigationEvent
@@ -196,6 +203,7 @@ private fun runApp(
 ) { host ->
     host.koin.loadModules(fakes, allowOverride = true)
     val keyboardHeight = mutableStateOf(0.dp)
+    val windowSize = mutableStateOf(IntSize(window.width.value.roundToInt(), window.height.value.roundToInt()))
     // The scene is given the keyboard as well as the app's composition: a dialog, every bottom sheet among them, is a
     // layer of the scene with a root of its own, and Modifier.imePadding reads the insets of that root, which the
     // scene hands it, rather than the ones Content provides.
@@ -216,13 +224,17 @@ private fun runApp(
                 dispatcher?.addInput(backInput)
                 onDispose { dispatcher?.removeInput(backInput) }
             }
-            host.Content(
-                filePicker = TestFilePicker(pickedFiles, pickedPhotos),
-                isPrepared = true,
-                keyboardHeight = keyboardHeight.value,
-                onViewModel = { viewModel = it },
-                onAppReady = { isAppReady = true },
-            )
+            // The test's own window info holds the size it was made with, so a resize reaches the app through this one.
+            val windowInfo = LocalWindowInfo.current
+            CompositionLocalProvider(LocalWindowInfo provides remember(windowInfo) { ResizableWindowInfo(windowInfo, windowSize) }) {
+                host.Content(
+                    filePicker = TestFilePicker(pickedFiles, pickedPhotos),
+                    isPrepared = true,
+                    keyboardHeight = keyboardHeight.value,
+                    onViewModel = { viewModel = it },
+                    onAppReady = { isAppReady = true },
+                )
+            }
         }
         waitUntil(timeoutMillis = LAUNCH_TIMEOUT_MILLIS) { isAppReady }
         AppTestScope(
@@ -231,9 +243,23 @@ private fun runApp(
             viewModel = checkNotNull(viewModel) { "The app was ready before its view model was made." },
             locale = AppLocale.findByCode(appearance.language.id),
             keyboardHeight = keyboardHeight,
+            windowSize = windowSize,
             backInput = backInput,
         ).test()
     }
+}
+
+/** The window's [size] as the app reads it, which [AppTestScope.resizeWindow] changes, and the rest as [source] says. */
+private class ResizableWindowInfo(private val source: WindowInfo, private val size: State<IntSize>) : WindowInfo {
+    override val isWindowFocused get() = source.isWindowFocused
+
+    @ExperimentalComposeUiApi
+    override val keyboardModifiers get() = source.keyboardModifiers
+
+    override val containerSize get() = size.value
+
+    // The scene is drawn at a density of one, so a pixel is a dp.
+    override val containerDpSize get() = DpSize(size.value.width.dp, size.value.height.dp)
 }
 
 /** A window with no system bars, whose keyboard is [keyboardHeight] tall, read as it is laid out (a dp is a pixel). */
@@ -256,6 +282,7 @@ internal class AppTestScope(
     val viewModel: CampfireViewModel,
     private val locale: AppLocale,
     keyboardHeight: MutableState<Dp>,
+    private val windowSize: MutableState<IntSize>,
     private val backInput: DirectNavigationEventInput,
 ) : ComposeUiTest by test {
 
@@ -302,6 +329,16 @@ internal class AppTestScope(
 
     /** The whole window as it is drawn, dialogs and popups included, which a node's capture leaves out. */
     fun captureWindow() = test.captureToImage()
+
+    /**
+     * The window resized to [width] × [height] at once, as a tablet turned or a desktop window maximised; the test steps
+     * the clock or waits for what follows.
+     */
+    @OptIn(InternalTestApi::class, InternalComposeUiApi::class)
+    fun resizeWindow(width: Dp, height: Dp) {
+        windowSize.value = IntSize(width.value.roundToInt(), height.value.roundToInt())
+        test.scene.size = windowSize.value
+    }
 
     val songsFolder get() = File(library, "songs")
 

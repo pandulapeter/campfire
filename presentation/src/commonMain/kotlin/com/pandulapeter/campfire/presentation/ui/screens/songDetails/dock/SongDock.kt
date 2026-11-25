@@ -99,6 +99,8 @@ private fun DockRowsBox(dock: SongDockState, metronome: DockMetronome, contentPa
     // Kept while the dock leaves, so that it shrinks away as it was rather than as nothing.
     val lastLayout = remember { LastDockLayout() }
     dock.layout?.let { lastLayout.value = it }
+    // Gone once it has shrunk away, so that nothing of it is still read or found under the pages.
+    if (dock.layout == null && dock.height == 0.dp) return
     lastLayout.value?.let { layout ->
         Box(modifier = Modifier.fillMaxWidth().height(dock.height).clipToBounds()) {
             val layoutDirection = LocalLayoutDirection.current

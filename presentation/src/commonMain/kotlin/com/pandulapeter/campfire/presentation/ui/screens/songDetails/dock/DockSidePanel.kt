@@ -64,6 +64,8 @@ internal fun DockSidePanel(
         last.layout = it
         last.width = dock.panelTarget
     }
+    // Gone once it has shrunk away, so that nothing of it is still read or found beside the song.
+    if (dock.panelLayout == null && dock.panelWidth == 0.dp) return
     val layout = last.layout ?: return
     Box(modifier = modifier.fillMaxHeight().width(dock.panelWidth).clipToBounds()) {
         Column(
