@@ -119,6 +119,7 @@ data class WidgetSnapshot(
         val tags: String = "",
         val languages: String = "",
         val randomPicksFilterDescription: String = "",
+        val pickCount: String = "",
     ) {
 
         /** Whether the setup screens' texts are there to show. */

@@ -21,7 +21,7 @@ import androidx.glance.appwidget.provideContent
 import androidx.glance.appwidget.state.getAppWidgetState
 import androidx.glance.appwidget.state.updateAppWidgetState
 import androidx.glance.currentState
-import com.pandulapeter.campfire.presentation.ui.widget.RANDOM_PICKS_MAX_ROWS
+import com.pandulapeter.campfire.presentation.ui.widget.DEFAULT_RANDOM_PICKS_COUNT
 import com.pandulapeter.campfire.presentation.ui.widget.RandomPicksFilter
 import kotlin.random.Random
 
@@ -32,8 +32,14 @@ import kotlin.random.Random
  */
 internal class RandomPicksWidget : GlanceAppWidget() {
 
-    /** One layout per number of rows, so that the widget lists as many songs as its height has room for. */
-    override val sizeMode = SizeMode.Responsive((1..RANDOM_PICKS_MAX_ROWS).map { DpSize(MIN_WIDTH.dp, RandomPicksWidgetMetrics.heightFor(it).dp) }.toSet())
+    /**
+     * One layout per number of rows, so that the widget lists as many songs as its height has room for, and the compact
+     * one for a widget too short for the header.
+     */
+    override val sizeMode = SizeMode.Responsive(
+        ((1..RandomPicksWidgetMetrics.MAX_ROWS).map { RandomPicksWidgetMetrics.heightFor(it) } + RandomPicksWidgetMetrics.COMPACT_HEIGHT)
+            .mapTo(mutableSetOf()) { DpSize(MIN_WIDTH.dp, it.dp) },
+    )
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val now = System.currentTimeMillis()
@@ -49,6 +55,7 @@ internal class RandomPicksWidget : GlanceAppWidget() {
                     snapshot = snapshot,
                     seed = currentState(WidgetState.RANDOM_PICKS_SEED) ?: 0L,
                     title = currentState(WidgetState.RANDOM_PICKS_TITLE),
+                    count = currentState(WidgetState.RANDOM_PICKS_COUNT) ?: DEFAULT_RANDOM_PICKS_COUNT,
                     filter = RandomPicksFilter(
                         tags = currentState(WidgetState.RANDOM_PICKS_TAGS).orEmpty(),
                         languages = currentState(WidgetState.RANDOM_PICKS_LANGUAGES).orEmpty(),

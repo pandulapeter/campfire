@@ -9,7 +9,8 @@
 -->
 <!--
   The random picks widget (RandomPicksWidgetReceiver). The hourly update is what draws new picks once the last draw is an
-  hour old (RandomPicksWidget); the widget lists as many songs as its height has room for, up to five. Adding it asks for
+  hour old (RandomPicksWidget); the widget lists as many of the songs it draws as its height has room for, down to one
+  cell's height, where its compact layout shows a single song without the header. Adding it asks for
   its title and filter (RandomPicksWidgetConfigurationActivity, named in full as the setlist widget's is), and so does
   its reconfiguration from the launcher.
 -->
@@ -20,7 +21,7 @@
     android:minWidth="250dp"
     android:minHeight="180dp"
     android:minResizeWidth="110dp"
-    android:minResizeHeight="110dp"
+    android:minResizeHeight="30dp"
     android:previewLayout="@layout/widget_random_picks_preview"
     android:resizeMode="horizontal|vertical"
     android:targetCellWidth="3"

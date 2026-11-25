@@ -12,11 +12,15 @@ package com.pandulapeter.campfire.widget
 import androidx.activity.compose.setContent
 import androidx.datastore.preferences.core.Preferences
 import androidx.glance.appwidget.GlanceAppWidget
+import com.pandulapeter.campfire.presentation.ui.widget.DEFAULT_RANDOM_PICKS_COUNT
 import com.pandulapeter.campfire.presentation.ui.widget.RandomPicksFilter
 import com.pandulapeter.campfire.presentation.ui.widget.RandomPicksWidgetSetup
 import com.pandulapeter.campfire.presentation.ui.widget.WidgetSnapshot
 
-/** Asks for a random picks widget's own title and the tags and languages it draws from ([RandomPicksWidgetSetup]). */
+/**
+ * Asks for a random picks widget's own title, how many songs it draws, and the tags and languages it draws them from
+ * ([RandomPicksWidgetSetup]).
+ */
 class RandomPicksWidgetConfigurationActivity : WidgetConfigurationActivity() {
 
     override val widget: GlanceAppWidget = RandomPicksWidget()
@@ -26,12 +30,14 @@ class RandomPicksWidgetConfigurationActivity : WidgetConfigurationActivity() {
         RandomPicksWidgetSetup(
             snapshot = snapshot,
             initialTitle = state[WidgetState.RANDOM_PICKS_TITLE].orEmpty(),
+            initialCount = state[WidgetState.RANDOM_PICKS_COUNT] ?: DEFAULT_RANDOM_PICKS_COUNT,
             initialFilter = RandomPicksFilter(
                 tags = state[WidgetState.RANDOM_PICKS_TAGS].orEmpty(),
                 languages = state[WidgetState.RANDOM_PICKS_LANGUAGES].orEmpty(),
             ),
-            onDone = { title, filter ->
-                apply(logDescription = "${if (title.isBlank()) "default" else "own"} title, ${filter.tags.size} tags, ${filter.languages.size} languages") { widgetState ->
+            onDone = { title, count, filter ->
+                apply(logDescription = "${if (title.isBlank()) "default" else "own"} title, $count picks, ${filter.tags.size} tags, ${filter.languages.size} languages") { widgetState ->
+                    widgetState[WidgetState.RANDOM_PICKS_COUNT] = count
                     if (title.isBlank()) widgetState.remove(WidgetState.RANDOM_PICKS_TITLE) else widgetState[WidgetState.RANDOM_PICKS_TITLE] = title.trim()
                     widgetState[WidgetState.RANDOM_PICKS_TAGS] = filter.tags
                     widgetState[WidgetState.RANDOM_PICKS_LANGUAGES] = filter.languages

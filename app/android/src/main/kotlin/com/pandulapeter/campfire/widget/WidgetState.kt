@@ -13,6 +13,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
@@ -21,6 +22,7 @@ import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
 import androidx.glance.appwidget.state.updateAppWidgetState
 import androidx.glance.currentState
+import com.pandulapeter.campfire.presentation.ui.widget.DEFAULT_RANDOM_PICKS_COUNT
 import com.pandulapeter.campfire.presentation.ui.widget.RandomPicksFilter
 import com.pandulapeter.campfire.presentation.ui.widget.WidgetSnapshot
 import kotlinx.coroutines.CoroutineScope
@@ -41,6 +43,9 @@ internal object WidgetState {
 
     /** The random picks widget's own title, none for the snapshot's Random picks ([RandomPicksWidgetConfigurationActivity]). */
     val RANDOM_PICKS_TITLE = stringPreferencesKey("randomPicksTitle")
+
+    /** How many songs the random picks widget draws, none for [DEFAULT_RANDOM_PICKS_COUNT]. */
+    val RANDOM_PICKS_COUNT = intPreferencesKey("randomPicksCount")
 
     /** The tags the random picks widget draws from, none for every song ([RandomPicksFilter.tags]). */
     val RANDOM_PICKS_TAGS = stringSetPreferencesKey("randomPicksTags")

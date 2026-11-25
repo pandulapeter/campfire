@@ -377,6 +377,7 @@
     <string name="widget_set_up">Configurează widgetul</string>
     <string name="widget_no_matching_songs">Niciun cântec nu se potrivește cu filtrul widgetului</string>
     <string name="widget_random_picks_filter_description">Alegerile vin din cântecele cu oricare dintre etichetele selectate, în oricare dintre limbile selectate. Un grup fără nimic selectat păstrează toate cântecele.</string>
+    <string name="widget_random_picks_count">Numărul de alegeri</string>
     <string name="optional_field_label">%1$s (opțional)</string>
     <string name="songs_new_song_title">Titlu</string>
     <string name="songs_new_song_artist">Artist</string>

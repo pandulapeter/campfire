@@ -45,6 +45,7 @@ import com.pandulapeter.campfire.presentation.resources.widget_next_gig
 import com.pandulapeter.campfire.presentation.resources.widget_next_gig_description
 import com.pandulapeter.campfire.presentation.resources.widget_no_matching_songs
 import com.pandulapeter.campfire.presentation.resources.widget_no_upcoming_setlist
+import com.pandulapeter.campfire.presentation.resources.widget_random_picks_count
 import com.pandulapeter.campfire.presentation.resources.widget_random_picks_filter_description
 import com.pandulapeter.campfire.presentation.resources.widget_set_up
 import com.pandulapeter.campfire.presentation.resources.widget_setlist_missing
@@ -136,6 +137,7 @@ private fun widgetStrings(): WidgetSnapshot.Strings {
         tags = stringResource(Res.string.songs_tags),
         languages = stringResource(Res.string.songs_languages),
         randomPicksFilterDescription = stringResource(Res.string.widget_random_picks_filter_description),
+        pickCount = stringResource(Res.string.widget_random_picks_count),
     )
 }
 

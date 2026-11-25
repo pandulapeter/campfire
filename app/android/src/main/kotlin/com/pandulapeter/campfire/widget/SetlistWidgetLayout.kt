@@ -9,7 +9,6 @@
  */
 package com.pandulapeter.campfire.widget
 
-import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -52,7 +51,9 @@ internal fun SetlistWidgetLayout(
     todayEpochDay: Long,
 ) {
     val content = snapshot?.setlistContent(pinnedFileName = pinnedFileName, todayEpochDay = todayEpochDay)
-    Column(modifier = GlanceModifier.widgetBackground().clickable(openLinkAction(content?.link))) {
+    // A setlist's list runs to the widget's bottom edge, cut off by it, its own last row carrying the padding.
+    val bottomPadding = if (content is SetlistWidgetContent.Shown && content.songs.isNotEmpty()) 0 else WIDGET_PADDING
+    Column(modifier = GlanceModifier.widgetBackground(bottomPadding = bottomPadding).clickable(openLinkAction(content?.link))) {
         when (content) {
             is SetlistWidgetContent.Shown -> Setlist(
                 content = content,
@@ -80,16 +81,24 @@ private fun ColumnScope.Setlist(
     if (content.songs.isNotEmpty()) {
         Box(modifier = GlanceModifier.fillMaxWidth().defaultWeight()) {
             LazyColumn(modifier = GlanceModifier.fillMaxSize()) {
-                // A row of the fades' height at either end, which is where a song sits once it is scrolled to an end: a
-                // widget's list cannot say how far it is scrolled, so the fades are always there, and only these are
-                // under them at rest.
+                // A row of the fade's height first, which is where the first song sits once it is scrolled back: a
+                // widget's list cannot say how far it is scrolled, so the fade is always there, and only this is under
+                // it at rest.
                 item { Spacer(modifier = GlanceModifier.height(EDGE_FADE_HEIGHT.dp)) }
+                val numberDigits = content.songs.maxOf { it.number }.toString().length
                 items(content.songs) { song ->
-                    WidgetSongRow(title = song.title, artist = song.artist, number = song.number, link = song.link, isMirrored = isMirrored)
+                    WidgetSongRow(
+                        title = song.title,
+                        artist = song.artist,
+                        number = song.number,
+                        link = song.link,
+                        isMirrored = isMirrored,
+                        numberDigits = numberDigits,
+                    )
                 }
-                item { Spacer(modifier = GlanceModifier.height(EDGE_FADE_HEIGHT.dp)) }
+                item { Spacer(modifier = GlanceModifier.height(WIDGET_PADDING.dp)) }
             }
-            EdgeFades()
+            TopEdgeFade()
         }
     }
 }
@@ -125,23 +134,18 @@ private fun SetlistHeader(
 }
 
 /**
- * The songs fading out at the list's ends, as the app's lists do under its bars: the widget's background in a gradient
- * over them, the drawables' alpha in its color. Drawn over the list without taking touches, which reach the list under it.
+ * The songs fading out under the header, as the app's lists do under its bars (`EdgeFade.kt`): the widget's background in
+ * a gradient over them, the drawable's alpha in its color, a little shorter than the app's fade, since at rest it is the
+ * gap under the header. Drawn over the list without taking touches, which reach the list under it. The bottom has none:
+ * the list is cut off by the widget's edge, as a list running to the bottom of the app's window is.
  */
 @Composable
-private fun EdgeFades() = Column(modifier = GlanceModifier.fillMaxSize()) {
-    EdgeFade(R.drawable.widget_fade_top)
-    Spacer(modifier = GlanceModifier.defaultWeight())
-    EdgeFade(R.drawable.widget_fade_bottom)
-}
-
-@Composable
-private fun EdgeFade(@DrawableRes drawable: Int) = Image(
+private fun TopEdgeFade() = Image(
     modifier = GlanceModifier.fillMaxWidth().height(EDGE_FADE_HEIGHT.dp),
-    provider = ImageProvider(drawable),
+    provider = ImageProvider(R.drawable.widget_fade_top),
     contentDescription = null,
     contentScale = ContentScale.FillBounds,
     colorFilter = ColorFilter.tint(GlanceTheme.colors.widgetBackground),
 )
 
-private const val EDGE_FADE_HEIGHT = 12
+private const val EDGE_FADE_HEIGHT = 20

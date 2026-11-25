@@ -19,8 +19,9 @@ import kotlinx.datetime.LocalDate
 sealed interface RandomPicksContent {
 
     /**
-     * The [songs] drawn, which a widget lists in this order, and whether drawing again can change them ([canDrawAgain]):
-     * only where there are more songs to draw from than the largest widget lists, so Shuffle never only reorders them.
+     * The [songs] drawn, which a widget lists in this order (as many of the first as its height has room for), and
+     * whether drawing again can change them ([canDrawAgain]): only where there are more songs to draw from than the
+     * widget draws, so Shuffle never only reorders them.
      */
     data class Picks(
         val songs: List<WidgetSnapshot.Song>,
@@ -76,7 +77,8 @@ data class RandomPicksFilter(
 )
 
 /**
- * Up to [count] songs drawn by [seed] from the library's songs [filter] leaves: the same seed draws the same songs from
+ * Up to [count] songs (the widget's pick count, [RANDOM_PICKS_COUNTS]) drawn by [seed] from the library's songs [filter]
+ * leaves, any first ones of them being what a draw of fewer would have drawn: the same seed draws the same songs from
  * the same library, in whatever order it is sorted, so a widget keeps its picks by keeping the seed, and draws again by
  * taking a new one. Every song can be drawn, however few: a library of three shows all three.
  */
@@ -87,7 +89,7 @@ fun WidgetSnapshot.randomPicksContent(count: Int, seed: Long, filter: RandomPick
     if (filtered.isEmpty()) return RandomPicksContent.Message(strings.noMatchingSongs.ifEmpty { strings.emptyLibrary })
     return RandomPicksContent.Picks(
         songs = pickWidgetSongs(songs = filtered, count = count, seed = seed),
-        canDrawAgain = filtered.size > RANDOM_PICKS_MAX_ROWS,
+        canDrawAgain = filtered.size > count,
     )
 }
 
@@ -134,8 +136,14 @@ fun WidgetSnapshot.setlistContent(pinnedFileName: String?, todayEpochDay: Long):
     )
 }
 
-/** The most songs a random picks widget lists, on either platform. */
-const val RANDOM_PICKS_MAX_ROWS = 5
+/** How many songs a random picks widget can be set to draw, on either platform. */
+val RANDOM_PICKS_COUNTS = 1..10
+
+/**
+ * The count a random picks widget draws until it is set to another, and so the one every widget set up before there was
+ * a count draws: as many as the largest of those could show.
+ */
+const val DEFAULT_RANDOM_PICKS_COUNT = 5
 
 /**
  * Up to [count] of [songs]: those whose file names, mixed with [seed], rank first. A song's rank is its own name's alone,

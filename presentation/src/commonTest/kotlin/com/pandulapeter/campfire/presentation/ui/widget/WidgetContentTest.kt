@@ -115,12 +115,19 @@ class WidgetContentTest {
     }
 
     @Test
-    fun `random picks can be drawn again only from more songs than the largest widget lists`() {
+    fun `random picks can be drawn again only from more songs than the widget draws`() {
         fun canDrawAgain(songCount: Int) = assertIs<RandomPicksContent.Picks>(
             snapshot(songs = (1..songCount).map { song("s$it") }).randomPicksContent(count = 3, seed = 0),
         ).canDrawAgain
-        assertEquals(false, canDrawAgain(RANDOM_PICKS_MAX_ROWS))
-        assertEquals(true, canDrawAgain(RANDOM_PICKS_MAX_ROWS + 1))
+        assertEquals(false, canDrawAgain(3))
+        assertEquals(true, canDrawAgain(4))
+    }
+
+    @Test
+    fun `a widget showing fewer picks than it draws shows the first of the same draw`() {
+        val library = snapshot(songs = (1..30).map { song("s$it") })
+        val drawn = assertIs<RandomPicksContent.Picks>(library.randomPicksContent(count = 10, seed = 3)).songs
+        assertEquals(assertIs<RandomPicksContent.Picks>(library.randomPicksContent(count = 4, seed = 3)).songs, drawn.take(4))
     }
 
     @Test

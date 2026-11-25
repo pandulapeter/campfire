@@ -30,18 +30,21 @@ import androidx.glance.text.TextStyle
 /**
  * A song both widgets list: its [title] and [artist] (none where blank), after its [number] in a setlist where there is
  * one, opening [link]. The row spans the widget from edge to edge, so that its touch feedback does too, and carries the
- * widget's side padding inside itself; where the widget [isMirrored], the number comes after the text.
+ * widget's side padding inside itself; where the widget [isMirrored], the number comes after the text. The numbers'
+ * column is as wide as [numberDigits] digits, the most a number of the list has, so that a list's numbers start where
+ * the header's text does and its titles all start in one line.
  */
 @Composable
 internal fun WidgetSongRow(
+    modifier: GlanceModifier = GlanceModifier.fillMaxWidth(),
     title: String,
     artist: String,
     number: Int?,
     link: String,
     isMirrored: Boolean,
+    numberDigits: Int = 1,
 ) = Row(
-    modifier = GlanceModifier
-        .fillMaxWidth()
+    modifier = modifier
         .height(RandomPicksWidgetMetrics.ROW_HEIGHT.dp)
         .clickable(openLinkAction(link))
         .padding(horizontal = WIDGET_PADDING.dp),
@@ -49,7 +52,7 @@ internal fun WidgetSongRow(
 ) {
     val hasArtist = artist.isNotBlank()
     if (number != null && !isMirrored) {
-        SongNumber(number = number, hasArtist = hasArtist, isMirrored = false)
+        SongNumber(number = number, digits = numberDigits, hasArtist = hasArtist, isMirrored = false)
         Spacer(modifier = GlanceModifier.width(NUMBER_GAP.dp))
     }
     Column(modifier = GlanceModifier.defaultWeight()) {
@@ -71,22 +74,23 @@ internal fun WidgetSongRow(
     }
     if (number != null && isMirrored) {
         Spacer(modifier = GlanceModifier.width(NUMBER_GAP.dp))
-        SongNumber(number = number, hasArtist = hasArtist, isMirrored = true)
+        SongNumber(number = number, digits = numberDigits, hasArtist = hasArtist, isMirrored = true)
     }
 }
 
 /**
- * A setlist song's number, its digits against the text so that 9 and 10 end in one line, on the title's line: a widget
- * has no baseline alignment, so where an artist line follows the title, an empty line of its size under the number keeps
- * the two columns of one height and the number level with the title.
+ * A setlist song's number in a column of [digits] digits, starting at the widget's padding as the header's text does, on
+ * the title's line: a widget has no baseline alignment, so where an artist line follows the title, an empty line of its
+ * size under the number keeps the two columns of one height and the number level with the title.
  */
 @Composable
 private fun SongNumber(
     number: Int,
+    digits: Int,
     hasArtist: Boolean,
     isMirrored: Boolean,
-) = Column(modifier = GlanceModifier.width(NUMBER_WIDTH.dp)) {
-    val textAlign = textAlignOf(!isMirrored)
+) = Column(modifier = GlanceModifier.width((digits * DIGIT_WIDTH).dp)) {
+    val textAlign = textAlignOf(isMirrored)
     Text(
         modifier = GlanceModifier.fillMaxWidth(),
         text = number.toString(),
@@ -103,7 +107,8 @@ private fun SongNumber(
     }
 }
 
-private const val NUMBER_WIDTH = 22
-private const val NUMBER_GAP = 10
+/** A digit's width with room to spare, so that a larger font size still fits it on one line. */
+private const val DIGIT_WIDTH = 11
+private const val NUMBER_GAP = 8
 private const val TITLE_SIZE = 14
 private const val ARTIST_SIZE = 12

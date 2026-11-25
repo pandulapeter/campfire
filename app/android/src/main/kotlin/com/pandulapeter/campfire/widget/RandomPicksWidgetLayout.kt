@@ -38,33 +38,72 @@ import com.pandulapeter.campfire.presentation.ui.widget.randomPicksContent
 
 /**
  * The random picks widget: a header with its [title] (the snapshot's Random picks where it has none of its own) and the
- * button that draws again where that can change the picks, then as many songs drawn by [seed] from those [filter] leaves
- * as the height has room for, or the snapshot's sentence where there is nothing to draw from. Anywhere but a song opens
- * the app.
+ * button that draws again where that can change the picks, then the first of the [count] songs drawn by [seed] from those
+ * [filter] leaves that the height has room for, or the snapshot's sentence where there is nothing to draw from. Too short
+ * for the header, it shows the first song alone, with the button beside it. Anywhere but a song opens the app.
  */
 @Composable
 internal fun RandomPicksWidgetLayout(
     snapshot: WidgetSnapshot?,
     seed: Long,
     title: String?,
+    count: Int,
     filter: RandomPicksFilter,
 ) {
-    val rows = RandomPicksWidgetMetrics.rowsFitting(LocalSize.current.height.value)
-    val content = snapshot?.randomPicksContent(count = rows, seed = seed, filter = filter)
-    Column(modifier = GlanceModifier.widgetBackground().clickable(openLinkAction(snapshot?.homeLink))) {
-        Header(
-            title = title?.takeIf { it.isNotBlank() } ?: snapshot?.strings?.randomPicks ?: LocalContext.current.getString(R.string.widget_random_picks_name),
-            shuffleDescription = snapshot?.strings?.drawNewPicks.takeIf { (content as? RandomPicksContent.Picks)?.canDrawAgain == true },
-            isMirrored = snapshot.isMirrored(),
-        )
+    val height = LocalSize.current.height.value
+    val content = snapshot?.randomPicksContent(count = count, seed = seed, filter = filter)
+    val shuffleDescription = snapshot?.strings?.drawNewPicks.takeIf { (content as? RandomPicksContent.Picks)?.canDrawAgain == true }
+    val isMirrored = snapshot.isMirrored()
+    val isCompact = RandomPicksWidgetMetrics.isCompact(height)
+    Column(
+        modifier = GlanceModifier
+            .widgetBackground(
+                topPadding = if (isCompact) RandomPicksWidgetMetrics.COMPACT_PADDING else WIDGET_PADDING,
+                bottomPadding = if (isCompact) RandomPicksWidgetMetrics.COMPACT_PADDING else WIDGET_PADDING,
+            )
+            .clickable(openLinkAction(snapshot?.homeLink)),
+    ) {
+        if (!isCompact) {
+            Header(
+                title = title?.takeIf { it.isNotBlank() } ?: snapshot?.strings?.randomPicks ?: LocalContext.current.getString(R.string.widget_random_picks_name),
+                shuffleDescription = shuffleDescription,
+                isMirrored = isMirrored,
+            )
+        }
         when (content) {
-            is RandomPicksContent.Picks -> content.songs.forEach { song ->
-                WidgetSongRow(title = song.title, artist = song.artist, number = null, link = song.link, isMirrored = snapshot.isMirrored())
+            is RandomPicksContent.Picks -> if (isCompact) {
+                CompactPick(song = content.songs.first(), shuffleDescription = shuffleDescription, isMirrored = isMirrored)
+            } else {
+                content.songs.take(RandomPicksWidgetMetrics.rowsFitting(height)).forEach { song ->
+                    WidgetSongRow(title = song.title, artist = song.artist, number = null, link = song.link, isMirrored = isMirrored)
+                }
             }
             is RandomPicksContent.Message -> WidgetMessage(text = content.text)
             null -> WidgetMessage(text = LocalContext.current.getString(R.string.widget_open_app))
         }
     }
+}
+
+/** The compact layout's one [song], and the button that draws again beside it where [shuffleDescription] is given. */
+@Composable
+private fun CompactPick(
+    song: WidgetSnapshot.Song,
+    shuffleDescription: String?,
+    isMirrored: Boolean,
+) = Row(
+    modifier = GlanceModifier.fillMaxWidth(),
+    verticalAlignment = Alignment.CenterVertically,
+) {
+    if (isMirrored) ShuffleButton(shuffleDescription)
+    WidgetSongRow(
+        modifier = GlanceModifier.defaultWeight(),
+        title = song.title,
+        artist = song.artist,
+        number = null,
+        link = song.link,
+        isMirrored = isMirrored,
+    )
+    if (!isMirrored) ShuffleButton(shuffleDescription)
 }
 
 /**
