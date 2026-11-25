@@ -8,7 +8,8 @@
 
 """
 Renders each page `urls.tsv` names in headless Chrome and saves what a share or a copy of it would hand the app: its
-text as rendered (`innerText`), split into lines, its title, and its final address, as `pages/<id>.json`, and the page
+text as the app's own web views read it (`PAGE_SNAPSHOT_SCRIPT`, taken from `PageSnapshotScript.kt` so the two never
+differ: `innerText` with every element drawn and a raised inline chord set as a chord row), split into lines, its title, and its final address, as `pages/<id>.json`, and the page
 printed the way a browser prints it, as `printed/<id>.pdf` (Letter for English, A4 for the rest, the print stylesheet
 applied). A page already saved is skipped, so a run picks up where the last one stopped.
 
@@ -31,7 +32,17 @@ from playwright.async_api import async_playwright
 PARALLEL = 4
 TIMEOUT_MS = 30_000
 SETTLE_MS = 2_500
+SCRIPT_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "data", "source", "remote", "implementation", "src", "commonMain", "kotlin", "com", "pandulapeter", "campfire", "data", "source", "remote", "implementation", "page", "PageSnapshotScript.kt")
 CHALLENGES = ("just a moment", "attention required", "access denied", "are you a robot", "verify you are human", "captcha")
+
+
+def snapshot_script():
+    with open(SCRIPT_FILE, encoding="utf-8") as file:
+        source = file.read()
+    return source[source.index('"""') + 3 : source.rindex('"""')]
+
+
+SCRIPT = snapshot_script()
 
 
 def page_id(url):
@@ -69,7 +80,7 @@ async def collect(browser, corpus, row, statuses):
             pass
         await page.wait_for_timeout(SETTLE_MS)
         title = await page.title()
-        text = await page.evaluate("() => document.body ? document.body.innerText : ''")
+        text = json.loads(await page.evaluate(SCRIPT))["text"]
         lines = text.replace("\r\n", "\n").split("\n")
         if is_blocked(title, lines):
             statuses[identity] = "blocked"
