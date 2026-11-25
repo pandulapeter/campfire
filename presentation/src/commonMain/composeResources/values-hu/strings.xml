@@ -564,6 +564,7 @@
     <string name="settings_notation">Akkordjelölés</string>
     <string name="settings_notation_description">Hogyan legyenek írva az akkordok a dalok olvasásakor és szerkesztésekor. A dalok mindig szabványos jelöléssel mentődnek, így minden alkalmazásban ugyanúgy olvashatók.</string>
     <string name="settings_notation_choose">Jelölés kiválasztása</string>
+    <string name="settings_language_choose">Nyelv kiválasztása</string>
     <string name="settings_notation_standard">Szabványos</string>
     <string name="settings_notation_standard_description">C D E F G A B</string>
     <string name="settings_notation_german">Német</string>

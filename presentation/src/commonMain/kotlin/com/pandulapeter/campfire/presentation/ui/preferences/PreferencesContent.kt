@@ -79,6 +79,7 @@ internal fun PreferencesContent(
                     userPreferences = userPreferences,
                     preferencesController = preferencesController,
                     isPerformanceModeEnabled = isPerformanceModeEnabled,
+                    showDialog = showDialog,
                 )
                 PreferencesPage.SONG -> SongPreferencesPage(userPreferences = userPreferences, preferencesController = preferencesController)
                 PreferencesPage.CHORDS -> ChordsPreferencesPage(

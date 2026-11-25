@@ -604,6 +604,7 @@
     <string name="settings_notation">כתיב אקורדים</string>
     <string name="settings_notation_description">איך האקורדים כתובים בזמן קריאה ועריכה של שירים. השירים תמיד נשמרים בכתיב הרגיל, כך שהם נקראים אותו דבר בכל אפליקציה.</string>
     <string name="settings_notation_choose">בחירת כתיב</string>
+    <string name="settings_language_choose">בחירת שפה</string>
     <string name="settings_notation_standard">רגיל</string>
     <string name="settings_notation_standard_description">C D E F G A B</string>
     <string name="settings_notation_german">גרמני</string>

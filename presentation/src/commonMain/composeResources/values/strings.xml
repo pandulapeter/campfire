@@ -564,6 +564,7 @@
     <string name="settings_notation">Chord notation</string>
     <string name="settings_notation_description">How chords are written while you read and edit songs. Songs are always saved in standard notation, so they read the same in every app.</string>
     <string name="settings_notation_choose">Choose notation</string>
+    <string name="settings_language_choose">Choose language</string>
     <string name="settings_notation_standard">Standard</string>
     <string name="settings_notation_standard_description">C D E F G A B</string>
     <string name="settings_notation_german">German</string>

@@ -605,6 +605,7 @@
     <string name="settings_notation">Notația acordurilor</string>
     <string name="settings_notation_description">Cum sunt scrise acordurile cât citești și editezi cântece. Cântecele sunt salvate mereu în notația standard, ca să arate la fel în orice aplicație.</string>
     <string name="settings_notation_choose">Alege notația</string>
+    <string name="settings_language_choose">Alege limba</string>
     <string name="settings_notation_standard">Standard</string>
     <string name="settings_notation_standard_description">C D E F G A B</string>
     <string name="settings_notation_german">Germană</string>

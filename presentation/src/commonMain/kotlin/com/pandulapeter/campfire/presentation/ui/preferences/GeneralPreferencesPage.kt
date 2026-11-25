@@ -29,13 +29,20 @@ import com.pandulapeter.campfire.presentation.resources.settings_group_appearanc
 import com.pandulapeter.campfire.presentation.resources.settings_app_icon_window
 import com.pandulapeter.campfire.presentation.resources.settings_app_icon_window_description
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language
+import com.pandulapeter.campfire.presentation.resources.settings_language_choose
 import com.pandulapeter.campfire.presentation.resources.settings_tooltips
 import com.pandulapeter.campfire.presentation.resources.settings_tooltips_description
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color
 import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
 import com.pandulapeter.campfire.presentation.ui.components.preferences.BackgroundWarmthSlider
-import com.pandulapeter.campfire.presentation.ui.components.preferences.LanguageChoice
+import com.pandulapeter.campfire.presentation.ui.components.preferences.appLanguageName
+import com.pandulapeter.campfire.presentation.ui.components.controls.PickerChip
+import com.pandulapeter.campfire.presentation.ui.components.list.LIST_ITEM_KEYLINE
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
+import com.pandulapeter.campfire.data.model.preferences.AppLanguage
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.Modifier
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSubsection
 import com.pandulapeter.campfire.presentation.ui.components.SwitchListItem
 import com.pandulapeter.campfire.presentation.ui.components.preferences.ThemeColorChoice
@@ -57,6 +64,7 @@ internal fun GeneralPreferencesPage(
     userPreferences: UserPreferences?,
     preferencesController: PreferencesController,
     isPerformanceModeEnabled: Boolean,
+    showDialog: (DialogType) -> Unit,
 ) {
     AnimatedVisibility(
         visible = userPreferences?.areSongsEnabled != false,
@@ -70,7 +78,7 @@ internal fun GeneralPreferencesPage(
         )
     }
     AppearanceSection(preferencesController = preferencesController, userPreferences = userPreferences)
-    LanguageSection(preferencesController = preferencesController, userPreferences = userPreferences)
+    LanguageSection(userPreferences = userPreferences, showDialog = showDialog)
 }
 
 @Composable
@@ -121,14 +129,22 @@ private fun AppearanceSection(
     )
 }
 
+/**
+ * The language, as a chip naming it that opens the list of every one ([DialogType.AppLanguage]), as the notation's does:
+ * the list itself, a row per translation, was the longest thing on the page for a choice made once. The section keeps its
+ * title, so somebody who ended up in a language they cannot read still finds the chip by the language name it shows.
+ */
 @Composable
 private fun LanguageSection(
-    preferencesController: PreferencesController,
     userPreferences: UserPreferences?,
+    showDialog: (DialogType) -> Unit,
 ) = SettingsSection(title = stringResource(Res.string.settings_user_interface_language)) {
-    LanguageChoice(
-        selected = userPreferences?.language,
-        onSelected = preferencesController::setLanguage,
+    PickerChip(
+        modifier = Modifier.padding(horizontal = LIST_ITEM_KEYLINE),
+        text = appLanguageName(userPreferences?.language ?: AppLanguage.SYSTEM_DEFAULT),
+        onClickLabel = stringResource(Res.string.settings_language_choose),
+        // Over this page's sheet rather than in its place, so that picking one comes back here (DialogStack).
+        onClick = { showDialog(DialogType.AppLanguage) },
     )
 }
 

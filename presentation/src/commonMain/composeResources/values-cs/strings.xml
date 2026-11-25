@@ -600,6 +600,7 @@
     <string name="settings_notation">Zápis akordů</string>
     <string name="settings_notation_description">Jak se akordy zapisují, když písně čteš a upravuješ. Písně se vždy ukládají ve standardním zápisu, takže v každé aplikaci vypadají stejně.</string>
     <string name="settings_notation_choose">Vybrat zápis</string>
+    <string name="settings_language_choose">Vybrat jazyk</string>
     <string name="settings_notation_standard">Standardní</string>
     <string name="settings_notation_standard_description">C D E F G A B</string>
     <string name="settings_notation_german">Německý</string>

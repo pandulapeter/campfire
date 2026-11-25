@@ -232,6 +232,7 @@ private fun SettingsTabContent(
                 userPreferences = userPreferences,
                 preferencesController = viewModel.preferencesController,
                 isPerformanceModeEnabled = isPerformanceModeEnabled,
+                showDialog = viewModel.dialogHost::showDialog,
             )
             SettingsTab.SONG -> SongPreferencesPage(userPreferences = userPreferences, preferencesController = viewModel.preferencesController)
             SettingsTab.CHORDS -> ChordsPreferencesPage(

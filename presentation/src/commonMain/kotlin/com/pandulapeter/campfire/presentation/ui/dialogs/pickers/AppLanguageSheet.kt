@@ -27,9 +27,9 @@ import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
 
 /**
- * The languages of the interface, the Settings list in a sheet over the onboarding, so that a newcomer who was greeted
- * in the wrong one can change it before reading a question. A pick is written at once, which turns the sheet and the
- * page under it to the new language as it slides away.
+ * The languages of the interface in a sheet, opened from the language chip of the Preferences' General page and over the
+ * onboarding, so that a newcomer who was greeted in the wrong one can change it before reading a question. A pick is
+ * written at once, which turns the sheet and the page under it to the new language as it slides away.
  */
 @Composable
 internal fun AppLanguageSheet(

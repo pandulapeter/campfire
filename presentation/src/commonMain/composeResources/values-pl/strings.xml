@@ -595,6 +595,7 @@
     <string name="settings_notation">Zapis akordów</string>
     <string name="settings_notation_description">Jak zapisywane są akordy podczas czytania i edycji piosenek. Piosenki są zawsze zapisywane w notacji standardowej, więc w każdej aplikacji wyglądają tak samo.</string>
     <string name="settings_notation_choose">Wybierz zapis</string>
+    <string name="settings_language_choose">Wybierz język</string>
     <string name="settings_notation_standard">Standardowy</string>
     <string name="settings_notation_standard_description">C D E F G A B</string>
     <string name="settings_notation_german">Niemiecki</string>

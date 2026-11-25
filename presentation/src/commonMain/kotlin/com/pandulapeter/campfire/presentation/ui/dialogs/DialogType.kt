@@ -306,7 +306,10 @@ sealed interface DialogType {
     /** The developer's note asking a regular user to tell a friend about Campfire, shown once, see `SpreadTheWordController`. */
     data object SpreadTheWord : DialogType
 
-    /** The languages of the interface, opened from the onboarding's first page so that it can be read from the start. */
+    /**
+     * The languages of the interface, opened from the onboarding's first page so that it can be read from the start, and from
+     * the language chip of the Preferences' General page.
+     */
     data object AppLanguage : DialogType
 
     /** Every keyboard shortcut that works here, opened with Ctrl / Cmd + slash or `?`, and from Settings → About. */

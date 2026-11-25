@@ -566,6 +566,7 @@
     <string name="settings_notation">Notação dos acordes</string>
     <string name="settings_notation_description">Como os acordes são escritos enquanto você lê e edita músicas. As músicas são sempre salvas na notação padrão, para que fiquem iguais em qualquer app.</string>
     <string name="settings_notation_choose">Escolher notação</string>
+    <string name="settings_language_choose">Escolher idioma</string>
     <string name="settings_notation_standard">Padrão</string>
     <string name="settings_notation_standard_description">C D E F G A B</string>
     <string name="settings_notation_german">Alemã</string>

@@ -46,7 +46,7 @@ internal fun DialogType.stacksOver(parent: DialogType) = when (this) {
     // A chord and a scale lead to each other, and Back goes the way it came, through what the player opened on the way.
     is DialogType.Scale -> parent is DialogType.ChordShape || parent is DialogType.ChordReference
     is DialogType.ChordReference -> parent is DialogType.Scale
-    is DialogType.Notation -> parent is DialogType.Preferences
+    is DialogType.Notation, is DialogType.AppLanguage -> parent is DialogType.Preferences
     is DialogType.Instrument, is DialogType.Tuning -> parent is DialogType.Preferences || parent is DialogType.Playing || parent is DialogType.Tuner
     is DialogType.Tuner -> parent is DialogType.Playing
     is DialogType.OpenSourceLicense -> parent is DialogType.OpenSourceLicenses

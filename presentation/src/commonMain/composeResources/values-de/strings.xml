@@ -564,6 +564,7 @@
     <string name="settings_notation">Akkordschreibweise</string>
     <string name="settings_notation_description">Wie Akkorde beim Lesen und Bearbeiten von Songs geschrieben werden. Gespeichert werden Songs immer in der Standardschreibweise, damit sie in jeder App gleich aussehen.</string>
     <string name="settings_notation_choose">Schreibweise wählen</string>
+    <string name="settings_language_choose">Sprache wählen</string>
     <string name="settings_notation_standard">Standard</string>
     <string name="settings_notation_standard_description">C D E F G A B</string>
     <string name="settings_notation_german">Deutsch</string>
