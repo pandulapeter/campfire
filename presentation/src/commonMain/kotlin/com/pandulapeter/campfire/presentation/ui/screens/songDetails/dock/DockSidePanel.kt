@@ -90,7 +90,7 @@ internal fun DockSidePanel(
                 card()
                 Crossfade(targetState = targetPage) { page ->
                     DockPanelControls(
-                        modifier = Modifier.padding(horizontal = DOCK_PANEL_PADDING).padding(top = PANEL_VERTICAL_PADDING),
+                        modifier = Modifier.padding(horizontal = DOCK_PANEL_PADDING).padding(top = DOCK_VERTICAL_PADDING),
                         content = dock.contents[page],
                         metronome = metronome,
                         layout = layout,
@@ -108,7 +108,9 @@ internal fun DockSidePanel(
             ) {
                 Crossfade(targetState = targetPage) { page ->
                     DockPanelRows(
-                        modifier = Modifier.padding(vertical = PANEL_VERTICAL_PADDING),
+                        // As far from the controls and the panel's end as the rows under the song are from each other
+                        // and from their surface's edge, and as the panel's sides are (DOCK_PANEL_PADDING).
+                        modifier = Modifier.padding(top = DOCK_ROW_GAP, bottom = DOCK_VERTICAL_PADDING),
                         content = dock.contents[page],
                         stepper = dock.steppers[page],
                         scrollState = scrollState,
@@ -124,5 +126,3 @@ internal fun DockSidePanel(
 
 /** The side panel's layout and width as [DockSidePanel] last drew them. Not a state. */
 private class LastDockPanel(var layout: DockLayout? = null, var width: Dp = 0.dp)
-
-private val PANEL_VERTICAL_PADDING = 12.dp
