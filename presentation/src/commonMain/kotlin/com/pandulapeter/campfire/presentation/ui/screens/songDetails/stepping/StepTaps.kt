@@ -24,6 +24,7 @@ import androidx.compose.ui.input.pointer.PointerType
 import androidx.compose.ui.input.pointer.isPrimaryPressed
 import androidx.compose.ui.input.pointer.pointerInput
 import kotlin.math.abs
+import kotlin.math.roundToInt
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -76,7 +77,8 @@ internal fun Modifier.stepOnTap(
                 // presses report no mouse buttons (Android's button state is 0 for a finger), so only a mouse is asked
                 // which one it was; currentEvent is the event the down came in.
                 val isOtherMouseButton = down.type == PointerType.Mouse && !currentEvent.buttons.isPrimaryPressed
-                if (isOtherMouseButton || currentIsMovingFreely()) return@awaitEachGesture
+                if (isOtherMouseButton) return@awaitEachGesture
+                if (currentIsMovingFreely()) return@awaitEachGesture logDroppedTap("the song was moving freely")
                 val isSteppingOn = currentIsStepping()
                 val origin = currentStepOrigin()
                 val readsLeftwards = currentStepsAcross()
@@ -89,8 +91,8 @@ internal fun Modifier.stepOnTap(
                 var up: PointerInputChange
                 while (true) {
                     val event = awaitPointerEvent()
-                    if (event.changes.any { it.id != down.id && it.pressed }) return@awaitEachGesture
-                    val change = event.changes.firstOrNull { it.id == down.id } ?: return@awaitEachGesture
+                    if (event.changes.any { it.id != down.id && it.pressed }) return@awaitEachGesture logDroppedTap("a second pointer")
+                    val change = event.changes.firstOrNull { it.id == down.id } ?: return@awaitEachGesture logDroppedTap("the pointer was lost")
                     if (!change.pressed) {
                         up = change
                         break
@@ -101,7 +103,10 @@ internal fun Modifier.stepOnTap(
                 // inside takes the up, since the scroll and the pager only fling on it, so a consumed one is the
                 // cancellation Compose makes up when the system takes the pointer away: Android's home and back
                 // gestures start as an ordinary press and slide on the window, and are short enough to pass for a tap.
-                if (up.isConsumed) return@awaitEachGesture
+                if (up.isConsumed) {
+                    if (isDragged) logDroppedTap("cancelled by the system")
+                    return@awaitEachGesture
+                }
                 val direction = when (readsLeftwards) {
                     null -> if (down.position.y < size.height / 2f) -1 else 1
                     false -> if (down.position.x < size.width / 2f) -1 else 1
@@ -111,7 +116,7 @@ internal fun Modifier.stepOnTap(
                 val duration = up.uptimeMillis - down.uptimeMillis
                 val isSideways: Boolean
                 if (!isDragged) {
-                    if (duration >= viewConfiguration.longPressTimeoutMillis) return@awaitEachGesture
+                    if (duration >= viewConfiguration.longPressTimeoutMillis) return@awaitEachGesture logDroppedTap("a long press ($duration ms)")
                     up.consume()
                     if (!isSteppingOn) {
                         currentOnStep(direction, origin)
@@ -120,14 +125,21 @@ internal fun Modifier.stepOnTap(
                     isSideways = false
                 } else {
                     val travel = up.position - down.position
-                    if (duration > SLOPPY_TAP_MAX_MILLIS || travel.getDistance() > extent * SLOPPY_TAP_MAX_TRAVEL_FRACTION) return@awaitEachGesture
+                    val reach = travel.getDistance() / extent
+                    if (duration > SLOPPY_TAP_MAX_MILLIS || reach > SLOPPY_TAP_MAX_TRAVEL_FRACTION) {
+                        // Only a near miss is logged: a slide over twice either limit is a drag or a fling, made on purpose.
+                        if (duration <= SLOPPY_TAP_MAX_MILLIS * 2 && reach <= SLOPPY_TAP_MAX_TRAVEL_FRACTION * 2) {
+                            logDroppedTap("a slide of $duration ms and ${(reach * 100).roundToInt()}% of the ${if (readsLeftwards == null) "height" else "width"}")
+                        }
+                        return@awaitEachGesture
+                    }
                     isSideways = abs(travel.x) > abs(travel.y)
                 }
                 launch {
                     withFrameNanos { }
                     if (isSideways) {
                         snapshotFlow { pagerState.isScrollInProgress }.first { !it }
-                        if (pagerState.currentPage != page) return@launch
+                        if (pagerState.currentPage != page) return@launch logDroppedTap("the slide turned the page")
                     }
                     currentOnStep(direction, origin)
                 }
@@ -135,6 +147,13 @@ internal fun Modifier.stepOnTap(
         }
     }
 }
+
+/**
+ * A breadcrumb for a press on the song that did not step it, by the [reason] it was dropped for, so that a reader's report
+ * of taps going missing can be told from the log. Only presses that could have been meant as a tap are logged: one a
+ * button or another child took was answered there, and a right or middle click is no tap.
+ */
+private fun logDroppedTap(reason: String) = println("Step tap dropped: $reason")
 
 private const val SLOPPY_TAP_MAX_MILLIS = 250L
 private const val SLOPPY_TAP_MAX_TRAVEL_FRACTION = 0.1f

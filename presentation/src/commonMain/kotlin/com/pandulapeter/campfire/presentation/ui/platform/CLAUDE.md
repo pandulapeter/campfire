@@ -115,10 +115,10 @@ Web: `createImageBitmap` and a canvas, outside the Wasm heap; HEIC only in Safar
 - Actions are recorded where they take effect, never per button: `logBreadcrumbs` for the start, screens and dialogs
   (class names, kept through R8 by `app/android/proguard-rules.pro`), changed setting names (`changedPropertyNames`,
   values never), the export format, the metronome, the tuner, imports, and the song filter;
-  `MessageSink.launchLibraryChange`'s `action` for every library write; exports, share links, searches opened, and sync
-  at their own sources, counts only (the connection's state, why a run starts and retries, each pass's plan, the synced
-  settings and shared copies steps, the change feed `Sync feed:`, the shared links list `Sharing:`). Kinds, counts, and
-  names; never typed text or a song's content.
+  `MessageSink.launchLibraryChange`'s `action` for every library write; exports, share links, searches opened, dropped
+  step taps (`songDetails/stepping`), and sync at their own sources, counts only (the connection's state, why a run
+  starts and retries, each pass's plan, the synced settings and shared copies steps, the change feed `Sync feed:`, the
+  shared links list `Sharing:`). Kinds, counts, and names; never typed text or a song's content.
 - Android and desktop: `System.out` / `System.err` mirrored into `campfire.log` (`noBackupFilesDir` on Android), flushed
   per finished line, so the lines before an uncaught exception are in the file; the previous uncaught exception handler
   still runs.

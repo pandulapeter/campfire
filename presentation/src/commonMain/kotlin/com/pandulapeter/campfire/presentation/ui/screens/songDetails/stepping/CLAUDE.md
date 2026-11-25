@@ -44,6 +44,10 @@ Pedal stepping and snapping, over the `SongRows` the layout reports (`ui/songVie
   right), only for taps nothing inside consumed; never a long press, a right or middle click, a fling-stopping press,
   or one the system cancelled. A drag under 250 ms and a tenth of the height (a strip's width) is still a tap (a
   strumming hand slides), stepping from where the song was at finger-down and replacing the fling.
+- **Every press that could have been a tap and did not step leaves a breadcrumb** (`Step tap dropped:`) with its reason:
+  the song moving freely (a fling stopped), a second pointer, a lost or system-cancelled pointer, a long press, a slide
+  past the tap limits but within twice them (a real drag or fling is not logged), or a sideways slide that turned the
+  page. A press a child took, and a right or middle click, are no lost tap.
 - **A fling goes no further than one step**; a drag goes anywhere. Not in a column scrolling by itself (`autoScroll/`).
 - The buttons take no focus; the screen retakes lost focus while uncovered, or the next arrow is spent on a focus search.
 - **A held step key is one step until released** (window focus loss counts as a release): key repeats would chain
