@@ -15,6 +15,15 @@ import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasScrollAction
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.onFirst
+import androidx.compose.ui.test.performTouchInput
+import com.pandulapeter.campfire.screenshots.opensTempoSheet
+import com.pandulapeter.campfire.screenshots.scrollIntoView
+import kotlin.test.assertEquals
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.performMouseInput
@@ -97,6 +106,44 @@ internal class AutoScrollTest {
         assertTrue(abs(two - 2 * one) <= 1f, "Two quick presses nudged the song $two, not twice the $one of one press.")
     }
 
+    @Test
+    fun `a chord's sheet opened from the dock pauses the song until it is put away, and the Tempo sheet stops it`() = runAppTest(
+        window = TestWindow.PHONE,
+        songs = listOf(LONG_SONG_FILE),
+        songLayout = SongLayout.CONTINUOUS,
+    ) {
+        openSong(LONG_SONG_TITLE)
+        val chordCell = hasText(DOCK_CHORD) and hasClickAction() and hasAnyAncestor(hasScrollAction())
+        scrollIntoView(chordCell)
+        mainClock.autoAdvance = false
+        try {
+            onRoot().performKeyInput { pressKey(Key.Spacebar) }
+            mainClock.advanceTimeBy(SHEET_MILLIS)
+            onAllNodes(chordCell).onFirst().performTouchInput { click() }
+            mainClock.advanceTimeBy(SHEET_MILLIS)
+            val paused = scroll()
+            mainClock.advanceTimeBy(SHEET_MILLIS)
+            assertEquals(paused, scroll(), "The song went on scrolling under the chord's sheet.")
+            pressBack()
+            mainClock.advanceTimeBy(SHEET_MILLIS)
+            val resumed = scroll()
+            mainClock.advanceTimeBy(SHEET_MILLIS)
+            assertTrue(scroll() > resumed, "The song did not play on once the chord's sheet was put away.")
+            onNode(opensTempoSheet()).performTouchInput { click() }
+            mainClock.advanceTimeBy(SHEET_MILLIS)
+            pressBack()
+            mainClock.advanceTimeBy(SHEET_MILLIS)
+            val stopped = scroll()
+            mainClock.advanceTimeBy(SHEET_MILLIS)
+            assertEquals(stopped, scroll(), "The song played on after the Tempo sheet, which stops it.")
+        } finally {
+            mainClock.advanceTimeByFrame()
+            mainClock.autoAdvance = true
+        }
+    }
+
+    private fun AppTestScope.scroll() = checkNotNull(songViewport()).scroll()
+
     /** The pieces of the song in the order they are read, and which of them is the topmost one wholly on screen. */
     private class TopmostLine(val keys: List<Pair<String, Int>>, val index: Int)
 
@@ -134,6 +181,12 @@ internal class AutoScrollTest {
             }
     }
 }
+
+/** A chord of the song that is not its key, so that only its diagram in the dock is named by it alone. */
+private const val DOCK_CHORD = "C"
+
+/** Long enough for a sheet to come up or go, and for a playing song to move. */
+private const val SHEET_MILLIS = 1_500L
 
 private const val LONG_SONG_FILE = "campfire_tests-the_long_road_north.cho"
 private const val LONG_SONG_TITLE = "The Long Road North"

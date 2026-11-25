@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.autoScroll.autoScrollCoverOf
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.autoScroll.rememberSongAutoScrolling
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.readAfterDock
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.SongDock
@@ -179,7 +180,7 @@ internal fun SongDetailsScreen(
     val isUncovered = isSongDetailsUncovered(visibleDialog, viewModel.navigator.backStack.lastOrNull())
     val autoScrolling = rememberSongAutoScrolling(
         userPreferences = userPreferences,
-        isUncovered = isUncovered,
+        cover = autoScrollCoverOf(visibleDialog, viewModel.navigator.backStack.lastOrNull()),
         playback = viewModel.navigator.autoScrollPlayback,
         currentPage = pagerState.currentPage,
         songFileName = currentSong?.fileName,

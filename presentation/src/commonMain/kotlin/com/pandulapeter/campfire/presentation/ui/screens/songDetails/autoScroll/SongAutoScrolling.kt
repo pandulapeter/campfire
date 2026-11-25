@@ -64,6 +64,9 @@ internal class SongAutoScrolling(private val coroutineScope: CoroutineScope) {
     /** The speed the song on screen plays at, in percent of its own pace. */
     val speed get() = song?.let { (fileName, stored) -> draggedSpeed?.takeIf { it.first == fileName }?.second ?: stored } ?: SongLayout.DEFAULT_AUTO_SCROLL_SPEED
 
+    /** Whether playing was paused under a dock's sheet ([pauseUnderSheet]), to go on once it is put away; any other stop forgets it. */
+    private var isPausedUnderSheet = false
+
     /** Starts playing where the song is, where there is anything left to play, and stops it if it is playing. */
     fun togglePlaying() {
         isPlaying = !isPlaying && scroller?.canPlay == true
@@ -74,8 +77,25 @@ internal class SongAutoScrolling(private val coroutineScope: CoroutineScope) {
      * way never ends on its own.
      */
     fun pause() {
+        isPausedUnderSheet = false
         isPlaying = false
         writeDraggedSpeed()
+    }
+
+    /** Pauses playing under a chord's or a scale's sheet ([AutoScrollCover.DOCK_SHEET]), to go on once it is put away. */
+    fun pauseUnderSheet() {
+        if (!isPlaying) return
+        pause()
+        isPausedUnderSheet = true
+        println("Auto scroll: paused under a sheet")
+    }
+
+    /** Plays on where [pauseUnderSheet] paused it and nothing has stopped it since. */
+    fun resumeAfterSheet() {
+        if (!isPausedUnderSheet) return
+        isPausedUnderSheet = false
+        isPlaying = scroller?.canPlay == true
+        println("Auto scroll: played on after a sheet")
     }
 
     /** Moves the song a little in [direction], answering false where it is already at that end. */
@@ -121,8 +141,8 @@ internal class SongAutoScrolling(private val coroutineScope: CoroutineScope) {
 
 /**
  * The [SongAutoScrolling] of a song details screen, playing [songFileName]'s page at its stored speed while the songs
- * are laid out in one column. The page being changed ([currentPage]), anything drawn over the screen ([isUncovered]
- * false: a sheet, a dialog, another screen), and the app leaving it (`ON_STOP`, which a window minimised or a tab hidden
+ * are laid out in one column. The page being changed ([currentPage]), anything drawn over the screen ([cover]: a sheet, a
+ * dialog, another screen) but a chord's or a scale's sheet, which only pauses it until it is put away, and the app leaving it (`ON_STOP`, which a window minimised or a tab hidden
  * also is) stop it, as the song being laid out in pages again does: nobody reads a song moving under something else.
  * So does the first step back while it plays, before a second one leaves the screen: the back gesture, which it answers
  * itself, and the ways back [playback] hands it (the desktop's Escape, the app bar's arrow, the browser's Back).
@@ -131,7 +151,7 @@ internal class SongAutoScrolling(private val coroutineScope: CoroutineScope) {
 @Composable
 internal fun rememberSongAutoScrolling(
     userPreferences: UserPreferences?,
-    isUncovered: Boolean,
+    cover: AutoScrollCover,
     playback: AutoScrollPlayback,
     currentPage: Int,
     songFileName: String?,
@@ -148,7 +168,13 @@ internal fun rememberSongAutoScrolling(
     // Only a speed handed over from a preview is still unwritten as another song comes on screen.
     LaunchedEffect(songFileName) { autoScrolling.writeDraggedSpeed() }
     LaunchedEffect(currentPage, isContinuous) { autoScrolling.pause() }
-    LaunchedEffect(isUncovered) { if (!isUncovered) autoScrolling.pause() }
+    LaunchedEffect(cover) {
+        when (cover) {
+            AutoScrollCover.NONE -> autoScrolling.resumeAfterSheet()
+            AutoScrollCover.DOCK_SHEET -> autoScrolling.pauseUnderSheet()
+            AutoScrollCover.OTHER -> autoScrolling.pause()
+        }
+    }
     LifecycleEventEffect(Lifecycle.Event.ON_STOP) { autoScrolling.pause() }
     LaunchedEffect(songFileName, storedSpeed) { autoScrolling.settleDraggedSpeed() }
     DisposableEffect(playback, autoScrolling.isPlaying) {

@@ -50,7 +50,9 @@ the next share a height, so any motion takes away what is still to be read.
   on from where it is headed. Past either end they go on to the setlist's neighbour as a step does.
 - It stops only when asked, at the song's end, on another page, with the layout back to pages, under anything drawn over
   the screen, or on `ON_STOP` (another app, a minimised window, a hidden tab); it never starts by itself, nor again once
-  what covered it has gone.
+  what covered it has gone. **A chord's or a scale's sheet only pauses it** (`AutoScrollCover`, tested: over song
+  details they open only from the dock, and one opened from another is still one): it plays on once the sheet is put
+  away, unless anything else stopped it meanwhile (another cover, the page, `ON_STOP`). Breadcrumbs: `Auto scroll: …`.
 - **The first step back while it plays stops it**; only the next leaves the screen. The back gesture is the screen's own
   `NavigationBackHandler`, so a predictive one turns the button to play while dragged (and back if cancelled); Escape and
   the app bar's arrow reach it through `Navigator.navigateBack` (`AutoScrollPlayback`), the web's Back through a history
