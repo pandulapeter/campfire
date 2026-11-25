@@ -14,8 +14,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.FlowRowScope
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -28,22 +30,20 @@ import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.So
 import com.pandulapeter.campfire.presentation.ui.songView.rememberChordCells
 
 /**
- * The side panel's contents for one song's [content], top to bottom: what starts the dock ([DockStart]) and the tempo
- * chip ([DockTempoChip]), wrapping onto a second line where the two do not fit beside each other, then the scale chips
- * wrapping, each group's title on a line of its own, then the diagrams at the Chords section's size in a grid, every chord
- * of the song. The controls are centred, the panel being as wide as the tempo chip (`dockPanelWidthOf`), which keeps it
- * with the metronome all it holds too: the metronome panel the rows under the song get then has no room here. Rows the
- * switches leave out are left out here too ([rows]). Nothing scrolls sideways: on a page turn the panel
- * ([scrollState]) scrolls only as far as brings the first chord of the page the reader is headed for into view, which
- * the page's [stepper] says, as the strip under the song scrolls to it.
+ * What scrolls in the side panel for one song's [content], under its controls ([DockPanelControls]): the scale chips as
+ * one row scrolling sideways, as under the song, since wrapped onto the panel's narrow lines they broke into ragged
+ * stacks, then the diagrams at the Chords section's size in a grid, every chord of the song. Rows the switches leave out
+ * are left out here too ([rows]). On a page turn the scale row scrolls to the headed page's group, and the panel
+ * ([scrollState]) only as far as brings the first chord of that page into view, which the page's [stepper] says, as the
+ * strip under the song scrolls to it.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun DockPanelRows(
     modifier: Modifier = Modifier,
     content: DockContent?,
     stepper: SongStepper?,
     scrollState: ScrollState,
-    metronome: DockMetronome,
     rows: DockRows,
     layout: DockLayout,
 ) = Column(
@@ -51,23 +51,32 @@ internal fun DockPanelRows(
     verticalArrangement = Arrangement.spacedBy(PANEL_ROW_GAP),
 ) {
     if (content == null) return@Column
-    val cells = rememberChordCells(content.model, content.chordDiagrams)
-    val dockKey = remember(content.playingControls, content.model) { dockKeyOf(content.playingControls, content.model) }
-    val hasStart = dockKey != null || content.hasInstrumentTools(keyOpensPlaying = dockKey?.opensPlaying == true)
-    val tempo = content.tempo
-    if (hasStart || tempo != null) {
-        PanelFlowRow(isCentered = true) {
-            if (hasStart) DockStart(content = content, dockKey = dockKey, height = layout.rowHeight)
-            if (tempo != null) DockTempoChip(tempo = tempo, metronome = metronome, height = layout.rowHeight)
+    val model = content.model
+    val headedSection by remember(stepper) { derivedStateOf { stepper?.headedSection } }
+    if (rows.hasScaleRow) {
+        val scaleGroups = model.scaleGroups
+        val headedGroup = remember(scaleGroups, headedSection) { headedSection?.let { scaleGroupAt(scaleGroups, it) } }
+        val scaleScroll = rememberScrollState()
+        DockScrollingRow(
+            height = layout.rowHeight,
+            horizontalPadding = PaddingValues(horizontal = DOCK_PANEL_PADDING),
+            scrollState = scaleScroll,
+            start = null,
+            end = null,
+        ) {
+            DockScaleChips(content = content, scrollState = scaleScroll, headedGroup = headedGroup)
         }
     }
-    if (rows.hasScaleRow) PanelFlowRow { DockScaleChips(content = content, isNarrow = true) }
     if (rows.hasChordRow) {
-        val model = content.model
-        val headedSection by remember(stepper) { derivedStateOf { stepper?.headedSection } }
+        val cells = rememberChordCells(model, content.chordDiagrams)
         val names = remember(cells) { cells.mapTo(mutableSetOf()) { it.name } }
         val headedChord = remember(model, names, headedSection) { headedSection?.let { section -> firstChordFrom(model.sections, section, names) } }
-        PanelFlowRow {
+        FlowRow(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = DOCK_PANEL_PADDING),
+            horizontalArrangement = Arrangement.spacedBy(DOCK_ITEM_GAP),
+            verticalArrangement = Arrangement.spacedBy(DOCK_ITEM_GAP),
+            itemVerticalAlignment = Alignment.CenterVertically,
+        ) {
             DockDiagramStrip(
                 cells = cells,
                 isSmall = false,
@@ -82,19 +91,5 @@ internal fun DockPanelRows(
         }
     }
 }
-
-/** One of the side panel's rows, whose items wrap onto as many lines as they need, each line [isCentered] or from the start. */
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun PanelFlowRow(
-    isCentered: Boolean = false,
-    content: @Composable FlowRowScope.() -> Unit,
-) = FlowRow(
-    modifier = Modifier.fillMaxWidth(),
-    horizontalArrangement = if (isCentered) Arrangement.spacedBy(DOCK_ITEM_GAP, Alignment.CenterHorizontally) else Arrangement.spacedBy(DOCK_ITEM_GAP),
-    verticalArrangement = Arrangement.spacedBy(DOCK_ITEM_GAP),
-    itemVerticalAlignment = Alignment.CenterVertically,
-    content = content,
-)
 
 private val PANEL_ROW_GAP = 16.dp

@@ -1,0 +1,52 @@
+/*
+ * This file is part of Campfire.
+ * Copyright (c) Pandula Péter 2017-2026.
+ * https://github.com/pandulapeter/campfire
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * https://mozilla.org/MPL/2.0/.
+ */
+package com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+
+/**
+ * The top of the side panel for one song's [content], which stays put while what is under it scrolls
+ * ([DockPanelRows]): what starts the dock ([DockStart]) over the tempo chip ([DockTempoChip]), centred. The key chip
+ * stands over the tuner's pill naming the tuning, as at the start of the rows' diagram row ([DockKeyAndTuner]), each a
+ * row tall and as wide as the tempo chip, which the panel is made as wide as (`dockPanelWidthOf`), so the three read as
+ * one column of controls. With the metronome all it holds the tempo chip is there too: the metronome panel the rows
+ * under the song get has no room here.
+ */
+@Composable
+internal fun DockPanelControls(
+    modifier: Modifier = Modifier,
+    content: DockContent?,
+    metronome: DockMetronome,
+    layout: DockLayout,
+) = Column(
+    modifier = modifier.fillMaxWidth(),
+    verticalArrangement = Arrangement.spacedBy(KEY_AND_TUNER_GAP),
+    horizontalAlignment = Alignment.CenterHorizontally,
+) {
+    if (content == null) return@Column
+    val dockKey = remember(content.playingControls, content.model) { dockKeyOf(content.playingControls, content.model) }
+    if (dockKey != null || content.hasInstrumentTools(keyOpensPlaying = dockKey?.opensPlaying == true)) {
+        DockStart(
+            modifier = Modifier.fillMaxWidth(),
+            content = content,
+            dockKey = dockKey,
+            height = layout.rowHeight,
+            tallHeight = layout.rowHeight * 2 + KEY_AND_TUNER_GAP,
+            pillWidth = dockTempoChipWidth(),
+        )
+    }
+    content.tempo?.let { tempo -> DockTempoChip(tempo = tempo, metronome = metronome, height = layout.rowHeight) }
+}

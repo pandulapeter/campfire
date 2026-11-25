@@ -28,8 +28,7 @@ app bar's metronome panel.
   window holding the narrowest column (`MIN_COLUMN_WIDTH`) and the step buttons beside the panel, its side insets left
   out: that song is read by its height and never wider than a column, so the rows would cost every screen lines for
   nothing. **As wide as the chip-high tempo chip** (`dockTempoChipWidth`, measured at the interface's text size) within
-  8 dp each side, so the pill sits in it evenly, never narrower than two full-size diagrams (`dockPanelWidthOf`), the
-  controls' line centred; with the metronome alone it shows that chip too, the metronome panel having no room there.
+  8 dp each side, so the pill sits in it evenly, never narrower than two full-size diagrams (`dockPanelWidthOf`).
   The switch travels: the rows shrink away as the panel slides in, the end inset passing between them
   (`PaddingBesidePanel`) so the song's start never moves.
 - **A setlist's pager bar is its last row** (`lastRow`), stacked at the panel's foot (`isStacked`). **An import
@@ -57,7 +56,11 @@ app bar's metronome panel.
   (`PAGE_HORIZONTAL_PADDING`, 8 dp past the insets) and the import preview's card; the rows are as far from the
   surface's top and, at a window's edge with no bottom inset, its bottom (`DOCK_VERTICAL_PADDING`); over an inset (a
   navigation bar) half that, the inset parting them from the edge (`dockBottomPaddingOf`).
-- **The panel's rows** (`DockPanelRows`) wrap rather than scroll; the panel scrolls as one where the height runs out.
+- **The panel's controls stay put** (`DockPanelControls`): the key chip over the tuner's pill naming the tuning, as in
+  the diagram row, then the tempo chip, all three a row tall and the tempo chip's width, centred (with the metronome
+  alone too: the metronome panel has no room there). **Under them scroll** (`DockPanelRows`) the scale chips, one row
+  scrolling sideways as under the song (wrapped onto the panel's lines they broke into ragged stacks), and the diagrams
+  in a grid, fading under the controls and, only over a bottom inset, at the bottom, padded by the inset.
 
 ## Its contents
 

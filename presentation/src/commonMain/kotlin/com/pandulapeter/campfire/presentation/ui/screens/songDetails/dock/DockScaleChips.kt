@@ -14,7 +14,6 @@ import com.pandulapeter.campfire.presentation.ui.songView.model.RenderSection
 import androidx.compose.foundation.ScrollState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -37,16 +36,13 @@ import com.pandulapeter.campfire.presentation.ui.chords.ScaleChip
  * row is the screen's rather than the song's. Emits nothing where the scale suggestions are off.
  *
  * Where [scrollState] is given, the row is the chips' own, and it scrolls itself to [headedGroup] (the index of the group
- * of the page the reader is headed for, [scaleGroupAt]) whenever that changes, and only then. In the side panel's
- * narrow rows, which wrap ([isNarrow]), each group's title starts a line of its own, over its chips, and the chips' names
- * are a size smaller, so that a common one ("D major pentatonic") keeps to one line.
+ * of the page the reader is headed for, [scaleGroupAt]) whenever that changes, and only then.
  */
 @Composable
 internal fun DockScaleChips(
     content: DockContent,
     scrollState: ScrollState? = null,
     headedGroup: Int? = null,
-    isNarrow: Boolean = false,
 ) {
     val suggestions = content.scaleSuggestions ?: return
     val groups = content.model.scaleGroups
@@ -76,7 +72,7 @@ internal fun DockScaleChips(
         }
         if (title != null) {
             Text(
-                modifier = first.semantics { heading() }.then(if (isNarrow) Modifier.fillMaxWidth() else Modifier),
+                modifier = first.semantics { heading() },
                 text = title,
                 style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -102,7 +98,6 @@ internal fun DockScaleChips(
                     println("Dock: scale chip")
                     suggestions.onScaleClicked(scaleId, rootName, suggestions.capo)
                 },
-                textStyle = if (isNarrow) MaterialTheme.typography.labelMedium else MaterialTheme.typography.labelLarge,
             )
         }
     }

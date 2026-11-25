@@ -36,7 +36,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.pandulapeter.campfire.presentation.ui.components.fadingVerticalEdges
+import com.pandulapeter.campfire.presentation.ui.components.fadingOverNavigationBar
 
 /**
  * The dock as a side panel at the end of the song (this package's `CLAUDE.md`), where a wide window puts it
@@ -44,8 +44,10 @@ import com.pandulapeter.campfire.presentation.ui.components.fadingVerticalEdges
  * inset of [contentPadding] included. It grows in from the screen's end edge and shrinks back into it as the window
  * switches between the panel and the rows under the song, its content laid out at its full width all the while, so that
  * it slides rather than reflows. Its contents are the song's that the pager is on or heading for ([targetPage]),
- * crossfading as a page turns ([DockPanelRows]), under an import preview's [card], scrolling as one where the window is
- * too short for them; [lastRow] is a setlist's pager bar, which ends the panel below what scrolls. Read by screen readers
+ * crossfading as a page turns: under an import preview's [card], the controls stay put ([DockPanelControls]) and the
+ * scale chips and diagrams scroll under them where the window is too short for them ([DockPanelRows]), fading out under
+ * the controls, and at the bottom only over the window's bottom inset, which they scroll on under and are padded by;
+ * [lastRow] is a setlist's pager bar, which ends the panel below what scrolls. Read by screen readers
  * after the app bar and before the song, as the rows under the song are.
  */
 @Composable
@@ -81,24 +83,35 @@ internal fun DockSidePanel(
                     traversalIndex = DOCK_TRAVERSAL_INDEX
                 },
         ) {
-            val scrollState = rememberScrollState()
             val endInset = contentPadding.calculateEndPadding(LocalLayoutDirection.current)
+            // Over a setlist's pager bar the panel ends at the bar, not at the window's edge.
+            val bottomInset = if (lastRow == null) contentPadding.calculateBottomPadding() else 0.dp
+            Column(modifier = Modifier.fillMaxWidth().padding(end = endInset)) {
+                card()
+                Crossfade(targetState = targetPage) { page ->
+                    DockPanelControls(
+                        modifier = Modifier.padding(horizontal = DOCK_PANEL_PADDING).padding(top = PANEL_VERTICAL_PADDING),
+                        content = dock.contents[page],
+                        metronome = metronome,
+                        layout = layout,
+                    )
+                }
+            }
+            val scrollState = rememberScrollState()
             Column(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
-                    .fadingVerticalEdges(scrollState = scrollState, backgroundColor = MaterialTheme.colorScheme.surfaceContainer)
+                    .fadingOverNavigationBar(scrollState = scrollState, backgroundColor = MaterialTheme.colorScheme.surfaceContainer, bottomInset = bottomInset)
                     .verticalScroll(scrollState)
-                    .padding(end = endInset, bottom = if (lastRow == null) contentPadding.calculateBottomPadding() else 0.dp),
+                    .padding(end = endInset, bottom = bottomInset),
             ) {
-                card()
                 Crossfade(targetState = targetPage) { page ->
                     DockPanelRows(
-                        modifier = Modifier.padding(horizontal = DOCK_PANEL_PADDING, vertical = PANEL_VERTICAL_PADDING),
+                        modifier = Modifier.padding(vertical = PANEL_VERTICAL_PADDING),
                         content = dock.contents[page],
                         stepper = dock.steppers[page],
                         scrollState = scrollState,
-                        metronome = metronome,
                         rows = dock.rows,
                         layout = layout,
                     )

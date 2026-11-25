@@ -24,6 +24,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.localization.stringResource
@@ -41,17 +42,19 @@ import org.jetbrains.compose.resources.painterResource
  * The start of the diagram row, as tall as the diagrams ([height]): the key chip ([DockKeyChip], opening the Playing
  * sheet) over a pill of the tuner ([DockTunerPill]), two controls of one width each with a container of its own, rather
  * than a key set large in a card as tall as the row, which wasted its room on one letter. The tuner pill names the tuning
- * the strings are tuned to, which the diagrams beside it are drawn for.
+ * the strings are tuned to, which the diagrams beside it are drawn for. As wide as the wider of the two, unless
+ * [modifier] sets a width (the side panel's).
  */
 @Composable
 internal fun DockKeyAndTuner(
+    modifier: Modifier = Modifier,
     dockKey: DockKey,
     chordDiagrams: ChordDiagrams,
     height: Dp,
     onPlayingClicked: () -> Unit,
     onTunerClicked: () -> Unit,
 ) = Column(
-    modifier = Modifier.height(height).width(IntrinsicSize.Max),
+    modifier = modifier.height(height).width(IntrinsicSize.Max),
     verticalArrangement = Arrangement.spacedBy(KEY_AND_TUNER_GAP, Alignment.CenterVertically),
 ) {
     val pillHeight = minOf((height - KEY_AND_TUNER_GAP) / 2, MAX_PILL_HEIGHT)
@@ -91,11 +94,12 @@ private fun DockTunerPill(
             },
             style = MaterialTheme.typography.labelLarge,
             maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }
 
-private val KEY_AND_TUNER_GAP = 6.dp
+internal val KEY_AND_TUNER_GAP = 6.dp
 
 /** As tall as a pill reads as one in the full-size diagram row, rather than as a card. */
 private val MAX_PILL_HEIGHT = 40.dp
