@@ -17,12 +17,16 @@ fast_checks
 # the modules a change reaches: a few seconds when none, under a minute for :presentation. The UI tests take minutes and
 # stay in CI. Git holds the checkout's index lock for as long as this hook runs, so a tree .githooks/verify already
 # checked is not built again: the lock is then held for seconds rather than for a build. Anything else is built here,
-# reading the working tree, which is what the staged files are unless a commit stages part of a file.
+# reading the working tree, which is what the staged files are unless a commit stages part of a file. A run of small
+# commits landed together may skip Gradle each (CAMPFIRE_DEFER_GRADLE=1 git commit …) and build only their last, clean,
+# with .githooks/verify --branch before landing: one build instead of one per commit.
 if [ -n "$(staged_code)" ]; then
     tree=$(git write-tree)
     record="$(verified_trees)/$tree"
     if [ -e "$record" ]; then
         rm -f "$record"
+    elif [ "${CAMPFIRE_DEFER_GRADLE:-}" = 1 ]; then
+        echo "Gradle deferred: run .githooks/verify --branch before landing this branch."
     else
         gradle_queued spotlessCheck desktopTest --quiet
     fi

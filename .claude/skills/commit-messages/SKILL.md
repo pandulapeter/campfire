@@ -18,6 +18,12 @@ while the pre-commit hook builds, and each one's tests ran over the others' half
 - **Land each commit right away**: `git rebase main` in the worktree, then `git -C <main checkout> merge --ff-only
   <branch>`; if `main` moved in between, rebase again. A merge the main checkout's own uncommitted files refuse is the
   user's to resolve: ask. Never push unless asked.
+- **A run of small fixes landed together** (a review's list, a lane) builds once, not once per commit: commit each with
+  `CAMPFIRE_DEFER_GRADLE=1 git commit -m "…"` (the hook's fast checks still run), then `git rebase main` and
+  `.githooks/verify --branch` on the last, with nothing uncommitted, before landing them. A failure is fixed in a commit
+  of its own on top.
+- **A subagent in a harness-isolated worktree cannot reach the main checkout** (its sandbox refuses `git -C`): it commits,
+  rebases on `main`, and reports its branch; the parent lands it and removes the worktree and branch.
 - **Never touch another session's locks**: a `.git/index.lock` or a slot in `.git/gradle-slots` belongs to a running
   process (the queue takes over a dead one's slot itself).
 - **When the task is done**, `git worktree remove` the worktree and `git branch -d` its branch.

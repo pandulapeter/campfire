@@ -15,6 +15,18 @@
 set -e
 cd "$(git rev-parse --show-toplevel)"
 . "$(dirname "$0")/lib.sh"
+# --branch checks the commit checked out instead, for commits made with CAMPFIRE_DEFER_GRADLE=1 (pre-commit): run once
+# on the last of them, with nothing staged or changed beside it, before they land.
+if [ "${1:-}" = --branch ]; then
+    if ! git diff --quiet HEAD -- . ':(exclude)*.md' ||
+        [ -n "$(git ls-files --others --exclude-standard | grep -vE '\.md$' || true)" ]; then
+        echo "Files besides Markdown differ from the commit checked out and would be built along with it; commit or move them first." >&2
+        exit 1
+    fi
+    gradle_queued spotlessCheck desktopTest --quiet
+    echo "Verified $(git rev-parse --short HEAD); the branch can land."
+    exit 0
+fi
 fast_checks
 if [ -z "$(staged_code)" ]; then
     echo "Nothing staged for Gradle to check; commit away."
