@@ -11,28 +11,18 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 
-/**
- * Which of the tools song details has: its click ([isMetronomeEnabled]), the dock's way to the tuner ([isTunerEnabled]),
- * and whether the menu holds the tuner instead ([isTunerInMenu]).
- */
+/** Which of the tools song details has: its click in the dock ([isMetronomeEnabled]) and the tuner in its menu ([isTunerInMenu]). */
 internal data class SongDetailsTools(
     val isMetronomeEnabled: Boolean,
-    val isTunerEnabled: Boolean,
     val isTunerInMenu: Boolean,
 )
 
 /**
- * The tools of song details under [userPreferences]: the Metronome and Tuner features, less what the Song page's Dock
- * section leaves out of this screen alone (the tabs keep theirs). The dock is there wherever the chords
- * ([shouldShowChords]) or the click are, and where it holds no tuner the menu does, so the tuner is never out of reach.
+ * The tools of song details under [userPreferences]: the Metronome feature less what the Song page's Dock section leaves
+ * out of this screen alone (the tab keeps it), and the Tuner feature, whose way in is always the song's menu (and the
+ * Playing sheet's tuning row), never an import preview's, which has no tuner.
  */
-internal fun songDetailsToolsOf(userPreferences: UserPreferences?, shouldShowChords: Boolean): SongDetailsTools {
-    val isMetronomeEnabled = userPreferences?.isMetronomeEnabled != false && userPreferences?.isDockMetronomeEnabled != false
-    val isTunerFeatureEnabled = userPreferences?.isTunerEnabled != false
-    val isTunerEnabled = isTunerFeatureEnabled && userPreferences?.isDockTunerEnabled != false
-    return SongDetailsTools(
-        isMetronomeEnabled = isMetronomeEnabled,
-        isTunerEnabled = isTunerEnabled,
-        isTunerInMenu = isTunerFeatureEnabled && !(isTunerEnabled && (shouldShowChords || isMetronomeEnabled)),
-    )
-}
+internal fun songDetailsToolsOf(userPreferences: UserPreferences?, isImportPreview: Boolean) = SongDetailsTools(
+    isMetronomeEnabled = userPreferences?.isMetronomeEnabled != false && userPreferences?.isDockMetronomeEnabled != false,
+    isTunerInMenu = userPreferences?.isTunerEnabled != false && !isImportPreview,
+)

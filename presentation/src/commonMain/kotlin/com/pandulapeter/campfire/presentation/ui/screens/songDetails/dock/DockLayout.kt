@@ -20,36 +20,31 @@ import com.pandulapeter.campfire.presentation.ui.songView.MIN_COLUMN_WIDTH
 
 /**
  * How the song's chords are shown in the dock, from the most room to the least: diagrams at the size the song's Chords
- * section draws them, smaller diagrams, or a chip per chord naming it, in the row the playing controls are in (a short
- * window's, and an import preview's, whose card takes the room of a second row).
+ * section draws them, smaller diagrams, or a chip per chord naming it, in the one row the scale chips and the tempo chip
+ * share (a short window's, and an import preview's, whose card takes the room of a second row).
  */
 internal enum class DockTier { FULL_DIAGRAMS, SMALL_DIAGRAMS, CHORD_CHIPS }
 
 /**
  * The rows the dock has, decided by the screen's switches and never by the song, so that its height stays the same as a
- * setlist's pages turn: the playing controls ([hasPlayingRow]: the chords or the metronome on), the song's chords
- * ([hasChordRow]: chord diagrams on, on an instrument with shapes), and its scale suggestions ([hasScaleRow]).
- * [isMetronomeOnly] where the click is all the playing controls hold (the chords off), which makes the one row the
- * metronome panel. [hasTempo] where the playing controls hold the tempo chip (the metronome on, never in an import
- * preview).
+ * setlist's pages turn: the song's chords ([hasChordRow]: chord diagrams on, on an instrument with shapes), its scale
+ * suggestions ([hasScaleRow]), and the click's tempo chip ([hasTempo]: the metronome on, never in an import preview).
+ * The key chip is the app bar's and the tuner the menu's and the Playing sheet's, so nothing else is the dock's.
  */
 @Immutable
 internal data class DockRows(
-    val hasPlayingRow: Boolean,
     val hasChordRow: Boolean,
     val hasScaleRow: Boolean,
-    val isMetronomeOnly: Boolean = false,
-    val hasTempo: Boolean = true,
+    val hasTempo: Boolean,
 ) {
     /**
-     * Where the playing controls would be the dock's only row and hold nothing but the key chip (and the tuner, and the
-     * instrument pill of an instrument without shapes): a whole surface spent on one chip, which the app bar holds
-     * instead, so the dock is gone.
+     * Where the click is all the dock holds (neither diagrams nor scale suggestions): its one row is then the metronome
+     * panel, which has the room for the stepper and the accents a chip has not.
      */
-    val isKeyOnly get() = hasPlayingRow && !hasTempo && !hasChordRow && !hasScaleRow
+    val isMetronomeOnly get() = hasTempo && !hasChordRow && !hasScaleRow
 
-    /** No row at all, or one the app bar holds instead ([isKeyOnly]): no dock. */
-    val isEmpty get() = isKeyOnly || (!hasPlayingRow && !hasChordRow && !hasScaleRow)
+    /** No row at all: no dock. */
+    val isEmpty get() = !hasChordRow && !hasScaleRow && !hasTempo
 }
 
 /**
@@ -87,7 +82,7 @@ internal fun dockBudgetOf(windowHeight: Dp, turnsByColumn: Boolean, hasPagerBar:
  * its side), whose every line is a page's worth of room, and an import preview, whose card takes the dock's room. Any
  * other gets diagrams: at their full size where they fit the budget, else smaller ones however
  * little room there is, a long song taking up to two pages more for them on an upright phone. Null where there is no row
- * at all, or only the key chip's, which the app bar holds instead ([DockRows.isKeyOnly]): no dock. A window that gives the dock a side panel ([isDockSidePanel]) has none of this.
+ * at all: no dock. A window that gives the dock a side panel ([isDockSidePanel]) has none of this.
  */
 internal fun dockLayoutOf(
     rows: DockRows,
@@ -99,9 +94,9 @@ internal fun dockLayoutOf(
     if (rows.isEmpty) return null
     val padding = DOCK_VERTICAL_PADDING + bottomPadding
     val oneRow = DockLayout(DockTier.CHORD_CHIPS, height = padding + rowHeight, rowHeight = rowHeight, bottomPadding = bottomPadding)
-    // The playing controls and the scale chips share the first row, so only the chords can ask for a second.
+    // The scale chips and the tempo chip share the one row, so only the diagrams can ask for a second.
     if (!rows.hasChordRow || isOneRow) return oneRow
-    // Without scale suggestions, the key chip and the click's controls stand at the diagram row's ends instead.
+    // Without scale suggestions, the diagram row is the only one, the tempo chip at its end.
     val firstRow = if (rows.hasScaleRow) rowHeight + DOCK_ROW_GAP else 0.dp
     val (full, small) = listOf(DockTier.FULL_DIAGRAMS to FULL_DIAGRAMS_PAST_ROW, DockTier.SMALL_DIAGRAMS to SMALL_DIAGRAMS_PAST_ROW).map { (tier, pastRow) ->
         // A row of diagrams is a line of names, as tall as the row's text, over the diagrams.
@@ -115,8 +110,8 @@ internal fun dockLayoutOf(
  * Whether the dock is a side panel at the end of the song rather than rows under it, never decided by the song.
  *
  * Only where its [rows] have the diagrams ([DockRows.hasChordRow]), which are what fill a panel as tall as the song:
- * without them it would hold only the key chip and the tempo chip, and with the metronome alone it would lose the
- * stepper and the accents of the metronome panel under the song, so those keep the one row under the song.
+ * without them it would hold only the tempo chip, and with the metronome alone it would lose the stepper and the
+ * accents of the metronome panel under the song, so those keep the one row under the song.
  *
  * Laid out in pages, only in a wide window ([WindowSize.EXPANDED], 840 dp and wider, where the editor's split panes
  * start), whatever its height, whose song has width to spare beside the panel and keeps all of its height. A narrower
@@ -135,8 +130,9 @@ internal fun isDockSidePanel(rows: DockRows, windowWidth: Dp, sideInsets: Dp, pa
 }
 
 /**
- * The dock as a side panel for [rows], its chips and controls [rowHeight] tall and its diagrams at the Chords section's
- * size, which a panel as tall as the window has room for; null where there is no row at all, which is no dock.
+ * The dock as a side panel for [rows], its chips [rowHeight] tall and its diagrams at the Chords section's size, which a
+ * panel as tall as the window has room for, as is the tempo chip at its foot; null where there is no row at all, which is
+ * no dock.
  */
 internal fun dockPanelLayoutOf(rows: DockRows, rowHeight: Dp = DOCK_ROW_HEIGHT): DockLayout? = if (rows.isEmpty) {
     null
@@ -145,10 +141,10 @@ internal fun dockPanelLayoutOf(rows: DockRows, rowHeight: Dp = DOCK_ROW_HEIGHT):
 }
 
 /**
- * How wide the side panel's content is, its padding left out: the tempo chip ([tempoChipWidth], `dockTempoChipWidth`)
- * or two diagrams of a fretted instrument at the Chords section's size side by side with room to spare, so that they
- * never wrap onto lines of one for a pixel's rounding, whichever is wider. Its pills are stretched to it. No wider than
- * the tempo chip needs: a 1024 × 720 window's songs take a page more past 176 dp (`PageCountTest`).
+ * How wide the side panel's content is, its padding left out: the tall tempo chip at its foot ([tempoChipWidth],
+ * `dockTallTempoChipWidth`) or two diagrams of a fretted instrument at the Chords section's size side by side with room
+ * to spare, so that they never wrap onto lines of one for a pixel's rounding, whichever is wider. The tempo chip is
+ * stretched to it. No wider than that: a 1024 × 720 window's songs take a page more past 176 dp (`PageCountTest`).
  */
 internal fun dockPanelContentWidthOf(tempoChipWidth: Dp) = maxOf(tempoChipWidth, DOCK_DIAGRAM_CELL_WIDTH * 2 + DOCK_ITEM_GAP + DIAGRAMS_SPARE_ROOM)
 
@@ -159,7 +155,7 @@ internal fun dockPanelWidthOf(tempoChipWidth: Dp) = dockPanelContentWidthOf(temp
 internal val DOCK_PANEL_PADDING = 8.dp
 
 private val DIAGRAMS_SPARE_ROOM = 8.dp
-/** A row of chips or playing controls at the interface's own text size: as tall as a chip, and as the controls. */
+/** A row of chips at the interface's own text size: as tall as a chip, and as the chip-high tempo chip. */
 internal val DOCK_ROW_HEIGHT = 32.dp
 internal val DOCK_ROW_GAP = 8.dp
 

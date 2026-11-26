@@ -37,6 +37,7 @@ import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.ui.components.fadingOverNavigationBar
+import com.pandulapeter.campfire.presentation.ui.components.fadingVerticalEdges
 
 /**
  * The dock as a side panel at the end of the song (this package's `CLAUDE.md`), where a wide window puts it
@@ -44,11 +45,13 @@ import com.pandulapeter.campfire.presentation.ui.components.fadingOverNavigation
  * inset of [contentPadding] included. It grows in from the screen's end edge and shrinks back into it as the window
  * switches between the panel and the rows under the song, its content laid out at its full width all the while, so that
  * it slides rather than reflows. Its contents are the song's that the pager is on or heading for ([targetPage]),
- * crossfading as a page turns: under an import preview's [card], the controls stay put ([DockPanelControls]) and the
- * diagrams scroll under them where the window is too short for them ([DockPanelRows]), fading out under
- * the controls, and at the bottom only over the window's bottom inset, which they scroll on under and are padded by;
- * [lastRow] is a setlist's pager bar, which ends the panel below what scrolls. Read by screen readers
- * after the app bar and before the song, as the rows under the song are.
+ * crossfading as a page turns: under an import preview's [card], the diagrams in a grid ([DockPanelRows]), scrolling
+ * where the window is too short for them, and at its foot the tempo chip, as tall as a row of diagrams and as wide as the
+ * panel, standing still in the panel's bottom end corner as it does at the end of the rows' diagram row. What scrolls
+ * fades out where it meets the panel's top and the tempo chip, or without one at the bottom only over the window's
+ * bottom inset, which it scrolls on under and is padded by. A setlist's pager bar ([hasPagerBar]) stands under the panel
+ * and the song alike, so the panel then ends at it rather than at the window's edge. Read by screen readers after the
+ * app bar and before the song, as the rows under the song are.
  */
 @Composable
 internal fun DockSidePanel(
@@ -57,8 +60,8 @@ internal fun DockSidePanel(
     metronome: DockMetronome,
     contentPadding: PaddingValues,
     targetPage: Int,
+    hasPagerBar: Boolean,
     card: @Composable () -> Unit,
-    lastRow: (@Composable () -> Unit)?,
 ) {
     // Kept while the panel leaves, so that it shrinks away as it was rather than as nothing.
     val last = remember { LastDockPanel() }
@@ -84,42 +87,58 @@ internal fun DockSidePanel(
                 },
         ) {
             val endInset = contentPadding.calculateEndPadding(LocalLayoutDirection.current)
-            // Over a setlist's pager bar the panel ends at the bar, not at the window's edge.
-            val bottomInset = if (lastRow == null) contentPadding.calculateBottomPadding() else 0.dp
+            val bottomInset = if (hasPagerBar) 0.dp else contentPadding.calculateBottomPadding()
+            val hasTempo = dock.rows.hasTempo
             Column(modifier = Modifier.fillMaxWidth().padding(end = endInset)) {
                 card()
-                Crossfade(targetState = targetPage) { page ->
-                    DockPanelControls(
-                        modifier = Modifier.padding(horizontal = DOCK_PANEL_PADDING).padding(top = DOCK_VERTICAL_PADDING),
-                        content = dock.contents[page],
-                        metronome = metronome,
-                        layout = layout,
-                    )
-                }
             }
             val scrollState = rememberScrollState()
+            val background = MaterialTheme.colorScheme.surfaceContainer
             Column(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
-                    .fadingOverNavigationBar(scrollState = scrollState, backgroundColor = MaterialTheme.colorScheme.surfaceContainer, bottomInset = bottomInset)
+                    .then(
+                        if (hasTempo) {
+                            Modifier.fadingVerticalEdges(scrollState = scrollState, backgroundColor = background)
+                        } else {
+                            Modifier.fadingOverNavigationBar(scrollState = scrollState, backgroundColor = background, bottomInset = bottomInset)
+                        },
+                    )
                     .verticalScroll(scrollState)
-                    .padding(end = endInset, bottom = bottomInset),
+                    .padding(end = endInset, bottom = if (hasTempo) 0.dp else bottomInset),
             ) {
-                if (dock.rows.hasChordRow) {
-                    Crossfade(targetState = targetPage) { page ->
-                        DockPanelRows(
-                            // As far from the controls and the panel's end as the rows under the song are from each
-                            // other and from their surface's edge, and as the panel's sides are (DOCK_PANEL_PADDING).
-                            modifier = Modifier.padding(top = DOCK_ROW_GAP, bottom = DOCK_VERTICAL_PADDING),
-                            content = dock.contents[page],
-                            stepper = dock.steppers[page],
-                            layout = layout,
+                Crossfade(targetState = targetPage) { page ->
+                    DockPanelRows(
+                        // As far from the panel's top and the tempo chip as the rows under the song are from their
+                        // surface's edge, and as the panel's sides are (DOCK_PANEL_PADDING).
+                        modifier = Modifier.padding(vertical = DOCK_VERTICAL_PADDING),
+                        content = dock.contents[page],
+                        stepper = dock.steppers[page],
+                        layout = layout,
+                    )
+                }
+            }
+            if (hasTempo) {
+                Crossfade(
+                    modifier = Modifier
+                        .padding(end = endInset, bottom = bottomInset)
+                        .padding(horizontal = DOCK_PANEL_PADDING)
+                        .padding(bottom = DOCK_VERTICAL_PADDING),
+                    targetState = targetPage,
+                ) { page ->
+                    dock.contents[page]?.tempo?.let { tempo ->
+                        DockTempoChip(
+                            modifier = Modifier.fillMaxWidth(),
+                            tempo = tempo,
+                            metronome = metronome,
+                            height = layout.diagramRowHeight,
+                            isTall = true,
+                            isStretched = true,
                         )
                     }
                 }
             }
-            lastRow?.invoke()
         }
     }
 }

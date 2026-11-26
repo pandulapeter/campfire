@@ -559,7 +559,6 @@
     <string name="settings_scale_suggestions_description">Pokazuje skale, na których można grać każdą część utworu, a na karcie akordu skale dla tego akordu.</string>
     <string name="settings_group_dock">Dock</string>
     <string name="settings_dock_metronome_description">Pokazuje tempo utworu i odtwarza jego klik przy utworze. Karta Metronom pozostaje bez zmian.</string>
-    <string name="settings_dock_tuner_description">Pokazuje drogę do stroika. Bez niej stroik jest w menu utworu.</string>
     <string name="settings_setlists_description">Karta Setlisty i dodawanie piosenek do setlist. Po wyłączeniu są tylko ukryte: żadna setlista nie zostanie usunięta.</string>
     <string name="settings_random_picks_description">Pięć losowych piosenek na początku listy liczącej ponad 20, nowe co godzinę</string>
     <string name="settings_song_details_lookup">Szczegóły piosenki z sieci</string>
@@ -1265,6 +1264,7 @@
     <string name="song_details_lookup_nothing_new">To nagranie nie wnosi nic, czego nie ma już w formularzu</string>
     <string name="song_details_lookup_attribution">Dane z MusicBrainz i iTunes.</string>
     <string name="song_details_capo">Kapodaster %1$d</string>
+    <string name="song_details_capo_short">Kapo %1$d</string>
     <string name="song_details_tempo">%1$s BPM</string>
     <string name="song_details_time">%1$s</string>
     <string name="song_details_key_change">Tonacja: %1$s</string>

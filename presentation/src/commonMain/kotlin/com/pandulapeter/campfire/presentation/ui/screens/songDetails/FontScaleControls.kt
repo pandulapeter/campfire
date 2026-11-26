@@ -19,10 +19,6 @@ import com.pandulapeter.campfire.presentation.resources.ic_text_increase
 import com.pandulapeter.campfire.presentation.resources.song_details_text_size_decrease
 import com.pandulapeter.campfire.presentation.resources.song_details_text_size_increase
 import com.pandulapeter.campfire.presentation.resources.song_details_text_size_reset
-import androidx.compose.ui.unit.dp
-import com.pandulapeter.campfire.presentation.ui.components.controls.STEPPER_BUTTON_LENGTH
-import com.pandulapeter.campfire.presentation.ui.components.controls.STEPPER_RESET_MARK_WIDTH
-import com.pandulapeter.campfire.presentation.ui.components.controls.STEPPER_VALUE_MIN_WIDTH
 import com.pandulapeter.campfire.presentation.ui.components.controls.Stepper
 import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
 import com.pandulapeter.campfire.presentation.ui.fontScale.FONT_SCALE_STEP
@@ -60,16 +56,3 @@ internal fun FontScaleControls(
 }
 
 private fun fontScaleLabel(fontScale: Float) = "${(fontScale * 100).roundToInt()}%"
-
-/**
- * How wide `250%`, the widest text size, is written in the stepper's value style, measured in the bundled Inter. The
- * stepper exactly fits the read only app bar of the smallest supported phone, so a change of the font or the style
- * measures it again rather than guessing.
- */
-private val WIDEST_FONT_SCALE_LABEL_WIDTH = 42.dp
-
-/**
- * How wide [FontScaleControls] is drawn, for the app bar that has to leave its title room beside it: its buttons and the
- * room its value keeps for the widest text size with the reset icon.
- */
-internal val FONT_SCALE_STEPPER_WIDTH = STEPPER_BUTTON_LENGTH * 2 + maxOf(STEPPER_VALUE_MIN_WIDTH, WIDEST_FONT_SCALE_LABEL_WIDTH + STEPPER_RESET_MARK_WIDTH)

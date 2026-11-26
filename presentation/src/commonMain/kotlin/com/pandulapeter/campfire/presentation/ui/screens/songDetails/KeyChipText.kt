@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock
+package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
 import androidx.compose.runtime.Immutable
 import com.pandulapeter.campfire.presentation.ui.playing.transpositionLabel
@@ -16,21 +16,19 @@ import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongPlayi
 import com.pandulapeter.campfire.presentation.ui.songView.model.SongLyricsModel
 
 /**
- * What the dock's key chip says: the key the page's chords are in ([key], as the transposition stepper named it, its
- * semitones where the song names no key, null where there is neither) and the capo the song is played at where it is
- * not zero, which is always on screen. [transposition] is the semitones the song is moved by ("+2") beside a named key,
- * so that a moved song says so without the sheet; null where it is not moved, or where [key] already is the semitones.
- * [opensPlaying] where the chip opens the Playing sheet, never in read only mode, whose sheet would write overrides.
- * [shapesKey] is the key of the shapes fingered above the [capo] where [key] names what sounds, which a chip as tall as
- * the diagram row says under the key ("Capo 2 (Am shapes)").
+ * What the app bar's key chip ([KeyChip]) says: the key the page's chords are in ([key], as the transposition stepper
+ * named it, its semitones where the song names no key, null where there is neither) and the capo the song is played at
+ * where it is not zero, which is always on screen. [transposition] is the semitones the song is moved by ("+2") beside a
+ * named key, so that a moved song says so without the sheet; null where it is not moved, or where [key] already is the
+ * semitones. [opensPlaying] where the chip opens the Playing sheet, never in read only mode, whose sheet would write
+ * overrides.
  */
 @Immutable
-internal data class DockKey(
+internal data class KeyChipText(
     val key: String?,
     val capo: Int?,
     val opensPlaying: Boolean,
     val transposition: String? = null,
-    val shapesKey: String? = null,
 )
 
 /**
@@ -38,20 +36,19 @@ internal data class DockKey(
  * song as the page shows it: the shapes' key where the chords are named by them, else the key that sounds). None with
  * the chords off, and none in read only mode where there is no key and no capo to say.
  */
-internal fun dockKeyOf(controls: SongPlayingControls?, model: SongLyricsModel): DockKey? {
+internal fun keyChipTextOf(controls: SongPlayingControls?, model: SongLyricsModel): KeyChipText? {
     if (!model.shouldShowChords) return null
     if (controls != null) {
         val keyControl = controls.key
         val capo = controls.capo?.capo?.fret?.takeIf { it != 0 }
-        return DockKey(
+        return KeyChipText(
             key = keyControl?.let { transpositionValue(it.transposition, it.key) },
             capo = capo,
-            shapesKey = controls.capo?.shapesKey?.takeIf { capo != null && it.isNotBlank() },
             opensPlaying = controls.onPlayingClicked != null,
             transposition = keyControl?.takeIf { it.transposition != 0 && !it.key.isNullOrBlank() }?.let { transpositionLabel(it.transposition, null) },
         )
     }
     val key = (model.shapesKey ?: model.song.metadata.key)?.takeIf { it.isNotBlank() }
     val capo = model.song.metadata.capo?.takeIf { it != 0 && model.isCapoShown }
-    return if (key == null && capo == null) null else DockKey(key = key, capo = capo, opensPlaying = false)
+    return if (key == null && capo == null) null else KeyChipText(key = key, capo = capo, opensPlaying = false)
 }

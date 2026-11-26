@@ -11,7 +11,6 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock
 
 import androidx.compose.runtime.Immutable
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongPlayingControls
-import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongPlayingTools
 import com.pandulapeter.campfire.presentation.ui.songView.model.ChordDiagrams
 import com.pandulapeter.campfire.presentation.ui.songView.model.ScaleSuggestions
 import com.pandulapeter.campfire.presentation.ui.songView.model.SongLyricsModel
@@ -22,18 +21,16 @@ import com.pandulapeter.campfire.presentation.ui.songView.model.SongLyricsModel
  * they left the song for the dock.
  *
  * @param playingControls What sets the key, the capo, the tempo, and the time signature, null in read only mode, whose
- *   key chip reads them from the song instead.
- * @param playingTools The tuner, null in an import preview.
+ *   key chip (the app bar's, which reads it from here) reads them from the song instead.
  * @param tempo What the tempo chip says and opens, null with the metronome switched off and in an import preview, which
  *   has no metronome.
- * @param chordDiagrams What the diagrams are drawn with, and the instrument pill, null with the diagrams off.
+ * @param chordDiagrams What the diagrams are drawn with, null with the diagrams off.
  * @param scaleSuggestions What the scale chips open, null with the scale suggestions off.
  */
 @Immutable
 internal data class DockContent(
     val model: SongLyricsModel,
     val playingControls: SongPlayingControls?,
-    val playingTools: SongPlayingTools?,
     val tempo: DockTempo?,
     val chordDiagrams: ChordDiagrams?,
     val scaleSuggestions: ScaleSuggestions?,

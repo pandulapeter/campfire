@@ -19,7 +19,7 @@ import kotlin.test.assertTrue
 
 internal class DockLayoutTest {
 
-    private val everyRow = DockRows(hasPlayingRow = true, hasChordRow = true, hasScaleRow = true)
+    private val everyRow = DockRows(hasChordRow = true, hasScaleRow = true, hasTempo = true)
 
     @Test
     fun `an upright phone gets smaller diagrams in two rows however it is read`() {
@@ -76,19 +76,17 @@ internal class DockLayoutTest {
     }
 
     @Test
-    fun `a playing row holding only the key chip is no dock since the app bar stands in for it`() {
-        val keyOnly = DockRows(hasPlayingRow = true, hasChordRow = false, hasScaleRow = false, hasTempo = false)
-        assertTrue(keyOnly.isKeyOnly)
-        assertNull(dockLayoutOf(keyOnly, 1000.dp, isOneRow = false))
-        assertNull(dockLayoutOf(keyOnly, 1000.dp, isOneRow = true))
-        listOf(keyOnly.copy(hasTempo = true), keyOnly.copy(hasChordRow = true), keyOnly.copy(hasScaleRow = true)).forEach { rows ->
-            assertFalse(rows.isKeyOnly, "$rows")
-            assertEquals(DockTier.CHORD_CHIPS, dockLayoutOf(rows, 1000.dp, isOneRow = true)?.tier, "$rows")
+    fun `the click alone is the metronome panel in one row`() {
+        val metronomeOnly = NO_ROW.copy(hasTempo = true)
+        assertTrue(metronomeOnly.isMetronomeOnly)
+        assertEquals(DockTier.CHORD_CHIPS, dockLayoutOf(metronomeOnly, 1000.dp, isOneRow = false)?.tier)
+        listOf(metronomeOnly.copy(hasChordRow = true), metronomeOnly.copy(hasScaleRow = true)).forEach { rows ->
+            assertFalse(rows.isMetronomeOnly, "$rows")
         }
     }
 
     @Test
-    fun `no row is no dock`() = assertNull(dockLayoutOf(DockRows(hasPlayingRow = false, hasChordRow = false, hasScaleRow = false), 1000.dp, isOneRow = false))
+    fun `no row is no dock`() = assertNull(dockLayoutOf(NO_ROW, 1000.dp, isOneRow = false))
 
     @Test
     fun `a wide window gets the side panel whatever its height`() {
@@ -119,8 +117,8 @@ internal class DockLayoutTest {
 
     @Test
     fun `a dock without diagrams keeps its row under the song in any window`() {
-        val withoutDiagrams = DockRows(hasPlayingRow = true, hasChordRow = false, hasScaleRow = true)
-        val metronomeOnly = DockRows(hasPlayingRow = true, hasChordRow = false, hasScaleRow = false, isMetronomeOnly = true)
+        val withoutDiagrams = DockRows(hasChordRow = false, hasScaleRow = true, hasTempo = true)
+        val metronomeOnly = NO_ROW.copy(hasTempo = true)
         listOf(withoutDiagrams, metronomeOnly).forEach { rows ->
             assertFalse(isDockSidePanel(rows = rows, windowWidth = 1280.dp, sideInsets = 0.dp, panelWidth = PANEL_WIDTH, isContinuous = false))
             assertFalse(isDockSidePanel(rows = rows, windowWidth = 1280.dp, sideInsets = 0.dp, panelWidth = PANEL_WIDTH, isContinuous = true))
@@ -128,7 +126,7 @@ internal class DockLayoutTest {
     }
 
     @Test
-    fun `the side panel is as wide as the tempo chip but never narrower than two diagrams with room to spare`() {
+    fun `the side panel is as wide as the tall tempo chip but never narrower than two diagrams with room to spare`() {
         assertEquals(dockPanelWidthOf(tempoChipWidth = 0.dp), dockPanelWidthOf(tempoChipWidth = 100.dp))
         assertTrue(dockPanelContentWidthOf(tempoChipWidth = 0.dp) > DOCK_DIAGRAM_CELL_WIDTH * 2 + DOCK_ITEM_GAP)
         assertEquals(200.dp, dockPanelContentWidthOf(tempoChipWidth = 200.dp))
@@ -138,7 +136,7 @@ internal class DockLayoutTest {
     @Test
     fun `the side panel draws full diagrams and is no dock without a row`() {
         assertEquals(DockTier.FULL_DIAGRAMS, dockPanelLayoutOf(everyRow)?.tier)
-        assertNull(dockPanelLayoutOf(DockRows(hasPlayingRow = false, hasChordRow = false, hasScaleRow = false)))
+        assertNull(dockPanelLayoutOf(NO_ROW))
     }
 
     @Test
@@ -153,7 +151,9 @@ internal class DockLayoutTest {
 
 private val PANEL_WIDTH = dockPanelWidthOf(tempoChipWidth = 130.dp)
 
-private val WITH_DIAGRAMS = DockRows(hasPlayingRow = true, hasChordRow = true, hasScaleRow = true)
+private val WITH_DIAGRAMS = DockRows(hasChordRow = true, hasScaleRow = true, hasTempo = true)
+
+private val NO_ROW = DockRows(hasChordRow = false, hasScaleRow = false, hasTempo = false)
 
 private fun isPagedSidePanel(windowWidth: Dp) =
     isDockSidePanel(rows = WITH_DIAGRAMS, windowWidth = windowWidth, sideInsets = 0.dp, panelWidth = PANEL_WIDTH, isContinuous = false)

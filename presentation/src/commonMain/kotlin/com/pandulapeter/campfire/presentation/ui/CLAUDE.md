@@ -115,15 +115,15 @@ Tags, languages, cover, and links are directives in the song file, so they trave
 
 ## How a song is played
 
-- Song details' dock under the song (`screens/songDetails/dock`) starts with the key chip: the key of the page's chords
-  and, wherever it is not zero, the capo. It opens the **Playing sheet** (`dialogs/playing`: the instrument
-  and tuning, and the transposition and capo steppers, `songView/firstSection`'s), read only mode's opening nothing; the
-  tuner is the dock's own. A dock that would hold only the key chip leaves it, and the tuner, to the app bar. The **tempo chip** ends it: the page's tempo, the bar lit while the click plays, and play and stop; the
-  chip opens the **Tempo sheet** (`dialogs/playing`: the tempo stepper ending in Tap, the song's accents, and play and
+- Song details' app bar (`screens/songDetails`) holds the key chip: the key of the page's chords and, wherever it is not
+  zero, the capo. It opens the **Playing sheet** (`dialogs/playing`: the instrument and tuning with the tuner after them,
+  and the transposition and capo steppers, `songView/firstSection`'s), read only mode's opening nothing; the song's
+  menu holds the tuner too. The dock under the song (`screens/songDetails/dock`) ends in the **tempo chip**: the page's
+  tempo, the bar lit while the click plays, and play and stop; the chip opens the **Tempo sheet** (`dialogs/playing`: the tempo stepper ending in Tap, the song's accents, and play and
   stop), read only mode's opening nothing. Both end in a quiet line (`OverridesNote`, scrolling with them) saying where
   what they change is kept, the setlist's entry or else the app, the accents always the app (`UserPreferences.beatLevels`),
-  and that the song file stays as it is; the Playing sheet's leaves with its steppers, the instrument being every song's. With the chords off the dock is the metronome panel itself. The dock and the sheets are drawn
-  at the interface's text size, never the song's; the editor's preview shows the four values in its About the song
+  and that the song file stays as it is; the Playing sheet's leaves with its steppers, the instrument being every song's. Without diagrams and scale suggestions the dock is the metronome panel
+  itself. The key chip, the dock, and the sheets are drawn at the interface's text size, never the song's; the editor's preview shows the four values in its About the song
   tiles.
 - Transposition, capo, and tempo are overridden per setlist or per device (`ui/playing`); **only the time signature is
   written into the file** (`{time}`), and the click counts by it. The **Song defaults sheet** (only from About the song)
@@ -162,8 +162,8 @@ Features (Settings → Features):
   (`ImportController`'s `areSongsEnabled`).
 - **Random picks** (`isRandomPicksEnabled`, disabled with the songs off): also answers the question under them.
 - **Metronome**: its tab, a song's tempo chip and Tempo sheet, the M and T keys, and tempo and time wherever a song is read.
-  The Song page's Dock section takes the song's part alone (`isDockMetronomeEnabled`), as it does the dock's way to the
-  tuner (`isDockTunerEnabled`, the song's menu then holding it); both are device-local.
+  The Song page's Dock section takes the song's part alone (`isDockMetronomeEnabled`, device-local). The stored
+  `isDockTunerEnabled` is no longer read: the song's menu and the Playing sheet always hold the tuner.
 - **Tuner**: its tab and the sheet's entry, and with them every way to ask for the microphone.
 - **Chords** (`isChordLibraryEnabled`): the Chords tab and the scale sheet's chord rows, whatever songs show.
 - **Scales** (`areScalesEnabled`): the Scales tab and the scale sheet, and with them the scale suggestions.

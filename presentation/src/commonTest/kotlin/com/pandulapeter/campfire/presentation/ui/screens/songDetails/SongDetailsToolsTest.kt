@@ -16,24 +16,24 @@ import kotlin.test.assertEquals
 internal class SongDetailsToolsTest {
 
     @Test
-    fun `with every switch on the dock holds the click and the tuner`() =
-        assertEquals(SongDetailsTools(isMetronomeEnabled = true, isTunerEnabled = true, isTunerInMenu = false), songDetailsToolsOf(testPreferences(), shouldShowChords = true))
+    fun `with every switch on the dock holds the click and the menu the tuner`() =
+        assertEquals(SongDetailsTools(isMetronomeEnabled = true, isTunerInMenu = true), songDetailsToolsOf(testPreferences(), isImportPreview = false))
 
     @Test
-    fun `the dock's own switches take the click and the tuner off the song while the tabs keep them`() = assertEquals(
-        SongDetailsTools(isMetronomeEnabled = false, isTunerEnabled = false, isTunerInMenu = true),
-        songDetailsToolsOf(testPreferences().copy(isDockMetronomeEnabled = false, isDockTunerEnabled = false), shouldShowChords = true),
+    fun `the dock's own switch takes the click off the song while the tab keeps it`() = assertEquals(
+        SongDetailsTools(isMetronomeEnabled = false, isTunerInMenu = true),
+        songDetailsToolsOf(testPreferences().copy(isDockMetronomeEnabled = false), isImportPreview = false),
     )
 
     @Test
-    fun `with neither the chords nor the click there is no dock so the menu holds the tuner`() = assertEquals(
-        SongDetailsTools(isMetronomeEnabled = false, isTunerEnabled = true, isTunerInMenu = true),
-        songDetailsToolsOf(testPreferences().copy(isMetronomeEnabled = false), shouldShowChords = false),
+    fun `with the tuner feature off no tuner is offered`() = assertEquals(
+        SongDetailsTools(isMetronomeEnabled = true, isTunerInMenu = false),
+        songDetailsToolsOf(testPreferences().copy(isTunerEnabled = false), isImportPreview = false),
     )
 
     @Test
-    fun `with the tuner feature off no tuner is offered anywhere`() = assertEquals(
-        SongDetailsTools(isMetronomeEnabled = true, isTunerEnabled = false, isTunerInMenu = false),
-        songDetailsToolsOf(testPreferences().copy(isTunerEnabled = false), shouldShowChords = true),
+    fun `an import preview offers no tuner`() = assertEquals(
+        SongDetailsTools(isMetronomeEnabled = true, isTunerInMenu = false),
+        songDetailsToolsOf(testPreferences(), isImportPreview = true),
     )
 }

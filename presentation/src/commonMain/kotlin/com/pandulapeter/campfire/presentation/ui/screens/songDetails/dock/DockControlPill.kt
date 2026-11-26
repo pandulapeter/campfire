@@ -22,11 +22,11 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 
 /**
- * The container of the dock's two controls, the key chip and the tempo chip: a tonal pill as the instrument pill and the
- * tuner button are, outlined as well, so that it reads as a control of the player's beside the chord and scale chips,
- * which are the song's, without a chevron spelling it out. [onClick] (null in read only mode, whose chips only
- * read) takes the press over the whole of it but what [content] gives a press of its own (play and stop). [isOutlined]
- * false leaves the outline out where the pill stands on the app bar beside the text size stepper, which has none.
+ * The container of the player's two controls, the tempo chip in the dock and the key chip in the app bar: a tonal pill
+ * as the instrument pill is, outlined as well, so that it reads as a control of the player's beside the chord and scale
+ * chips, which are the song's, without a chevron spelling it out, and stands out from the dock's surface. [onClick]
+ * (null in read only mode, whose chips only read) takes the press over the whole of it but what [content] gives a press
+ * of its own (play and stop).
  */
 @Composable
 internal fun DockControlPill(
@@ -34,7 +34,6 @@ internal fun DockControlPill(
     shape: Shape = CircleShape,
     onClickLabel: String,
     onClick: (() -> Unit)?,
-    isOutlined: Boolean = true,
     content: @Composable () -> Unit,
 ) = Surface(
     modifier = modifier,
@@ -42,7 +41,7 @@ internal fun DockControlPill(
     color = MaterialTheme.colorScheme.surfaceContainerHighest,
     contentColor = MaterialTheme.colorScheme.onSurface,
     // The fill alone is a step too close to the dock's own surface to stand out from it.
-    border = if (isOutlined) BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant) else null,
+    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
 ) {
     if (onClick == null) {
         content()

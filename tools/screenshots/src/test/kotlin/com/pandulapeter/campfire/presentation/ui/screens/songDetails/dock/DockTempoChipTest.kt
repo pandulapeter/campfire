@@ -89,6 +89,16 @@ internal class DockTempoChipTest {
     }
 
     @Test
+    fun `without diagrams and scale suggestions the dock is the metronome panel too`() = runAppTest(
+        extraPreferences = mapOf("areChordDiagramsEnabled" to JsonPrimitive(false), "areScaleSuggestionsEnabled" to JsonPrimitive(false)),
+    ) {
+        openSong()
+        onNode(opensTempoSheet()).assertDoesNotExist()
+        onNode(hasContentDescription(string(Res.string.song_details_tempo_increase))).assertExists()
+        onNode(hasContentDescription(string(Res.string.metronome_beat, 1)) and hasClickAction()).assertExists()
+    }
+
+    @Test
     fun `with the dock's metronome switched off the song has no tempo chip and no click`() = runAppTest(
         extraPreferences = mapOf("isDockMetronomeEnabled" to JsonPrimitive(false)),
     ) {

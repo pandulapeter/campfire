@@ -48,15 +48,13 @@ import com.pandulapeter.campfire.presentation.ui.fontScale.FontScaleController
 import kotlinx.coroutines.flow.StateFlow
 
 /**
- * The song details screen's app bar actions: the text size where the bar has room for it, the key chip and the tuner
- * where the bar holds them in place of the dock ([playingTools]), then read only mode's mark and menu, or the song's
- * setlists and the song's menu, which holds what the bar has no room for. The overflow button reaches into the tuner's
- * button ([isAfterTuner]) as into the star or the lock, where it stands right after it.
+ * The song details screen's app bar actions: the key chip ([keyChip]), then read only mode's mark and menu, or the
+ * song's setlists and the song's menu, which holds what the bar has no room for, the tuner ([tunerAction]), and at its
+ * end the text size, which a pinch and the zoom keys reach as well.
  */
 @Composable
 internal fun RowScope.SongDetailsActions(
-    playingTools: @Composable () -> Unit,
-    isAfterTuner: Boolean,
+    keyChip: @Composable () -> Unit,
     fontScaleController: FontScaleController,
     songFileNamesInSetlistsFlow: StateFlow<Set<String>>,
     songActions: SongActionHandler,
@@ -66,7 +64,6 @@ internal fun RowScope.SongDetailsActions(
     isPerformanceModeEnabled: Boolean,
     isImportPreview: Boolean,
     areSetlistsEnabled: Boolean,
-    showsFontScaleInBar: Boolean,
     showsSetlistAssignmentsInBar: Boolean,
     aboutSongAction: ActionsMenuItem?,
     tunerAction: ActionsMenuItem?,
@@ -74,30 +71,17 @@ internal fun RowScope.SongDetailsActions(
     onReadOnlyMarkClicked: () -> Unit,
 ) {
     val songFileNamesInSetlists by songFileNamesInSetlistsFlow.collectAsStateWithLifecycle()
-    // The key chip comes first, as it does in the dock.
-    playingTools()
-    // The text size is in the bar wherever the title leaves it the room, and at the end of the menu where not: it is the
-    // first of the bar's controls to go back into the menu as the bar narrows, expanding and shrinking as it goes, the
-    // way the song's actions move in and out of their menu.
-    AnimatedVisibility(
-        visible = showsFontScaleInBar,
-        enter = fadeIn() + expandHorizontally(),
-        exit = fadeOut() + shrinkHorizontally(),
-    ) {
-        LiveFontScaleControls(fontScaleController = fontScaleController)
-    }
-    val fontScaleMenuFooter: (@Composable () -> Unit)? = if (showsFontScaleInBar) {
-        null
-    } else {
-        {
-            MenuStepperRow(label = stringResource(Res.string.song_details_text_size)) {
-                LiveFontScaleControls(fontScaleController = fontScaleController)
-            }
+    keyChip()
+    // The text size is rarely changed, and a pinch and the zoom keys change it too, so it is always the menu's last row
+    // rather than room taken from the title.
+    val fontScaleMenuFooter = @Composable {
+        MenuStepperRow(label = stringResource(Res.string.song_details_text_size)) {
+            LiveFontScaleControls(fontScaleController = fontScaleController)
         }
     }
     // Read only mode's actions and the song's are the same two buttons, a mark (the lock, the setlists' star) and an
     // overflow button reaching into it, laid out to the same width. Switching the mode therefore only crossfades them in
-    // place, end aligned: shrinking one set while the other expands would slide the buttons and the stepper before them
+    // place, end aligned: shrinking one set while the other expands would slide the buttons and the key chip before them
     // back and forth. The width is animated only where the two differ (the bar too narrow for the star, or a preview,
     // which has read only mode's menu but never the lock: nothing in it is the library's to change until Import,
     // whatever the mode), and an imported preview turning into its song's screen gains the song's actions, or the lock,
@@ -119,7 +103,7 @@ internal fun RowScope.SongDetailsActions(
                 }
                 // Read only mode's menu: nothing in it changes the library, and nothing in it is ever let out as a button.
                 ActionsMenu(
-                    isAfterButton = showsReadOnlyMark || isAfterTuner,
+                    isAfterButton = showsReadOnlyMark,
                     menuFooter = fontScaleMenuFooter,
                     items = { listOfNotNull(aboutSongAction, tunerAction, preferencesAction) },
                 )
@@ -135,7 +119,6 @@ internal fun RowScope.SongDetailsActions(
                         isReadOnly = heldWhileLeaving(isReadOnly),
                         areSetlistsEnabled = areSetlistsEnabled,
                         showsSetlistAssignmentsInBar = heldWhileLeaving(showsSetlistAssignmentsInBar),
-                        isAfterTuner = isAfterTuner,
                         aboutSongAction = aboutSongAction,
                         tunerAction = tunerAction,
                         preferencesAction = preferencesAction,
@@ -181,11 +164,10 @@ private fun SongActionsWithSetlists(
     isReadOnly: Boolean,
     areSetlistsEnabled: Boolean,
     showsSetlistAssignmentsInBar: Boolean,
-    isAfterTuner: Boolean,
     aboutSongAction: ActionsMenuItem?,
     tunerAction: ActionsMenuItem?,
     preferencesAction: ActionsMenuItem,
-    menuFooter: (@Composable () -> Unit)?,
+    menuFooter: @Composable () -> Unit,
 ) {
     AnimatedVisibility(
         visible = showsSetlistAssignmentsInBar,
@@ -199,8 +181,8 @@ private fun SongActionsWithSetlists(
             setlistFileName = setlistFileName,
         )
     }
-    // The overflow button reaches into the button before it, and only into a button: the stepper's pill and the title
-    // are kept clear of its touch target.
+    // The overflow button reaches into the button before it, and only into a button: the key chip and the title are
+    // kept clear of its touch target.
     val overflowOverlap by animateDpAsState(if (showsSetlistAssignmentsInBar) ACTION_BUTTON_OVERLAP else 0.dp)
     SongActions(
         modifier = Modifier.overlappingAction(start = overflowOverlap, end = 0.dp),
@@ -209,7 +191,7 @@ private fun SongActionsWithSetlists(
         isDeletable = setlistFileName == null,
         isEditAndExportOnly = isReadOnly,
         setlistFileName = setlistFileName,
-        isAfterButton = showsSetlistAssignmentsInBar || isAfterTuner,
+        isAfterButton = showsSetlistAssignmentsInBar,
         editShortcut = KeyShortcut.EDIT,
         exportShortcut = KeyShortcut.SAVE,
         leadingItems = {
@@ -229,8 +211,8 @@ private fun SongActionsWithSetlists(
                 preferencesAction,
             )
         },
-        // The transposition, the capo and the tempo are set in the dock under the song; what is left for the menu
-        // is the text size, which belongs to the reader rather than to the song.
+        // The transposition and the capo are set from the key chip and the tempo in the dock under the song; what is
+        // left for the menu is the text size, which belongs to the reader rather than to the song.
         menuFooter = menuFooter,
     )
 }

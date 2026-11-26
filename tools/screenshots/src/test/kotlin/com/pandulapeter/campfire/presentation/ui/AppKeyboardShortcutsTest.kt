@@ -35,7 +35,6 @@ import com.pandulapeter.campfire.screenshots.AppTestScope
 import com.pandulapeter.campfire.screenshots.TestWindow
 import com.pandulapeter.campfire.screenshots.openSong
 import com.pandulapeter.campfire.screenshots.runAppTest
-import kotlinx.serialization.json.JsonPrimitive
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
@@ -106,16 +105,6 @@ internal class AppKeyboardShortcutsTest {
         // The sheet is a layer of its own, with the focus in it.
         onAllNodes(isRoot()).onLast().performKeyInput { pressKey(Key.U) }
         waitUntil { viewModel.dialogHost.visibleDialog.value == null }
-    }
-
-    @Test
-    fun `U opens the tuner sheet over a song whose menu holds the tuner`() = runAppTest(
-        extraPreferences = mapOf("isDockTunerEnabled" to JsonPrimitive(false)),
-    ) {
-        openSong()
-        waitForIdle()
-        onRoot().performKeyInput { pressKey(Key.U) }
-        waitUntil { viewModel.dialogHost.visibleDialog.value is DialogType.Tuner }
     }
 
     private fun AppTestScope.pressQuestionMark() = onRoot().performKeyInput { withKeyDown(Key.ShiftLeft) { pressKey(Key.Slash) } }

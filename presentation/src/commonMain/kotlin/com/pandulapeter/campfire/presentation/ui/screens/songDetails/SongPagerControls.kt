@@ -18,7 +18,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.calculateEndPadding
@@ -55,7 +54,8 @@ import com.pandulapeter.campfire.presentation.resources.song_details_up_next
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * The dock's last row, on its surface (`SongDock`), that steps through the songs of a setlist without swiping. Between
+ * The row under the dock and the side panel, on their surface (`SongDock`, `DockSidePanel`), as wide as the screen, that
+ * steps through the songs of a setlist without swiping. Between
  * the two buttons it names the setlist being played and how far along it the current song is, or, while a step past the
  * end of the song waits for the press that confirms it ([NextSongConfirmation]), the song that press goes to: the row is
  * there in every setlist and covers nothing of the song, and it turns the secondary container colour so the change is seen from a
@@ -66,11 +66,10 @@ import org.jetbrains.compose.resources.painterResource
  * @param currentPage The song on screen, which is what the label names.
  * @param targetPage The song the pager is on its way to, which is what decides whether there is anywhere left to step.
  * @param nextSongTitle The title of the next song while a step to it waits for its confirmation, else null.
- * @param isStacked Whether the row is the side panel's, too narrow for a name beside its buttons: the setlist's name, or
- *   the next song's, then goes on a line of its own above them, which leaves the place or the hint between them.
  */
 @Composable
 internal fun SongPagerControls(
+    modifier: Modifier = Modifier,
     setlistTitle: String?,
     setlistSlots: SetlistSlots?,
     currentPage: Int,
@@ -80,58 +79,50 @@ internal fun SongPagerControls(
     nextSongTitle: String?,
     onStep: (Int) -> Unit,
     onConfirmNextSong: () -> Unit,
-    isStacked: Boolean = false,
 ) = Surface(
+    modifier = modifier,
     color = animateColorAsState(
         if (nextSongTitle == null) MaterialTheme.colorScheme.surfaceContainer else MaterialTheme.colorScheme.secondaryContainer,
     ).value,
 ) {
     val layoutDirection = LocalLayoutDirection.current
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(
-                start = contentPadding.calculateStartPadding(layoutDirection) + 4.dp,
-                end = contentPadding.calculateEndPadding(layoutDirection) + 4.dp,
-                bottom = contentPadding.calculateBottomPadding(),
-            ),
-    ) {
-        if (isStacked) StackedTitle(setlistTitle = setlistTitle, nextSongTitle = nextSongTitle, onConfirmNextSong = onConfirmNextSong)
-        PagerButtonRow(
-            setlistTitle = setlistTitle.takeUnless { isStacked },
-            setlistSlots = setlistSlots,
-            currentPage = currentPage,
-            targetPage = targetPage,
-            pageCount = pageCount,
-            nextSongTitle = nextSongTitle,
-            isStacked = isStacked,
-            onStep = onStep,
-            onConfirmNextSong = onConfirmNextSong,
-        )
-    }
+    PagerButtonRow(
+        modifier = Modifier.padding(
+            start = contentPadding.calculateStartPadding(layoutDirection) + 4.dp,
+            end = contentPadding.calculateEndPadding(layoutDirection) + 4.dp,
+            bottom = contentPadding.calculateBottomPadding(),
+        ),
+        setlistTitle = setlistTitle,
+        setlistSlots = setlistSlots,
+        currentPage = currentPage,
+        targetPage = targetPage,
+        pageCount = pageCount,
+        nextSongTitle = nextSongTitle,
+        onStep = onStep,
+        onConfirmNextSong = onConfirmNextSong,
+    )
 }
 
 /**
  * The previous and next buttons and between them the setlist's place (after its [setlistTitle] where it is given), or
- * the next song waiting for the press that goes on to it ([nextSongTitle]), only the hint where the title is above them
- * ([isStacked]).
+ * the next song waiting for the press that goes on to it ([nextSongTitle]).
  */
 @Composable
 private fun PagerButtonRow(
+    modifier: Modifier = Modifier,
     setlistTitle: String?,
     setlistSlots: SetlistSlots?,
     currentPage: Int,
     targetPage: Int,
     pageCount: Int,
     nextSongTitle: String?,
-    isStacked: Boolean,
     onStep: (Int) -> Unit,
     onConfirmNextSong: () -> Unit,
 ) {
     val layoutDirection = LocalLayoutDirection.current
     // The arrow keys go to the song lying their way in the pager, so in a right-to-left layout Right is the previous one.
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .height(PAGER_CONTROLS_HEIGHT),
         verticalAlignment = Alignment.CenterVertically,
@@ -158,7 +149,7 @@ private fun PagerButtonRow(
                 )
             } else {
                 NextSongPrompt(
-                    title = title.takeUnless { isStacked },
+                    title = title,
                     onClick = onConfirmNextSong,
                 )
             }
@@ -215,12 +206,12 @@ private fun SetlistPosition(
 }
 
 /**
- * The song the next step goes to ([title], null where the line above the row names it), and that it takes one more. Only
- * the title gives way, since the hint is what the prompt is for. A polite live region, as it appears on its own.
+ * The song the next step goes to ([title]), and that it takes one more. Only the title gives way, since the hint is
+ * what the prompt is for. A polite live region, as it appears on its own.
  */
 @Composable
 private fun NextSongPrompt(
-    title: String?,
+    title: String,
     onClick: () -> Unit,
 ) = Row(
     modifier = Modifier
@@ -230,52 +221,21 @@ private fun NextSongPrompt(
     horizontalArrangement = Arrangement.Center,
     verticalAlignment = Alignment.CenterVertically,
 ) {
-    if (title != null) {
-        Text(
-            modifier = Modifier.weight(1f, fill = false),
-            text = textResource(Res.string.song_details_up_next, title),
-            style = MaterialTheme.typography.labelLarge,
-            textAlign = TextAlign.Center,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-        Separator(color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = HINT_ALPHA))
-    }
+    Text(
+        modifier = Modifier.weight(1f, fill = false),
+        text = textResource(Res.string.song_details_up_next, title),
+        style = MaterialTheme.typography.labelLarge,
+        textAlign = TextAlign.Center,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+    )
+    Separator(color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = HINT_ALPHA))
     Text(
         text = stringResource(Res.string.song_details_step_again),
         style = MaterialTheme.typography.labelLarge,
         color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = HINT_ALPHA),
         textAlign = TextAlign.Center,
         maxLines = 1,
-    )
-}
-
-/**
- * The line a stacked row ([SongPagerControls]' `isStacked`) has above its buttons: the setlist's name, or while a step
- * to the next song waits for its confirmation, that song ([nextSongTitle]), which goes on to it as the hint under it does.
- */
-@Composable
-private fun StackedTitle(
-    setlistTitle: String?,
-    nextSongTitle: String?,
-    onConfirmNextSong: () -> Unit,
-) = AnimatedContent(
-    modifier = Modifier.fillMaxWidth(),
-    targetState = nextSongTitle,
-    transitionSpec = { fadeIn() togetherWith fadeOut() },
-    contentAlignment = Alignment.Center,
-) { title ->
-    Text(
-        modifier = Modifier
-            .fillMaxWidth()
-            .then(if (title == null) Modifier else Modifier.clickable(onClick = onConfirmNextSong))
-            .padding(horizontal = 8.dp)
-            .padding(top = 12.dp),
-        text = if (title == null) setlistTitle.orEmpty() else textResource(Res.string.song_details_up_next, title),
-        style = MaterialTheme.typography.labelLarge,
-        textAlign = TextAlign.Center,
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
     )
 }
 

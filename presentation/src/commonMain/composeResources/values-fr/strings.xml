@@ -532,7 +532,6 @@
     <string name="settings_scale_suggestions_description">Montre les gammes sur lesquelles chaque partie d\'un morceau peut se jouer et, dans la fiche d\'un accord, les gammes de cet accord.</string>
     <string name="settings_group_dock">Dock</string>
     <string name="settings_dock_metronome_description">Montre le tempo du morceau et joue son clic depuis le morceau. L\'onglet Métronome n\'est pas concerné.</string>
-    <string name="settings_dock_tuner_description">Montre un accès à l\'accordeur. Sans lui, l\'accordeur est dans le menu du morceau.</string>
     <string name="settings_setlists_description">L\'onglet Setlists et l\'ajout de chansons aux setlists. Désactivées, elles sont seulement masquées : aucune setlist n\'est supprimée.</string>
     <string name="settings_random_picks_description">Cinq chansons au hasard en tête d\'une liste de plus de 20, renouvelées chaque heure</string>
     <string name="settings_song_details_lookup">Infos de chanson en ligne</string>
@@ -1234,6 +1233,7 @@
     <string name="song_details_lookup_nothing_new">Cet enregistrement n\'apporte rien que le formulaire n\'indique déjà</string>
     <string name="song_details_lookup_attribution">Données de MusicBrainz et iTunes.</string>
     <string name="song_details_capo">Capo %1$d</string>
+    <string name="song_details_capo_short">Capo %1$d</string>
     <string name="song_details_tempo">%1$s BPM</string>
     <string name="song_details_time">%1$s</string>
     <string name="song_details_key_change">Tonalité : %1$s</string>

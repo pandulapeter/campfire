@@ -9,38 +9,39 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock
 
-import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.screenshots.AppTestScope
 import com.pandulapeter.campfire.screenshots.TestWindow
 import com.pandulapeter.campfire.screenshots.openSong
-import com.pandulapeter.campfire.screenshots.opensPlayingSheet
 import com.pandulapeter.campfire.screenshots.runAppTest
 import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
 /**
- * A wide window has the dock as a side panel at the song's end, a narrower one as rows under it, and a window resized
- * across the line moves the dock between the two without the song jumping.
+ * A wide window has the dock as a side panel at the song's end, its diagrams over the tempo chip at its foot, a narrower
+ * one as rows under it, the tempo chip ending the diagrams' row, and a window resized across the line moves the dock
+ * between the two without the song jumping.
  */
 @OptIn(ExperimentalTestApi::class)
 internal class DockSidePanelTest {
 
     @Test
-    fun `a wide window shows the dock as a side panel beside the song`() = runAppTest(window = TestWindow.DESKTOP) {
+    fun `a wide window shows the dock as a side panel beside the song, the tempo chip at its foot`() = runAppTest(window = TestWindow.DESKTOP) {
         openSong()
         waitForIdle()
-        assertBeside(keyChip(), firstLine())
+        assertBeside()
     }
 
     @Test
     fun `a phone on its side keeps the dock under the song`() = runAppTest(window = TestWindow.PHONE_ON_ITS_SIDE) {
         openSong()
         waitForIdle()
-        assertUnder(keyChip(), firstLine())
+        val tempoChip = tempoChip()
+        val line = firstLine()
+        assertTrue(tempoChip.top >= line.bottom, "The tempo chip at $tempoChip is not under the song's line at $line.")
     }
 
     @Test
@@ -48,8 +49,8 @@ internal class DockSidePanelTest {
         runAppTest(window = NARROW) {
             openSong()
             waitForIdle()
-            assertUnder(keyChip(), firstLine())
-            listOf(WIDE to ::assertBeside, NARROW to ::assertUnder).forEach { (window, assertPlaced) ->
+            assertUnder()
+            listOf(WIDE to { assertBeside() }, NARROW to { assertUnder() }).forEach { (window, assertPlaced) ->
                 val before = firstLine()
                 mainClock.autoAdvance = false
                 resizeWindow(window.width, window.height)
@@ -61,21 +62,29 @@ internal class DockSidePanelTest {
                 }
                 mainClock.autoAdvance = true
                 waitForIdle()
-                assertPlaced(keyChip(), firstLine())
+                assertPlaced()
             }
         }
 
-    private fun AppTestScope.keyChip() = onNode(opensPlayingSheet()).fetchSemanticsNode().boundsInRoot
-
     private fun AppTestScope.firstLine() = onNode(hasText(FIRST_LINE, substring = true)).fetchSemanticsNode().boundsInRoot
 
-    private fun assertBeside(keyChip: Rect, line: Rect) {
-        assertTrue(keyChip.left >= line.right, "The key chip at $keyChip is not beside the song's line at $line.")
-        assertTrue(keyChip.top < line.bottom, "The key chip at $keyChip is not at the panel's top.")
+    /** The panel's diagrams stand beside the song's line, over the tempo chip at its foot. */
+    private fun AppTestScope.assertBeside() {
+        val diagram = diagram()
+        val tempoChip = tempoChip()
+        val line = firstLine()
+        assertTrue(diagram.left >= line.right, "The diagram at $diagram is not beside the song's line at $line.")
+        assertTrue(tempoChip.top >= diagram.bottom, "The tempo chip at $tempoChip is not at the panel's foot under the diagram at $diagram.")
     }
 
-    private fun assertUnder(keyChip: Rect, line: Rect) =
-        assertTrue(keyChip.top >= line.bottom, "The key chip at $keyChip is not under the song's line at $line.")
+    /** The rows stand under the song's line, the tempo chip ending the diagrams' row. */
+    private fun AppTestScope.assertUnder() {
+        val diagram = diagram()
+        val tempoChip = tempoChip()
+        val line = firstLine()
+        assertTrue(diagram.top >= line.bottom, "The diagram at $diagram is not under the song's line at $line.")
+        assertTrue(tempoChip.top < diagram.bottom && tempoChip.bottom > diagram.top, "The tempo chip at $tempoChip is not in the row of the diagram at $diagram.")
+    }
 }
 
 private val NARROW = TestWindow(width = 800.dp, height = 600.dp)

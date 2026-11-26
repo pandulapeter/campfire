@@ -24,9 +24,9 @@ import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcu
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * The song details screen's way to the tuner sheet, next to the transposition and the capo it tunes for: the strings are
- * tuned to what the capo and the key ask of them, so that is where a player looks for it. Drawn as switched on while
- * [isSheetShown], the way the metronome's button is while its panel is up.
+ * The Playing sheet's way to the tuner sheet, beside the instrument and tuning it tunes to, over the transposition and
+ * the capo: the strings are tuned to what they ask of them, so that is where a player looks for it. Drawn as switched on
+ * while [isSheetShown], the way the metronome's button is while its panel is up.
  */
 @Composable
 internal fun TunerButton(

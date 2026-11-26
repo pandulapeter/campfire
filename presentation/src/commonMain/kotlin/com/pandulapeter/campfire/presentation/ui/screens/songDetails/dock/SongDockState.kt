@@ -62,10 +62,9 @@ internal class SongDockState(
 }
 
 /**
- * The dock as the switches in [userPreferences] and the window decide it, never the song: its rows (the playing controls
- * with the chords or the metronome on, the chords with [chordDiagrams] drawn on an instrument with shapes, the scale
- * suggestions; none where the playing controls would hold only the key chip, [DockRows.isKeyOnly], which the app bar
- * then holds), and whether it is a side panel ([isDockSidePanel], which the reading mode weighs too) or rows under the song, which get as much room as the
+ * The dock as the switches in [userPreferences] and the window decide it, never the song: its rows (the chords with
+ * [chordDiagrams] drawn on an instrument with shapes, the scale suggestions, the tempo chip with the metronome on), and
+ * whether it is a side panel ([isDockSidePanel], which the reading mode weighs too) or rows under the song, which get as much room as the
  * reading mode and a setlist's pager bar ([hasPagerBar]) leave them ([dockBudgetOf]) in a window that is not short and
  * outside an import preview ([isImportPreview]), whose card takes the room of a second row. Rows without the pager bar cover the bottom inset of
  * [contentPadding] too, and the panel its end inset.
@@ -78,20 +77,18 @@ internal fun rememberSongDock(
     isImportPreview: Boolean,
     contentPadding: PaddingValues,
 ): SongDockState {
-    // An import preview has no metronome, so its click would leave the playing row empty with the chords off.
+    // An import preview has no metronome.
     val isMetronomeShown = userPreferences?.isMetronomeEnabled != false && userPreferences?.isDockMetronomeEnabled != false && !isImportPreview
     val rows = DockRows(
-        hasPlayingRow = userPreferences?.areChordsEnabled != false || isMetronomeShown,
         hasChordRow = chordDiagrams?.tuning != null,
         hasScaleRow = SongSections.of(userPreferences).areScaleSuggestionsShown,
-        isMetronomeOnly = userPreferences?.areChordsEnabled == false && isMetronomeShown,
         hasTempo = isMetronomeShown,
     )
     val turnsByColumn = userPreferences?.songLayout != SongLayout.CONTINUOUS && userPreferences?.pageTurn == PageTurn.COLUMN
     val windowSize = LocalWindowInfo.current.containerDpSize
     val layoutDirection = LocalLayoutDirection.current
     val endInset = contentPadding.calculateEndPadding(layoutDirection)
-    val panelWidth = dockPanelWidthOf(tempoChipWidth = dockTempoChipWidth())
+    val panelWidth = dockPanelWidthOf(tempoChipWidth = dockTallTempoChipWidth())
     val isSidePanel = isDockSidePanel(
         rows = rows,
         windowWidth = windowSize.width,
@@ -102,7 +99,7 @@ internal fun rememberSongDock(
     val rowHeight = dockRowHeight()
     val bottomPadding = dockBottomPaddingOf(bottomInset = contentPadding.calculateBottomPadding())
     // Beside a side panel the rows under the song are the scale suggestions alone, which the panel has no width for.
-    val rowsUnder = if (isSidePanel) DockRows(hasPlayingRow = false, hasChordRow = false, hasScaleRow = rows.hasScaleRow) else rows
+    val rowsUnder = if (isSidePanel) DockRows(hasChordRow = false, hasScaleRow = rows.hasScaleRow, hasTempo = false) else rows
     val layout = remember(rows, windowSize.height, turnsByColumn, hasPagerBar, isImportPreview, rowHeight, isSidePanel, bottomPadding) {
         if (isSidePanel) {
             dockLayoutOf(rows = rowsUnder, budget = 0.dp, isOneRow = true, rowHeight = rowHeight, bottomPadding = bottomPadding)
@@ -117,8 +114,8 @@ internal fun rememberSongDock(
         }
     }
     val panelLayout = remember(rows, rowHeight, isSidePanel) { if (isSidePanel) dockPanelLayoutOf(rows, rowHeight) else null }
-    // A setlist's pager bar covers the bottom inset under the rows, but beside a side panel it is the panel's last row.
-    val target = layout?.let { it.height + if (hasPagerBar && !isSidePanel) 0.dp else contentPadding.calculateBottomPadding() } ?: 0.dp
+    // A setlist's pager bar, under both the rows and the side panel, covers the bottom inset for them.
+    val target = layout?.let { it.height + if (hasPagerBar) 0.dp else contentPadding.calculateBottomPadding() } ?: 0.dp
     val panelTarget = if (panelLayout == null) 0.dp else panelWidth + endInset
     return SongDockState(
         rows = rows,
@@ -135,8 +132,8 @@ internal fun rememberSongDock(
 }
 
 /**
- * How tall the dock's row of chips and controls is, and the key chip where the app bar holds it ([DockRows.isKeyOnly]):
- * the controls are drawn at the interface's text size, which a large system text size grows past a chip's.
+ * How tall the dock's row of chips is: they and the tempo chip are drawn at the interface's text size, which a large
+ * system text size grows past a chip's.
  */
 @Composable
 internal fun dockRowHeight() = maxOf(DOCK_ROW_HEIGHT, songControlHeight(MaterialTheme.typography.titleSmall))

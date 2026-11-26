@@ -24,7 +24,7 @@ import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.So
 import com.pandulapeter.campfire.presentation.ui.songView.rememberChordCells
 
 /**
- * What scrolls in the side panel for one song's [content], under its controls ([DockPanelControls]): the diagrams at
+ * What scrolls in the side panel for one song's [content], over the tempo chip at its foot: the diagrams at
  * the Chords section's size in a grid, every chord of the song. The scale suggestions are the row under the song beside
  * the panel, where they scroll sideways as under the song elsewhere. The chords on the screen the page's [stepper] shows are
  * drawn as they are and the rest faded back ([rememberChordsOnScreen]); the panel moves only under the reader's finger.
@@ -42,7 +42,7 @@ internal fun DockPanelRows(
     val cells = rememberChordCells(model, content.chordDiagrams)
     val names = remember(cells) { cells.mapTo(mutableSetOf()) { it.name } }
     FlowRow(
-        // As wide as its widest line, centred as a block under the centred controls, so that an odd last chord stays in
+        // As wide as its widest line, centred as a block over the tempo chip, so that an odd last chord stays in
         // its column rather than being centred on a line of its own.
         modifier = modifier.fillMaxWidth().padding(horizontal = DOCK_PANEL_PADDING).wrapContentWidth(),
         horizontalArrangement = Arrangement.spacedBy(DOCK_ITEM_GAP),

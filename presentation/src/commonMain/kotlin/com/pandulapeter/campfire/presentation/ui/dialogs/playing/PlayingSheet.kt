@@ -10,9 +10,11 @@
 package com.pandulapeter.campfire.presentation.ui.dialogs.playing
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -60,15 +62,17 @@ import com.pandulapeter.campfire.presentation.ui.songView.firstSection.Transposi
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.rememberSongPlayingControls
 import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
 import com.pandulapeter.campfire.presentation.ui.state.songText.SongTextStore
+import com.pandulapeter.campfire.presentation.ui.tuner.TunerButton
 import kotlinx.coroutines.flow.StateFlow
 
 /**
- * How a song is played where it is read, opened from the key chip of song details' dock: the instrument in the player's
- * hands and its tuning ([PlayingInstrumentRow]), then the transposition and the capo ([PlayingStepperRow]), the very
- * steppers the song's first section had, writing the same overrides the same way (held pending, written once they rest,
- * see `PendingWrites`), so the song behind it follows every step. Nothing to save: its close button only closes it. No
- * tuner: the dock has it beside the key chip, or the app bar beside the chip where it holds it. The transposition and the capo leave with the chords; the instrument stays, as the tuner
- * and the keyboard's names read it.
+ * How a song is played where it is read, opened from the key chip in song details' app bar: the instrument in the
+ * player's hands and its tuning with the tuner after them ([PlayingInstrumentRow], [onTunerClicked], opening over this
+ * sheet), then the transposition and the capo ([PlayingStepperRow]), the very steppers the song's first section had,
+ * writing the same overrides the same way (held pending, written once they rest, see `PendingWrites`), so the song
+ * behind it follows every step. Nothing to save: its close button only closes it. The transposition and the capo leave
+ * with the chords; the instrument stays, as the tuner and the keyboard's names read it, and the tuner with the Tuner
+ * feature.
  */
 @Composable
 internal fun PlayingSheet(
@@ -78,6 +82,7 @@ internal fun PlayingSheet(
     overrides: PlayingOverrides,
     songRenderer: SongRenderer,
     dialogHost: DialogHost,
+    onTunerClicked: () -> Unit,
     dialog: DialogType.Playing,
 ) {
     val songs by allSongs.collectAsStateWithLifecycle()
@@ -119,6 +124,10 @@ internal fun PlayingSheet(
                 userPreferences = userPreferences,
                 onInstrumentClicked = { dialogHost.showDialog(DialogType.Instrument) },
                 onTuningClicked = { dialogHost.showDialog(DialogType.Tuning) },
+                onTunerClicked = {
+                    println("Playing sheet: tuner")
+                    onTunerClicked()
+                }.takeIf { userPreferences?.isTunerEnabled != false },
             )
             AnimatedPlayingRow(value = controls?.key) { key ->
                 PlayingStepperRow(label = stringResource(Res.string.song_details_transposition)) {
@@ -168,13 +177,15 @@ internal fun PlayingSheet(
 
 /**
  * The instrument in the player's hands and its tuning ([InstrumentPill]) as a setting of the sheet, each half opening its
- * sheet over this one, lined up with the steppers under it.
+ * sheet over this one, lined up with the steppers under it, and the tuner after it ([onTunerClicked], null with the
+ * Tuner feature off), which tunes the strings the pill names.
  */
 @Composable
 private fun PlayingInstrumentRow(
     userPreferences: UserPreferences?,
     onInstrumentClicked: () -> Unit,
     onTuningClicked: () -> Unit,
+    onTunerClicked: (() -> Unit)?,
 ) = Row(
     modifier = Modifier.fillMaxWidth(),
     verticalAlignment = Alignment.CenterVertically,
@@ -195,6 +206,22 @@ private fun PlayingInstrumentRow(
         onInstrumentClicked = onInstrumentClicked,
         onTuningClicked = onTuningClicked,
     )
+    // Kept while it leaves, so that it shrinks away as it was.
+    val lastTunerClick = remember { LastValue<() -> Unit>() }
+    onTunerClicked?.let { lastTunerClick.value = it }
+    AnimatedVisibility(
+        visible = onTunerClicked != null,
+        enter = fadeIn() + expandHorizontally(),
+        exit = fadeOut() + shrinkHorizontally(),
+    ) {
+        TunerButton(
+            modifier = Modifier.padding(start = 8.dp),
+            isSheetShown = false,
+            height = STEPPER_HEIGHT,
+            fontScale = 1f,
+            onClick = { lastTunerClick.value?.invoke() },
+        )
+    }
 }
 
 /** A setting of the sheet: its [label] at the start and its [stepper] at the end. */

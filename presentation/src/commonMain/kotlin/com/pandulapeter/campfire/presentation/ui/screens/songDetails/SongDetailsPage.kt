@@ -25,7 +25,7 @@ import com.pandulapeter.campfire.presentation.ui.songView.SongLyrics
 import com.pandulapeter.campfire.presentation.ui.songView.SongModelBuild
 import com.pandulapeter.campfire.presentation.ui.songView.rememberSongLyricsModel
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongPlayingControls
-import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongPlayingTools
+import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongMetronomeTool
 import com.pandulapeter.campfire.presentation.ui.songView.model.ChordDiagrams
 import com.pandulapeter.campfire.presentation.ui.songView.model.ScaleSuggestions
 import com.pandulapeter.campfire.presentation.ui.songView.model.RenderSection
@@ -127,7 +127,7 @@ import org.jetbrains.compose.resources.painterResource
  *   for a file that names none; null where the playing controls are drawn, which name it themselves.
  * @param playingControls What sets the key, the capo, the tempo and the time signature from the dock, null in read only
  *   mode, see [SongPlayingControls].
- * @param playingTools The tuner and metronome buttons beside them, in read only mode too, see [SongPlayingTools].
+ * @param metronomeTool What the dock's tempo chip says and opens, in read only mode too, see [SongMetronomeTool].
  * @param shouldShowTempo False with the metronome switched off, which takes the tempo and the time signature off the page,
  *   the changes of them further down included.
  * @param fontScale Read where the lyrics are built rather than passed as a value: a pinch changes it on every frame,
@@ -170,7 +170,7 @@ internal fun SongDetailsPage(
     inferredChordsKey: String?,
     inferredKey: String?,
     playingControls: SongPlayingControls?,
-    playingTools: SongPlayingTools?,
+    metronomeTool: SongMetronomeTool?,
     shouldShowChords: Boolean,
     shouldShowTempo: Boolean,
     shouldNumberSections: Boolean,
@@ -266,7 +266,7 @@ internal fun SongDetailsPage(
             change = songChange,
         )
         val model = frame.model
-        val dockContent = frame.dockContent(playingTools)
+        val dockContent = frame.dockContent(metronomeTool)
         SideEffect { onDockContent(dockContent) }
         if (model.song.blocks.isEmpty()) {
             // The file exists and could be read, it just has nothing in it yet - a newly created song, typically.
@@ -388,12 +388,11 @@ internal fun SongDetailsPage(
     }
 }
 
-/** What the dock draws for the song this frame shows, with the tuner and tempo chip of [playingTools]. */
-private fun SongFrame.dockContent(playingTools: SongPlayingTools?) = DockContent(
+/** What the dock draws for the song this frame shows, with the tempo chip of [metronomeTool]. */
+private fun SongFrame.dockContent(metronomeTool: SongMetronomeTool?) = DockContent(
     model = model,
     playingControls = playingControls,
-    playingTools = playingTools,
-    tempo = playingTools?.metronome?.takeIf { shouldShowTempo }?.let { tool ->
+    tempo = metronomeTool?.takeIf { shouldShowTempo }?.let { tool ->
         DockTempo(bpm = tool.bpm, control = playingControls?.tempo, onClick = tool.onTempoClicked)
     },
     chordDiagrams = chordDiagrams,

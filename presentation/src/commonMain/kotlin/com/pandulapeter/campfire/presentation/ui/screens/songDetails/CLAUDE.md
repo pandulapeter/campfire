@@ -10,8 +10,9 @@
 
 # :presentation — ui/screens/songDetails
 
-The song details screen. The song is drawn by `ui/songView/`, starting at its first line; how it is played (the playing
-controls, its chords, its scale suggestions) is in the dock under it, or beside it in a wide window, `dock/`; pedal stepping is in `stepping/`, the
+The song details screen. The song is drawn by `ui/songView/`, starting at its first line; how it is played is the app bar's
+key chip (key, transposition, capo) and the dock under it, or beside it in a wide window (its chords, its scale
+suggestions, its tempo chip), `dock/`; pedal stepping is in `stepping/`, the
 self-scrolling column in `autoScroll/`. Read only mode is in `ui/CLAUDE.md`.
 
 The guarantee most of this file serves: **every line of a song can be reached with Up and Down alone** (a page turner
@@ -22,7 +23,9 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
 - Before the library is read, only a destination whose songs are all present resolves, so a restored setlist pager
   never restores its page index onto the wrong song over a partial batch. Once every song it names is gone from a read
   library, the screen closes itself.
-- The pager bar numbers by place in the setlist, missing entries included; pages are only the songs that exist.
+- The pager bar runs as wide as the screen under the dock's rows and its side panel alike (`SetlistPagerBar`), on their
+  surface and read with them, rounding the surface's top where nothing stands above it; it numbers by place in the
+  setlist, missing entries included; pages are only the songs that exist.
 - **In a setlist a step leaves a song's end only on the next press** (`NextSongConfirmation`): the first turns the pager
   bar to name the next song (selecting it goes on too); going back, scrolling up, or another song forgets it. A press
   while the step reaching the end still moves is not that first one. The bar's buttons, swipes, and Shift + an arrow do
@@ -64,7 +67,8 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
 - **The subtitle names the sounding key** (transposition and capo played applied), whatever the chords are named by,
   after a 16dp dot (the cards' 24dp would grow the bar and shrink the lyrics' room). Worked out for the song its
   crossfaded content was composed for, since a page change draws two. Chords off, a song without chords, and a file
-  naming no key whose chords make none clear drop the key, as does the app bar's key chip naming the same one. No tempo (the dock
+  naming no key whose chords make none clear drop the key, as does the key chip naming the same one (never where they
+  differ: the chip names the transposition stepper's key, with a capo the shapes', the subtitle the sounding one). No tempo (the dock
   says it) and no duration.
 - **A file with no `{key}` is named by the key its chords are in** (`inferredKeyOf`), shown and moved as a written key
   is everywhere (bar, key chip, Transposition control, numbering, the dock's chords and scales, chord shape
@@ -76,27 +80,26 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
   press dims the title, cover, and chevron. **Back to the top** is Home's and a long press on the step back button's
   wherever there is song above (no tooltip on that press), never a menu entry; each leaves a `Back to the top:`
   breadcrumb naming it.
-- As the bar narrows the text size stepper goes into the menu (at its end, the menu staying open while pressed), then
-  Choose setlists, then the cover, decided from the settled width for every page at once: the cover and Choose setlists
-  each while the title keeps 160dp, the stepper only while the title keeps a comfortable 200dp beside the cover (about
-  528dp with a cover, 476dp without, in both modes), since the menu and a pinch reach it anyway. Performance mode: the
-  read only mark (`ReadOnlyMark`, a lock opening the Preferences, so a mode switched on by accident is noticed and undone
-  here) always before the overflow button, no Choose setlists. An import preview has read only mode's menu and never the
-  mark, the mode or not: only Import makes it editable, and the mark comes with its song's screen. **The overflow button
-  is always the bar's last.**
-- **Where the dock would hold only the key chip** (`DockRows.isKeyOnly`, an import preview's too) the bar holds it
-  instead, and with the dock's tuner on a tuner icon button, both first among the actions, as the key chip is first in
-  the dock: before the text size stepper, the setlists' star, the read only mark, and the overflow button
-  (`AppBarPlayingTools`). The chip is the stepper's sibling there: as tall, tonal with no outline (the dock's outline is
-  for the dock's surface), 12dp before it where no tuner stands between, the room an icon button's touch target leaves
-  around its glyph, so every action of the group is as far from the next; the tuner reaches into a button after it as
-  the bar's buttons do, never into the stepper's pill, and the overflow button into the tuner. The same chip, opening the same
-  sheet (nothing in read only mode), left out with neither key nor capo, for the page the pager is on or heading for,
-  crossfading as the subtitle does, which leaves out its key where the chip names the same one (never where they
-  differ: the chip names the transposition stepper's key, with a capo the shapes', the subtitle the sounding one). They come and go fading and growing as the dock
-  shrinks away or returns. Their room is taken before the cover's and the buttons' (`appBarPlayingToolsWidth`): the
-  chip by a constant, since the bar decides for every page at once and a width that followed the page would move the
-  cover in and out of the menu as pages turn. `App bar: tuner` and the dock's `Dock: key chip` breadcrumbs.
+- **The key chip is always the bar's** (`AppBarKeyChip`, `KeyChip`, `keyChipTextOf`) wherever the chords are on, an
+  import preview's too, first among the actions, before the setlists' star or the read only mark and the overflow
+  button. It names what the transposition stepper names (the shapes' under `SHAPES`, the inferred key for a file naming
+  none), a moved song's semitones small after it ("Bm +2", not in read only mode), and **a capo other than zero always**,
+  on a smaller second line under the key in a short form (`song_details_capo_short`, "Kapo 2" where a language's word is
+  long); a screen reader hears all of it in full. An outlined tonal pill (`DockControlPill`), as tall as a stepper. It
+  opens the Playing sheet (nothing in read only mode, whose overrides it would write), is left out with neither key nor
+  capo, follows the page the pager is on or heading for, crossfading and resizing as the subtitle does (a setlist's
+  songs, a key change), and comes and goes fading and growing with the chords switch. Its room is taken first and by a
+  constant (`KEY_CHIP_ROOM`, 56 dp and a 4 dp gap from the title), since the bar decides for every page at once: as much
+  as leaves a 360 dp bar the title's 160 dp beside the star; a wider chip takes the rest from the title. `App bar: key
+  chip` breadcrumb.
+- **The text size stepper and the tuner are always the menu's**: the stepper its last row (the menu staying open while
+  pressed; a pinch and the zoom keys reach it too), the tuner an entry (`tunerAction`, `Menu: tuner`; with the Tuner
+  feature on, never an import preview's), which the Playing sheet also has beside the tuning. As the bar narrows Choose
+  setlists goes into the menu, then the cover, each while the title keeps 160dp. Performance mode: the read only mark
+  (`ReadOnlyMark`, a lock opening the Preferences, so a mode switched on by accident is noticed and undone here) always
+  before the overflow button, no Choose setlists. An import preview has read only mode's menu and never the mark, the
+  mode or not: only Import makes it editable, and the mark comes with its song's screen. **The overflow button is always
+  the bar's last.**
 - Both menus (read only mode's too) hold About the song (never in a preview), and Preferences (the sheet with every page,
   opening on Song, the read only mark's on General; written at once, so the song changes behind it), never let out as buttons.
 
@@ -143,6 +146,5 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
 - Home goes back to the song's top, as a long press on the step back button does.
 - M starts and stops the click and T taps the tempo wherever the dock's tempo chip is (the metronome on, not an import
   preview; T not in read only mode, where it would write an override).
-- U opens the tuner sheet wherever the Tuner feature is on (the way to it in the dock, the app bar, or with the Dock's
-  tuner off the menu, whose entry names the key; not an import preview), leaving a `Keyboard: tuner` breadcrumb, and U
-  again closes it (`closeShortcut`, after a field or a stepper's typed value has had its letter).
+- U opens the tuner sheet wherever the Tuner feature is on (the menu's entry names the key; not an import preview),
+  leaving a `Keyboard: tuner` breadcrumb, and U again closes it (`closeShortcut`, after a field or a stepper's typed value has had its letter).

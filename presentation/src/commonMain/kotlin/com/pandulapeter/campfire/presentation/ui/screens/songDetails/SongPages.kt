@@ -16,8 +16,7 @@ import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.So
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.rememberRowSnapFlingBehavior
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongPlayingControls
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.rememberSongPlayingControls
-import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongPlayingTools
-import com.pandulapeter.campfire.presentation.ui.songView.firstSection.rememberSongPlayingTools
+import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongMetronomeTool
 import com.pandulapeter.campfire.presentation.ui.songView.model.ChordDiagrams
 import com.pandulapeter.campfire.presentation.ui.songView.model.buildsModelInPlace
 import androidx.compose.foundation.ScrollState
@@ -76,7 +75,7 @@ import com.pandulapeter.campfire.presentation.ui.songView.SongModelBuild
  * time. What only the pages read is collected here, so that it is still read only inside the page that uses it.
  *
  * @param importPreview Set where the pages are a preview's, whose texts and folds are its own rather than the library's
- *   and the preferences', and which has no tuner or metronome buttons, since it has no metronome to show.
+ *   and the preferences', and which has no tempo chip, since it has no metronome to show.
  * @param pageKey What the pager keys a song's page by, see [rememberPageKeys].
  * @param pageScrollStates The scroll of every page that is composed, by page, which a step back from the top of a song
  *   puts at the end of the one before it.
@@ -92,7 +91,6 @@ internal fun SongPages(
     fontScaleController: FontScaleController,
     songRenderer: SongRenderer,
     dialogHost: DialogHost,
-    onTunerClicked: () -> Unit,
     destination: CampfireDestination.SongDetails,
     importPreview: ImportPreviewState?,
     pageKey: (Song) -> String,
@@ -105,8 +103,6 @@ internal fun SongPages(
     chordSpelling: UserPreferences.ChordSpelling,
     shouldShowChords: Boolean,
     isMetronomeEnabled: Boolean,
-    isTunerEnabled: Boolean,
-    isTunerSheetShown: Boolean,
     canPage: Boolean,
     settledWidth: Dp,
     pageContentPadding: PaddingValues,
@@ -231,18 +227,15 @@ internal fun SongPages(
                 shouldShowTempo = isMetronomeEnabled,
                 inferredKey = inferredKeys[song.fileName],
             ),
-            playingTools = rememberPagePlayingTools(
+            metronomeTool = rememberPageMetronomeTool(
                 dialogHost = dialogHost,
-                onTunerClicked = onTunerClicked,
-                song = song,
+                        song = song,
                 setlistFileName = destination.setlistFileName,
                 // The stretch the page is in, a later {tempo} included, as the click plays it.
                 bpm = songTimings[song.fileName]?.bpm ?: tempo.bpm,
                 isReadOnly = isReadOnly,
                 isMetronomeEnabled = isMetronomeEnabled,
-                isTunerEnabled = isTunerEnabled,
-                isTunerSheetShown = isTunerSheetShown,
-            ).takeIf { importPreview == null },
+                            ).takeIf { importPreview == null },
             shouldShowChords = shouldShowChords,
             shouldShowTempo = isMetronomeEnabled,
             shouldNumberSections = userPreferences?.shouldNumberSections == true,
@@ -301,21 +294,18 @@ private fun PageRegistrationEffect(
 }
 
 /**
- * The tuner and the tempo chip of [song]'s page ([rememberSongPlayingTools]), whose chip opens its Tempo sheet; not in
- * read only mode, whose chip only reads.
+ * What the tempo chip of [song]'s page says and opens ([SongMetronomeTool]), its Tempo sheet, not in read only mode, whose
+ * chip only reads; null with the metronome switched off.
  */
 @Composable
-private fun rememberPagePlayingTools(
+private fun rememberPageMetronomeTool(
     dialogHost: DialogHost,
-    onTunerClicked: () -> Unit,
     song: Song,
     setlistFileName: String?,
     bpm: Int,
     isReadOnly: Boolean,
     isMetronomeEnabled: Boolean,
-    isTunerEnabled: Boolean,
-    isTunerSheetShown: Boolean,
-): SongPlayingTools? {
+): SongMetronomeTool? {
     val onTempoClicked = remember(dialogHost, song, setlistFileName, isReadOnly) {
         if (isReadOnly) {
             null
@@ -326,14 +316,9 @@ private fun rememberPagePlayingTools(
             }
         }
     }
-    return rememberSongPlayingTools(
-        onTunerClicked = onTunerClicked,
-        bpm = bpm,
-        isMetronomeEnabled = isMetronomeEnabled,
-        isTunerEnabled = isTunerEnabled,
-        isTunerSheetShown = isTunerSheetShown,
-        onTempoClicked = onTempoClicked,
-    )
+    return remember(bpm, isMetronomeEnabled, onTempoClicked) {
+        if (isMetronomeEnabled) SongMetronomeTool(bpm = bpm, onTempoClicked = onTempoClicked) else null
+    }
 }
 
 /**
@@ -358,7 +343,7 @@ private fun rememberPagePlayingControls(
     if (isReadOnly) return null
     val onPlayingClicked = remember(dialogHost, song, setlistFileName) {
         {
-            println("Dock: key chip")
+            println("App bar: key chip")
             dialogHost.showDialog(DialogType.Playing(song = song, setlistFileName = setlistFileName))
         }
     }

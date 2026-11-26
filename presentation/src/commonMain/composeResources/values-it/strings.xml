@@ -528,7 +528,6 @@
     <string name="settings_scale_suggestions_description">Mostra le scale su cui si può suonare ogni parte di un brano e, nella scheda di un accordo, le scale per quell\'accordo.</string>
     <string name="settings_group_dock">Dock</string>
     <string name="settings_dock_metronome_description">Mostra il tempo del brano e ne suona il clic dal brano. La scheda Metronomo non cambia.</string>
-    <string name="settings_dock_tuner_description">Mostra un accesso all\'accordatore. Senza, l\'accordatore è nel menu del brano.</string>
     <string name="settings_setlists_description">La scheda Scalette e l\'aggiunta di canzoni alle scalette. Se disattivata, vengono solo nascoste: nessuna scaletta viene eliminata.</string>
     <string name="settings_random_picks_description">Cinque canzoni a caso in cima a una lista di più di 20, nuove ogni ora</string>
     <string name="settings_song_details_lookup">Dettagli delle canzoni online</string>
@@ -1229,6 +1228,7 @@
     <string name="song_details_lookup_nothing_new">Questa registrazione non aggiunge nulla a ciò che il modulo dice già</string>
     <string name="song_details_lookup_attribution">Dati da MusicBrainz e iTunes.</string>
     <string name="song_details_capo">Capotasto %1$d</string>
+    <string name="song_details_capo_short">Capo %1$d</string>
     <string name="song_details_tempo">%1$s BPM</string>
     <string name="song_details_time">%1$s</string>
     <string name="song_details_key_change">Tonalità: %1$s</string>

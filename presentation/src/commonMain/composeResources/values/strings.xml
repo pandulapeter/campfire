@@ -528,7 +528,6 @@
     <string name="settings_scale_suggestions_description">Show the scales each part of a song can be played over, and in a chord\'s sheet, the scales for that chord.</string>
     <string name="settings_group_dock">Dock</string>
     <string name="settings_dock_metronome_description">Show the song\'s tempo and play its click from the song. The Metronome tab is not affected.</string>
-    <string name="settings_dock_tuner_description">Show a way to the tuner. Without it, the tuner is in the song\'s menu.</string>
     <string name="settings_setlists_description">The Setlists tab and adding songs to setlists. Off, they are only hidden: no setlist is deleted.</string>
     <string name="settings_random_picks_description">Five random songs at the top of a list of more than 20, new every hour</string>
     <string name="settings_song_details_lookup">Online song details</string>
@@ -1229,6 +1228,7 @@
     <string name="song_details_lookup_nothing_new">This recording says nothing the form does not say already</string>
     <string name="song_details_lookup_attribution">Data from MusicBrainz and iTunes.</string>
     <string name="song_details_capo">Capo %1$d</string>
+    <string name="song_details_capo_short">Capo %1$d</string>
     <string name="song_details_tempo">%1$s BPM</string>
     <string name="song_details_time">%1$s</string>
     <string name="song_details_key_change">Key: %1$s</string>

@@ -82,10 +82,10 @@ internal fun AppTestScope.openChordsPreferences() =
 
 internal fun AppTestScope.openSong() = tap(hasText(RISING_SUN_TITLE) and hasClickAction())
 
-/** Opens the Playing sheet of the song on screen from its key chip in the dock, which is pressed to open it. */
+/** Opens the Playing sheet of the song on screen from its key chip in the app bar, which is pressed to open it. */
 internal fun AppTestScope.openPlayingSheet() = tap(opensPlayingSheet())
 
-/** The dock's key chip, the one control whose press is said as opening the Playing sheet. */
+/** The app bar's key chip, the one control whose press is said as opening the Playing sheet. */
 internal fun AppTestScope.opensPlayingSheet() = SemanticsMatcher("opens the Playing sheet") {
     it.config.getOrNull(SemanticsActions.OnClick)?.label == string(Res.string.song_details_dock_open_playing)
 }

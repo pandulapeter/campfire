@@ -25,9 +25,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_chord_diagrams
 import com.pandulapeter.campfire.presentation.resources.settings_chord_diagrams_description
 import com.pandulapeter.campfire.presentation.resources.settings_show_chords
 import com.pandulapeter.campfire.presentation.resources.settings_dock_metronome_description
-import com.pandulapeter.campfire.presentation.resources.settings_dock_tuner_description
 import com.pandulapeter.campfire.presentation.resources.settings_group_dock
-import com.pandulapeter.campfire.presentation.resources.tuner
 import com.pandulapeter.campfire.presentation.resources.settings_chords_description
 import com.pandulapeter.campfire.presentation.resources.page_turn_column
 import com.pandulapeter.campfire.presentation.resources.page_turn_page
@@ -123,9 +121,9 @@ private fun SongPageSection(
 
 /**
  * What song details' dock holds, every switch that adds to it in one place: the diagrams of a song's chords and its scale
- * suggestions (each also in the editor's preview and the PDF), its click, and its way to the tuner. Each is disabled
- * while what it needs is off (the chords, the Scales tab, the Metronome, the Tuner, or for the tuner a dock to hold it, [isDockTunerSwitchEnabled]), never hidden. The key chip has no
- * switch: it is the only way to the transposition and the capo.
+ * suggestions (each also in the editor's preview and the PDF), and its click. Each is disabled while what it needs is
+ * off (the chords, the Scales tab, the Metronome), never hidden. The app bar's key chip has no switch: it is the only way
+ * to the transposition and the capo. The tuner has none either: it is the song's menu's and the Playing sheet's.
  */
 @Composable
 private fun DockSection(
@@ -154,12 +152,5 @@ private fun DockSection(
         isChecked = userPreferences?.isDockMetronomeEnabled != false,
         isEnabled = userPreferences?.isMetronomeEnabled != false,
         onCheckedChange = preferencesController::setDockMetronomeEnabled,
-    )
-    SwitchListItem(
-        title = stringResource(Res.string.tuner),
-        description = stringResource(Res.string.settings_dock_tuner_description),
-        isChecked = userPreferences?.isDockTunerEnabled != false,
-        isEnabled = isDockTunerSwitchEnabled(userPreferences),
-        onCheckedChange = preferencesController::setDockTunerEnabled,
     )
 }

@@ -8,7 +8,7 @@
  * https://mozilla.org/MPL/2.0/.
  */
 
-package com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock
+package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.hasContentDescription
@@ -26,9 +26,9 @@ import com.pandulapeter.campfire.screenshots.runAppTest
 import com.pandulapeter.campfire.screenshots.tap
 import kotlin.test.Test
 
-/** The key chip that starts song details' dock: what it names, and the Playing sheet it opens. */
+/** The key chip in song details' app bar: what it names, and the Playing sheet it opens. */
 @OptIn(ExperimentalTestApi::class)
-internal class DockKeyChipTest {
+internal class KeyChipTest {
 
     @Test
     fun `the key chip names the song's key and opens the Playing sheet with its transposition and capo`() = runAppTest {
@@ -42,9 +42,9 @@ internal class DockKeyChipTest {
     }
 
     @Test
-    fun `a capo put on shows on the key chip after its key, and taken off leaves it`() = runAppTest {
+    fun `a capo put on shows on the key chip under its key, and taken off leaves it`() = runAppTest {
         openSong()
-        // The chip is read as one description, the capo in it.
+        // The chip is read as one description, the capo in it, under the key on screen.
         val capoTwo = hasContentDescription(string(Res.string.song_details_capo, 2), substring = true) and opensPlayingSheet()
         onNode(capoTwo).assertDoesNotExist()
         openPlayingSheet()

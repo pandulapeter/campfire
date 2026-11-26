@@ -11,9 +11,15 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.autoScroll.autoScrollCoverOf
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.readAfterDock
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.DOCK_CORNER
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.DOCK_TRAVERSAL_INDEX
+import androidx.compose.ui.semantics.isTraversalGroup
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.traversalIndex
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.DockSidePanel
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.PaddingBesidePanel
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.SongDock
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.SongDockState
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.rememberDockMetronome
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.rememberSongDock
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongPlayingControls
@@ -32,6 +38,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
@@ -56,27 +64,22 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
 import com.pandulapeter.campfire.presentation.ui.metronome.SongTiming
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
-import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.pictures.LocalSongImageLoader
 import com.pandulapeter.campfire.presentation.ui.screens.rememberSongActionHandler
 
 /**
- * The lyrics (and chords) of a song, or of a setlist's songs in a pager. **How the song is played is set under the
- * song**, in the dock ([SongDock]): the key, the capo, the tempo and the time signature, each next to the control that
- * sets it (see [SongPlayingControls]), with the song's chords and scale suggestions, so the app bar is left with what is
- * about the song rather than about how it is played, and the song starts at its first line. Read only mode -
- * performance mode, and a song read from an archived setlist - gets the line of text those four used to be.
+ * The lyrics (and chords) of a song, or of a setlist's songs in a pager. **How the song is played is set from its key
+ * chip** in the app bar (the key, the transposition, and the capo, see [SongPlayingControls]) and the dock under the song
+ * ([SongDock]: the song's chords, its scale suggestions, and the tempo chip), so the song starts at its first line.
  *
- * The text size is the one control that is still the bar's, as a row at the end of its overflow menu
- * ([MenuStepperRow]) - and in performance mode, where it is the one control beside that menu, in the bar itself
- * wherever it fits ([appBarButtons]). It can
- * also be changed with a pinch or Ctrl / Cmd + scroll on the content itself, see [fontScaleGestures], and on the
- * desktop and the web with Ctrl / Cmd + plus, minus and zero, which the window answers (`FontScaleController.zoomSongText`).
+ * The text size is a row at the end of the bar's overflow menu ([MenuStepperRow]). It can also be changed with a pinch
+ * or Ctrl / Cmd + scroll on the content itself, see [fontScaleGestures], and on the desktop and the web with Ctrl / Cmd
+ * + plus, minus and zero, which the window answers (`FontScaleController.zoomSongText`).
  *
  * When there is more than one song to page through, or the song is read from a setlist of any length, a
- * [SongPagerControls] row, the dock's last, offers the same paging as the swipe gesture, along with the name of the
- * setlist and the position of the current song in it.
+ * [SongPagerControls] row under the dock and the side panel alike offers the same paging as the swipe gesture, along
+ * with the name of the setlist and the position of the current song in it.
  *
  * The arrow keys do both without either gesture, see [songKeyboardShortcuts].
  *
@@ -143,7 +146,7 @@ internal fun SongDetailsScreen(
     val setlistSlots = remember(setlist, songs) { setlist?.let { buildSetlistSlots(it.entries, songs.map { song -> song.fileName }) } }
     val shouldShowChords = userPreferences?.areChordsEnabled != false
     val chordDiagrams = rememberChordDiagrams(userPreferences = userPreferences)
-    val (isMetronomeEnabled, isTunerEnabled, isTunerInMenu) = songDetailsToolsOf(userPreferences, shouldShowChords)
+    val (isMetronomeEnabled, isTunerInMenu) = songDetailsToolsOf(userPreferences, isImportPreview)
     val areSetlistsEnabled = userPreferences?.areSetlistsEnabled != false
     val isCoverArtEnabled = userPreferences?.isCoverArtEnabled == true
     val openCurrentSongInfo = rememberOpenSongInfo(
@@ -215,8 +218,6 @@ internal fun SongDetailsScreen(
             isPerformanceModeEnabled = isPerformanceModeEnabled,
             shouldShowChords = shouldShowChords,
             isTunerInMenu = isTunerInMenu,
-            isKeyInBar = dock.rows.isKeyOnly,
-            isTunerInBar = isTunerEnabled && !isImportPreview,
             dockContents = dock.contents,
             targetPage = { pagerState.targetPage },
             areSetlistsEnabled = areSetlistsEnabled,
@@ -231,14 +232,11 @@ internal fun SongDetailsScreen(
             onBack = onBack,
         )
         // The paging bar, or the dock without one, sits below the pager and covers the bottom inset for it, so the pages
-        // only keep the padding that is still theirs to apply; the paging bar leaving for the side panel hands it back.
-        val pagerBarCover by animateDpAsState(if (hasPagerControls && !dock.isSidePanel) contentPadding.calculateBottomPadding() else 0.dp)
+        // only keep the padding that is still theirs to apply.
+        val pagerBarCover = if (hasPagerControls) contentPadding.calculateBottomPadding() else 0.dp
         val baseBottom = (contentPadding.calculateBottomPadding() - dock.height - pagerBarCover).coerceAtLeast(0.dp)
         val previewCard = @Composable { preview: ImportPreviewState?, padding: PaddingValues, bottom: Dp ->
             PreviewCard(viewModel = viewModel, importPreview = preview, currentPage = pagerState.currentPage, contentPadding = padding, baseBottom = bottom)
-        }
-        val pagerBar: (@Composable (PaddingValues, Boolean) -> Unit)? = if (!hasPagerControls) null else { padding, isStacked ->
-            SetlistPagerBar(setlistTitle = setlist?.title, setlistSlots = setlistSlots, pagerState = pagerState, songs = songs, steps = steps, contentPadding = padding, isStacked = isStacked)
         }
         val metronome = rememberDockMetronome(viewModel.metronomeController, viewModel.libraryState, viewModel.songTextStore)
         Row(modifier = Modifier.weight(1f).fillMaxWidth()) {
@@ -259,7 +257,6 @@ internal fun SongDetailsScreen(
                             fontScaleController = viewModel.fontScaleController,
                             songRenderer = viewModel.songRenderer,
                             dialogHost = viewModel.dialogHost,
-                            onTunerClicked = viewModel::openTunerSheet,
                             destination = destination,
                             importPreview = importPreview,
                             pageKey = pageKey,
@@ -273,8 +270,6 @@ internal fun SongDetailsScreen(
                             chordSpelling = chordSpelling,
                             shouldShowChords = shouldShowChords,
                             isMetronomeEnabled = isMetronomeEnabled,
-                            isTunerEnabled = isTunerEnabled,
-                            isTunerSheetShown = visibleDialog is DialogType.Tuner,
                             canPage = canPage,
                             settledWidth = settledWidth - dock.panelTarget,
                             pageContentPadding = PaddingValues(
@@ -304,7 +299,6 @@ internal fun SongDetailsScreen(
                     contentPadding = songPadding,
                     targetPage = pagerState.targetPage,
                     isUnderCard = importPreview != null && !dock.isSidePanel,
-                    lastRow = pagerBar?.takeUnless { dock.isSidePanel }?.let { bar -> { bar(songPadding, false) } },
                 )
             }
             DockSidePanel(
@@ -312,9 +306,12 @@ internal fun SongDetailsScreen(
                 metronome = metronome,
                 contentPadding = contentPadding,
                 targetPage = pagerState.targetPage,
+                hasPagerBar = hasPagerControls,
                 card = { previewCard(importPreview.takeIf { dock.isSidePanel }, PaddingValues(), 0.dp) },
-                lastRow = pagerBar?.takeIf { dock.isSidePanel }?.let { bar -> { bar(contentPadding.only(end = true, bottom = true), true) } },
             )
+        }
+        if (hasPagerControls) {
+            SetlistPagerBar(setlistTitle = setlist?.title, setlistSlots = setlistSlots, pagerState = pagerState, songs = songs, steps = steps, contentPadding = contentPadding, dock = dock, hasCard = importPreview != null)
         }
     }
 }
@@ -339,8 +336,10 @@ private fun PreviewCard(
 )
 
 /**
- * [SongPagerControls] for a setlist read through [songs], stepping with [steps]: under the song, or [isStacked] as the
- * side panel's last row.
+ * [SongPagerControls] for a setlist read through [songs], stepping with [steps], as wide as the screen under the dock and
+ * the side panel alike, on their surface, and read by screen readers with them. Where nothing stands on the surface
+ * above it (no rows under the song in [dock], no import preview's card, [hasCard]) its top corners are rounded as the
+ * dock's would be, but the end one under the side panel, which it meets square.
  */
 @Composable
 private fun SetlistPagerBar(
@@ -350,8 +349,21 @@ private fun SetlistPagerBar(
     songs: List<Song>,
     steps: SongDetailsSteps,
     contentPadding: PaddingValues,
-    isStacked: Boolean,
+    dock: SongDockState,
+    hasCard: Boolean,
 ) = SongPagerControls(
+    modifier = Modifier
+        .clip(
+            RoundedCornerShape(
+                topStart = animateDpAsState(if (dock.layout == null && !hasCard) DOCK_CORNER else 0.dp).value,
+                topEnd = animateDpAsState(if (dock.layout == null && !hasCard && !dock.isSidePanel) DOCK_CORNER else 0.dp).value,
+            ),
+        )
+        // Read with the dock, after it and before the song, as its last row was.
+        .semantics {
+            isTraversalGroup = true
+            traversalIndex = DOCK_TRAVERSAL_INDEX
+        },
     setlistTitle = setlistTitle,
     setlistSlots = setlistSlots,
     currentPage = pagerState.currentPage,
@@ -361,7 +373,6 @@ private fun SetlistPagerBar(
     nextSongTitle = songs.getOrNull(pagerState.targetPage + 1)?.title?.takeIf { steps.nextSongConfirmation.armedPage == pagerState.targetPage },
     onStep = steps.pageStepper::step,
     onConfirmNextSong = { steps.stepForward(null) },
-    isStacked = isStacked,
 )
 
 /**

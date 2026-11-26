@@ -10,7 +10,6 @@
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
 import com.pandulapeter.campfire.presentation.ui.components.CampfireIconButton
-import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongPlayingTools
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
@@ -39,7 +38,6 @@ import com.pandulapeter.campfire.presentation.ui.state.songText.SongTextStore
 import com.pandulapeter.campfire.presentation.ui.state.songs.SongFilesController
 import kotlinx.coroutines.flow.StateFlow
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.DockContent
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.dockKeyOf
 import com.pandulapeter.campfire.presentation.ui.components.appBar.CampfireTopAppBar
 import com.pandulapeter.campfire.presentation.ui.tuner.tunerAction
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
@@ -50,9 +48,10 @@ import com.pandulapeter.campfire.presentation.ui.screens.rememberSongActionHandl
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * The song details screen's app bar: the way back, the title block that opens the sheet of what the song is, the song's
- * actions, and where the dock would hold only the key chip ([isKeyInBar]) that chip, for the page the pager is on or
- * heading for ([targetPage], [dockContents]), and the tuner ([isTunerInBar], never an import preview's, which has none). A composable of its own because [SongDetailsScreen] recomposes on every
+ * The song details screen's app bar: the way back, the title block that opens the sheet of what the song is, the key
+ * chip with the chords on ([shouldShowChords]) for the page the pager is on or heading for ([targetPage],
+ * [dockContents]), and the song's actions, whose menu holds the tuner ([isTunerInMenu], never an import preview's, which
+ * has none). A composable of its own because [SongDetailsScreen] recomposes on every
  * page change: what only the bar reads is collected and decided here, so that a change of it recomposes the bar rather
  * than the whole screen.
  */
@@ -74,8 +73,6 @@ internal fun SongDetailsAppBar(
     isPerformanceModeEnabled: Boolean,
     shouldShowChords: Boolean,
     isTunerInMenu: Boolean,
-    isKeyInBar: Boolean,
-    isTunerInBar: Boolean,
     dockContents: Map<Int, DockContent>,
     targetPage: () -> Int,
     areSetlistsEnabled: Boolean,
@@ -94,22 +91,25 @@ internal fun SongDetailsAppBar(
     val layoutDirection = LocalLayoutDirection.current
     val appBarWidth = settledWidth - contentPadding.calculateStartPadding(layoutDirection) - contentPadding.calculateEndPadding(layoutDirection)
     // Decided from the settled width and for every song of the pager at once, like the song actions, so that the
-    // cover and the steppers do not come and go during a navigation transition or a page change. The cover's room is
+    // cover and the star do not come and go during a navigation transition or a page change. The cover's room is
     // reserved for every song of the pager, so that paging to a song without one does not move the star in and out of
     // the menu.
     val appBarButtons = appBarButtons(
         appBarWidth = appBarWidth,
         hasCover = isCoverArtEnabled && songs.any { it.coverArtUrl != null },
         isReadOnly = isReadOnly,
-        playingToolsWidth = appBarPlayingToolsWidth(hasKeyChip = isKeyInBar, hasTuner = isKeyInBar && isTunerInBar),
+        hasKeyChip = shouldShowChords,
     )
     val showsCoverInBar = isCoverArtEnabled && appBarButtons.isCoverShown
-    val showsFontScaleInBar = appBarButtons.isFontScaleShown
     val showsSetlistAssignmentsInBar = areSetlistsEnabled && appBarButtons.isSetlistAssignmentsShown
-    // The tuner is the dock's wherever the dock holds one (see SongDetailsScreen), else the menu's.
     val openPreferences = { page: PreferencesPage -> dialogHost.showDialog(DialogType.Preferences(PreferencesContext.SONG_DETAILS, page)) }
     val tunerAction = if (isTunerInMenu) {
-        tunerAction(isAlwaysInMenu = isReadOnly, onClick = onTunerClicked)
+        tunerAction(
+            onClick = {
+                println("Menu: tuner")
+                onTunerClicked()
+            },
+        )
     } else {
         null
     }
@@ -137,24 +137,14 @@ internal fun SongDetailsAppBar(
                 barKeyOf = { fileName ->
                     // The dock's contents are by page, and the pages are the songs in order.
                     dockContents[songs.indexOfFirst { it.fileName == fileName }]
-                        ?.takeIf { isKeyInBar }
-                        ?.let { dockKeyOf(it.playingControls, it.model)?.key }
+                        ?.takeIf { shouldShowChords }
+                        ?.let { keyChipTextOf(it.playingControls, it.model)?.key }
                 },
             )
         },
         actions = {
             SongDetailsActions(
-                playingTools = {
-                    AppBarPlayingTools(
-                        isShown = isKeyInBar,
-                        isBeforeStepper = showsFontScaleInBar,
-                        contents = dockContents,
-                        targetPage = targetPage,
-                        onTunerClicked = onTunerClicked.takeIf { isTunerInBar },
-                    )
-                },
-                // The stepper, where it is in the bar, stands between the tuner and the buttons after it.
-                isAfterTuner = isKeyInBar && isTunerInBar && !showsFontScaleInBar,
+                keyChip = { AppBarKeyChip(isShown = shouldShowChords, contents = dockContents, targetPage = targetPage) },
                 fontScaleController = fontScaleController,
                 songFileNamesInSetlistsFlow = libraryState.songFileNamesInSetlists,
                 songActions = songActions,
@@ -164,7 +154,6 @@ internal fun SongDetailsAppBar(
                 isPerformanceModeEnabled = isPerformanceModeEnabled,
                 isImportPreview = destination.importPreview != null,
                 areSetlistsEnabled = areSetlistsEnabled,
-                showsFontScaleInBar = showsFontScaleInBar,
                 showsSetlistAssignmentsInBar = showsSetlistAssignmentsInBar,
                 aboutSongAction = openCurrentSongInfo?.let { aboutSongAction(onClick = it) },
                 tunerAction = tunerAction,

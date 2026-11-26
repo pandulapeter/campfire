@@ -10,12 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock
 
 import com.pandulapeter.campfire.presentation.ui.songView.rememberChordCells
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -51,12 +46,11 @@ import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.So
 /**
  * What left the song for the screen to hold, under the pages and outside the pager (this package's `CLAUDE.md`): one surface,
  * rounded at its top corners, with no divider or shadow, its rows as tall as [dock] says, the bottom inset included where
- * there is no [lastRow] under them to cover that. Its rows are the screen's ([SongDockState.rows]) and their contents
- * the song's that the pager is on or heading for ([targetPage], [SongDockState.contents]), crossfading as a page turns, as the app
- * bar's subtitle does. [lastRow] is a setlist's pager bar, on the same surface, shrinking away as it leaves for the side
- * panel ([DockSidePanel]), as the rows do. Where an import preview's card stands on
- * the surface above it ([isUnderCard]) its corners square off, the card's room rounding the surface's top instead. Read
- * by screen readers after the app bar and before the song.
+ * there is no setlist's pager bar under them to cover that. Its rows are the screen's ([SongDockState.rows]) and their
+ * contents the song's that the pager is on or heading for ([targetPage], [SongDockState.contents]), crossfading as a page
+ * turns, as the app bar's subtitle does. Where an import preview's card stands on the surface above it ([isUnderCard])
+ * its corners square off, the card's room rounding the surface's top instead. Read by screen readers after the app bar
+ * and before the song.
  */
 @Composable
 internal fun SongDock(
@@ -66,12 +60,11 @@ internal fun SongDock(
     contentPadding: PaddingValues,
     targetPage: Int,
     isUnderCard: Boolean,
-    lastRow: (@Composable () -> Unit)?,
 ) {
     val corner by animateDpAsState(if (isUnderCard) 0.dp else DOCK_CORNER)
     // Beside the side panel the row meets the panel's own surface, the two making one.
     val endCorner by animateDpAsState(if (isUnderCard || dock.isSidePanel) 0.dp else DOCK_CORNER)
-    Column(
+    Box(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(topStart = corner, topEnd = endCorner))
@@ -82,16 +75,6 @@ internal fun SongDock(
             },
     ) {
         DockRowsBox(dock = dock, metronome = metronome, contentPadding = contentPadding, targetPage = targetPage)
-        // Kept while it leaves for the side panel, so that it shrinks away as it was rather than as nothing.
-        val shownLastRow = remember { LastRow() }
-        lastRow?.let { shownLastRow.value = it }
-        AnimatedVisibility(
-            visible = lastRow != null,
-            enter = fadeIn() + expandVertically(expandFrom = Alignment.Top),
-            exit = fadeOut() + shrinkVertically(shrinkTowards = Alignment.Top),
-        ) {
-            shownLastRow.value?.invoke()
-        }
     }
 }
 
@@ -138,14 +121,13 @@ private fun DockRowsBox(dock: SongDockState, metronome: DockMetronome, contentPa
 /**
  * The dock's rows for one song's [content], laid out at the dock's full height whatever height it is animating through.
  * With the metronome all it holds, one row that is the metronome panel ([DockMetronomePanel]). In [DockTier.CHORD_CHIPS]
- * (a short window's and an import preview's), or without the diagrams, one row: what starts the dock ([DockStart]), then the chord chips and the scale chips
- * scrolling between it and the tempo chip ([DockTempoChip]). Otherwise the diagrams have a row of their own between the
- * dock's start and the tempo chip, both as tall as the diagrams (see [DockKeyAndTuner] and [DockTempoChip]), under a row of
- * the scale chips alone where there are scale suggestions. Whatever scrolls fades only where it meets what stands still. The click is the
- * screen's ([metronome]), whichever page the rows are drawn for.
- * The diagrams fade back the chords not on the screen the page's [stepper] shows; the rows move only under the
- * reader's finger. Beside
- * the side panel ([isBesidePanel]) the one row is the scale chips alone, fading where they scroll under the panel.
+ * (a short window's and an import preview's), or without the diagrams, one row: the chord chips and the scale chips
+ * scrolling up to the chip-high tempo chip ([DockTempoChip]) at its end. Otherwise the diagrams have a row of their own,
+ * the tempo chip as tall as they are at its end, under a row of the scale chips alone where there are scale suggestions,
+ * so that the tempo chip always stands in the dock's bottom end corner. Whatever scrolls fades only where it meets what
+ * stands still. The click is the screen's ([metronome]), whichever page the rows are drawn for. The diagrams fade back
+ * the chords not on the screen the page's [stepper] shows; the rows move only under the reader's finger. Beside the side
+ * panel ([isBesidePanel]) the one row is the scale chips alone, fading where they scroll under the panel.
  */
 @Composable
 private fun DockRowsOf(
@@ -169,22 +151,17 @@ private fun DockRowsOf(
     val cells = content?.let { rememberChordCells(it.model, it.chordDiagrams) }.orEmpty()
     val onChordClicked = content?.chordDiagrams?.onChordClicked
     val hasDiagramRow = rows.hasChordRow && layout.tier != DockTier.CHORD_CHIPS
-    val dockKey = remember(content?.playingControls, content?.model) { content?.let { dockKeyOf(it.playingControls, it.model) } }
-    val startContent = content?.takeIf { rows.hasPlayingRow }?.takeIf { dockKey != null || it.hasInstrumentTools(keyOpensPlaying = dockKey?.opensPlaying == true, keyHoldsTuner = false) }
-    val start = startContent?.let { @Composable { DockStart(content = it, dockKey = dockKey, height = layout.rowHeight) } }
-    val tempo = content?.tempo?.takeIf { rows.hasPlayingRow }
+    val tempo = content?.tempo?.takeIf { rows.hasTempo }
     if (rows.isMetronomeOnly) {
-        if (tempo != null) DockMetronomePanel(tempo = tempo, metronome = metronome, height = layout.rowHeight, start = start, horizontalPadding = horizontalPadding)
+        if (tempo != null) DockMetronomePanel(tempo = tempo, metronome = metronome, height = layout.rowHeight, horizontalPadding = horizontalPadding)
         return@Column
     }
-    val end = tempo?.let { @Composable { DockTempoChip(tempo = it, metronome = metronome, height = layout.rowHeight) } }
     if (!hasDiagramRow) {
         DockScrollingRow(
             height = layout.rowHeight,
             horizontalPadding = horizontalPadding,
             scrollState = rowScroll,
-            start = start,
-            end = end,
+            end = tempo?.let { @Composable { DockTempoChip(tempo = it, metronome = metronome, height = layout.rowHeight) } },
             fadesAtEnd = isBesidePanel,
         ) {
             if (content != null) {
@@ -194,7 +171,7 @@ private fun DockRowsOf(
         }
     } else {
         if (rows.hasScaleRow) {
-            DockScrollingRow(height = layout.rowHeight, horizontalPadding = horizontalPadding, scrollState = rowScroll, start = null, end = null) {
+            DockScrollingRow(height = layout.rowHeight, horizontalPadding = horizontalPadding, scrollState = rowScroll, end = null) {
                 if (content != null) DockScaleChips(content = content, stepper = stepper)
             }
         }
@@ -203,7 +180,6 @@ private fun DockRowsOf(
             height = layout.diagramRowHeight,
             horizontalPadding = horizontalPadding,
             scrollState = stripScroll,
-            start = startContent?.let { @Composable { DockStart(content = it, dockKey = dockKey, height = layout.rowHeight, tallHeight = layout.diagramRowHeight) } },
             end = tempo?.let { @Composable { DockTempoChip(tempo = it, metronome = metronome, height = layout.diagramRowHeight, isTall = true) } },
         ) {
             if (content != null) {
@@ -233,9 +209,6 @@ internal fun Modifier.readAfterDock() = semantics {
 
 /** The dock's rows and their layout as [SongDock] last drew them. Not a state. */
 private class ShownDockRows(var rows: DockRows? = null, var layout: DockLayout? = null)
-
-/** The dock's last row as [SongDock] last drew it. Not a state. */
-private class LastRow(var value: (@Composable () -> Unit)? = null)
 
 internal val DOCK_CORNER = 16.dp
 

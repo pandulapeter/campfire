@@ -108,6 +108,3 @@ internal fun stepperResetMarkWidth(fontScale: Float, isPressable: Boolean): Dp {
     val markWidth = STEPPER_RESET_MARK_SIZE * fontScale + STEPPER_RESET_MARK_GAP
     return if (isPressable) maxOf(markWidth, STEPPER_BUTTON_LENGTH) else markWidth
 }
-
-/** The width of a [StepperResetMark] that takes no press, where the stepper is not scaled by a song's text size. */
-internal val STEPPER_RESET_MARK_WIDTH = stepperResetMarkWidth(fontScale = 1f, isPressable = false)
