@@ -48,10 +48,13 @@ import com.pandulapeter.campfire.presentation.ui.components.rememberClearTextBut
 import kotlin.math.roundToInt
 
 /**
- * The random picks widget's setup screen: its own title (empty for the snapshot's Random picks, which the field shows as
- * its placeholder), how many songs it draws, and the tags and languages of [snapshot]'s library it draws from,
- * [initialTitle], [initialCount], and [initialFilter] at first. Done calls [onDone] with them. A group the library has
- * none of is left out.
+ * The random picks widget's setup screen: its own title, how many songs it draws, and the tags and languages of
+ * [snapshot]'s library it draws from, [initialTitle], [initialCount], and [initialFilter] at first. Done calls [onDone]
+ * with them. A group the library has none of is left out.
+ *
+ * A widget without a title of its own shows the snapshot's Random picks, which the field starts with (and shows as its
+ * placeholder once cleared); a title left as that one, or cleared, is handed back empty, so that the widget keeps
+ * following the app's language rather than keeping the words of the one it was set up in.
  *
  * The title is typed as the app's setlist titles are (`dialogs/forms`): selected whole the first time it takes focus, so
  * the first key typed replaces a title rather than adding to it, cut at their length, with a clear button, and the
@@ -67,7 +70,8 @@ fun RandomPicksWidgetSetup(
 ) {
     val strings = snapshot.strings
     var title by rememberSaveable(stateSaver = TextFieldValue.Saver) {
-        mutableStateOf(TextFieldValue(text = initialTitle, selection = TextRange(initialTitle.length)))
+        val text = initialTitle.ifBlank { strings.randomPicks }
+        mutableStateOf(TextFieldValue(text = text, selection = TextRange(text.length)))
     }
     var hasTitleBeenFocused by rememberSaveable { mutableStateOf(false) }
     // A tap focuses the field and places its caret in the same pass, which would undo the selection made as the focus
@@ -90,7 +94,10 @@ fun RandomPicksWidgetSetup(
     var languages by rememberSaveable { mutableStateOf(snapshot.languages.map { it.code }.filter { it in initialFilter.languages }) }
     WidgetSetupScaffold(
         snapshot = snapshot,
-        onDone = { onDone(title.text, count, RandomPicksFilter(tags = tags.toSet(), languages = languages.toSet())) },
+        onDone = {
+            val ownTitle = title.text.trim().takeUnless { it == strings.randomPicks }.orEmpty()
+            onDone(ownTitle, count, RandomPicksFilter(tags = tags.toSet(), languages = languages.toSet()))
+        },
     ) {
         item(key = TITLE_KEY) {
             OutlinedTextField(
