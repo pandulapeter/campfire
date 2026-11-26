@@ -21,7 +21,9 @@ shells' (`app/android`'s Glance widgets, `app/ios`'s `CampfireWidgets` extension
   app is opened, so a key added later has a default (optional in Swift). Never backed up, never synced.
 - `WidgetSnapshotEffect` builds it from a library read whole (`DataState.Idle` and `isWholeLibrary`, never a first
   read's batches) and writes it through the shell's `WidgetFiles` once it has held for a second, again only when it
-  changes.
+  changes. **The library and the switches are collected as flows** (`widgetPublications`), never as composed state: a
+  window's recomposer pauses once the app is out of sight, and a sync run or an import goes on there. Only the texts,
+  the theme, and the formatters come from the composition.
 - **Covers** (`WidgetPublisher`, `WidgetCovers.kt`): a song's `cover` names a small JPEG thumbnail (120 px on its
   shorter side, made by `reencodePicture`) in a `covers/` folder beside the snapshot, named by the address's SHA-256,
   since an iOS extension cannot read the app's `covers/`. The bytes come through `GetCoverArtUseCase`, as the songs
