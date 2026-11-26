@@ -109,8 +109,18 @@ internal class DockTunerTest {
     }
 
     @Test
-    fun `with the diagrams off there is no card, so the menu holds the tuner whatever the switch says`() = runAppTest(
+    fun `with the diagrams off the one line card keeps the tuner, so the menu has none`() = runAppTest(
         extraPreferences = mapOf("areChordDiagramsEnabled" to JsonPrimitive(false), "isDockTunerEnabled" to JsonPrimitive(true)),
+    ) {
+        openSong()
+        waitForIdle()
+        onNode(dockTunerNode()).assertExists()
+        assertMenuTuner(isThere = false)
+    }
+
+    @Test
+    fun `with the diagrams and the dock's tuner off there is no card, so the menu holds the tuner`() = runAppTest(
+        extraPreferences = mapOf("areChordDiagramsEnabled" to JsonPrimitive(false), "isDockTunerEnabled" to JsonPrimitive(false)),
     ) {
         openSong()
         waitForIdle()

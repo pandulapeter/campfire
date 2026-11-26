@@ -96,8 +96,17 @@ internal class DockInstrumentPillTest {
     }
 
     @Test
-    fun `with the diagrams off there is no instrument pill`() = runAppTest(
-        extraPreferences = mapOf("areChordDiagramsEnabled" to JsonPrimitive(false)),
+    fun `with the diagrams off the instrument pill stays while it holds the tuner`() = runAppTest(
+        extraPreferences = mapOf("areChordDiagramsEnabled" to JsonPrimitive(false), "isDockTunerEnabled" to JsonPrimitive(true)),
+    ) {
+        openSong()
+        waitForIdle()
+        onNode(instrumentPillNode()).assertExists()
+    }
+
+    @Test
+    fun `with the diagrams and the dock's tuner off there is no instrument pill`() = runAppTest(
+        extraPreferences = mapOf("areChordDiagramsEnabled" to JsonPrimitive(false), "isDockTunerEnabled" to JsonPrimitive(false)),
     ) {
         openSong()
         waitForIdle()
