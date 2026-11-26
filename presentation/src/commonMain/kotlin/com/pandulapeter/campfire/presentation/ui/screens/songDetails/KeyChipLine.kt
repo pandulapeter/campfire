@@ -15,6 +15,12 @@ internal enum class KeyChipLine {
     /** The key and the small muted words naming it ("Key of G (+1)", "Em shapes"), see [keyLabelOf]. */
     LABELLED_KEY,
 
+    /**
+     * The semitones of a song that names no key, after the bare label ("Key +2"): the template's words around them would
+     * name "+2" as a key.
+     */
+    LABELLED_SEMITONES,
+
     /** The label alone, muted at the key's size: a song with no key whose chip opens the Playing sheet. */
     LABEL_ALONE,
 

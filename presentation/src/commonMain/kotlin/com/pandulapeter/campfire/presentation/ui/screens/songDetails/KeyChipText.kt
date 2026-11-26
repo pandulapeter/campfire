@@ -20,7 +20,7 @@ import com.pandulapeter.campfire.presentation.ui.songView.model.SongLyricsModel
  * named it, its semitones where the song names no key, null where there is neither) and the capo the song is played at
  * where it is not zero, which is always on screen. [transposition] is the semitones the song is moved by ("+2") beside a
  * named key, so that a moved song says so without the sheet; null where it is not moved, or where [key] already is the
- * semitones. They move what sounds, so they follow the key that sounds: the chip's own where it names it
+ * semitones ([isSemitones]). They move what sounds, so they follow the key that sounds: the chip's own where it names it
  * ([transpositionOnChip]), else the subtitle's ([transpositionInSubtitle]). [opensPlaying] where the chip opens the Playing sheet, never in read only mode, whose sheet would write
  * overrides. [namesShapes] where [key] is the shapes fingered above a capo rather than the key that sounds, which the
  * title's subtitle then names beside it: the chip names it as the shapes ("Em shapes") rather than as the key, so that the bar never names
@@ -33,6 +33,7 @@ internal data class KeyChipText(
     val opensPlaying: Boolean,
     val transposition: String? = null,
     val namesShapes: Boolean = false,
+    val isSemitones: Boolean = false,
 ) {
     /** [transposition] beside the chip's key, which names what sounds. */
     val transpositionOnChip get() = transposition.takeUnless { namesShapes }
@@ -47,6 +48,7 @@ internal data class KeyChipText(
      */
     val keyLine
         get() = when {
+            key != null && isSemitones -> KeyChipLine.LABELLED_SEMITONES
             key != null -> KeyChipLine.LABELLED_KEY
             opensPlaying -> KeyChipLine.LABEL_ALONE
             else -> KeyChipLine.NONE
@@ -69,6 +71,7 @@ internal fun keyChipTextOf(controls: SongPlayingControls?, model: SongLyricsMode
             opensPlaying = controls.onPlayingClicked != null,
             transposition = keyControl?.takeIf { it.transposition != 0 && !it.key.isNullOrBlank() }?.let { transpositionLabel(it.transposition, null) },
             namesShapes = capo != null && controls.capo.namesShapes,
+            isSemitones = keyControl != null && keyControl.key.isNullOrBlank(),
         )
     }
     val key = (model.shapesKey ?: model.song.metadata.key)?.takeIf { it.isNotBlank() }

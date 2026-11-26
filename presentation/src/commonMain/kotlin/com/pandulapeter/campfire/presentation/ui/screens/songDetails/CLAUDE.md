@@ -87,7 +87,8 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
   import preview's too, first among the actions, before the setlists' star or the read only mark and the overflow
   button. Small muted words name the key, before or after it as the language orders them (`song_details_dock_key_short`, "Key
   of %1$s", "Ton. %1$s" where a language's word is long, read by `keyLabelOf`; a key alone read as a letter in a box; a
-  song with no key whose chip opens the sheet reads the full word alone, `KeyChipText.keyLine`), **the shapes' words
+  song with no key whose chip opens the sheet reads the full word alone, and one named by its semitones the full word
+  before them, "Key +2", never "Key of +2", `KeyChipText.keyLine`), **the shapes' words
   where the key names the shapes above a capo** ("Em shapes", "Em-Griffe", `KeyChipText.namesShapes`,
   `song_details_dock_shapes_short`: the subtitle then names the sounding key, and two keys both called the key left the
   reader guessing; each word crossfades on its own as a capo comes or goes), then what the transposition stepper names in the chords' colour (the shapes' under `SHAPES`,

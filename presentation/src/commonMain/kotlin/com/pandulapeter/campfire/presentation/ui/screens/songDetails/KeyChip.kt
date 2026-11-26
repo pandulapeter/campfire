@@ -108,6 +108,12 @@ internal fun KeyChip(
                     key = text.key.orEmpty(),
                     transposition = text.transpositionOnChip,
                 )
+                KeyChipLine.LABELLED_SEMITONES -> KeyLine(
+                    label = keyLabelOf(keyLabel),
+                    // Isolated, or a sentence read from the right would draw "+2" as "2+".
+                    key = text.key.orEmpty().isolatedLeftToRight(),
+                    transposition = null,
+                )
                 // A song whose key is not known is still named for what the chip opens, rather than "Playing", which
                 // read as a state.
                 KeyChipLine.LABEL_ALONE -> Text(

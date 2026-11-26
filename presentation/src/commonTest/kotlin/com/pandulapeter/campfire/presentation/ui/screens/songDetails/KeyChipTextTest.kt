@@ -57,6 +57,10 @@ internal class KeyChipTextTest {
         assertEquals(KeyChipLine.LABELLED_KEY, keyChipTextOf(controls(key = "G", capo = 0, transposition = 1), model("{key: F#}"))?.keyLine)
 
     @Test
+    fun `a song named by its semitones is led by the bare Key label rather than named as a key`() =
+        assertEquals(KeyChipLine.LABELLED_SEMITONES, keyChipTextOf(controls(key = null, capo = 0, transposition = 2), model(""))?.keyLine)
+
+    @Test
     fun `a song with no key whose chip opens the sheet reads the Key label alone`() =
         assertEquals(KeyChipLine.LABEL_ALONE, KeyChipText(key = null, capo = 2, opensPlaying = true).keyLine)
 
