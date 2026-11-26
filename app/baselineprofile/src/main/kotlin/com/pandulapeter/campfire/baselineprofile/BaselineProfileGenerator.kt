@@ -14,8 +14,10 @@ import androidx.benchmark.macro.junit4.BaselineProfileRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.BySelector
+import androidx.test.uiautomator.Condition
 import androidx.test.uiautomator.Direction
 import androidx.test.uiautomator.StaleObjectException
+import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.Until
 import org.junit.FixMethodOrder
@@ -158,8 +160,15 @@ class BaselineProfileGenerator {
 
     private fun MacrobenchmarkScope.waitFor(selector: BySelector): UiObject2? = device.wait(Until.findObject(selector), STEP_TIMEOUT)
 
-    /** A tool's button in the group, which names an unselected tool only in its content description, or its rail item. */
-    private fun MacrobenchmarkScope.toolButton(label: String): UiObject2? = device.findObject(By.desc(label)) ?: waitFor(By.text(label))
+    /**
+     * A tool's button in the group, which names an unselected tool only in its content description, or its rail item, which
+     * names it in its text. Both are waited for at once: the group is still arriving just after the Tools item is
+     * selected, and a wait for the text alone would never find the group's button.
+     */
+    private fun MacrobenchmarkScope.toolButton(label: String): UiObject2? = device.wait(
+        Condition<UiDevice, UiObject2?> { it.findObject(By.desc(label)) ?: it.findObject(By.text(label)) },
+        STEP_TIMEOUT,
+    )
 
     /** A song action, shown in the bar where it is wide enough and otherwise behind the song's overflow button. */
     private fun MacrobenchmarkScope.songAction(label: String): UiObject2? = device.findObject(By.desc(label))
