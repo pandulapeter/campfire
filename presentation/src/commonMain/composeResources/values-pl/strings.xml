@@ -1282,6 +1282,7 @@
     <string name="song_details_overrides_kept_app">Zapisane w aplikacji. Plik piosenki pozostaje bez zmian.</string>
     <string name="song_details_tempo_kept_setlist">Tempo jest zapisane w tej setliście, a akcenty w aplikacji. Plik piosenki pozostaje bez zmian.</string>
     <string name="song_details_dock_key">Tonacja</string>
+    <string name="song_details_dock_key_short">Ton.</string>
     <string name="song_details_dock_transposition">Transpozycja: %1$s</string>
     <string name="song_details_dock_open_playing">Otwórz ustawienia grania</string>
     <string name="song_details_dock_open_tempo">Otwórz ustawienia tempa</string>

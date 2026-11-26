@@ -38,6 +38,7 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.song_details_capo
 import com.pandulapeter.campfire.presentation.resources.song_details_capo_short
 import com.pandulapeter.campfire.presentation.resources.song_details_dock_key
+import com.pandulapeter.campfire.presentation.resources.song_details_dock_key_short
 import com.pandulapeter.campfire.presentation.resources.song_details_dock_open_playing
 import com.pandulapeter.campfire.presentation.resources.song_details_dock_transposition
 import com.pandulapeter.campfire.presentation.resources.song_details_key_change
@@ -50,7 +51,7 @@ import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
  * The app bar's key chip: one outlined control with no fill ([DockControlPill], [ControlPillFrame.OUTLINED]: a fill made
  * it read as one of the song's section headers, which are filled pills), a rounded rectangle rather than a pill so that
  * its two lines are not cut by round ends. A small muted "Key" label leads the key, so that a key alone still reads as
- * the control it is: a word, neutral between the shapes' key and the sounding one, where a note mark said "what sounds"
+ * the control it is (shortened where a language's word for it is long, read in full): a word, neutral between the shapes' key and the sounding one, where a note mark said "what sounds"
  * of a key that names the shapes under a capo. Then the key the page's chords are in, in the colour chords are written
  * in, a moved song's semitones muted and smaller after it in parentheses ("Key G# (+1)", which bare would read as a step
  * up from G#), and the capo wherever it is not zero on a second, smaller line under it ("Capo 2", shortened where a
@@ -94,7 +95,7 @@ internal fun KeyChip(
         ) {
             val keyLine = text.keyLine
             when (keyLine) {
-                KeyChipLine.LABELLED_KEY -> KeyLine(label = keyLabel, key = text.key.orEmpty(), transposition = text.transposition)
+                KeyChipLine.LABELLED_KEY -> KeyLine(label = stringResource(Res.string.song_details_dock_key_short), key = text.key.orEmpty(), transposition = text.transposition)
                 // A song whose key is not known is still named for what the chip opens, rather than "Playing", which
                 // read as a state.
                 KeyChipLine.LABEL_ALONE -> Text(

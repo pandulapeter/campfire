@@ -82,8 +82,8 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
   breadcrumb naming it.
 - **The key chip is always the bar's** (`AppBarKeyChip`, `KeyChip`, `keyChipTextOf`) wherever the chords are on, an
   import preview's too, first among the actions, before the setlists' star or the read only mark and the overflow
-  button. A small muted "Key" label leads the key (a key alone read as a letter in a box; a word, since a note mark said
-  "sounding" of a key naming the shapes; a song with no key whose chip opens the sheet reads the label alone,
+  button. A small muted "Key" label leads the key (`song_details_dock_key_short`, "Ton." where a language's word is long;
+  a key alone read as a letter in a box; a word, since a note mark said "sounding" of a key naming the shapes; a song with no key whose chip opens the sheet reads the label alone,
   `KeyChipText.keyLine`), then what the transposition stepper names in the chords' colour (the shapes' under `SHAPES`,
   the inferred key for a file naming none), a moved song's semitones muted, smaller, and in parentheses after it ("Key
   G# (+1)": bare, "+1" read as one up from G#; not in read only mode), and **a capo other than zero always**, on a
