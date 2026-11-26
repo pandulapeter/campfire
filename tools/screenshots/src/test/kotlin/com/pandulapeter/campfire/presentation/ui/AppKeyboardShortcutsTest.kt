@@ -16,6 +16,8 @@ import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.isRoot
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isSelected
@@ -26,7 +28,9 @@ import androidx.compose.ui.test.performMouseInput
 import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.test.withKeyDown
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.metronome.api.model.MetronomePlayback
 import com.pandulapeter.campfire.presentation.resources.keyboard_shortcuts
+import com.pandulapeter.campfire.presentation.resources.metronome_start
 import com.pandulapeter.campfire.presentation.resources.setlists
 import com.pandulapeter.campfire.presentation.resources.songs
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
@@ -34,8 +38,10 @@ import com.pandulapeter.campfire.presentation.ui.platform.ImpersonatedPlatform
 import com.pandulapeter.campfire.screenshots.AppTestScope
 import com.pandulapeter.campfire.screenshots.TestWindow
 import com.pandulapeter.campfire.screenshots.openPlayingSheet
+import com.pandulapeter.campfire.screenshots.openTempoSheet
 import com.pandulapeter.campfire.screenshots.openSong
 import com.pandulapeter.campfire.screenshots.runAppTest
+import com.pandulapeter.campfire.screenshots.tap
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
@@ -104,6 +110,19 @@ internal class AppKeyboardShortcutsTest {
         // The sheet is a layer of its own, with the focus in it.
         onAllNodes(isRoot()).onLast().performKeyInput { pressKey(Key.U) }
         waitUntil { viewModel.dialogHost.visibleDialog.value is DialogType.Tuner }
+    }
+
+    @Test
+    fun `U over the Tempo sheet opens the tuner over it and stops the click`() = runAppTest {
+        openSong()
+        tap(hasContentDescription(string(Res.string.metronome_start)) and hasClickAction())
+        waitUntil { viewModel.metronomeController.metronomePlayback.value is MetronomePlayback.Playing }
+        openTempoSheet()
+        waitForIdle()
+        // The sheet is a layer of its own, with the focus in it.
+        onAllNodes(isRoot()).onLast().performKeyInput { pressKey(Key.U) }
+        waitUntil { viewModel.dialogHost.visibleDialog.value is DialogType.Tuner }
+        assertTrue(viewModel.metronomeController.metronomePlayback.value !is MetronomePlayback.Playing)
     }
 
     @Test

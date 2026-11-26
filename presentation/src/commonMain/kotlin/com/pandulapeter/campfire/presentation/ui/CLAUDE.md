@@ -67,11 +67,10 @@ The view model facade, the composition root, and the product rules every screen 
   under a dialog or menu), since keys travel only along the focus path. A held key acts once; the keys held are
   forgotten as a dialog, a sheet, or a menu comes or goes, since their release reaches its window instead. Each asks the
   view model whether the screen on top offers what it presses (New only outside read only mode and the selection,
-  Ctrl / Cmd + 1 to 7 only over a main screen, the shortcuts sheet over no dialog, U only over song details with the Tuner
-  feature on), and is left unconsumed where it does not. `?` and U are left alone while a field is being
-  typed in (an open text input session, counted by
-  `InterceptPlatformTextInput` in `CampfireApp`): the desktop and iOS type a character from an event after its key-down,
-  which reaches the root.
+  Ctrl / Cmd + 1 to 7 only over a main screen, the shortcuts sheet over no dialog, U only over song details, or its
+  Playing or Tempo sheet, with the Tuner feature on), and is left unconsumed where it does not. `?` and U are left
+  alone while a field is being typed in (an open text input session, counted by `InterceptPlatformTextInput` in
+  `CampfireApp`): the desktop and iOS type a character from an event after its key-down, which reaches the root.
 - Snackbars are queued with a running number: two identical messages are the same object.
 - **Rescans** only on `ON_START` (not `ON_RESUME`, which iOS sends after Control Center), on desktop window focus if the
   last is ten seconds old (`refreshIfStale`), on launch, and on retry after a failed load — and only where the library
@@ -121,7 +120,7 @@ Tags, languages, cover, and links are directives in the song file, so they trave
   instrument card, or the song's menu, holds the tuner. The dock under the song
   (`screens/songDetails/dock`) starts its chords with the instrument card (instrument, tuning, and tuner) and ends in
   the **tempo chip**: the page's tempo, the bar lit while the click plays, and play and stop; the chip opens the **Tempo sheet** (`dialogs/playing`: the tempo stepper ending in Tap, the song's
-  accents, and play and stop), read only mode's opening nothing. Both end in a quiet line (`OverridesNote`, scrolling
+  accents, and play and stop, U opening the tuner over it), read only mode's opening nothing. Both end in a quiet line (`OverridesNote`, scrolling
   with them) saying where what they change is kept, the setlist's entry or else the app, the accents always the app
   (`UserPreferences.beatLevels`), and that the song file stays as it is; the Playing sheet's leaves with its steppers.
   **The instrument is changed where its diagrams are**: the dock's instrument card, the Tuner, Chords, and Scales tabs,

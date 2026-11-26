@@ -62,7 +62,8 @@ import com.pandulapeter.campfire.presentation.ui.state.songText.SongTextStore
  * writing the same override the same way the song's first section's did, so the chip and a playing click follow every
  * step, then the bar the click counts, whose accents are tapped here for this song alone (`UserPreferences.beatLevels`,
  * removed once tapped back to the signature's), with play and stop at its end, so that both are judged by ear here. The time signature is not here: it is written into the file, so it is
- * Song defaults'. Nothing to save: its close button only closes it.
+ * Song defaults'. Nothing to save: its close button only closes it. U opens the tuner over it ([onTunerClicked],
+ * [tunerKeyShortcut]) with the Tuner feature on, which stops the click, as it does over the song.
  */
 @Composable
 internal fun TempoSheet(
@@ -73,6 +74,7 @@ internal fun TempoSheet(
     songRenderer: SongRenderer,
     metronomeController: MetronomeController,
     dialogHost: DialogHost,
+    onTunerClicked: () -> Unit,
     dialog: DialogType.Tempo,
 ) {
     val songs by libraryState.allSongs.collectAsStateWithLifecycle()
@@ -96,6 +98,7 @@ internal fun TempoSheet(
     CampfireBottomSheet(
         title = stringResource(Res.string.song_details_dock_tempo),
         subtitle = songLabel(song),
+        keyShortcut = tunerKeyShortcut(userPreferences, onTunerClicked),
         onDismiss = { dialogHost.dismissSheet(dialog) },
     ) { contentPadding ->
         val scrollState = rememberScrollState()

@@ -413,6 +413,7 @@ private fun SongPlayingDialog(
             songRenderer = viewModel.songRenderer,
             metronomeController = viewModel.metronomeController,
             dialogHost = viewModel.dialogHost,
+            onTunerClicked = viewModel::openTunerSheet,
             dialog = dialog,
         )
         else -> Unit

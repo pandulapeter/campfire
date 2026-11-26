@@ -74,9 +74,11 @@ class DialogStackTest {
     }
 
     @Test
-    fun `the tuner stacks over a song's Playing sheet and the instrument's choices stack over neither`() {
+    fun `the tuner stacks over a song's Playing and Tempo sheets and the instrument's choices stack over neither`() {
         val playing = DialogType.Playing(song = song, setlistFileName = null)
+        val tempo = DialogType.Tempo(song = song, setlistFileName = null)
         assertEquals(listOf(playing), nextUnderlyingDialogs(openDialogs = listOf(playing), next = DialogType.Tuner))
+        assertEquals(listOf(tempo), nextUnderlyingDialogs(openDialogs = listOf(tempo), next = DialogType.Tuner))
         listOf(DialogType.Instrument, DialogType.Tuning, DialogType.Notation).forEach { choice ->
             assertEquals(emptyList(), nextUnderlyingDialogs(openDialogs = listOf(playing), next = choice))
             assertEquals(emptyList(), nextUnderlyingDialogs(openDialogs = listOf(DialogType.Tuner), next = choice))

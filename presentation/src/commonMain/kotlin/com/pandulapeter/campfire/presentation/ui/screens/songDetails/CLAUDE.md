@@ -104,7 +104,7 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
   zoom keys reach it too). **The tuner is the dock's instrument card's** with the Dock's Tuner switch on (`dock/`), else
   a menu entry (`tunerAction`, `Menu: tuner`), the menu's too wherever the card is not shown (diagrams off, a song with
   no diagram to draw), so it is offered once (`SongDetailsTools.isTunerInMenu`); with the Tuner feature on only, never
-  an import preview's. The Playing sheet has no tuner (U still opens it over the sheet). As the bar narrows Choose
+  an import preview's. The Playing and Tempo sheets have no tuner (U still opens it over them). As the bar narrows Choose
   setlists goes into the menu, then the cover, each while the title keeps 140dp. Performance mode: the read only mark
   (`ReadOnlyMark`, a lock opening the Preferences, so a mode switched on by accident is noticed and undone here) always
   before the overflow button, no Choose setlists. An import preview has read only mode's menu and never the mark, the
@@ -160,5 +160,6 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
   preview; T not in read only mode, where it would write an override).
 - U opens the tuner sheet wherever the Tuner feature is on (the card's button or the menu's entry names the key; not an
   import preview), leaving a `Keyboard: tuner` breadcrumb, and U again closes it (`closeShortcut`, after a field or a stepper's typed value has had its letter).
-  Over the Playing sheet, which holds the focus so the root hears nothing, the sheet hears U itself (`keyShortcut`) and
-  opens the tuner over it.
+  Over the Playing and Tempo sheets, which hold the focus so the root hears nothing, the sheet hears U itself
+  (`keyShortcut`, `tunerKeyShortcut`) and opens the tuner over it; the tuner opening stops a playing click
+  (`SoundLifetime`), which its closing does not restart.

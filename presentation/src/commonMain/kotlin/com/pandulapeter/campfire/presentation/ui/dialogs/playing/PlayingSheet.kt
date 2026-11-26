@@ -40,7 +40,6 @@ import com.pandulapeter.campfire.presentation.resources.song_details_transpositi
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_capo
 import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
-import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.CampfireBottomSheet
@@ -62,7 +61,7 @@ import kotlinx.coroutines.flow.StateFlow
  * (held pending, written once they rest, see `PendingWrites`), so the song behind it follows every step. Nothing to save:
  * its close button only closes it. The instrument is the device's rather than the song's, so it is changed where the
  * diagrams it draws are (the dock's instrument card) and in the tools, not here. U opens the tuner over it
- * ([onTunerClicked]) with the Tuner feature on, as it does over the song.
+ * ([onTunerClicked], [tunerKeyShortcut]) with the Tuner feature on, as it does over the song.
  */
 @Composable
 internal fun PlayingSheet(
@@ -93,16 +92,10 @@ internal fun PlayingSheet(
         inferredKey = inferredKeys[song.fileName],
         onPlayingClicked = null,
     )
-    val isTunerEnabled = userPreferences?.isTunerEnabled != false
-    val openTuner = {
-        println("Keyboard: tuner")
-        onTunerClicked()
-    }
     CampfireBottomSheet(
         title = stringResource(Res.string.song_details_dock_playing),
         subtitle = songLabel(song),
-        // U opens the tuner over the sheet as it does over the song: the app's root does not hear keys while the sheet is up.
-        keyShortcut = (KeyShortcut.TUNER to openTuner).takeIf { isTunerEnabled },
+        keyShortcut = tunerKeyShortcut(userPreferences, onTunerClicked),
         onDismiss = { dialogHost.dismissSheet(dialog) },
     ) { contentPadding ->
         val scrollState = rememberScrollState()
