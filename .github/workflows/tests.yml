@@ -6,10 +6,12 @@
 # If a copy of the MPL was not distributed with this file, You can obtain one at
 # https://mozilla.org/MPL/2.0/.
 
-# Every test the repository has: the unit tests of every module, run on the desktop target, the UI tests, the Node
-# tests of the web build's storage worker and offline support and the Python test of the release description's parser
-# — and a compilation of every platform's code, the iOS one on a macOS runner, since desktopTest compiles only the
-# desktop target's. Run on every pull request, on every push to main (a merged pull request or a direct push) that
+# Every test the repository has: the unit tests of every module, run on the desktop target and again on Windows, the UI
+# tests, the large-archive import test, the build logic's tests, the storage contract in headless Chrome and on the iOS
+# simulator, the Node tests of the web build's storage worker and offline support, and every Python script's tests
+# (test_*.py); the checks the pre-commit hook runs too (license headers, store listings, regular expressions, iOS-tested
+# test names, file and function sizes, presentation layers, and sync seams); and a compilation of every platform's
+# code, the iOS one on a macOS runner, since desktopTest compiles only the desktop target's. Run on every pull request, on every push to main (a merged pull request or a direct push) that
 # changes more than documentation/, and by publish-all.yml before it starts a single store build, so a failing test or a
 # platform that does not compile stops every store's release rather than one of them.
 
