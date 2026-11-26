@@ -59,7 +59,7 @@ import org.jetbrains.compose.resources.painterResource
  * long), so that a capo is never out of sight. Two short lines rather than one long one, so that the chip takes as little
  * of the title's room as it can: a phone's bar holds the title, the chip, the star, and the overflow button side by
  * side. As tall as a stepper ([STEPPER_HEIGHT]), more at a large system text size. The whole of it opens the Playing
- * sheet ([onClick]), none in read only mode, whose chip only reads. A song with no key that the chip still opens the
+ * sheet ([onClick]), none in read only mode, whose chip only reads and so drops its fill and outline. A song with no key that the chip still opens the
  * sheet for reads "Key", muted. A new key crossfades, and the capo's line grows in and shrinks away.
  */
 @Composable
@@ -79,6 +79,7 @@ internal fun KeyChip(
         shape = RoundedCornerShape(KEY_CHIP_CORNER),
         onClickLabel = stringResource(Res.string.song_details_dock_open_playing),
         onClick = onClick,
+        isFramed = onClick != null,
     ) {
         val key = text.key ?: keyLabel.takeIf { onClick != null }
         // One description for the whole pill: the clickable merges its children, and a description of the key alone

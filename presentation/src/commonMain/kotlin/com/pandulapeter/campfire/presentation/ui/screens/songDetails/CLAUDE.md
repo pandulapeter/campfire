@@ -89,7 +89,8 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
   "Kapo 2" where a language's word is long); a screen reader hears all of it in full, as one description. Outlined and
   tonal (`DockControlPill`), a rounded rectangle (12 dp corners) so the round ends of a pill never cut its second line,
   as tall as a stepper. It
-  opens the Playing sheet (nothing in read only mode, whose overrides it would write), is left out with neither key nor
+  opens the Playing sheet (nothing in read only mode, whose overrides it would write, so there its fill and outline
+  fade away and it reads as text beside the title), is left out with neither key nor
   capo, follows the page the pager is on or heading for, crossfading and resizing as the subtitle does (a setlist's
   songs, a key change), and comes and goes fading and growing with the chords switch. Its room is taken first and by a
   constant (`KEY_CHIP_ROOM`, 72 dp and a 4 dp gap from the title), since the bar decides for every page at once: as much
