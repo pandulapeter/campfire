@@ -222,8 +222,9 @@ them. If a change has no effect a user could notice, it is not in the notes.
      certification (each published as soon as it passes), and attaches the Linux packages to the release
      itself — so the notes list no downloads beyond the fixed store badges at their bottom.
 
-12. **Do not create the tag, the release, or commit anything.** Leave the draft, resources, listings, and generated
-    profiles ready for review. Their commit must be included in the version's tag before publishing.
+12. **Do not create the tag or the release, and never commit the release-notes draft** (it is pasted into GitHub,
+    not kept). The resources, listings, and generated profiles are committed and landed as the `commit-messages`
+    skill says; the version's tag must include them before publishing.
 
 ## Writing the changelog
 

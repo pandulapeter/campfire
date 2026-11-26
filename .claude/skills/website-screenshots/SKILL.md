@@ -36,7 +36,9 @@ the README banners are composed from the same tool's renders (`Compositions.kt`)
 | Website link preview | `Compositions.kt` | `../CampfireWebsite/assets/og-image.jpg`, 1200×630 |
 | README banners | `Compositions.kt` | `documentation/screenshots/01–06.webp`, 1200×900 |
 
-Nothing is committed, in either repository, unless the user asks.
+The images are not committed, in either repository, unless the user asks: a release renders and commits them itself
+(above), so a local run is a preview, and CampfireWebsite is another repository this one's workflow does not govern.
+An edit to the shots or the tools is code, committed as the `commit-messages` skill says.
 
 ## Steps
 

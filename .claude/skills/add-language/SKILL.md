@@ -10,8 +10,8 @@ English system dialogs on iOS, an English loading screen on the web, a docs list
 enforced by `scripts/language.py`; run it, never skip it.
 
 Romanian (`ro`) was added this way and is the worked example: when unsure how a step looks, look at how `ro` appears in
-that file. Don't commit unless the user asks (then load the `commit-messages` skill). Load the `code-style` skill before
-editing any `.kt` or `strings.xml` file.
+that file. Work and commit as the `commit-messages` skill says (load it before the first edit). Load the `code-style`
+skill before editing any `.kt` or `strings.xml` file.
 
 `L=.claude/skills/add-language/scripts/language.py` below.
 
@@ -225,7 +225,7 @@ If this run had to touch a place `wiring` does not check, add it to `check_wirin
 
 Tell the user, in a few lines: the language added and its own name in the picker; what was wired (code, iOS, web,
 docs); the test and check results; the translation choices worth a native speaker's look (address, key terms, the
-agents' doubts you kept); every preflight `NOTE` as a known limitation; and that nothing was committed. Also tell them
+agents' doubts you kept); every preflight `NOTE` as a known limitation; and the commits landed. Also tell them
 that the next release creates the language's listing in every store, with its text and its screenshots (it turns its
 `screenshots` switch on by itself, and stops if the description says `screenshots: false` or a store's `listings:
 false`), and that the website gets the language's screenshots only once its pages exist there (`localize.py` in the

@@ -49,7 +49,8 @@ PNG with no alpha channel (Apple refuses screenshots that have one, Play a featu
 
 The README's banners and the website's link preview show the same shots: say so when a shot changed, since they are
 the `website-screenshots` skill's to remake. Raw renders go to the gitignored `tools/screenshots/renders/`, replaced on
-every run. Nothing is committed unless the user asks.
+every run. The images themselves live outside the repository (the stores take them from the Desktop folder), so
+nothing of them is committed; an edit to the shots, texts, or tools is committed as the `commit-messages` skill says.
 
 ## Steps
 

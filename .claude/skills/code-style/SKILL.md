@@ -261,7 +261,5 @@ wrong or undo it".
 
 ## Committing
 
-- **Never commit automatically.** Leave the work in the tree so it can be reviewed. Only run
-  `git add` / `git commit` / `git push` when that request explicitly asked for it — finishing the code,
-  fixing the build or passing the tests is not an implicit instruction to commit.
-- When you are asked to commit, load the `commit-messages` skill first.
+- How and when to commit (a worktree per session, committing each step unasked, landing on `main`, never pushing)
+  is the `commit-messages` skill's: load it before the first edit.
