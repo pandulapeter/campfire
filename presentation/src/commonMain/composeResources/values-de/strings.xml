@@ -1248,6 +1248,8 @@
     <string name="song_details_tempo_kept_setlist">Das Tempo wird in dieser Setlist gespeichert, die Betonungen in der App. Die Song-Datei bleibt unverändert.</string>
     <string name="song_details_dock_key">Tonart</string>
     <string name="song_details_dock_key_short">Tonart</string>
+    <string name="song_details_dock_shapes_short">Griffe</string>
+    <string name="song_details_shapes_of">%1$s-Griffe</string>
     <string name="song_details_dock_transposition">Transposition: %1$s</string>
     <string name="song_details_dock_open_playing">Spielweise-Einstellungen öffnen</string>
     <string name="song_details_dock_open_tempo">Tempo-Einstellungen öffnen</string>

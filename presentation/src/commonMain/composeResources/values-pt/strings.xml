@@ -1250,6 +1250,8 @@
     <string name="song_details_tempo_kept_setlist">O andamento fica salvo neste repertório, e os acentos no app. O arquivo da música continua como está.</string>
     <string name="song_details_dock_key">Tom</string>
     <string name="song_details_dock_key_short">Tom</string>
+    <string name="song_details_dock_shapes_short">Formatos</string>
+    <string name="song_details_shapes_of">Formatos de %1$s</string>
     <string name="song_details_dock_transposition">Transposição: %1$s</string>
     <string name="song_details_dock_open_playing">Abrir as definições de execução</string>
     <string name="song_details_dock_open_tempo">Abrir as definições de andamento</string>

@@ -40,8 +40,10 @@ import com.pandulapeter.campfire.presentation.resources.song_details_capo_short
 import com.pandulapeter.campfire.presentation.resources.song_details_dock_key
 import com.pandulapeter.campfire.presentation.resources.song_details_dock_key_short
 import com.pandulapeter.campfire.presentation.resources.song_details_dock_open_playing
+import com.pandulapeter.campfire.presentation.resources.song_details_dock_shapes_short
 import com.pandulapeter.campfire.presentation.resources.song_details_dock_transposition
 import com.pandulapeter.campfire.presentation.resources.song_details_key_change
+import com.pandulapeter.campfire.presentation.resources.song_details_shapes_of
 import com.pandulapeter.campfire.presentation.ui.components.controls.STEPPER_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.ControlPillFrame
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.DockControlPill
@@ -51,16 +53,17 @@ import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
  * The app bar's key chip: one outlined control with no fill ([DockControlPill], [ControlPillFrame.OUTLINED]: a fill made
  * it read as one of the song's section headers, which are filled pills), a rounded rectangle rather than a pill so that
  * its two lines are not cut by round ends. A small muted "Key" label leads the key, so that a key alone still reads as
- * the control it is (shortened where a language's word for it is long, read in full): a word, neutral between the shapes' key and the sounding one, where a note mark said "what sounds"
- * of a key that names the shapes under a capo. Then the key the page's chords are in, in the colour chords are written
+ * the control it is (shortened where a language's word for it is long, read in full). Then the key the page's chords are in, in the colour chords are written
  * in, a moved song's semitones muted and smaller after it in parentheses ("Key G# (+1)", which bare would read as a step
  * up from G#), and the capo wherever it is not zero on a second, smaller line under it ("Capo 2", shortened where a
  * language's word for it is long), so that a capo is never out of sight. Two short lines rather than one long one, so
  * that the chip takes as little of the title's room as it can: a phone's bar holds the title, the chip, the star, and the
  * overflow button side by side. As tall as a stepper ([STEPPER_HEIGHT]), more at a large system text size. The whole of
  * it opens the Playing sheet ([onClick]), none in read only mode, whose chip only reads and so drops its outline too,
- * fading it. A song with no key that the chip still opens the sheet for reads "Key" alone, muted. A new key crossfades,
- * and the capo's line grows in and shrinks away.
+ * fading it. A song with no key that the chip still opens the sheet for reads "Key" alone, muted. Where the key names
+ * the shapes fingered above a capo ([KeyChipText.namesShapes]) the label says "Shapes" instead, since the title's
+ * subtitle then names the key that sounds and two keys for one song would leave the reader to guess which is which. A
+ * new key or label crossfades, and the capo's line grows in and shrinks away.
  */
 @Composable
 internal fun KeyChip(
@@ -82,7 +85,7 @@ internal fun KeyChip(
         // One description for the whole pill: the clickable merges its children, and a description of the key alone
         // would hide the transposition and the capo from a screen reader, which is read in full rather than shortened.
         val description = listOfNotNull(
-            text.key?.let { textResource(Res.string.song_details_key_change, it) } ?: keyLabel.takeIf { text.keyLine == KeyChipLine.LABEL_ALONE },
+            text.key?.let { textResource(if (text.namesShapes) Res.string.song_details_shapes_of else Res.string.song_details_key_change, it) } ?: keyLabel.takeIf { text.keyLine == KeyChipLine.LABEL_ALONE },
             text.transposition?.let { stringResource(Res.string.song_details_dock_transposition, it) },
             stringResource(Res.string.song_details_capo, lastCapo.value).takeIf { text.capo != null },
         ).joinToString(", ")
@@ -95,7 +98,11 @@ internal fun KeyChip(
         ) {
             val keyLine = text.keyLine
             when (keyLine) {
-                KeyChipLine.LABELLED_KEY -> KeyLine(label = stringResource(Res.string.song_details_dock_key_short), key = text.key.orEmpty(), transposition = text.transposition)
+                KeyChipLine.LABELLED_KEY -> KeyLine(
+                    label = stringResource(if (text.namesShapes) Res.string.song_details_dock_shapes_short else Res.string.song_details_dock_key_short),
+                    key = text.key.orEmpty(),
+                    transposition = text.transposition,
+                )
                 // A song whose key is not known is still named for what the chip opens, rather than "Playing", which
                 // read as a state.
                 KeyChipLine.LABEL_ALONE -> Text(
@@ -125,7 +132,8 @@ internal fun KeyChip(
 
 /**
  * The [key] [KeyChip] names after its small muted [label], and a moved song's semitones ([transposition]) small after it,
- * in parentheses. The label stands still while the key and the semitones crossfade.
+ * in parentheses. The label crossfades on its own, so that a capo put on or taken off turns "Key" into "Shapes" while the
+ * key beside it crossfades too.
  */
 @Composable
 private fun KeyLine(
@@ -138,12 +146,18 @@ private fun KeyLine(
     // as a subscript of the key rather than as its caption.
     verticalAlignment = Alignment.CenterVertically,
 ) {
-    Text(
-        text = label,
-        style = MaterialTheme.typography.labelSmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        maxLines = 1,
-    )
+    AnimatedContent(
+        targetState = label,
+        transitionSpec = { fadeIn() togetherWith fadeOut() },
+        contentAlignment = Alignment.Center,
+    ) { shownLabel ->
+        Text(
+            text = shownLabel,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+        )
+    }
     AnimatedContent(
         targetState = key to transposition,
         transitionSpec = { fadeIn() togetherWith fadeOut() },

@@ -1289,6 +1289,8 @@
     <string name="song_details_tempo_kept_setlist">Tempo je uložené v tomto setlistu, přízvuky v aplikaci. Soubor písně zůstává beze změny.</string>
     <string name="song_details_dock_key">Tónina</string>
     <string name="song_details_dock_key_short">Tónina</string>
+    <string name="song_details_dock_shapes_short">Hmaty</string>
+    <string name="song_details_shapes_of">Hmaty %1$s</string>
     <string name="song_details_dock_transposition">Transpozice: %1$s</string>
     <string name="song_details_dock_open_playing">Otevřít nastavení hraní</string>
     <string name="song_details_dock_open_tempo">Otevřít nastavení tempa</string>

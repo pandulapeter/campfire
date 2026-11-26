@@ -21,7 +21,9 @@ import com.pandulapeter.campfire.presentation.ui.songView.model.SongLyricsModel
  * where it is not zero, which is always on screen. [transposition] is the semitones the song is moved by ("+2") beside a
  * named key, so that a moved song says so without the sheet; null where it is not moved, or where [key] already is the
  * semitones. [opensPlaying] where the chip opens the Playing sheet, never in read only mode, whose sheet would write
- * overrides.
+ * overrides. [namesShapes] where [key] is the shapes fingered above a capo rather than the key that sounds, which the
+ * title's subtitle then names beside it: the chip's label says "Shapes" rather than "Key", so that the bar never names
+ * two keys for one song.
  */
 @Immutable
 internal data class KeyChipText(
@@ -29,10 +31,12 @@ internal data class KeyChipText(
     val capo: Int?,
     val opensPlaying: Boolean,
     val transposition: String? = null,
+    val namesShapes: Boolean = false,
 ) {
     /**
-     * What the chip's first line is: the "Key" label before [key]; the label alone where the chip opens the sheet for a
-     * song with no key, so that it still names what it opens, never the label twice; else none, the capo alone.
+     * What the chip's first line is: the "Key" label ("Shapes" where [namesShapes]) before [key]; the label alone where
+     * the chip opens the sheet for a song with no key, so that it still names what it opens, never the label twice; else
+     * none, the capo alone.
      */
     val keyLine
         get() = when {
@@ -57,9 +61,14 @@ internal fun keyChipTextOf(controls: SongPlayingControls?, model: SongLyricsMode
             capo = capo,
             opensPlaying = controls.onPlayingClicked != null,
             transposition = keyControl?.takeIf { it.transposition != 0 && !it.key.isNullOrBlank() }?.let { transpositionLabel(it.transposition, null) },
+            namesShapes = capo != null && controls.capo.namesShapes,
         )
     }
     val key = (model.shapesKey ?: model.song.metadata.key)?.takeIf { it.isNotBlank() }
     val capo = model.song.metadata.capo?.takeIf { it != 0 && model.isCapoShown }
-    return if (key == null && capo == null) null else KeyChipText(key = key, capo = capo, opensPlaying = false)
+    return if (key == null && capo == null) {
+        null
+    } else {
+        KeyChipText(key = key, capo = capo, opensPlaying = false, namesShapes = key != null && model.shapesKey != null)
+    }
 }

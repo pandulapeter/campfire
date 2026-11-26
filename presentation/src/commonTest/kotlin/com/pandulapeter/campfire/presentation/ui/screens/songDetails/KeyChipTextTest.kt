@@ -36,7 +36,7 @@ internal class KeyChipTextTest {
     @Test
     fun `read only the chip reads the song as the page shows it and opens nothing`() {
         assertEquals(KeyChipText(key = "Am", capo = 3, opensPlaying = false), keyChipTextOf(null, model("{key: Am}\n{capo: 3}")))
-        assertEquals(KeyChipText(key = "Em", capo = 3, opensPlaying = false), keyChipTextOf(null, model("{key: Am}\n{capo: 3}", shapesKey = "Em")))
+        assertEquals(KeyChipText(key = "Em", capo = 3, opensPlaying = false, namesShapes = true), keyChipTextOf(null, model("{key: Am}\n{capo: 3}", shapesKey = "Em")))
     }
 
     @Test
@@ -65,6 +65,22 @@ internal class KeyChipTextTest {
         assertEquals(KeyChipLine.NONE, keyChipTextOf(null, model("{capo: 3}"))?.keyLine)
 
     @Test
+    fun `a key naming the shapes above a capo is labelled as the shapes`() {
+        assertEquals(true, keyChipTextOf(controls(key = "Em", capo = 2, namesShapes = true), model("{key: Em}"))?.namesShapes)
+        assertEquals(true, keyChipTextOf(null, model("{key: F#m}\n{capo: 2}", shapesKey = "Em"))?.namesShapes)
+    }
+
+    @Test
+    fun `a key naming what sounds is labelled as the key`() {
+        assertEquals(false, keyChipTextOf(controls(key = "F#m", capo = 2), model("{key: Em}"))?.namesShapes)
+        assertEquals(false, keyChipTextOf(null, model("{key: Em}\n{capo: 2}"))?.namesShapes)
+    }
+
+    @Test
+    fun `with no capo on the key is labelled as the key`() =
+        assertEquals(false, keyChipTextOf(controls(key = "Em", capo = 0, namesShapes = true), model("{key: Em}"))?.namesShapes)
+
+    @Test
     fun `the chords switched off take the chip`() = assertNull(keyChipTextOf(controls(key = "Am", capo = 2), model("{key: Am}", shouldShowChords = false)))
 
     private fun model(text: String, shapesKey: String? = null, shouldShowChords: Boolean = true) = SongLyricsModel(
@@ -75,9 +91,9 @@ internal class KeyChipTextTest {
         shapesKey = shapesKey,
     )
 
-    private fun controls(key: String?, capo: Int, transposition: Int = 0) = SongPlayingControls(
+    private fun controls(key: String?, capo: Int, transposition: Int = 0, namesShapes: Boolean = false) = SongPlayingControls(
         key = SongKeyControl(transposition = transposition, isDefault = transposition == 0, key = key, labels = emptyList(), onStep = {}, onReset = {}),
-        capo = SongCapoControl(capo = EffectiveCapo(fret = capo, songFret = 0), namesShapes = false, shapesKey = null, onStep = {}, onReset = {}),
+        capo = SongCapoControl(capo = EffectiveCapo(fret = capo, songFret = 0), namesShapes = namesShapes, shapesKey = null, onStep = {}, onReset = {}),
         tempo = null,
         onPlayingClicked = {},
     )

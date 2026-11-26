@@ -1291,6 +1291,8 @@
     <string name="song_details_tempo_kept_setlist">הטמפו נשמר בסט־ליסט הזה, וההדגשות באפליקציה. קובץ השיר נשאר כמו שהוא.</string>
     <string name="song_details_dock_key">טונליות</string>
     <string name="song_details_dock_key_short">סולם</string>
+    <string name="song_details_dock_shapes_short">צורות</string>
+    <string name="song_details_shapes_of">צורות %1$s</string>
     <string name="song_details_dock_transposition">טרנספוזיציה: %1$s</string>
     <string name="song_details_dock_open_playing">פתיחת הגדרות הנגינה</string>
     <string name="song_details_dock_open_tempo">פתיחת הגדרות הטמפו</string>
