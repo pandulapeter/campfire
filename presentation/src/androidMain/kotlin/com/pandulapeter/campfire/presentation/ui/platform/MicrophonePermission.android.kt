@@ -45,13 +45,17 @@ internal actual fun rememberMicrophonePermission(): MicrophonePermission {
     val activity = remember(context) { context.findActivity() }
     val storedRefusal = remember(context) { StoredMicrophoneRefusal(context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)) }
     var isGranted by remember { mutableStateOf(context.isMicrophoneGranted()) }
+    // A state rather than read as it is composed: a first refusal changes neither the grant nor the stored refusal, so
+    // only the rationale it leaves owed recomposes the notice into Ask again.
+    var rationale by remember { mutableStateOf(activity?.shouldShowMicrophoneRationale() == true) }
     // Saved, since the Activity can be recreated under the system's question.
     var rationaleBefore by rememberSaveable { mutableStateOf(false) }
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         isGranted = granted
+        rationale = activity?.shouldShowMicrophoneRationale() == true
         val refusal = microphoneRefusalAfter(
             rationaleBefore = rationaleBefore,
-            rationaleAfter = activity?.shouldShowMicrophoneRationale() == true,
+            rationaleAfter = rationale,
             isGranted = granted,
             earlierSilentDenials = storedRefusal.value.silentDenials,
         )
@@ -60,12 +64,13 @@ internal actual fun rememberMicrophonePermission(): MicrophonePermission {
     }
     LifecycleResumeEffect(context) {
         isGranted = context.isMicrophoneGranted()
+        rationale = activity?.shouldShowMicrophoneRationale() == true
         if (isGranted) storedRefusal.update(MicrophoneRefusal())
         onPauseOrDispose { }
     }
     val state = androidMicrophoneStateOf(
         isGranted = isGranted,
-        rationale = activity?.shouldShowMicrophoneRationale() == true,
+        rationale = rationale,
         isRefusedForGood = storedRefusal.value.isForGood,
     )
     return MicrophonePermission(
