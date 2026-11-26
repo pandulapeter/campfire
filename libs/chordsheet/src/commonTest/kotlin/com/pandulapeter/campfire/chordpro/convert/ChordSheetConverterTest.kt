@@ -545,7 +545,8 @@ class ChordSheetConverterTest {
     fun `a lyrics-only book of thousands of songs takes time in proportion to its length`() {
         // Compared with a quarter of itself, fastest of three, as the text of tens of thousands of lines is: whether a part
         // is the contents looks across every part's title, and a step that went quadratic in the number of songs only
-        // outgrows the rest of the conversion at hundreds of them.
+        // outgrows the rest of the conversion at hundreds of them. Four times the songs take about 12 times as long with that
+        // step, 4 to 6 times without it, and up to 8 on a CI runner, whose collection pauses grow with the book.
         fun name(index: Int) = generateSequence(index) { (it / 26).takeIf { rest -> rest > 0 } }.map { 'a' + it % 26 }.joinToString("")
         fun timeOf(songs: Int) = ChordSheet(List(songs) { titledPage("Song ${name(it)}", "Sing along tonight\nUnder the evening light") }).let { sheet ->
             val started = TimeSource.Monotonic.markNow()
@@ -556,7 +557,7 @@ class ChordSheetConverterTest {
         val runs = List(3) { timeOf(SONGBOOK_QUARTER) to timeOf(SONGBOOK_QUARTER * 4) }
         val quarter = runs.minOf { it.first }
         val whole = runs.minOf { it.second }
-        assertTrue(whole < quarter * 7, "$whole for the whole book, $quarter for a quarter of it")
+        assertTrue(whole < quarter * 10, "$whole for the whole book, $quarter for a quarter of it")
     }
 
     /** A page opening with [title] in a type twice the body's, so the split cuts a song there, over the lyrics [words]. */
