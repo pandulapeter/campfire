@@ -67,7 +67,7 @@ android {
         create(releaseSigningConfig) {
             keyAlias = project.property("campfire.android.keyAlias").toString()
             keyPassword = project.property("campfire.android.keyPassword").toString()
-            storeFile = file(project.property("campfire.android.keystoreFile").toString())
+            storeFile = releaseKeystore(project.property("campfire.android.keystoreFile").toString())
             storePassword = project.property("campfire.android.keystorePassword").toString()
         }
     }
@@ -141,4 +141,19 @@ tasks.matching { it.name == "generateBaselineProfile" }.configureEach {
 
 kotlin {
     jvmToolchain(libs.versions.jvmTarget.get().toInt())
+}
+
+/**
+ * The release keystore [path] names, relative to this module or absolute. A git worktree holds only committed files, so a
+ * relative keystore that only the main checkout has (it is never committed) is taken from the main checkout's copy of
+ * this module, which lets a worktree reuse the main checkout's local.properties as it is.
+ */
+fun releaseKeystore(path: String): File {
+    val keystore = file(path)
+    val gitFile = rootProject.file(".git")
+    if (keystore.exists() || File(path).isAbsolute || !gitFile.isFile) return keystore
+    // A linked worktree's .git file points at <main checkout>/.git/worktrees/<name>.
+    val worktreeGitDir = rootDir.resolve(gitFile.readText().substringAfter("gitdir:").trim())
+    val mainCheckout = worktreeGitDir.parentFile?.parentFile?.parentFile ?: return keystore
+    return mainCheckout.resolve(keystore.relativeTo(rootDir)).takeIf { it.exists() } ?: keystore
 }
