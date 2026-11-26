@@ -528,6 +528,7 @@
     <string name="settings_scale_suggestions_description">Muestra las escalas sobre las que se puede tocar cada parte de una canción y, en la hoja de un acorde, las escalas de ese acorde.</string>
     <string name="settings_group_dock">Dock</string>
     <string name="settings_dock_metronome_description">Muestra el tempo de la canción y reproduce su clic desde la canción. La pestaña Metrónomo no se ve afectada.</string>
+    <string name="settings_dock_tuner_description">Muestra el afinador junto al instrumento en el dock. Desactivado, el afinador está en el menú de la canción.</string>
     <string name="settings_setlists_description">La pestaña Repertorios y la opción de añadir canciones a repertorios. Si se desactiva, solo se ocultan: no se elimina ningún repertorio.</string>
     <string name="settings_random_picks_description">Cinco canciones al azar al principio de una lista de más de 20, nuevas cada hora</string>
     <string name="settings_song_details_lookup">Detalles de canciones en línea</string>

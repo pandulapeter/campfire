@@ -564,6 +564,7 @@
     <string name="settings_scale_suggestions_description">Ukazuje stupnice, přes které lze hrát každou část písně, a na kartě akordu stupnice pro tento akord.</string>
     <string name="settings_group_dock">Dock</string>
     <string name="settings_dock_metronome_description">Ukazuje tempo písně a přehrává její klik přímo u písně. Karty Metronom se to netýká.</string>
+    <string name="settings_dock_tuner_description">Ukazuje ladičku vedle nástroje v docku. Když je vypnuto, je ladička v nabídce písně.</string>
     <string name="settings_setlists_description">Karta Setlisty a přidávání písní do setlistů. Když je vypnuto, jsou jen skryté: žádný setlist se nesmaže.</string>
     <string name="settings_random_picks_description">Pět náhodných písní na začátku seznamu s více než 20 písněmi, každou hodinu nové</string>
     <string name="settings_song_details_lookup">Podrobnosti o písni online</string>

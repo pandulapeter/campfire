@@ -21,6 +21,7 @@ import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -91,6 +92,11 @@ import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
  *   tool's as one pill (see SharedTabChrome), drawing its container in its stead.
  * @param tuningVisibility Where the tuning half fades in and out, for a caller that measures the pill and so has to know
  * when a leaving half is no longer laid out; its target is kept by the caller at whether there is a tuning to show.
+ * @param stackedHalfPadding How far a stacked pill's names are from its sides, less where a narrow window wants the
+ *   pill narrow (song details' dock on a phone).
+ * @param trailing What the pill ends in after its halves, in the same container (song details' dock: the tuner, which
+ *   tunes the strings the pill names); the halves give up their room to it first. A pill made wider than both centres
+ *   them together.
  */
 @Composable
 internal fun InstrumentPill(
@@ -106,6 +112,8 @@ internal fun InstrumentPill(
     isEnabled: Boolean = true,
     isTabChromePart: Boolean = false,
     tuningVisibility: MutableTransitionState<Boolean>? = null,
+    stackedHalfPadding: Dp = INSTRUMENT_PILL_HALF_PADDING,
+    trailing: (@Composable () -> Unit)? = null,
     onInstrumentClicked: () -> Unit,
     onTuningClicked: () -> Unit,
 ) {
@@ -127,29 +135,40 @@ internal fun InstrumentPill(
         color = chrome.drawnContainerColor(containerColor),
         border = border,
     ) {
-        if (isStacked) {
-            InstrumentPillStackedHalves(
-                instrument = instrument,
-                tuning = tuning,
-                notation = notation,
-                style = style,
-                height = height,
-                isEnabled = isEnabled,
-                onInstrumentClicked = onInstrumentClicked,
-                onTuningClicked = onTuningClicked,
-            )
-            return@Surface
+        val halves = @Composable {
+            if (isStacked) {
+                InstrumentPillStackedHalves(
+                    instrument = instrument,
+                    tuning = tuning,
+                    notation = notation,
+                    style = style,
+                    height = height,
+                    horizontalPadding = stackedHalfPadding,
+                    isEnabled = isEnabled,
+                    onInstrumentClicked = onInstrumentClicked,
+                    onTuningClicked = onTuningClicked,
+                )
+            } else {
+                InstrumentPillHalves(
+                    instrument = instrument,
+                    tuning = tuning,
+                    notation = notation,
+                    style = style,
+                    isEnabled = isEnabled,
+                    tuningVisibility = tuningVisibility,
+                    onInstrumentClicked = onInstrumentClicked,
+                    onTuningClicked = onTuningClicked,
+                )
+            }
         }
-        InstrumentPillHalves(
-            instrument = instrument,
-            tuning = tuning,
-            notation = notation,
-            style = style,
-            isEnabled = isEnabled,
-            tuningVisibility = tuningVisibility,
-            onInstrumentClicked = onInstrumentClicked,
-            onTuningClicked = onTuningClicked,
-        )
+        if (trailing == null) {
+            halves()
+        } else {
+            Row(horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+                Box(modifier = Modifier.weight(1f, fill = false).fillMaxHeight()) { halves() }
+                trailing()
+            }
+        }
     }
 }
 
@@ -300,6 +319,7 @@ private fun InstrumentPillStackedHalves(
     notation: ChordNotation,
     style: TextStyle,
     height: Dp,
+    horizontalPadding: Dp,
     isEnabled: Boolean,
     onInstrumentClicked: () -> Unit,
     onTuningClicked: () -> Unit,
@@ -312,7 +332,6 @@ private fun InstrumentPillStackedHalves(
         animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
     )
     // Its corners are rounded less than a pill's ends, so the names need none of the room a round end takes.
-    val horizontalPadding = INSTRUMENT_PILL_HALF_PADDING
     InstrumentPillHalf(
         modifier = Modifier.fillMaxWidth().weight(1f),
         text = instrumentLabel(instrument),
@@ -328,7 +347,7 @@ private fun InstrumentPillStackedHalves(
         val isLeaving = shownTuning == null
         Column(modifier = Modifier.fillMaxWidth().height(height * tuningShare).clipToBounds().alpha(tuningShare * 2)) {
             HorizontalDivider(
-                modifier = Modifier.padding(horizontal = INSTRUMENT_PILL_HALF_PADDING),
+                modifier = Modifier.padding(horizontal = horizontalPadding),
                 color = MaterialTheme.colorScheme.outlineVariant,
             )
             InstrumentPillHalf(

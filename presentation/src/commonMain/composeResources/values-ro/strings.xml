@@ -569,6 +569,7 @@
     <string name="settings_scale_suggestions_description">Arată gamele peste care se poate cânta fiecare parte a cântecului, iar în fișa unui acord, gamele pentru acel acord.</string>
     <string name="settings_group_dock">Dock</string>
     <string name="settings_dock_metronome_description">Arată tempoul cântecului și pornește metronomul lui din cântec. Fila Metronom nu este afectată.</string>
+    <string name="settings_dock_tuner_description">Arată acordorul lângă instrument în dock. Oprit, acordorul este în meniul cântecului.</string>
     <string name="settings_setlists_description">Fila Liste și adăugarea cântecelor în liste. Dezactivate, listele sunt doar ascunse: niciuna nu este ștearsă.</string>
     <string name="settings_random_picks_description">Cinci cântece aleatorii în capul unei liste de peste 20, noi în fiecare oră</string>
     <string name="settings_song_details_lookup">Detalii online ale cântecelor</string>

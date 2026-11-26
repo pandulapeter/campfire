@@ -13,7 +13,7 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
-import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isDialog
 import androidx.compose.ui.test.isPopup
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -31,7 +31,7 @@ import com.pandulapeter.campfire.screenshots.tap
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
-/** Song details' key chip in the app bar, with the tuner and the text size left to the menu and the Playing sheet. */
+/** Song details' key chip in the app bar, with the text size left to the menu and the tuner to the Playing sheet too. */
 @OptIn(ExperimentalTestApi::class)
 internal class AppBarKeyChipTest {
 
@@ -56,13 +56,11 @@ internal class AppBarKeyChipTest {
     }
 
     @Test
-    fun `the tuner and the text size are the menu's however wide the bar is`() = runAppTest(window = TestWindow(width = 800.dp, height = 640.dp)) {
+    fun `the text size is the menu's however wide the bar is`() = runAppTest(window = TestWindow(width = 800.dp, height = 640.dp)) {
         openSong()
         waitForIdle()
-        onNode(hasContentDescription(string(Res.string.tuner)) and hasClickAction()).assertDoesNotExist()
         onNode(hasContentDescription(string(Res.string.song_details_text_size_decrease)) and hasClickAction()).assertDoesNotExist()
         tap(hasContentDescription(string(Res.string.songs_actions)))
-        onNode(hasText(string(Res.string.tuner)) and hasAnyAncestor(isPopup())).assertExists()
         onNode(hasContentDescription(string(Res.string.song_details_text_size_decrease)) and hasAnyAncestor(isPopup())).assertExists()
     }
 
@@ -70,7 +68,8 @@ internal class AppBarKeyChipTest {
     fun `the Playing sheet opens the tuner from beside the tuning`() = runAppTest {
         openSong()
         openPlayingSheet()
-        tap(hasContentDescription(string(Res.string.tuner)) and hasClickAction())
+        // The dock's instrument card has a tuner too, under the sheet.
+        tap(hasContentDescription(string(Res.string.tuner)) and hasClickAction() and hasAnyAncestor(isDialog()))
         waitUntil { viewModel.dialogHost.visibleDialog.value is DialogType.Tuner }
     }
 }

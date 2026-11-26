@@ -27,16 +27,21 @@ internal enum class DockTier { FULL_DIAGRAMS, SMALL_DIAGRAMS, CHORD_CHIPS }
 
 /**
  * The rows the dock has: the song's chords ([hasChordRow]: chord diagrams on, on an instrument with shapes), its scale
- * suggestions ([hasScaleRow]), and the click's tempo chip ([hasTempo]: the metronome on, never in an import preview).
- * The screen's switches decide them first, then the song ([forSong]). The key chip is the app bar's and the tuner the
- * menu's and the Playing sheet's, so nothing else is the dock's.
+ * suggestions ([hasScaleRow]), the click's tempo chip ([hasTempo]: the metronome on, never in an import preview), and
+ * on an instrument without shapes, which has no diagrams, the one-line instrument card alone ([hasInstrumentChip]: the
+ * diagrams on), the way back to an instrument with them, starting the one row. The screen's switches decide them first,
+ * then the song ([forSong]). The key chip is the app bar's, so nothing else is the dock's.
  */
 @Immutable
 internal data class DockRows(
     val hasChordRow: Boolean,
     val hasScaleRow: Boolean,
     val hasTempo: Boolean,
+    val hasInstrumentChip: Boolean = false,
 ) {
+    /** Whether the dock shows its instrument card, which holds the tuner where the Dock's Tuner switch puts it there. */
+    val hasInstrumentCard get() = hasChordRow || hasInstrumentChip
+
     /**
      * Where the click is all the dock holds (neither diagrams nor scale suggestions): its one row is then the metronome
      * panel, which has the room for the stepper and the accents a chip has not.
@@ -44,23 +49,30 @@ internal data class DockRows(
     val isMetronomeOnly get() = hasTempo && !hasChordRow && !hasScaleRow
 
     /** No row at all: no dock. */
-    val isEmpty get() = !hasChordRow && !hasScaleRow && !hasTempo
+    val isEmpty get() = !hasChordRow && !hasScaleRow && !hasTempo && !hasInstrumentChip
 
     /**
      * These rows for a song with or without a diagram to draw ([hasChords]) and a scale to suggest ([hasScales]): a row
      * the song has nothing for goes as its switch turned off would take it, rather than saying the song has none, so a
      * song without scales falls back to the diagrams alone or the scale strip to the metronome panel, and one with
      * nothing for any row has no dock. Decided per song, never per screen of it, so stepping through a song never
-     * changes the dock.
+     * changes the dock. The instrument card of an instrument without shapes goes with a song without chords too, which no
+     * instrument would draw a diagram of.
      */
-    fun forSong(hasChords: Boolean, hasScales: Boolean) = copy(hasChordRow = hasChordRow && hasChords, hasScaleRow = hasScaleRow && hasScales)
+    fun forSong(hasChords: Boolean, hasScales: Boolean) = copy(
+        hasChordRow = hasChordRow && hasChords,
+        hasScaleRow = hasScaleRow && hasScales,
+        hasInstrumentChip = hasInstrumentChip && hasChords,
+    )
 }
 
 /**
  * How the dock is laid out: its [tier], how tall it is above whatever inset it covers (nothing for the side panel, which
  * is as tall as the song), how tall its row of chips and controls is ([rowHeight]), its row of diagrams
- * ([diagramRowHeight], none in [DockTier.CHORD_CHIPS]), and the room under its last row ([bottomPadding],
- * [dockBottomPaddingOf]).
+ * ([diagramRowHeight], none in [DockTier.CHORD_CHIPS]), the room under its last row ([bottomPadding],
+ * [dockBottomPaddingOf]), and whether its tall controls are made smaller ([areControlsCompact]: in a window narrower than
+ * [DOCK_COMPACT_WINDOW_WIDTH], an upright phone's, where the instrument card and the tempo chip at full size took most of
+ * the diagrams' row).
  */
 @Immutable
 internal data class DockLayout(
@@ -69,6 +81,7 @@ internal data class DockLayout(
     val rowHeight: Dp,
     val diagramRowHeight: Dp = 0.dp,
     val bottomPadding: Dp = DOCK_VERTICAL_PADDING,
+    val areControlsCompact: Boolean = false,
 ) {
     /**
      * How tall the tall tempo chip is, beside the diagram row and at the side panel's foot alike: as tall as a row of the

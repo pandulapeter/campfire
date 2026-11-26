@@ -37,7 +37,8 @@ import com.pandulapeter.campfire.presentation.ui.metronome.TempoStepper
  * The dock where the metronome is all it holds (neither diagrams nor scale suggestions): the metronome panel itself,
  * [height] tall, since there is room for it, padded in from the screen's edges by [horizontalPadding]: the tempo stepper
  * with Tap (read only mode's number alone, which sets nothing), the bar as a row of beats as wide as the rest leaves,
- * whose accents are tapped in place (not in read only mode, where they would be written), and play and stop at the end.
+ * whose accents are tapped in place (not in read only mode, where they would be written), and play and stop at the end;
+ * after [start] where it is given (the one-line instrument card of an instrument without shapes).
  */
 @Composable
 internal fun DockMetronomePanel(
@@ -46,6 +47,7 @@ internal fun DockMetronomePanel(
     metronome: DockMetronome,
     height: Dp,
     horizontalPadding: PaddingValues,
+    start: (@Composable () -> Unit)? = null,
 ) = Row(
     modifier = modifier
         .fillMaxWidth()
@@ -54,6 +56,7 @@ internal fun DockMetronomePanel(
     horizontalArrangement = Arrangement.spacedBy(DOCK_ITEM_GAP),
     verticalAlignment = Alignment.CenterVertically,
 ) {
+    start?.invoke()
     // Read only mode's number, which sets nothing, and the stepper crossfade into each other as the mode is switched.
     AnimatedContent(
         targetState = tempo.control,

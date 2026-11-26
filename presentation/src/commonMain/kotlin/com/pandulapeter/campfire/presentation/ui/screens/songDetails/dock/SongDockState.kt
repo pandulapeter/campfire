@@ -45,7 +45,8 @@ import com.pandulapeter.campfire.presentation.ui.songView.model.ChordDiagrams
  * inset included where they cover it) and the [panelWidth] the panel takes from its end (the end inset included), each
  * followed as it animates to a new one, which the pages' grid waits for ([isSettled]) as it does for the app bar. Each
  * page composed puts what the dock draws for it in [contents], and its stepper, which says where its reader is headed,
- * in [steppers], by its index.
+ * in [steppers], by its index. The instrument card ends in the tuner where [onTunerClicked] is given (the Dock's Tuner
+ * switch and the Tuner feature on).
  */
 internal class SongDockState(
     val rows: DockRows,
@@ -58,6 +59,7 @@ internal class SongDockState(
     animatedPanelWidth: State<Dp>,
     val contents: SnapshotStateMap<Int, DockContent>,
     val steppers: SnapshotStateMap<Int, SongStepper>,
+    val onTunerClicked: (() -> Unit)?,
 ) {
     val height by animatedHeight
     val panelWidth by animatedPanelWidth
@@ -70,7 +72,7 @@ internal class SongDockState(
  * The dock as the switches in [userPreferences], the song the pager is on or heading for ([targetPage], [songKey], its
  * [songText] read ahead of its page, then what its page handed up in [SongDockState.contents], kept in [dockFacts] for
  * the next time), and the window decide it: its rows (the chords with [chordDiagrams] drawn on an
- * instrument with shapes, the scale suggestions, the tempo chip with the metronome on, each only where the song has
+ * instrument with shapes, on one without its instrument card alone, the scale suggestions, the tempo chip with the metronome on, each only where the song has
  * something for it, [DockRows.forSong]), and whether it is a side panel ([isDockSidePanel], which the reading mode weighs too) or rows under the song, which get as much room as the
  * reading mode and a setlist's pager bar ([hasPagerBar]) leave them ([dockBudgetOf]) in a window that is not short and
  * outside an import preview ([isImportPreview]), whose card takes the room of a second row. Rows without the pager bar cover the bottom inset of
@@ -87,6 +89,7 @@ internal fun rememberSongDock(
     songKey: String?,
     songText: String?,
     dockFacts: MutableMap<String, Pair<Boolean?, Boolean?>>,
+    onTunerClicked: (() -> Unit)?,
 ): SongDockState {
     // An import preview has no metronome.
     val isMetronomeShown = userPreferences?.isMetronomeEnabled != false && userPreferences?.isDockMetronomeEnabled != false && !isImportPreview
@@ -94,6 +97,8 @@ internal fun rememberSongDock(
         hasChordRow = chordDiagrams?.tuning != null,
         hasScaleRow = SongSections.of(userPreferences).areScaleSuggestionsShown,
         hasTempo = isMetronomeShown,
+        // An instrument without shapes keeps its card, the way back to one with diagrams.
+        hasInstrumentChip = chordDiagrams != null && chordDiagrams.tuning == null,
     )
     val contents = remember { mutableStateMapOf<Int, DockContent>() }
     val songRows = rememberSongRows(switchedRows, contents[targetPage], songKey, songText, dockFacts)
@@ -114,7 +119,8 @@ internal fun rememberSongDock(
     val bottomPadding = dockBottomPaddingOf(bottomInset = contentPadding.calculateBottomPadding())
     // Beside a side panel the rows under the song are the scale suggestions alone, which the panel has no width for.
     val rowsUnder = if (isSidePanel) DockRows(hasChordRow = false, hasScaleRow = rows.hasScaleRow, hasTempo = false) else rows
-    val layout = remember(rows, windowSize.height, turnsByColumn, hasPagerBar, isImportPreview, rowHeight, isSidePanel, bottomPadding) {
+    val areControlsCompact = windowSize.width < DOCK_COMPACT_WINDOW_WIDTH
+    val layout = remember(rows, windowSize.height, turnsByColumn, hasPagerBar, isImportPreview, rowHeight, isSidePanel, bottomPadding, areControlsCompact) {
         if (isSidePanel) {
             dockLayoutOf(rows = rowsUnder, budget = 0.dp, isOneRow = true, rowHeight = rowHeight, bottomPadding = bottomPadding)
         } else {
@@ -124,7 +130,7 @@ internal fun rememberSongDock(
                 isOneRow = windowSize.height < SHORT_WINDOW_HEIGHT || isImportPreview,
                 rowHeight = rowHeight,
                 bottomPadding = bottomPadding,
-            )
+            )?.copy(areControlsCompact = areControlsCompact)
         }
     }
     val panelLayout = remember(rows, rowHeight, isSidePanel) { if (isSidePanel) dockPanelLayoutOf(rows, rowHeight) else null }
@@ -142,6 +148,7 @@ internal fun rememberSongDock(
         animatedPanelWidth = animateDockDp(panelTarget, snaps = songRows.isDataArriving),
         contents = contents,
         steppers = remember { mutableStateMapOf() },
+        onTunerClicked = onTunerClicked,
     )
 }
 

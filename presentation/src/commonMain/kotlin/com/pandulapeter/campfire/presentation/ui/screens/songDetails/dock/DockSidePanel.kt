@@ -100,6 +100,7 @@ internal fun DockSidePanel(
                     .padding(top = DOCK_VERTICAL_PADDING),
                 content = dock.contents[targetPage],
                 height = layout.tallTempoChipHeight,
+                onTunerClicked = dock.onTunerClicked,
             )
             val scrollState = rememberScrollState()
             val background = MaterialTheme.colorScheme.surfaceContainer
@@ -163,11 +164,19 @@ private fun PanelInstrumentPill(
     modifier: Modifier,
     content: DockContent?,
     height: Dp,
+    onTunerClicked: (() -> Unit)?,
 ) {
     val last = remember { LastChordDiagrams() }
     content?.chordDiagrams?.let { last.value = it }
     last.value?.let { chordDiagrams ->
-        DockInstrumentPill(modifier = modifier.fillMaxWidth(), chordDiagrams = chordDiagrams, height = height, isTall = true)
+        DockInstrumentPill(
+            modifier = modifier.fillMaxWidth(),
+            chordDiagrams = chordDiagrams,
+            height = height,
+            isTall = true,
+            isCompact = false,
+            onTunerClicked = onTunerClicked,
+        )
     }
 }
 

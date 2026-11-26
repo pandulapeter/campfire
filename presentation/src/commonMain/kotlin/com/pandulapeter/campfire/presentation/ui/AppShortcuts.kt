@@ -131,8 +131,8 @@ private val CampfireViewModel.isUncovered get() = dialogHost.visibleDialog.value
 private val CampfireViewModel.top get() = navigator.backStack.lastOrNull()
 
 /**
- * The tuner sheet over song details, which shows a way to the tuner wherever the Tuner feature is on (the dock's, the app
- * bar's, or with the Dock's tuner off the menu's), never in an import preview, which has no tuner; under the same rules as M
+ * The tuner sheet over song details, which shows a way to the tuner wherever the Tuner feature is on (the dock's
+ * instrument card's, or the menu's), never in an import preview, which has no tuner; under the same rules as M
  * (`MetronomeController.toggleMetronomeByKey`), and left alone while a field is typed in, which the desktop and iOS type
  * the `u` of after its key-down reached here.
  */

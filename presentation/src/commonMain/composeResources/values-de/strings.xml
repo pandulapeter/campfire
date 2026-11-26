@@ -528,6 +528,7 @@
     <string name="settings_scale_suggestions_description">Zeigt die Tonleitern, über die sich jeder Teil eines Songs spielen lässt, und im Akkordblatt die Tonleitern zu diesem Akkord.</string>
     <string name="settings_group_dock">Dock</string>
     <string name="settings_dock_metronome_description">Zeigt das Tempo des Songs und spielt seinen Klick direkt beim Song. Der Metronom-Tab bleibt davon unberührt.</string>
+    <string name="settings_dock_tuner_description">Zeigt das Stimmgerät neben dem Instrument im Dock. Ausgeschaltet ist das Stimmgerät im Menü des Songs.</string>
     <string name="settings_setlists_description">Der Tab „Setlists“ und das Hinzufügen von Songs zu Setlists. Ausgeschaltet werden sie nur ausgeblendet: Keine Setlist wird gelöscht.</string>
     <string name="settings_random_picks_description">Fünf zufällige Songs oben in einer Liste mit mehr als 20, jede Stunde neue</string>
     <string name="settings_song_details_lookup">Song-Details online</string>

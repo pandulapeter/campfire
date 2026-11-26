@@ -19,8 +19,9 @@ import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcu
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * The song details screen's way to the tuner sheet as an entry of its menu, never let out as a button: the bar's room is
- * the title's and the key chip's, and the Playing sheet, which the key chip opens, has the tuner beside the tuning too.
+ * The song details screen's way to the tuner sheet as an entry of its menu, wherever the dock's instrument card does not
+ * hold it, never let out as a button: the bar's room is the title's and the key chip's, and the Playing sheet, which the
+ * key chip opens, has the tuner beside the tuning too.
  */
 @Composable
 internal fun tunerAction(onClick: () -> Unit) = ActionsMenuItem(

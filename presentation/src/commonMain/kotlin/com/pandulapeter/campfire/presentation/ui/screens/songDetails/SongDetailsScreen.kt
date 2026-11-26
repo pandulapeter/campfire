@@ -146,7 +146,7 @@ internal fun SongDetailsScreen(
     val setlistSlots = remember(setlist, songs) { setlist?.let { buildSetlistSlots(it.entries, songs.map { song -> song.fileName }) } }
     val shouldShowChords = userPreferences?.areChordsEnabled != false
     val chordDiagrams = rememberChordDiagrams(userPreferences = userPreferences)
-    val (isMetronomeEnabled, isTunerInMenu) = songDetailsToolsOf(userPreferences, isImportPreview)
+    val tools = songDetailsToolsOf(userPreferences, isImportPreview)
     val areSetlistsEnabled = userPreferences?.areSetlistsEnabled != false
     val isCoverArtEnabled = userPreferences?.isCoverArtEnabled == true
     val openCurrentSongInfo = rememberOpenSongInfo(
@@ -158,7 +158,7 @@ internal fun SongDetailsScreen(
     )
     val chordSpelling = userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default
     val layoutDirection = LocalLayoutDirection.current
-    val dock = rememberSongDock(userPreferences, chordDiagrams, hasPagerBar = hasPagerControls, isImportPreview = isImportPreview, contentPadding = contentPadding, targetPage = pagerState.targetPage, songKey = songs.getOrNull(pagerState.targetPage)?.fileName, songText = songs.getOrNull(pagerState.targetPage)?.let { songTexts[it.fileName] }, dockFacts = viewModel.songTextStore.dockFacts)
+    val dock = rememberSongDock(userPreferences, chordDiagrams, hasPagerBar = hasPagerControls, isImportPreview = isImportPreview, contentPadding = contentPadding, targetPage = pagerState.targetPage, songKey = songs.getOrNull(pagerState.targetPage)?.fileName, songText = songs.getOrNull(pagerState.targetPage)?.let { songTexts[it.fileName] }, dockFacts = viewModel.songTextStore.dockFacts, onTunerClicked = viewModel::openTunerSheet.takeIf { tools.isTunerInCard })
     // The side panel covers the end inset for what stands beside it, which keeps only what of it is still its own.
     val songPadding = remember(contentPadding, dock) { PaddingBesidePanel(contentPadding) { dock.panelWidth } }
     val isUncovered = isSongDetailsUncovered(visibleDialog, viewModel.navigator.backStack.lastOrNull())
@@ -199,7 +199,7 @@ internal fun SongDetailsScreen(
                 setlistFileName = destination.setlistFileName,
                 importPreview = importPreview,
                 importController = viewModel.importController,
-                playingKeys = SongPlayingKeys(overrides = viewModel.overrides, areChordsShown = shouldShowChords, isTempoShown = isMetronomeEnabled).takeUnless { isReadOnly },
+                playingKeys = SongPlayingKeys(overrides = viewModel.overrides, areChordsShown = shouldShowChords, isTempoShown = tools.isMetronomeEnabled).takeUnless { isReadOnly },
             ),
     ) {
         SongDetailsAppBar(
@@ -217,7 +217,7 @@ internal fun SongDetailsScreen(
             isReadOnly = isReadOnly,
             isPerformanceModeEnabled = isPerformanceModeEnabled,
             shouldShowChords = shouldShowChords,
-            isTunerInMenu = isTunerInMenu,
+            isTunerInMenu = tools.isTunerInMenu(hasInstrumentCard = dock.rows.hasInstrumentCard),
             dockContents = dock.contents,
             targetPage = { pagerState.targetPage },
             areSetlistsEnabled = areSetlistsEnabled,
@@ -269,7 +269,7 @@ internal fun SongDetailsScreen(
                             isReadOnly = isReadOnly,
                             chordSpelling = chordSpelling,
                             shouldShowChords = shouldShowChords,
-                            isMetronomeEnabled = isMetronomeEnabled,
+                            isMetronomeEnabled = tools.isMetronomeEnabled,
                             canPage = canPage,
                             settledWidth = settledWidth - dock.panelTarget,
                             pageContentPadding = PaddingValues(

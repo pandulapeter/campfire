@@ -21,7 +21,7 @@ tuning's strings directly (every stringed instrument, not only the five with sha
   `songControlHeight`, matching the transposition stepper, touched 48 dp tall, except on the Preferences' Chords page,
   where it takes the picker chips' height (`PICKER_CHIP_HEIGHT`) among them, and in song details' dock, where it takes
   the dock's controls' height, outline, and corners, stacked (`isStacked`: the tuning under the instrument, a line
-  between them) beside the diagrams. In song details' Playing sheet and dock, Tuner, Chords, Scales, onboarding, and the
+  between them) beside the diagrams, and ends in the tuner (`trailing`, in the same container). In song details' Playing sheet and dock, Tuner, Chords, Scales, onboarding, and the
   Preferences' Chords page.
   A swap between two tools carries the pill (and between Chords and Scales the capo) over as one (`ui/chrome`).
 - The Chords and Scales tabs end the line with the Preferences button (`endAction`), outside the line's own layout, so

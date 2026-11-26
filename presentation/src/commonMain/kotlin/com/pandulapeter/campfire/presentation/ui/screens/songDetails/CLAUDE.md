@@ -98,9 +98,11 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
   page at once: as much as leaves a 360 dp bar the title's 140 dp beside the star, which "Key Am" fits
   (`AppBarKeyChipTest`); a wider chip (a moved key, a language's long word for "Key") takes the rest from the title.
   `App bar: key chip` breadcrumb.
-- **The text size stepper and the tuner are always the menu's**: the stepper its last row (the menu staying open while
-  pressed; a pinch and the zoom keys reach it too), the tuner an entry (`tunerAction`, `Menu: tuner`; with the Tuner
-  feature on, never an import preview's), which the Playing sheet also has beside the tuning. As the bar narrows Choose
+- **The text size stepper is always the menu's**, its last row (the menu staying open while pressed; a pinch and the
+  zoom keys reach it too). **The tuner is the dock's instrument card's** with the Dock's Tuner switch on (`dock/`), else
+  a menu entry (`tunerAction`, `Menu: tuner`), the menu's too wherever the card is not shown (diagrams off, a song with
+  no diagram to draw), so it is offered once (`SongDetailsTools.isTunerInMenu`); with the Tuner feature on only, never
+  an import preview's. The Playing sheet has it beside the tuning whatever the switch says. As the bar narrows Choose
   setlists goes into the menu, then the cover, each while the title keeps 140dp. Performance mode: the read only mark
   (`ReadOnlyMark`, a lock opening the Preferences, so a mode switched on by accident is noticed and undone here) always
   before the overflow button, no Choose setlists. An import preview has read only mode's menu and never the mark, the
@@ -152,7 +154,7 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
 - Home goes back to the song's top, as a long press on the step back button does.
 - M starts and stops the click and T taps the tempo wherever the dock's tempo chip is (the metronome on, not an import
   preview; T not in read only mode, where it would write an override).
-- U opens the tuner sheet wherever the Tuner feature is on (the menu's entry names the key; not an import preview),
-  leaving a `Keyboard: tuner` breadcrumb, and U again closes it (`closeShortcut`, after a field or a stepper's typed value has had its letter).
+- U opens the tuner sheet wherever the Tuner feature is on (the card's button or the menu's entry names the key; not an
+  import preview), leaving a `Keyboard: tuner` breadcrumb, and U again closes it (`closeShortcut`, after a field or a stepper's typed value has had its letter).
   Over the Playing sheet, which holds the focus so the root hears nothing, the sheet hears U itself (`keyShortcut`) and
   opens the tuner over it as its tuner button does.

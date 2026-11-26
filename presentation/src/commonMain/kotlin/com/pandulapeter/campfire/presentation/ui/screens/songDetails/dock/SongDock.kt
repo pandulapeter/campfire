@@ -107,6 +107,7 @@ private fun DockRowsBox(dock: SongDockState, metronome: DockMetronome, contentPa
                     content = dock.contents[page],
                     stepper = dock.steppers[page],
                     metronome = metronome,
+                    onTunerClicked = dock.onTunerClicked,
                     rows = rows,
                     layout = layout,
                     horizontalPadding = horizontalPadding,
@@ -119,10 +120,11 @@ private fun DockRowsBox(dock: SongDockState, metronome: DockMetronome, contentPa
 
 /**
  * The dock's rows for one song's [content], laid out at the dock's full height whatever height it is animating through.
- * With the metronome all it holds, one row that is the metronome panel ([DockMetronomePanel]). In [DockTier.CHORD_CHIPS]
- * (a short window's and an import preview's), or without the diagrams, one row: the chord chips and the scale chips
- * scrolling up to the chip-high tempo chip ([DockTempoChip]) at its end, after a chip-high instrument pill
- * ([DockInstrumentPill]) where there are chord chips. Otherwise the diagrams have a row of their own between the tall
+ * With the metronome all it holds, one row that is the metronome panel ([DockMetronomePanel]), after the one-line
+ * instrument card of an instrument without shapes. In [DockTier.CHORD_CHIPS] (a short window's and an import preview's),
+ * or without the diagrams, one row: the chord chips and the scale chips scrolling up to the chip-high tempo chip
+ * ([DockTempoChip]) at its end, after a one-line instrument card ([DockInstrumentPill]) where there are chord chips or
+ * an instrument without shapes. Otherwise the diagrams have a row of their own between the tall
  * instrument pill and the tall tempo chip, under a row of the scale chips alone where there are scale suggestions,
  * so that the tempo chip always stands in the dock's bottom end corner. Whatever scrolls fades only where it meets what
  * stands still. The click is the screen's ([metronome]), whichever page the rows are drawn for. The diagrams fade back
@@ -134,6 +136,7 @@ private fun DockRowsOf(
     content: DockContent?,
     stepper: SongStepper?,
     metronome: DockMetronome,
+    onTunerClicked: (() -> Unit)?,
     rows: DockRows,
     layout: DockLayout,
     horizontalPadding: PaddingValues,
@@ -152,9 +155,12 @@ private fun DockRowsOf(
     val onChordClicked = content?.chordDiagrams?.onChordClicked
     val hasDiagramRow = rows.hasChordRow && layout.tier != DockTier.CHORD_CHIPS
     val tempo = content?.tempo?.takeIf { rows.hasTempo }
-    val chordDiagrams = content?.chordDiagrams?.takeIf { rows.hasChordRow }
+    val chordDiagrams = content?.chordDiagrams?.takeIf { rows.hasInstrumentCard }
+    val oneLineCard = chordDiagrams?.let {
+        @Composable { DockInstrumentPill(chordDiagrams = it, height = layout.rowHeight, isTall = false, isCompact = false, onTunerClicked = onTunerClicked) }
+    }
     if (rows.isMetronomeOnly) {
-        if (tempo != null) DockMetronomePanel(tempo = tempo, metronome = metronome, height = layout.rowHeight, horizontalPadding = horizontalPadding)
+        if (tempo != null) DockMetronomePanel(tempo = tempo, metronome = metronome, height = layout.rowHeight, horizontalPadding = horizontalPadding, start = oneLineCard)
         return@Column
     }
     if (!hasDiagramRow) {
@@ -162,7 +168,7 @@ private fun DockRowsOf(
             height = layout.rowHeight,
             horizontalPadding = horizontalPadding,
             scrollState = rowScroll,
-            start = chordDiagrams?.let { @Composable { DockInstrumentPill(chordDiagrams = it, height = layout.rowHeight, isTall = false) } },
+            start = oneLineCard,
             end = tempo?.let { @Composable { DockTempoChip(tempo = it, metronome = metronome, height = layout.rowHeight) } },
             fadesAtEnd = isBesidePanel,
         ) {
@@ -182,8 +188,22 @@ private fun DockRowsOf(
             height = layout.diagramRowHeight,
             horizontalPadding = horizontalPadding,
             scrollState = stripScroll,
-            start = chordDiagrams?.let { @Composable { DockInstrumentPill(chordDiagrams = it, height = layout.tallTempoChipHeight, isTall = true) } },
-            end = tempo?.let { @Composable { DockTempoChip(tempo = it, metronome = metronome, height = layout.tallTempoChipHeight, isTall = true) } },
+            start = chordDiagrams?.let {
+                @Composable {
+                    DockInstrumentPill(
+                        chordDiagrams = it,
+                        height = layout.tallTempoChipHeight,
+                        isTall = true,
+                        isCompact = layout.areControlsCompact,
+                        onTunerClicked = onTunerClicked,
+                    )
+                }
+            },
+            end = tempo?.let {
+                @Composable {
+                    DockTempoChip(tempo = it, metronome = metronome, height = layout.tallTempoChipHeight, isTall = true, isCompact = layout.areControlsCompact)
+                }
+            },
         ) {
             if (content != null) {
                 val model = content.model

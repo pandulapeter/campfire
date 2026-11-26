@@ -38,6 +38,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.lerp
 import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -58,7 +59,8 @@ import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeIcon
  * number alone does not say whose it is.
  *
  * [isTall] beside diagrams (the diagram row's, and the side panel's): as tall as a row of them, the number over the beats
- * and play and stop a round button beside them ([DockRoundPlayStop]), one size in both (`DockLayout.tallTempoChipHeight`).
+ * and play and stop a round button beside them ([DockRoundPlayStop]), one size in both (`DockLayout.tallTempoChipHeight`),
+ * its text a size smaller and its button and padding smaller in a narrow window ([isCompact]), as the instrument card is.
  * Otherwise it is as tall as a chip, the beats after the number and play and stop after a divider at its end ([DockPlayStop]). A new
  * number crossfades.
  */
@@ -69,6 +71,7 @@ internal fun DockTempoChip(
     metronome: DockMetronome,
     height: Dp,
     isTall: Boolean = false,
+    isCompact: Boolean = false,
 ) = DockControlPill(
     modifier = modifier.height(height),
     shape = if (isTall) RoundedCornerShape(DOCK_TALL_CORNER) else CircleShape,
@@ -89,27 +92,30 @@ internal fun DockTempoChip(
         )
     }
     if (isTall) {
+        val compactness = dockCompactness(isCompact)
+        val padding = dockTallChipPadding(compactness)
         Row(
-            modifier = Modifier.padding(start = TEMPO_CHIP_PADDING, end = TALL_BUTTON_PADDING),
+            modifier = Modifier.padding(start = padding, end = dockTallButtonPadding(compactness)),
             // Centred in a chip stretched wider than it (the side panel's, as wide as its instrument pill).
-            horizontalArrangement = Arrangement.spacedBy(TEMPO_CHIP_PADDING, Alignment.CenterHorizontally),
+            horizontalArrangement = Arrangement.spacedBy(padding, Alignment.CenterHorizontally),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(
                 verticalArrangement = Arrangement.spacedBy(TALL_GAP, Alignment.CenterVertically),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Row(horizontalArrangement = Arrangement.spacedBy(ICON_GAP), verticalAlignment = Alignment.CenterVertically) {
-                    TempoMark(metronome = metronome)
-                    TempoNumber(bpm = tempo.bpm, style = MaterialTheme.typography.titleMedium)
+                Row(horizontalArrangement = Arrangement.spacedBy(lerp(ICON_GAP, COMPACT_ICON_GAP, compactness)), verticalAlignment = Alignment.CenterVertically) {
+                    TempoMark(metronome = metronome, size = lerp(ICON_SIZE, COMPACT_ICON_SIZE, compactness))
+                    val typography = MaterialTheme.typography
+                    TempoNumber(bpm = tempo.bpm, style = dockTallTextStyle(typography.titleMedium, typography.titleSmall, compactness))
                 }
-                beats(TALL_BEATS_WIDTH, TALL_BEAT_HEIGHT)
+                beats(lerp(TALL_BEATS_WIDTH, BEATS_WIDTH, compactness), TALL_BEAT_HEIGHT)
             }
-            DockRoundPlayStop(isPlaying = panel.isPlaying, onClick = metronome.onPlayStop)
+            DockRoundPlayStop(isPlaying = panel.isPlaying, size = dockRoundButtonSize(compactness), onClick = metronome.onPlayStop)
         }
     } else {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            TempoMark(modifier = Modifier.padding(start = TEMPO_CHIP_PADDING, end = ICON_GAP), metronome = metronome)
+            TempoMark(modifier = Modifier.padding(start = DOCK_CHIP_PADDING, end = ICON_GAP), metronome = metronome, size = ICON_SIZE)
             TempoNumber(
                 modifier = Modifier.padding(end = BEAT_ROW_GAP),
                 bpm = tempo.bpm,
@@ -135,7 +141,8 @@ internal fun dockTallTempoChipWidth(): Dp {
     val numberWidth = remember(measurer, style, density) {
         with(density) { measurer.measure(text = MetronomePattern.BPM_RANGE.last.toString(), style = style, maxLines = 1).size.width.toDp() }
     }
-    return TEMPO_CHIP_PADDING + maxOf(ICON_SIZE + ICON_GAP + numberWidth, TALL_BEATS_WIDTH) + TEMPO_CHIP_PADDING + DOCK_ROUND_BUTTON_SIZE + TALL_BUTTON_PADDING
+    return DOCK_CHIP_PADDING + maxOf(ICON_SIZE + ICON_GAP + numberWidth, TALL_BEATS_WIDTH) + DOCK_CHIP_PADDING + dockRoundButtonSize(compactness = 0f) +
+        dockTallButtonPadding(compactness = 0f)
 }
 
 /** The metronome mark before the tempo, swinging with the click. */
@@ -143,8 +150,9 @@ internal fun dockTallTempoChipWidth(): Dp {
 private fun TempoMark(
     modifier: Modifier = Modifier,
     metronome: DockMetronome,
+    size: Dp,
 ) = MetronomeIcon(
-    modifier = modifier.size(ICON_SIZE),
+    modifier = modifier.size(size),
     beat = metronome.iconBeat,
     contentDescription = null,
     tint = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -182,10 +190,11 @@ private fun TempoNumber(
     }
 }
 
-private val TEMPO_CHIP_PADDING = 12.dp
 private val BEAT_ROW_GAP = 8.dp
 private val ICON_SIZE = 18.dp
 private val ICON_GAP = 6.dp
+private val COMPACT_ICON_SIZE = 16.dp
+private val COMPACT_ICON_GAP = 4.dp
 
 /** As wide as four beats read clearly at, a longer bar's narrowing to fit: the chip is as wide whatever the bar. */
 private val BEATS_WIDTH = 40.dp
@@ -194,9 +203,6 @@ private val BEAT_GAP = 2.dp
 
 /** The corners of the tall controls beside the diagrams (the tempo chip, the instrument pill), which a pill's would make round. */
 internal val DOCK_TALL_CORNER = 16.dp
-
-/** Keeps a tall chip's round button as far from its end as from its top and bottom in a row of small diagrams. */
-private val TALL_BUTTON_PADDING = 10.dp
 
 private val TALL_GAP = 6.dp
 private val TALL_BEATS_WIDTH = 48.dp

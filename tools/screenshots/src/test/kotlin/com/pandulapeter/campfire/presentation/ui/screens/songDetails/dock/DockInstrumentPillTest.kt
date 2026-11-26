@@ -31,7 +31,8 @@ import kotlin.test.assertTrue
 /**
  * The app's instrument and tuning pill at the start of song details' dock: before the diagrams in their row, its tuning
  * under the instrument, at the side panel's head, and at the start of a short window's one row; opening the instrument's
- * sheet, read only mode's too; and nowhere the diagrams are not.
+ * sheet, read only mode's too; on an instrument without shapes too, which has no diagrams; and nowhere the diagrams are
+ * switched off.
  */
 @OptIn(ExperimentalTestApi::class)
 internal class DockInstrumentPillTest {
@@ -104,12 +105,13 @@ internal class DockInstrumentPillTest {
     }
 
     @Test
-    fun `an instrument without shapes has no instrument pill in the dock`() = runAppTest(
+    fun `an instrument without shapes keeps its pill in the dock, which changes it back`() = runAppTest(
         extraPreferences = mapOf("instrument" to JsonPrimitive(UserPreferences.Instrument.VIOLIN.id)),
     ) {
         openSong()
         waitForIdle()
-        onNode(hasText(string(Res.string.instrument_violin)) and hasClickAction()).assertDoesNotExist()
+        tap(hasText(string(Res.string.instrument_violin)) and hasClickAction())
+        waitUntil { viewModel.dialogHost.visibleDialog.value is DialogType.Instrument }
     }
 
     @Test

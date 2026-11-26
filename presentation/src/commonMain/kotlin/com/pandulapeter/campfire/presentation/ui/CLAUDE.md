@@ -118,9 +118,9 @@ Tags, languages, cover, and links are directives in the song file, so they trave
 - Song details' app bar (`screens/songDetails`) holds the key chip: the key of the page's chords and, wherever it is not
   zero, the capo. It opens the **Playing sheet** (`dialogs/playing`: the instrument and tuning with the tuner after
   them, and the transposition and capo steppers, `songView/firstSection`'s), read only mode's opening nothing; the
-  song's menu holds the tuner too. The dock under the song (`screens/songDetails/dock`) starts its chords with the
-  instrument and tuning pill and ends in the **tempo chip**: the page's tempo, the bar lit while the click plays, and
-  play and stop; the chip opens the **Tempo sheet** (`dialogs/playing`: the tempo stepper ending in Tap, the song's
+  dock's instrument card, or the song's menu, holds the tuner too. The dock under the song
+  (`screens/songDetails/dock`) starts its chords with the instrument card (instrument, tuning, and tuner) and ends in
+  the **tempo chip**: the page's tempo, the bar lit while the click plays, and play and stop; the chip opens the **Tempo sheet** (`dialogs/playing`: the tempo stepper ending in Tap, the song's
   accents, and play and stop), read only mode's opening nothing. Both end in a quiet line (`OverridesNote`, scrolling
   with them) saying where what they change is kept, the setlist's entry or else the app, the accents always the app
   (`UserPreferences.beatLevels`), and that the song file stays as it is; the Playing sheet's leaves with its steppers,
@@ -164,9 +164,10 @@ Features (Settings → Features):
   (`ImportController`'s `areSongsEnabled`).
 - **Random picks** (`isRandomPicksEnabled`, disabled with the songs off): also answers the question under them.
 - **Metronome**: its tab, a song's tempo chip and Tempo sheet, the M and T keys, and tempo and time wherever a song is read.
-  The Song page's Dock section takes the song's part alone (`isDockMetronomeEnabled`, device-local). The stored
-  `isDockTunerEnabled` is no longer read: the song's menu and the Playing sheet always hold the tuner.
-- **Tuner**: its tab and the sheet's entry, and with them every way to ask for the microphone.
+  The Song page's Dock section takes the song's part alone (`isDockMetronomeEnabled`, device-local), and its Tuner
+  (`isDockTunerEnabled`) moves the tuner between the dock's instrument card and the song's menu.
+- **Tuner**: its tab and the sheet's entry, song details' (the dock's card, the menu, the Playing sheet, U), and with them
+  every way to ask for the microphone.
 - **Chords** (`isChordLibraryEnabled`): the Chords tab and the scale sheet's chord rows, whatever songs show.
 - **Scales** (`areScalesEnabled`): the Scales tab and the scale sheet, and with them the scale suggestions.
 - **Setlists**: their tab and every way into one; files still travel through import, export, and sync. Off with the

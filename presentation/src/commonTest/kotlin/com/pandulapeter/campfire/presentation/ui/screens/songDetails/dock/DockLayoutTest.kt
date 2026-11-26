@@ -98,6 +98,22 @@ internal class DockLayoutTest {
     fun `no row is no dock`() = assertNull(dockLayoutOf(NO_ROW, 1000.dp, isOneRow = false))
 
     @Test
+    fun `an instrument without shapes keeps its card in one row under the song even with nothing else to show`() {
+        val cardOnly = NO_ROW.copy(hasInstrumentChip = true)
+        assertTrue(cardOnly.hasInstrumentCard)
+        assertEquals(DockTier.CHORD_CHIPS, dockLayoutOf(cardOnly, 1000.dp, isOneRow = false)?.tier)
+        assertTrue(cardOnly.copy(hasTempo = true).isMetronomeOnly)
+        assertFalse(isDockSidePanel(rows = cardOnly.copy(hasScaleRow = true, hasTempo = true), windowWidth = 1280.dp, sideInsets = 0.dp, panelWidth = PANEL_WIDTH, isContinuous = false))
+    }
+
+    @Test
+    fun `an instrument without shapes has no card over a song without chords`() {
+        val rows = NO_ROW.copy(hasInstrumentChip = true).forSong(hasChords = false, hasScales = false)
+        assertFalse(rows.hasInstrumentCard)
+        assertNull(dockLayoutOf(rows, 1000.dp, isOneRow = false))
+    }
+
+    @Test
     fun `a wide window gets the side panel whatever its height`() {
         assertTrue(isPagedSidePanel(windowWidth = 1024.dp))
         assertTrue(isPagedSidePanel(windowWidth = 840.dp))

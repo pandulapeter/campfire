@@ -11,9 +11,8 @@
 # :presentation — ui/screens/songDetails/dock
 
 What left the song on song details, which now starts at its first line (`SongLyrics.showsPlayingSections`; the editor's
-preview and the PDF keep their sections): the Chords and Scales sections, the instrument and tuning they are drawn for,
-and the click. The first section's key and capo are the app bar's key chip (`../CLAUDE.md`), the tuner the menu's and
-the Playing sheet's: nothing of them is the dock's.
+preview and the PDF keep their sections): the Chords and Scales sections, the instrument and tuning they are drawn for
+with the tuner, and the click. The first section's key and capo are the app bar's key chip (`../CLAUDE.md`).
 
 ## Where it is
 
@@ -52,16 +51,19 @@ the Playing sheet's: nothing of them is the dock's.
   that switch off would, never a row saying it has none: the scale strip with the tempo chip, then the metronome panel,
   then no dock. No row, no dock. With the metronome alone (neither diagrams nor scale suggestions) the row is the
   metronome panel (`DockMetronomePanel`): stepper with Tap, a bar as wide as the rest leaves with its accents tapped in
-  place, play / stop. An instrument without shapes has no diagrams and so no instrument pill in the dock: the Playing
-  sheet's instrument row (and the tuner sheet's pill) changes it.
+  place, play / stop. **An instrument without shapes** (Other, the violin) has no diagrams but keeps the instrument card,
+  one line, the way back to an instrument with them (`DockRows.hasInstrumentChip`, with the diagrams on and a song with
+  chords): it starts the one row (the scale strip and the tempo chip, else beside the metronome panel, else a row of its
+  own), never a side panel.
 - **Its tier is the window's** (`dockLayoutOf`). A short window (`SHORT_WINDOW_HEIGHT`) narrower than the panel's gets
   one row with a chip per chord. Any other gets two, diagrams in the second at the Chords section's size where they fit
   `dockBudgetOf` (the share of the window that costs no page turn as `PageCountTest` measured it: 80 dp by page, 60 by
   column, 48 and 40 over a pager bar), else smaller. The owner chose diagrams on an upright phone at the cost of up to
   two pages on a long song, and its 8 dp padding at one more in some cases, which `PageCountTest` holds.
 - **The tempo chip always stands in the dock's bottom end corner**, and the instrument pill starts the chords' row. **In
-  one row** (a short window, an import preview, no diagrams): the chip-high instrument pill where there are chord chips,
-  the chord chips (with diagrams on) and the scale chips scrolling, the chip-high tempo chip at its end. **In two**: the
+  one row** (a short window, an import preview, no diagrams): the chip-high instrument card where there are chord chips
+  or an instrument without shapes, the chord chips (with diagrams on) and the scale chips scrolling, the chip-high tempo
+  chip at its end. **In two**: the
   scale chips alone, then the tall instrument pill, the diagrams, and the tall tempo chip, symmetric; without scale
   suggestions only the second. The pill and the tempo chip stand still (`DockScrollingRow`) and what scrolls fades only
   where it meets them; at the screen's edge a row runs to it, padded instead, as far in as the step buttons are
@@ -85,21 +87,30 @@ the Playing sheet's: nothing of them is the dock's.
   `ControlPillFrame.TONAL`; the app bar's key chip is outlined only), set apart from the chord and scale chips (the
   song's) by their fill rather than by a chevron, the outline giving them contrast on the dock's surface. A screen
   reader reads the tempo chip as one description.
-- **The instrument pill is the app's** (`ui/instrument`'s `InstrumentPill`, which `DockInstrumentPill` only frames, never
-  a pill of the dock's own): the instrument the diagrams are drawn for and its tuning ("Standard" too; an instrument with
-  one tuning, its name alone), only where the diagrams or the chord chips are (`DockRows.hasChordRow`, so not with the
-  diagrams off, an instrument without shapes, or a song with no diagram to draw). The tempo chip's height, fill,
-  outline, and corners: beside the diagrams stacked (`isStacked`, the tuning under the instrument), in a short window's
-  one row one line. Its halves open the instrument's and the tuning's sheets (`DialogType.Instrument`,
+- **The instrument card is the app's pill** (`ui/instrument`'s `InstrumentPill`, which `DockInstrumentPill` only frames,
+  never a pill of the dock's own): the instrument the diagrams are drawn for and its tuning ("Standard" too; an
+  instrument with one tuning, its name alone), only where the diagrams or the chord chips are, or the one-line card of
+  an instrument without shapes (`DockRows.hasInstrumentCard`, so not with the diagrams off or a song with no diagram to
+  draw). The tempo chip's height, fill, outline, and corners: beside the diagrams stacked (`isStacked`, the tuning under
+  the instrument), elsewhere one line. Its halves open the instrument's and the tuning's sheets (`DialogType.Instrument`,
   `DialogType.Tuning`), read only mode included, the instrument being the device's. `Dock: instrument pill` and `Dock:
   instrument pill tuning` breadcrumbs.
+- **It ends in the tuner**, built as the tempo chip is (its `trailing`), so the row reads tune, the diagrams, play: a
+  round button (`DockTunerButton` over `DockRoundButton`, the play / stop's too) beside the stacked names, the tuner's
+  mark after a divider on one line (`DockEndButton`, the chip-high play / stop's too). Only with the Dock's Tuner switch
+  on (`SongDetailsTools.isTunerInCard`, the Tuner feature on, never an import preview); it fades and grows in and out
+  with the switch. The song's menu holds the tuner wherever the card does not (`isTunerInMenu`). `Dock: tuner`.
+- **On a narrow window** (under 600 dp, `DockLayout.areControlsCompact`) the tall instrument card and tempo chip are
+  smaller, about 100 dp each where they took 60 % of a 360 dp row: text a size down, a 32 dp round button, 8 dp padding
+  (`DockControlMetrics.kt`), eased across the width (`dockCompactness`) rather than snapped. The side panel keeps the
+  full size.
 - **The tempo chip** (`DockTempoChip`, every part of it opening its sheet but play and stop; never in an import preview,
   which has no metronome): the metronome mark swinging with the click (where the visual beat is on), then the tempo of
   the page's stretch (`SongTiming.bpm`), as wide as the widest tempo so play / stop (M) never moves, and a beat row lit
   while the click plays. Beside diagrams (their row, the side panel's foot) it is tall, one size in both, as tall as a
   row of the smaller diagrams (`DockLayout.tallTempoChipHeight`, centred in a row of full-size ones), the number over
-  the beats and a round play / stop (`DockRoundPlayStop`); elsewhere chip-high, play / stop after a divider
-  (`DockPlayStop`). The click is the screen's (`DockMetronome`), not a page's. It opens the Tempo sheet
+  the beats and a round play / stop (`DockRoundPlayStop`), smaller on a narrow window; elsewhere chip-high, play / stop
+  after a divider (`DockPlayStop`). The click is the screen's (`DockMetronome`), not a page's. It opens the Tempo sheet
   (`DialogType.Tempo`): stepper with Tap, and the song's accents with a round play / stop; not the time signature, which
   is the file's (Song defaults). Read only mode's opens nothing; the click still plays.
 - **The scale chips** are the Scales section's groups, the home one untitled, the rest under their titles ("Over E7").

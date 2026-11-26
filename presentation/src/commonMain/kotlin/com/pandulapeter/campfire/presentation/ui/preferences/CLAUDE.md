@@ -54,5 +54,6 @@ same setting**: a page is one component wherever it appears (the Metronome page 
   Accidentals stay enabled under a numbering (they still spell its key). Examples are written in the picked notation,
   never in the language. Diagrams and degrees are disabled with the songs or their chords off. Degrees disabled by the
   Song page's diagrams switch alone say so in place of their description, as that switch is on another page.
-  The Dock section has no Tuner switch: the tuner is always the song's menu's and the Playing sheet's, so the stored
-  `isDockTunerEnabled` is no longer read.
+  The Dock section's Tuner (`isDockTunerEnabled`) puts the tuner in the dock's instrument card, else the song's menu;
+  disabled with the Tuner feature off and wherever there is no card to hold it (diagrams or chords off,
+  `isDockTunerSwitchEnabled`), the menu then holding the tuner whatever it says.
