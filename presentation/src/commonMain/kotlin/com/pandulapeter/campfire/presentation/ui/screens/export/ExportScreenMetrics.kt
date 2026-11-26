@@ -11,6 +11,13 @@ package com.pandulapeter.campfire.presentation.ui.screens.export
 
 import androidx.compose.ui.unit.dp
 
+/**
+ * The widest the screen's content is laid out: the options and a preview pane as wide as a landscape page fills at a
+ * large monitor's height, centered beyond that, so that a very wide window keeps the options, the preview, and the button
+ * that finishes the export together rather than in three corners of the screen.
+ */
+internal val EXPORT_SCREEN_MAX_WIDTH = 1_600.dp
+
 /** The room around a page at a zoom of 1, and between two pages of the pager. */
 internal val PAGE_MARGIN = 16.dp
 

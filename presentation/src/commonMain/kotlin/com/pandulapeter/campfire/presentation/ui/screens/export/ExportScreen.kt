@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -322,7 +323,7 @@ internal fun ExportScreen(
         val pageButtonsWidth = pageButtonsWidthFor(pageCount)
         var actionButtonWidth by remember { mutableStateOf(0.dp) }
         Box(Modifier.fillMaxSize()) {
-            Column(Modifier.fillMaxSize()) {
+            Column(Modifier.align(Alignment.TopCenter).widthIn(max = EXPORT_SCREEN_MAX_WIDTH).fillMaxSize()) {
                 PrintTopAppBar(
                     title = stringResource(exportTitleOf(dialog)),
                     subtitle = dialog.setlist?.title ?: dialog.song?.let { songLabel(it) } ?: songsCount,
