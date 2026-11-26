@@ -299,9 +299,9 @@
     <string name="songs_paste_from_clipboard">Coller une chanson</string>
     <string name="add_songs_hint_title">Ajoute tes propres chansons</string>
     <string name="add_songs_tip_paste_title">Ajoute une chanson depuis n\'importe quel site</string>
-    <string name="add_songs_tip_paste_hint">Copie la page d\'une chanson, puis colle-la ou dépose-la ici. Campfire trouve la chanson et laisse de côté les menus, les publicités et les commentaires, directement sur ton appareil.</string>
-    <string name="add_songs_tip_paste_hint_with_links">Copie la page d\'une chanson, ou simplement son lien, puis colle-le ou dépose-le ici, ou partage la page avec Campfire. Il trouve la chanson et laisse de côté les menus, les publicités et les commentaires, directement sur ton appareil.</string>
-    <string name="add_songs_tip_paste_hint_with_links_without_sharing">Copie la page d\'une chanson, ou simplement son lien, puis colle-le ou dépose-le ici. Campfire trouve la chanson et laisse de côté les menus, les publicités et les commentaires, directement sur ton appareil.</string>
+    <string name="add_songs_tip_paste_hint">Copie la page entière d\'une chanson et colle-la ici. Campfire ne garde que la chanson, sans publicités ni superflu, directement sur ton appareil.</string>
+    <string name="add_songs_tip_paste_hint_with_links">Copie le lien d\'une chanson et colle-le ici, ou partage la page avec Campfire. Il ne garde que la chanson, sans publicités ni superflu, directement sur ton appareil.</string>
+    <string name="add_songs_tip_paste_hint_with_links_without_sharing">Copie le lien d\'une chanson et colle-le ici. Campfire ne garde que la chanson, sans publicités ni superflu, directement sur ton appareil.</string>
     <string name="add_songs_tip_import_title">Récupère tes chansons d\'une autre app</string>
     <string name="add_songs_tip_import_hint">Exporte tes chansons depuis une autre app de recueil, de préférence en archive zip ou en sauvegarde, et importe-les ici. Les fichiers ChordPro, PDF, Word et texte fonctionnent aussi.</string>
     <string name="songs_paste_converted">Converti à partir d\'accords écrits au-dessus des paroles. Vérifie le titre et l\'artiste, puis enregistre.</string>
