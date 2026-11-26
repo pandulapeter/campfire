@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.padding
@@ -55,7 +56,7 @@ private fun DockChordChip(
     cell: ChordCell,
     onChordClicked: ((chordName: String) -> Unit)?,
 ) {
-    Row(
+    Box(
         modifier = modifier
             .defaultMinSize(minHeight = DOCK_ROW_HEIGHT)
             .clip(FilterChipDefaults.shape)
@@ -71,26 +72,38 @@ private fun DockChordChip(
                 },
             )
             .padding(horizontal = CHORD_CHIP_PADDING),
-        horizontalArrangement = Arrangement.spacedBy(GLOSS_GAP),
-        verticalAlignment = Alignment.CenterVertically,
+        contentAlignment = Alignment.Center,
     ) {
-        (cell.letterName ?: cell.degree)?.let { gloss ->
-            Text(
-                modifier = Modifier.alignByBaseline(),
-                text = gloss,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-            )
-        }
+        ChordChipLabel(cell = cell)
+    }
+}
+
+/**
+ * What a [DockChordChip] reads: its gloss and its name on one baseline. A row of baseline-aligned children places them
+ * from its top whatever its vertical alignment, so the chip centres this row rather than being it.
+ */
+@Composable
+private fun ChordChipLabel(
+    cell: ChordCell,
+) = Row(
+    horizontalArrangement = Arrangement.spacedBy(GLOSS_GAP),
+) {
+    (cell.letterName ?: cell.degree)?.let { gloss ->
         Text(
             modifier = Modifier.alignByBaseline(),
-            text = cell.name,
-            style = MaterialTheme.typography.labelLarge,
-            color = LocalSecondAccentColor.current,
+            text = gloss,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = 1,
         )
     }
+    Text(
+        modifier = Modifier.alignByBaseline(),
+        text = cell.name,
+        style = MaterialTheme.typography.labelLarge,
+        color = LocalSecondAccentColor.current,
+        maxLines = 1,
+    )
 }
 
 private val CHORD_CHIP_PADDING = 12.dp
