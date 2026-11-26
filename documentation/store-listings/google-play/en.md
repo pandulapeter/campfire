@@ -83,6 +83,7 @@ Import, export, share, and sync
 Make it yours
 • Light and dark themes, a sepia slider, and ten color schemes, or your wallpaper's colors
 • Switch off any feature you never use
+• Home screen widgets and app icon shortcuts
 • English, Hungarian, Romanian, German, Spanish, French, Italian, Hebrew, Portuguese, Polish, and Czech, switchable inside the app
 
 Your songs are yours

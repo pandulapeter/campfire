@@ -30,7 +30,7 @@ Chords, lyrics, and setlists
 ## Promotional text (170 characters max)
 
 ```
-New in 5.6.0: share a song from Safari, or just paste its link, and Campfire picks out the lyrics, chords, key, and capo, leaving the menus, ads, and comments behind.
+New in 5.7.0: a redesigned song screen, its chord diagrams, scales, and tempo in a dock that follows your page, and Home Screen widgets for random picks and the next gig.
 ```
 
 ## Description (4,000 characters max)
@@ -93,6 +93,7 @@ Make it yours
 • Light and dark themes, a sepia slider, and ten color schemes
 • The app icon follows the color you choose
 • Switch off any feature you never use
+• Home Screen widgets and app icon quick actions
 • English, Hungarian, Romanian, German, Spanish, French, Italian, Hebrew, Portuguese, Polish, and Czech, switchable inside the app
 
 Your songs are yours
@@ -132,12 +133,14 @@ Campfire has no account and nothing to sign in to. Two public-domain demo songs 
 
 The microphone is used only by the Tuner tab (and the tuner sheet opened from a song), and is asked for only when the user taps the button on that page. It is listened to only while that page is on screen; nothing it hears is recorded, kept, or sent anywhere.
 
-Network use is limited to features the user starts: optional sync with the user's own Dropbox account (Settings → Sync, not needed to review anything else); sharing a song or setlist as a public link in that same Dropbox; opening a shared link, which downloads it from dl.dropboxusercontent.com with no account; cover art for songs, an image downloaded from the address a song names and a search of MusicBrainz and the iTunes Search API, opened by tapping the cover in the "About the song" sheet; the song details lookup, which searches the same two services; pictures named by an https address, downloaded once into the library when the user enters one with From a link in the editor's Image menu, taps Download on a missing picture, or opens the review of an import whose songs name one (Settings → Features → Pictures from links turns that off); and a web page shared to Campfire from the share sheet or pasted as its address alone, read once on the device, offscreen in the system's own web view (WKWebView), keeping only its text for the import (public https hosts only, never the local network; Settings → Features → Pages from links turns that off). Everything else works offline.
+Network use is limited to features the user starts: optional sync with the user's own Dropbox account (Settings → Sync, not needed to review anything else); sharing a song or setlist as a public link in that same Dropbox; opening a shared link, which downloads it from dl.dropboxusercontent.com with no account; cover art for songs, an image downloaded from the address a song names and a search of MusicBrainz and the iTunes Search API, opened by tapping the cover in the "About the song" sheet; the same cover images for the songs a placed Home Screen widget can show, as its thumbnails (Settings → Features → Cover art turns covers off); the song details lookup, which searches the same two services; pictures named by an https address, downloaded once into the library when the user enters one with From a link in the editor's Image menu, taps Download on a missing picture, or opens the review of an import whose songs name one (Settings → Features → Pictures from links turns that off); and a web page shared to Campfire from the share sheet or pasted as its address alone, read once on the device, offscreen in the system's own web view (WKWebView), keeping only its text for the import (public https hosts only, never the local network; Settings → Features → Pages from links turns that off). Everything else works offline.
 
 The "audio" background mode keeps the metronome clicking while the screen is locked; it plays only after the user starts it, and stops when they leave the screen it was started on.
 
 On iOS 26 and later, an import the user started keeps working for a while after they leave the app, as a continued processing task shown in the system's own progress; it exists only while that import runs and ends with it.
 
 New since the last approved version, and where to find it:
-- Songs from web pages: open a page with a song's chords and lyrics in Safari, tap Share, then Campfire, and open Campfire (or tap the notification it posts); or copy the page's address and tap Paste from clipboard in the New button's menu on the Songs screen. Campfire reads the page on the device ("Reading the page…"), keeps only the song, and opens it in the editor, where Save keeps it and Use the whole page brings back anything left out. Settings → Features → Pages from links turns reading addresses off.
+- Redesigned song screen: open any song on the Songs screen. Its chord diagrams, scale suggestions, and tempo are in a dock under the song (beside it on a wide iPad screen) that follows the page being read; tap the key chip in the top bar for the transposition and the capo, the tempo chip for the tempo sheet, and its play button to start the click.
+- Home Screen widgets: touch and hold the Home Screen, tap Edit, then Add Widget, and choose Campfire's Random picks (songs drawn at random; Edit Widget sets its title, tags, languages, and number of songs) or Setlist (the next gig, or a setlist chosen in Edit Widget). Tapping a song opens it in the app.
+- Quick actions: touch and hold the Campfire icon for Paste a song, Metronome, Tuner, Setlists, and New song.
 ```
