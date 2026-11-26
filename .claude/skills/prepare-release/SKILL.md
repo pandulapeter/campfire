@@ -47,7 +47,7 @@ them. If a change has no effect a user could notice, it is not in the notes.
    export is dozens), so cluster them by the user-visible capability before judging importance:
    ```bash
    git log <last tag>..HEAD --format='%H %s'
-   git diff <last tag>..HEAD --stat -- presentation domain data chordpro app | tail -40
+   git diff <last tag>..HEAD --stat -- presentation domain data libs app | tail -40
    ```
    Do not stop at the strings diff: a feature that rebuilds an existing screen (a new reading layout, new ways to
    page through a song) adds few strings and is easy to miss. Check which screens and `CLAUDE.md` sections
@@ -70,7 +70,7 @@ them. If a change has no effect a user could notice, it is not in the notes.
    Pay particular attention to two files, because they say what a user will *see*:
    ```bash
    git diff <last tag>..HEAD -- presentation/src/commonMain/composeResources/values/strings.xml
-   git diff <last tag>..HEAD --stat -- presentation domain data chordpro app
+   git diff <last tag>..HEAD --stat -- presentation domain data libs app
    ```
    New or changed strings are almost always a new feature, a new setting or a new message worth a bullet.
 
@@ -357,8 +357,7 @@ all of them are always written:
   release's bullets, trimmed to the ones a store visitor would care about, in the same voice as the
   GitHub notes, one per line as `- Headline: description.` (the same six-at-most bullets, without the bold).
 - **A `whats-new` block for every other language of the app**, right after the English one, in the order of the
-  `values-*` folders by code (list them as step 8 does): `de`, `es`, `fr`, `hu`, `it`, `ro`, and a new language as
-  its folder's code. **A block is named by the language alone, never with a country** (`fr`, not `fr-FR`):
+  `values-*` folders by code (list them as step 8 does, never from memory), each named by its folder's code. **A block is named by the language alone, never with a country** (`fr`, not `fr-FR`):
   `release_description.py` stops a release whose tag names one, and each store's script fills in every locale of that
   language the store has (Play's `fr-FR` and `fr-CA`, Apple's plain `ro`). Each is that language's store notes,
   passed to the stores exactly as the English block is: the same bullets as the English block, in the same order,
