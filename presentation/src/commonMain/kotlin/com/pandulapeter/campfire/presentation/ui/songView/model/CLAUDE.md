@@ -19,8 +19,9 @@
   recall is the one cut not joined.
 - A later `{transpose}` leaves a "Key: A" line in the reader's transposition and notation, the key of the page's chords
   as the Transposition control names it; omitted where the song has no `{key}` or chords are off.
-- Lyrics-only mode drops tab, grid, and verbatim lines (comments inside a tab or grid too), a section left empty whole,
-  and the info section's key, capo, tempo, and time line (the section where nothing else is).
+- Lyrics-only mode drops tab, grid, and verbatim lines (comments inside a tab or grid too), and the info section's key,
+  capo, tempo, and time line (the section where nothing else is). **A section left with no line keeps its heading**, the
+  singer's cue for an instrumental part; only one that is nothing but notation (ABC, LilyPond, SVG) goes whole.
 - A comment's bracketed chords are transposed and colored, as in the editor.
 - **A picture is a unit of its own** (`RenderSection.Image`), never joined, cut, or folded, kept in lyrics-only mode; one
   written inside a section cuts it, the rest headed by its fold toggle alone. Its size is part of it (null while read),

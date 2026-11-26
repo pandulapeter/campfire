@@ -266,28 +266,29 @@ internal class PrintLayoutTest {
         assertFalse(layout(source(entry("[G] [C] x4")), PrintSettings(showChords = false)).pages.single().texts.any { it.text == "x4" })
     }
 
-    @Test fun `hidden instrumental chord lines do not reserve space`() = runTest {
+    @Test fun `hidden instrumental chord lines keep only their label`() = runTest {
         val instrumentalLines = (1..100).map {
             ChordProLine.Lyrics(if (it % 2 == 0) "    " else "", listOf(ChordProLine.Lyrics.Chord(0, "D", false)))
         }
         val verse = ChordProBlock.Section(SectionType.Verse, "Verse", listOf(ChordProLine.Lyrics("Sung words", emptyList())))
-        val entry = song(emptyList(), listOf(ChordProBlock.Section(SectionType.Custom("instrumental"), "Instrumental", instrumentalLines), verse))
+        fun entry(lines: List<ChordProLine>) = song(emptyList(), listOf(ChordProBlock.Section(SectionType.Custom("instrumental"), "Instrumental", lines), verse))
         val settings = PrintSettings(showChords = false)
-        val document = layout(source(entry), settings)
-        assertEquals(layout(source(song(emptyList(), listOf(verse))), settings), document)
+        val document = layout(source(entry(instrumentalLines)), settings)
+        assertEquals(layout(source(entry(emptyList())), settings), document)
         assertEquals(1, document.pages.size)
-        assertFalse(document.pages.flatMap { it.texts }.any { it.text == "Instrumental" })
-        assertTrue(layout(source(entry)).pages.size > 1)
+        assertTrue(document.pages.flatMap { it.texts }.any { it.text == "Instrumental" })
+        assertTrue(layout(source(entry(instrumentalLines))).pages.size > 1)
     }
 
-    @Test fun `a tab only section leaves out its label when tablature is hidden`() = runTest {
+    @Test fun `a tab only section keeps its label when tablature is hidden`() = runTest {
         val riff = ChordProBlock.Section(SectionType.Custom("riff"), "Riff", listOf(ChordProLine.Tab("e|--0--2--|"), ChordProLine.Tab("B|--1--3--|", continuesEnvironment = true)))
         val texts = layout(source(song(emptyList(), listOf(riff))), PrintSettings(showTabs = false)).pages.flatMap { it.texts }.map { it.text }
-        assertFalse("Riff" in texts)
+        assertTrue("Riff" in texts)
+        assertFalse(texts.any { it.startsWith("e|") })
         assertTrue("Riff" in layout(source(song(emptyList(), listOf(riff)))).pages.flatMap { it.texts }.map { it.text })
     }
 
-    @Test fun `a bare tab is headed tab and left out with its heading when tablature is hidden`() = runTest {
+    @Test fun `a bare tab is headed tab and keeps the heading alone when tablature is hidden`() = runTest {
         val tab = song(emptyList(), listOf(ChordProBlock.Section(SectionType.Paragraph, null, listOf(ChordProLine.Tab("e|---0---|")))))
         val texts = layout(source(tab)).pages.flatMap { it.texts }
         val heading = texts.single { it.text == "Tab" }
@@ -295,7 +296,8 @@ internal class PrintLayoutTest {
         assertEquals(90, heading.style.gray)
         assertTrue(texts.any { it.text.startsWith("e|") && it.y > heading.y })
         val hidden = layout(source(tab), PrintSettings(showTabs = false)).pages.flatMap { it.texts }.map { it.text }
-        assertFalse("Tab" in hidden || hidden.any { it.startsWith("e|") })
+        assertTrue("Tab" in hidden)
+        assertFalse(hidden.any { it.startsWith("e|") })
     }
 
     @Test fun `tablature is engraved - its strings ruled and its lines selectable as the file has them`() = runTest {
@@ -335,7 +337,8 @@ internal class PrintLayoutTest {
         assertFalse("D" in tabsOnly)
         val chordsOnly = printed(PrintSettings(showChords = true, showTabs = false))
         assertTrue("D" in chordsOnly)
-        assertFalse(chordsOnly.any { it.startsWith("e|") } || "Palm muted" in chordsOnly || "Tab" in chordsOnly)
+        assertFalse(chordsOnly.any { it.startsWith("e|") } || "Palm muted" in chordsOnly)
+        assertTrue("Tab" in chordsOnly)
     }
 
     @Test fun `a grid line is drawn as boxes and reaches the text layer once as ChordPro writes it`() = runTest {
@@ -349,7 +352,7 @@ internal class PrintLayoutTest {
         assertTrue(page.boxes.isNotEmpty())
     }
 
-    @Test fun `a bare grid is headed grid and left out with its heading when chords are hidden`() = runTest {
+    @Test fun `a bare grid is headed grid and keeps the heading alone when chords are hidden`() = runTest {
         val grid = song(emptyList(), listOf(ChordProBlock.Section(SectionType.Paragraph, null, listOf(
             ChordProLine.Grid(listOf(GridToken.Bar("|"), GridToken.Chord("G"), GridToken.Bar("|"))),
         ))))
@@ -360,7 +363,8 @@ internal class PrintLayoutTest {
         assertTrue(texts.any { it.text.contains("G") && it.style.monospace && it.y > heading.y })
         val hiddenPages = layout(source(grid), PrintSettings(showChords = false)).pages
         val hidden = hiddenPages.flatMap { it.texts }.map { it.text }
-        assertFalse("Grid" in hidden || hidden.any { it.contains("G |") })
+        assertTrue("Grid" in hidden)
+        assertFalse(hidden.any { it.contains("G |") })
         assertTrue(hiddenPages.all { it.boxes.isEmpty() })
     }
 
@@ -457,7 +461,7 @@ internal class PrintLayoutTest {
         val texts = layout(source(entry), settings).pages.single().texts
         assertTrue(texts.any { it.text == "Solo" })
         assertFalse(texts.any { it.text == "D" })
-        assertEquals(layout(source(song(emptyList(), emptyList())), settings.copy(showComments = false)),
+        assertEquals(layout(source(song(emptyList())), settings.copy(showComments = false)),
             layout(source(entry), settings.copy(showComments = false)))
     }
 
@@ -905,14 +909,14 @@ internal class PrintLayoutTest {
         assertEquals(document.placeOf("Sung 1"), document.placeOf("Intro"))
     }
 
-    @Test fun `a recall whose chorus prints only a comment keeps its heading`() = runTest {
+    @Test fun `a chorus that prints only a comment keeps its heading over it - and so does its recall`() = runTest {
         val chorus = ChordProBlock.Section(SectionType.Chorus, null, listOf(ChordProLine.Tab("e|--0--2--|")))
         val comment = ChordProBlock.Comment("Softly", CommentStyle.PLAIN, CommentPlacement.IN_SECTION)
         val texts = layout(source(song(emptyList(), listOf(chorus, comment, ChordProBlock.ChorusRecall(null, listOf(chorus, comment))))), PrintSettings(showTabs = false))
             .pages.single().texts.map { it.text }
         assertEquals(2, texts.count { it == "Softly" })
-        assertEquals(1, texts.count { it == "Chorus" })
-        assertTrue(texts.indexOf("Chorus") > texts.lastIndexOf("Softly"))
+        assertEquals(2, texts.count { it == "Chorus" })
+        assertTrue(texts.indexOf("Chorus") < texts.indexOf("Softly") && texts.lastIndexOf("Chorus") < texts.lastIndexOf("Softly"))
     }
 
     private fun guitarChord(name: String) = PrintChord(name, geometry = ChordDiagramGeometry.Fretted(6, 1, 4, List(6) { null }, emptyList(), emptyList()))

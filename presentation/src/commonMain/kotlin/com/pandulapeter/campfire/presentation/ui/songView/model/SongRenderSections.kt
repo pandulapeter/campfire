@@ -47,9 +47,9 @@ import com.pandulapeter.campfire.presentation.ui.songLayout.withNumberedSections
  * toggle alone, since it starts a page of its own (see [SongUnits.timingStarts]).
  *
  * A `{chorus}` recall repeats the chorus the parser found for it (`ChordProBlock.ChorusRecall.blocks`), every piece of
- * it and the comments inside it, headed once. In lyrics-only mode the chords go away with the sections that consist
- * of nothing else: tabs and grids say nothing without them, and a line that was only chords would leave a blank behind.
- * A comment written inside a tab or a grid goes with it, since it is a note about what is no longer there, and so does
+ * it and the comments inside it, headed once. In lyrics-only mode the chords go away with the lines that consist of
+ * nothing else (tabs and grids say nothing without them, and a line that was only chords would leave a blank behind),
+ * a section left with no line keeping its heading as the cue for the instrumental part it is. A comment written inside a tab or a grid goes with it, since it is a note about what is no longer there, and so does
  * the line of a key change, the key being the chords' own.
  *
  * A picture ([ChordProBlock.Image]) is a unit of its own where it stands, cutting the section it is written in (the
@@ -82,10 +82,11 @@ internal fun ChordProSong.toRenderSections(
     fun addSection(pieces: List<ChordProBlock>, header: String?, foldKey: String, startOffset: Int): Boolean {
         val comments = pieces.filterIsInstance<ChordProBlock.Comment>().mapNotNull { it.toRenderSection(shouldShowChords) }
         val sectionPieces = pieces.filterIsInstance<ChordProBlock.Section>()
-        // A section that is nothing but tablature or a grid goes away entirely in lyrics-only mode, its heading with
-        // it: neither says anything without the chords, and a heading over nothing is worse than no heading at all.
-        // The comments in it that are not about the tablature or the grid still say something, so they stay.
-        if (!shouldShowChords && sectionPieces.all { piece -> piece.lines.all { it.needsChords() || it.isBlank() } }) {
+        // A section that is nothing but notation (ABC, LilyPond, SVG) goes away entirely in lyrics-only mode, its
+        // heading with it: it writes down a melody sung somewhere else, not a part of its own. A section of chords,
+        // tablature, or a grid keeps its heading over nothing below, since a singer has to know where the instrumental
+        // parts are. The comments in it that are not about the tablature or the grid still say something, so they stay.
+        if (!shouldShowChords && sectionPieces.all { piece -> piece.lines.all { it is ChordProLine.Verbatim || it.isBlank() } }) {
             sections += comments
             return false
         }

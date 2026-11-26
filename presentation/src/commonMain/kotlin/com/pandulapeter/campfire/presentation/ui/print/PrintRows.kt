@@ -30,6 +30,7 @@ import com.pandulapeter.campfire.presentation.ui.songLayout.foldableKind
 import com.pandulapeter.campfire.presentation.ui.songLayout.groupIntoRuns
 import com.pandulapeter.campfire.presentation.ui.songLayout.header
 import com.pandulapeter.campfire.presentation.ui.songLayout.joinCutSections
+import com.pandulapeter.campfire.presentation.ui.songView.model.isBlank
 import kotlin.math.roundToInt
 
 /**
@@ -161,10 +162,13 @@ internal class PrintRows(
         }
         val printed = segments.map { parts -> parts.map { partRows(it, sectionLabel, lineWidth) } }
         val printsLines = segments.zip(printed).any { (parts, rows) -> parts.indices.any { parts[it] is SectionPart.Lines && rows[it].isNotEmpty() } }
-        // A section whose every line the options hide leaves out its label too, rather than printing a heading with
-        // nothing under it, and keeps only its comments, outside it as the screen keeps them; one written with no lines
-        // at all keeps its label, since there the label is the cue.
-        if (!printsLines && group.any { it is ChordProBlock.Section && it.lines.isNotEmpty() }) {
+        // A section whose every line the options hide keeps its label, the cue for an instrumental part a singer has
+        // to know is there, as the screen keeps it. Only one that is nothing but notation (ABC, LilyPond, SVG) leaves
+        // it out and keeps only its comments, outside it as the screen keeps them: it writes down a melody sung
+        // somewhere else, not a part of its own.
+        val isOnlyNotation = group.any { it is ChordProBlock.Section && it.lines.isNotEmpty() } &&
+            group.all { block -> block !is ChordProBlock.Section || block.lines.all { it is ChordProLine.Verbatim || it.isBlank() } }
+        if (!printsLines && isOnlyNotation) {
             return SectionSegments(
                 segments = segments.map { parts -> parts.filterIsInstance<SectionPart.Comment>().map { commentRows(it.comment, width) }.joinedWithGaps() },
                 isLabelled = false,

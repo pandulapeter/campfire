@@ -37,8 +37,8 @@ Campfire's PDFs back, so much here exists to keep the text layer importable.
   the PDF has no picker. Drawn in black, the frets' boxes in white, never in the text layer; a tune that does not render
   prints as its text.
 - Sections and runs are grouped by the screen's own `joinCutSections` and `groupIntoRuns`: a chorus is one unit under
-  one bar, a break the one cut the PDF keeps. Section labels hide when the options hide all their lines; an unnamed
-  verse is "Verse", an unnamed paragraph has none.
+  one bar, a break the one cut the PDF keeps. A section whose lines the options all hide keeps its label, as on screen
+  (but one of notation alone, which goes whole); an unnamed verse is "Verse", an unnamed paragraph has none.
 - A row with markup prints as one text with spans, laid out once so right-to-left lines keep their order. A line with
   any bold wraps measured in bold, so no bold word passes the column. **Bold is written into the text layer regular**:
   read back, a bold chord-name word would become a chord. Likewise a tab run's bold chord line.

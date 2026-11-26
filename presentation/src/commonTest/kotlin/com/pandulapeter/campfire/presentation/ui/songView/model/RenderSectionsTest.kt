@@ -163,7 +163,7 @@ class RenderSectionsTest {
             shape("{tempo: 120}\n{sov}\n[G]la\n{eov}\n{tempo: 90}\n{comment_italic: Note}\n{tempo: 80}\n{sov}\n[G]la\n{eov}"),
         )
         assertEquals(
-            listOf("Versszak: lines"),
+            listOf("Versszak: lines", "timing 90 4/4", "Tab: "),
             shape("{tempo: 120}\n{sov}\n[G]la\n{eov}\n{tempo: 90}\n{start_of_tab}\ne|--0--|\n{end_of_tab}", shouldShowChords = false),
         )
     }
@@ -252,6 +252,13 @@ class RenderSectionsTest {
     }
 
     @Test
+    fun `lyrics-only mode keeps the heading of a section that is only a tab or a grid`() {
+        val text = "{sot: Solo}\ne|-0-|\n{eot}\n\n{start_of_grid: Bridge}\n| G . . . |\n{end_of_grid}\n\n{sov}\nla\n{eov}"
+
+        assertEquals(listOf("Solo: ", "Bridge: ", "Versszak: lines"), shape(text, shouldShowChords = false))
+    }
+
+    @Test
     fun `lyrics-only mode hides the comments written in a tab or a grid with it`() {
         val text = "{sov: Solo}\nla\n{sot}\n{c: in tab}\ne|-0-|\n{eot}\n{c: after tab}\nla\n{eov}\n\n" +
             "{sot: Riff}\ne|-0-|\n{c: in riff}\n{eot}\n{c: after riff}"
@@ -261,7 +268,7 @@ class RenderSectionsTest {
             shape(text),
         )
         assertEquals(
-            listOf("Solo: lines, after tab, lines", "comment after riff"),
+            listOf("Solo: lines, after tab, lines", "Riff: ", "comment after riff"),
             shape(text, shouldShowChords = false),
         )
     }
