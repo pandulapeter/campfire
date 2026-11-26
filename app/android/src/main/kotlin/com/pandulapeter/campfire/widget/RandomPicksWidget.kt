@@ -33,12 +33,10 @@ import kotlin.random.Random
 internal class RandomPicksWidget : GlanceAppWidget() {
 
     /**
-     * One layout per number of rows, so that the widget lists as many songs as its height has room for, and the compact
-     * one for a widget too short for the header.
+     * The full layout, whose songs scroll, and the compact one for a widget too short for the header.
      */
     override val sizeMode = SizeMode.Responsive(
-        ((1..RandomPicksWidgetMetrics.MAX_ROWS).map { RandomPicksWidgetMetrics.heightFor(it) } + RandomPicksWidgetMetrics.COMPACT_HEIGHT)
-            .mapTo(mutableSetOf()) { DpSize(MIN_WIDTH.dp, it.dp) },
+        setOf(RandomPicksWidgetMetrics.COMPACT_HEIGHT, RandomPicksWidgetMetrics.FULL_HEIGHT).mapTo(mutableSetOf()) { DpSize(MIN_WIDTH.dp, it.dp) },
     )
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {

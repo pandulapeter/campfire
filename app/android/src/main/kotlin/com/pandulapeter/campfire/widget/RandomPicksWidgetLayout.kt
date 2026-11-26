@@ -21,6 +21,7 @@ import androidx.glance.LocalSize
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.action.actionRunCallback
 import androidx.glance.appwidget.components.CircleIconButton
+import androidx.glance.appwidget.lazy.items
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Column
 import androidx.glance.layout.Row
@@ -39,9 +40,9 @@ import com.pandulapeter.campfire.presentation.ui.widget.randomPicksContent
 
 /**
  * The random picks widget: a header with its [title] (the snapshot's Random picks where it has none of its own) and the
- * button that draws again where that can change the picks, then the first of the [count] songs drawn by [seed] from those
- * [filter] leaves that the height has room for, or the snapshot's sentence where there is nothing to draw from. Too short
- * for the header, it shows the first song alone, with the button beside it. Anywhere but a song opens the app.
+ * button that draws again where that can change the picks, then the [count] songs drawn by [seed] from those [filter]
+ * leaves, scrolling ([WidgetSongList]), or the snapshot's sentence where there is nothing to draw from. Too short for the
+ * header, it shows the first song alone, with the button beside it. Anywhere but a song opens the app.
  */
 @Composable
 internal fun RandomPicksWidgetLayout(
@@ -56,13 +57,18 @@ internal fun RandomPicksWidgetLayout(
     val shuffleDescription = snapshot?.strings?.drawNewPicks.takeIf { (content as? RandomPicksContent.Picks)?.canDrawAgain == true }
     val isMirrored = snapshot.isMirrored()
     val isCompact = RandomPicksWidgetMetrics.isCompact(height)
-    val shownSongs = (content as? RandomPicksContent.Picks)?.songs?.take(if (isCompact) 1 else RandomPicksWidgetMetrics.rowsFitting(height)).orEmpty()
+    val shownSongs = (content as? RandomPicksContent.Picks)?.songs?.let { if (isCompact) it.take(1) else it }.orEmpty()
+    val bottomPadding = when {
+        isCompact -> RandomPicksWidgetMetrics.COMPACT_PADDING
+        shownSongs.isNotEmpty() -> 0
+        else -> WIDGET_PADDING
+    }
     val covers = rememberWidgetCovers(shownSongs.mapNotNullTo(mutableSetOf()) { it.cover })
     Column(
         modifier = GlanceModifier
             .widgetBackground(
                 topPadding = if (isCompact) RandomPicksWidgetMetrics.COMPACT_PADDING else WIDGET_PADDING,
-                bottomPadding = if (isCompact) RandomPicksWidgetMetrics.COMPACT_PADDING else WIDGET_PADDING,
+                bottomPadding = bottomPadding,
             )
             .clickable(openLinkAction(snapshot?.homeLink)),
     ) {
@@ -77,8 +83,10 @@ internal fun RandomPicksWidgetLayout(
             is RandomPicksContent.Picks -> if (isCompact) {
                 CompactPick(song = shownSongs.first(), cover = shownSongs.first().cover?.let(covers::get), shuffleDescription = shuffleDescription, isMirrored = isMirrored)
             } else {
-                shownSongs.forEach { song ->
-                    WidgetSongRow(title = song.title, artist = song.artist, cover = song.cover?.let(covers::get), number = null, link = song.link, isMirrored = isMirrored)
+                WidgetSongList {
+                    items(shownSongs) { song ->
+                        WidgetSongRow(title = song.title, artist = song.artist, cover = song.cover?.let(covers::get), number = null, link = song.link, isMirrored = isMirrored)
+                    }
                 }
             }
             is RandomPicksContent.Message -> WidgetMessage(text = content.text)

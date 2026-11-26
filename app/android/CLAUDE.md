@@ -87,10 +87,10 @@
   Android 12 and square before it, as the widget is, and in a setlist its number, centered on the row), spanning the widget edge to edge so its touch feedback does:
   `widgetBackground` pads only above and below, and every other part pads its own sides. The headers tell the widgets
   apart.
-- The Setlist's songs are a `LazyColumn` (scrolling, so any number; a plain container draws only its first ten
-  children), each song opening the setlist at it.
-- Random picks: `SizeMode.Responsive`, one layout per row count (up to ten, the first of its draw that fit), and below
-  the header's and one row's height a compact one (a song and Shuffle, no header) for a launcher's shortest cell. The draw is a seed in the widget's own
+- Both widgets' songs scroll under the header (`WidgetSongList`: a `LazyColumn`, so any number and any height; a plain
+  container draws only its first ten children), a Setlist's each opening the setlist at it.
+- Random picks: `SizeMode.Responsive` with two layouts: the header over every pick of its draw, and below the header's
+  and one row's height a compact one (a song and Shuffle, no header) for a launcher's shortest cell. The draw is a seed in the widget's own
   state, drawn again by Shuffle (`ShuffleAction`, public: Glance's R8 rules keep only public `ActionCallback`s) and by
   `provideGlance` once 55 minutes old (the hourly `updatePeriodMillis` alarm repeats from itself, not from the draw).
   Its own title, pick count, and tag and language filter are in its state too, set by `RandomPicksWidgetConfigurationActivity`.
