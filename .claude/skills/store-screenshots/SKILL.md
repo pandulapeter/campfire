@@ -59,7 +59,7 @@ nothing of them is committed; an edit to the shots, texts, or tools is committed
    `tools/screenshots/progress.sh <scratchpad>/render.log`: it prints the shots done and the time left every two
    minutes, relayed to the user as they come, and stops once the build ends (a render without
    `--out` empties `renders/` first, so nothing else may render in the clone until the framing is done) (one app start
-   per image, a few seconds each; the listing is about 500 images, half an hour): every shot of `Shot.kt` on every
+   per image, a few seconds each; the listing is 9 devices × 8 shots × 11 languages, about 790 images, some three quarters of an hour): every shot of `Shot.kt` on every
    listing `Device` in every language, into `renders/<row label>/<language>/`, and the stores' shots of `Banners.kt`.
    `--only` also takes device enum names and shot ids. A failed render is reported and the run goes on; grep the log
    for `Exception` as well, since a broken class fails a shot that still counts as written.
