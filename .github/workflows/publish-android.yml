@@ -204,3 +204,6 @@ jobs:
             app/android/build/outputs/mapping/release/mapping.txt \
             "${{ steps.version.outputs.name }} (${{ steps.version.outputs.code }})" "${{ inputs.update_priority }}" \
             release_notes.txt "${FLAGS[@]}"
+      - name: Clean up credentials
+        if: always()
+        run: rm -f app/android/release.keystore local.properties

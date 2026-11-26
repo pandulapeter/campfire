@@ -16,7 +16,8 @@ The workflows that test and publish Campfire. The `campfire.*` properties and `l
 
 - Every workflow writes `local.properties` with `.github/scripts/write_local_properties.py`, each value passed through
   `env:` — never `-P` (visible in the process list) or interpolated into `run:` (the shell re-reads `$`, backticks, and
-  quotes).
+  quotes). Each job removes what it wrote of them (`local.properties`, the keystore, keys, keychains, and profiles) in a
+  last `if: always()` step, "Clean up credentials".
 - Every build passes `campfire.dropbox.appKey` from `DROPBOX_APP_KEY`; each workflow, and `publish-all.yml` first, refuses
   to start without it (a build without it silently has no sync). The check lives in the workflows, not Gradle, because
   the empty checked-in default must keep building a fresh clone.

@@ -196,3 +196,6 @@ jobs:
           ASSET="campfire-$VERSION_NAME-linux-${{ matrix.appimage_architecture }}.AppImage"
           cp "$APPIMAGE" "$ASSET"
           gh release upload "${{ inputs.release_tag }}" "$ASSET" --clobber
+      - name: Clean up credentials
+        if: always()
+        run: rm -f local.properties

@@ -224,6 +224,7 @@ jobs:
             for DIRECTORY in "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles" "$HOME/Library/MobileDevice/Provisioning Profiles"; do
               mkdir -p "$DIRECTORY"
               cp "$PROFILE" "$DIRECTORY/$UUID.mobileprovision"
+              echo "$DIRECTORY/$UUID.mobileprovision" >> "$RUNNER_TEMP/installed-profiles.txt"
             done
             echo "${TARGET%%:*}_PROFILE=$(security cms -D -i "$PROFILE" | plutil -extract Name raw -o - -)" >> "$GITHUB_ENV"
           done
@@ -366,7 +367,11 @@ jobs:
           if [ -n "$KEYCHAIN_PATH" ] && [ -f "$KEYCHAIN_PATH" ]; then
             security delete-keychain "$KEYCHAIN_PATH"
           fi
-          rm -f "$HOME/.appstoreconnect/private_keys/"*.p8 "$RUNNER_TEMP/apple-signing-key.pem"
+          if [ -f "$RUNNER_TEMP/installed-profiles.txt" ]; then
+            while IFS= read -r PROFILE; do rm -f "$PROFILE"; done < "$RUNNER_TEMP/installed-profiles.txt"
+          fi
+          rm -f "$HOME/.appstoreconnect/private_keys/"*.p8 "$RUNNER_TEMP/apple-signing-key.pem" "$RUNNER_TEMP/"*.mobileprovision \
+            local.properties
 
   # GitHub cancels a job it finds no hosted runner for within a quarter of an hour, and macOS runners run short often
   # enough to have cost the 2026-11-24 release its iOS build: a build that never started (cancelled while the run was

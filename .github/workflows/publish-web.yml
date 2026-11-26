@@ -112,3 +112,6 @@ jobs:
           git status --short "$WEBSITE_SUBDIRECTORY"
           git commit --message "Update Campfire web app."
           git push origin "$WEBSITE_BRANCH"
+      - name: Clean up credentials
+        if: always()
+        run: rm -f local.properties
