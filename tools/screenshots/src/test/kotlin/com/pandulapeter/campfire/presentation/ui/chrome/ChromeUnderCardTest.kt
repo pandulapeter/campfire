@@ -46,6 +46,7 @@ import com.pandulapeter.campfire.screenshots.TestWindow
 import com.pandulapeter.campfire.screenshots.openChords
 import com.pandulapeter.campfire.screenshots.runAppTest
 import com.pandulapeter.campfire.screenshots.tap
+import kotlinx.serialization.json.JsonPrimitive
 import kotlin.math.abs
 import kotlin.math.roundToInt
 import kotlin.test.Test
@@ -111,6 +112,8 @@ internal class ChromeUnderCardTest {
     fun `the keyboard never reaches the navigation under an open song`() = runAppTest(
         window = TestWindow.DESKTOP,
         platform = ImpersonatedPlatform.WINDOWS,
+        // The song's own tuner, in its dock's instrument card, is named as the navigation's Tuner is.
+        extraPreferences = mapOf("isDockTunerEnabled" to JsonPrimitive(false)),
     ) {
         val navigationLabels = listOf(
             Res.string.songs,
