@@ -30,7 +30,7 @@ import com.pandulapeter.campfire.presentation.ui.songLayout.UNNAMED_SECTION_HEAD
 /**
  * A section's name, followed by the chevron that folds it where it can be folded; only the chevron for a section with
  * no name ([UNNAMED_SECTION_HEADER]), or the room for it where it cannot. [chevronDescription] names the chevron instead
- * of the default "Hide the section", and [chevronModifier] is what it is pressed by ([FoldMenuAnchor]).
+ * of the default "Hide the section", and [chevronModifier] is what it is pressed by ([FoldGestures]).
  */
 @Composable
 internal fun SectionTitle(

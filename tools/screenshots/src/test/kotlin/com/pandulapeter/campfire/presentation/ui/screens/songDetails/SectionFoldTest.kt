@@ -10,15 +10,12 @@
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
 import androidx.compose.ui.test.ExperimentalTestApi
-import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
-import androidx.compose.ui.test.isPopup
 import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.performTouchInput
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.song_details_section_collapse
 import com.pandulapeter.campfire.presentation.resources.song_details_section_expand
 import com.pandulapeter.campfire.screenshots.AppTestScope
 import com.pandulapeter.campfire.screenshots.runAppTest
@@ -27,8 +24,8 @@ import kotlin.test.Test
 import kotlin.test.assertTrue
 
 /**
- * A song's fold headers on song details, where a tap is the song's to step: an unfolded one folds only from the menu its
- * long press opens, and a folded one still unfolds on a tap. The header of the song's first section, on its first page, stands in for them all.
+ * A song's fold headers on song details, where a tap is the song's to step: an unfolded one folds only on a long press,
+ * and a folded one still unfolds on a tap. The header of the song's first section, on its first page, stands in for them all.
  */
 @OptIn(ExperimentalTestApi::class)
 internal class SectionFoldTest {
@@ -41,7 +38,6 @@ internal class SectionFoldTest {
         assertTrue(!isIntroFolded(), "A tap on an unfolded header folded it.")
         onNode(header).performTouchInput { longClick() }
         waitForIdle()
-        tap(hasText(string(Res.string.song_details_section_collapse)) and hasAnyAncestor(isPopup()))
         waitUntil { isIntroFolded() }
         tap(header)
         waitUntil { !isIntroFolded() }

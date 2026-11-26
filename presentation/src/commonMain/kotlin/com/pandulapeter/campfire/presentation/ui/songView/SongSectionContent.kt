@@ -70,7 +70,7 @@ import kotlin.math.ceil
  * **Every section with a header folds from it** ([foldedRuns]), so that a song can be read as the handful of parts that
  * are still to be learned: the pill is the toggle, its chevron after the name, and on a card the whole title row is,
  * its chevron at the far end the way an expandable card carries it — so that a folded chorus is a slim card of its
- * own that still stands out, and pressing anywhere along its top answers, as [FoldMenuAnchor] has it (on song details
+ * own that still stands out, and pressing anywhere along its top answers, as [FoldGestures] has it (on song details
  * an unfolded one only to a long press or a mouse on its chevron, a tap stepping the song). A section with no header
  * has nothing to fold it from, except one that is nothing but tablature or a grid, which gets a toggle named after that.
  *
@@ -421,7 +421,7 @@ private fun SectionRun(
 
 /**
  * The title row of a section drawn on a card, which folds the section where it has anything to fold ([toggle]), pressed
- * as [FoldMenuAnchor] says. It is as wide as the card and pressed as a whole, with the chevron at its far end, since a
+ * as [FoldGestures] says. It is as wide as the card and pressed as a whole, with the chevron at its far end, since a
  * card has no pill to press.
  */
 @Composable
@@ -431,7 +431,7 @@ private fun CardTitleRow(
     toggle: FoldToggle?,
     style: TextStyle,
     chevronSize: Dp,
-) = FoldMenuAnchor(toggle = toggle, kind = null) { gestures, chevronGestures ->
+) = FoldGestures(toggle = toggle) { gestures, chevronGestures ->
     SectionTitle(
         modifier = Modifier
             .fillMaxWidth()
@@ -448,7 +448,7 @@ private fun CardTitleRow(
 
 /**
  * What folds a run of tablature or a grid that shares its section with other lines, or sits in a section without a
- * header, and what is left of the run once it is folded, pressed as [FoldMenuAnchor] says. It is named like a section
+ * header, and what is left of the run once it is folded, pressed as [FoldGestures] says. It is named like a section
  * that is nothing but that run would be, and hangs into the section's padding the way a header pill does, so that its
  * text starts on the keyline of the lyrics around it.
  */
@@ -460,7 +460,7 @@ private fun FoldToggleRow(
     toggle: FoldToggle,
     style: TextStyle,
     chevronSize: Dp,
-) = FoldMenuAnchor(toggle = toggle, kind = kind) { gestures, chevronGestures ->
+) = FoldGestures(toggle = toggle) { gestures, chevronGestures ->
     Row(
         modifier = modifier
             .offset(x = -FOLD_TOGGLE_HORIZONTAL_PADDING)
