@@ -19,7 +19,6 @@
 "Title" = "שם";
 "Tags" = "תגיות";
 "Languages" = "שפות";
-"Number of picks" = "מספר השירים";
 "Tag" = "תגית";
 "Language" = "שפה";
 "Choose the widget's title, and the tags and languages its picks come from. With none chosen in a group, that group leaves every song in." = "בחרו את שם הווידג׳ט ואת התגיות והשפות שמהן נלקחות הבחירות. קבוצה שלא נבחר בה דבר משאירה את כל השירים.";

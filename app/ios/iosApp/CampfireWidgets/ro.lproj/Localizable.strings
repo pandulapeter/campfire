@@ -19,7 +19,6 @@
 "Title" = "Titlu";
 "Tags" = "Etichete";
 "Languages" = "Limbi";
-"Number of picks" = "Numărul de alegeri";
 "Tag" = "Etichetă";
 "Language" = "Limbă";
 "Choose the widget's title, and the tags and languages its picks come from. With none chosen in a group, that group leaves every song in." = "Alege titlul widgetului și etichetele și limbile din care vin alegerile. Un grup fără nimic selectat păstrează toate cântecele.";

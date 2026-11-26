@@ -132,11 +132,10 @@ extension (`iosApp/ShareExtension/`) and the widget extension (`iosApp/CampfireW
   timeline rebuilt within the hour draws the same; Shuffle (`ShuffleIntent`) stores a new seed, shared by
   every such widget, and shows only where the filter leaves more songs than the widget draws. Edit Widget
   (`RandomPicksConfiguration.swift`) gives it a title of its own, the tags and languages it draws from (`TagEntity`,
-  `LanguageEntity`, listed from the snapshot), filtered as `WidgetContent.kt`'s `RandomPicksFilter` does, and a number
-  of picks (1–10, `RANDOM_PICKS_COUNTS`); a widget from before has no filter and draws `DEFAULT_RANDOM_PICKS_COUNT`.
-  Small (no Shuffle: its title needs the width), medium, and large: each family has a row capacity
-  (`songRowCapacity`: 3, or 8 on large), a widget showing the first ones of its draw that fit, in slots of that
-  capacity's height, so rows are packed alike in every size.
+  `LanguageEntity`, listed from the snapshot), filtered as `WidgetContent.kt`'s `RandomPicksFilter` does; a widget
+  from before has no filter. **No number of picks** (Android's setup has one): WidgetKit cannot scroll, so a count past
+  what fits would hide picks; each family draws its row capacity (`songRowCapacity`: 3, or 8 on large), in slots of
+  that capacity's height, so rows are packed alike in every size. Small has no Shuffle (its title needs the width).
   Both list songs in `WidgetSongRow` (`WidgetStyle.swift`, a 28 pt cover where the song has one), edge to edge: the widgets turn the
   content margins off (`contentMarginsDisabled`) and each part puts back the `widgetContentMargins` it needs; a
   setlist's numbers start at the header's edge, in a column as wide as the list's longest number. Setlist
