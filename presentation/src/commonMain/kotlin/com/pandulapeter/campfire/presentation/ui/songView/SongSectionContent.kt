@@ -281,13 +281,13 @@ private fun SectionHeading(
         }
 
         isOnCard -> CardTitleRow(
-            // The gap under the title belongs to the lines under it, so that a folded card is as deep above its title
-            // as below it.
+            // The gap under the title belongs to the lines under it. A folded card is only its title, padded above and
+            // below as a header pill is, so that a folded chorus is as tall as the folded sections around it.
             modifier = Modifier.padding(
                 start = CARD_PADDING,
-                top = CARD_PADDING,
+                top = if (hasBody) CARD_PADDING else HEADER_VERTICAL_PADDING,
                 end = CARD_PADDING,
-                bottom = if (hasBody) HEADER_GAP else CARD_PADDING,
+                bottom = if (hasBody) HEADER_GAP else HEADER_VERTICAL_PADDING,
             ),
             header = header,
             toggle = toggle,
