@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.ColorFilter
+import androidx.glance.ExperimentalGlanceApi
 import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
 import androidx.glance.Image
@@ -71,6 +72,7 @@ internal fun SetlistWidgetLayout(
  * widget is not pinned to the setlist, then how far away its day is, the day itself adding nothing), over its songs in the
  * random picks widget's rows, each numbered by its place in the setlist.
  */
+@OptIn(ExperimentalGlanceApi::class)
 @Composable
 private fun ColumnScope.Setlist(
     content: SetlistWidgetContent.Shown,
@@ -81,7 +83,7 @@ private fun ColumnScope.Setlist(
     if (content.songs.isNotEmpty()) {
         val covers = rememberWidgetCovers(content.songs.mapNotNullTo(mutableSetOf()) { it.cover })
         Box(modifier = GlanceModifier.fillMaxWidth().defaultWeight()) {
-            LazyColumn(modifier = GlanceModifier.fillMaxSize()) {
+            LazyColumn(activityOptions = widgetLaunchOptions(), modifier = GlanceModifier.fillMaxSize()) {
                 // A row of the fade's height first, which is where the first song sits once it is scrolled back: a
                 // widget's list cannot say how far it is scrolled, so the fade is always there, and only this is under
                 // it at rest.
