@@ -29,7 +29,8 @@ import com.pandulapeter.campfire.presentation.ui.preferences.SongLayoutChoices
  * column that scrolls by itself, and while pages are picked whether they turn a page or a column at a time, in a
  * [ConfirmedQuestionSheet]. A pick is written at once, the song behind it changing as
  * it goes, and only Confirm answers the question, so that a stray tap beside it does not; confirming without a pick keeps
- * what is shown as picked, the layout suiting the window's shape (`FitUnchosenSongLayoutToWindow`), and a sheet put away without Confirm (back, Escape) is asked again.
+ * what is shown as picked, the layout suiting the window's shape (`FitUnchosenSongLayoutToWindow`), and a sheet put away
+ * without Confirm (back, Escape) is asked again over the next song, its pick lasting until its song is closed.
  */
 @Composable
 internal fun SongLayoutSheet(

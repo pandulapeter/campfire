@@ -91,7 +91,7 @@ internal fun CampfireContent(
     val isCoverArtEnabled by remember(userPreferences) { derivedStateOf { userPreferences.value?.isCoverArtEnabled != false } }
     val isKeyboard by remember(userPreferences) { derivedStateOf { userPreferences.value?.instrument == UserPreferences.Instrument.KEYBOARD } }
     val songColumnWidth = minSongColumnWidth(isCoverArtEnabled = isCoverArtEnabled)
-    FitUnchosenSongLayoutToWindow(preferencesController = viewModel.preferencesController, dialogHost = viewModel.dialogHost)
+    FitUnchosenSongLayoutToWindow(viewModel.preferencesController, backStack = backStack, isTransitionRunning = isNavigationTransitionRunning)
 
     // How many items each rail holds at the reader's text size, from the window's height less the rail's insets, which
     // are the system bars' and never the keyboard's, so that the grouping of the tools does not flip while typing

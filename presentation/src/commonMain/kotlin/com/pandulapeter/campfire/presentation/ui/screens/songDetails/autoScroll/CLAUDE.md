@@ -60,4 +60,6 @@ the next share a height, so any motion takes away what is still to be read.
 - The layout is asked over the first song opened (never by the onboarding), as the song details notes say. Until it is
   answered, the layout follows the window's shape (one column for a window taller than wide, else pages,
   `ui/preferences/FitUnchosenSongLayoutToWindow`), so the question opens with that one picked and the song under it
-  already laid out so; never while the question is shown, so a turned phone never takes a pick back.
+  already laid out so; never while a song is open (anywhere in the back stack, and until its pop has settled), so a
+  turned phone never takes a pick back: a pick put away without Confirm lasts while its song is open and is refitted
+  once it is closed, and a song open from launch keeps the stored layout.
