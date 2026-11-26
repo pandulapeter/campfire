@@ -43,7 +43,7 @@ jobs:
       BUDGET: ${{ inputs.budget }}
     steps:
       - name: Check out repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           # The agent runs with every permission granted, so the token that can push and dispatch is handed to git

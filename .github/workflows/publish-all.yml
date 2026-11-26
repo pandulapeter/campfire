@@ -91,7 +91,7 @@ jobs:
       screenshots: ${{ steps.notes.outputs.screenshots }}
     steps:
       - name: Check out repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
       # A tag on a commit that still carries the previous version would build, sign and submit that version again
       # under a new name, and the stores would be the first to notice.
       - name: Check the tag against the version
@@ -207,7 +207,7 @@ jobs:
           name: screenshots
           path: screenshots
       - name: Check out the website repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           repository: pandulapeter/campfire-website
           ref: main
@@ -278,7 +278,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out main
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           ref: main
       - name: Download the screenshots

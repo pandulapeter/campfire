@@ -49,7 +49,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
       - name: Set up JDK 21 and Gradle
         uses: ./.github/actions/setup-jdk
       # Before Gradle, whose failure would skip every later step. The parser of a release's description is what
@@ -146,7 +146,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
       - name: Set up JDK 21 and Gradle
         uses: ./.github/actions/setup-jdk
       # desktopTest compiles commonMain and desktopMain alone. The Android app compiles every library's androidMain, and
@@ -176,7 +176,7 @@ jobs:
       DEVELOPER_DIR: /Applications/Xcode_27.2.app/Contents/Developer
     steps: &compile-ios
       - name: Check out repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
       - name: Set up JDK 21 and Gradle
         uses: ./.github/actions/setup-jdk
       # Every library's iosMain and the framework the Xcode project embeds.
@@ -212,7 +212,7 @@ jobs:
       - name: Keep the line endings as committed
         run: git config --global core.autocrlf false
       - name: Check out repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
       - name: Set up JDK 21 and Gradle
         uses: ./.github/actions/setup-jdk
       # The desktop app ships on the Microsoft Store, and paths, file locks, and atomic replaces behave differently on

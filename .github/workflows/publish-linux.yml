@@ -63,7 +63,7 @@ jobs:
             appimage_runtime_sha256: 00cbdfcf917cc6c0ff6d3347d59e0ca1f7f45a6df1a428a0d6d8a78664d87444
     steps:
       - name: Check out repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.release_tag }}
       # The tag decides what is built, and the scripts and the shared actions come from the commit this workflow runs

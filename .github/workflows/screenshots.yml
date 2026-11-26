@@ -95,7 +95,7 @@ jobs:
         include: ${{ fromJSON(needs.plan.outputs.include) }}
     steps: &render
       - name: Check out repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.release_tag || inputs.ref || github.ref }}
       - name: Set up JDK 21 and Gradle
@@ -140,7 +140,7 @@ jobs:
       include: ${{ steps.find.outputs.include }}
     steps:
       - name: Check out the scripts
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.workflow_sha }}
           sparse-checkout: .github/scripts
@@ -179,7 +179,7 @@ jobs:
     timeout-minutes: 90
     steps: &frame
       - name: Check out repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.release_tag || inputs.ref || github.ref }}
       # As in every publish workflow: the tag decides what is rendered, the scripts come from the workflow's commit.
