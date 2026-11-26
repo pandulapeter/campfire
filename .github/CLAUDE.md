@@ -127,6 +127,9 @@ locales are filled in from the language), Play's `update-priority`, a `submit` a
 - The desktop's web view helper is compiled only for the machine Gradle runs on, so `tests.yml` compiles each
   operating system's on its own runner (Linux in `compile`, macOS in `compile-ios`, Windows in `test-windows`). `CI`
   makes a missing toolchain fail it, there and in every desktop package a release builds (`app/desktop/CLAUDE.md`).
+- `tests.yml`'s `android-release` starts `assembleRelease` (R8 full mode, as Play gets it) on an emulator with
+  `.github/scripts/start_android_release_build.sh`, the only run of shrunk Android code before a release. It follows
+  the app links by the demo library's file names, so a renamed demo song is renamed there too.
 - `publish-web.yml` `rsync --delete`s the distribution over `app/` of the `campfire-website` repository
   (https://campfire-songbook.com/app/), a folder that holds only the distribution.
 

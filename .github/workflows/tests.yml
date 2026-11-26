@@ -11,7 +11,8 @@
 # simulator, the Node tests of the web build's storage worker and offline support, and every Python script's tests
 # (test_*.py); the checks the pre-commit hook runs too (license headers, store listings, regular expressions, iOS-tested
 # test names, file and function sizes, presentation layers, and sync seams); and a compilation of every platform's
-# code, the iOS one on a macOS runner, since desktopTest compiles only the desktop target's. Run on every pull request, on every push to main (a merged pull request or a direct push) that
+# code, the iOS one on a macOS runner, since desktopTest compiles only the desktop target's; and the Android release
+# build started on an emulator. Run on every pull request, on every push to main (a merged pull request or a direct push) that
 # changes more than documentation/, and by publish-all.yml before it starts a single store build, so a failing test or a
 # platform that does not compile stops every store's release rather than one of them.
 
@@ -167,6 +168,35 @@ jobs:
       - name: Run the storage tests in headless Chrome
         run: bash .github/scripts/gradlew_retrying.sh :data:source:local:implementation:wasmJsBrowserTest
 
+  # R8's full mode removes what a library's keep rules forget, and what it breaks fails only once the shrunk app runs,
+  # which nothing else here does, often in a library's own startup initializer, before the first frame. The release
+  # build as Play gets it, signed with the committed debug keystore the defaults name, is started on an emulator and
+  # walked through its app links.
+  android-release:
+    name: Start the Android release build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+      - name: Set up JDK 21 and Gradle
+        uses: ./.github/actions/setup-jdk
+      - name: Build the Android release
+        run: bash .github/scripts/gradlew_retrying.sh :app:android:assembleRelease
+      # The emulator needs hardware acceleration, which a Linux runner has but does not grant its user.
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Start the release build on an emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          script: bash .github/scripts/start_android_release_build.sh app/android/build/outputs/apk/release/android-release.apk
+
   compile-ios:
     name: Compile the iOS app
     # The runner and the Xcode publish-ios.yml builds the release with, so a retired label or an Xcode that is gone
@@ -238,7 +268,7 @@ jobs:
   # when its second try passed.
   passed:
     name: Every test passed
-    needs: [test, compile, compile-ios, compile-ios-again, test-windows]
+    needs: [test, compile, android-release, compile-ios, compile-ios-again, test-windows]
     if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     outputs:
