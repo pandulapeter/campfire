@@ -147,9 +147,9 @@ with the tuner, and the click. The first section's key and capo are the app bar'
   back to 60 %, well above a disabled control's 38 %, so no colour is spent on the mark and nothing looks unplayable;
   nothing fades before the song is laid out, nor in a song the screen holds whole. **What is on the screen is its lines,
   never whole sections**: the layout reports every chunk it placed (`SongRows.pieces`, a line each where a section may be
-  cut, in pages, a strip, and one column alike), and a chunk counts once half a line of it is in view, less what the bars
-  and, scrolled into a row, the top fade cover (`piecesOnScreen`), so a section zoomed taller than the screen marks on
-  each page only its chords there. The screen is the one a step or a fling comes to rest on, else the one shown now, so
+  cut, in pages, a strip, and one column alike), and a chunk counts once half a line of it is in view, less what the bars,
+  a strip's sides (inside its scroll, `ReadingWindow.sides`), and, scrolled into a row, the top fade cover
+  (`piecesOnScreen`), so a section zoomed taller than the screen marks on each page only its chords there. The screen is the one a step or a fling comes to rest on, else the one shown now, so
   the marks follow a hand drag and a self-scrolling column too (`rememberChordsOnScreen`: `SongStepper.shownPieces`,
   derived, so only new lines recompose; `chordsOnScreen`, a screen of none marking the chord it is headed by,
   `firstChordFrom`, counted from its first line). A tab's slot stands for its whole run, whose line of chord names

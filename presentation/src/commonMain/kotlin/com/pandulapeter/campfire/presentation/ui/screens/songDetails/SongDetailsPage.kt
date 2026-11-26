@@ -336,12 +336,12 @@ internal fun SongDetailsPage(
                     overlap = (lyricsLineHeight * currentFontScale).roundToPx() * 2,
                 )
             }
-            SideEffect { flingBehavior.readingWindow = if (isAcross) readingWindow.across() else readingWindow }
             // Read by both the padding and the width the song is handed, so the two can never drift apart. The pages fill
             // the screen, so whatever the screen is still missing this layout is missing too: the width at rest is taken
             // once, rather than a difference added back to a width that changes on every frame of a transition.
             val startPadding = contentPadding.calculateStartPadding(layoutDirection) + PAGE_HORIZONTAL_PADDING
             val endPadding = contentPadding.calculateEndPadding(layoutDirection) + PAGE_HORIZONTAL_PADDING
+            SideEffect { flingBehavior.readingWindow = if (isAcross) readingWindow.across(with(density) { (startPadding + endPadding).roundToPx() }) else readingWindow }
             val settledPageWidth = settledSize(previous = settled.width, live = maxOf(settledWidth, maxWidth), isSettled = isViewportSettled()).also { settled.width = it }
             // Only one column scrolls on through the bottom inset; in a setlist the pager bar stands over it instead.
             val bottomInset = if (isContinuous) contentPadding.calculateBottomPadding() else 0.dp

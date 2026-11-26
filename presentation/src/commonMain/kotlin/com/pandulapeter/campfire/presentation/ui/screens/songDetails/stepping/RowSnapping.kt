@@ -96,9 +96,11 @@ internal fun oneStepCappedTarget(start: Float, target: Float, rows: SongRows, vi
  * How much of the viewport a step reads the song through: all of it but what the top edge fades out ([top]) and what
  * the system bars cover at its bottom ([bottom]). A step that goes on within what did not fit on the screen moves the
  * song by that much less [overlap], the last line or two read, which the eye finds its place again by. [end] is the
- * empty space the scroll holds after the last line, above what the system bars cover, which is nothing to read.
+ * empty space the scroll holds after the last line, above what the system bars cover, which is nothing to read. [sides]
+ * is the padding a strip scrolled sideways has at its two sides, inside its scroll, which no column is read through and
+ * no step counts.
  */
-internal data class ReadingWindow(val top: Int = 0, val bottom: Int = 0, val end: Int = 0, val overlap: Int = 0) {
+internal data class ReadingWindow(val top: Int = 0, val bottom: Int = 0, val end: Int = 0, val overlap: Int = 0, val sides: Int = 0) {
 
     /** How much of the song can be read at once. */
     fun visibleHeight(viewportHeight: Int) = viewportHeight - top - bottom
@@ -119,9 +121,9 @@ internal data class ReadingWindow(val top: Int = 0, val bottom: Int = 0, val end
 
     /**
      * This window for a strip scrolled sideways, which no edge fades, no bar covers, and no space follows: only the least
-     * a press moves the strip by is left, which a column is always wider than.
+     * a press moves the strip by is left, which a column is always wider than, and the strip's [sides].
      */
-    fun across() = ReadingWindow(overlap = overlap)
+    fun across(sides: Int) = ReadingWindow(overlap = overlap, sides = sides)
 }
 
 /**

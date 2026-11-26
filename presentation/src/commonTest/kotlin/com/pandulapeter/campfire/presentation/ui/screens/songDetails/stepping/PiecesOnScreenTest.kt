@@ -69,7 +69,8 @@ internal class PiecesOnScreenTest {
             SongPiece(start = 680, end = 980, section = 2, items = 0..0),
         )
         val rows = SongRows(restingOffsets = listOf(0, 340, 680), isAcross = true, pieces = strip)
-        assertEquals(strip.subList(0, 2), piecesOnScreen(0, 680, rows, window.across()))
-        assertEquals(strip.subList(1, 3), piecesOnScreen(340, 680, rows, window.across()))
+        // The strip's sides are inside its scroll, so the viewport is the columns' width and both of them.
+        assertEquals(strip.subList(0, 2), piecesOnScreen(0, 728, rows, window.across(sides = 48)))
+        assertEquals(strip.subList(1, 3), piecesOnScreen(340, 728, rows, window.across(sides = 48)))
     }
 }

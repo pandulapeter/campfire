@@ -549,7 +549,7 @@ class RowSnappingTest {
             isSteppedByRow = true,
             isAcross = true,
         )
-        val window = ReadingWindow(top = 30, bottom = 40, end = 16, overlap = 100).across()
+        val window = ReadingWindow(top = 30, bottom = 40, end = 16, overlap = 100).across(sides = 0)
         assertEquals(420, nextStepTarget(0, rows, viewportHeight = 1_000, window = window, maxValue = 420))
         assertEquals(null, nextStepTarget(420, rows, viewportHeight = 1_000, window = window, maxValue = 420))
         assertEquals(0, previousStepTarget(420, rows, viewportHeight = 1_000, window = window, maxValue = 420))
