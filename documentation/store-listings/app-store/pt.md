@@ -32,7 +32,7 @@ Cifras, letras e repertórios
 ## Promotional text (170 characters max)
 
 ```
-Novo na 5.6.0: compartilhe uma música do Safari ou cole o link dela, e o Campfire extrai a letra, os acordes, o tom e o capotraste, sem menus, anúncios nem comentários.
+Novo na 5.7.0: tela da música redesenhada, com acordes, escalas e andamento num dock que segue a página, e widgets na Tela de Início: sugestões aleatórias e próximo show.
 ```
 
 ## Description (4,000 characters max)
@@ -95,6 +95,7 @@ Do seu jeito
 • Temas claro e escuro, um controle de sépia e dez esquemas de cores
 • O ícone do app segue a cor que você escolher
 • Desative qualquer recurso que você não usa
+• Widgets na Tela de Início e ações rápidas no ícone do app
 • Inglês, húngaro, romeno, alemão, espanhol, francês, italiano, hebraico, português, polonês e tcheco, alternáveis dentro do app
 
 Suas músicas são suas

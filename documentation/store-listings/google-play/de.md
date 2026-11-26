@@ -85,6 +85,7 @@ Importieren, exportieren, teilen und synchronisieren
 Ganz nach deinem Geschmack
 • Helles und dunkles Design, Sepia-Regler und zehn Farbschemata oder Farben deines Hintergrundbilds
 • Schalte ab, was du nie nutzt
+• Widgets und App-Verknüpfungen
 • Englisch, Ungarisch, Rumänisch, Deutsch, Spanisch, Französisch, Italienisch, Hebräisch, Portugiesisch, Polnisch und Tschechisch, in der App wählbar
 
 Deine Songs gehören dir

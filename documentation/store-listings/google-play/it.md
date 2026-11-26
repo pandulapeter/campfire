@@ -37,10 +37,10 @@ Gli accordi stanno sopra le sillabe giuste e la canzone riempie tutte le colonne
 Campfire non ha canzoni sue: è la casa delle tue.
 
 Lettura
-• Gira pagina o colonna con un tocco, un tasto o un pedale voltapagina Bluetooth, e raggiungi ogni riga solo con Su e Giù
+• Gira pagina o colonna con un tocco, un tasto o un pedale voltapagina Bluetooth, e raggiungi ogni riga con Su e Giù
 • Oppure una colonna che scorre da sola al ritmo di ogni canzone
-• Le melodie ABC come spartito, anche nel PDF
-• Immagini sulle pagine di una canzone, come la foto di uno spartito, anche nel PDF
+• Melodie ABC come spartito, anche in PDF
+• Immagini sulle pagine di una canzone, come la foto di uno spartito, anche in PDF
 • Testo ridimensionabile, sezioni richiudibili, copertine e link alle registrazioni
 • Vista Solo testo per chi canta
 • Sola lettura protegge le canzoni da un tocco accidentale sul palco
@@ -76,16 +76,17 @@ Organizzazione e modifica
 • Allega a una canzone un PDF, una registrazione o un video, e aprilo dalla canzone
 
 Importa, esporta, condividi e sincronizza
-• Incolla, trascina o condividi un foglio di accordi, una pagina web o solo il suo link: il resto della pagina resta fuori, e gli accordi si possono trasporre
+• Incolla, trascina o condividi un foglio di accordi, una pagina web o solo il suo link: il resto della pagina resta fuori, con accordi trasponibili
 • Importa file ChordPro, testo, PDF, Word e ABC, archivi zip e backup di altre app di canzonieri
-• Esportazione PDF pronta per la stampa, con formato carta e colonne a scelta
+• PDF pronti per la stampa, con formato carta e colonne a scelta
 • Condividi una canzone o una scaletta come link o codice QR che chiunque apre in Campfire, sempre aggiornato
 • Sincronizzazione facoltativa col tuo Dropbox, automatica a ogni modifica
 
 Rendila tua
 • Temi chiaro e scuro, un cursore Seppia e dieci combinazioni di colori, oppure i colori del tuo sfondo
 • Disattiva le funzionalità che non usi
-• Inglese, ungherese, rumeno, tedesco, spagnolo, francese, italiano, ebraico, portoghese, polacco e ceco, selezionabili nell'app
+• Widget e scorciatoie sull'icona dell'app
+• Inglese, ungherese, rumeno, tedesco, spagnolo, francese, italiano, ebraico, portoghese, polacco e ceco, a scelta nell'app
 
 Le tue canzoni sono tue
 La tua libreria è una cartella di file di testo ChordPro sul tuo dispositivo. Campfire funziona offline, senza account, e non raccoglie dati: niente statistiche, tracciamento o pubblicità. Va online solo su tua richiesta, senza server di Campfire in mezzo. Puoi esportare tutto quando vuoi.

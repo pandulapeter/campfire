@@ -32,7 +32,7 @@ Versuri, acorduri și liste
 ## Promotional text (170 characters max)
 
 ```
-Nou în 5.6.0: partajează un cântec din Safari sau lipește-i linkul, iar Campfire preia versurile, acordurile, tonalitatea și capodastrul, fără meniuri și reclame.
+Nou în 5.7.0: ecran de cântec regândit, cu acorduri, game și tempo într-un dock ce urmează pagina și widgeturi pe ecranul principal: alegeri aleatorii, concertul următor.
 ```
 
 ## Description (4,000 characters max)
@@ -95,6 +95,7 @@ Pe gustul tău
 • Temă deschisă sau întunecată, glisor sepia și zece scheme de culori
 • Pictograma aplicației preia culoarea aleasă
 • Dezactivezi orice funcție pe care n-o folosești
+• Widgeturi pe ecranul principal și acțiuni rapide pe pictograma aplicației
 • Engleză, maghiară, română, germană, spaniolă, franceză, italiană, ebraică, portugheză, poloneză și cehă, de ales din aplicație
 
 Cântecele tale sunt ale tale

@@ -21,7 +21,7 @@ Information stay as in the English file.
 ## Promotional text (170 characters max)
 
 ```
-Neu in 5.6.0: Füge die Webseite eines Songs oder nur ihren Link ein, und Campfire übernimmt Text, Akkorde, Tonart und Kapodaster ohne Menüs, Werbung und Kommentare.
+Neu in 5.7.0: ein neuer Song-Bildschirm mit Akkorddiagrammen, Tonleitern und Tempo in einem eigenen Dock, das deiner Seite folgt, im breiten Fenster neben dem Song.
 ```
 
 ## Description (4,000 characters max)

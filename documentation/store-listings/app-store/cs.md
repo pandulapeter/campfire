@@ -32,7 +32,7 @@ Texty, akordy a setlisty
 ## Promotional text (170 characters max)
 
 ```
-Novinka ve verzi 5.6.0: sdílej píseň ze Safari, nebo jen vlož její odkaz, a Campfire z ní vytáhne text, akordy, tóninu a kapodastr bez nabídek, reklam a komentářů.
+Novinka ve verzi 5.7.0: nová obrazovka písně s diagramy akordů, stupnicemi a tempem v docku, který sleduje stránku, a widgety na ploše pro náhodný výběr a příští koncert.
 ```
 
 ## Description (4,000 characters max)
@@ -95,6 +95,7 @@ Po tvém
 • Světlý a tmavý motiv, posuvník sépie a deset barevných schémat
 • Ikona aplikace se přizpůsobí barvě, kterou si vybereš
 • Vypni každou funkci, kterou nepoužíváš
+• Widgety na ploše a rychlé akce na ikoně aplikace
 • Angličtina, maďarština, rumunština, němčina, španělština, francouzština, italština, hebrejština, portugalština, polština a čeština, přepínatelné v aplikaci
 
 Tvoje písně patří tobě

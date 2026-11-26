@@ -33,7 +33,7 @@ Songtexte, Akkorde, Setlists
 ## Promotional text (170 characters max)
 
 ```
-Neu in 5.6.0: Teile einen Song aus Safari oder füge nur seinen Link ein, und Campfire übernimmt Text, Akkorde, Tonart und Kapodaster ohne Menüs, Werbung und Kommentare.
+Neu in 5.7.0: ein neuer Song-Bildschirm mit Akkorddiagrammen, Tonleitern und Tempo im Dock, das deiner Seite folgt, und Widgets für Zufallsauswahl und den nächsten Gig.
 ```
 
 ## Description (4,000 characters max)
@@ -96,6 +96,7 @@ Ganz nach deinem Geschmack
 • Helles und dunkles Design, Sepia-Regler und zehn Farbschemata
 • Das App-Symbol folgt der Farbe, die du wählst
 • Schalte ab, was du nie nutzt
+• Widgets für den Home-Bildschirm und Schnellaktionen am App-Symbol
 • Englisch, Ungarisch, Rumänisch, Deutsch, Spanisch, Französisch, Italienisch, Hebräisch, Portugiesisch, Polnisch und Tschechisch, in der App umschaltbar
 
 Deine Songs gehören dir

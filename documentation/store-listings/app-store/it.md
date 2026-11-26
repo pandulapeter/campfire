@@ -32,7 +32,7 @@ Testi, accordi e scalette
 ## Promotional text (170 characters max)
 
 ```
-Novità della 5.6.0: condividi una canzone da Safari o incolla il suo link, e Campfire ne estrae testo, accordi, tonalità e capotasto, senza menu, pubblicità e commenti.
+Novità della 5.7.0: schermata della canzone ridisegnata, con accordi, scale e tempo in un dock che segue la pagina, e widget Home per scelte a caso e prossimo concerto.
 ```
 
 ## Description (4,000 characters max)
@@ -45,10 +45,10 @@ Gli accordi stanno sopra le sillabe giuste e la canzone riempie tutte le colonne
 Campfire non ha canzoni sue: è la casa delle tue.
 
 Lettura
-• Gira pagina o colonna con un tocco, un tasto o un pedale voltapagina Bluetooth, e raggiungi ogni riga solo con Su e Giù
+• Gira pagina o colonna con un tocco, un tasto o un pedale voltapagina Bluetooth, e raggiungi ogni riga con Su e Giù
 • Oppure una colonna che scorre da sola al ritmo di ogni canzone
-• Le melodie ABC come spartito, anche nel PDF
-• Immagini sulle pagine di una canzone, come la foto di uno spartito, anche nel PDF
+• Melodie ABC come spartito, anche in PDF
+• Immagini sulle pagine di una canzone, come la foto di uno spartito, anche in PDF
 • Testo ridimensionabile, sezioni richiudibili, copertine e link alle registrazioni
 • Vista Solo testo per chi canta
 • Sola lettura protegge le canzoni da un tocco accidentale sul palco
@@ -95,7 +95,8 @@ Rendila tua
 • Temi chiaro e scuro, un cursore Seppia e dieci combinazioni di colori
 • L'icona dell'app segue il colore che scegli
 • Disattiva le funzionalità che non usi
-• Inglese, ungherese, rumeno, tedesco, spagnolo, francese, italiano, ebraico, portoghese, polacco e ceco, selezionabili nell'app
+• Widget nella schermata Home e azioni rapide sull'icona dell'app
+• Inglese, ungherese, rumeno, tedesco, spagnolo, francese, italiano, ebraico, portoghese, polacco e ceco, a scelta nell'app
 
 Le tue canzoni sono tue
 La tua libreria è una cartella di file di testo ChordPro sul tuo dispositivo. Campfire funziona offline, senza account, e non raccoglie dati: niente statistiche, tracciamento o pubblicità. Va online solo su tua richiesta, senza server di Campfire in mezzo. Puoi esportare tutto quando vuoi.

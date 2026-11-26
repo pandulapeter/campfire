@@ -33,7 +33,7 @@ Letras, acordes y repertorios
 ## Promotional text (170 characters max)
 
 ```
-Novedad en 5.6.0: comparte una canción desde Safari o pega su enlace, y Campfire extrae la letra, los acordes, la tonalidad y el capo, sin menús, anuncios ni comentarios.
+Novedad en 5.7.0: nueva pantalla de canción, con diagramas de acordes, escalas y tempo en un dock que sigue tu página, y widgets de canciones al azar y próximo concierto.
 ```
 
 ## Description (4,000 characters max)
@@ -96,6 +96,7 @@ A tu manera
 • Temas claro y oscuro, un control de sepia y diez paletas de colores
 • El icono de la app sigue el color que elijas
 • Desactiva cualquier función que no uses
+• Widgets de la pantalla de inicio y acciones rápidas del icono de la app
 • En inglés, húngaro, rumano, alemán, español, francés, italiano, hebreo, portugués, polaco y checo, a elegir en la app
 
 Tus canciones son tuyas

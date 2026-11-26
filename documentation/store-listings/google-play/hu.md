@@ -85,6 +85,7 @@ Import, export, megosztás, szinkronizálás
 Szabd magadra
 • Világos és sötét téma, szépia csúszka és tíz színséma, vagy a háttérképed színei
 • Kapcsold ki, amit sosem használsz
+• Kezdőképernyő-widgetek és parancsikonok az alkalmazás ikonján
 • Angol, magyar, román, német, spanyol, francia, olasz, héber, portugál, lengyel és cseh nyelv, az appban váltható
 
 A dalaid a tieid

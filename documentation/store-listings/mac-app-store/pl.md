@@ -21,7 +21,7 @@ Paste into App Store Connect's pl localization of the macOS version. The name an
 ## Promotional text (170 characters max)
 
 ```
-Nowość w 5.6.0: wklej stronę z piosenką albo tylko jej link, a Campfire wyciągnie tekst, akordy, tonację i kapodaster, bez menu, reklam i komentarzy.
+Nowość w 5.7.0: nowy wygląd ekranu piosenki, z diagramami akordów, skalami i tempem w osobnym docku, który podąża za czytaną stroną, obok piosenki w szerokim oknie.
 ```
 
 ## Description (4,000 characters max)

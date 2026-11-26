@@ -20,7 +20,7 @@ Paste into the App Store Connect locale: ro (the Mac version's own fields; the n
 ## Promotional text (170 characters max)
 
 ```
-Nou în 5.6.0: lipește pagina web a unui cântec sau doar linkul ei, iar Campfire preia versurile, acordurile, tonalitatea și capodastrul, fără meniuri și reclame.
+Nou în 5.7.0: ecranul cântecului regândit, cu diagramele de acorduri, gamele și tempoul într-un dock separat ce urmează pagina citită, lângă cântec în fereastra lată.
 ```
 
 ## Description (4,000 characters max)

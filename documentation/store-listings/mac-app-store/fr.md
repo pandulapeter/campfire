@@ -20,7 +20,7 @@ Paste into App Store Connect's French localizations: fr-FR and fr-CA.
 ## Promotional text (170 characters max)
 
 ```
-Nouveau en 5.6.0 : colle la page web d'une chanson ou juste son lien, et Campfire en extrait paroles, accords, tonalité et capo, sans menus, publicités ni commentaires.
+Nouveau en 5.7.0 : écran de chanson repensé, diagrammes d'accords, gammes et tempo dans un dock à part qui suit la page que tu lis, à côté de la chanson en fenêtre large.
 ```
 
 ## Description (4,000 characters max)

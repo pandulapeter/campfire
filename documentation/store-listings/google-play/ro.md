@@ -40,13 +40,13 @@ Citire
 • Întorci o pagină sau o coloană cu o atingere, o tastă sau o pedală Bluetooth și ajungi la orice rând cu Sus și Jos
 • Sau o coloană care se derulează singură, în ritmul fiecărui cântec
 • Melodii ABC ca partitură, și în PDF
-• Imagini în paginile cântecului, de exemplu o fotografie a partiturii, și în PDF
+• Imagini în paginile cântecului, ca o fotografie a partiturii, și în PDF
 • Mărimea textului reglabilă, secțiuni pliabile, coperte și linkuri spre înregistrări
 • Modul Doar versuri, pentru cei care cântă
 • Modul Doar citire: o atingere rătăcită nu schimbă nimic în timpul setului
 
 Acorduri și game
-• Diagrame pentru chitară, ukulele, mandolină, banjo sau claviatură, inclusiv în acordaje alternative, în pozițiile pe care le cânți
+• Diagrame pentru chitară, ukulele, mandolină, banjo sau claviatură, și în acordaje alternative, în pozițiile pe care le cânți
 • Fila Acorduri: acordurile uzuale din fiecare tonalitate; fila Game: orice gamă desenată și cântată pe instrumentul tău
 • Fiecare cântec își sugerează gamele, iar tabulaturile lui se mută pe instrumentul tău
 • Transpui, pui capodastrul, iar Campfire îți spune tonalitatea auzită de trupă
@@ -76,7 +76,7 @@ Organizare și editare
 • Atașezi la un cântec un PDF, o înregistrare sau un videoclip și le deschizi din cântec
 
 Import, export, partajare, sincronizare
-• Lipești, tragi sau partajezi o foaie cu acorduri, o pagină web ori doar linkul ei: restul paginii e lăsat deoparte, iar acordurile se pot transpune
+• Lipești, tragi sau partajezi o foaie cu acorduri, o pagină web ori doar linkul ei: restul paginii e ignorat, iar acordurile se pot transpune
 • Import de fișiere ChordPro, text, PDF, Word și ABC, arhive zip și backupuri din alte aplicații de cântece
 • Export PDF gata de tipar, cu formatul de hârtie și coloanele tale
 • Partajezi un cântec sau o listă ca link sau cod QR, deschis de oricine în Campfire și ținut la zi
@@ -85,10 +85,11 @@ Import, export, partajare, sincronizare
 Pe gustul tău
 • Temă deschisă sau întunecată, glisor sepia și zece scheme de culori sau culorile imaginii de fundal
 • Dezactivezi orice funcție pe care n-o folosești
+• Widgeturi pe ecranul de pornire și comenzi rapide pe pictograma aplicației
 • Engleză, maghiară, română, germană, spaniolă, franceză, italiană, ebraică, portugheză, poloneză și cehă, de ales din aplicație
 
 Cântecele tale sunt ale tale
-Biblioteca ta e un folder cu fișiere text ChordPro pe dispozitiv. Campfire merge offline, fără cont, și nu colectează date: fără statistici, urmărire sau reclame. Iese pe internet doar la cererea ta, fără vreun server Campfire la mijloc. Poți exporta totul oricând.
+Biblioteca ta e un folder cu fișiere text ChordPro pe dispozitiv. Campfire merge offline, fără cont, și nu colectează date: fără statistici, urmărire sau reclame. Iese pe internet doar la cererea ta, fără server Campfire la mijloc. Poți exporta totul oricând.
 
 Disponibil și pe iPhone, iPad, Mac, Windows, Linux și web: https://campfire-songbook.com
 

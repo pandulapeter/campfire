@@ -46,7 +46,7 @@ Campfire nemá vlastní písně: je domovem pro ty tvoje.
 • Režim jen pro čtení: náhodné klepnutí nezmění píseň uprostřed vystoupení
 
 Akordy a stupnice
-• Diagramy akordů pro kytaru, ukulele, mandolínu, banjo a klávesy, i v alternativních laděních, v hmatech, které opravdu hraješ
+• Diagramy akordů pro kytaru, ukulele, mandolínu, banjo a klávesy, i v jiných laděních, v hmatech, které opravdu hraješ
 • Karta Akordy s běžnými akordy každé tóniny a karta Stupnice, která nakreslí a zahraje každou stupnici na tvém nástroji
 • Každá píseň navrhne stupnice, které k ní sedí, a její tabulatury se přenesou na tvůj nástroj
 • Transponuj a nasaď kapodastr a Campfire ti řekne, jakou tóninu slyší kapela
@@ -55,7 +55,7 @@ Akordy a stupnice
 Ladička
 • Laď kytaru, baskytaru, ukulele, housle, mandolínu nebo banjo struna po struně, v mnoha laděních, nebo jakýkoli nástroj chromaticky
 • Referenční tóny pro ladění podle sluchu, otevřené nad písní, kterou se chystáš hrát
-• Poslouchá jen, když je na obrazovce, a nic z toho, co slyší, si neuchovává
+• Poslouchá, jen když je na obrazovce, a nic si neuchovává
 
 Metronom
 • Každá píseň má vlastní tempo, takt a přízvuky, včetně změn tempa
@@ -76,15 +76,16 @@ Organizace a úpravy
 • Přilož k písni PDF, nahrávku nebo video a otevři je z písně
 
 Import, export, sdílení a synchronizace
-• Vlož, přetáhni nebo nasdílej text s akordy, webovou stránku nebo jen její odkaz: zbytek stránky se vynechá a akordy půjdou transponovat
+• Vlož, přetáhni nebo nasdílej text s akordy, webovou stránku či jen odkaz: zbytek stránky se vynechá a akordy půjdou transponovat
 • Importuj soubory ChordPro, textové soubory, PDF, Word a ABC, archivy zip i zálohy jiných zpěvníkových aplikací
 • Export do PDF připraveného k tisku, s tvým formátem papíru a sloupci
 • Sdílej píseň nebo setlist jako odkaz nebo QR kód, který kdokoli otevře v Campfire, vždy aktuální
-• Volitelná synchronizace přes tvůj vlastní Dropbox, automaticky po každé změně
+• Volitelná synchronizace přes tvůj Dropbox, automaticky po každé změně
 
 Po tvém
 • Světlý a tmavý motiv, posuvník sépie a deset barevných schémat, nebo barvy tvé tapety
 • Vypni každou funkci, kterou nepoužíváš
+• Widgety na ploše a zkratky ikony aplikace
 • Angličtina, maďarština, rumunština, němčina, španělština, francouzština, italština, hebrejština, portugalština, polština a čeština, přepínatelné v aplikaci
 
 Tvoje písně patří tobě

@@ -20,7 +20,7 @@ Paste into the App Store Connect localization hu (macOS).
 ## Promotional text (170 characters max)
 
 ```
-Újdonság az 5.6.0-ban: illeszd be egy dal weboldalát vagy csak a linkjét, és a Campfire kiveszi a szöveget, az akkordokat, a hangnemet és a capót, reklám nélkül.
+Újdonság az 5.7.0-ban: megújult dalképernyő, az akkordábrák, a skálák és a tempó egy külön dokkban, amely követi az olvasott oldalt, széles ablakban a dal mellett.
 ```
 
 ## Description (4,000 characters max)

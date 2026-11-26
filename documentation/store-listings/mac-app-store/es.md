@@ -21,7 +21,7 @@ in `../app-store/es.md`; the review notes and App Sandbox information are single
 ## Promotional text (170 characters max)
 
 ```
-Novedad en 5.6.0: pega la página web de una canción o solo su enlace, y Campfire extrae la letra, los acordes, la tonalidad y el capo, sin menús, anuncios ni comentarios.
+Novedad en 5.7.0: pantalla de canción rediseñada, con diagramas de acordes, escalas y tempo en un dock aparte que sigue tu página, a su lado en una ventana ancha.
 ```
 
 ## Description (4,000 characters max)

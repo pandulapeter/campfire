@@ -32,7 +32,7 @@ Akkordok, dalszövegek, listák
 ## Promotional text (170 characters max)
 
 ```
-Újdonság az 5.6.0-ban: oszd meg a dalt a Safariból, vagy illeszd be a linkjét, és a Campfire kiveszi a szöveget, az akkordokat, a hangnemet és a capót, reklám nélkül.
+Újdonság az 5.7.0-ban: megújult dalképernyő, akkordábrák, skálák és tempó az oldalt követő dokkban, és Főképernyő-widgetek véletlen dalokhoz és a következő fellépéshez.
 ```
 
 ## Description (4,000 characters max)
@@ -95,6 +95,7 @@ Szabd magadra
 • Világos és sötét téma, szépia csúszka és tíz színséma
 • Az alkalmazásikon a választott színt követi
 • Kapcsold ki, amit sosem használsz
+• Főképernyő-widgetek és gyorsműveletek az alkalmazásikonon
 • Angol, magyar, román, német, spanyol, francia, olasz, héber, portugál, lengyel és cseh nyelv, az appban váltható
 
 A dalaid a tieid

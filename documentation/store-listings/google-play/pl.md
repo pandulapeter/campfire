@@ -85,6 +85,7 @@ Import, eksport, udostępnianie i synchronizacja
 Po twojemu
 • Jasny i ciemny motyw, suwak sepii i dziesięć schematów kolorów albo kolory twojej tapety
 • Wyłącz każdą funkcję, której nie używasz
+• Widżety na ekranie głównym i skróty pod ikoną aplikacji
 • Angielski, węgierski, rumuński, niemiecki, hiszpański, francuski, włoski, hebrajski, portugalski, polski i czeski, przełączane w aplikacji
 
 Twoje piosenki należą do ciebie

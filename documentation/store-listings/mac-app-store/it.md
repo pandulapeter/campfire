@@ -21,7 +21,7 @@ review notes and App Sandbox information stay in `en.md`.
 ## Promotional text (170 characters max)
 
 ```
-Novità della 5.6.0: incolla la pagina web di una canzone o solo il suo link, e Campfire ne estrae testo, accordi, tonalità e capotasto, senza menu, pubblicità e commenti.
+Novità della 5.7.0: schermata della canzone ridisegnata, con accordi, scale e tempo in un dock a parte che segue la pagina, accanto alla canzone in una finestra larga.
 ```
 
 ## Description (4,000 characters max)

@@ -32,7 +32,7 @@ Chansonnier et setlists
 ## Promotional text (170 characters max)
 
 ```
-Nouveau en 5.6.0 : partage une chanson depuis Safari ou colle son lien, et Campfire en extrait paroles, accords, tonalité et capo, sans menus, publicités ni commentaires.
+Nouveau en 5.7.0 : écran de chanson repensé, diagrammes d'accords, gammes et tempo dans un dock qui suit ta page, et widgets d'écran d'accueil : hasard, prochain concert.
 ```
 
 ## Description (4,000 characters max)
@@ -95,6 +95,7 @@ Import, export, partage et synchro
 • Thèmes clair et sombre, curseur sépia et dix palettes de couleurs
 • L'icône de l'app suit la couleur que tu choisis
 • Désactive ce dont tu ne te sers jamais
+• Widgets d'écran d'accueil et actions rapides de l'icône
 • Anglais, hongrois, roumain, allemand, espagnol, français, italien, hébreu, portugais, polonais et tchèque, au choix dans l'app
 
 Tes chansons t'appartiennent

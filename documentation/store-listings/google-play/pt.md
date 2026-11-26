@@ -85,6 +85,7 @@ Importar, exportar, compartilhar e sincronizar
 Do seu jeito
 • Temas claro e escuro, um controle de sépia e dez esquemas de cores, ou as cores do seu papel de parede
 • Desative qualquer recurso que você não usa
+• Widgets na tela inicial e atalhos no ícone do app
 • Inglês, húngaro, romeno, alemão, espanhol, francês, italiano, hebraico, português, polonês e tcheco, alternáveis dentro do app
 
 Suas músicas são suas

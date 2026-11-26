@@ -21,7 +21,7 @@ Paste into App Store Connect's pt-BR localization of the macOS version. The name
 ## Promotional text (170 characters max)
 
 ```
-Novo na 5.6.0: cole a página web de uma música ou só o link dela, e o Campfire extrai a letra, os acordes, o tom e o capotraste, sem menus, anúncios nem comentários.
+Novo na 5.7.0: tela da música redesenhada, com diagramas de acordes, escalas e andamento num dock à parte que segue sua página, ao lado da música numa janela larga.
 ```
 
 ## Description (4,000 characters max)

@@ -32,7 +32,7 @@ Teksty, chwyty i setlisty
 ## Promotional text (170 characters max)
 
 ```
-Nowość w 5.6.0: udostępnij piosenkę z Safari albo wklej jej link, a Campfire wyciągnie tekst, akordy, tonację i kapodaster, bez menu, reklam i komentarzy.
+Nowość w 5.7.0: nowy ekran piosenki z diagramami akordów, skalami i tempem w docku podążającym za stroną i widżety ekranu początkowego: losowy wybór i następny koncert.
 ```
 
 ## Description (4,000 characters max)
@@ -95,6 +95,7 @@ Po twojemu
 • Jasny i ciemny motyw, suwak sepii i dziesięć schematów kolorów
 • Ikona aplikacji przyjmuje wybrany przez ciebie kolor
 • Wyłącz każdą funkcję, której nie używasz
+• Widżety na ekranie początkowym i szybkie czynności ikony aplikacji
 • Angielski, węgierski, rumuński, niemiecki, hiszpański, francuski, włoski, hebrajski, portugalski, polski i czeski, przełączane w aplikacji
 
 Twoje piosenki należą do ciebie

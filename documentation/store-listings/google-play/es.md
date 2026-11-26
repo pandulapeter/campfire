@@ -70,13 +70,13 @@ Repertorios
 Organización y edición
 • Busca por título, artista o etiqueta
 • Selecciona varias canciones para añadirlas a repertorios, etiquetarlas o exportarlas
-• Etiquetas e idiomas guardados en el propio archivo, con 14 colores
+• Etiquetas e idiomas guardados en el archivo, con 14 colores
 • Portada y datos de la canción buscados en línea, solo si lo pides
 • Editor ChordPro con resaltado, marcas de error, vista previa en vivo, y negrita, cursiva, subrayado y colores
 • Adjunta un PDF, una grabación o un vídeo a una canción, y ábrelo desde la canción
 
 Importar, exportar, compartir y sincronizar
-• Pega, suelta o comparte una hoja de acordes, una página web o solo su enlace: se deja fuera el resto de la página, y los acordes se pueden transponer
+• Pega, suelta o comparte una hoja de acordes, una página web o solo su enlace: sin el resto de la página y con acordes transponibles
 • Importa ChordPro, texto, PDF, Word, ABC, zip y copias de seguridad de otras apps de cancioneros
 • PDF listo para imprimir, con tu tamaño de papel y columnas
 • Comparte canciones o repertorios como enlace o QR que cualquiera abre en Campfire, al día
@@ -85,6 +85,7 @@ Importar, exportar, compartir y sincronizar
 A tu manera
 • Temas claro y oscuro, un control de sepia y diez paletas de colores, o los colores de tu fondo de pantalla
 • Desactiva cualquier función que no uses
+• Widgets de la pantalla de inicio y accesos directos del icono de la app
 • Inglés, húngaro, rumano, alemán, español, francés, italiano, hebreo, portugués, polaco y checo, a elegir en la app
 
 Tus canciones son tuyas

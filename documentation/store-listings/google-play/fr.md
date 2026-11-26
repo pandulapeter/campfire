@@ -85,6 +85,7 @@ Import, export, partage et synchro
 À ton image
 • Thèmes clair et sombre, curseur sépia et dix palettes de couleurs, ou les couleurs de ton fond d'écran
 • Désactive ce dont tu ne te sers jamais
+• Widgets d'écran d'accueil et raccourcis d'icône
 • Anglais, hongrois, roumain, allemand, espagnol, français, italien, hébreu, portugais, polonais et tchèque, au choix dans l'app
 
 Tes chansons t'appartiennent
