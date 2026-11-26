@@ -40,7 +40,6 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -49,8 +48,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshots.SnapshotStateMap
-import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.keepScreenOn
@@ -63,7 +60,6 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
 import com.pandulapeter.campfire.presentation.ui.metronome.SongTiming
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.pictures.LocalSongImageLoader
 import com.pandulapeter.campfire.presentation.ui.screens.rememberSongActionHandler
@@ -173,15 +169,12 @@ internal fun SongDetailsScreen(
         isNextSongAsked = destination.setlistFileName != null && !isImportPreview,
     )
 
-    val isCompactHeight = LocalWindowInfo.current.containerDpSize.height < SHORT_WINDOW_HEIGHT
-    val appBarScrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(canScroll = { isCompactHeight })
-    // The room the pages have changes on every frame the bar collapses or comes back and the dock grows or shrinks, so the
-    // pages decide their grid only once both are at rest, see SongDetailsPage's isViewportSettled.
-    val isViewportSettled = { (!isCompactHeight || isAppBarSettled(appBarScrollBehavior.state.collapsedFraction)) && dock.isSettled }
+    // The room the pages have changes on every frame the dock grows, shrinks, or slides its panel in, so the pages decide
+    // their grid only once it is at rest, see SongDetailsPage's isViewportSettled.
+    val isViewportSettled = { dock.isSettled }
     Column(
         modifier = modifier
             .fillMaxSize()
-            .nestedScroll(appBarScrollBehavior.nestedScrollConnection)
             .keepScreenOn()
             .songDetailsKeyboardShortcuts(
                 currentPageScrollState = { steps.current.scrollState },
@@ -227,7 +220,6 @@ internal fun SongDetailsScreen(
             openCurrentSongInfo = openCurrentSongInfo,
             songs = songs,
             settledWidth = settledWidth,
-            scrollBehavior = if (isCompactHeight) appBarScrollBehavior else null,
             contentPadding = contentPadding,
             onBack = onBack,
         )
@@ -452,9 +444,3 @@ private fun rememberOpenSongInfo(
     if (song == null || songText == null || (isReadOnly && !hasSongInfo)) return null
     return { viewModel.dialogHost.showDialog(DialogType.SongInfo(song = song, target = SongEditTarget.File(song.fileName))) }
 }
-
-/**
- * Whether the app bar is at rest: Material's own snap leaves it fully expanded or fully collapsed, and below 1% it does
- * not snap at all (`settleAppBar`).
- */
-internal fun isAppBarSettled(collapsedFraction: Float) = collapsedFraction < 0.01f || collapsedFraction == 1f

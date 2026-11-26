@@ -56,6 +56,5 @@
 
 ### The plain bar (`CampfireTopAppBar`)
 
-- Song details and editor: flat, background color, never tints or lifts. In a short window details gives it
-  `enterAlwaysScrollBehavior`; pages choose their grid from the settled height (`isAppBarSettled`), so a moving bar
-  searches no grid. The editor's is 48dp (`isCompact`) while the keyboard is up.
+- Song details and editor: flat, background color, never tints, lifts, or scrolls away, in a short window too: the
+  song's controls stay one tap away. The editor's is 48dp (`isCompact`) while the keyboard is up.

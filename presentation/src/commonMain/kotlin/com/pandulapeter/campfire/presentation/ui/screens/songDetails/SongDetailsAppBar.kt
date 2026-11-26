@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
@@ -81,7 +80,6 @@ internal fun SongDetailsAppBar(
     openCurrentSongInfo: (() -> Unit)?,
     songs: List<Song>,
     settledWidth: Dp,
-    scrollBehavior: TopAppBarScrollBehavior?,
     contentPadding: PaddingValues,
     onBack: () -> Unit,
 ) {
@@ -114,7 +112,6 @@ internal fun SongDetailsAppBar(
         null
     }
     CampfireTopAppBar(
-        scrollBehavior = scrollBehavior,
         navigationIcon = {
             CampfireIconButton(
                 icon = painterResource(Res.drawable.ic_back),

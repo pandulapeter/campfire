@@ -99,7 +99,7 @@ import org.jetbrains.compose.resources.painterResource
  * @param buildsModelInPlace Whether the first rendering of the text is built while composing rather than in the
  *   background, see [buildsModelInPlace] and [rememberSongLyricsModel].
  * @param modelBuild Where the model is taken from when it was built before, and kept once built, see [SongModelBuild].
- * @param isViewportSettled Whether the app bar above the pager and the dock under or beside it are at rest, read while
+ * @param isViewportSettled Whether the dock under or beside the pager is at rest, read while
  *   composing: the grid is decided against the height and the width the page has then, see [settledSize].
  * @param followsViewport Whether the page follows the viewport's height frame by frame: the page being read and the one
  *   a swipe is heading to; the others keep the height it last rested at, see [pageViewportHeight].
@@ -298,10 +298,10 @@ internal fun SongDetailsPage(
             modifier = Modifier.fillMaxSize()
         ) {
             val currentFontScale = fontScale()
-            // The grid is decided against the height the page has with the app bar and the dock at rest,
-            // since every pixel either moves would otherwise search it again, on all three composed pages; the rows
-            // are still padded to the live height, so what is on screen follows the bar frame by frame. Reading whether
-            // they are at rest is what recomposes this once they come to rest.
+            // The grid is decided against the height the page has with the dock at rest, since every pixel it moves
+            // would otherwise search it again, on all three composed pages; the rows are still padded to the live
+            // height, so what is on screen follows the dock frame by frame. Reading whether it is at rest is what
+            // recomposes this once it comes to rest.
             val settled = remember { SettledViewport(maxHeight, maxOf(settledWidth, maxWidth)) }
             settled.height = settledSize(previous = settled.height, live = maxHeight, isSettled = isViewportSettled())
             // The pages beside the one being read are off screen, so they keep the height the viewport last rested at
@@ -309,9 +309,9 @@ internal fun SongDetailsPage(
             val viewportHeight = pageViewportHeight(live = maxHeight, settled = settled.height, followsViewport = followsViewport)
             // A single change - a window maximised, a stepper tapped - springs the sections to their new place; a burst
             // of them, from a pinch or a window edge being dragged, is followed, gliding only over the grid's jumps. The
-            // viewport's height is one of them, since every row is padded to it: a bottom edge dragged, the short window's
-            // title row collapsing over the frames of a scroll and the dock growing or shrinking under the pager are
-            // bursts of height changes alike, and the grid they settle into glides too.
+            // viewport's height is one of them, since every row is padded to it: a bottom edge dragged and the dock
+            // growing or shrinking under the pager are bursts of height changes alike, and the grid they settle into
+            // glides too.
             val isChangingContinuously = rememberContinuousChange(maxWidth, viewportHeight, currentFontScale)
             // Of those bursts only a pinch resizes the playing controls on every frame; the others leave them their sizes,
             // so they still travel where one of them rearranges them.

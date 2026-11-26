@@ -12,24 +12,8 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 import androidx.compose.ui.unit.dp
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
 
 class SettledViewportTest {
-
-    @Test
-    fun `an app bar fully expanded - barely moved or fully collapsed is settled`() {
-        assertTrue(isAppBarSettled(0f))
-        assertTrue(isAppBarSettled(0.005f))
-        assertTrue(isAppBarSettled(1f))
-    }
-
-    @Test
-    fun `an app bar anywhere between is not settled`() {
-        assertFalse(isAppBarSettled(0.01f))
-        assertFalse(isAppBarSettled(0.5f))
-        assertFalse(isAppBarSettled(0.999f))
-    }
 
     @Test
     fun `the settled height keeps the previous one while the viewport moves`() {

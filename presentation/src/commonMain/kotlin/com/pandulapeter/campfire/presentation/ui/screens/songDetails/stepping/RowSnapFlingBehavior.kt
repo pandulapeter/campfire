@@ -92,8 +92,8 @@ internal class RowSnapFlingBehavior(
 
     /**
      * Takes the [placedRows] the layout put the song in within a [viewport], in the layout pass that placed them. Where only
-     * the viewport's height changed - the dock growing or shrinking under the page, the short window's title row
-     * collapsing - the reader is put back on their place in that same pass, before the scroll places the song: every row is
+     * the viewport's height changed - the dock growing or shrinking under the page, a window's bottom edge
+     * dragged - the reader is put back on their place in that same pass, before the scroll places the song: every row is
      * padded to that height, so every divider below the top of the song moves with it, and a scroll left where it was until
      * the change is over has the divider above the row being read slide into view for as long as the change lasts, and the
      * song only catch up after it. A change of the width or of the text size reflows the song, and is left to

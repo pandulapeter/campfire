@@ -43,7 +43,7 @@ import com.pandulapeter.campfire.presentation.ui.songView.model.ChordDiagrams
  * side panel at the song's end (null for no dock), beside which [layout] is the one row of scale suggestions under the
  * song, the rows under it being [rowsUnder], the [height] the rows take from the bottom of the screen (the bottom
  * inset included where they cover it) and the [panelWidth] the panel takes from its end (the end inset included), each
- * followed as it animates to a new one, which the pages' grid waits for ([isSettled]) as it does for the app bar. Each
+ * followed as it animates to a new one, which the pages' grid waits for ([isSettled]). Each
  * page composed puts what the dock draws for it in [contents], and its stepper, which says where its reader is headed,
  * in [steppers], by its index. The instrument card ends in the tuner where [onTunerClicked] is given (the Dock's Tuner
  * switch and the Tuner feature on).
