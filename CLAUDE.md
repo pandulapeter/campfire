@@ -364,7 +364,7 @@ same way.
   off.
 - **Run `git config core.hooksPath .githooks` once per clone**: the pre-commit hook runs the `.github/scripts` checks
   (`.githooks/lib.sh`), refuses deleting `.run/iOS.run.xml`, and, when more than Markdown (or a version bump alone) is
-  staged, `spotlessCheck` and `desktopTest`, unless `.githooks/verify` checked that staged tree first (or the commit
+  staged, `spotlessCheck`, `desktopTest`, and the UI tests of the packages it changes, unless `.githooks/verify` checked that staged tree first (or the commit
   defers them to one `verify --branch` before landing). Sessions work in a worktree each and land on `main` by
   fast-forward (the `commit-messages` skill).
 - `.run/` holds the IDE-written run configurations (no license header, the IDE would drop it).

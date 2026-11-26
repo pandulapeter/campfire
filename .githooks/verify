@@ -23,7 +23,7 @@ if [ "${1:-}" = --branch ]; then
         echo "Files besides Markdown differ from the commit checked out and would be built along with it; commit or move them first." >&2
         exit 1
     fi
-    gradle_queued spotlessCheck desktopTest --quiet
+    gradle_checks "$(git diff --name-only "$(git merge-base main HEAD)" HEAD)"
     echo "Verified $(git rev-parse --short HEAD); the branch can land."
     exit 0
 fi
@@ -41,7 +41,7 @@ if ! git diff --quiet -- . ':(exclude)*.md' ||
     exit 1
 fi
 tree=$(git write-tree)
-gradle_queued spotlessCheck desktopTest --quiet
+gradle_checks "$(staged_code)"
 mkdir -p "$(verified_trees)"
 touch "$(verified_trees)/$tree"
 echo "Verified; a plain git commit of these staged files now skips Gradle."

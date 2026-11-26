@@ -94,7 +94,8 @@ pass `1000 / hz` ms. `--csv <path>`, one row per frame, is the only thing either
 
 ## UI tests
 
-`./gradlew :tools:screenshots:test`, run by `tests.yml`. Each test starts the whole app with `runAppTest` — real view
+`./gradlew :tools:screenshots:test`, run by `tests.yml`; a commit runs those of the packages it changes (a screen's, or a
+test's own; `ui_test_args` in `.githooks/lib.sh`), so a changed screen's tests are updated in the same commit. Each test starts the whole app with `runAppTest` — real view
 model, use cases, repositories, and files in a temporary home — and drives it like a user, through Compose's
 `SkikoComposeUiTest` at a density of one, so a `TestWindow` is in dp. A right-to-left test runs in Hebrew.
 

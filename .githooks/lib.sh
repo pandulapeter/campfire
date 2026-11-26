@@ -82,3 +82,29 @@ gradle_queued() {
         sleep 3
     done
 }
+
+# The UI tests (tools/screenshots) of the packages the given files are in, as `--tests` arguments for
+# :tools:screenshots:test: a UI test sits in the package of the screen it drives, so a change to a screen's package runs
+# the tests of that package (not of the packages under it), and a change to a UI test or its helpers runs its package's.
+# The whole suite takes minutes and stays in CI; these few are what a change to a screen most often breaks unnoticed.
+ui_test_args() {
+    root=tools/screenshots/src/test/kotlin
+    dirs=$(echo "$1" | sed -nE "s#^presentation/src/[^/]+/kotlin/(.+)/[^/]+\.kt\$#\1#p; s#^$root/(.+)/[^/]+\.kt\$#\1#p" | sort -u)
+    for dir in $dirs; do
+        for test in "$root/$dir"/*Test.kt; do
+            [ -e "$test" ] || continue
+            class=${test#"$root/"}
+            printf ' --tests %s' "$(echo "${class%.kt}" | tr / .)"
+        done
+    done
+}
+
+# Spotless, the unit tests, and the UI tests of the packages the given files change, in one queued Gradle run.
+gradle_checks() {
+    tests=$(ui_test_args "$1")
+    if [ -n "$tests" ]; then
+        echo "Running the UI tests of the changed packages:$(echo "$tests" | sed 's/ --tests [^ ]*\./ /g')"
+    fi
+    # shellcheck disable=SC2086 # the test filters are one word each, split on purpose
+    gradle_queued spotlessCheck desktopTest ${tests:+:tools:screenshots:test} $tests --quiet
+}
