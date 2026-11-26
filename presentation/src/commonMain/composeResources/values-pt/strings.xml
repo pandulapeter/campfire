@@ -1245,8 +1245,8 @@
     <string name="song_details_chords">Acordes</string>
     <string name="song_details_dock_playing">Execução</string>
     <string name="song_details_dock_tempo">Andamento</string>
-    <string name="song_details_overrides_kept_setlist">Fica salvo neste repertório. O arquivo da música continua como está.</string>
-    <string name="song_details_overrides_kept_app">Fica salvo no app. O arquivo da música continua como está.</string>
+    <string name="song_details_overrides_kept_setlist">As alterações ficam salvas neste repertório. O arquivo da música continua como está.</string>
+    <string name="song_details_overrides_kept_app">As alterações ficam salvas no app. O arquivo da música continua como está.</string>
     <string name="song_details_tempo_kept_setlist">O andamento fica salvo neste repertório, e os acentos no app. O arquivo da música continua como está.</string>
     <string name="song_details_dock_key">Tom</string>
     <string name="song_details_dock_key_short">Tom %1$s</string>

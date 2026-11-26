@@ -1284,8 +1284,8 @@
     <string name="song_details_chords">Akordy</string>
     <string name="song_details_dock_playing">Hraní</string>
     <string name="song_details_dock_tempo">Tempo</string>
-    <string name="song_details_overrides_kept_setlist">Uloženo v tomto setlistu. Soubor písně zůstává beze změny.</string>
-    <string name="song_details_overrides_kept_app">Uloženo v aplikaci. Soubor písně zůstává beze změny.</string>
+    <string name="song_details_overrides_kept_setlist">Změny jsou uložené v tomto setlistu. Soubor písně zůstává beze změny.</string>
+    <string name="song_details_overrides_kept_app">Změny jsou uložené v aplikaci. Soubor písně zůstává beze změny.</string>
     <string name="song_details_tempo_kept_setlist">Tempo je uložené v tomto setlistu, přízvuky v aplikaci. Soubor písně zůstává beze změny.</string>
     <string name="song_details_dock_key">Tónina</string>
     <string name="song_details_dock_key_short">Tónina %1$s</string>

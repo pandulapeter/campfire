@@ -1242,8 +1242,8 @@
     <string name="song_details_chords">Akkordok</string>
     <string name="song_details_dock_playing">Játék</string>
     <string name="song_details_dock_tempo">Tempó</string>
-    <string name="song_details_overrides_kept_setlist">Ebben a listában marad. A dal fájlja nem változik.</string>
-    <string name="song_details_overrides_kept_app">Az alkalmazásban marad. A dal fájlja nem változik.</string>
+    <string name="song_details_overrides_kept_setlist">A változások ebben a listában maradnak. A dal fájlja nem változik.</string>
+    <string name="song_details_overrides_kept_app">A változások az alkalmazásban maradnak. A dal fájlja nem változik.</string>
     <string name="song_details_tempo_kept_setlist">A tempó ebben a listában marad, a hangsúlyok az alkalmazásban. A dal fájlja nem változik.</string>
     <string name="song_details_dock_key">Hangnem</string>
     <string name="song_details_dock_key_short">Hn. %1$s</string>

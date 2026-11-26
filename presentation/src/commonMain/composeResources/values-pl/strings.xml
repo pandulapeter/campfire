@@ -1279,8 +1279,8 @@
     <string name="song_details_chords">Akordy</string>
     <string name="song_details_dock_playing">Granie</string>
     <string name="song_details_dock_tempo">Tempo</string>
-    <string name="song_details_overrides_kept_setlist">Zapisane w tej setliście. Plik piosenki pozostaje bez zmian.</string>
-    <string name="song_details_overrides_kept_app">Zapisane w aplikacji. Plik piosenki pozostaje bez zmian.</string>
+    <string name="song_details_overrides_kept_setlist">Zmiany są zapisane w tej setliście. Plik piosenki pozostaje bez zmian.</string>
+    <string name="song_details_overrides_kept_app">Zmiany są zapisane w aplikacji. Plik piosenki pozostaje bez zmian.</string>
     <string name="song_details_tempo_kept_setlist">Tempo jest zapisane w tej setliście, a akcenty w aplikacji. Plik piosenki pozostaje bez zmian.</string>
     <string name="song_details_dock_key">Tonacja</string>
     <string name="song_details_dock_key_short">Ton. %1$s</string>
