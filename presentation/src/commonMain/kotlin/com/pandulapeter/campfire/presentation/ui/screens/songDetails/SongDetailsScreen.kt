@@ -241,7 +241,7 @@ internal fun SongDetailsScreen(
                 PagesAbovePreviewBar(
                     modifier = Modifier.weight(1f).fillMaxWidth().readAfterDock(),
                     baseBottom = baseBottom,
-                    bar = { PreviewCard(viewModel, importPreview, pagerState.currentPage, songPadding, baseBottom, isBesidePanel = dock.isSidePanel) },
+                    bar = { PreviewCard(viewModel, importPreview, pagerState.currentPage, songPadding, baseBottom) },
                 ) { bottomPadding ->
                     // A preview's pictures are the ones its review brings, which no shelf keeps before Import.
                     CompositionLocalProvider(LocalSongImageLoader provides (importPreview?.images ?: LocalSongImageLoader.current)) {
@@ -295,7 +295,6 @@ internal fun SongDetailsScreen(
                     metronome = metronome,
                     contentPadding = songPadding,
                     targetPage = pagerState.targetPage,
-                    isUnderCard = importPreview != null,
                 )
             }
             DockSidePanel(
@@ -307,7 +306,7 @@ internal fun SongDetailsScreen(
             )
         }
         if (hasPagerControls) {
-            SetlistPagerBar(setlistTitle = setlist?.title, setlistSlots = setlistSlots, pagerState = pagerState, songs = songs, steps = steps, contentPadding = contentPadding, dock = dock, hasCard = importPreview != null)
+            SetlistPagerBar(setlistTitle = setlist?.title, setlistSlots = setlistSlots, pagerState = pagerState, songs = songs, steps = steps, contentPadding = contentPadding, dock = dock)
         }
     }
 }
@@ -320,7 +319,6 @@ private fun PreviewCard(
     currentPage: Int,
     contentPadding: PaddingValues,
     baseBottom: Dp,
-    isBesidePanel: Boolean,
 ) = SongDetailsPreviewBar(
     importController = viewModel.importController,
     importReportState = viewModel.importReportState,
@@ -330,13 +328,12 @@ private fun PreviewCard(
     contentPadding = contentPadding,
     layoutDirection = LocalLayoutDirection.current,
     baseBottom = baseBottom,
-    isBesidePanel = isBesidePanel,
 )
 
 /**
  * [SongPagerControls] for a setlist read through [songs], stepping with [steps], as wide as the screen under the dock and
  * the side panel alike, on their surface, and read by screen readers with them. Where nothing stands on the surface
- * above it (no rows under the song in [dock], no import preview's card, [hasCard]) its top corners are rounded as the
+ * above it (no rows under the song in [dock]; an import preview's card floats over it) its top corners are rounded as the
  * dock's would be, but the end one under the side panel, which it meets square.
  */
 @Composable
@@ -348,13 +345,12 @@ private fun SetlistPagerBar(
     steps: SongDetailsSteps,
     contentPadding: PaddingValues,
     dock: SongDockState,
-    hasCard: Boolean,
 ) = SongPagerControls(
     modifier = Modifier
         .clip(
             RoundedCornerShape(
-                topStart = animateDpAsState(if (dock.layout == null && !hasCard) DOCK_CORNER else 0.dp).value,
-                topEnd = animateDpAsState(if (dock.layout == null && !hasCard && !dock.isSidePanel) DOCK_CORNER else 0.dp).value,
+                topStart = animateDpAsState(if (dock.layout == null) DOCK_CORNER else 0.dp).value,
+                topEnd = animateDpAsState(if (dock.layout == null && !dock.isSidePanel) DOCK_CORNER else 0.dp).value,
             ),
         )
         // Read with the dock, after it and before the song, as its last row was.

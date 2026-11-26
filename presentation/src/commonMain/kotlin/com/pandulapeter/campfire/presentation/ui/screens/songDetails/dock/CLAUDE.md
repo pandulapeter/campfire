@@ -39,10 +39,11 @@ with the tuner, and the click. The first section's key and capo are the app bar'
   The switch travels: the rows shrink away as the panel slides in (drawn as they were until the height settles, then
   swapped for the row under the song, whose scale chips keep their scroll), the end inset passing between them
   (`PaddingBesidePanel`) so the song's start never moves.
-- **An import preview's card stands on the surface above its one row** (measured with the pages, `PagesAbovePreviewBar`),
-  always under the song: beside a side panel too, above the scale row there, its end corner square where it meets the
-  panel, never at the panel's head, which keeps its column of instrument card, diagrams, and tempo chip whole. A resize
-  across the panel's breakpoint leaves the card where it is while the panel slides in or out.
+- **An import preview's card floats over the dock** (measured with the pages, which end above it,
+  `PagesAbovePreviewBar`): on its own fill, no surface of the dock's behind it, the dock's rounded top under it, as far
+  from the dock as from the window's edges. Always under the song: beside a side panel too, over the scale row there,
+  never at the panel's head, which keeps its column of instrument card, diagrams, and tempo chip whole. A resize across
+  the panel's breakpoint leaves the card where it is while the panel slides in or out.
 - Read by screen readers after the app bar and before the song (`readAfterDock`).
 
 ## Its rows

@@ -22,10 +22,10 @@ import com.pandulapeter.campfire.presentation.ui.state.importing.ImportControlle
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportReportState
 
 /**
- * [ImportPreviewBar] where the song details screen puts it: on the dock's surface over the bottom of the pages, which leave
- * it its room, the card kept off the edges, and the room reaching down over whatever of the bottom inset nothing under
- * it covers ([baseBottom]). Always under the song, beside the dock's side panel too ([isBesidePanel]), never at the
- * panel's head, which keeps its column of instrument card, diagrams, and tempo chip whole.
+ * [ImportPreviewBar] where the song details screen puts it: over the dock at the bottom of the pages, which leave it its
+ * room, the card as far from the window's edges as from the dock under it, and the room reaching down over whatever of
+ * the bottom inset nothing under it covers ([baseBottom]). Always under the song, beside the dock's side panel too,
+ * never at the panel's head, which keeps its column of instrument card, diagrams, and tempo chip whole.
  */
 @Composable
 internal fun SongDetailsPreviewBar(
@@ -37,16 +37,14 @@ internal fun SongDetailsPreviewBar(
     contentPadding: PaddingValues,
     layoutDirection: LayoutDirection,
     baseBottom: Dp,
-    isBesidePanel: Boolean,
 ) = ImportPreviewBar(
     modifier = Modifier.fillMaxWidth(),
-    isBesidePanel = isBesidePanel,
     roomPadding = PaddingValues(
         start = contentPadding.calculateStartPadding(layoutDirection) + PREVIEW_CARD_MARGIN,
         top = PREVIEW_CARD_MARGIN,
         end = contentPadding.calculateEndPadding(layoutDirection) + PREVIEW_CARD_MARGIN,
-        // The dock's own padding above its first row (as wide as this margin) is the gap under the card.
-        bottom = baseBottom,
+        // No surface of the dock's stands behind the card, so it keeps the same gap from the dock's top as from the edges.
+        bottom = baseBottom + PREVIEW_CARD_MARGIN,
     ),
     importPreview = importPreview,
     currentPage = currentPage,

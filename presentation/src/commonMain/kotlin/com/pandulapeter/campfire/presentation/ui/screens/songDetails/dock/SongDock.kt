@@ -47,9 +47,8 @@ import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.So
  * rounded at its top corners, with no divider or shadow, its rows as tall as [dock] says, the bottom inset included where
  * there is no setlist's pager bar under them to cover that. Its rows are the screen's ([SongDockState.rows]) and their
  * contents the song's that the pager is on or heading for ([targetPage], [SongDockState.contents]), crossfading as a page
- * turns, as the app bar's subtitle does. Where an import preview's card stands on the surface above it ([isUnderCard])
- * its corners square off, the card's room rounding the surface's top instead. Read by screen readers after the app bar
- * and before the song.
+ * turns, as the app bar's subtitle does. An import preview's card floats over its rounded top, on no surface of the
+ * dock's. Read by screen readers after the app bar and before the song.
  */
 @Composable
 internal fun SongDock(
@@ -58,11 +57,10 @@ internal fun SongDock(
     metronome: DockMetronome,
     contentPadding: PaddingValues,
     targetPage: Int,
-    isUnderCard: Boolean,
 ) {
-    val corner by animateDpAsState(if (isUnderCard) 0.dp else DOCK_CORNER)
+    val corner = DOCK_CORNER
     // Beside the side panel the row meets the panel's own surface, the two making one.
-    val endCorner by animateDpAsState(if (isUnderCard || dock.isSidePanel) 0.dp else DOCK_CORNER)
+    val endCorner by animateDpAsState(if (dock.isSidePanel) 0.dp else DOCK_CORNER)
     Box(
         modifier = modifier
             .fillMaxWidth()

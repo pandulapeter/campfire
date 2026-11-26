@@ -44,8 +44,8 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
   addressed as `/import`. Without the review it was opened over the screen closes itself, except while the report is
   `Importing`. Its pages show the pictures the review's songs bring (in memory, or read whole from the staging folder for a
   staged one) ahead of the library's (`ImportPreviewState.images`), and never offer Add image.
-- **Marked plainly**: a card on the dock's surface above its rows under the song, beside the side panel too, never in it (at most 720dp
-  wide, `dock/`), says the song is not
+- **Marked plainly**: a card floating over the dock's rows under the song, on no surface of the dock's, beside the side panel too, never
+  in it (at most 720dp wide, `dock/`), says the song is not
   in the library yet and, for a taken name, that it is. Its buttons sit beside the message where that keeps 140dp, else under it; the pages'
   bottom padding clears a card under them (pedal rule), measured in the same pass as the pages so the lyrics are never flowed
   twice as the screen opens. **Import**, or for a taken name **Import as a copy** and **Replace** (confirmed), Replace

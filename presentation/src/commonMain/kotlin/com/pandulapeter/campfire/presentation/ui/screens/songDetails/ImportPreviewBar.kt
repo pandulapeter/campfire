@@ -14,14 +14,12 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,7 +34,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedButton
@@ -74,7 +71,6 @@ import com.pandulapeter.campfire.presentation.resources.import_preview_shared_up
 import com.pandulapeter.campfire.presentation.resources.import_preview_title
 import com.pandulapeter.campfire.presentation.ui.components.controls.segmentShape
 import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.DOCK_CORNER
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportPreviewAction
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportPreviewPage
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportPreviewPageChoice
@@ -85,9 +81,10 @@ import com.pandulapeter.campfire.presentation.ui.state.importing.importPreviewPa
  * library: a card in the secondary container colour of the app's other notices (`WarningCard`), holding the message,
  * over the review the page's own choices (the same ones its row in the review offers), and the buttons that import.
  * The buttons sit at the card's end beside the message where the message keeps a readable width, and under it, still at
- * the end, where it would not. It stands on the dock's surface rather than over the song: a room of that surface as wide
- * as the screen, rounded at its top as the dock is, holds it, kept off the edges by [roomPadding] and at most
- * [PREVIEW_CARD_MAX_WIDTH] wide. It goes away, sinking into the dock, once the preview of one song has been imported and
+ * the end, where it would not. It floats over the dock's rounded top on its own fill, with no surface of the dock's
+ * behind it, the song's pages ending above it rather than running under it: a room as wide as the screen holds it, kept
+ * off the window's edges and the dock by [roomPadding] alike, and at most [PREVIEW_CARD_MAX_WIDTH] wide. It goes away,
+ * sinking into the dock, once the preview of one song has been imported and
  * the screen is the song's own. In a short window ([SHORT_WINDOW_HEIGHT]) it is compact: one line and the buttons, over the review
  * with the page's choices in [ImportPreviewChoicesMenu].
  *
@@ -98,7 +95,6 @@ import com.pandulapeter.campfire.presentation.ui.state.importing.importPreviewPa
 internal fun ImportPreviewBar(
     modifier: Modifier = Modifier,
     roomPadding: PaddingValues,
-    isBesidePanel: Boolean,
     importPreview: ImportPreviewState?,
     currentPage: Int,
     isAddingToReview: Boolean,
@@ -110,8 +106,6 @@ internal fun ImportPreviewBar(
     // A short window leaves the song a slot a few lines tall above the full card, which gives most of it back as one line
     // and its buttons, the page's choices going behind a button of their own.
     val isCompact = LocalWindowInfo.current.containerDpSize.height < SHORT_WINDOW_HEIGHT
-    // Beside the dock's side panel the room meets the panel's surface, the two making one, as the rows under the song do.
-    val endCorner by animateDpAsState(if (isBesidePanel) 0.dp else DOCK_CORNER)
     AnimatedVisibility(
         modifier = modifier,
         visible = importPreview != null,
@@ -122,7 +116,6 @@ internal fun ImportPreviewBar(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.surfaceContainer, RoundedCornerShape(topStart = DOCK_CORNER, topEnd = endCorner))
                 .padding(roomPadding),
             contentAlignment = Alignment.Center,
         ) {
