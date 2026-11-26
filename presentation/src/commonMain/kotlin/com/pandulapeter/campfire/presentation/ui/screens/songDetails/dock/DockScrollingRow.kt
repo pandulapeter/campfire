@@ -9,6 +9,11 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -44,29 +49,41 @@ import com.pandulapeter.campfire.presentation.ui.components.fadingHorizontalEdge
  * so that a one-line instrument card with long names ("12-string guitar", "Full step down") is cut short rather than
  * taking the whole row from the chips it is there for (see [dockScrollingRowStartMaxWidth]). The diagrams' row keeps
  * none: its cards have their own narrow size on a phone, and what is left between them is the diagrams'.
+ *
+ * [start] and [end] fade and grow in and out as [isStartShown] and [isEndShown] say, the gap between them and what scrolls
+ * going with them, so that a row gaining or losing one (a switch in the Preferences) gives or takes the room gradually.
+ * [contentModifier] is the scrolling part's, after its scrolling.
  */
 @Composable
 internal fun DockScrollingRow(
+    modifier: Modifier = Modifier,
     height: Dp,
     horizontalPadding: PaddingValues,
     scrollState: ScrollState,
     start: (@Composable () -> Unit)? = null,
     end: (@Composable () -> Unit)?,
+    isStartShown: Boolean = true,
+    isEndShown: Boolean = true,
     fadesAtEnd: Boolean = false,
     minScrollingRoom: Dp = 0.dp,
+    contentModifier: Modifier = Modifier,
     content: @Composable RowScope.() -> Unit,
 ) {
     val layoutDirection = LocalLayoutDirection.current
     val startPadding = horizontalPadding.calculateStartPadding(layoutDirection)
     val endPadding = horizontalPadding.calculateEndPadding(layoutDirection)
     Layout(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .height(height),
         contents = listOf(
             {
                 if (start != null) {
-                    Row(modifier = Modifier.padding(start = startPadding), verticalAlignment = Alignment.CenterVertically) { start() }
+                    Row(modifier = Modifier.padding(start = startPadding), verticalAlignment = Alignment.CenterVertically) {
+                        DockRowEnd(isShown = isStartShown, expandFrom = Alignment.Start) {
+                            Row(modifier = Modifier.padding(end = DOCK_ITEM_GAP), verticalAlignment = Alignment.CenterVertically) { start() }
+                        }
+                    }
                 }
             },
             {
@@ -78,7 +95,8 @@ internal fun DockScrollingRow(
                             backgroundColor = MaterialTheme.colorScheme.surfaceContainer,
                         )
                         .horizontalScroll(scrollState)
-                        .padding(start = if (start == null) startPadding else DOCK_ITEM_GAP, end = if (end == null) endPadding else DOCK_ITEM_GAP),
+                        .then(contentModifier)
+                        .padding(start = if (start == null) startPadding else 0.dp, end = if (end == null) endPadding else 0.dp),
                     horizontalArrangement = Arrangement.spacedBy(DOCK_ITEM_GAP),
                     verticalAlignment = Alignment.CenterVertically,
                     content = content,
@@ -86,7 +104,11 @@ internal fun DockScrollingRow(
             },
             {
                 if (end != null) {
-                    Row(modifier = Modifier.padding(end = endPadding), verticalAlignment = Alignment.CenterVertically) { end() }
+                    Row(modifier = Modifier.padding(end = endPadding), verticalAlignment = Alignment.CenterVertically) {
+                        DockRowEnd(isShown = isEndShown, expandFrom = Alignment.End) {
+                            Row(modifier = Modifier.padding(start = DOCK_ITEM_GAP), verticalAlignment = Alignment.CenterVertically) { end() }
+                        }
+                    }
                 }
             },
         ),
@@ -106,6 +128,16 @@ internal fun DockScrollingRow(
             endPlaceables.forEach { it.placeRelative(constraints.maxWidth - endWidth, center(it.height)) }
         }
     }
+}
+
+/** What stands at an end of a [DockScrollingRow], fading and growing in from that end ([expandFrom]) and back into it. */
+@Composable
+private fun DockRowEnd(isShown: Boolean, expandFrom: Alignment.Horizontal, content: @Composable () -> Unit) = AnimatedVisibility(
+    visible = isShown,
+    enter = fadeIn(MaterialTheme.motionScheme.defaultEffectsSpec()) + expandHorizontally(MaterialTheme.motionScheme.defaultSpatialSpec(), expandFrom = expandFrom),
+    exit = fadeOut(MaterialTheme.motionScheme.fastEffectsSpec()) + shrinkHorizontally(MaterialTheme.motionScheme.fastSpatialSpec(), shrinkTowards = expandFrom),
+) {
+    content()
 }
 
 /**

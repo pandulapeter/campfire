@@ -9,7 +9,12 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -129,7 +134,12 @@ internal fun DockSidePanel(
                     )
                 }
             }
-            if (hasTempo) {
+            // The tempo chip grows in and out at the panel's foot, the diagrams' room giving way to it or taking it back.
+            AnimatedVisibility(
+                visible = hasTempo,
+                enter = fadeIn(MaterialTheme.motionScheme.defaultEffectsSpec()) + expandVertically(MaterialTheme.motionScheme.defaultSpatialSpec(), expandFrom = Alignment.Top),
+                exit = fadeOut(MaterialTheme.motionScheme.fastEffectsSpec()) + shrinkVertically(MaterialTheme.motionScheme.fastSpatialSpec(), shrinkTowards = Alignment.Top),
+            ) {
                 Crossfade(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -138,7 +148,7 @@ internal fun DockSidePanel(
                         .padding(bottom = DOCK_VERTICAL_PADDING),
                     targetState = targetPage,
                 ) { page ->
-                    dock.contents[page]?.tempo?.let { tempo ->
+                    rememberLastOf(dock.contents[page]?.tempo)?.let { tempo ->
                         // As wide as the instrument pill over the diagrams, so that the panel's controls make one column.
                         DockTempoChip(
                             modifier = Modifier.fillMaxWidth(),

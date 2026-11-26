@@ -41,7 +41,8 @@ import com.pandulapeter.campfire.presentation.ui.songView.model.ChordDiagrams
 /**
  * The song details screen's dock: its [rows], and either its [layout] as rows under the song or its [panelLayout] as a
  * side panel at the song's end (null for no dock), beside which [layout] is the one row of scale suggestions under the
- * song, the rows under it being [rowsUnder], the [height] the rows take from the bottom of the screen (the bottom
+ * song, the rows under it being [rowsUnder] (those drawn, and their [layout], as a change of them is staged, with the
+ * [visibleParts] of them faded in, [rememberDockStage]), the [height] the rows take from the bottom of the screen (the bottom
  * inset included where they cover it) and the [panelWidth] the panel takes from its end (the end inset included), each
  * followed as it animates to a new one, which the pages' grid waits for ([isSettled]). Each
  * page composed puts what the dock draws for it in [contents], and its stepper, which says where its reader is headed,
@@ -52,6 +53,7 @@ internal class SongDockState(
     val rows: DockRows,
     val rowsUnder: DockRows,
     val layout: DockLayout?,
+    val visibleParts: Set<DockPart>,
     val panelLayout: DockLayout?,
     private val target: Dp,
     animatedHeight: State<Dp>,
@@ -65,6 +67,9 @@ internal class SongDockState(
     val panelWidth by animatedPanelWidth
     val isSidePanel get() = panelLayout != null
     val isHeightSettled get() = height == target
+
+    /** The room under the rows that is the bottom inset they cover: none over a setlist's pager bar, which covers it. */
+    val rowsBottomInset get() = layout?.let { (target - it.height).coerceAtLeast(0.dp) } ?: 0.dp
     val isSettled get() = isHeightSettled && panelWidth == panelTarget
 }
 
@@ -135,13 +140,15 @@ internal fun rememberSongDock(
         }
     }
     val panelLayout = remember(rows, rowHeight, isSidePanel) { if (isSidePanel) dockPanelLayoutOf(rows, rowHeight) else null }
+    val staged = rememberDockStage(rows = rowsUnder, layout = layout, snaps = songRows.isDataArriving)
     // A setlist's pager bar, under both the rows and the side panel, covers the bottom inset for them.
-    val target = layout?.let { it.height + if (hasPagerBar) 0.dp else contentPadding.calculateBottomPadding() } ?: 0.dp
+    val target = staged.layout?.let { it.height + if (hasPagerBar) 0.dp else contentPadding.calculateBottomPadding() } ?: 0.dp
     val panelTarget = if (panelLayout == null) 0.dp else panelWidth + endInset
     return SongDockState(
         rows = rows,
-        rowsUnder = rowsUnder,
-        layout = layout,
+        rowsUnder = staged.rows,
+        layout = staged.layout,
+        visibleParts = staged.visible,
         panelLayout = panelLayout,
         target = target,
         animatedHeight = animateDockDp(target, snaps = songRows.isDataArriving),

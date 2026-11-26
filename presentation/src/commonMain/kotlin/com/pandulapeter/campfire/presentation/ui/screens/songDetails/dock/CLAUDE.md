@@ -36,9 +36,18 @@ with the tuner, and the click. The first section's key and capo are the app bar'
   nothing. **As wide as the tall tempo chip** (`dockTallTempoChipWidth`, measured at the interface's text size, about
   132 dp) or two full-size guitar diagrams with 8 dp to spare, whichever is wider, within 8 dp each side
   (`dockPanelWidthOf`); past 176 dp a 1024 × 720 window's songs take a page more (`PageCountTest`).
-  The switch travels: the rows shrink away as the panel slides in (drawn as they were until the height settles, then
-  swapped for the row under the song, whose scale chips keep their scroll), the end inset passing between them
-  (`PaddingBesidePanel`) so the song's start never moves.
+  The switch travels: the panel slides in as the rows under the song are staged into the scale row alone (below), whose
+  scale chips keep their scroll, the end inset passing between them (`PaddingBesidePanel`) so the song's start never
+  moves. The panel's tempo chip grows in and out at its foot.
+- **A change of its rows is staged** (`rememberDockStage`, `DockPart`), as a change of the song's look is
+  (`StagedSongFrame`), since it happens in view behind the Preferences sheet: what leaves (a row, the card or the tempo
+  chip at a row's end, the diagrams at their old size, the chip row's old chips) fades out with the old layout held,
+  then the height and the rows' places glide on one spring, then what arrives fades in. The rows stand on the dock's
+  bottom, so its top edge uncovers or covers a row it gains or loses while the rest keep their places, and the chip row
+  glides down onto the bottom or up over the diagram row (`DockChipRow`). The card and the tempo chip fade and grow in
+  from their end of the row (`DockScrollingRow`). A change of the layout alone (a window resized) glides at once, and
+  data arriving snaps. What the page stops handing up as a switch takes it is drawn until it has faded
+  (`rememberLastOf`).
 - **An import preview's card floats over the dock** (measured with the pages, which end above it,
   `PagesAbovePreviewBar`): on its own fill, no surface of the dock's behind it, the dock's rounded top under it, as far
   from the dock as from the window's edges. Always under the song: beside a side panel too, over the scale row there,
