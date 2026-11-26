@@ -49,6 +49,7 @@ internal fun SetlistWidgetLayout(
             is SetlistWidgetContent.Shown -> Setlist(
                 content = content,
                 label = snapshot.strings.nextGig.takeIf { pinnedFileName == null },
+                emptyText = snapshot.strings.emptySetlist,
                 isMirrored = snapshot.isMirrored(),
             )
             is SetlistWidgetContent.Message -> WidgetMessage(text = content.text)
@@ -60,16 +61,19 @@ internal fun SetlistWidgetLayout(
 /**
  * [content]: its header, the part that tells it from the random picks widget (its title under [label], Next gig where the
  * widget is not pinned to the setlist, then how far away its day is, the day itself adding nothing), over its songs in the
- * random picks widget's rows, each numbered by its place in the setlist.
+ * random picks widget's rows, each numbered by its place in the setlist, or [emptyText] where it has none.
  */
 @Composable
 private fun ColumnScope.Setlist(
     content: SetlistWidgetContent.Shown,
     label: String?,
+    emptyText: String,
     isMirrored: Boolean,
 ) {
     SetlistHeader(content = content, label = label, textAlign = textAlignOf(isMirrored))
-    if (content.songs.isNotEmpty()) {
+    if (content.songs.isEmpty()) {
+        if (emptyText.isNotEmpty()) WidgetMessage(text = emptyText)
+    } else {
         val covers = rememberWidgetCovers(content.songs.mapNotNullTo(mutableSetOf()) { it.cover })
         WidgetSongList {
             val numberDigits = content.songs.maxOf { it.number }.toString().length

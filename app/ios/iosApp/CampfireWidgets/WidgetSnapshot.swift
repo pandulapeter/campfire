@@ -98,6 +98,8 @@ struct WidgetSnapshot: Decodable {
         /// The Setlist widget's page buttons' spoken names; absent likewise, which leaves them unnamed.
         let previousPage: String?
         let nextPage: String?
+        /// An empty setlist's sentence; absent likewise, which leaves its header alone.
+        let emptySetlist: String?
     }
 
     /// A counted text as the app's language reads each count, so that no plural rule is needed here: past the list, a

@@ -95,7 +95,7 @@ data class WidgetSnapshot(
     /**
      * The widgets' texts. A counted one is a [Plural]; [isRightToLeft] is whether the app's language is written from the
      * right. The setup screens' texts, from [setUpWidget] on, are empty in a snapshot written before they were part of
-     * it ([hasSetupTexts]).
+     * it ([hasSetupTexts]), as [emptySetlist] is in one written before it, which leaves an empty setlist's header alone.
      */
     @Serializable
     data class Strings(
@@ -124,6 +124,7 @@ data class WidgetSnapshot(
         val pickCount: String = "",
         val previousPage: String = "",
         val nextPage: String = "",
+        val emptySetlist: String = "",
     ) {
 
         /** Whether the setup screens' texts are there to show. */

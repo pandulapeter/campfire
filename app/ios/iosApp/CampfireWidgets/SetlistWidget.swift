@@ -213,9 +213,13 @@ struct SetlistWidgetView: View {
                     )
                         .padding(.leading, margins.leading)
                         .padding(.trailing, margins.trailing)
-                    WidgetSongRows(count: capacity, rows: shown.map { song in
-                        WidgetSongRow(title: song.title, artist: song.artist, cover: song.cover, link: song.link, number: song.number, numberDigits: digits)
-                    })
+                    if songs.isEmpty, let empty = entry.snapshot?.strings.emptySetlist, !empty.isEmpty {
+                        WidgetMessage(text: empty)
+                    } else {
+                        WidgetSongRows(count: capacity, rows: shown.map { song in
+                            WidgetSongRow(title: song.title, artist: song.artist, cover: song.cover, link: song.link, number: song.number, numberDigits: digits)
+                        })
+                    }
                 }
                 .padding(.top, margins.top)
                 .padding(.bottom, margins.bottom)
