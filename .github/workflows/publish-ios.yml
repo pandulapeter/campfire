@@ -106,9 +106,9 @@ jobs:
     # Connect refuses builds made with an SDK older than iOS 27 from April 2027. While GitHub calls this image a
     # preview, its label may become macos-27 once it is generally available. tests.yml's compile-ios uses the same two.
     runs-on: xcode-27
-    env:
+    env: &build-env
       DEVELOPER_DIR: /Applications/Xcode_27.2.app/Contents/Developer
-    steps:
+    steps: &build
       - name: Check out repository
         uses: actions/checkout@v5
         with:
@@ -367,3 +367,14 @@ jobs:
             security delete-keychain "$KEYCHAIN_PATH"
           fi
           rm -f "$HOME/.appstoreconnect/private_keys/"*.p8 "$RUNNER_TEMP/apple-signing-key.pem"
+
+  # GitHub cancels a job it finds no hosted runner for within a quarter of an hour, and macOS runners run short often
+  # enough to have cost the 2026-11-24 release its iOS build: a build that never started (cancelled while the run was
+  # not) gets one more try, as compile-ios does in tests.yml.
+  build-again:
+    name: Build and Upload, again
+    needs: build
+    if: ${{ !cancelled() && needs.build.result == 'cancelled' }}
+    runs-on: xcode-27
+    env: *build-env
+    steps: *build

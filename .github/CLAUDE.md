@@ -35,10 +35,11 @@ The workflows that test and publish Campfire. The `campfire.*` properties and `l
   but nothing publishes them.
 - **A macOS job GitHub finds no runner for gets one more try**: GitHub cancels it after a quarter of an hour, without
   a step run ("not acquired"), and macOS runners run short often enough to have cost one release its screenshots and
-  another every store build. `tests.yml`'s `compile-ios-again` reruns a `compile-ios` cancelled while the run was not,
-  and `screenshots.yml`'s `render-again` reruns only the legs `unacquired_jobs.py` finds never started (none when any
-  leg failed otherwise). The cancelled job fails its workflow for good, so `publish-all.yml` reads each one's output
-  (`passed`, `ready`) besides its result.
+  another every store build. `tests.yml`'s `compile-ios-again`, `screenshots.yml`'s `frame-again`, and
+  `publish-ios.yml`'s and `publish-macos.yml`'s `build-again` rerun their job when it was cancelled while the run was
+  not, and `screenshots.yml`'s `render-again` reruns only the legs `unacquired_jobs.py` finds never started (none when
+  any leg failed otherwise). The cancelled job fails its workflow for good, so `publish-all.yml` reads the tests' and
+  the screenshots' output (`passed`, `ready`) besides their result; nothing waits on the iOS and macOS builds.
 - Every desktop leg starts the built app image before publishing (ProGuard breaks things only a start shows, see
   `app/desktop`) via `.github/scripts/start_release_build.sh`, in an empty data directory.
 

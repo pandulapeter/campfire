@@ -39,7 +39,7 @@ on:
     outputs:
       ready:
         description: "'true' once the screenshots artifact is uploaded"
-        value: ${{ jobs.frame.outputs.ready }}
+        value: ${{ jobs.frame.outputs.ready || jobs.frame-again.outputs.ready }}
   workflow_dispatch:
     inputs:
       ref:
@@ -177,7 +177,7 @@ jobs:
       ready: ${{ steps.ready.outputs.ready }}
     # Framing and checking take a quarter of an hour; the bound is for a runner that hangs, not for a slow one.
     timeout-minutes: 90
-    steps:
+    steps: &frame
       - name: Check out repository
         uses: actions/checkout@v5
         with:
@@ -234,8 +234,19 @@ jobs:
           path: screenshots
           # Long enough to upload the images no API takes by hand, after a release (store_images.py's MANUAL).
           retention-days: 90
-      # What publish-all.yml asks rather than the workflow's result, which a leg that got no runner fails for good even
-      # when its second try rendered everything.
+      # What publish-all.yml asks rather than the workflow's result, which a leg or a framing that got no runner fails
+      # for good even when its second try went through.
       - name: Say the screenshots are ready
         id: ready
         run: echo "ready=true" >> "$GITHUB_OUTPUT"
+
+  # A framing that got no runner, as compile-ios-again in tests.yml: cancelled while the run was not, one more try.
+  frame-again:
+    name: Frame, check, and upload, again
+    needs: frame
+    if: ${{ !cancelled() && needs.frame.result == 'cancelled' }}
+    runs-on: macos-latest
+    outputs:
+      ready: ${{ steps.ready.outputs.ready }}
+    timeout-minutes: 90
+    steps: *frame
