@@ -69,7 +69,8 @@ struct TurnSetlistPageIntent: AppIntent {
 
 /// Previous and next page, drawn as Random picks draws its Shuffle button. The chevrons are the direction-aware symbols,
 /// so in a right-to-left language (the widget takes the app's direction) Previous points right and stands on the right.
-/// The one with no page to go to is dimmed and disabled rather than hidden, so the other never moves.
+/// The one with no page to go to is dimmed rather than hidden, so the other never moves, and stays a button that turns to
+/// the page already shown: a disabled button in a widget passes its tap through to the widget's link, opening the setlist.
 struct SetlistPageButtons: View {
     let identity: String
     let setlistFileName: String
@@ -88,7 +89,7 @@ struct SetlistPageButtons: View {
 
     private func button(symbol: String, label: String?, target: Int) -> some View {
         let isEnabled = (0..<pageCount).contains(target)
-        return Button(intent: TurnSetlistPageIntent(identity: identity, setlistFileName: setlistFileName, page: target)) {
+        return Button(intent: TurnSetlistPageIntent(identity: identity, setlistFileName: setlistFileName, page: isEnabled ? target : page)) {
             Image(systemName: symbol)
                 .font(.system(size: 15, weight: .bold))
                 .frame(width: 20, height: 20)
@@ -97,7 +98,6 @@ struct SetlistPageButtons: View {
                 .opacity(isEnabled ? 1 : 0.35)
         }
         .buttonStyle(.plain)
-        .disabled(!isEnabled)
         .accessibilityLabel(Text(verbatim: label ?? ""))
     }
 }
