@@ -51,25 +51,27 @@ quality.
      or Composable, rename a private or internal name). Every docs-only finding and most low-severity ones are simple.
    - **Complex**: anything else — it crosses modules, touches what the list above excludes, has several reasonable
      fixes, needs a decision, or its diff would run past about a screen. When in doubt it is complex.
-4. **Fix the simple ones now**, one at a time in the main checkout (never in parallel: they share one tree), in the
-   order that keeps fixes to one file together:
+4. **Fix the simple ones now**, one at a time in the session's own worktree (the `commit-messages` skill; never in
+   parallel: they share one tree), in the order that keeps fixes to one file together:
    1. Load `code-style` before the first edit.
    2. Make the fix, with the test it needs where the logic is testable, and the `CLAUDE.md` lines and strings it makes
       stale.
    3. Verify with the commands in the last section — the tests of the touched modules and a compile of every platform
       the change touches.
    4. Stage only the fix's paths, load `commit-messages`, and commit with a single `-m` sentence — one finding, one
-      commit, never two folded or one split — then run the commit checks of section 4, step 6.
+      commit, never two folded or one split — as a run of small fixes (`CAMPFIRE_DEFER_GRADLE=1`), then run the commit
+      checks of section 4, step 6.
    5. A fix that turns out bigger, riskier or different than the finding said is reverted from the tree and becomes
       a plan instead.
 
    When the last one is in, one fresh read-only agent reads `git diff <review start>..HEAD` against the findings and
    looks for a fix that breaks a caller, a documented usage or another fix; what it finds is fixed by one more commit,
-   never by rewriting the landed ones. **Do not push.**
+   never by rewriting the landed ones. Then land the run as `commit-messages` says (`git rebase main`,
+   `.githooks/verify --branch`, `merge --ff-only`). **Do not push.**
 5. **Group the complex findings into lanes**: sets of plans whose files do not overlap, so each lane can run in its own
    worktree. Name files shared between lanes (module `CLAUDE.md` files, `strings.xml`) and how each lane may touch
    them. A plan that moves, splits or renames a file owns that file: every other plan that edits the same code goes in
-   its lane, after it, since a cherry-pick does not carry an edit into code another lane moved. Pick a **merge
+   its lane, after it, since rebasing one lane onto another does not carry an edit into code the other moved. Pick a **merge
    order**: the lane others build on first, the lane that touches the most shared UI files last.
 6. **Write the plans** (section 2). With no complex finding there is no plans folder: report and write the memory.
 7. **Challenge every plan before reporting** — verification proves a finding is real, not that its fix is right, and a
@@ -141,11 +143,11 @@ again when the plans land: the commit range, and what was skipped and why. Point
 challenge (section 1, step 7) has run on every plan; every open decision has an answer; the unit tests pass. Commit
 the plans first if they are untracked (`Add the <nth> review plans.`), then note `START=$(git rev-parse HEAD)`.
 
-**Lanes** — one **detached** worktree per lane next to the checkout, so no branch is created:
-`git worktree add --detach ../<Repo>-lane-<x> START`. Spawn one `general-purpose` subagent per lane in a single
-message, each confined to its worktree. Cap concurrent Gradle builds (see the last section); start the rest of the
-lanes as earlier ones finish. A lane that builds on another lane's results is cut from the main checkout's `HEAD`
-after that lane merged, not from `START`; its cherry-pick range then starts at that base.
+**Lanes** — one worktree and one branch per lane, as `commit-messages` has for a session:
+`git worktree add .claude/worktrees/lane-<x> -b lane-<x> START`. Spawn one `general-purpose` subagent per lane in a
+single message, each confined to its worktree; their hook and `verify` builds queue by themselves, a direct `./gradlew`
+does not (see the last section). A lane that
+builds on another lane's results is cut from `main` after that lane landed, not from `START`.
 
 Every lane prompt keeps the lanes apart — subagents share the session scratchpad, and one lane once ran another's
 same-named helper scripts and committed into the wrong worktree:
@@ -168,29 +170,33 @@ same-named helper scripts and committed into the wrong worktree:
    report only if a mistake there would hurt.
 5. `git rm` the plan file in the same commit as its fix.
 6. Load `commit-messages`; commit with a single `-m` sentence — one fix, one commit, never two fixes folded or one
-   split. Then check the raw commit object and amend on the spot if it fails:
+   split — as a run of small fixes (`CAMPFIRE_DEFER_GRADLE=1 git commit -m "…"`). Then check the raw commit object
+   and amend on the spot if it fails:
 
    ```
    test "$(git cat-file commit HEAD | sed '1,/^$/d' | wc -l | tr -d ' ')" = "1" || echo "MORE THAN ONE LINE"
    git log -1 --format=%B | grep -qiE 'co-authored|generated with|claude code|anthropic\.com' && echo "ATTRIBUTION"
    ```
 
-   Never branch, merge, rebase, push, bump the version or dispatch a workflow from a lane.
-7. Lane report: `NN: <hash> "<message>" — verified: <commands>; skipped manual: <what, why>`, then `Not done: NN —
-   <why>`, then the final test result.
+   Never create another branch, merge, push, bump the version, or dispatch a workflow from a lane; landing is the
+   orchestrator's.
+7. After the last plan, with nothing uncommitted: `git rebase main` and `.githooks/verify --branch`; a failure is
+   fixed in a commit of its own on top. Lane report: `NN: <hash> "<message>" — verified: <commands>; skipped manual:
+   <what, why>`, then `Not done: NN — <why>`, then the `verify --branch` result.
 
-**Merging**, in the README's order, as lanes report: first list the paths each lane commit touched
-(`git -C <worktree> log --stat --format=%s <base>..HEAD`) and stop on any outside the lane's files; then, in the main
-checkout, `git cherry-pick <base>..<lane HEAD>`. Resolve conflicts keeping both sides' intent — `CLAUDE.md` paragraphs
-and `strings.xml` as a word-level three-way merge, every sentence and key from both sides kept, never one side's
-version whole. Run the tests after each lane and the full build after the last; a break is fixed by one more commit
-(`Fix the iOS build after the storage changes.`), never by rewriting landed commits. Then
-`git worktree remove ../<Repo>-lane-<x>`.
+**Landing**, in the README's order, as lanes report: first list the paths each lane commit touched
+(`git -C <worktree> log --stat --format=%s main..lane-<x>`) and stop on any outside the lane's files; then, in the
+lane's worktree, `git rebase main`. Resolve conflicts keeping both sides' intent — `CLAUDE.md` paragraphs and
+`strings.xml` as a word-level three-way merge, every sentence and key from both sides kept, never one side's version
+whole. If the rebase replayed onto anything new, run `.githooks/verify --branch` again; then
+`git -C <main checkout> merge --ff-only lane-<x>`. Run the full build after the last lane; a break is fixed by one more
+commit (`Fix the iOS build after the storage changes.`), never by rewriting landed commits. Then
+`git worktree remove .claude/worktrees/lane-<x>` and `git branch -d lane-<x>`.
 
 **Finish**: plan files still present are the skipped ones — leave them, with the README trimmed to them, or ask the
 user whether to delete the folder. Final checks: `git log --format=%B START..HEAD | grep -ciE
 'co-authored|generated with|claude code|anthropic\.com'` prints 0, `git log --oneline START..HEAD` is one line per
-plan, `git status` is clean and `git worktree list` shows only the checkout. Report the commit count and the skipped plans
+plan, `git status` is clean, and `git worktree list` and `git branch` show no lane left. Report the commit count and the skipped plans
 with reasons; name a hand check only where a mistake would hurt (data loss, a crash, a store rejection). Update the
 memory.
 
@@ -252,7 +258,9 @@ behind a surprising design, platform quirks; each rule in one file, at the level
   `:app:ios:linkDebugFrameworkIosSimulatorArm64`; `wasmJsMain` → `:app:web:compileKotlinWasmJs`; the packaged
   desktop runtime → `:app:desktop:createReleaseDistributable`. Full build after the last lane:
   `./gradlew :app:android:assembleDebug :app:ios:linkDebugFrameworkIosSimulatorArm64 :app:web:wasmJsBrowserDistribution :app:desktop:packageDistributionForCurrentOS`.
-- **At most two concurrent Gradle builds** — six lanes at once hit Kotlin daemon OOMs on the 24 GB Mac.
+- **At most two concurrent Gradle builds**, enforced: `.githooks/lib.sh` (`GRADLE_SLOTS=2`) queues every hook and
+  `verify` build across the clone's worktrees, since six lanes at once hit Kotlin daemon OOMs on the 24 GB Mac. A
+  direct `./gradlew` is not queued: with more than two lanes running, start the rest as earlier ones finish.
 - Known false alarm: a corrupt incremental cache, retried with `-Pkotlin.incremental=false`.
 - `local.properties` is not in a worktree; copy it in only for lanes whose manual check needs the Dropbox key.
 - Strings and the `CLAUDE.md` file a changed behaviour updates follow the `code-style` skill.
