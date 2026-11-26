@@ -20,8 +20,12 @@ are the app bar's key chip (`../CLAUDE.md`), the tuner the menu's and the Playin
   rested page's last line is unfaded. Over the setlist's pager bar (`../CLAUDE.md`: as wide as the screen, under the
   rows and the side panel alike), else over the bottom inset (`baseBottom`). One
   `surfaceContainer` surface rounded at its top, never collapsed, no divider or shadow.
-- **Its height is the screen's, never the song's** (`SongDockState`): one that followed the song would lay the viewport
-  out anew on every setlist page turn. A new height animates, the grid waiting for it as for the app bar.
+- **Its height is the song's, never a screen's of it** (`SongDockState`): stepping through a song never changes it, and
+  a setlist's next song may. A new height animates (a switch, a window resized, another song), the grid waiting for it
+  as for the app bar, so the pages never jump; a change while neither the song nor the switches changed (its page
+  saying what it has) is data arriving and snaps (`animateDockDp`). What a song has is kept by file name
+  (`SongTextStore.dockFacts`), so a song opened again has its dock on its first frame; until its page has said, the last
+  song's rows stand, or the switches' alone.
 - **A side panel** at the song's end (`DockSidePanel`, `isDockSidePanel`), the step buttons between them; the grid is
   searched without its width. **Only with the diagrams**, which fill it: without them it held only the tempo chip, and with
   the metronome alone it lost the metronome panel's stepper and accents, so those keep their row under the song. **In pages**, a wide window's (`WindowSize.EXPANDED`, 840 dp and wider, whatever its
@@ -41,11 +45,13 @@ are the app bar's key chip (`../CLAUDE.md`), the tuner the menu's and the Playin
 
 ## Its rows
 
-- **Decided by the switches, never the song** (`DockRows`): diagrams on an instrument with shapes, scale suggestions,
-  the tempo chip with the metronome on (never in an import preview). No row, no dock. With the metronome alone (neither
-  diagrams nor scale suggestions) the row is the metronome panel (`DockMetronomePanel`): stepper with Tap, a bar as wide
-  as the rest leaves with its accents tapped in place, play / stop. A song with nothing for a row leaves it empty, or
-  says so. An instrument without shapes has no diagrams and no pill in the dock: the Playing sheet's instrument row (and
+- **Decided by the switches, then by the song** (`DockRows`, `DockRows.forSong`): diagrams on an instrument with
+  shapes, scale suggestions, the tempo chip with the metronome on (never in an import preview); a song with no diagram
+  to draw (no chords, a songbook of too many, `DockContent.hasChordCells`) or no scale to suggest lays the dock out as
+  that switch off would, never a row saying it has none: the scale strip with the tempo chip, then the metronome panel,
+  then no dock. No row, no dock. With the metronome alone (neither diagrams nor scale suggestions) the row is the
+  metronome panel (`DockMetronomePanel`): stepper with Tap, a bar as wide as the rest leaves with its accents tapped in
+  place, play / stop. An instrument without shapes has no diagrams and no pill in the dock: the Playing sheet's instrument row (and
   the tuner sheet's pill) changes it.
 - **Its tier is the window's** (`dockLayoutOf`). A short window (`SHORT_WINDOW_HEIGHT`) narrower than the panel's gets
   one row with a chip per chord. Any other gets two, diagrams in the second at the Chords section's size where they fit
@@ -60,8 +66,8 @@ are the app bar's key chip (`../CLAUDE.md`), the tuner the menu's and the Playin
   (`PAGE_HORIZONTAL_PADDING`, 8 dp past the insets) and the import preview's card; the rows are as far from the
   surface's top and, at a window's edge with no bottom inset, its bottom (`DOCK_VERTICAL_PADDING`); over an inset (a
   navigation bar) half that, the inset parting them from the edge (`dockBottomPaddingOf`).
-- **In the side panel the diagrams scroll in a grid** (`DockPanelRows`) over the tall tempo chip at its foot, stretched
-  to the panel's width and standing still, fading where they meet the panel's top and the chip (without a chip, at the
+- **In the side panel the diagrams scroll in a grid** (`DockPanelRows`) over the tall tempo chip at its foot, centred and
+  standing still, fading where they meet the panel's top and the chip (without a chip, at the
   bottom only over a bottom inset, padded by it).
 - **Beside the panel the scale suggestions are one row under the song** (`SongDockState.rowsUnder`), the rows' own
   scale row, over the bottom inset, its corner square where it meets the panel and fading out under it while there
@@ -77,13 +83,14 @@ are the app bar's key chip (`../CLAUDE.md`), the tuner the menu's and the Playin
   surface; every part of it opens its sheet but play and stop. A screen reader reads it as one description.
 - **The tempo chip** (`DockTempoChip`; never in an import preview, which has no metronome): the metronome mark swinging with the click (where the visual beat
   is on), then the tempo of the page's stretch (`SongTiming.bpm`), as wide as the widest tempo so play / stop (M) never moves, and a beat row lit while the
-  click plays. Beside diagrams (their row, the side panel's foot) it is as tall as a row of them, the number over the
-  beats and a round play / stop (`DockRoundPlayStop`); elsewhere chip-high, play / stop after a divider (`DockPlayStop`). The click is the screen's
+  click plays. Beside diagrams (their row, the side panel's foot) it is tall, one size in both, as tall as a row of the
+  smaller diagrams (`DockLayout.tallTempoChipHeight`, centred in a row of full-size ones), the number over the beats and a
+  round play / stop (`DockRoundPlayStop`); elsewhere chip-high, play / stop after a divider (`DockPlayStop`). The click is the screen's
   (`DockMetronome`), not a page's. It opens the Tempo sheet (`DialogType.Tempo`): stepper with Tap, and the song's
   accents with a round play / stop; not the time signature, which is the file's (Song defaults). Read only mode's opens
   nothing; the click still plays.
 - **The scale chips** are the Scales section's groups, the home one untitled, the rest under their titles ("Over E7").
-  None (a songbook, a song over `MAX_PLAYED_CHORDS` included) says so: the row is the screen's. A group none of whose
+  A song with none (a songbook, a song over `MAX_PLAYED_CHORDS` included) has no scale row. A group none of whose
   sections (`SongScaleGroup.sections`) is on the screen is faded back as the diagrams are, title and chips, still opening
   their sheets (`rememberScaleGroupsOnScreen`); the home group never, and nothing while no range is known.
 - **The diagram strip** (`DockDiagramStrip`) is the Chords section's cells (`rememberChordCells`), sized by what the

@@ -19,7 +19,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.pandulapeter.campfire.presentation.ui.chords.hasTooManySongChords
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.SongStepper
 import com.pandulapeter.campfire.presentation.ui.songView.rememberChordCells
 
@@ -53,7 +52,6 @@ internal fun DockPanelRows(
             cells = cells,
             isSmall = false,
             rowHeight = layout.diagramRowHeight,
-            hasTooManyChords = remember(model) { cells.isEmpty() && model.shouldShowChords && hasTooManySongChords(model.song, model.notation) },
             markedChords = rememberChordsOnScreen(stepper, model.sections, names),
             onChordClicked = content.chordDiagrams?.onChordClicked,
         )

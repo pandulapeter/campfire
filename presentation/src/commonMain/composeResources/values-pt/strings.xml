@@ -1242,8 +1242,6 @@
     <string name="tab_notice_hidden">Tablatura oculta</string>
     <string name="tab_notice_hidden_instrument">Tablatura de %1$s oculta</string>
     <string name="song_details_chords">Acordes</string>
-    <string name="song_details_dock_no_chords">Esta música não tem acordes</string>
-    <string name="song_details_dock_no_scales">Nenhuma sugestão de escalas para esta música</string>
     <string name="song_details_dock_playing">Execução</string>
     <string name="song_details_dock_tempo">Andamento</string>
     <string name="song_details_overrides_kept_setlist">Fica salvo neste repertório. O arquivo da música continua como está.</string>
@@ -1253,11 +1251,6 @@
     <string name="song_details_dock_transposition">Transposição: %1$s</string>
     <string name="song_details_dock_open_playing">Abrir as definições de execução</string>
     <string name="song_details_dock_open_tempo">Abrir as definições de andamento</string>
-    <string name="song_details_dock_open_tuner">Abrir o afinador</string>
-    <plurals name="song_details_dock_too_many_chords">
-        <item quantity="one">Mais de %1$d acorde, demais para mostrar aqui</item>
-        <item quantity="other">Mais de %1$d acordes, demais para mostrar aqui</item>
-    </plurals>
     <string name="song_details_chord_tuning">Afinação: %1$s</string>
     <string name="song_details_chord_defined_standard_tuning">Definido nesta música para afinação padrão</string>
     <string name="song_details_chord_defined_standard_tuning_show">Mostrar o formato da música</string>

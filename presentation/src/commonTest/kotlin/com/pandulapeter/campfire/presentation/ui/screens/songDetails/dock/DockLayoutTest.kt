@@ -86,6 +86,15 @@ internal class DockLayoutTest {
     }
 
     @Test
+    fun `a song with nothing for a row lays the dock out as that row's switch turned off would`() {
+        assertEquals(everyRow.copy(hasScaleRow = false), everyRow.forSong(hasChords = true, hasScales = false))
+        assertEquals(everyRow.copy(hasChordRow = false), everyRow.forSong(hasChords = false, hasScales = true))
+        assertTrue(everyRow.forSong(hasChords = false, hasScales = false).isMetronomeOnly)
+        assertNull(dockLayoutOf(everyRow.copy(hasTempo = false).forSong(hasChords = false, hasScales = false), 1000.dp, isOneRow = false))
+        assertEquals(everyRow.copy(hasChordRow = false), everyRow.copy(hasChordRow = false).forSong(hasChords = true, hasScales = true))
+    }
+
+    @Test
     fun `no row is no dock`() = assertNull(dockLayoutOf(NO_ROW, 1000.dp, isOneRow = false))
 
     @Test

@@ -1281,8 +1281,6 @@
     <string name="tab_notice_hidden">Tabulatura skrytá</string>
     <string name="tab_notice_hidden_instrument">Tabulatura (%1$s) skrytá</string>
     <string name="song_details_chords">Akordy</string>
-    <string name="song_details_dock_no_chords">Tato píseň nemá akordy</string>
-    <string name="song_details_dock_no_scales">Pro tuto píseň nejsou žádné návrhy stupnic</string>
     <string name="song_details_dock_playing">Hraní</string>
     <string name="song_details_dock_tempo">Tempo</string>
     <string name="song_details_overrides_kept_setlist">Uloženo v tomto setlistu. Soubor písně zůstává beze změny.</string>
@@ -1292,12 +1290,6 @@
     <string name="song_details_dock_transposition">Transpozice: %1$s</string>
     <string name="song_details_dock_open_playing">Otevřít nastavení hraní</string>
     <string name="song_details_dock_open_tempo">Otevřít nastavení tempa</string>
-    <string name="song_details_dock_open_tuner">Otevřít ladičku</string>
-    <plurals name="song_details_dock_too_many_chords">
-        <item quantity="one">Více než %1$d akord, příliš mnoho na zobrazení</item>
-        <item quantity="few">Více než %1$d akordy, příliš mnoho na zobrazení</item>
-        <item quantity="other">Více než %1$d akordů, příliš mnoho na zobrazení</item>
-    </plurals>
     <string name="song_details_chord_tuning">Ladění: %1$s</string>
     <string name="song_details_chord_defined_standard_tuning">Definováno v této písni pro standardní ladění</string>
     <string name="song_details_chord_defined_standard_tuning_show">Zobrazit hmat z písně</string>

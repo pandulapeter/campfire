@@ -46,8 +46,8 @@ import com.pandulapeter.campfire.presentation.ui.components.fadingVerticalEdges
  * switches between the panel and the rows under the song, its content laid out at its full width all the while, so that
  * it slides rather than reflows. Its contents are the song's that the pager is on or heading for ([targetPage]),
  * crossfading as a page turns: under an import preview's [card], the diagrams in a grid ([DockPanelRows]), scrolling
- * where the window is too short for them, and at its foot the tempo chip, as tall as a row of diagrams and as wide as the
- * panel, standing still in the panel's bottom end corner as it does at the end of the rows' diagram row. What scrolls
+ * where the window is too short for them, and at its foot the tall tempo chip, centred and standing still, the same size
+ * as at the end of the rows' diagram row. What scrolls
  * fades out where it meets the panel's top and the tempo chip, or without one at the bottom only over the window's
  * bottom inset, which it scrolls on under and is padded by. A setlist's pager bar ([hasPagerBar]) stands under the panel
  * and the song alike, so the panel then ends at it rather than at the window's edge. Read by screen readers after the
@@ -122,20 +122,15 @@ internal fun DockSidePanel(
             if (hasTempo) {
                 Crossfade(
                     modifier = Modifier
+                        .fillMaxWidth()
                         .padding(end = endInset, bottom = bottomInset)
                         .padding(horizontal = DOCK_PANEL_PADDING)
-                        .padding(bottom = DOCK_VERTICAL_PADDING),
+                        .padding(bottom = DOCK_VERTICAL_PADDING)
+                        .wrapContentWidth(),
                     targetState = targetPage,
                 ) { page ->
                     dock.contents[page]?.tempo?.let { tempo ->
-                        DockTempoChip(
-                            modifier = Modifier.fillMaxWidth(),
-                            tempo = tempo,
-                            metronome = metronome,
-                            height = layout.diagramRowHeight,
-                            isTall = true,
-                            isStretched = true,
-                        )
+                        DockTempoChip(tempo = tempo, metronome = metronome, height = layout.tallTempoChipHeight, isTall = true)
                     }
                 }
             }

@@ -58,9 +58,8 @@ import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeIcon
  * number alone does not say whose it is.
  *
  * [isTall] beside diagrams (the diagram row's, and the side panel's): as tall as a row of them, the number over the beats
- * and play and stop a round button beside them ([DockRoundPlayStop]); [isStretched] where it is made wider than it needs
- * (the side panel's, as wide as its diagrams), the number and the beats then centred in what is left. Otherwise it is as
- * tall as a chip, the beats after the number and play and stop after a divider at its end ([DockPlayStop]). A new
+ * and play and stop a round button beside them ([DockRoundPlayStop]), one size in both (`DockLayout.tallTempoChipHeight`).
+ * Otherwise it is as tall as a chip, the beats after the number and play and stop after a divider at its end ([DockPlayStop]). A new
  * number crossfades.
  */
 @Composable
@@ -70,7 +69,6 @@ internal fun DockTempoChip(
     metronome: DockMetronome,
     height: Dp,
     isTall: Boolean = false,
-    isStretched: Boolean = false,
 ) = DockControlPill(
     modifier = modifier.height(height),
     shape = if (isTall) RoundedCornerShape(DOCK_TALL_CORNER) else CircleShape,
@@ -97,7 +95,6 @@ internal fun DockTempoChip(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(
-                modifier = if (isStretched) Modifier.weight(1f) else Modifier,
                 verticalArrangement = Arrangement.spacedBy(TALL_GAP, Alignment.CenterVertically),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
@@ -127,7 +124,7 @@ internal fun DockTempoChip(
 /**
  * How wide the tall [DockTempoChip] is, whatever the tempo: the metronome mark and the widest tempo at the interface's
  * text size, which a large system text size widens, over the beats, and the round play and stop beside them. The side
- * panel is at least as wide as this (`dockPanelWidthOf`), the chip at its foot stretched to its width.
+ * panel is at least as wide as this (`dockPanelWidthOf`), the chip standing at its foot.
  */
 @Composable
 internal fun dockTallTempoChipWidth(): Dp {

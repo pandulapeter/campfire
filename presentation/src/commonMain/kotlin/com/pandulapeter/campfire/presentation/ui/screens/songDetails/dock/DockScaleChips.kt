@@ -23,7 +23,6 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.song_details_dock_no_scales
 import com.pandulapeter.campfire.presentation.resources.song_details_scales_other
 import com.pandulapeter.campfire.presentation.resources.song_details_scales_unheld
 import com.pandulapeter.campfire.presentation.ui.chords.ScaleChip
@@ -32,10 +31,9 @@ import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.So
 /**
  * The song's scale suggestions as one line of chips in the dock, in the order the song's Scales section drew them (the
  * home group's untitled, then each other group and each chord worth a scale of its own under its title, "Over E7"), a
- * chorded part no scale holds said so in place of chips. A chip opens its scale's sheet, in read only mode too. A song
- * with none (a songbook and a song of too many chords among them, whose scales are never worked out) says so, since the
- * row is the screen's rather than the song's. Emits nothing where the scale suggestions are off. The row moves only
- * under the reader's finger, never by itself.
+ * chorded part no scale holds said so in place of chips. A chip opens its scale's sheet, in read only mode too. Emits
+ * nothing where the scale suggestions are off or the song has none, whose dock then has no scale row
+ * ([DockRows.forSong]). The row moves only under the reader's finger, never by itself.
  *
  * A group none of whose sections is on the screen [stepper] shows is faded back, its title and chips alike, as the
  * diagram strip fades the chords off it ([rememberScaleGroupsOnScreen], [DIMMED_ALPHA]): nothing moves, and a faded
@@ -45,14 +43,7 @@ import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.So
 internal fun DockScaleChips(content: DockContent, stepper: SongStepper?) {
     val suggestions = content.scaleSuggestions ?: return
     val groups = content.model.scaleGroups
-    if (groups.isEmpty()) {
-        Text(
-            text = stringResource(Res.string.song_details_dock_no_scales),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        return
-    }
+    if (groups.isEmpty()) return
     val section = remember(groups) { RenderSection.Scales(groups) }
     val isGrouped = groups.size > 1
     val other = stringResource(Res.string.song_details_scales_other)

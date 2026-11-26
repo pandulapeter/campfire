@@ -1286,8 +1286,6 @@
     <string name="tab_notice_hidden">Tabulatură ascunsă</string>
     <string name="tab_notice_hidden_instrument">Tabulatură pentru %1$s ascunsă</string>
     <string name="song_details_chords">Acorduri</string>
-    <string name="song_details_dock_no_chords">Acest cântec nu are acorduri</string>
-    <string name="song_details_dock_no_scales">Nicio sugestie de game pentru acest cântec</string>
     <string name="song_details_dock_playing">Interpretare</string>
     <string name="song_details_dock_tempo">Tempo</string>
     <string name="song_details_overrides_kept_setlist">Rămâne în această listă. Fișierul cântecului nu se schimbă.</string>
@@ -1297,12 +1295,6 @@
     <string name="song_details_dock_transposition">Transpunere: %1$s</string>
     <string name="song_details_dock_open_playing">Deschide setările de interpretare</string>
     <string name="song_details_dock_open_tempo">Deschide setările de tempo</string>
-    <string name="song_details_dock_open_tuner">Deschide acordorul</string>
-    <plurals name="song_details_dock_too_many_chords">
-        <item quantity="one">Peste %1$d acord, prea multe pentru a fi afișate aici</item>
-        <item quantity="few">Peste %1$d acorduri, prea multe pentru a fi afișate aici</item>
-        <item quantity="other">Peste %1$d de acorduri, prea multe pentru a fi afișate aici</item>
-    </plurals>
     <string name="song_details_chord_tuning">Acordaj: %1$s</string>
     <string name="song_details_chord_defined_standard_tuning">Definit în acest cântec pentru acordajul standard</string>
     <string name="song_details_chord_defined_standard_tuning_show">Arată poziția din cântec</string>

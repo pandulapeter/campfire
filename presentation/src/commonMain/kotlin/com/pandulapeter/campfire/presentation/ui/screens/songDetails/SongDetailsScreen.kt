@@ -158,7 +158,7 @@ internal fun SongDetailsScreen(
     )
     val chordSpelling = userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default
     val layoutDirection = LocalLayoutDirection.current
-    val dock = rememberSongDock(userPreferences, chordDiagrams, hasPagerBar = hasPagerControls, isImportPreview = isImportPreview, contentPadding = contentPadding)
+    val dock = rememberSongDock(userPreferences, chordDiagrams, hasPagerBar = hasPagerControls, isImportPreview = isImportPreview, contentPadding = contentPadding, targetPage = pagerState.targetPage, songKey = songs.getOrNull(pagerState.targetPage)?.fileName, songText = songs.getOrNull(pagerState.targetPage)?.let { songTexts[it.fileName] }, dockFacts = viewModel.songTextStore.dockFacts)
     // The side panel covers the end inset for what stands beside it, which keeps only what of it is still its own.
     val songPadding = remember(contentPadding, dock) { PaddingBesidePanel(contentPadding) { dock.panelWidth } }
     val isUncovered = isSongDetailsUncovered(visibleDialog, viewModel.navigator.backStack.lastOrNull())

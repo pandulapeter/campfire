@@ -82,16 +82,20 @@ internal fun rememberChordCells(model: SongLyricsModel, chordDiagrams: ChordDiag
     // Not a state: nothing is redrawn because of it.
     val lastCells = remember { LastChordCells() }
     val cells = remember(model, chordDiagrams?.tuning, chordDiagrams?.storedShapes, chordDiagrams?.showsDefinitionsOnly) {
-        when {
-            chordDiagrams == null -> emptyList()
-            chordDiagrams.showsDefinitionsOnly -> definitionCellsOf(model.song, chordDiagrams.notation)
-            else -> chordDiagrams.tuning?.let { tuning ->
-                chordCellsOf(model.chords, model.chordTuning, tuning, chordDiagrams.storedShapes) ?: lastCells.value
-            }.orEmpty()
-        }
+        songChordCellsOf(model, chordDiagrams) ?: lastCells.value
     }
     lastCells.value = cells
     return cells
+}
+
+/**
+ * The cells [rememberChordCells] draws for [model] as [chordDiagrams] asks for them, none where it is null or has no
+ * tuning to draw in; null while the model's chords are still collected for another tuning.
+ */
+internal fun songChordCellsOf(model: SongLyricsModel, chordDiagrams: ChordDiagrams?): List<ChordCell>? = when {
+    chordDiagrams == null -> emptyList()
+    chordDiagrams.showsDefinitionsOnly -> definitionCellsOf(model.song, chordDiagrams.notation)
+    else -> chordDiagrams.tuning?.let { tuning -> chordCellsOf(model.chords, model.chordTuning, tuning, chordDiagrams.storedShapes) } ?: emptyList()
 }
 
 /** The cells [rememberChordCells] last built. */

@@ -187,7 +187,8 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
   taps only nudge it: `ui/screens/songDetails/autoScroll`, `ui/songView/grid`.
 - Song details starts a song at its first line, a tap on it only stepping: its key chip is the app bar's, the tuner and
   the text size the menu's, and its chords, scale suggestions, and tempo chip are in a dock under it (beside it from
-  840 dp wide), its rows decided by the switches and its height by the window and the reading mode, never by the song:
+  840 dp wide), its rows decided by the switches and the song (a row the song has nothing for goes as its switch off
+  would) and its height by them, the window, and the reading mode, never by the screen of the song read:
   `ui/screens/songDetails`, `ui/screens/songDetails/dock`.
 - Selection mode starts from a song's menu, lives while Songs is on top, never deletes in bulk: `ui/screens/songs`.
 - Tags, languages, cover, and links are ChordPro directives in the song file, so they travel with it: `ui`.

@@ -26,10 +26,10 @@ import com.pandulapeter.campfire.presentation.ui.songView.MIN_COLUMN_WIDTH
 internal enum class DockTier { FULL_DIAGRAMS, SMALL_DIAGRAMS, CHORD_CHIPS }
 
 /**
- * The rows the dock has, decided by the screen's switches and never by the song, so that its height stays the same as a
- * setlist's pages turn: the song's chords ([hasChordRow]: chord diagrams on, on an instrument with shapes), its scale
+ * The rows the dock has: the song's chords ([hasChordRow]: chord diagrams on, on an instrument with shapes), its scale
  * suggestions ([hasScaleRow]), and the click's tempo chip ([hasTempo]: the metronome on, never in an import preview).
- * The key chip is the app bar's and the tuner the menu's and the Playing sheet's, so nothing else is the dock's.
+ * The screen's switches decide them first, then the song ([forSong]). The key chip is the app bar's and the tuner the
+ * menu's and the Playing sheet's, so nothing else is the dock's.
  */
 @Immutable
 internal data class DockRows(
@@ -45,6 +45,15 @@ internal data class DockRows(
 
     /** No row at all: no dock. */
     val isEmpty get() = !hasChordRow && !hasScaleRow && !hasTempo
+
+    /**
+     * These rows for a song with or without a diagram to draw ([hasChords]) and a scale to suggest ([hasScales]): a row
+     * the song has nothing for goes as its switch turned off would take it, rather than saying the song has none, so a
+     * song without scales falls back to the diagrams alone or the scale strip to the metronome panel, and one with
+     * nothing for any row has no dock. Decided per song, never per screen of it, so stepping through a song never
+     * changes the dock.
+     */
+    fun forSong(hasChords: Boolean, hasScales: Boolean) = copy(hasChordRow = hasChordRow && hasChords, hasScaleRow = hasScaleRow && hasScales)
 }
 
 /**
@@ -60,7 +69,14 @@ internal data class DockLayout(
     val rowHeight: Dp,
     val diagramRowHeight: Dp = 0.dp,
     val bottomPadding: Dp = DOCK_VERTICAL_PADDING,
-)
+) {
+    /**
+     * How tall the tall tempo chip is, beside the diagram row and at the side panel's foot alike: as tall as a row of the
+     * smaller diagrams, the least either place has, so that it is one size wherever it stands (centred in a row of
+     * full-size diagrams).
+     */
+    val tallTempoChipHeight get() = rowHeight + SMALL_DIAGRAMS_PAST_ROW
+}
 
 /**
  * How much of a window [windowHeight] tall the dock may take: the room the song's first sections took from its first page

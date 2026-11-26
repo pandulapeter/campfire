@@ -37,16 +37,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import com.pandulapeter.campfire.presentation.localization.pluralTextResource
-import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.localization.textResource
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.song_details_dock_no_chords
-import com.pandulapeter.campfire.presentation.resources.song_details_dock_too_many_chords
 import com.pandulapeter.campfire.presentation.resources.song_details_key_change
 import com.pandulapeter.campfire.presentation.ui.chords.ChordCell
 import com.pandulapeter.campfire.presentation.ui.chords.ChordDiagram
-import com.pandulapeter.campfire.presentation.ui.chords.MAX_SONG_CHORDS
 import com.pandulapeter.campfire.presentation.ui.chords.chordCellDescription
 import com.pandulapeter.campfire.presentation.ui.chords.chordDiagramGeometryOf
 import com.pandulapeter.campfire.presentation.ui.chords.emptyChordDiagramGeometryOf
@@ -58,9 +53,8 @@ import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
  * more than one, each under its name and, where degrees or letters gloss the names, a smaller line over them. The
  * diagrams take what [rowHeight] leaves the lines of text, at most the Chords section's size ([isSmall] sets the
  * smaller names), the keyboard's wider and lower; a chord drawn with another shape crossfades to it. A diagram opens the
- * chord's sheet ([onChordClicked], null where shapes are not picked here). A song without chords says so, and a
- * songbook ([hasTooManyChords]) that it has too many, so that the row, which the screen's switches give the dock rather
- * than the song, is not left looking broken.
+ * chord's sheet ([onChordClicked], null where shapes are not picked here). Emits nothing for a song without a diagram
+ * to draw, whose dock then has no diagram row ([DockRows.forSong]).
  *
  * The chords played on the screen the reader is headed for ([markedChords], `rememberChordsOnScreen`) are drawn as they
  * are and the rest faded back ([DIMMED_ALPHA]), so that the page's chords are found at a glance with no colour spent on
@@ -72,23 +66,9 @@ internal fun DockDiagramStrip(
     cells: List<ChordCell>,
     isSmall: Boolean,
     rowHeight: Dp,
-    hasTooManyChords: Boolean,
     markedChords: Set<String>,
     onChordClicked: ((chordName: String) -> Unit)?,
 ) {
-    if (cells.isEmpty()) {
-        Text(
-            modifier = Modifier.padding(vertical = 8.dp),
-            text = if (hasTooManyChords) {
-                pluralTextResource(Res.plurals.song_details_dock_too_many_chords, MAX_SONG_CHORDS, MAX_SONG_CHORDS.toString())
-            } else {
-                stringResource(Res.string.song_details_dock_no_chords)
-            },
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        return
-    }
     val typography = MaterialTheme.typography
     val nameStyle = if (isSmall) typography.labelMedium else typography.labelLarge
     val glossStyle = typography.labelSmall

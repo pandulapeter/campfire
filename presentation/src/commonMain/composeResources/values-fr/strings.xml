@@ -1245,8 +1245,6 @@
     <string name="tab_notice_hidden">Tablature masquée</string>
     <string name="tab_notice_hidden_instrument">Tablature pour %1$s masquée</string>
     <string name="song_details_chords">Accords</string>
-    <string name="song_details_dock_no_chords">Cette chanson n\'a pas d\'accords</string>
-    <string name="song_details_dock_no_scales">Aucune suggestion de gammes pour cette chanson</string>
     <string name="song_details_dock_playing">Jeu</string>
     <string name="song_details_dock_tempo">Tempo</string>
     <string name="song_details_overrides_kept_setlist">Enregistré dans cette setlist. Le fichier de la chanson reste tel quel.</string>
@@ -1256,11 +1254,6 @@
     <string name="song_details_dock_transposition">Transposition : %1$s</string>
     <string name="song_details_dock_open_playing">Ouvrir les réglages de jeu</string>
     <string name="song_details_dock_open_tempo">Ouvrir les réglages de tempo</string>
-    <string name="song_details_dock_open_tuner">Ouvrir l\'accordeur</string>
-    <plurals name="song_details_dock_too_many_chords">
-        <item quantity="one">Plus de %1$d accord, trop pour les afficher ici</item>
-        <item quantity="other">Plus de %1$d accords, trop pour les afficher ici</item>
-    </plurals>
     <string name="song_details_chord_tuning">Accordage : %1$s</string>
     <string name="song_details_chord_defined_standard_tuning">Défini dans cette chanson pour l\'accordage standard</string>
     <string name="song_details_chord_defined_standard_tuning_show">Afficher le doigté de la chanson</string>

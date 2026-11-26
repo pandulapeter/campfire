@@ -39,7 +39,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.pandulapeter.campfire.presentation.ui.chords.hasTooManySongChords
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.PAGE_HORIZONTAL_PADDING
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.SongStepper
 
@@ -123,7 +122,7 @@ private fun DockRowsBox(dock: SongDockState, metronome: DockMetronome, contentPa
  * With the metronome all it holds, one row that is the metronome panel ([DockMetronomePanel]). In [DockTier.CHORD_CHIPS]
  * (a short window's and an import preview's), or without the diagrams, one row: the chord chips and the scale chips
  * scrolling up to the chip-high tempo chip ([DockTempoChip]) at its end. Otherwise the diagrams have a row of their own,
- * the tempo chip as tall as they are at its end, under a row of the scale chips alone where there are scale suggestions,
+ * the tall tempo chip at its end, under a row of the scale chips alone where there are scale suggestions,
  * so that the tempo chip always stands in the dock's bottom end corner. Whatever scrolls fades only where it meets what
  * stands still. The click is the screen's ([metronome]), whichever page the rows are drawn for. The diagrams fade back
  * the chords not on the screen the page's [stepper] shows; the rows move only under the reader's finger. Beside the side
@@ -180,7 +179,7 @@ private fun DockRowsOf(
             height = layout.diagramRowHeight,
             horizontalPadding = horizontalPadding,
             scrollState = stripScroll,
-            end = tempo?.let { @Composable { DockTempoChip(tempo = it, metronome = metronome, height = layout.diagramRowHeight, isTall = true) } },
+            end = tempo?.let { @Composable { DockTempoChip(tempo = it, metronome = metronome, height = layout.tallTempoChipHeight, isTall = true) } },
         ) {
             if (content != null) {
                 val model = content.model
@@ -189,7 +188,6 @@ private fun DockRowsOf(
                     cells = cells,
                     isSmall = layout.tier == DockTier.SMALL_DIAGRAMS,
                     rowHeight = layout.diagramRowHeight,
-                    hasTooManyChords = remember(model) { cells.isEmpty() && model.shouldShowChords && hasTooManySongChords(model.song, model.notation) },
                     markedChords = rememberChordsOnScreen(stepper, model.sections, names),
                     onChordClicked = onChordClicked,
                 )

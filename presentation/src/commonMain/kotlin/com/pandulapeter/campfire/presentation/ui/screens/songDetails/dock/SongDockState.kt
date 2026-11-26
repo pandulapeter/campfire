@@ -9,7 +9,9 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock
 
-import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.VectorConverter
+import androidx.compose.runtime.LaunchedEffect
 import com.pandulapeter.campfire.presentation.ui.songView.songControlHeight
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
@@ -28,6 +30,9 @@ import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.preferences.PageTurn
 import com.pandulapeter.campfire.data.model.preferences.SongLayout
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
+import com.pandulapeter.campfire.chordpro.ChordProParser
+import com.pandulapeter.campfire.chordpro.chords.ChordNotation
+import com.pandulapeter.campfire.presentation.ui.chords.hasSongChords
 import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.preferences.SongSections
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.SongStepper
@@ -62,9 +67,11 @@ internal class SongDockState(
 }
 
 /**
- * The dock as the switches in [userPreferences] and the window decide it, never the song: its rows (the chords with
- * [chordDiagrams] drawn on an instrument with shapes, the scale suggestions, the tempo chip with the metronome on), and
- * whether it is a side panel ([isDockSidePanel], which the reading mode weighs too) or rows under the song, which get as much room as the
+ * The dock as the switches in [userPreferences], the song the pager is on or heading for ([targetPage], [songKey], its
+ * [songText] read ahead of its page, then what its page handed up in [SongDockState.contents], kept in [dockFacts] for
+ * the next time), and the window decide it: its rows (the chords with [chordDiagrams] drawn on an
+ * instrument with shapes, the scale suggestions, the tempo chip with the metronome on, each only where the song has
+ * something for it, [DockRows.forSong]), and whether it is a side panel ([isDockSidePanel], which the reading mode weighs too) or rows under the song, which get as much room as the
  * reading mode and a setlist's pager bar ([hasPagerBar]) leave them ([dockBudgetOf]) in a window that is not short and
  * outside an import preview ([isImportPreview]), whose card takes the room of a second row. Rows without the pager bar cover the bottom inset of
  * [contentPadding] too, and the panel its end inset.
@@ -76,14 +83,21 @@ internal fun rememberSongDock(
     hasPagerBar: Boolean,
     isImportPreview: Boolean,
     contentPadding: PaddingValues,
+    targetPage: Int,
+    songKey: String?,
+    songText: String?,
+    dockFacts: MutableMap<String, Pair<Boolean?, Boolean?>>,
 ): SongDockState {
     // An import preview has no metronome.
     val isMetronomeShown = userPreferences?.isMetronomeEnabled != false && userPreferences?.isDockMetronomeEnabled != false && !isImportPreview
-    val rows = DockRows(
+    val switchedRows = DockRows(
         hasChordRow = chordDiagrams?.tuning != null,
         hasScaleRow = SongSections.of(userPreferences).areScaleSuggestionsShown,
         hasTempo = isMetronomeShown,
     )
+    val contents = remember { mutableStateMapOf<Int, DockContent>() }
+    val songRows = rememberSongRows(switchedRows, contents[targetPage], songKey, songText, dockFacts)
+    val rows = songRows.rows
     val turnsByColumn = userPreferences?.songLayout != SongLayout.CONTINUOUS && userPreferences?.pageTurn == PageTurn.COLUMN
     val windowSize = LocalWindowInfo.current.containerDpSize
     val layoutDirection = LocalLayoutDirection.current
@@ -123,12 +137,88 @@ internal fun rememberSongDock(
         layout = layout,
         panelLayout = panelLayout,
         target = target,
-        animatedHeight = animateDpAsState(target),
+        animatedHeight = animateDockDp(target, snaps = songRows.isDataArriving),
         panelTarget = panelTarget,
-        animatedPanelWidth = animateDpAsState(panelTarget),
-        contents = remember { mutableStateMapOf() },
+        animatedPanelWidth = animateDockDp(panelTarget, snaps = songRows.isDataArriving),
+        contents = contents,
         steppers = remember { mutableStateMapOf() },
     )
+}
+
+/**
+ * The dock's rows for the song the pager is on or heading for ([songKey], its page's [content]), [switchedRows] fitted to
+ * what it has ([DockRows.forSong]): what its page last said, kept in [facts] for the screen opened on it again; before
+ * that, what its [songText] says at a glance (whether it has chords, which a song of chords has scales for too), so that
+ * the dock is right on the song's first frame and its page laid out once; else the last song's while its text has not
+ * been read, or the switches' alone before any song is known. [SongRows.isDataArriving]
+ * where the rows changed while neither the song nor the switches did: the song's page saying what it has, data
+ * arriving rather than a change the reader made, which is then not animated.
+ */
+@Composable
+private fun rememberSongRows(
+    switchedRows: DockRows,
+    content: DockContent?,
+    songKey: String?,
+    songText: String?,
+    facts: MutableMap<String, Pair<Boolean?, Boolean?>>,
+): SongRows {
+    val known = remember { KnownSongRows() }
+    if (songKey != null && songText != null && songKey !in facts) {
+        // Read here, in the composition that first needs it: the page, composed as the pager is measured, hands up what
+        // it has a frame later, by which time it would have been laid out against the wrong dock.
+        val hasChords = hasSongChords(ChordProParser.parse(songText), ChordNotation.STANDARD)
+        facts[songKey] = hasChords to hasChords
+    }
+    if (content != null && songKey != null) {
+        val stored = facts[songKey]
+        facts[songKey] = (content.hasChordCells ?: stored?.first) to (content.hasScaleSuggestions ?: stored?.second)
+    }
+    val songFacts = songKey?.let { facts[it] } ?: known.facts
+    val rows = remember(switchedRows, songFacts) {
+        switchedRows.forSong(hasChords = songFacts?.first ?: true, hasScales = songFacts?.second ?: true)
+    }
+    val isDataArriving = rows != known.rows && songKey == known.songKey && switchedRows == known.switchedRows
+    known.facts = songFacts
+    known.rows = rows
+    known.songKey = songKey
+    known.switchedRows = switchedRows
+    return SongRows(rows = rows, isDataArriving = isDataArriving)
+}
+
+/** The dock's rows for a song, see [rememberSongRows]. */
+private class SongRows(val rows: DockRows, val isDataArriving: Boolean)
+
+/** What [rememberSongRows] last decided, and for what. Not a state: it is written and read in the same composition. */
+private class KnownSongRows(
+    var facts: Pair<Boolean?, Boolean?>? = null,
+    var rows: DockRows? = null,
+    var songKey: String? = null,
+    var switchedRows: DockRows? = null,
+)
+
+/**
+ * [target] as the dock's height or the side panel's width follows it: animated, as a switch flipped, a window resized,
+ * or a setlist's next song changes it, but snapped where [snaps] says the change is a song's page saying what it has,
+ * and snapped in the very composition that learns of it rather than a frame later, so that the page is laid out once.
+ */
+@Composable
+private fun animateDockDp(target: Dp, snaps: Boolean): State<Dp> {
+    val dp = remember { DockDp(Animatable(target, Dp.VectorConverter)) }
+    if (snaps) dp.snapped = target
+    LaunchedEffect(target) {
+        if (snaps) dp.animatable.snapTo(target) else dp.animatable.animateTo(target)
+        dp.snapped = null
+    }
+    return dp
+}
+
+/**
+ * The value of [animateDockDp]: the one it [snapped] to until its animatable has caught up, else the animatable's. Not
+ * a state of its own: the snap is written and read in the same composition, and the animatable's value is one.
+ */
+private class DockDp(val animatable: Animatable<Dp, *>) : State<Dp> {
+    var snapped: Dp? = null
+    override val value get() = snapped ?: animatable.value
 }
 
 /**

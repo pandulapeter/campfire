@@ -1276,8 +1276,6 @@
     <string name="tab_notice_hidden">Ukryto tabulaturę</string>
     <string name="tab_notice_hidden_instrument">Ukryto tabulaturę (%1$s)</string>
     <string name="song_details_chords">Akordy</string>
-    <string name="song_details_dock_no_chords">Ta piosenka nie ma akordów</string>
-    <string name="song_details_dock_no_scales">Brak podpowiedzi skal dla tej piosenki</string>
     <string name="song_details_dock_playing">Granie</string>
     <string name="song_details_dock_tempo">Tempo</string>
     <string name="song_details_overrides_kept_setlist">Zapisane w tej setliście. Plik piosenki pozostaje bez zmian.</string>
@@ -1287,12 +1285,6 @@
     <string name="song_details_dock_transposition">Transpozycja: %1$s</string>
     <string name="song_details_dock_open_playing">Otwórz ustawienia grania</string>
     <string name="song_details_dock_open_tempo">Otwórz ustawienia tempa</string>
-    <string name="song_details_dock_open_tuner">Otwórz tuner</string>
-    <plurals name="song_details_dock_too_many_chords">
-        <item quantity="one">Ponad %1$d akord, za dużo, by je tu pokazać</item>
-        <item quantity="few">Ponad %1$d akordy, za dużo, by je tu pokazać</item>
-        <item quantity="other">Ponad %1$d akordów, za dużo, by je tu pokazać</item>
-    </plurals>
     <string name="song_details_chord_tuning">Strój: %1$s</string>
     <string name="song_details_chord_defined_standard_tuning">Zdefiniowany w tej piosence dla stroju standardowego</string>
     <string name="song_details_chord_defined_standard_tuning_show">Pokaż chwyt z piosenki</string>

@@ -82,6 +82,13 @@ internal class SongTextStore(
     val lyricsModels = SongLyricsModelCache()
 
     /**
+     * What each song read gave song details' dock, by file name (or an import preview's page name): whether it has a
+     * chord diagram to draw and a scale to suggest, each null until a page drawing it with that switch on has said, so a
+     * song opened again lays its dock out on its first frame rather than a frame after its page. Main thread only.
+     */
+    val dockFacts = mutableMapOf<String, Pair<Boolean?, Boolean?>>()
+
+    /**
      * The songs whose files are being renamed right now, under the names they had when it started.
      *
      * A rename moves the file - and with it the song in the library - before the screens that were opened on the old
