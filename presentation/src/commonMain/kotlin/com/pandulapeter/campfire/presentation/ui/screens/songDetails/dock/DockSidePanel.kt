@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.ui.components.fadingOverNavigationBar
 import com.pandulapeter.campfire.presentation.ui.components.fadingVerticalEdges
+import com.pandulapeter.campfire.presentation.ui.songView.model.ChordDiagrams
 
 /**
  * The dock as a side panel at the end of the song (this package's `CLAUDE.md`), where a wide window puts it
@@ -45,10 +46,10 @@ import com.pandulapeter.campfire.presentation.ui.components.fadingVerticalEdges
  * inset of [contentPadding] included. It grows in from the screen's end edge and shrinks back into it as the window
  * switches between the panel and the rows under the song, its content laid out at its full width all the while, so that
  * it slides rather than reflows. Its contents are the song's that the pager is on or heading for ([targetPage]),
- * crossfading as a page turns: under an import preview's [card], the diagrams in a grid ([DockPanelRows]), scrolling
- * where the window is too short for them, and at its foot the tall tempo chip, centred and standing still, the same size
- * as at the end of the rows' diagram row. What scrolls
- * fades out where it meets the panel's top and the tempo chip, or without one at the bottom only over the window's
+ * crossfading as a page turns: under an import preview's [card], the tall instrument pill ([DockInstrumentPill]) as wide
+ * as the panel and standing still, then the diagrams in a grid ([DockPanelRows]), scrolling where the window is too short
+ * for them, and at its foot the tall tempo chip, centred and standing still, the same size as at the end of the rows'
+ * diagram row. What scrolls fades out where it meets the instrument pill (or the panel's top) and the tempo chip, or without one at the bottom only over the window's
  * bottom inset, which it scrolls on under and is padded by. A setlist's pager bar ([hasPagerBar]) stands under the panel
  * and the song alike, so the panel then ends at it rather than at the window's edge. Read by screen readers after the
  * app bar and before the song, as the rows under the song are.
@@ -92,6 +93,14 @@ internal fun DockSidePanel(
             Column(modifier = Modifier.fillMaxWidth().padding(end = endInset)) {
                 card()
             }
+            PanelInstrumentPill(
+                modifier = Modifier
+                    .padding(end = endInset)
+                    .padding(horizontal = DOCK_PANEL_PADDING)
+                    .padding(top = DOCK_VERTICAL_PADDING),
+                content = dock.contents[targetPage],
+                height = layout.tallTempoChipHeight,
+            )
             val scrollState = rememberScrollState()
             val background = MaterialTheme.colorScheme.surfaceContainer
             Column(
@@ -137,6 +146,27 @@ internal fun DockSidePanel(
         }
     }
 }
+
+/**
+ * The instrument pill at the head of the side panel, as wide as the panel's content. The instrument is the device's, the
+ * same on every page, so it stands for the last page that said it while the page turned to has not, rather than
+ * crossfading into itself.
+ */
+@Composable
+private fun PanelInstrumentPill(
+    modifier: Modifier,
+    content: DockContent?,
+    height: Dp,
+) {
+    val last = remember { LastChordDiagrams() }
+    content?.chordDiagrams?.let { last.value = it }
+    last.value?.let { chordDiagrams ->
+        DockInstrumentPill(modifier = modifier.fillMaxWidth(), chordDiagrams = chordDiagrams, height = height, isTall = true)
+    }
+}
+
+/** The chord diagrams [PanelInstrumentPill] last drew. Not a state: it is written and read in the same composition. */
+private class LastChordDiagrams(var value: ChordDiagrams? = null)
 
 /** The side panel's layout and width as [DockSidePanel] last drew them. Not a state. */
 private class LastDockPanel(var layout: DockLayout? = null, var width: Dp = 0.dp)
