@@ -9,9 +9,9 @@
  */
 
 /* The widget extension's own strings, keyed by their English text: the gallery's names and descriptions, Edit
-   Widget's words, and what a widget says before the app has written its snapshot. The system shows them in its own
-   language, before the app has ever run; everything else a widget shows comes from the snapshot, in the app's
-   language. Keep hu.lproj, ro.lproj, de.lproj, es.lproj, fr.lproj, it.lproj, he.lproj, pt.lproj, pl.lproj, and
+   Widget's words, the Setlist widget's page buttons' spoken names, and what a widget says before the app has written
+   its snapshot. The system shows them in its own language, before the app has ever run; everything else a widget
+   shows comes from the snapshot, in the app's language. Keep hu.lproj, ro.lproj, de.lproj, es.lproj, fr.lproj, it.lproj, he.lproj, pt.lproj, pl.lproj, and
    cs.lproj in step. */
 "Random picks" = "Random picks";
 "A few random songs from your library, new ones every hour." = "A few random songs from your library, new ones every hour.";
@@ -20,6 +20,8 @@
 "Next gig" = "Next gig";
 "Choose which setlist the widget shows." = "Choose which setlist the widget shows.";
 "Draw new picks" = "Draw new picks";
+"Previous page" = "Previous page";
+"Next page" = "Next page";
 "Open Campfire to fill this widget." = "Open Campfire to fill this widget.";
 "Title" = "Title";
 "Tags" = "Tags";

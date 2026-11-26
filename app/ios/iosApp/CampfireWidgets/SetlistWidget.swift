@@ -15,8 +15,10 @@ import WidgetKit
 /// picks (medium and large). A song opens the setlist at it; the rest of the widget, the setlist's first song read from it
 /// (or the setlists screen, where there is no setlist to show).
 struct SetlistWidget: Widget {
+    nonisolated static let kind = "Setlist"
+
     var body: some WidgetConfiguration {
-        AppIntentConfiguration(kind: "Setlist", intent: SetlistConfigurationIntent.self, provider: SetlistProvider()) { entry in
+        AppIntentConfiguration(kind: Self.kind, intent: SetlistConfigurationIntent.self, provider: SetlistProvider()) { entry in
             SetlistWidgetView(entry: entry)
         }
         .configurationDisplayName("Setlist")
@@ -31,13 +33,16 @@ struct SetlistEntry: TimelineEntry {
     let snapshot: WidgetSnapshot?
     /// The file name of the setlist chosen, nil for Next gig.
     let pinnedFileName: String?
+    /// What the widget was set to show (`SetlistEntity`'s id), which its page is kept by.
+    let identity: String
+    let storedPage: SetlistPage?
 }
 
 /// An entry now and one at each of the week's next midnights: "In 3 days" becomes "In 2 days", and a next gig whose day
 /// has passed gives way to the one after it.
 struct SetlistProvider: AppIntentTimelineProvider {
     func placeholder(in context: Context) -> SetlistEntry {
-        SetlistEntry(date: Date(), snapshot: nil, pinnedFileName: nil)
+        SetlistEntry(date: Date(), snapshot: nil, pinnedFileName: nil, identity: SetlistEntity.nextGigId, storedPage: nil)
     }
 
     func snapshot(for configuration: SetlistConfigurationIntent, in context: Context) async -> SetlistEntry {
@@ -56,14 +61,15 @@ struct SetlistProvider: AppIntentTimelineProvider {
 
     private func entry(at date: Date, configuration: SetlistConfigurationIntent, snapshot: WidgetSnapshot?) -> SetlistEntry {
         let pinned = configuration.setlist.flatMap { $0.isNextGig ? nil : $0.id }
-        return SetlistEntry(date: date, snapshot: snapshot, pinnedFileName: pinned)
+        let identity = pinned ?? SetlistEntity.nextGigId
+        return SetlistEntry(date: date, snapshot: snapshot, pinnedFileName: pinned, identity: identity, storedPage: SetlistPage.stored(for: identity))
     }
 }
 
 /// What the widget shows on its entry's day: the same rules as the Android widget's (`:presentation`'s
 /// `WidgetContent.kt`), written again here, since the extension links no Kotlin.
 enum SetlistContent {
-    case shown(title: String, relativeDay: String, songs: [Song], link: String)
+    case shown(fileName: String, title: String, relativeDay: String, songs: [Song], link: String)
     case message(text: String, link: String)
 
     /// A song of the setlist shown, its number in it (from 1), and the link that opens the setlist at it.
@@ -98,6 +104,7 @@ enum SetlistContent {
         }
         let library = Dictionary(snapshot.songs.map { ($0.fileName, $0) }, uniquingKeysWith: { _, last in last })
         self = .shown(
+            fileName: setlist.fileName,
             title: setlist.title,
             relativeDay: Self.relativeDay(from: date, to: setlist.date, strings: strings),
             songs: setlist.songFileNames.enumerated().compactMap { index, fileName in
@@ -112,7 +119,7 @@ enum SetlistContent {
 
     var link: String {
         switch self {
-        case .shown(_, _, _, let link), .message(_, let link): link
+        case .shown(_, _, _, _, let link), .message(_, let link): link
         }
     }
 
@@ -177,7 +184,7 @@ struct SetlistWidgetView: View {
             } else {
                 WidgetMessage(text: text)
             }
-        case .shown(let title, let relativeDay, let songs, _):
+        case .shown(let fileName, let title, let relativeDay, let songs, _):
             switch family {
             case .accessoryRectangular:
                 VStack(alignment: .leading, spacing: 0) {
@@ -187,11 +194,20 @@ struct SetlistWidgetView: View {
                 .padding(margins)
                 .frame(maxWidth: .infinity, alignment: .leading)
             case .systemMedium, .systemLarge:
+                // A page of the rows that fit, its songs keeping their numbers in the setlist; widgets cannot scroll.
                 let capacity = family.songRowCapacity
-                let shown = songs.prefix(capacity)
+                let pageCount = max((songs.count + capacity - 1) / capacity, 1)
+                let page = SetlistPage.shown(stored: entry.storedPage, setlistFileName: fileName, pageCount: pageCount)
+                let shown = Array(songs.dropFirst(page * capacity).prefix(capacity))
                 let digits = String(shown.map(\.number).max() ?? 1).count
                 VStack(alignment: .leading, spacing: 4) {
-                    SetlistHeader(title: title, relativeDay: relativeDay)
+                    SetlistHeader(
+                        title: title,
+                        relativeDay: relativeDay,
+                        pages: pageCount > 1
+                            ? SetlistPageButtons(identity: entry.identity, setlistFileName: fileName, page: page, pageCount: pageCount)
+                            : nil
+                    )
                         .padding(.leading, margins.leading)
                         .padding(.trailing, margins.trailing)
                     WidgetSongRows(count: capacity, rows: shown.map { song in
@@ -215,10 +231,12 @@ struct SetlistWidgetView: View {
 }
 
 /// What tells the widget from Random picks: the setlist's title where Random picks has its own, and how far away its day
-/// is where Random picks has its button. The day itself is left out, since how far away it is already says it.
+/// is where Random picks has its button, followed by the page buttons where its songs need more than one page. The day
+/// itself is left out, since how far away it is already says it.
 private struct SetlistHeader: View {
     let title: String
     let relativeDay: String
+    let pages: SetlistPageButtons?
     @Environment(\.widgetColors) private var colors
 
     var body: some View {
@@ -233,6 +251,9 @@ private struct SetlistHeader: View {
                 .font(InterFont.medium(13, relativeTo: .caption))
                 .foregroundStyle(colors.secondaryText)
                 .lineLimit(1)
+            if let pages {
+                pages.padding(.leading, 4)
+            }
         }
     }
 }
