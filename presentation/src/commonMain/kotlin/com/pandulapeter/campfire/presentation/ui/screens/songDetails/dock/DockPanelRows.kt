@@ -10,26 +10,21 @@
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock
 
 import androidx.compose.foundation.ScrollState
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.SongStepper
 import com.pandulapeter.campfire.presentation.ui.songView.rememberChordCells
 
 /**
  * What scrolls in the side panel for one song's [content], over the tempo chip at its foot: the diagrams at
- * the Chords section's size in a grid, every chord of the song. The scale suggestions are the row under the song beside
+ * the Chords section's size in a grid ([DockPanelGrid]), every chord of the song. The scale suggestions are the row under the song beside
  * the panel, where they scroll sideways as under the song elsewhere. The chords on the screen the page's [stepper] shows are
  * drawn as they are and the rest faded back ([rememberChordsOnScreen]), and once the screen has settled they come first
  * and the panel ([scrollState]) scrolls back to its top ([rememberDockRowsOrder]), never while [isHeld].
  */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun DockPanelRows(
     modifier: Modifier = Modifier,
@@ -47,13 +42,10 @@ internal fun DockPanelRows(
         isHeld = isHeld,
     )
     ScrollWithDockOrder(order = order.cells, scrollState = scrollState, target = { 0 })
-    FlowRow(
-        // As wide as its widest line, centred as a block over the tempo chip, so that an odd last chord stays in
-        // its column rather than being centred on a line of its own.
+    DockPanelGrid(
+        // As wide as its widest line, centred as a block over the tempo chip.
         modifier = modifier.fillMaxWidth().padding(horizontal = DOCK_PANEL_PADDING).wrapContentWidth(),
-        horizontalArrangement = Arrangement.spacedBy(DOCK_ITEM_GAP),
-        verticalArrangement = Arrangement.spacedBy(DOCK_ITEM_GAP),
-        itemVerticalAlignment = Alignment.CenterVertically,
+        gap = DOCK_ITEM_GAP,
     ) {
         DockDiagramStrip(
             cells = order.cells,

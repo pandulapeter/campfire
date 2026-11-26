@@ -79,7 +79,9 @@ with the tuner, and the click. The first section's key and capo are the app bar'
 - **In the side panel the diagrams scroll in a grid** (`DockPanelRows`) between the tall instrument pill at its head and
   the tall tempo chip at its foot, both as wide as the panel's content (never widening it, the chip's content centred)
   and standing still, so the panel's controls make one column; the diagrams fade where they meet the pill and the chip
-  (without a chip, at the bottom only over a bottom inset, padded by it).
+  (without a chip, at the bottom only over a bottom inset, padded by it). The grid is centred in the panel, its lines
+  of several starting together so they read as columns; a diagram alone on its line (a long name that shares none) is
+  centred, but an odd last one no wider than the one above stays in that column (`DockPanelGrid`).
 - **Beside the panel the scale suggestions are one row under the song** (`SongDockState.rowsUnder`), the rows' own
   scale row, over the bottom inset, its corner square where it meets the panel and fading out under it while there
   is more to scroll that way: in the panel, wrapped they broke into ragged stacks, a chip a line pushed the diagrams
