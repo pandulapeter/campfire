@@ -238,12 +238,15 @@ internal fun cellStartsOf(
     }
     // The space a row leaves is shared out evenly: as much of it before the first column, between every two and after
     // the last, so that no column looks pushed to one side of the row. Two columns are never closer than a column gap,
-    // what is left of the space then being split between the two edges. The whole width is shared out wherever that
-    // keeps the row out of the edge left to the buttons, and only the rest of it otherwise.
+    // what is left of the space then being split between the two edges. Nor are they ever further apart than
+    // MAX_SPREAD_COLUMN_GAPS column gaps: on a very wide window an even share would put a screen's width of nothing
+    // between two verses, and the eye would lose the next column's first line; the row stays one block in the middle
+    // instead. The whole width is shared out wherever that keeps the row out of the edge left to the buttons, and only
+    // the rest of it otherwise.
     fun spacedEvenly(widths: IntArray, regionStart: Int, regionWidth: Int): IntArray {
         val shownCount = widths.count { it > 0 }
         val freeSpace = (regionWidth - widths.sum()).coerceAtLeast(0)
-        val gap = maxOf(columnGapPx, freeSpace / (shownCount + 1))
+        val gap = (freeSpace / (shownCount + 1)).coerceIn(columnGapPx, columnGapPx * MAX_SPREAD_COLUMN_GAPS)
         // A column left empty takes no room at all.
         return packed(widths, start = regionStart + ((freeSpace - gap * (shownCount - 1).coerceAtLeast(0)) / 2).coerceAtLeast(0), gap = gap)
     }
@@ -387,3 +390,9 @@ internal fun songRowsOf(
         timingSections = units.timingSections,
     )
 }
+
+/**
+ * How many column gaps apart the columns of a row are at the most when it has room to spread out (`cellStartsOf`): about
+ * what a laptop's window leaves between two columns, so that a 4K or an ultrawide screen sets the song as one does.
+ */
+internal const val MAX_SPREAD_COLUMN_GAPS = 8

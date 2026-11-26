@@ -21,8 +21,9 @@ with the step keys, fewest pages first.
 - **Several counts fit one row → the most even fill**; more columns only by a margin and wrapping no more lines.
 - **A page with room spreads out**: section gaps widened first (by at most a chorded line), then a single-row page's
   columns centered as one block by the tallest, 45% above, since exact centering reads low. They share one top, so the
-  eye finds the next column's first line where the last one's was. The room is the one the grid was decided for, so it
-  never scrolls. `ColumnSpreads` is what the fold hold freezes.
+  eye finds the next column's first line where the last one's was. Columns share a row's spare width evenly, but never
+  further apart than `MAX_SPREAD_COLUMN_GAPS` column gaps, so a 4K or ultrawide window keeps one block in the middle.
+  The room is the one the grid was decided for, so it never scrolls. `ColumnSpreads` is what the fold hold freezes.
 - Rows are read across like systems of sheet music, never column by column. **A section taller than the screen gets a
   row of its own**: a pedal reader cannot go back up to a column beside it.
 - Fewest pages first, then the row reaching furthest; columns balanced by squared deviation, since greedy fill dumps

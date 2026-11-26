@@ -69,11 +69,21 @@ class SectionPlacementTest {
 
     @Test
     fun `the columns of a row are spread evenly across the width`() {
-        val starts = cellStarts(oneRowOfTwo, arrayOf(intArrayOf(100, 200))).single()
+        val starts = cellStarts(oneRowOfTwo, arrayOf(intArrayOf(100, 200)), width = 700).single()
         val before = starts[0]
         val between = starts[1] - (starts[0] + 100)
-        val after = 1_000 - (starts[1] + 200)
+        val after = 700 - (starts[1] + 200)
         assertTrue(abs(before - between) <= 1 && abs(after - between) <= 1, starts.toList().toString())
+    }
+
+    @Test
+    fun `the columns of a row on a very wide screen stay one block in the middle`() {
+        val starts = cellStarts(oneRowOfTwo, arrayOf(intArrayOf(100, 200)), width = 10_000).single()
+        val between = starts[1] - (starts[0] + 100)
+        assertEquals(SECTION_GAP * MAX_SPREAD_COLUMN_GAPS, between)
+        val before = starts[0]
+        val after = 10_000 - (starts[1] + 200)
+        assertTrue(abs(before - after) <= 1, starts.toList().toString())
     }
 
     @Test
