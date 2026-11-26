@@ -76,7 +76,7 @@ jobs:
             and each open decision takes its recommended default.
           - There is no memory directory here; skip memory reads and writes.
           - Hard cap: $BUDGET US dollars for this whole run (enforced by --max-budget-usd; past it the run stops
-            mid-work). Do the work yourself, plan by plan, in the main checkout: no lanes, no worktrees, no subagents.
+            mid-work). Do the work yourself, plan by plan, in this checkout: no lanes, no worktrees, no subagents.
             Read only what a plan names and what its fix needs. Commit each plan as soon as it is verified, so a run cut
             short keeps every landed plan; take the plans in the merge order, so the cheapest to lose come last.
           - You run in print mode: ending your turn ends the run. Never end it before the report is written.
@@ -91,6 +91,9 @@ jobs:
           - A plan that turns out wrong or impossible is skipped as the skill says: revert, leave its file, note why.
           - The pre-commit hook is installed and must pass; never bypass it with --no-verify.
           - Load the `code-style` skill before the first edit and the `commit-messages` skill before the first commit.
+            Take only its message format from it: its worktree, branch, `.githooks/verify` and deferral, and landing
+            rules do not apply here. Commit with a plain `git commit` on HEAD in this checkout, where the workflow
+            counts the commits it pushes.
           - Do not branch or push; the workflow pushes main after you finish. The one-commit-per-plan rule, the
             commit checks, and the finish (deleting the folder once no plan file is left, else trimming the README to
             the skipped ones) hold as written.
@@ -108,6 +111,11 @@ jobs:
             --verbose \
             | tee "$RUNNER_TEMP/fix.jsonl" \
             | jq -r --unbuffered 'select(.type == "assistant") | .message.content[]? | select(.type == "text") | .text' || true
+          # The pipe only shows the text as it comes; the transcript's last result says whether the run itself worked
+          # (a refused key, an unknown model, or the budget running out are an error result, a crash none at all).
+          jq -Rne '[inputs | fromjson? | select(.type == "result")] | last | . != null and .is_error != true' \
+            "$RUNNER_TEMP/fix.jsonl" > /dev/null \
+            || { echo "::error::Claude Code ended without a successful result; see the transcript."; exit 1; }
       # The commits, before any push, so nothing is lost if the push is refused.
       - name: Bundle the commits
         if: ${{ always() }}

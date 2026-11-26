@@ -88,9 +88,11 @@ jobs:
           - The CampfireWebsite repository is not checked out: say in the report that the website's translation should
             use the Play title.
           - Never change anything under `.github/workflows/`.
-          - When step 7 passes, commit everything as one commit (load the `commit-messages` skill first). The
-            pre-commit hook is installed and must pass; never bypass it with --no-verify. Do not branch or push; the
-            workflow pushes the commit to a branch and opens the pull request.
+          - When step 7 passes, commit everything as one commit (load the `commit-messages` skill first, and take only
+            its message format from it: its worktree, branch, `.githooks/verify` and deferral, and landing rules do not
+            apply here). Commit with a plain `git commit` on HEAD in this checkout, where the workflow counts the
+            commit it pushes. The pre-commit hook is installed and must pass; never bypass it with --no-verify. Do not
+            branch or push; the workflow pushes the commit to a branch and opens the pull request.
 
           Finally, write the skill's step 8 report as Markdown to the file named by the SUMMARY environment variable; it
           becomes the pull request's description. Say there that the commit is on the pull request's branch rather than
@@ -107,6 +109,11 @@ jobs:
             --verbose \
             | tee "$RUNNER_TEMP/translate.jsonl" \
             | jq -r --unbuffered 'select(.type == "assistant") | .message.content[]? | select(.type == "text") | .text' || true
+          # The pipe only shows the text as it comes; the transcript's last result says whether the run itself worked
+          # (a refused key, an unknown model, or the budget running out are an error result, a crash none at all).
+          jq -Rne '[inputs | fromjson? | select(.type == "result")] | last | . != null and .is_error != true' \
+            "$RUNNER_TEMP/translate.jsonl" > /dev/null \
+            || { echo "::error::Claude Code ended without a successful result; see the transcript."; exit 1; }
       # The commit, before any push, so nothing is lost if the push is refused.
       - name: Bundle the commit
         if: ${{ always() }}
