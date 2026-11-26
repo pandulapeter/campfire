@@ -63,6 +63,10 @@ on:
         description: 'Tag of the release to build (leave empty to build this branch)'
         type: string
         required: false
+      notes_from_release:
+        description: 'Tag of a published release whose notes, every language''s, to use when no notes are typed (leave empty for release_tag''s own release, if it has one)'
+        type: string
+        required: false
       submit:
         description: 'Send the release for review (off: leave it as a draft in the Play Console, to change the listing first)'
         type: boolean
@@ -121,13 +125,35 @@ jobs:
           echo "name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
           echo "code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
           echo "Releasing version $VERSION_NAME ($VERSION_CODE)"
+      # A hand dispatch given no notes takes a release's own, every language's, read from its description as
+      # publish-all.yml reads them: notes_from_release's, which a hotfix shipped without a release of its own reuses, else
+      # release_tag's where that tag has a release, else nothing and the commit log below.
+      - name: Read the release notes
+        id: notes
+        if: github.event_name == 'workflow_dispatch' && inputs.release_notes == ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NOTES_FROM_RELEASE: ${{ inputs.notes_from_release }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          TAG="${NOTES_FROM_RELEASE:-$RELEASE_TAG}"
+          [ -n "$TAG" ] || exit 0
+          if ! RELEASE_BODY=$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json body --jq .body); then
+            if [ -n "$NOTES_FROM_RELEASE" ]; then
+              echo "::error::No release is tagged $NOTES_FROM_RELEASE to take the notes from." >&2
+              exit 1
+            fi
+            echo "::notice::$RELEASE_TAG has no release, so the notes are the commit log."
+            exit 0
+          fi
+          RELEASE_BODY="$RELEASE_BODY" python3 .github/scripts/release_description.py
       - name: Generate release notes
         env:
-          RELEASE_NOTES_OVERRIDE: ${{ inputs.release_notes }}
+          RELEASE_NOTES_OVERRIDE: ${{ steps.notes.outputs.release_notes || inputs.release_notes }}
           # publish-all.yml passes the release's description as it is, and a backslash in prose is a character: %b would
           # rewrite \t and \n and, on \c, stop writing the text altogether - a Play listing quietly cut in half. Only
           # the dispatch form has no way to type a real line break, so only there are escapes expanded.
-          EXPAND_ESCAPES: ${{ github.event_name == 'workflow_dispatch' }}
+          EXPAND_ESCAPES: ${{ github.event_name == 'workflow_dispatch' && inputs.release_notes != '' }}
         run: |
           if [ -n "$RELEASE_NOTES_OVERRIDE" ]; then
             if [ "$EXPAND_ESCAPES" = 'true' ]; then
@@ -186,7 +212,7 @@ jobs:
       - name: Publish to the Play Console
         env:
           PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
-          RELEASE_NOTES_BY_LANGUAGE: ${{ inputs.release_notes_by_language }}
+          RELEASE_NOTES_BY_LANGUAGE: ${{ steps.notes.outputs.release_notes_by_language || inputs.release_notes_by_language }}
           SUBMIT: ${{ inputs.submit }}
           LISTINGS: ${{ inputs.listings }}
           SCREENSHOTS: ${{ (inputs.screenshots || inputs.screenshots_run != '') && format('{0}/screenshots/store', runner.temp) || '' }}
