@@ -45,8 +45,8 @@ internal fun dockTallTextStyle(large: TextStyle, small: TextStyle, compactness: 
 /** How far the dock's controls keep their text from their sides, and from a round button after it. */
 internal val DOCK_CHIP_PADDING = 12.dp
 
-/** The same in a narrow window, where the tall controls are made smaller. */
-private val DOCK_COMPACT_CHIP_PADDING = 8.dp
+/** The same in a narrow window, where the tall controls are made smaller, and around a one-line card's names. */
+internal val DOCK_COMPACT_CHIP_PADDING = 8.dp
 
 /** How narrow a window is where the dock's tall controls are made smaller: an upright phone's, below a navigation rail's. */
 internal val DOCK_COMPACT_WINDOW_WIDTH = 600.dp

@@ -69,7 +69,9 @@ internal fun DockInstrumentPill(
         isStacked = isTall,
         shape = if (isTall) RoundedCornerShape(DOCK_TALL_CORNER) else CircleShape,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-        stackedHalfPadding = dockTallChipPadding(compactness),
+        // One line, the names sit as far from the card's start as the tempo chip's mark does from its own, and as close to
+        // the dividers as its play and stop's mark: the card's room goes to the names before they shrink.
+        halfPadding = if (isTall) dockTallChipPadding(compactness) else DOCK_COMPACT_CHIP_PADDING,
         // A long tuning ("Double drop D") in a narrow card, or in a one-line card the row cuts short so that its chips keep
         // their room (`DockScrollingRow`), shrinks a little before it is cut short.
         minFontSize = DOCK_CARD_MIN_FONT_SIZE,

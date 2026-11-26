@@ -95,8 +95,8 @@ import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
  *   tool's as one pill (see SharedTabChrome), drawing its container in its stead.
  * @param tuningVisibility Where the tuning half fades in and out, for a caller that measures the pill and so has to know
  * when a leaving half is no longer laid out; its target is kept by the caller at whether there is a tuning to show.
- * @param stackedHalfPadding How far a stacked pill's names are from its sides, less where a narrow window wants the
- *   pill narrow (song details' dock on a phone).
+ * @param halfPadding How far each name is from its half's sides (and, one line, a pill's names from its round ends, a
+ *   little further), less where a card wants its names given the room rather than its padding (song details' dock).
  * @param minFontSize How far a name too long for its half shrinks before it is cut short (song details' dock, whose
  *   cards are narrow); unspecified, it is cut at [style]'s size.
  * @param trailing What the pill ends in, in the same container (song details' dock: the tuner, which tunes the strings
@@ -117,7 +117,7 @@ internal fun InstrumentPill(
     isEnabled: Boolean = true,
     isTabChromePart: Boolean = false,
     tuningVisibility: MutableTransitionState<Boolean>? = null,
-    stackedHalfPadding: Dp = INSTRUMENT_PILL_HALF_PADDING,
+    halfPadding: Dp = INSTRUMENT_PILL_HALF_PADDING,
     minFontSize: TextUnit = TextUnit.Unspecified,
     trailing: (@Composable () -> Unit)? = null,
     onInstrumentClicked: () -> Unit,
@@ -150,7 +150,7 @@ internal fun InstrumentPill(
                     style = style,
                     minFontSize = minFontSize,
                     height = height,
-                    horizontalPadding = stackedHalfPadding,
+                    horizontalPadding = halfPadding,
                     endInset = endInset,
                     isEnabled = isEnabled,
                     onInstrumentClicked = onInstrumentClicked,
@@ -163,6 +163,7 @@ internal fun InstrumentPill(
                     notation = notation,
                     style = style,
                     minFontSize = minFontSize,
+                    halfPadding = halfPadding,
                     endInset = endInset,
                     isEnabled = isEnabled,
                     tuningVisibility = tuningVisibility,
@@ -187,6 +188,7 @@ private fun InstrumentPillHalves(
     notation: ChordNotation,
     style: TextStyle,
     minFontSize: TextUnit,
+    halfPadding: Dp,
     endInset: Dp,
     isEnabled: Boolean,
     tuningVisibility: MutableTransitionState<Boolean>?,
@@ -205,7 +207,9 @@ private fun InstrumentPillHalves(
         val tuningState = tuningVisibility ?: remember { MutableTransitionState(shownTuning != null) }.apply { targetState = shownTuning != null }
         // The room between the pill's rounded end and the name, and the room a trailing control stands over ([endInset]),
         // is the last half's, so that its press and ripple reach the end of the pill; the instrument half gives it up as
-        // the tuning half comes in, at the pace that half grows.
+        // the tuning half comes in, at the pace that half grows. A trailing control takes the rounded end, so the names
+        // need no room from it there.
+        val endRoom = if (endInset > 0.dp) endInset else INSTRUMENT_PILL_EDGE_PADDING
         val instrumentIsLast by animateFloatAsState(
             targetValue = if (tuningState.targetState) 0f else 1f,
             animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
@@ -216,8 +220,8 @@ private fun InstrumentPillHalves(
             style = style,
             minFontSize = minFontSize,
             isEnabled = isEnabled,
-            startPadding = INSTRUMENT_PILL_HALF_PADDING + INSTRUMENT_PILL_EDGE_PADDING,
-            endPadding = INSTRUMENT_PILL_HALF_PADDING + (INSTRUMENT_PILL_EDGE_PADDING + endInset) * instrumentIsLast,
+            startPadding = halfPadding + INSTRUMENT_PILL_EDGE_PADDING,
+            endPadding = halfPadding + endRoom * instrumentIsLast,
             onClick = onInstrumentClicked,
         )
         AnimatedVisibility(
@@ -238,8 +242,8 @@ private fun InstrumentPillHalves(
                     style = style,
                     minFontSize = minFontSize,
                     isEnabled = isEnabled,
-                    startPadding = INSTRUMENT_PILL_HALF_PADDING,
-                    endPadding = INSTRUMENT_PILL_HALF_PADDING + INSTRUMENT_PILL_EDGE_PADDING + endInset,
+                    startPadding = halfPadding,
+                    endPadding = halfPadding + endRoom,
                     onClick = { if (!isLeaving) onTuningClicked() },
                 )
             }
