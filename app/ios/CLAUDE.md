@@ -143,8 +143,8 @@ extension (`iosApp/ShareExtension/`) and the widget extension (`iosApp/CampfireW
   of the week's midnights; the choice is a `SetlistEntity`
   (`next-gig`, else a setlist's file name) listed from the snapshot, a missing one kept until changed. Widgets cannot
   scroll, so a setlist longer than its rows gets Previous and Next in the header (`SetlistPaging.swift`, the chevrons
-  direction-aware, the one with nowhere to go dimmed and disabled): `TurnSetlistPageIntent` keeps the page in the group's
-  `UserDefaults` by that choice, with the setlist it was turned in, so Next gig moving on starts the new one on its first
+  direction-aware, the one with nowhere to go dimmed, still a button that stays on the shown page):
+  `TurnSetlistPageIntent` keeps the page in the group's `UserDefaults` by that choice, with the setlist it was turned in, so Next gig moving on starts the new one on its first
   page and a setlist that lost songs is held to its last.
 - What a widget shows comes from the snapshot, in the app's language and direction. The gallery's names and
   descriptions, Edit Widget's words, and the line shown before the app has written a snapshot are the extension's
