@@ -186,9 +186,11 @@ wrong or undo it".
   assume): add a new key to each one's `strings.xml`, in the same commented group in each file, and when the
   English wording of an existing key changes, rewrite every translation to match it rather than leaving it
   stale. Translate properly, never copy the English in. A missing key is a build-time hole that shows up
-  as "???". Strings outside `composeResources` follow the same rule: the iOS share extension's and
-  microphone prompt's text in every `*.lproj` folder, and the web loading screen's in every language of
-  `TEXTS` in `app/web/src/wasmJsMain/resources/index.html`.
+  as "???". Strings outside `composeResources` follow the same rule: the iOS share extension's,
+  microphone prompt's, and home screen widgets' text in every `*.lproj` folder (`app/ios/iosApp/ShareExtension`,
+  `iosApp`, and `CampfireWidgets`), the Android widgets' gallery texts in every
+  `app/android/src/main/res/values-*/strings.xml` (Hebrew is `values-iw`), and the web loading screen's in every
+  language of `TEXTS` in `app/web/src/wasmJsMain/resources/index.html`.
 - Formatted strings are always called with their arguments (`%1$s`, `%1$d`); never concatenate a literal
   with a value. A sentence that takes text somebody else wrote — a title, a tag, a header value, a file
   or account name, a chord or a key — is read with `textResource(Res.string.x, text)` (`:presentation`'s
