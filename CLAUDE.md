@@ -331,9 +331,9 @@ JVM; a release is still checked by hand. Add or update tests with every change t
 The web build's JavaScript has Node tests (`app/web`), and the Python scripts in `.github/scripts` have `unittest`s
 beside them (`test_*.py`). `.github/workflows/tests.yml` runs all of them plus `spotlessCheck` and the scripts'
 checks, runs the unit tests again on Windows, and compiles every platform (iOS on macOS, where the storage tests also
-run on the simulator, and the web, whose storage tests run in headless Chrome), starts the Android release build (R8)
-on an emulator, on every PR, on every push to `main` that changes more than `documentation/`, and before
-`publish-all.yml` builds anything.
+run on the simulator, and the web, whose storage tests run in headless Chrome), starts the release builds as they
+ship (Android's on an emulator, the desktop's ProGuarded image), on every PR, on every
+push to `main` that changes more than `documentation/`, and before `publish-all.yml` builds anything.
 
 The importer is scored against a private corpus of other programs' documents (`ImportCorpusTest`, outside git, named by
 `campfire.importCorpus` in `local.properties`; a worktree passes it with `-P`), never in CI. `PageCorpusTest`

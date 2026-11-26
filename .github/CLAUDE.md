@@ -42,7 +42,8 @@ The workflows that test and publish Campfire. The `campfire.*` properties and `l
   any leg failed otherwise). The cancelled job fails its workflow for good, so `publish-all.yml` reads the tests' and
   the screenshots' output (`passed`, `ready`) besides their result; nothing waits on the iOS and macOS builds.
 - Every desktop leg starts the built app image before publishing (ProGuard breaks things only a start shows, see
-  `app/desktop`) via `.github/scripts/start_release_build.sh`, in an empty data directory.
+  `app/desktop`) via `.github/scripts/start_release_build.sh`, in an empty data directory; `tests.yml`'s `compile`
+  starts the Linux one too.
 
 ### Release notes and per-store switches
 

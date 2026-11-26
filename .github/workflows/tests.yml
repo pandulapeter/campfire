@@ -11,10 +11,11 @@
 # simulator, the Node tests of the web build's storage worker and offline support, and every Python script's tests
 # (test_*.py); the checks the pre-commit hook runs too (license headers, store listings, regular expressions, iOS-tested
 # test names, file and function sizes, presentation layers, and sync seams); and a compilation of every platform's
-# code, the iOS one on a macOS runner, since desktopTest compiles only the desktop target's; and the Android release
-# build started on an emulator. Run on every pull request, on every push to main (a merged pull request or a direct push) that
-# changes more than documentation/, and by publish-all.yml before it starts a single store build, so a failing test or a
-# platform that does not compile stops every store's release rather than one of them.
+# code, the iOS one on a macOS runner, since desktopTest compiles only the desktop target's; and the release builds
+# started as they ship: Android's on an emulator and the desktop's ProGuarded app image.
+# Run on every pull request, on every push to main (a merged pull request or a direct push) that changes more than
+# documentation/, and by publish-all.yml before it starts a single store build, so a failing test or a platform that
+# does not compile stops every store's release rather than one of them.
 
 name: 'Run all tests'
 
@@ -167,6 +168,28 @@ jobs:
       # platform's storage keeps runs over it in headless Chrome, as it runs on the desktop and the iOS simulator.
       - name: Run the storage tests in headless Chrome
         run: bash .github/scripts/gradlew_retrying.sh :data:source:local:implementation:wasmJsBrowserTest
+      # What ProGuard breaks for reflection passes the verification above and fails only once the app runs, which a
+      # publishing leg would otherwise be the first to do, after other stores' builds went out. The app image the .deb
+      # ships, its class data sharing archive recorded (which needs a display: Xvfb, with Skiko drawing in software), is
+      # started as publish-linux.yml starts it, in this job since it packages the ProGuarded jar built above.
+      - name: Package the desktop release app image
+        run: |
+          command -v xvfb-run > /dev/null || { sudo apt-get update && sudo apt-get install --yes xvfb; }
+          SKIKO_RENDER_API=SOFTWARE_FAST xvfb-run --auto-servernum bash .github/scripts/gradlew_retrying.sh :app:desktop:recordClassDataArchive
+      - name: Start the desktop release build
+        run: |
+          APP="app/desktop/build/compose/binaries/main-release/app/Campfire/bin/Campfire"
+          HOME_DIRECTORY="$RUNNER_TEMP/campfire-home"
+          mkdir -p "$HOME_DIRECTORY"
+          export JAVA_TOOL_OPTIONS="-Duser.home=$HOME_DIRECTORY -Xlog:class+load=info:file=$RUNNER_TEMP/class-load.txt"
+          unset XDG_DATA_HOME
+          export SKIKO_RENDER_API=SOFTWARE_FAST
+          bash .github/scripts/start_release_build.sh \
+            --launcher "$APP" \
+            --data "$HOME_DIRECTORY/.local/share/campfire" \
+            --log "$RUNNER_TEMP/campfire.log" \
+            --class-load "$RUNNER_TEMP/class-load.txt" --min-shared-percent 80 \
+            -- xvfb-run --auto-servernum "$APP"
 
   # R8's full mode removes what a library's keep rules forget, and what it breaks fails only once the shrunk app runs,
   # which nothing else here does, often in a library's own startup initializer, before the first frame. The release
