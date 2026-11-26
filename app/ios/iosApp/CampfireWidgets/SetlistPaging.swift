@@ -12,7 +12,7 @@ import SwiftUI
 import WidgetKit
 
 /// The page a setlist widget last turned to, kept in the group's defaults by what the widget was set to show (a setlist's
-/// file name, or Next gig's id), so every widget set alike turns together. It remembers which setlist the page was turned
+/// file name, or Next gig's id) and the songs a page of it holds, so every widget set alike and as large turns together. It remembers which setlist the page was turned
 /// in: Next gig moves on to another setlist without anyone turning a page, and that one starts on its first.
 struct SetlistPage {
     let setlistFileName: String

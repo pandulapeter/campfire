@@ -33,7 +33,8 @@ struct SetlistEntry: TimelineEntry {
     let snapshot: WidgetSnapshot?
     /// The file name of the setlist chosen, nil for Next gig.
     let pinnedFileName: String?
-    /// What the widget was set to show (`SetlistEntity`'s id), which its page is kept by.
+    /// What the widget was set to show (`SetlistEntity`'s id) and how many songs a page of it holds, which its page is
+    /// kept by: a page number means other songs in a widget of another size.
     let identity: String
     let storedPage: SetlistPage?
 }
@@ -46,7 +47,7 @@ struct SetlistProvider: AppIntentTimelineProvider {
     }
 
     func snapshot(for configuration: SetlistConfigurationIntent, in context: Context) async -> SetlistEntry {
-        entry(at: Date(), configuration: configuration, snapshot: WidgetSnapshot.load())
+        entry(at: Date(), configuration: configuration, family: context.family, snapshot: WidgetSnapshot.load())
     }
 
     func timeline(for configuration: SetlistConfigurationIntent, in context: Context) async -> Timeline<SetlistEntry> {
@@ -55,13 +56,13 @@ struct SetlistProvider: AppIntentTimelineProvider {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: now)
         let midnights = (1...7).compactMap { calendar.date(byAdding: .day, value: $0, to: today) }
-        let entries = ([now] + midnights).map { entry(at: $0, configuration: configuration, snapshot: snapshot) }
+        let entries = ([now] + midnights).map { entry(at: $0, configuration: configuration, family: context.family, snapshot: snapshot) }
         return Timeline(entries: entries, policy: snapshot == nil ? WidgetSnapshot.retryPolicy : .atEnd)
     }
 
-    private func entry(at date: Date, configuration: SetlistConfigurationIntent, snapshot: WidgetSnapshot?) -> SetlistEntry {
+    private func entry(at date: Date, configuration: SetlistConfigurationIntent, family: WidgetFamily, snapshot: WidgetSnapshot?) -> SetlistEntry {
         let pinned = configuration.setlist.flatMap { $0.isNextGig ? nil : $0.id }
-        let identity = pinned ?? SetlistEntity.nextGigId
+        let identity = "\(pinned ?? SetlistEntity.nextGigId)#\(family.songRowCapacity)"
         return SetlistEntry(date: date, snapshot: snapshot, pinnedFileName: pinned, identity: identity, storedPage: SetlistPage.stored(for: identity))
     }
 }
