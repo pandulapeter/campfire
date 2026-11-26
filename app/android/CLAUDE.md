@@ -83,6 +83,9 @@
 - **A refresh moves `REFRESHED_AT` in each widget's Glance state before `update`**: a composition still alive is only
   recomposed by an update, and not at all for a state that did not change, so `rememberWidgetSnapshot` reads it, and
   the day is read again.
+- **Every refresh and every update the system asks for also draws at once** (`WidgetDrawing.kt`: Glance's `compose`,
+  then `updateAppWidget`): Glance's session is a WorkManager job, held back for half a minute in the background, and
+  the launcher icon's switch puts every widget back to its loading layout (a package change) as the app leaves.
 - Both widgets list songs in one row (`WidgetSongRow`: title, artist, the cover where it has one, 36 dp, rounded from
   Android 12 and square before it, as the widget is, and in a setlist its number, centered on the row), spanning the widget edge to edge so its touch feedback does:
   `widgetBackground` pads only above and below, and every other part pads its own sides. The headers tell the widgets

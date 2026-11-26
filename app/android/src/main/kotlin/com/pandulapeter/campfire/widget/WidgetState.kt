@@ -84,6 +84,7 @@ internal fun GlanceAppWidgetReceiver.refreshAllAsync(context: Context) {
 internal suspend fun GlanceAppWidget.refreshAll(context: Context) {
     GlanceAppWidgetManager(context).getGlanceIds(javaClass).forEach { glanceId ->
         updateAppWidgetState(context, glanceId) { it[WidgetState.REFRESHED_AT] = System.currentTimeMillis() }
+        drawNow(context = context, glanceId = glanceId)
         update(context, glanceId)
     }
 }

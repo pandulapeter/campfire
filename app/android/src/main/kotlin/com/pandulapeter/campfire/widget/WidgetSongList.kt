@@ -61,4 +61,4 @@ private fun TopEdgeFade() = Image(
 )
 
 /** The fade's height, which is also the gap above the first song at rest. */
-internal const val EDGE_FADE_HEIGHT = 20
+internal const val EDGE_FADE_HEIGHT = 8

@@ -123,6 +123,11 @@ internal fun WidgetSnapshotEffect(
     LaunchedEffect(snapshot, coverAddresses, placement, lifecycleOwner) {
         delay(SETTLE_MILLISECONDS)
         println("Widget snapshot published: ${snapshot.songs.size} songs, ${snapshot.setlists.size} setlists, ${coverAddresses.size} covers")
+        // A change made just before leaving (a theme picked, then the home screen to see the widgets) is written as the
+        // app leaves, not at its return, which would leave the widgets showing the old one until then.
+        if (!lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+            publisher.publish(snapshot = snapshot, allCoverAddresses = coverAddresses, placed = placement.placedWidgets())
+        }
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
             placement.changes.onStart { emit(Unit) }.collectLatest {
                 publisher.publish(snapshot = snapshot, allCoverAddresses = coverAddresses, placed = placement.placedWidgets())

@@ -25,6 +25,7 @@ class RandomPicksWidgetReceiver : GlanceAppWidgetReceiver() {
 
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
         super.onUpdate(context, appWidgetManager, appWidgetIds)
+        glanceAppWidget.drawNowAsync(context = context, appWidgetIds = appWidgetIds)
         WidgetPlacementImpl.notifyChanged()
     }
 
