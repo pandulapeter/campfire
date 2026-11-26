@@ -134,12 +134,18 @@ internal fun DockSidePanel(
                         .fillMaxWidth()
                         .padding(end = endInset, bottom = bottomInset)
                         .padding(horizontal = DOCK_PANEL_PADDING)
-                        .padding(bottom = DOCK_VERTICAL_PADDING)
-                        .wrapContentWidth(),
+                        .padding(bottom = DOCK_VERTICAL_PADDING),
                     targetState = targetPage,
                 ) { page ->
                     dock.contents[page]?.tempo?.let { tempo ->
-                        DockTempoChip(tempo = tempo, metronome = metronome, height = layout.tallTempoChipHeight, isTall = true)
+                        // As wide as the instrument pill over the diagrams, so that the panel's controls make one column.
+                        DockTempoChip(
+                            modifier = Modifier.fillMaxWidth(),
+                            tempo = tempo,
+                            metronome = metronome,
+                            height = layout.tallTempoChipHeight,
+                            isTall = true,
+                        )
                     }
                 }
             }

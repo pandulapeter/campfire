@@ -91,7 +91,8 @@ internal fun DockTempoChip(
     if (isTall) {
         Row(
             modifier = Modifier.padding(start = TEMPO_CHIP_PADDING, end = TALL_BUTTON_PADDING),
-            horizontalArrangement = Arrangement.spacedBy(TEMPO_CHIP_PADDING),
+            // Centred in a chip stretched wider than it (the side panel's, as wide as its instrument pill).
+            horizontalArrangement = Arrangement.spacedBy(TEMPO_CHIP_PADDING, Alignment.CenterHorizontally),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(

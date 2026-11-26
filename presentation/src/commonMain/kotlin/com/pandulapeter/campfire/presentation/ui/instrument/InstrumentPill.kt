@@ -13,18 +13,25 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -34,6 +41,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.MeasurePolicy
 import androidx.compose.ui.layout.Placeable
@@ -72,7 +81,12 @@ import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
  * instrument's name (see [InstrumentPillMeasurePolicy]). The tuning half fades in and out with the instrument's
  * tunings and the pill resizes with it.
  *
- * @param height How tall the pill is: a song's playing controls' height, or that of the picker chips it stands among.
+ * @param height How tall the pill is: a song's playing controls' height, that of the picker chips it stands among, or
+ *   the dock's controls'.
+ * @param isStacked Whether the tuning half stands under the instrument's rather than after it, the two parted by a
+ *   line, for a pill as tall as two lines (song details' dock beside its diagrams, see [InstrumentPillStackedHalves]),
+ *   which then takes a [shape] with corners rounded less than a pill's.
+ * @param border The outline of a pill on a surface its fill alone is too close to (song details' dock).
  * @param isTabChromePart Whether it is the instrument pill of a tool's tab, which a tab swap carries over to the other
  *   tool's as one pill (see SharedTabChrome), drawing its container in its stead.
  * @param tuningVisibility Where the tuning half fades in and out, for a caller that measures the pill and so has to know
@@ -86,6 +100,9 @@ internal fun InstrumentPill(
     notation: ChordNotation,
     style: TextStyle = MaterialTheme.typography.titleSmall,
     height: Dp = songControlHeight(style),
+    isStacked: Boolean = false,
+    shape: Shape = CircleShape,
+    border: BorderStroke? = null,
     isEnabled: Boolean = true,
     isTabChromePart: Boolean = false,
     tuningVisibility: MutableTransitionState<Boolean>? = null,
@@ -106,9 +123,23 @@ internal fun InstrumentPill(
             .sharedTabChrome(chrome = chrome, zIndex = TOOL_LINE_Z_INDEX, isContainerDrawnOutsideSwaps = true)
             .height(height)
             .alpha(alpha),
-        shape = CircleShape,
+        shape = shape,
         color = chrome.drawnContainerColor(containerColor),
+        border = border,
     ) {
+        if (isStacked) {
+            InstrumentPillStackedHalves(
+                instrument = instrument,
+                tuning = tuning,
+                notation = notation,
+                style = style,
+                height = height,
+                isEnabled = isEnabled,
+                onInstrumentClicked = onInstrumentClicked,
+                onTuningClicked = onTuningClicked,
+            )
+            return@Surface
+        }
         InstrumentPillHalves(
             instrument = instrument,
             tuning = tuning,
@@ -171,15 +202,7 @@ private fun InstrumentPillHalves(
                 StepperDivider()
                 InstrumentPillHalf(
                     modifier = if (isLeaving) Modifier.clearAndSetSemantics { } else Modifier,
-                    // Named in full where it is the standard one, which "Standard" alone does not say out of the sheet's
-                    // context. Asked of the tuning rather than of [instrument], since a half fading out is still drawing
-                    // the tuning of the instrument picked before, and the one picked now may have no tunings at all (the
-                    // keyboard, Other).
-                    text = if (lastTuning.isStandard) {
-                        stringResource(Res.string.instrument_tuning_standard)
-                    } else {
-                        tuningLabel(lastTuning, notation)
-                    },
+                    text = tuningName(lastTuning, notation),
                     onClickLabel = stringResource(Res.string.instrument_tuning_choose),
                     style = style,
                     isEnabled = isEnabled,
@@ -262,6 +285,77 @@ private fun InstrumentPillHalf(
             overflow = TextOverflow.Ellipsis,
         )
     }
+}
+
+/**
+ * The halves of a stacked [InstrumentPill], [height] tall: the instrument over the tuning, each the whole width of the
+ * pill (as wide as the wider name, or as the pill is made), a line between them stopping short of its sides as a
+ * stepper's divider does. The tuning half grows in from nothing and shrinks away with the instrument's tunings, the
+ * instrument half then taking the pill's whole height, so that the pill keeps its height.
+ */
+@Composable
+private fun InstrumentPillStackedHalves(
+    instrument: UserPreferences.Instrument,
+    tuning: InstrumentTuning?,
+    notation: ChordNotation,
+    style: TextStyle,
+    height: Dp,
+    isEnabled: Boolean,
+    onInstrumentClicked: () -> Unit,
+    onTuningClicked: () -> Unit,
+) = Column(modifier = Modifier.width(IntrinsicSize.Max)) {
+    val shownTuning = shownTuning(instrument, tuning)
+    val lastShownTuning = remember { LastTuning() }
+    shownTuning?.let { lastShownTuning.value = it }
+    val tuningShare by animateFloatAsState(
+        targetValue = if (shownTuning == null) 0f else 0.5f,
+        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+    )
+    // Its corners are rounded less than a pill's ends, so the names need none of the room a round end takes.
+    val horizontalPadding = INSTRUMENT_PILL_HALF_PADDING
+    InstrumentPillHalf(
+        modifier = Modifier.fillMaxWidth().weight(1f),
+        text = instrumentLabel(instrument),
+        onClickLabel = stringResource(Res.string.instrument_choose),
+        style = style,
+        isEnabled = isEnabled,
+        startPadding = horizontalPadding,
+        endPadding = horizontalPadding,
+        onClick = onInstrumentClicked,
+    )
+    val lastTuning = lastShownTuning.value
+    if (lastTuning != null && tuningShare > 0f) {
+        val isLeaving = shownTuning == null
+        Column(modifier = Modifier.fillMaxWidth().height(height * tuningShare).clipToBounds().alpha(tuningShare * 2)) {
+            HorizontalDivider(
+                modifier = Modifier.padding(horizontal = INSTRUMENT_PILL_HALF_PADDING),
+                color = MaterialTheme.colorScheme.outlineVariant,
+            )
+            InstrumentPillHalf(
+                modifier = (if (isLeaving) Modifier.clearAndSetSemantics { } else Modifier).fillMaxWidth().weight(1f),
+                text = tuningName(lastTuning, notation),
+                onClickLabel = stringResource(Res.string.instrument_tuning_choose),
+                style = style,
+                isEnabled = isEnabled,
+                startPadding = horizontalPadding,
+                endPadding = horizontalPadding,
+                onClick = { if (!isLeaving) onTuningClicked() },
+            )
+        }
+    }
+}
+
+/**
+ * What the tuning half of an [InstrumentPill] says for [tuning]: named in full where it is the standard one, which
+ * "Standard" alone does not say out of the sheet's context. Asked of the tuning rather than of the instrument, since a
+ * half fading out is still drawing the tuning of the instrument picked before, and the one picked now may have no
+ * tunings at all (the keyboard, Other).
+ */
+@Composable
+private fun tuningName(tuning: InstrumentTuning, notation: ChordNotation) = if (tuning.isStandard) {
+    stringResource(Res.string.instrument_tuning_standard)
+} else {
+    tuningLabel(tuning, notation)
 }
 
 /** How opaque a disabled [InstrumentPill] is. */

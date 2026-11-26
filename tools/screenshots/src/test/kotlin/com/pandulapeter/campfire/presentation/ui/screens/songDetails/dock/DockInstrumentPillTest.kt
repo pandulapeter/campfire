@@ -9,20 +9,15 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock
 
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.hasClickAction
-import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
-import androidx.compose.ui.test.click
-import androidx.compose.ui.test.performTouchInput
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.instrument_guitar
 import com.pandulapeter.campfire.presentation.resources.instrument_tuning_standard
 import com.pandulapeter.campfire.presentation.resources.instrument_violin
-import com.pandulapeter.campfire.presentation.resources.song_details_chord_tuning
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.screenshots.AppTestScope
 import com.pandulapeter.campfire.screenshots.TestWindow
@@ -34,9 +29,9 @@ import kotlin.test.Test
 import kotlin.test.assertTrue
 
 /**
- * The instrument and tuning pill at the start of song details' dock: before the diagrams in their row, at the side
- * panel's head, and at the start of a short window's one row; opening the instrument's sheet, read only mode's too; and
- * nowhere the diagrams are not.
+ * The app's instrument and tuning pill at the start of song details' dock: before the diagrams in their row, its tuning
+ * under the instrument, at the side panel's head, and at the start of a short window's one row; opening the instrument's
+ * sheet, read only mode's too; and nowhere the diagrams are not.
  */
 @OptIn(ExperimentalTestApi::class)
 internal class DockInstrumentPillTest {
@@ -51,7 +46,7 @@ internal class DockInstrumentPillTest {
             pill.right <= diagram.left && pill.top < diagram.bottom && pill.bottom > diagram.top,
             "The instrument pill at $pill does not start the row of the diagram at $diagram.",
         )
-        tapPill(part = TOP_HALF)
+        tap(instrumentPillNode())
         waitUntil { viewModel.dialogHost.visibleDialog.value is DialogType.Instrument }
     }
 
@@ -59,16 +54,11 @@ internal class DockInstrumentPillTest {
     fun `the tall instrument pill's tuning under the instrument opens the tuning's sheet`() = runAppTest {
         openSong()
         waitForIdle()
-        tapPill(part = BOTTOM_HALF)
+        val instrument = instrumentPill()
+        val tuning = onNode(tuningHalfNode()).fetchSemanticsNode().boundsInRoot
+        assertTrue(tuning.top >= instrument.bottom - 1f, "The tuning half at $tuning is not under the instrument's at $instrument.")
+        tap(tuningHalfNode())
         waitUntil { viewModel.dialogHost.visibleDialog.value is DialogType.Tuning }
-    }
-
-    @Test
-    fun `the instrument pill names the tuning too, as one description`() = runAppTest {
-        openSong()
-        waitForIdle()
-        val tuning = string(Res.string.song_details_chord_tuning, string(Res.string.instrument_tuning_standard))
-        onNode(hasContentDescription("${string(Res.string.instrument_guitar)}, $tuning") and hasClickAction()).assertExists()
     }
 
     @Test
@@ -100,7 +90,7 @@ internal class DockInstrumentPillTest {
     ) {
         openSong()
         waitForIdle()
-        tapPill(part = TOP_HALF)
+        tap(instrumentPillNode())
         waitUntil { viewModel.dialogHost.visibleDialog.value is DialogType.Instrument }
     }
 
@@ -119,7 +109,7 @@ internal class DockInstrumentPillTest {
     ) {
         openSong()
         waitForIdle()
-        onNode(hasContentDescription(string(Res.string.instrument_violin), substring = true) and hasClickAction()).assertDoesNotExist()
+        onNode(hasText(string(Res.string.instrument_violin)) and hasClickAction()).assertDoesNotExist()
     }
 
     @Test
@@ -129,25 +119,19 @@ internal class DockInstrumentPillTest {
         onNode(instrumentPillNode()).assertDoesNotExist()
     }
 
-    private fun AppTestScope.instrumentPillNode() = hasContentDescription(string(Res.string.instrument_guitar), substring = true) and hasClickAction()
+    /** The pill's instrument half, which the pill's place is measured by. */
+    private fun AppTestScope.instrumentPillNode() = hasText(string(Res.string.instrument_guitar)) and hasClickAction()
 
-    /** Taps the pill [part] of its height down, the instrument's half over the tuning's in a tall one. */
-    private fun AppTestScope.tapPill(part: Float) {
-        onNode(instrumentPillNode()).performTouchInput { click(Offset(centerX, height * part)) }
-        waitForIdle()
-    }
+    private fun AppTestScope.tuningHalfNode() = hasText(string(Res.string.instrument_tuning_standard)) and hasClickAction()
 
     private fun AppTestScope.instrumentPill(): Rect = onNode(instrumentPillNode()).fetchSemanticsNode().boundsInRoot
 }
 
-private const val TOP_HALF = 0.25f
-private const val BOTTOM_HALF = 0.75f
-
 /** The side panel's widest, its padding included (`dockPanelWidthOf`), in dp. */
 private const val MAX_PANEL_WIDTH = 176f
 
-/** How far past the tempo chip's sides the panel's content may reach: the chip is centred in it, the pill as wide as it. */
-private const val PANEL_SLACK = 40f
+/** How far past the tempo chip's sides the pill may reach: both are as wide as the panel's content, give or take a pixel. */
+private const val PANEL_SLACK = 1f
 
 /** A song of words alone, no chord in it. */
 private const val SPOKEN_SONG_FILE = "campfire_tests-spoken_word_around_the_fire.cho"

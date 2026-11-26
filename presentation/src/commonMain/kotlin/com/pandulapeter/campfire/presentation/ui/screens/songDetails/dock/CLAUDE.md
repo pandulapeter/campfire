@@ -68,10 +68,10 @@ the Playing sheet's: nothing of them is the dock's.
   (`PAGE_HORIZONTAL_PADDING`, 8 dp past the insets) and the import preview's card; the rows are as far from the
   surface's top and, at a window's edge with no bottom inset, its bottom (`DOCK_VERTICAL_PADDING`); over an inset (a
   navigation bar) half that, the inset parting them from the edge (`dockBottomPaddingOf`).
-- **In the side panel the diagrams scroll in a grid** (`DockPanelRows`) between the tall instrument pill at its head, as
-  wide as the panel's content (never widening it), and the tall tempo chip at its foot, centred, both standing still;
-  they fade where they meet the pill and the chip (without a chip, at the bottom only over a bottom inset, padded by
-  it).
+- **In the side panel the diagrams scroll in a grid** (`DockPanelRows`) between the tall instrument pill at its head and
+  the tall tempo chip at its foot, both as wide as the panel's content (never widening it, the chip's content centred)
+  and standing still, so the panel's controls make one column; the diagrams fade where they meet the pill and the chip
+  (without a chip, at the bottom only over a bottom inset, padded by it).
 - **Beside the panel the scale suggestions are one row under the song** (`SongDockState.rowsUnder`), the rows' own
   scale row, over the bottom inset, its corner square where it meets the panel and fading out under it while there
   is more to scroll that way: in the panel, wrapped they broke into ragged stacks, a chip a line pushed the diagrams
@@ -81,16 +81,17 @@ the Playing sheet's: nothing of them is the dock's.
 
 - Each page hands up what it drew the song with (`DockContent`, by page index); the dock shows the page the pager is on
   or heading for, crossfading as it turns, as the bar's subtitle does.
-- **The tempo chip and the instrument pill are outlined tonal pills** (`DockControlPill`, `ControlPillFrame.TONAL`; the
-  app bar's key chip is outlined only), set apart from the chord and scale chips (the song's) by their fill rather than
-  by a chevron, the outline giving them contrast on the dock's surface. A screen reader reads each as one description.
-- **The instrument pill** (`DockInstrumentPill`) names the instrument the diagrams are drawn for and its tuning
-  ("Standard" too; an instrument with one tuning, its name alone), only where the diagrams or the chord chips are
-  (`DockRows.hasChordRow`, so not with the diagrams off, an instrument without shapes, or a song with no diagram to
-  draw). Tall (the tempo chip's height) the instrument over the tuning, chip-high the tuning after a divider. Its two
-  parts open the instrument's and the tuning's sheets (`DialogType.Instrument`, `DialogType.Tuning`) as a song page's
-  instrument pill did, read only mode included, the instrument being the device's; a screen reader hears instrument
-  and tuning as one control, the tuning's sheet its custom action. No icon. `Dock: instrument pill` and `Dock:
+- **The tempo chip and the instrument pill are outlined tonal pills** (the tempo chip a `DockControlPill`,
+  `ControlPillFrame.TONAL`; the app bar's key chip is outlined only), set apart from the chord and scale chips (the
+  song's) by their fill rather than by a chevron, the outline giving them contrast on the dock's surface. A screen
+  reader reads the tempo chip as one description.
+- **The instrument pill is the app's** (`ui/instrument`'s `InstrumentPill`, which `DockInstrumentPill` only frames, never
+  a pill of the dock's own): the instrument the diagrams are drawn for and its tuning ("Standard" too; an instrument with
+  one tuning, its name alone), only where the diagrams or the chord chips are (`DockRows.hasChordRow`, so not with the
+  diagrams off, an instrument without shapes, or a song with no diagram to draw). The tempo chip's height, fill,
+  outline, and corners: beside the diagrams stacked (`isStacked`, the tuning under the instrument), in a short window's
+  one row one line. Its halves open the instrument's and the tuning's sheets (`DialogType.Instrument`,
+  `DialogType.Tuning`), read only mode included, the instrument being the device's. `Dock: instrument pill` and `Dock:
   instrument pill tuning` breadcrumbs.
 - **The tempo chip** (`DockTempoChip`, every part of it opening its sheet but play and stop; never in an import preview,
   which has no metronome): the metronome mark swinging with the click (where the visual beat is on), then the tempo of
