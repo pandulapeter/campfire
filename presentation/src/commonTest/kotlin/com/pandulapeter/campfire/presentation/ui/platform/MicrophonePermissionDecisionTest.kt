@@ -76,4 +76,22 @@ class MicrophonePermissionDecisionTest {
             androidMicrophoneStateOf(isGranted = true, rationale = false, isRefusedForGood = true),
         )
     }
+
+    @Test
+    fun `a refusal for good still refused after the settings offers the question once more`() {
+        val afterSettings = MicrophoneRefusal(isForGood = true).afterSettings(isGranted = false)
+        assertTrue(androidMicrophoneStateOf(isGranted = false, rationale = false, isRefusedForGood = afterSettings.isForGood).canAskAgain)
+        val afterSilentPress = microphoneRefusalAfter(
+            rationaleBefore = false,
+            rationaleAfter = false,
+            isGranted = false,
+            earlierSilentDenials = afterSettings.silentDenials,
+        )
+        assertTrue(afterSilentPress.isForGood)
+    }
+
+    @Test
+    fun `a trip to the settings that grants clears the refusal`() {
+        assertEquals(MicrophoneRefusal(), MicrophoneRefusal(isForGood = true).afterSettings(isGranted = true))
+    }
 }

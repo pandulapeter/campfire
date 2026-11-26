@@ -62,9 +62,15 @@ internal actual fun rememberMicrophonePermission(): MicrophonePermission {
         println("Microphone: ${if (granted) "granted" else if (refusal.isForGood) "refused for good" else "refused"}")
         storedRefusal.update(refusal)
     }
+    // Saved, since the process can end while the system settings are in front.
+    var isInSettings by rememberSaveable { mutableStateOf(false) }
     LifecycleResumeEffect(context) {
         isGranted = context.isMicrophoneGranted()
         rationale = activity?.shouldShowMicrophoneRationale() == true
+        if (isInSettings) {
+            isInSettings = false
+            storedRefusal.update(storedRefusal.value.afterSettings(isGranted))
+        }
         if (isGranted) storedRefusal.update(MicrophoneRefusal())
         onPauseOrDispose { }
     }
@@ -81,6 +87,7 @@ internal actual fun rememberMicrophonePermission(): MicrophonePermission {
             launcher.launch(Manifest.permission.RECORD_AUDIO)
         },
         openSettings = {
+            isInSettings = true
             context.startActivity(
                 Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", context.packageName, null))
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),

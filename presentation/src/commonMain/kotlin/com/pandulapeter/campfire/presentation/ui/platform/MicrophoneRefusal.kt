@@ -40,6 +40,18 @@ internal fun microphoneRefusalAfter(
     else -> MicrophoneRefusal(silentDenials = earlierSilentDenials + 1)
 }
 
+/**
+ * The [MicrophoneRefusal] left on returning from the app's page of the system settings, opened by Open settings, with
+ * the microphone still off. Android's "Ask every time" there shows the question again yet owes no rationale, which a
+ * refusal for good kept as it was would answer with Open settings alone, endlessly; so it becomes one silent denial,
+ * offering the question once more, and a system that still refuses silently costs that one press.
+ */
+internal fun MicrophoneRefusal.afterSettings(isGranted: Boolean) = when {
+    isGranted -> MicrophoneRefusal()
+    isForGood -> MicrophoneRefusal(silentDenials = 1)
+    else -> this
+}
+
 /** The microphone's status as Android reports it, and whether its question can still be shown. */
 internal data class AndroidMicrophoneState(
     val status: MicrophoneStatus,
