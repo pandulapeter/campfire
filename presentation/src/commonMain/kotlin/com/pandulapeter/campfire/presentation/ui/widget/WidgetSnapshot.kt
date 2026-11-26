@@ -118,7 +118,6 @@ data class WidgetSnapshot(
         val noMatchingSongs: String = "",
         val setUpWidget: String = "",
         val done: String = "",
-        val title: String = "",
         val tags: String = "",
         val languages: String = "",
         val randomPicksFilterDescription: String = "",

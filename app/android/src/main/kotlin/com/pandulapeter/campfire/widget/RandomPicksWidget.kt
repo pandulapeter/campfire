@@ -53,7 +53,6 @@ internal class RandomPicksWidget : GlanceAppWidget() {
                 RandomPicksWidgetLayout(
                     snapshot = snapshot,
                     seed = currentState(WidgetState.RANDOM_PICKS_SEED) ?: 0L,
-                    title = currentState(WidgetState.RANDOM_PICKS_TITLE),
                     count = currentState(WidgetState.RANDOM_PICKS_COUNT) ?: DEFAULT_RANDOM_PICKS_COUNT,
                     filter = RandomPicksFilter(
                         tags = currentState(WidgetState.RANDOM_PICKS_TAGS).orEmpty(),

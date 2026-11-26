@@ -39,7 +39,7 @@ import com.pandulapeter.campfire.presentation.ui.widget.WidgetSnapshot
 import com.pandulapeter.campfire.presentation.ui.widget.randomPicksContent
 
 /**
- * The random picks widget: a header with its [title] (the snapshot's Random picks where it has none of its own) and the
+ * The random picks widget: a header with the snapshot's Random picks and the
  * button that draws again where that can change the picks, then the [count] songs drawn by [seed] from those [filter]
  * leaves, scrolling ([WidgetSongList]), or the snapshot's sentence where there is nothing to draw from. Too short for the
  * header, it shows the first song alone, with the button beside it. Anywhere but a song opens the app.
@@ -48,7 +48,6 @@ import com.pandulapeter.campfire.presentation.ui.widget.randomPicksContent
 internal fun RandomPicksWidgetLayout(
     snapshot: WidgetSnapshot?,
     seed: Long,
-    title: String?,
     count: Int,
     filter: RandomPicksFilter,
 ) {
@@ -74,7 +73,7 @@ internal fun RandomPicksWidgetLayout(
     ) {
         if (!isCompact) {
             Header(
-                title = title?.takeIf { it.isNotBlank() } ?: snapshot?.strings?.randomPicks ?: LocalContext.current.getString(R.string.widget_random_picks_name),
+                title = snapshot?.strings?.randomPicks ?: LocalContext.current.getString(R.string.widget_random_picks_name),
                 shuffleDescription = shuffleDescription,
                 isMirrored = isMirrored,
             )

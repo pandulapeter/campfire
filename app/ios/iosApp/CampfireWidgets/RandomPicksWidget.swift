@@ -32,8 +32,6 @@ struct RandomPicksEntry: TimelineEntry {
     let snapshot: WidgetSnapshot?
     /// What this entry's draw is made by: the seed Shuffle last stored, mixed with the hour.
     let seed: UInt64
-    /// The header's title from Edit Widget, nil for the snapshot's.
-    let title: String?
     let filter: RandomPicksFilter
 }
 
@@ -43,7 +41,7 @@ struct RandomPicksEntry: TimelineEntry {
 struct RandomPicksProvider: AppIntentTimelineProvider {
     func placeholder(in context: Context) -> RandomPicksEntry {
         RandomPicksEntry(
-            date: Date(), snapshot: nil, seed: 0, title: nil, filter: RandomPicksFilter()
+            date: Date(), snapshot: nil, seed: 0, filter: RandomPicksFilter()
         )
     }
 
@@ -63,14 +61,12 @@ struct RandomPicksProvider: AppIntentTimelineProvider {
 
     private func entry(at date: Date, configuration: RandomPicksConfigurationIntent, snapshot: WidgetSnapshot?) -> RandomPicksEntry {
         let hour = UInt64(max(0, Int64(date.timeIntervalSince1970 / 3600)))
-        let title = configuration.title?.trimmingCharacters(in: .whitespacesAndNewlines)
         // Mixed, not added: a seed one increment of the generator's own on would start the same stream one value later,
         // so each hour would show nearly the picks of the hour before it.
         return RandomPicksEntry(
             date: date,
             snapshot: snapshot,
             seed: SplitMix.mix(ShuffleSeed.current ^ hour),
-            title: title?.isEmpty == false ? title : nil,
             filter: configuration.filter
         )
     }
@@ -172,7 +168,7 @@ struct RandomPicksView: View {
 
     private func header(_ strings: WidgetSnapshot.Strings, canDrawAgain: Bool) -> some View {
         HStack {
-            Text(verbatim: entry.title ?? strings.randomPicks)
+            Text(verbatim: strings.randomPicks)
                 .font(InterFont.bold(15))
                 .foregroundStyle(colors.accent)
                 .widgetAccentable()

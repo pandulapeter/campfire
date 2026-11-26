@@ -131,7 +131,7 @@ extension (`iosApp/ShareExtension/`) and the widget extension (`iosApp/CampfireW
   finalizer, never added: an added hour slides the same draw along), ranking songs as `pickWidgetSongs` does, so a
   timeline rebuilt within the hour draws the same; Shuffle (`ShuffleIntent`) stores a new seed, shared by
   every such widget, and shows only where the filter leaves more songs than the widget draws. Edit Widget
-  (`RandomPicksConfiguration.swift`) gives it a title of its own, the tags and languages it draws from (`TagEntity`,
+  (`RandomPicksConfiguration.swift`) gives it the tags and languages it draws from (`TagEntity`,
   `LanguageEntity`, listed from the snapshot), filtered as `WidgetContent.kt`'s `RandomPicksFilter` does; a widget
   from before has no filter. **No number of picks** (Android's setup has one): WidgetKit cannot scroll, so a count past
   what fits would hide picks; each family draws its row capacity (`songRowCapacity`: 3, or 8 on large), in slots of

@@ -16,9 +16,8 @@
 "Choose which setlist the widget shows." = "Scegli quale scaletta mostra il widget.";
 "Draw new picks" = "Nuove scelte";
 "Open Campfire to fill this widget." = "Apri Campfire per riempire questo widget.";
-"Title" = "Titolo";
 "Tags" = "Tag";
 "Languages" = "Lingue";
 "Tag" = "Tag";
 "Language" = "Lingua";
-"Choose the widget's title, and the tags and languages its picks come from. With none chosen in a group, that group leaves every song in." = "Scegli il titolo del widget e i tag e le lingue da cui vengono le scelte. Un gruppo senza nulla di selezionato lascia tutte le canzoni.";
+"Choose the tags and languages its picks come from. With none chosen in a group, that group leaves every song in." = "Scegli i tag e le lingue da cui vengono le scelte. Un gruppo senza nulla di selezionato lascia tutte le canzoni.";

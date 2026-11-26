@@ -41,9 +41,6 @@ internal object WidgetState {
     /** When [RANDOM_PICKS_SEED] was drawn, in milliseconds since the epoch. */
     val RANDOM_PICKS_DRAWN_AT = longPreferencesKey("randomPicksDrawnAt")
 
-    /** The random picks widget's own title, none for the snapshot's Random picks ([RandomPicksWidgetConfigurationActivity]). */
-    val RANDOM_PICKS_TITLE = stringPreferencesKey("randomPicksTitle")
-
     /** How many songs the random picks widget draws, none for [DEFAULT_RANDOM_PICKS_COUNT]. */
     val RANDOM_PICKS_COUNT = intPreferencesKey("randomPicksCount")
 

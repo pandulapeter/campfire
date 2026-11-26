@@ -56,17 +56,14 @@ struct LanguageQuery: EntityQuery {
     }
 }
 
-/// The Random picks widget's settings, from Edit Widget: a title of its own, and the tags and languages its picks come
-/// from. A widget added before they existed has none of them, so it draws from every song under the snapshot's title.
+/// The Random picks widget's settings, from Edit Widget: the tags and languages its picks come from. A widget added
+/// before they existed has none of them, so it draws from every song.
 /// How many it draws is its size's, never a setting: as many as fill it (`songRowCapacity`).
 struct RandomPicksConfigurationIntent: WidgetConfigurationIntent {
     static var title: LocalizedStringResource = "Random picks"
     static var description = IntentDescription(
-        "Choose the widget's title, and the tags and languages its picks come from. With none chosen in a group, that group leaves every song in."
+        "Choose the tags and languages its picks come from. With none chosen in a group, that group leaves every song in."
     )
-
-    @Parameter(title: "Title")
-    var title: String?
 
     @Parameter(title: "Tags")
     var tags: [TagEntity]?

@@ -21,9 +21,8 @@
 "Choose which setlist the widget shows." = "Choose which setlist the widget shows.";
 "Draw new picks" = "Draw new picks";
 "Open Campfire to fill this widget." = "Open Campfire to fill this widget.";
-"Title" = "Title";
 "Tags" = "Tags";
 "Languages" = "Languages";
 "Tag" = "Tag";
 "Language" = "Language";
-"Choose the widget's title, and the tags and languages its picks come from. With none chosen in a group, that group leaves every song in." = "Choose the widget's title, and the tags and languages its picks come from. With none chosen in a group, that group leaves every song in.";
+"Choose the tags and languages its picks come from. With none chosen in a group, that group leaves every song in." = "Choose the tags and languages its picks come from. With none chosen in a group, that group leaves every song in.";

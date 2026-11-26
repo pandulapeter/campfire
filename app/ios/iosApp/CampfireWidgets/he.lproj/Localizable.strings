@@ -16,9 +16,8 @@
 "Choose which setlist the widget shows." = "בחירת הסט־ליסט שהווידג׳ט מציג.";
 "Draw new picks" = "בחירה חדשה";
 "Open Campfire to fill this widget." = "פתחו את Campfire כדי למלא את הווידג׳ט הזה.";
-"Title" = "שם";
 "Tags" = "תגיות";
 "Languages" = "שפות";
 "Tag" = "תגית";
 "Language" = "שפה";
-"Choose the widget's title, and the tags and languages its picks come from. With none chosen in a group, that group leaves every song in." = "בחרו את שם הווידג׳ט ואת התגיות והשפות שמהן נלקחות הבחירות. קבוצה שלא נבחר בה דבר משאירה את כל השירים.";
+"Choose the tags and languages its picks come from. With none chosen in a group, that group leaves every song in." = "בחרו את התגיות והשפות שמהן נלקחות הבחירות. קבוצה שלא נבחר בה דבר משאירה את כל השירים.";

@@ -96,7 +96,7 @@
   and one row's height a compact one (a song and Shuffle, no header) for a launcher's shortest cell. The draw is a seed in the widget's own
   state, drawn again by Shuffle (`ShuffleAction`, public: Glance's R8 rules keep only public `ActionCallback`s) and by
   `provideGlance` once 55 minutes old (the hourly `updatePeriodMillis` alarm repeats from itself, not from the draw).
-  Its own title, pick count, and tag and language filter are in its state too, set by `RandomPicksWidgetConfigurationActivity`.
+  Its pick count and tag and language filter are in its state too, set by `RandomPicksWidgetConfigurationActivity`.
 - **The setup screens** (`WidgetConfigurationActivity`, `android:configure`, `reconfigurable`; own task affinity, out of
   Recents, so they never raise the app) show `:presentation`'s `SetlistWidgetSetup` and `RandomPicksWidgetSetup`; only
   their Done writes the widget's state. A snapshot without the setup texts (none yet, or an older app's) adds the widget
