@@ -42,9 +42,8 @@ import kotlin.test.Test
 import kotlin.test.fail
 
 /**
- * The song's dock on the smallest phone, which holds its controls (the key chip, the tempo, and the time signature) and
- * a diagram for each of its chords under the song: they must stay apart and off the song, and their labels must stay
- * whole at a large text size.
+ * The song's dock on the smallest phone, which holds the tempo chip and a diagram for each of its chords under the song:
+ * they must stay apart and off the song, and their labels must stay whole at a large text size.
  */
 @OptIn(ExperimentalTestApi::class)
 internal class SongDetailsFitTest {
@@ -110,8 +109,8 @@ private fun songChords() = Regex("\\[([^\\]]+)]").findAll(demoSongText(HOUSE_OF_
 private fun AppTestScope.node(matcher: SemanticsMatcher) = onNode(matcher, useUnmergedTree = true).fetchSemanticsNode()
 
 /**
- * The song's controls: the smallest part of the screen that holds the key chip, the tempo chip, and a diagram's
- * name outside the song, which is the dock.
+ * The song's controls: the smallest part of the screen that holds the tempo chip and a diagram's name outside the song
+ * and the app bar's key chip (whose key may be a chord's name too), which is the dock.
  */
 @OptIn(ExperimentalTestApi::class)
 private fun AppTestScope.controls(): SemanticsNode {
@@ -120,7 +119,6 @@ private fun AppTestScope.controls(): SemanticsNode {
     val diagramName = onAllNodes(hasText(songChords().last()), useUnmergedTree = true).fetchSemanticsNodes()
         .first { node -> node.ancestry().none { it.id == song.id || it.id == chip.id } }
     val anchors = listOf(
-        chip,
         opening(string(Res.string.song_details_dock_open_tempo)),
         diagramName,
     )
