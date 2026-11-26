@@ -88,9 +88,9 @@ The song renderer, drawn by song details and the editor's preview; `model/` buil
 - A plain paragraph, and the rest of a section a chorus recall cut, get a chevron-only pill, named for screen readers by
   its first lyric. The preview folds nothing but draws that pill, so it lays out like details. A chorus has no pill and
   folds from its whole title row.
-- **On song details a tap is the song's** (`FoldGestures`): an unfolded header takes none, so it steps; a long press,
-  a right click, or a mouse's click on its chevron folds it at once, with no menu between. A folded header unfolds on
-  any press. Screen readers keep the toggle as its action.
+- **On song details a tap is the song's** (`FoldGestures`): a header takes none, folded or not, so it steps; a long
+  press, a right click, or a mouse's click on its chevron folds or unfolds it at once, with no menu between. Screen
+  readers keep the toggle as its action.
   Buttons inside the song (a missing picture's, the part picker, the cut-song notice) keep their taps; chord names in
   the lyrics have no gesture. Breadcrumbs (kinds only): `Fold: …`, and `Picture: …`.
 - A fold re-measures only its section. An unfolding run animates only opacity: a height still animating would be

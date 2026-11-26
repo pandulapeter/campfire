@@ -71,7 +71,7 @@ import kotlin.math.ceil
  * are still to be learned: the pill is the toggle, its chevron after the name, and on a card the whole title row is,
  * its chevron at the far end the way an expandable card carries it — so that a folded chorus is a slim card of its
  * own that still stands out, and pressing anywhere along its top answers, as [FoldGestures] has it (on song details
- * an unfolded one only to a long press or a mouse on its chevron, a tap stepping the song). A section with no header
+ * only to a long press or a mouse on its chevron, folded or not, a tap stepping the song). A section with no header
  * has nothing to fold it from, except one that is nothing but tablature or a grid, which gets a toggle named after that.
  *
  * Inside a section every run of tablature and every run of a chord grid folds on its own as well, since a solo written

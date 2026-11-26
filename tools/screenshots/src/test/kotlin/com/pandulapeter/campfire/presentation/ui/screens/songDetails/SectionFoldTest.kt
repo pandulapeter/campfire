@@ -24,14 +24,14 @@ import kotlin.test.Test
 import kotlin.test.assertTrue
 
 /**
- * A song's fold headers on song details, where a tap is the song's to step: an unfolded one folds only on a long press,
- * and a folded one still unfolds on a tap. The header of the song's first section, on its first page, stands in for them all.
+ * A song's fold headers on song details, where a tap is the song's to step: a header folds and unfolds only on a long
+ * press, never on a tap. The header of the song's first section, on its first page, stands in for them all.
  */
 @OptIn(ExperimentalTestApi::class)
 internal class SectionFoldTest {
 
     @Test
-    fun `a tap on an unfolded header leaves it unfolded, its long press folds it, and a tap unfolds it again`() = runAppTest(songs = listOf(LONG_SONG_FILE)) {
+    fun `a tap leaves a header as it is, folded or not, and its long press folds and unfolds it`() = runAppTest(songs = listOf(LONG_SONG_FILE)) {
         openSong(LONG_SONG_TITLE)
         val header = hasText(INTRO) and hasClickAction()
         tap(header)
@@ -40,6 +40,9 @@ internal class SectionFoldTest {
         waitForIdle()
         waitUntil { isIntroFolded() }
         tap(header)
+        assertTrue(isIntroFolded(), "A tap on a folded header unfolded it.")
+        onNode(header).performTouchInput { longClick() }
+        waitForIdle()
         waitUntil { !isIntroFolded() }
     }
 
