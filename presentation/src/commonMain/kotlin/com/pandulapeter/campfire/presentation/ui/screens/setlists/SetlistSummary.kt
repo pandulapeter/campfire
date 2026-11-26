@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -103,7 +104,8 @@ internal fun SetlistSummary(
         }
         if (description.isNotBlank()) {
             Text(
-                modifier = Modifier.clickable(enabled = isCompactHeight) { isExpanded = !isExpanded },
+                // Capped where a wide window would otherwise run a line across every column of cards, too long to read.
+                modifier = Modifier.widthIn(max = DESCRIPTION_MAX_WIDTH).clickable(enabled = isCompactHeight) { isExpanded = !isExpanded },
                 maxLines = if (isCompactHeight && !isExpanded) 2 else Int.MAX_VALUE,
                 overflow = TextOverflow.Ellipsis,
                 text = description,
@@ -164,6 +166,9 @@ private val SUMMARY_BOTTOM_PADDING = 8.dp
 
 /** The room between the labels and the description under them. */
 private val SUMMARY_LINE_GAP = 8.dp
+
+/** The widest a description is set, about the length of a line a book would set it in at this size. */
+private val DESCRIPTION_MAX_WIDTH = 720.dp
 
 /** The room between a label and the one after it. */
 private val SUMMARY_LABEL_GAP = 12.dp

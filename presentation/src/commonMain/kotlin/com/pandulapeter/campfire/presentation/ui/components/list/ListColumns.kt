@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import kotlin.math.ceil
 
 /**
  * The columns of the song lists: [count] equally wide columns filling the available width, so that wide windows show
@@ -36,13 +37,19 @@ internal data class ListColumns(private val count: Int) : GridCells {
 }
 
 /**
- * The number of [minColumnWidth] wide columns that fit into the given width. Capped, so that a maximized desktop
- * window does not turn the list into a wall of narrow columns.
+ * The number of columns of at least [minColumnWidth] the given width is laid out in: as many as fit up to
+ * [MAX_COLUMN_COUNT], so that a maximized laptop window does not turn the list into a wall of cards, and past that as
+ * few as keep each column at most [MAX_COLUMN_WIDTH_RATIO] times [minColumnWidth]. A 4K or an ultrawide screen would
+ * otherwise stretch four cards across it, a song's star and menu a screen's width from its title.
  */
 internal fun columnCountForWidth(
     width: Dp,
     minColumnWidth: Dp = MIN_SONG_COLUMN_WIDTH,
-) = (width / minColumnWidth).toInt().coerceIn(1, MAX_COLUMN_COUNT)
+): Int {
+    val fitting = (width / minColumnWidth).toInt().coerceAtLeast(1)
+    val forWidestColumn = ceil(width / (minColumnWidth * MAX_COLUMN_WIDTH_RATIO)).toInt()
+    return maxOf(fitting.coerceAtMost(MAX_COLUMN_COUNT), forWidestColumn.coerceAtMost(fitting))
+}
 
 /**
  * The narrowest column a song card is laid out in where there are two or more: the room its title and artist need, and
@@ -64,3 +71,6 @@ private val CARD_COVER_WIDTH = 68.dp
 internal val MIN_SONG_COLUMN_WIDTH = minSongColumnWidth(isCoverArtEnabled = true)
 
 private const val MAX_COLUMN_COUNT = 4
+
+/** How much wider than the narrowest a column grows before a wide window gets another one, see [columnCountForWidth]. */
+private const val MAX_COLUMN_WIDTH_RATIO = 1.5f

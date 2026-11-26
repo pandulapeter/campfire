@@ -54,10 +54,17 @@ class ListLayoutTest {
     }
 
     @Test
-    fun `a maximized window stops adding columns`() {
-        val wide = layout(MIN_SONG_COLUMN_WIDTH * 20)
-        assertEquals(wide, layout(MIN_SONG_COLUMN_WIDTH * 200))
-        assertTrue(wide.columnCount < 20)
+    fun `a maximized laptop window stops adding columns at four`() {
+        assertEquals(4, layout(MIN_SONG_COLUMN_WIDTH * 4 + FAST_SCROLLER_WIDTH).columnCount)
+        assertEquals(4, layout(MIN_SONG_COLUMN_WIDTH * 5.5f + FAST_SCROLLER_WIDTH).columnCount)
+    }
+
+    @Test
+    fun `a very wide window keeps its cards from stretching`() {
+        listOf(2_560.dp, 3_840.dp, 5_120.dp).forEach { width ->
+            val columnWidth = (width - FAST_SCROLLER_WIDTH) / layout(width).columnCount
+            assertTrue(columnWidth >= MIN_SONG_COLUMN_WIDTH && columnWidth <= MIN_SONG_COLUMN_WIDTH * 1.5f, "$width: $columnWidth")
+        }
     }
 
     @Test
