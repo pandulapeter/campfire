@@ -25,6 +25,7 @@ internal class SetlistWidget : GlanceAppWidget() {
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         WidgetSnapshotFile.load(context)
+        WidgetLaunchEntry.load(context)
         provideContent {
             val snapshot = rememberWidgetSnapshot()
             WidgetTheme(theme = snapshot?.theme) {

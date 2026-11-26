@@ -48,6 +48,7 @@ internal class RandomPicksWidget : GlanceAppWidget() {
             updateAppWidgetState(context, id) { it.drawRandomPicks(now) }
         }
         WidgetSnapshotFile.load(context)
+        WidgetLaunchEntry.load(context)
         provideContent {
             val snapshot = rememberWidgetSnapshot()
             WidgetTheme(theme = snapshot?.theme) {

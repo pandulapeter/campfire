@@ -16,6 +16,7 @@ import android.os.Build
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.theme.appIconColor
 import com.pandulapeter.campfire.shortcuts.LauncherShortcutPublisher
+import com.pandulapeter.campfire.widget.WidgetLaunchEntry
 import java.util.concurrent.Executors
 
 /**
@@ -97,7 +98,10 @@ internal object AppIconSwitcher {
                 )
             } + packageManager.setState(component = initialEntry, state = PackageManager.COMPONENT_ENABLED_STATE_DISABLED)
             appliedTarget = target
-            if (changes.any { it }) LauncherShortcutPublisher.republish(context)
+            if (changes.any { it }) {
+                LauncherShortcutPublisher.republish(context)
+                WidgetLaunchEntry.onChanged(context)
+            }
         } catch (exception: Exception) {
             // A device policy (a managed or work profile, some OEM launchers) may refuse a component switch, and this
             // is asked for on every stop, where a crash would come back every time the app is left. The icon stays as it
