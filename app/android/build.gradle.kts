@@ -27,6 +27,9 @@ dependencies {
     // The home screen widgets, which RemoteViews draw: Glance writes them in Compose's terms, the colors in Material 3's.
     implementation(libs.androidx.glance.appwidget)
     implementation(libs.androidx.glance.material3)
+    // Over the WorkManager 2.7 Glance brings: its Room 2.2 keeps WorkDatabase_Impl but not the constructor Room creates it
+    // with, which R8's full mode then removes, and every launch fails in WorkManager's startup initializer.
+    implementation(libs.androidx.work.runtime)
     // Only compiled against, for the widgets' colors: the Material 3 the shared UI already ships.
     implementation(libs.compose.material3)
     implementation(libs.androidx.profileinstaller)
