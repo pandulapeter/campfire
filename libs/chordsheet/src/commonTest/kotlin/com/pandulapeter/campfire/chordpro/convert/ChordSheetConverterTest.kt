@@ -21,6 +21,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeSource
 
@@ -543,10 +544,12 @@ class ChordSheetConverterTest {
 
     @Test
     fun `a lyrics-only book of thousands of songs takes time in proportion to its length`() {
-        // Compared with a quarter of itself, fastest of three, as the text of tens of thousands of lines is: whether a part
-        // is the contents looks across every part's title, and a step that went quadratic in the number of songs only
-        // outgrows the rest of the conversion at hundreds of them. Four times the songs take about 12 times as long with that
-        // step, 4 to 6 times without it, and up to 8 on a CI runner, whose collection pauses grow with the book.
+        // Compared with a quarter of itself converted four times over, fastest of three, as the text of tens of thousands of
+        // lines is: whether a part is the contents looks across every part's title, and a step that went quadratic in the
+        // number of songs only outgrows the rest of the conversion at hundreds of them. Four times the songs take about 12
+        // times as long as one quarter with that step, 4 to 6 times without it. The quarter is timed four times in a row so
+        // both sides span as long a stretch: a busy CI runner gave the fastest of three single quarters a quiet moment the
+        // whole book never had, and the ratio over 10.
         fun name(index: Int) = generateSequence(index) { (it / 26).takeIf { rest -> rest > 0 } }.map { 'a' + it % 26 }.joinToString("")
         fun timeOf(songs: Int) = ChordSheet(List(songs) { titledPage("Song ${name(it)}", "Sing along tonight\nUnder the evening light") }).let { sheet ->
             val started = TimeSource.Monotonic.markNow()
@@ -554,10 +557,10 @@ class ChordSheetConverterTest {
             started.elapsedNow().also { assertEquals(songs, result.size) }
         }
         timeOf(SONGBOOK_QUARTER)
-        val runs = List(3) { timeOf(SONGBOOK_QUARTER) to timeOf(SONGBOOK_QUARTER * 4) }
-        val quarter = runs.minOf { it.first }
+        val runs = List(3) { List(4) { timeOf(SONGBOOK_QUARTER) }.reduce(Duration::plus) to timeOf(SONGBOOK_QUARTER * 4) }
+        val quarters = runs.minOf { it.first }
         val whole = runs.minOf { it.second }
-        assertTrue(whole < quarter * 10, "$whole for the whole book, $quarter for a quarter of it")
+        assertTrue(whole < quarters * 2.5, "$whole for the whole book, $quarters for a quarter of it four times")
     }
 
     /** A page opening with [title] in a type twice the body's, so the split cuts a song there, over the lyrics [words]. */
