@@ -27,6 +27,9 @@
              light window). Naming any icon background color turns that guess off; for an adaptive icon the system
              never draws this color itself, it draws the whole icon, the background of its alias's own color included. -->
         <item name="android:windowSplashScreenIconBackgroundColor" tools:targetApi="s">@color/campfire_gray</item>
+        <!-- The icon whoever starts the app: a launch that is not the launcher's (a widget's tap, a notification, a link)
+             would get the window color alone, and a launcher's options for a widget's tap replace any the app asks for. -->
+        <item name="android:windowSplashScreenBehavior" tools:targetApi="tiramisu">icon_preferred</item>
     </style>
 
 </resources>

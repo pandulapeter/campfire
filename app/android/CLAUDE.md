@@ -107,9 +107,8 @@
   `TIMEZONE_CHANGED` (the date's isn't exempt from the background limits everywhere; the hourly update covers it).
 - A launcher lays a widget out in the system's direction, so one in an app language written the other way is mirrored
   by hand (`isMirrored`: lines aligned to their end, the header's button first).
-- Every tap is `appLinkIntent` (the shortcuts' intent), launched with `widgetLaunchOptions` (the setlist's list too, as
-  its template): the app's own PendingIntent gets an icon-less splash unless it asks for the icon (Android 13+). Text
-  is the system font (a launcher can't load Inter); colors are the snapshot's theme (`WidgetTheme.kt`): its palette where it has one, else the wallpaper's from Android 12 (the
+- Every tap is `appLinkIntent` (the shortcuts' intent). Text is the system font (a launcher can't load Inter); colors
+  are the snapshot's theme (`WidgetTheme.kt`): its palette where it has one, else the wallpaper's from Android 12 (the
   app's `widgetLightColorScheme` before), in a fixed half where the app has one, which also spares a launcher below 12
   the half it resolved at drawing time. Gallery names,
   descriptions, and the open-the-app sentence are `res/values*/strings.xml` in every app language (`values-iw` for
@@ -190,4 +189,6 @@ shows their placeholders until sync or an import brings them back.
   on a Galaxy S9.
 - The theme is the platform's `Theme.Material` with the window background pinned to Material 3's
   (`campfire_window_background`), painting the starting window, splash, and pre-preferences frame. A splash icon
-  background color is named only so Android 12+ draws the whole adaptive icon.
+  background color is named only so Android 12+ draws the whole adaptive icon. `icon_preferred` (Android 13+) gives a
+  start that is not the launcher's (a widget's tap) the icon too, which ActivityOptions cannot: the launcher's own
+  options for a widget's tap replace the app's.
