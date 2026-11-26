@@ -79,10 +79,13 @@ internal fun TunerSheet(
     val state = tunerController.tunerState.collectAsStateWithLifecycle()
     val config by tunerController.tunerConfig.collectAsStateWithLifecycle()
     val userPreferences by userPreferencesFlow.collectAsStateWithLifecycle()
-    val hasRequested by tunerController.hasTurnedOnMicrophone.collectAsStateWithLifecycle()
+    val hasTurnedOnMicrophone by tunerController.hasTurnedOnMicrophone.collectAsStateWithLifecycle()
     val notation = (userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default).notation.toChordNotation()
-    val permission = rememberMicrophonePermission(hasAsked = hasRequested, onAnswered = tunerController::markMicrophoneAsked)
+    val permission = rememberMicrophonePermission()
     val status = permission.status
+    // The flag means something only where opening the input is what asks: elsewhere it would hide the question a
+    // lapsed grant needs asked again.
+    val hasRequested = hasTurnedOnMicrophone && permission.request == null
     val notice by remember(status, hasRequested) {
         derivedStateOf { tunerNoticeOf(status = status, listening = state.value.listening, hasRequested = hasRequested) }
     }

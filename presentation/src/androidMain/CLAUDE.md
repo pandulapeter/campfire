@@ -26,6 +26,9 @@
   the run alive but silently drops its notification, so the run can't be followed or stopped. The answer is ignored (a
   refusal costs only the notification); asked once per launch while connected and missing, and Android stops showing it
   after a second refusal. The metronome's media session notification is exempt.
+- **Microphone refusal for good** is kept in a `SharedPreferences` file of its own (`microphone_permission`), which the
+  backup rules' allow-lists leave behind: it belongs to this installation, and a restore carrying it would offer only
+  the settings for a question the new phone would still show.
 - **File picker**: a singleton the launchers of every composition attach to, so a result survives Activity recreation
   under the picker. Launchers are taken at launch time, not when the pick began (a recreated Activity has unregistered
   the old ones). A result after *process* recreation is still acted on: picks join `filesToImport`, exports are filled

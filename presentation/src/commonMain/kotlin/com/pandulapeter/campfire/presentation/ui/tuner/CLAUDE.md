@@ -33,9 +33,10 @@ What the Tuner tab and song details' tuner sheet share.
   is easily refused, and iOS and Android only ask so often.
 - Where the platform cannot say (desktop), the first ask is remembered and later openings listen without a tap; a later
   refusal is heard as silence and shown with Open settings.
-- Android reports a question never asked and one refused for good alike (no rationale owed), so an answered request is
-  remembered in the same flag: with it, no rationale is a refusal for good, offering Open settings without Ask again,
-  which the system would answer silently.
+- Android reports a question never asked, a grant that lapsed, and one refused for good alike (no rationale owed), so a
+  refusal for good is judged from the rationale before and after each request and stored on the device by itself
+  (never backed up, cleared by any grant): with it, no rationale offers Open settings without Ask again, which the
+  system would answer silently. Android never reads or sets the desktop's flag, which would hide the never-asked notice.
 - Notice order (`tunerNoticeOf`, tested): a stop reason, then a refusal, then a never-asked question. Notices are polite
   live regions, since they arrive without a tap.
 - On Windows the silent line names the system's audio enhancements, which remove a held note as noise and which Java

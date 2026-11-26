@@ -14,6 +14,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.provider.Settings
@@ -31,36 +32,49 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 /**
  * `checkSelfPermission`, read again on every resume, the Activity's result launcher, and the app's page of the system
  * settings. A refusal with no rationale owed after it is one the system no longer shows a question for, which Open
- * settings then answers instead of Ask again; Android says the same of a question never asked, so whether this device
- * has asked ([hasAsked], kept across launches) is what tells the two apart. A grant taken back in the system's settings
- * reads as refused for good too, which Open settings still answers.
+ * settings then answers instead of Ask again; Android says the same of a question never asked and of a grant that
+ * lapsed ("Only this time", the reset of an unused app's permissions, a restore to another phone), so a refusal for
+ * good is told from the rationale owed before and after each request ([microphoneRefusalAfter]) and stored on this
+ * device by itself. Its own preferences file stays out of the backups, which name only the library and the
+ * preferences document, since the refusal belongs to this installation; any grant clears it. A grant taken back in
+ * the system's settings reads as never asked, which the question then answers.
  */
 @Composable
-internal actual fun rememberMicrophonePermission(hasAsked: Boolean, onAnswered: () -> Unit): MicrophonePermission {
+internal actual fun rememberMicrophonePermission(): MicrophonePermission {
     val context = LocalContext.current
     val activity = remember(context) { context.findActivity() }
+    val storedRefusal = remember(context) { StoredMicrophoneRefusal(context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)) }
     var isGranted by remember { mutableStateOf(context.isMicrophoneGranted()) }
-    var wasRefused by rememberSaveable { mutableStateOf(false) }
+    // Saved, since the Activity can be recreated under the system's question.
+    var rationaleBefore by rememberSaveable { mutableStateOf(false) }
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         isGranted = granted
-        wasRefused = !granted
-        onAnswered()
+        val refusal = microphoneRefusalAfter(
+            rationaleBefore = rationaleBefore,
+            rationaleAfter = activity?.shouldShowMicrophoneRationale() == true,
+            isGranted = granted,
+            earlierSilentDenials = storedRefusal.value.silentDenials,
+        )
+        println("Microphone: ${if (granted) "granted" else if (refusal.isForGood) "refused for good" else "refused"}")
+        storedRefusal.update(refusal)
     }
     LifecycleResumeEffect(context) {
         isGranted = context.isMicrophoneGranted()
-        if (isGranted) wasRefused = false
+        if (isGranted) storedRefusal.update(MicrophoneRefusal())
         onPauseOrDispose { }
     }
-    val rationale = activity?.shouldShowRequestPermissionRationale(Manifest.permission.RECORD_AUDIO) == true
-    val isRefusedForGood = !isGranted && !rationale && (wasRefused || hasAsked)
+    val state = androidMicrophoneStateOf(
+        isGranted = isGranted,
+        rationale = activity?.shouldShowMicrophoneRationale() == true,
+        isRefusedForGood = storedRefusal.value.isForGood,
+    )
     return MicrophonePermission(
-        status = when {
-            isGranted -> MicrophoneStatus.GRANTED
-            rationale || isRefusedForGood -> MicrophoneStatus.DENIED
-            else -> MicrophoneStatus.NOT_ASKED
+        status = state.status,
+        canAskAgain = state.canAskAgain,
+        request = {
+            rationaleBefore = activity?.shouldShowMicrophoneRationale() == true
+            launcher.launch(Manifest.permission.RECORD_AUDIO)
         },
-        canAskAgain = !isRefusedForGood,
-        request = { launcher.launch(Manifest.permission.RECORD_AUDIO) },
         openSettings = {
             context.startActivity(
                 Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", context.packageName, null))
@@ -69,6 +83,32 @@ internal actual fun rememberMicrophonePermission(hasAsked: Boolean, onAnswered: 
         },
     )
 }
+
+/** The [MicrophoneRefusal] kept in the microphone's own preferences file, read once as the tuner is first shown. */
+private class StoredMicrophoneRefusal(private val preferences: SharedPreferences) {
+    var value by mutableStateOf(
+        MicrophoneRefusal(
+            isForGood = preferences.getBoolean(KEY_IS_FOR_GOOD, false),
+            silentDenials = preferences.getInt(KEY_SILENT_DENIALS, 0),
+        ),
+    )
+        private set
+
+    fun update(refusal: MicrophoneRefusal) {
+        if (refusal == value) return
+        value = refusal
+        preferences.edit()
+            .putBoolean(KEY_IS_FOR_GOOD, refusal.isForGood)
+            .putInt(KEY_SILENT_DENIALS, refusal.silentDenials)
+            .apply()
+    }
+}
+
+private const val PREFERENCES_NAME = "microphone_permission"
+private const val KEY_IS_FOR_GOOD = "is_refused_for_good"
+private const val KEY_SILENT_DENIALS = "silent_denials"
+
+private fun Activity.shouldShowMicrophoneRationale() = shouldShowRequestPermissionRationale(Manifest.permission.RECORD_AUDIO)
 
 private fun Context.isMicrophoneGranted() = checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
 

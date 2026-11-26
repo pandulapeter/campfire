@@ -27,7 +27,7 @@ import kotlin.js.Promise
  * the address, which no page can open.
  */
 @Composable
-internal actual fun rememberMicrophonePermission(hasAsked: Boolean, onAnswered: () -> Unit): MicrophonePermission {
+internal actual fun rememberMicrophonePermission(): MicrophonePermission {
     val status = lastKnownStatus
     var checks by remember { mutableStateOf(0) }
     LifecycleResumeEffect(Unit) {
