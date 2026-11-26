@@ -1247,8 +1247,8 @@
     <string name="song_details_overrides_kept_app">Kept in the app. The song file stays as it is.</string>
     <string name="song_details_tempo_kept_setlist">The tempo is kept in this setlist, the accents in the app. The song file stays as it is.</string>
     <string name="song_details_dock_key">Key</string>
-    <string name="song_details_dock_key_short">Key</string>
-    <string name="song_details_dock_shapes_short">Shapes</string>
+    <string name="song_details_dock_key_short">Key of %1$s</string>
+    <string name="song_details_dock_shapes_short">%1$s shapes</string>
     <string name="song_details_shapes_of">%1$s shapes</string>
     <string name="song_details_dock_transposition">Transposition: %1$s</string>
     <string name="song_details_dock_open_playing">Open playing settings</string>

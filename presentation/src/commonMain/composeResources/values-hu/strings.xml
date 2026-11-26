@@ -1246,8 +1246,8 @@
     <string name="song_details_overrides_kept_app">Az alkalmazásban marad. A dal fájlja nem változik.</string>
     <string name="song_details_tempo_kept_setlist">A tempó ebben a listában marad, a hangsúlyok az alkalmazásban. A dal fájlja nem változik.</string>
     <string name="song_details_dock_key">Hangnem</string>
-    <string name="song_details_dock_key_short">Hn.</string>
-    <string name="song_details_dock_shapes_short">Fogások</string>
+    <string name="song_details_dock_key_short">Hn. %1$s</string>
+    <string name="song_details_dock_shapes_short">%1$s fogások</string>
     <string name="song_details_shapes_of">%1$s fogások</string>
     <string name="song_details_dock_transposition">Transzponálás: %1$s</string>
     <string name="song_details_dock_open_playing">Játékbeállítások megnyitása</string>

@@ -22,7 +22,7 @@ import com.pandulapeter.campfire.presentation.ui.songView.model.SongLyricsModel
  * named key, so that a moved song says so without the sheet; null where it is not moved, or where [key] already is the
  * semitones. [opensPlaying] where the chip opens the Playing sheet, never in read only mode, whose sheet would write
  * overrides. [namesShapes] where [key] is the shapes fingered above a capo rather than the key that sounds, which the
- * title's subtitle then names beside it: the chip's label says "Shapes" rather than "Key", so that the bar never names
+ * title's subtitle then names beside it: the chip names it as the shapes ("Em shapes") rather than as the key, so that the bar never names
  * two keys for one song.
  */
 @Immutable
@@ -34,7 +34,7 @@ internal data class KeyChipText(
     val namesShapes: Boolean = false,
 ) {
     /**
-     * What the chip's first line is: the "Key" label ("Shapes" where [namesShapes]) before [key]; the label alone where
+     * What the chip's first line is: the words naming [key] (the shapes' where [namesShapes]) around it; the label alone where
      * the chip opens the sheet for a song with no key, so that it still names what it opens, never the label twice; else
      * none, the capo alone.
      */

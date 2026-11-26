@@ -12,7 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 /** The first line of the key chip ([KeyChip]), see [KeyChipText.keyLine]. */
 internal enum class KeyChipLine {
 
-    /** The small muted "Key" label, then the key ("Key G (+1)"). */
+    /** The key and the small muted words naming it ("Key of G (+1)", "Em shapes"), see [keyLabelOf]. */
     LABELLED_KEY,
 
     /** The label alone, muted at the key's size: a song with no key whose chip opens the Playing sheet. */

@@ -1247,8 +1247,8 @@
     <string name="song_details_overrides_kept_app">Se guarda en la app. El archivo de la canción no cambia.</string>
     <string name="song_details_tempo_kept_setlist">El tempo se guarda en este repertorio y los acentos en la app. El archivo de la canción no cambia.</string>
     <string name="song_details_dock_key">Tonalidad</string>
-    <string name="song_details_dock_key_short">Tono</string>
-    <string name="song_details_dock_shapes_short">Formas</string>
+    <string name="song_details_dock_key_short">Tono %1$s</string>
+    <string name="song_details_dock_shapes_short">Formas de %1$s</string>
     <string name="song_details_shapes_of">Formas de %1$s</string>
     <string name="song_details_dock_transposition">Transposición: %1$s</string>
     <string name="song_details_dock_open_playing">Abrir los ajustes de cómo se toca</string>

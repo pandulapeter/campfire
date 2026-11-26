@@ -1293,8 +1293,8 @@
     <string name="song_details_overrides_kept_app">Rămâne în aplicație. Fișierul cântecului nu se schimbă.</string>
     <string name="song_details_tempo_kept_setlist">Tempoul rămâne în această listă, accentele în aplicație. Fișierul cântecului nu se schimbă.</string>
     <string name="song_details_dock_key">Tonalitate</string>
-    <string name="song_details_dock_key_short">Ton.</string>
-    <string name="song_details_dock_shapes_short">Poziții</string>
+    <string name="song_details_dock_key_short">Ton. %1$s</string>
+    <string name="song_details_dock_shapes_short">Poziții de %1$s</string>
     <string name="song_details_shapes_of">Poziții de %1$s</string>
     <string name="song_details_dock_transposition">Transpunere: %1$s</string>
     <string name="song_details_dock_open_playing">Deschide setările de interpretare</string>

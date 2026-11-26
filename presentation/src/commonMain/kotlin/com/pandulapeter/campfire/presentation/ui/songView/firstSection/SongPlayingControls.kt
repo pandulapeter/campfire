@@ -57,7 +57,7 @@ internal class SongKeyControl(
  * The capo, which the song is fingered above.
  *
  * @param namesShapes Whether the page names the shapes fingered above it, the transposition's key included, which the
- *   app bar's key chip then labels "Shapes" rather than "Key", the song's own header naming the key it sounds in.
+ *   app bar's key chip then names as the shapes ("Em shapes"), the song's own header naming the key it sounds in.
  * @param shapesKey The key of the shapes fingered above the capo where the page's key names what sounds instead, for the
  *   dock's key chip to say beside the capo ("Capo 2 (Am shapes)"); null under no capo, where the key already names the
  *   shapes, or on an instrument without a capo.

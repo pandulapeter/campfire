@@ -83,13 +83,14 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
   breadcrumb naming it.
 - **The key chip is always the bar's** (`AppBarKeyChip`, `KeyChip`, `keyChipTextOf`) wherever the chords are on, an
   import preview's too, first among the actions, before the setlists' star or the read only mark and the overflow
-  button. A small muted "Key" label leads the key (`song_details_dock_key_short`, "Ton." where a language's word is long;
-  a key alone read as a letter in a box; a song with no key whose chip opens the sheet reads the label alone,
-  `KeyChipText.keyLine`), **"Shapes" where the key names the shapes above a capo** (`KeyChipText.namesShapes`,
-  `song_details_dock_shapes_short`: the subtitle then names the sounding key, and two keys both labelled as the key left
-  the reader guessing; the label crossfades as a capo comes or goes), then what the transposition stepper names in the chords' colour (the shapes' under `SHAPES`,
-  the inferred key for a file naming none), a moved song's semitones muted, smaller, and in parentheses after it ("Key
-  G# (+1)": bare, "+1" read as one up from G#; not in read only mode), the label and the semitones centred on the key
+  button. Small muted words name the key, before or after it as the language orders them (`song_details_dock_key_short`, "Key
+  of %1$s", "Ton. %1$s" where a language's word is long, read by `keyLabelOf`; a key alone read as a letter in a box; a
+  song with no key whose chip opens the sheet reads the full word alone, `KeyChipText.keyLine`), **the shapes' words
+  where the key names the shapes above a capo** ("Em shapes", "Em-Griffe", `KeyChipText.namesShapes`,
+  `song_details_dock_shapes_short`: the subtitle then names the sounding key, and two keys both called the key left the
+  reader guessing; each word crossfades on its own as a capo comes or goes), then what the transposition stepper names in the chords' colour (the shapes' under `SHAPES`,
+  the inferred key for a file naming none), a moved song's semitones muted, smaller, and in parentheses after the words
+  ("Key of G# (+1)": bare, "+1" read as one up from G#; not in read only mode), the label and the semitones centred on the key
   rather than on its baseline (there the small label read as its subscript), and **a capo other than zero always**, on a
   smaller second line under the key in a short form (`song_details_capo_short`, "Kapo 2" where a language's word is
   long); a screen reader hears all of it in full, as one description. Outlined with no fill (`DockControlPill`,
@@ -98,8 +99,8 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
   whose overrides it would write, so there its outline fades away and it reads as text beside the title), is left out
   with neither key nor capo, follows the page the pager is on or heading for, crossfading and resizing as the subtitle
   does (a setlist's songs, a key change), and comes and goes fading and growing with the chords switch. Its room is
-  taken first and by a constant (`KEY_CHIP_ROOM`, 72 dp and a 4 dp gap from the title), since the bar decides for every
-  page at once: as much as leaves a 360 dp bar the title's 140 dp beside the star, which "Key Am" fits
+  taken first and by a constant (`KEY_CHIP_ROOM`, 80 dp and a 4 dp gap from the title), since the bar decides for every
+  page at once: as much as leaves a 360 dp bar the title's 132 dp beside the star, which "Key of Am" fits
   (`AppBarKeyChipTest`); a wider chip (a moved key, a language's long word for "Key") takes the rest from the title.
   `App bar: key chip` breadcrumb.
 - **The text size stepper is always the menu's**, its last row (the menu staying open while pressed; a pinch and the
@@ -107,7 +108,7 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
   a menu entry (`tunerAction`, `Menu: tuner`), the menu's too wherever the card is not shown (a song with
   no chords), so it is offered once (`SongDetailsTools.isTunerInMenu`); with the Tuner feature on only, never
   an import preview's. The Playing and Tempo sheets have no tuner (U still opens it over them). As the bar narrows Choose
-  setlists goes into the menu, then the cover, each while the title keeps 140dp. Performance mode: the read only mark
+  setlists goes into the menu, then the cover, each while the title keeps 132dp. Performance mode: the read only mark
   (`ReadOnlyMark`, a lock opening the Preferences, so a mode switched on by accident is noticed and undone here) always
   before the overflow button, no Choose setlists. An import preview has read only mode's menu and never the mark, the
   mode or not: only Import makes it editable, and the mark comes with its song's screen. **The overflow button is always
