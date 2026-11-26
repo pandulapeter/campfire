@@ -116,15 +116,16 @@ Tags, languages, cover, and links are directives in the song file, so they trave
 ## How a song is played
 
 - Song details' app bar (`screens/songDetails`) holds the key chip: the key of the page's chords and, wherever it is not
-  zero, the capo. It opens the **Playing sheet** (`dialogs/playing`: the instrument and tuning with the tuner after
-  them, and the transposition and capo steppers, `songView/firstSection`'s), read only mode's opening nothing; the
-  dock's instrument card, or the song's menu, holds the tuner too. The dock under the song
+  zero, the capo. It opens the **Playing sheet** (`dialogs/playing`: the transposition and capo steppers,
+  `songView/firstSection`'s, and nothing else, U opening the tuner over it), read only mode's opening nothing; the dock's
+  instrument card, or the song's menu, holds the tuner. The dock under the song
   (`screens/songDetails/dock`) starts its chords with the instrument card (instrument, tuning, and tuner) and ends in
   the **tempo chip**: the page's tempo, the bar lit while the click plays, and play and stop; the chip opens the **Tempo sheet** (`dialogs/playing`: the tempo stepper ending in Tap, the song's
   accents, and play and stop), read only mode's opening nothing. Both end in a quiet line (`OverridesNote`, scrolling
   with them) saying where what they change is kept, the setlist's entry or else the app, the accents always the app
-  (`UserPreferences.beatLevels`), and that the song file stays as it is; the Playing sheet's leaves with its steppers,
-  the instrument being every song's. Without diagrams and scale suggestions the dock is the metronome panel itself. The
+  (`UserPreferences.beatLevels`), and that the song file stays as it is; the Playing sheet's leaves with its steppers.
+  **The instrument is changed where its diagrams are**: the dock's instrument card, the Tuner, Chords, and Scales tabs,
+  onboarding, and the Preferences' Chords page; neither the Playing sheet nor the tuner sheet has it. Without diagrams and scale suggestions the dock is the metronome panel itself. The
   key chip, the dock, and the sheets are drawn at the interface's text size, never the song's; the editor's preview
   shows the four values in its About the song tiles.
 - Transposition, capo, and tempo are overridden per setlist or per device (`ui/playing`); **only the time signature is
@@ -166,8 +167,8 @@ Features (Settings → Features):
 - **Metronome**: its tab, a song's tempo chip and Tempo sheet, the M and T keys, and tempo and time wherever a song is read.
   The Song page's Dock section takes the song's part alone (`isDockMetronomeEnabled`, device-local), and its Tuner
   (`isDockTunerEnabled`) moves the tuner between the dock's instrument card and the song's menu.
-- **Tuner**: its tab and the sheet's entry, song details' (the dock's card, the menu, the Playing sheet, U), and with them
-  every way to ask for the microphone.
+- **Tuner**: its tab and the sheet's entry, song details' (the dock's card, the menu, U), and with them every way to ask
+  for the microphone.
 - **Chords** (`isChordLibraryEnabled`): the Chords tab and the scale sheet's chord rows, whatever songs show.
 - **Scales** (`areScalesEnabled`): the Scales tab and the scale sheet, and with them the scale suggestions.
 - **Setlists**: their tab and every way into one; files still travel through import, export, and sync. Off with the
@@ -180,23 +181,29 @@ Features (Settings → Features):
   (`isPageLinkLoadingEnabled`, only where the platform can read a page, `CanLoadPagesUseCase`): a shared or pasted
   page's address read once on the device (`/presentation/CLAUDE.md`); off, the links-only snackbar.
 
+**A Feature off takes every mention of itself out**: a Preferences row that only changes what a switched off Feature
+would show is hidden, fading and folding away (the Dock section's Metronome, Tuner, and Scale suggestions; the Chords
+page's degrees, notation, accidentals, and capo rows, `ui/preferences/FeatureRows.kt`), a section left with no row going
+with its heading. **A preference another preference takes is disabled**, never hidden: what it is set to is what that
+preference brings back.
+
 Song preferences (the Preferences' Song and Chords pages, `ui/preferences`), each disabled rather than hidden while
-another takes what it adds:
+another preference takes what it adds:
 
 - **Chords** (`areChordsEnabled`): a song's chords, key, transposition, and capo; the chord spelling rows are disabled
-  only once neither songs nor the Chords and Scales tabs name a chord.
+  only once neither songs nor the Chords and Scales tabs name a chord (hidden once none of those Features is on).
 - **Chord diagrams** (`areChordDiagramsEnabled`, in the Song page's Dock section with scale suggestions): disabled
-  while chords are off; takes a song's diagrams (the dock's, the preview's and the PDF's Chords section); chosen shapes
-  kept. The instrument pill stays (the tuner, the keyboard's
-  sounding names).
+  while chords are off; takes a song's diagrams (the dock's, the preview's and the PDF's Chords section) and with them
+  the dock's instrument card, the song's menu then holding the tuner; chosen shapes kept.
 - **Chord degrees** (`areChordDegreesEnabled`): off by default, since numerals a reader never asked for look like the
   notation gone wrong; disabled while no diagram it labels is drawn (a song's in neither numbering, or a scale sheet's,
   which needs the Scales and Chords tabs); takes the degree over each diagram's name, in the PDF too, and the scale
   sheet's numerals.
-- **Scale suggestions** (`areScaleSuggestionsEnabled`): disabled while scales or chords are off (read off the chords);
+- **Scale suggestions** (`areScaleSuggestionsEnabled`): hidden with the Scales feature off, disabled with the chords off
+  (read off them);
   takes the dock's scale chips (the preview's Scales section) and the chord sheets' scales.
 - **Chord names with a capo** (`chordNames`, after the accidentals): shapes fingered above the capo (default) or what
-  sounds (`ui/playing`); disabled with songs or chords off and on the keyboard, which always reads what sounds, as its
+  sounds (`ui/playing`); hidden with the songs off, disabled with their chords off and on the keyboard, which always reads what sounds, as its
   description says. Asked once, over the first song a capo matters on, never with the layout question.
 - **Capo keeps the key** (`capoKeepsKey`, after it): a capo put on changes only the shapes, the file's `{capo}` alone
   being pitch. Enabled on the keyboard too, which then shows no capo; the question's third answer.

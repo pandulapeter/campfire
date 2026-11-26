@@ -44,6 +44,7 @@ import com.pandulapeter.campfire.presentation.resources.song_layout_pages
 import com.pandulapeter.campfire.presentation.resources.tuner
 import com.pandulapeter.campfire.presentation.ui.components.SwitchListItem
 import com.pandulapeter.campfire.presentation.ui.components.controls.SegmentedChoice
+import com.pandulapeter.campfire.presentation.ui.settingsPage.AnimatedSettingsRow
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSection
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSubsection
 import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
@@ -55,8 +56,8 @@ import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
  * they are picked; then whether a reader sees the chords at
  * all (how they are drawn and written is the Chords page's) and how the song's sections are named; then what the dock
  * beside the song holds ([DockSection]).
- * Each only hides, and each is disabled rather than hidden while another takes what it adds, since what it is set to is
- * still what the songs will open with once that is back.
+ * Each only hides, and each is disabled rather than hidden while another preference takes what it adds, since what it
+ * is set to is still what the songs will open with once that is back; a row whose Feature is off is hidden instead.
  */
 @Composable
 internal fun SongPreferencesPage(
@@ -123,10 +124,11 @@ private fun SongPageSection(
 
 /**
  * What song details' dock holds, every switch that adds to it in one place: the diagrams of a song's chords and its scale
- * suggestions (each also in the editor's preview and the PDF), its click, and the tuner in its instrument card. Each is
- * disabled while what it needs is off (the chords, the Scales tab, the Metronome, the Tuner, or for the tuner the
- * diagrams whose card holds it, [isDockTunerSwitchEnabled]), never hidden. The app bar's key chip has no switch: it is
- * the only way to the transposition and the capo.
+ * suggestions (each also in the editor's preview and the PDF), its click, and the tuner in its instrument card. A switch
+ * whose Feature is off (the Scales, the Metronome, the Tuner) is hidden with it, fading and folding away
+ * (`FeatureRows.kt`); one waiting for another preference (the chords, or for the tuner the diagrams whose card holds it,
+ * [isDockTunerSwitchEnabled]) is disabled. The diagrams' switch is always there, so the section never empties. The app
+ * bar's key chip has no switch: it is the only way to the transposition and the capo.
  */
 @Composable
 private fun DockSection(
@@ -142,25 +144,30 @@ private fun DockSection(
         onCheckedChange = preferencesController::setChordDiagramsEnabled,
     )
     // A suggestion is read off a song's chords and opens a scale's sheet, so it needs both the chords and the scales.
-    SwitchListItem(
-        title = stringResource(Res.string.settings_scale_suggestions),
-        description = stringResource(Res.string.settings_scale_suggestions_description),
-        isChecked = userPreferences?.areScaleSuggestionsEnabled != false,
-        isEnabled = userPreferences?.areScalesEnabled != false && areChordsEnabled,
-        onCheckedChange = preferencesController::setScaleSuggestionsEnabled,
-    )
-    SwitchListItem(
-        title = stringResource(Res.string.metronome),
-        description = stringResource(Res.string.settings_dock_metronome_description),
-        isChecked = userPreferences?.isDockMetronomeEnabled != false,
-        isEnabled = userPreferences?.isMetronomeEnabled != false,
-        onCheckedChange = preferencesController::setDockMetronomeEnabled,
-    )
-    SwitchListItem(
-        title = stringResource(Res.string.tuner),
-        description = stringResource(Res.string.settings_dock_tuner_description),
-        isChecked = userPreferences?.isDockTunerEnabled != false,
-        isEnabled = isDockTunerSwitchEnabled(userPreferences),
-        onCheckedChange = preferencesController::setDockTunerEnabled,
-    )
+    AnimatedSettingsRow(isVisible = isScaleSuggestionsSwitchShown(userPreferences)) {
+        SwitchListItem(
+            title = stringResource(Res.string.settings_scale_suggestions),
+            description = stringResource(Res.string.settings_scale_suggestions_description),
+            isChecked = userPreferences?.areScaleSuggestionsEnabled != false,
+            isEnabled = areChordsEnabled,
+            onCheckedChange = preferencesController::setScaleSuggestionsEnabled,
+        )
+    }
+    AnimatedSettingsRow(isVisible = isDockMetronomeSwitchShown(userPreferences)) {
+        SwitchListItem(
+            title = stringResource(Res.string.metronome),
+            description = stringResource(Res.string.settings_dock_metronome_description),
+            isChecked = userPreferences?.isDockMetronomeEnabled != false,
+            onCheckedChange = preferencesController::setDockMetronomeEnabled,
+        )
+    }
+    AnimatedSettingsRow(isVisible = isDockTunerSwitchShown(userPreferences)) {
+        SwitchListItem(
+            title = stringResource(Res.string.tuner),
+            description = stringResource(Res.string.settings_dock_tuner_description),
+            isChecked = userPreferences?.isDockTunerEnabled != false,
+            isEnabled = isDockTunerSwitchEnabled(userPreferences),
+            onCheckedChange = preferencesController::setDockTunerEnabled,
+        )
+    }
 }

@@ -27,8 +27,11 @@ class DockTunerSwitchTest {
         assertTrue(isDockTunerSwitchEnabled(testPreferences().copy(isDockTunerEnabled = false)))
 
     @Test
-    fun `the tuner feature off disables the switch`() =
-        assertFalse(isDockTunerSwitchEnabled(testPreferences().copy(isTunerEnabled = false)))
+    fun `the tuner feature off hides the switch rather than disabling it`() {
+        assertFalse(isDockTunerSwitchShown(testPreferences().copy(isTunerEnabled = false)))
+        assertTrue(isDockTunerSwitchShown(testPreferences()))
+        assertTrue(isDockTunerSwitchEnabled(testPreferences().copy(isTunerEnabled = false)))
+    }
 
     @Test
     fun `the chord diagrams off leave no instrument card for the tuner and the switch is disabled`() =

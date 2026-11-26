@@ -50,10 +50,17 @@ same setting**: a page is one component wherever it appears (the Metronome page 
 
 ## Rows
 
-- The chord-writing rows are disabled only while nothing names a chord (songs with chords, the Chords or Scales tabs).
+- **A Feature off hides, a preference disables** (`FeatureRows.kt`, tested): a row that only changes what a switched off
+  Feature would show leaves, fading and folding (`AnimatedSettingsRow`), a section with no row left going with its
+  heading; a row waiting for another preference stays, disabled, since what it is set to is what that preference brings
+  back. Hidden: the Dock's Metronome (Metronome off), Tuner (Tuner off), and Scale suggestions (Scales off); the
+  degrees once neither the songs nor the Chords and Scales tabs together are on; chord names with a capo and capo keeps
+  the key with the songs off; the notation and the accidentals, and with them the Names section, once neither the songs
+  nor the Chords or Scales tab is on.
+- The chord-writing rows are disabled while nothing shown names a chord (songs' chords off and neither tab on).
   Accidentals stay enabled under a numbering (they still spell its key). Examples are written in the picked notation,
-  never in the language. Diagrams and degrees are disabled with the songs or their chords off. Degrees disabled by the
-  Song page's diagrams switch alone say so in place of their description, as that switch is on another page.
-  The Dock section's Tuner (`isDockTunerEnabled`) puts the tuner in the dock's instrument card, else the song's menu;
-  disabled with the Tuner feature off and wherever there is no card to hold it (diagrams or chords off,
-  `isDockTunerSwitchEnabled`), the menu then holding the tuner whatever it says.
+  never in the language. Diagrams and degrees are disabled with the chords off. Degrees disabled by the Song page's
+  diagrams switch alone say so in place of their description, as that switch is on another page.
+- The Dock section's Tuner (`isDockTunerEnabled`) puts the tuner in the dock's instrument card, else the song's menu;
+  disabled wherever there is no card to hold it (diagrams or chords off, `isDockTunerSwitchEnabled`), the menu then
+  holding the tuner whatever it says.

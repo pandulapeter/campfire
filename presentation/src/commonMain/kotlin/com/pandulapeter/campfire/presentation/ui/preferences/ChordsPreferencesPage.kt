@@ -9,6 +9,11 @@
  */
 package com.pandulapeter.campfire.presentation.ui.preferences
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -45,6 +50,7 @@ import com.pandulapeter.campfire.presentation.ui.components.list.LIST_ITEM_KEYLI
 import com.pandulapeter.campfire.presentation.ui.components.controls.PICKER_CHIP_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.components.controls.PickerChip
 import com.pandulapeter.campfire.presentation.ui.components.controls.SegmentedChoice
+import com.pandulapeter.campfire.presentation.ui.settingsPage.AnimatedSettingsRow
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSubsection
 import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
@@ -66,7 +72,14 @@ internal fun ChordsPreferencesPage(
     showDialog: (DialogType) -> Unit,
 ) {
     ChordDiagramsSection(userPreferences = userPreferences, preferencesController = preferencesController, showDialog = showDialog)
-    ChordNamesSection(userPreferences = userPreferences, preferencesController = preferencesController, showDialog = showDialog)
+    // With no Feature on that names a chord the section has no row left, so it goes with its heading.
+    AnimatedVisibility(
+        visible = areChordSpellingRowsShown(userPreferences),
+        enter = fadeIn() + expandVertically(),
+        exit = fadeOut() + shrinkVertically(),
+    ) {
+        ChordNamesSection(userPreferences = userPreferences, preferencesController = preferencesController, showDialog = showDialog)
+    }
 }
 
 /** The instrument the diagrams are drawn for, and whether they carry their degrees; whether a song shows them is the Song page's dock section. */
@@ -102,21 +115,24 @@ private fun ChordDiagramsSection(
     val isNumbering = userPreferences?.chordSpelling?.notation?.isNumbering == true
     val isEnabled = (areSongsEnabled && areChordsEnabled && areChordDiagramsEnabled && !isNumbering) ||
         (userPreferences.isChordLibraryEnabled && userPreferences.areScalesEnabled)
-    SwitchListItem(
-        title = stringResource(Res.string.settings_chord_degrees),
-        // The diagrams switch is on another page, so the row says where it is when it alone is what disables this one;
-        // the songs, their chords, and a numbering are switched where their own rows say what they take.
-        description = stringResource(
-            if (!isEnabled && areSongsEnabled && areChordsEnabled && !isNumbering) {
-                Res.string.settings_chord_degrees_needs_diagrams
-            } else {
-                Res.string.settings_chord_degrees_description
-            },
-        ),
-        isChecked = userPreferences?.areChordDegreesEnabled == true,
-        isEnabled = isEnabled,
-        onCheckedChange = preferencesController::setChordDegreesEnabled,
-    )
+    // Hidden where the Features leave nothing it could label, disabled where only a preference does.
+    AnimatedSettingsRow(isVisible = isChordDegreesSwitchShown(userPreferences)) {
+        SwitchListItem(
+            title = stringResource(Res.string.settings_chord_degrees),
+            // The diagrams switch is on another page, so the row says where it is when it alone is what disables this one;
+            // their chords and a numbering are switched where their own rows say what they take.
+            description = stringResource(
+                if (!isEnabled && areSongsEnabled && areChordsEnabled && !isNumbering) {
+                    Res.string.settings_chord_degrees_needs_diagrams
+                } else {
+                    Res.string.settings_chord_degrees_description
+                },
+            ),
+            isChecked = userPreferences?.areChordDegreesEnabled == true,
+            isEnabled = isEnabled,
+            onCheckedChange = preferencesController::setChordDegreesEnabled,
+        )
+    }
 }
 
 /**
@@ -164,32 +180,36 @@ private fun ChordNamesSection(
     }
     // Only a song's chords are named by their shapes, so it says nothing with the songs' chords off, and nothing on the
     // keyboard, which is fingered as it sounds and always reads what sounds, as its description says.
-    val canNameShapes = userPreferences?.areSongsEnabled != false && userPreferences?.areChordsEnabled != false &&
-        userPreferences?.instrument != UserPreferences.Instrument.KEYBOARD
-    SettingsSubsection(
-        title = stringResource(Res.string.settings_chord_names),
-        description = stringResource(Res.string.settings_chord_names_description),
-        isEnabled = canNameShapes,
-    ) {
-        SegmentedChoice(
-            options = listOf(
-                ChordNames.SHAPES to stringResource(Res.string.settings_chord_names_shapes),
-                ChordNames.SOUNDING to stringResource(Res.string.settings_chord_names_sounding),
-            ),
-            selected = userPreferences?.chordNames,
+    // Both are about a song's capo, so they go with the songs (a Feature) and are disabled with their chords off.
+    val canNameShapes = userPreferences?.areChordsEnabled != false && userPreferences?.instrument != UserPreferences.Instrument.KEYBOARD
+    AnimatedSettingsRow(isVisible = areSongCapoRowsShown(userPreferences)) {
+        SettingsSubsection(
+            title = stringResource(Res.string.settings_chord_names),
+            description = stringResource(Res.string.settings_chord_names_description),
             isEnabled = canNameShapes,
-            onSelected = preferencesController::setChordNames,
-        )
+        ) {
+            SegmentedChoice(
+                options = listOf(
+                    ChordNames.SHAPES to stringResource(Res.string.settings_chord_names_shapes),
+                    ChordNames.SOUNDING to stringResource(Res.string.settings_chord_names_sounding),
+                ),
+                selected = userPreferences?.chordNames,
+                isEnabled = canNameShapes,
+                onSelected = preferencesController::setChordNames,
+            )
+        }
     }
     // Unlike the names, this moves what the band hears, so it applies on the keyboard too, whose capo stepper is the
     // band's.
-    SwitchListItem(
-        title = stringResource(Res.string.settings_capo_keeps_key),
-        description = stringResource(Res.string.settings_capo_keeps_key_description),
-        isChecked = userPreferences?.capoKeepsKey == true,
-        isEnabled = userPreferences?.areSongsEnabled != false && userPreferences?.areChordsEnabled != false,
-        onCheckedChange = preferencesController::setCapoKeepsKey,
-    )
+    AnimatedSettingsRow(isVisible = areSongCapoRowsShown(userPreferences)) {
+        SwitchListItem(
+            title = stringResource(Res.string.settings_capo_keeps_key),
+            description = stringResource(Res.string.settings_capo_keeps_key_description),
+            isChecked = userPreferences?.capoKeepsKey == true,
+            isEnabled = userPreferences?.areChordsEnabled != false,
+            onCheckedChange = preferencesController::setCapoKeepsKey,
+        )
+    }
 }
 
 /**
