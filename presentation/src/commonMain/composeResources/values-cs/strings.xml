@@ -328,8 +328,8 @@
     <string name="add_songs_hint_title">Přidej vlastní písně</string>
     <string name="add_songs_tip_paste_title">Přidej píseň z libovolného webu</string>
     <string name="add_songs_tip_paste_hint">Zkopíruj celou stránku s písní a vlož ji sem. Campfire si nechá jen píseň, bez reklam a zbytečností, a to přímo ve tvém zařízení.</string>
-    <string name="add_songs_tip_paste_hint_with_links">Zkopíruj odkaz na píseň a vlož ho sem, nebo stránku sdílej do Campfiru. Nechá si jen píseň, bez reklam a zbytečností, a to přímo ve tvém zařízení.</string>
-    <string name="add_songs_tip_paste_hint_with_links_without_sharing">Zkopíruj odkaz na píseň a vlož ho sem. Campfire si nechá jen píseň, bez reklam a zbytečností, a to přímo ve tvém zařízení.</string>
+    <string name="add_songs_tip_paste_hint_with_links">Zkopíruj odkaz na píseň nebo její obsah a vlož ho sem, nebo stránku sdílej do Campfiru. Nechá si jen píseň, bez reklam a zbytečností, a to přímo ve tvém zařízení.</string>
+    <string name="add_songs_tip_paste_hint_with_links_without_sharing">Zkopíruj odkaz na píseň nebo její obsah a vlož ho sem. Campfire si nechá jen píseň, bez reklam a zbytečností, a to přímo ve tvém zařízení.</string>
     <string name="add_songs_tip_import_title">Přenes písně z jiné aplikace</string>
     <string name="add_songs_tip_import_hint">Exportuj písně z jiné zpěvníkové aplikace, ideálně jako archiv zip nebo zálohu, a importuj je sem. Fungují i soubory ChordPro, PDF, Word a textové soubory.</string>
     <string name="songs_paste_converted">Převedeno z akordů zapsaných nad textem. Zkontroluj název a interpreta a pak ulož.</string>

@@ -325,8 +325,8 @@
     <string name="add_songs_hint_title">Dodaj własne piosenki</string>
     <string name="add_songs_tip_paste_title">Dodaj piosenkę z dowolnej strony</string>
     <string name="add_songs_tip_paste_hint">Skopiuj całą stronę z piosenką i wklej ją tutaj. Campfire zostawi tylko piosenkę, bez reklam i zbędnych dodatków, wprost na twoim urządzeniu.</string>
-    <string name="add_songs_tip_paste_hint_with_links">Skopiuj link do piosenki i wklej go tutaj albo udostępnij stronę aplikacji Campfire. Zostawi tylko piosenkę, bez reklam i zbędnych dodatków, wprost na twoim urządzeniu.</string>
-    <string name="add_songs_tip_paste_hint_with_links_without_sharing">Skopiuj link do piosenki i wklej go tutaj. Campfire zostawi tylko piosenkę, bez reklam i zbędnych dodatków, wprost na twoim urządzeniu.</string>
+    <string name="add_songs_tip_paste_hint_with_links">Skopiuj link do piosenki albo jej treść i wklej tutaj albo udostępnij stronę aplikacji Campfire. Zostawi tylko piosenkę, bez reklam i zbędnych dodatków, wprost na twoim urządzeniu.</string>
+    <string name="add_songs_tip_paste_hint_with_links_without_sharing">Skopiuj link do piosenki albo jej treść i wklej tutaj. Campfire zostawi tylko piosenkę, bez reklam i zbędnych dodatków, wprost na twoim urządzeniu.</string>
     <string name="add_songs_tip_import_title">Przenieś piosenki z innej aplikacji</string>
     <string name="add_songs_tip_import_hint">Wyeksportuj piosenki z innej aplikacji śpiewnikowej, najlepiej jako archiwum zip lub kopię zapasową, i zaimportuj je tutaj. Pliki ChordPro, PDF, Word i tekstowe też działają.</string>
     <string name="songs_paste_converted">Przekonwertowano z akordów zapisanych nad tekstem. Sprawdź tytuł i wykonawcę, a potem zapisz.</string>

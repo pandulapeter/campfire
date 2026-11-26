@@ -331,8 +331,8 @@
     <string name="add_songs_hint_title">הוספת שירים משלכם</string>
     <string name="add_songs_tip_paste_title">הוספת שיר מכל אתר</string>
     <string name="add_songs_tip_paste_hint">העתיקו את כל הדף של שיר והדביקו אותו כאן. Campfire ישמור רק את השיר, בלי פרסומות ועומס מיותר, ישירות במכשיר שלכם.</string>
-    <string name="add_songs_tip_paste_hint_with_links">העתיקו את הקישור לשיר והדביקו אותו כאן, או שתפו את הדף עם Campfire. הוא ישמור רק את השיר, בלי פרסומות ועומס מיותר, ישירות במכשיר שלכם.</string>
-    <string name="add_songs_tip_paste_hint_with_links_without_sharing">העתיקו את הקישור לשיר והדביקו אותו כאן. Campfire ישמור רק את השיר, בלי פרסומות ועומס מיותר, ישירות במכשיר שלכם.</string>
+    <string name="add_songs_tip_paste_hint_with_links">העתיקו את הקישור לשיר או את התוכן שלו והדביקו אותו כאן, או שתפו את הדף עם Campfire. הוא ישמור רק את השיר, בלי פרסומות ועומס מיותר, ישירות במכשיר שלכם.</string>
+    <string name="add_songs_tip_paste_hint_with_links_without_sharing">העתיקו את הקישור לשיר או את התוכן שלו והדביקו אותו כאן. Campfire ישמור רק את השיר, בלי פרסומות ועומס מיותר, ישירות במכשיר שלכם.</string>
     <string name="add_songs_tip_import_title">העברת השירים מאפליקציה אחרת</string>
     <string name="add_songs_tip_import_hint">ייצאו את השירים מאפליקציית שירים אחרת, רצוי כארכיון zip או כגיבוי, וייבאו אותם כאן. גם קובצי ChordPro, PDF, Word וטקסט עובדים.</string>
     <string name="songs_paste_converted">הומר מאקורדים שנכתבו מעל המילים. בדקו את השם ואת האמן, ואז שמרו.</string>

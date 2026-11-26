@@ -332,8 +332,8 @@
     <string name="add_songs_hint_title">Adaugă propriile cântece</string>
     <string name="add_songs_tip_paste_title">Adaugă un cântec de pe orice site</string>
     <string name="add_songs_tip_paste_hint">Copiază întreaga pagină a unui cântec și lipește-o aici. Campfire păstrează doar cântecul, fără reclame și alte elemente inutile, chiar pe dispozitivul tău.</string>
-    <string name="add_songs_tip_paste_hint_with_links">Copiază linkul unui cântec și lipește-l aici sau partajează pagina cu Campfire. Păstrează doar cântecul, fără reclame și alte elemente inutile, chiar pe dispozitivul tău.</string>
-    <string name="add_songs_tip_paste_hint_with_links_without_sharing">Copiază linkul unui cântec și lipește-l aici. Campfire păstrează doar cântecul, fără reclame și alte elemente inutile, chiar pe dispozitivul tău.</string>
+    <string name="add_songs_tip_paste_hint_with_links">Copiază linkul sau conținutul unui cântec și lipește-l aici sau partajează pagina cu Campfire. Păstrează doar cântecul, fără reclame și alte elemente inutile, chiar pe dispozitivul tău.</string>
+    <string name="add_songs_tip_paste_hint_with_links_without_sharing">Copiază linkul sau conținutul unui cântec și lipește-l aici. Campfire păstrează doar cântecul, fără reclame și alte elemente inutile, chiar pe dispozitivul tău.</string>
     <string name="add_songs_tip_import_title">Adu-ți cântecele din altă aplicație</string>
     <string name="add_songs_tip_import_hint">Exportă cântecele din altă aplicație de cântece, ideal ca arhivă zip sau backup, și importă-le aici. Merg și fișierele ChordPro, PDF, Word și text.</string>
     <string name="songs_paste_converted">Convertit din acorduri scrise deasupra versurilor. Verifică titlul și artistul, apoi salvează.</string>

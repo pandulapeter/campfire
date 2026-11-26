@@ -297,8 +297,8 @@
     <string name="add_songs_hint_title">Füge deine eigenen Songs hinzu</string>
     <string name="add_songs_tip_paste_title">Füge einen Song von einer beliebigen Website hinzu</string>
     <string name="add_songs_tip_paste_hint">Kopiere die ganze Seite eines Songs und füge sie hier ein. Campfire behält nur den Song, ohne Werbung und Ballast, direkt auf deinem Gerät.</string>
-    <string name="add_songs_tip_paste_hint_with_links">Kopiere den Link eines Songs und füge ihn hier ein, oder teile die Seite mit Campfire. Es behält nur den Song, ohne Werbung und Ballast, direkt auf deinem Gerät.</string>
-    <string name="add_songs_tip_paste_hint_with_links_without_sharing">Kopiere den Link eines Songs und füge ihn hier ein. Campfire behält nur den Song, ohne Werbung und Ballast, direkt auf deinem Gerät.</string>
+    <string name="add_songs_tip_paste_hint_with_links">Kopiere den Link oder Inhalt eines Songs und füge ihn hier ein, oder teile die Seite mit Campfire. Es behält nur den Song, ohne Werbung und Ballast, direkt auf deinem Gerät.</string>
+    <string name="add_songs_tip_paste_hint_with_links_without_sharing">Kopiere den Link oder Inhalt eines Songs und füge ihn hier ein. Campfire behält nur den Song, ohne Werbung und Ballast, direkt auf deinem Gerät.</string>
     <string name="add_songs_tip_import_title">Hol deine Songs aus einer anderen App</string>
     <string name="add_songs_tip_import_hint">Exportiere deine Songs aus einer anderen Songbook-App, am besten als Zip-Archiv oder Backup, und importiere sie hier. ChordPro-, PDF-, Word- und Textdateien funktionieren auch.</string>
     <string name="songs_paste_converted">Aus Akkorden über dem Text umgewandelt. Prüfe Titel und Interpret und speichere dann.</string>
