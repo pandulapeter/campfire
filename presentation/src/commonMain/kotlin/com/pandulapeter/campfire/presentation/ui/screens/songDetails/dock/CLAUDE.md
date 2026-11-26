@@ -75,7 +75,8 @@ with the tuner, and the click. The first section's key and capo are the app bar'
   two pages on a long song, and its 8 dp padding at one more in some cases, which `PageCountTest` holds.
 - **The tempo chip always stands in the dock's bottom end corner**, and the instrument pill starts the chords' row. **In
   one row** (a short window, an import preview, no diagrams): the chip-high instrument card where there are chord chips
-  or an instrument without shapes, the chord chips (with diagrams on) and the scale chips scrolling, the chip-high tempo
+  or an instrument without shapes, the chord chips (with diagrams on; each keeps its diagram's degree or letters, in a
+  smaller line's style before the name, as a chip holds one line) and the scale chips scrolling, the chip-high tempo
   chip at its end; the row measures its end first and leaves what scrolls at least `DOCK_MIN_SCROLLING_ROOM` (about two
   chips), so a card of long names ("12-string guitar", "Full step down") is cut short rather than taking the row
   (`DockScrollingRow`). **In two**: the
