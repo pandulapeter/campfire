@@ -136,18 +136,22 @@ with the tuner, and the click. The first section's key and capo are the app bar'
   is the file's (Song defaults). Read only mode's opens nothing; the click still plays.
 - **The scale chips** are the Scales section's groups, the home one untitled, the rest under their titles ("Over E7").
   A song with none (a songbook, a song over `MAX_PLAYED_CHORDS` included) has no scale row. A group none of whose
-  sections (`SongScaleGroup.sections`) is on the screen is faded back as the diagrams are, title and chips, still opening
+  sections (`SongScaleGroup.sections`) has a line on the screen is faded back as the diagrams are, title and chips, still opening
   their sheets (`rememberScaleGroupsOnScreen`). The home group is one like the others: its sections are the ones played
   over the home scale, so a screen whose every section another group holds (a modulation, an "Over E7" part) fades it
   too. Nothing fades while no range is known, nor on a screen no group holds a section of (a comment, a picture).
 - **The diagram strip** (`DockDiagramStrip`) is the Chords section's cells (`rememberChordCells`), sized by what the
   row's height leaves (`dockDiagramSize`). The chords played on the screen are drawn as they are and the rest faded
   back to 60 %, well above a disabled control's 38 %, so no colour is spent on the mark and nothing looks unplayable;
-  nothing fades before the song is laid out, nor in a song the screen holds whole (`sectionsOnScreen`: a scroll at its end
-  shows every section to the song's last). The screen is the one a step or a fling comes to rest on, else the one
-  shown now, so the marks follow a hand drag and a self-scrolling column too (`rememberChordsOnScreen`:
-  `SongStepper.shownSections`, derived, so only a new range of sections recomposes; `chordsOnScreen`, a screen of none
-  marking the chord it is headed by, `firstChordFrom`). A chord chip or diagram opens the chord sheet, not in
+  nothing fades before the song is laid out, nor in a song the screen holds whole. **What is on the screen is its lines,
+  never whole sections**: the layout reports every chunk it placed (`SongRows.pieces`, a line each where a section may be
+  cut, in pages, a strip, and one column alike), and a chunk counts once half a line of it is in view, less what the bars
+  and, scrolled into a row, the top fade cover (`piecesOnScreen`), so a section zoomed taller than the screen marks on
+  each page only its chords there. The screen is the one a step or a fling comes to rest on, else the one shown now, so
+  the marks follow a hand drag and a self-scrolling column too (`rememberChordsOnScreen`: `SongStepper.shownPieces`,
+  derived, so only new lines recompose; `chordsOnScreen`, a screen of none marking the chord it is headed by,
+  `firstChordFrom`, counted from its first line). A tab's slot stands for its whole run, whose line of chord names
+  may be in any of them. A chord chip or diagram opens the chord sheet, not in
   performance mode (it writes the player's pick), yes in an import preview; a scale chip its sheet, read only mode
   included.
 - **What is on the screen comes first** (`rememberDockRowsOrder`, `DockOrder.kt`, tested): the diagrams (the row's, the

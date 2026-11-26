@@ -88,9 +88,11 @@ class StripPlacementTest {
         val rtl = place(LayoutDirection.Rtl, isInsetAtLeft = true)
         assertEquals(ltr.columnStops, rtl.columnStops)
         assertEquals(ltr.positions.map { ltr.width - it.x - 400 }, rtl.positions.map { it.x })
-        val rows = stripRowsOf(grid, units, rtl.columnStops, readsLeftwards = true)
+        val rows = stripRowsOf(grid, units, rtl, readsLeftwards = true)
         assertTrue(rows.isAcross && rows.readsLeftwards)
         assertEquals(listOf(0, 1), rows.stepSections)
+        // Its pieces are counted from its start edge as its stops are, so they are the ones read from the left.
+        assertEquals(stripRowsOf(grid, units, ltr, readsLeftwards = false).pieces, rows.pieces)
     }
 
     @Test

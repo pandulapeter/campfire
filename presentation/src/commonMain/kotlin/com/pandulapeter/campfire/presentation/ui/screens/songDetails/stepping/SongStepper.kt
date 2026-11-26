@@ -76,16 +76,16 @@ internal class SongStepper(
     val headedOffset get() = stepTarget ?: flingBehavior.flingTarget ?: scrollState.value.takeUnless { scrollState.isScrollInProgress }
 
     /**
-     * The sections on the screen ([sectionsOnScreen]): the one a step or a fling being animated comes to rest on where
-     * one is known, else the one shown now, so they follow a finger dragging the song and a song scrolling by itself
-     * (`SongAutoScroller`, which moves the same scroll) as they go. Null before the song has been laid out. Changes with
-     * every pixel scrolled, so it is to be read through derived state, which tells only of a new range.
+     * The pieces of the song on the screen ([piecesOnScreen]): the screen a step or a fling being animated comes to rest
+     * on where one is known, else the one shown now, so they follow a finger dragging the song and a song scrolling by
+     * itself (`SongAutoScroller`, which moves the same scroll) as they go. Null before the song has been laid out.
+     * Changes with every pixel scrolled, so it is to be read through derived state, which tells only of new pieces.
      */
-    val shownSections get() = sectionsOnScreen(
+    val shownPieces get() = piecesOnScreen(
         offset = stepTarget ?: flingBehavior.flingTarget ?: scrollState.value,
         viewport = scrollState.viewportSize,
         rows = flingBehavior.rows,
-        maxValue = scrollState.maxValue,
+        window = flingBehavior.readingWindow,
     )
 
     /** Whether there is anything to step to in [direction] from [from], or from [origin] where it is null. */

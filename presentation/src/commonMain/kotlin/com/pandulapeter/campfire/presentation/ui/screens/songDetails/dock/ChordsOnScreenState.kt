@@ -17,13 +17,13 @@ import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.So
 import com.pandulapeter.campfire.presentation.ui.songView.model.RenderSection
 
 /**
- * The chords of [names] on the screen ([SongStepper.shownSections], [chordsOnScreen]), which the diagram strip marks:
+ * The chords of [names] on the screen ([SongStepper.shownPieces], [chordsOnScreen]), which the diagram strip marks:
  * the screen a step or a fling comes to rest on, else the one shown now, following a song dragged by hand or scrolling
- * by itself. Derived, so that what reads it is recomposed only when the range of sections on the screen changes, never
+ * by itself. Derived, so that what reads it is recomposed only when the lines on the screen change, never
  * on every frame of a scroll.
  */
 @Composable
 internal fun rememberChordsOnScreen(stepper: SongStepper?, sections: List<RenderSection>, names: Set<String>): Set<String> {
-    val onScreen by remember(stepper) { derivedStateOf { stepper?.shownSections } }
+    val onScreen by remember(stepper) { derivedStateOf { stepper?.shownPieces } }
     return remember(sections, names, onScreen) { onScreen?.let { chordsOnScreen(sections, it, names) }.orEmpty() }
 }

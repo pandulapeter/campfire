@@ -13,49 +13,75 @@ import com.pandulapeter.campfire.chordpro.chords.ChordProChordNames
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.GridToken
 import com.pandulapeter.campfire.chordpro.tabs.ChordProTabWrapper
+import com.pandulapeter.campfire.presentation.ui.songLayout.FoldableKind
+import com.pandulapeter.campfire.presentation.ui.songView.SongPiece
 import com.pandulapeter.campfire.presentation.ui.songView.model.RenderSection
+import com.pandulapeter.campfire.presentation.ui.songView.model.SectionItem
 
 /**
- * The chord a screen whose first section is [section] (an index into [sections]) is headed by, which the diagram strip
- * marks where the screen plays none ([chordsOnScreen]): the first of [names] (the strip's chords) played from there on,
- * which is the screen's first chord, else the last one played before it, since a section of none (an instrumental's
- * comment, a picture) is still played over the chord before it. Null where the song plays none of them.
+ * The chord a screen whose first line is [item] of [section] (indices into [sections] and that section's items) is
+ * headed by, which the diagram strip marks where the screen plays none ([chordsOnScreen]): the first of [names] (the
+ * strip's chords) played from there on, which is the screen's first chord, else the last one played before it, since a
+ * stretch of none (an instrumental's comment, a picture) is still played over the chord before it. Null where the song
+ * plays none of them.
  */
-internal fun firstChordFrom(sections: List<RenderSection>, section: Int, names: Set<String>): String? {
+internal fun firstChordFrom(sections: List<RenderSection>, section: Int, item: Int, names: Set<String>): String? {
     val from = section.coerceIn(0, sections.size)
-    return (from until sections.size).firstNotNullOfOrNull { sections.chordsOf(it, names).firstOrNull() }
-        ?: (from - 1 downTo 0).firstNotNullOfOrNull { sections.chordsOf(it, names).lastOrNull() }
-}
-
-/**
- * The chords of [names] (the strip's) that the sections of [onScreen] play, which the dock's diagram strip marks as the
- * page's. A page of no chords (an instrumental's comment, a picture) marks the chord it is headed by ([firstChordFrom]),
- * so that one is always marked.
- */
-internal fun chordsOnScreen(sections: List<RenderSection>, onScreen: IntRange, names: Set<String>): Set<String> {
-    val played = (onScreen.first.coerceAtLeast(0)..minOf(onScreen.last, sections.lastIndex)).flatMapTo(mutableSetOf()) { sections.chordsOf(it, names) }
-    return played.ifEmpty { setOfNotNull(firstChordFrom(sections, onScreen.first, names)) }
-}
-
-/**
- * The chords of [names] the section at [index] plays, in order: over its lyrics (annotations and marks left out), in
- * its grids' cells, a cell of several chords ("C~G") giving each, and on a tab's lines of chord names (a second shape's
- * `G/B*` giving `G/B`).
- */
-private fun List<RenderSection>.chordsOf(index: Int, names: Set<String>) = (this[index] as? RenderSection.Lines)?.lines.orEmpty().asSequence()
-    .flatMap { line ->
-        when (line) {
-            is ChordProLine.Lyrics -> line.chords.asSequence().filter { !it.isAnnotation && !it.isMark }.map { it.name }
-            is ChordProLine.Grid -> line.tokens.asSequence().filterIsInstance<GridToken.Chord>().flatMap { it.name.split(GRID_CELL_CHORD_SEPARATOR) }
-            // A line of chord names over a tab's bars, which the page draws as chords.
-            is ChordProLine.Tab -> if (ChordProTabWrapper.isChordLine(line.text)) {
-                line.text.split(' ', '\t').asSequence().map { ChordProChordNames.withoutShapeMark(it).trim('(', ')') }
-            } else {
-                emptySequence()
-            }
-            else -> emptySequence()
-        }
+    val ahead = sequence {
+        sections.getOrNull(from)?.let { yieldAll((item.coerceAtLeast(0) until it.itemCount).map { index -> from to index }) }
+        for (next in from + 1 until sections.size) yieldAll((0 until sections[next].itemCount).map { index -> next to index })
     }
-    .filter { it in names }
+    val behind = sequence {
+        sections.getOrNull(from)?.let { yieldAll((minOf(item, it.itemCount) - 1 downTo 0).map { index -> from to index }) }
+        for (previous in from - 1 downTo 0) yieldAll((sections[previous].itemCount - 1 downTo 0).map { index -> previous to index })
+    }
+    return ahead.firstNotNullOfOrNull { (index, at) -> sections[index].chordsOf(at, names).firstOrNull() }
+        ?: behind.firstNotNullOfOrNull { (index, at) -> sections[index].chordsOf(at, names).lastOrNull() }
+}
+
+/**
+ * The chords of [names] (the strip's) that the lines of [onScreen] play, which the dock's diagram strip marks as the
+ * page's: only the lines on it, not the rest of their sections, since a section the text size has made taller than the
+ * screen is read a page at a time. A page of no chords (an instrumental's comment, a picture) marks the chord it is
+ * headed by ([firstChordFrom]), so that one is always marked.
+ */
+internal fun chordsOnScreen(sections: List<RenderSection>, onScreen: List<SongPiece>, names: Set<String>): Set<String> {
+    val played = onScreen.flatMapTo(mutableSetOf()) { piece ->
+        sections.getOrNull(piece.section)?.let { section -> piece.items.asSequence().flatMap { section.chordsOf(it, names) } }.orEmpty().asIterable()
+    }
+    if (played.isNotEmpty()) return played
+    val first = onScreen.minWithOrNull(compareBy({ it.section }, { it.items.first })) ?: return emptySet()
+    return setOfNotNull(firstChordFrom(sections, first.section, first.items.first, names))
+}
+
+private val RenderSection.itemCount get() = (this as? RenderSection.Lines)?.itemCount ?: 0
+
+/** The chords of [names] its [item] plays: a line's, a grid row's cells, and, for a slot of a tab, the whole run's. */
+private fun RenderSection.chordsOf(item: Int, names: Set<String>): Sequence<String> {
+    val lines = when (val sectionItem = (this as? RenderSection.Lines)?.sectionItems?.getOrNull(item)) {
+        is SectionItem.Line -> sequenceOf(sectionItem.line)
+        // A grid's slots are its rows, one each; a tab's are the rows its staves wrap into, which say nothing of where
+        // its line of chord names is, so any of them stands for the whole run.
+        is SectionItem.RunSlot -> if (sectionItem.kind == FoldableKind.GRID) {
+            sectionItem.run.asSequence().filterIsInstance<ChordProLine.Grid>().drop(sectionItem.slot).take(1)
+        } else {
+            sectionItem.run.asSequence()
+        }
+        else -> emptySequence()
+    }
+    return lines.flatMap { it.chordNames() }.filter { it in names }
+}
+
+private fun ChordProLine.chordNames(): Sequence<String> = when (this) {
+    is ChordProLine.Lyrics -> chords.asSequence().filter { !it.isAnnotation && !it.isMark }.map { it.name }
+    is ChordProLine.Grid -> tokens.asSequence().filterIsInstance<GridToken.Chord>().flatMap { it.name.split(GRID_CELL_CHORD_SEPARATOR) }
+    // A line of chord names over a tab's bars, which the page draws as chords.
+    is ChordProLine.Tab -> if (ChordProTabWrapper.isChordLine(text)) {
+        text.split(' ', '\t').asSequence().map { ChordProChordNames.withoutShapeMark(it).trim('(', ')') }
+    } else {
+        emptySequence()
+    }
+    else -> emptySequence()
+}
 
 private const val GRID_CELL_CHORD_SEPARATOR = '~'

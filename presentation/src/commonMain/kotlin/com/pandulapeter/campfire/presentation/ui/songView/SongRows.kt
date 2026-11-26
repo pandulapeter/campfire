@@ -38,6 +38,9 @@ import kotlinx.coroutines.flow.first
  *
  * A song turned a column at a time is scrolled sideways ([isAcross]): its stops are where its columns start, counted
  * from the song's start edge, which is the right one where it [readsLeftwards], and it has no rows and no lines.
+ *
+ * [pieces] are every chunk of the song wherever it is placed, in every way it is read, which is what tells the lines on
+ * the screen apart from the rest (see `stepping.piecesOnScreen`).
  */
 internal data class SongRows(
     val restingOffsets: List<Int> = emptyList(),
@@ -52,6 +55,7 @@ internal data class SongRows(
     val timingSections: List<Int> = emptyList(),
     val isAcross: Boolean = false,
     val readsLeftwards: Boolean = false,
+    val pieces: List<SongPiece> = emptyList(),
 ) {
     /**
      * These rows in the coordinates of a scroll that holds [topPadding] above them: everything that much further down,
@@ -65,6 +69,7 @@ internal data class SongRows(
         stepOffsets = stepOffsets.map { if (it <= 0) 0 else it + topPadding },
         lineTops = lineTops.map { it + topPadding },
         lineBottoms = lineBottoms.map { it + topPadding },
+        pieces = pieces.map { it.copy(start = it.start + topPadding, end = it.end + topPadding) },
     )
 
     /**

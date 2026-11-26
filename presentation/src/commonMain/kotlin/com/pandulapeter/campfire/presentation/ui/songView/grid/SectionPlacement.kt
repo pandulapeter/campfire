@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.songView.grid
 
+import com.pandulapeter.campfire.presentation.ui.songView.SongPiece
 import com.pandulapeter.campfire.presentation.ui.songView.SongRows
 import com.pandulapeter.campfire.presentation.ui.songView.model.SongUnits
 import androidx.compose.ui.unit.IntOffset
@@ -77,7 +78,8 @@ internal fun SongGridSearch.sectionWidthsOf(decided: DecidedGrid, layoutWidth: I
 
 /**
  * Where the decided grid puts every unit and every card, and whether the song is scrolled by its rows; [width] is how wide
- * the layout is, and [columnStops] where a strip's columns start (see [placeStrip]), none for any other grid.
+ * the layout is, and [columnStops] where a strip's columns start (see [placeStrip]), none for any other grid; [stripSpans]
+ * are where each unit of a strip starts and ends, counted from the song's start edge as its stops are.
  */
 internal class SectionPlacement(
     val isScrolledByRow: Boolean,
@@ -87,6 +89,7 @@ internal class SectionPlacement(
     val cards: List<Pair<Int, IntRect>>,
     val width: Int,
     val columnStops: List<Int> = emptyList(),
+    val stripSpans: List<IntRange> = emptyList(),
 )
 
 /**
@@ -350,7 +353,7 @@ internal fun songRowsOf(
     fadePx: Int,
     layoutDirection: LayoutDirection,
 ): SongRows {
-    if (grid.isStrip) return stripRowsOf(grid, units, placement.columnStops, readsLeftwards = layoutDirection == LayoutDirection.Rtl)
+    if (grid.isStrip) return stripRowsOf(grid, units, placement, readsLeftwards = layoutDirection == LayoutDirection.Rtl)
     val arrangement = placement.arrangement
     val isScrolledByRow = placement.isScrolledByRow
     val unitCount = units.unitSections.size
@@ -388,6 +391,14 @@ internal fun songRowsOf(
         lineSections = singleColumnUnits.map { units.unitSections[it] },
         playedLines = singleColumnUnits.map { units.playedLineCount[it] },
         timingSections = units.timingSections,
+        pieces = List(unitCount) { unit ->
+            SongPiece(
+                start = arrangement.tops[unit],
+                end = arrangement.tops[unit] + unitHeights[unit],
+                section = units.unitSections[unit],
+                items = units.itemRanges[unit],
+            )
+        },
     )
 }
 

@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.songView.grid
 
+import com.pandulapeter.campfire.presentation.ui.songView.SongPiece
 import com.pandulapeter.campfire.presentation.ui.songView.SongRows
 import com.pandulapeter.campfire.presentation.ui.songView.model.SongUnits
 import androidx.compose.ui.unit.IntOffset
@@ -71,9 +72,9 @@ internal fun placeStrip(
         unitSections = units.unitSections,
         piecePadding = piecePadding,
     )
+    val starts = IntArray(unitHeights.size) { index -> lead + slotStarts[grid.columns[index]] + offsets[grid.columns[index]] }
     val positions = Array(unitHeights.size) { index ->
-        val column = grid.columns[index]
-        val start = lead + slotStarts[column] + offsets[column]
+        val start = starts[index]
         // What is narrower than its column sits at the column's start, which is its right edge in a song read leftwards.
         IntOffset(x = if (readsLeftwards) totalWidth - start - widths.unitWidths[index] else start, y = arrangement.tops[index])
     }
@@ -85,21 +86,26 @@ internal fun placeStrip(
         cards = cardBoundsOf(grid, units, positions, unitHeights, widths.unitWidths, piecePadding),
         width = totalWidth,
         columnStops = columnStops,
+        stripSpans = List(starts.size) { starts[it] until starts[it] + widths.unitWidths[it] },
     )
 }
 
 /**
- * The stops of a strip placed at [columnStops], one a column from the first, each named by the section its column starts
- * with, which a scroll reversed for a song that [readsLeftwards] counts from its start edge too.
+ * The stops of a strip as [placement] placed it, one a column from the first, each named by the section its column
+ * starts with, which a scroll reversed for a song that [readsLeftwards] counts from its start edge too, as it does its
+ * pieces.
  */
-internal fun stripRowsOf(grid: SectionGrid, units: SongUnits, columnStops: List<Int>, readsLeftwards: Boolean) = SongRows(
-    restingOffsets = columnStops,
+internal fun stripRowsOf(grid: SectionGrid, units: SongUnits, placement: SectionPlacement, readsLeftwards: Boolean) = SongRows(
+    restingOffsets = placement.columnStops,
     // A column is never taller than the screen, so a stop shows all of it.
-    bottoms = columnStops,
-    stepOffsets = columnStops,
-    stepSections = columnStops.indices.map { column -> units.unitSections[grid.columns.indexOfFirst { it == column }] },
+    bottoms = placement.columnStops,
+    stepOffsets = placement.columnStops,
+    stepSections = placement.columnStops.indices.map { column -> units.unitSections[grid.columns.indexOfFirst { it == column }] },
     isSteppedByRow = true,
     timingSections = units.timingSections,
     isAcross = true,
     readsLeftwards = readsLeftwards,
+    pieces = placement.stripSpans.mapIndexed { unit, span ->
+        SongPiece(start = span.first, end = span.last + 1, section = units.unitSections[unit], items = units.itemRanges[unit])
+    },
 )
