@@ -95,6 +95,9 @@ struct WidgetSnapshot: Decodable {
         let daysAgo: Plural
         /// Absent from a snapshot an app from before it wrote, which says the library is empty instead.
         let noMatchingSongs: String?
+        /// The Setlist widget's page buttons' spoken names; absent likewise, which leaves them unnamed.
+        let previousPage: String?
+        let nextPage: String?
     }
 
     /// A counted text as the app's language reads each count, so that no plural rule is needed here: past the list, a

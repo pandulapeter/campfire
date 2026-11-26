@@ -148,8 +148,8 @@ extension (`iosApp/ShareExtension/`) and the widget extension (`iosApp/CampfireW
   `UserDefaults` by that choice, with the setlist it was turned in, so Next gig moving on starts the new one on its first
   page and a setlist that lost songs is held to its last.
 - What a widget shows comes from the snapshot, in the app's language and direction. The gallery's names and
-  descriptions, Edit Widget's words, the page buttons' spoken names, and the line shown before the app has written a
-  snapshot are the extension's `Localizable.strings`, keyed by their English text, in every app language. Inter through `UIAppFonts`, referencing
+  descriptions, Edit Widget's words, and the line shown before the app has written a snapshot are the extension's
+  `Localizable.strings`, keyed by their English text, in every app language. Inter through `UIAppFonts`, referencing
   `:presentation`'s font files, by PostScript name (`Inter Medium` is a family of its own); the snapshot's theme
   as `WidgetColors` in the environment (its palette and fixed half), else the app's purple as `AccentColor` and the
   system's widget background.

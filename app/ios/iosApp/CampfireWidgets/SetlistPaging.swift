@@ -75,16 +75,18 @@ struct SetlistPageButtons: View {
     let setlistFileName: String
     let page: Int
     let pageCount: Int
+    /// The snapshot's, for the buttons' spoken names in the app's language.
+    let strings: WidgetSnapshot.Strings?
     @Environment(\.widgetColors) private var colors
 
     var body: some View {
         HStack(spacing: 12) {
-            button(symbol: "chevron.backward", label: "Previous page", target: page - 1)
-            button(symbol: "chevron.forward", label: "Next page", target: page + 1)
+            button(symbol: "chevron.backward", label: strings?.previousPage, target: page - 1)
+            button(symbol: "chevron.forward", label: strings?.nextPage, target: page + 1)
         }
     }
 
-    private func button(symbol: String, label: LocalizedStringKey, target: Int) -> some View {
+    private func button(symbol: String, label: String?, target: Int) -> some View {
         let isEnabled = (0..<pageCount).contains(target)
         return Button(intent: TurnSetlistPageIntent(identity: identity, setlistFileName: setlistFileName, page: target)) {
             Image(systemName: symbol)
@@ -96,6 +98,6 @@ struct SetlistPageButtons: View {
         }
         .buttonStyle(.plain)
         .disabled(!isEnabled)
-        .accessibilityLabel(Text(label))
+        .accessibilityLabel(Text(verbatim: label ?? ""))
     }
 }

@@ -123,6 +123,8 @@ data class WidgetSnapshot(
         val languages: String = "",
         val randomPicksFilterDescription: String = "",
         val pickCount: String = "",
+        val previousPage: String = "",
+        val nextPage: String = "",
     ) {
 
         /** Whether the setup screens' texts are there to show. */

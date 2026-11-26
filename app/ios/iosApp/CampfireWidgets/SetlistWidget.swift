@@ -205,7 +205,9 @@ struct SetlistWidgetView: View {
                         title: title,
                         relativeDay: relativeDay,
                         pages: pageCount > 1
-                            ? SetlistPageButtons(identity: entry.identity, setlistFileName: fileName, page: page, pageCount: pageCount)
+                            ? SetlistPageButtons(
+                                identity: entry.identity, setlistFileName: fileName, page: page, pageCount: pageCount, strings: entry.snapshot?.strings
+                            )
                             : nil
                     )
                         .padding(.leading, margins.leading)

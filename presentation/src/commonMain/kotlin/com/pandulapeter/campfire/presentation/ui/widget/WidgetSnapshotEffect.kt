@@ -36,6 +36,8 @@ import com.pandulapeter.campfire.presentation.resources.setlists_countdown_in_da
 import com.pandulapeter.campfire.presentation.resources.setlists_countdown_today
 import com.pandulapeter.campfire.presentation.resources.setlists_countdown_tomorrow
 import com.pandulapeter.campfire.presentation.resources.setlists_countdown_yesterday
+import com.pandulapeter.campfire.presentation.resources.song_details_next_page
+import com.pandulapeter.campfire.presentation.resources.song_details_previous_page
 import com.pandulapeter.campfire.presentation.resources.songs_languages
 import com.pandulapeter.campfire.presentation.resources.songs_languages_unknown
 import com.pandulapeter.campfire.presentation.resources.songs_new_song_title
@@ -164,6 +166,8 @@ private fun widgetStrings(): WidgetSnapshot.Strings {
         languages = stringResource(Res.string.songs_languages),
         randomPicksFilterDescription = stringResource(Res.string.widget_random_picks_filter_description),
         pickCount = stringResource(Res.string.widget_random_picks_count),
+        previousPage = stringResource(Res.string.song_details_previous_page),
+        nextPage = stringResource(Res.string.song_details_next_page),
     )
 }
 
