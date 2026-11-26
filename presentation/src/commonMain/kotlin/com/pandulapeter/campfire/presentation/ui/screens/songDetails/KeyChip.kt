@@ -90,7 +90,7 @@ internal fun KeyChip(
         // would hide the transposition and the capo from a screen reader, which is read in full rather than shortened.
         val description = listOfNotNull(
             text.key?.let { textResource(if (text.namesShapes) Res.string.song_details_shapes_of else Res.string.song_details_key_change, it) } ?: keyLabel.takeIf { text.keyLine == KeyChipLine.LABEL_ALONE },
-            text.transposition?.let { stringResource(Res.string.song_details_dock_transposition, it) },
+            text.transpositionOnChip?.let { stringResource(Res.string.song_details_dock_transposition, it) },
             stringResource(Res.string.song_details_capo, lastCapo.value).takeIf { text.capo != null },
         ).joinToString(", ")
         Column(
@@ -106,7 +106,7 @@ internal fun KeyChip(
                     // The template as it is written, its words placed around the key by the language.
                     label = keyLabelOf(textResource(if (text.namesShapes) Res.string.song_details_dock_shapes_short else Res.string.song_details_dock_key_short)),
                     key = text.key.orEmpty(),
-                    transposition = text.transposition,
+                    transposition = text.transpositionOnChip,
                 )
                 // A song whose key is not known is still named for what the chip opens, rather than "Playing", which
                 // read as a state.

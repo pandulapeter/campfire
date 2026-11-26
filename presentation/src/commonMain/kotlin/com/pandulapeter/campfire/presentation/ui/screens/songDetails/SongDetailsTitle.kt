@@ -48,10 +48,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.offset
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
+import com.pandulapeter.campfire.presentation.localization.isolatedLeftToRight
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_expand
 import com.pandulapeter.campfire.presentation.resources.song_details_dock_key_short
+import com.pandulapeter.campfire.presentation.resources.song_details_dock_transposition
 import com.pandulapeter.campfire.presentation.resources.song_details_song_info
 import com.pandulapeter.campfire.presentation.resources.songs_key
 import com.pandulapeter.campfire.presentation.ui.components.coverArt.APP_BAR_COVER_GAP
@@ -73,9 +75,10 @@ import org.jetbrains.compose.resources.painterResource
  *
  * @param inferredKeyOf The key a song's chords were found to be in, by its file name, for one whose file names none (see
  *   `InferredSongKeys`).
- * @param barKeyOf The key the app bar's key chip names for a song, by its file name, where the bar holds the chip. The
+ * @param barKeyChipOf What the app bar's key chip says for a song, by its file name, where the bar holds the chip. The
  *   subtitle leaves out a key the chip already names, but not one it does not: the chip names the key the transposition
- *   stepper does, which with a capo is the shapes' while the subtitle's is the one that sounds.
+ *   stepper does, which with a capo is the shapes' while the subtitle's is the one that sounds, and then the subtitle
+ *   takes the semitones the song is moved by too ([KeyChipText.transpositionInSubtitle]), since they move what sounds.
  */
 @Composable
 internal fun SongDetailsTitle(
@@ -88,7 +91,7 @@ internal fun SongDetailsTitle(
     showsCoverInBar: Boolean,
     openCurrentSongInfo: (() -> Unit)?,
     inferredKeyOf: (fileName: String) -> String?,
-    barKeyOf: (fileName: String) -> String?,
+    barKeyChipOf: (fileName: String) -> KeyChipText?,
 ) {
     val titleInteractionSource = remember { MutableInteractionSource() }
     val isTitlePressed by titleInteractionSource.collectIsPressedAsState()
@@ -109,6 +112,7 @@ internal fun SongDetailsTitle(
         contentKey = { it?.fileName },
         transitionSpec = { fadeIn() togetherWith fadeOut() },
     ) { song ->
+        val keyChip = song?.let { barKeyChipOf(it.fileName) }
         val headerKey = headerKeyOf(
             song = song,
             setlistFileName = setlistFileName,
@@ -117,10 +121,11 @@ internal fun SongDetailsTitle(
             songRenderer = songRenderer,
             chordSpelling = chordSpelling,
             inferredKey = song?.let { inferredKeyOf(it.fileName) },
-        )?.takeUnless { key -> song != null && key == barKeyOf(song.fileName) }
+        )?.takeUnless { key -> key == keyChip?.key }
         SongTitleBlock(
             song = song,
             headerKey = headerKey,
+            headerTransposition = keyChip?.transpositionInSubtitle?.takeIf { headerKey != null },
             showsCoverInBar = showsCoverInBar,
             hasChevron = openCurrentSongInfo != null,
         )
@@ -157,7 +162,8 @@ internal fun headerKeyOf(
 }
 
 /**
- * The cover, the title and the artist of [song], and its [headerKey] after them.
+ * The cover, the title and the artist of [song], and its [headerKey] after them, with the semitones it is moved by
+ * ([headerTransposition]) where the key chip names the shapes rather than the key that sounds.
  *
  * @param hasChevron Whether the chevron saying that the title opens the sheet is there, which it is wherever the sheet is
  *   offered.
@@ -166,6 +172,7 @@ internal fun headerKeyOf(
 private fun SongTitleBlock(
     song: Song?,
     headerKey: String?,
+    headerTransposition: String?,
     showsCoverInBar: Boolean,
     hasChevron: Boolean,
 ) = Row(
@@ -244,8 +251,17 @@ private fun SongTitleBlock(
             SongHeaderNote(
                 // Named as the key in the chip's own words ("Key of F#m"): it is shown only where the chip names
                 // another one (the shapes above a capo), and two bare keys left the reader to guess which sounds.
-                text = headerKey?.let { textResource(Res.string.song_details_dock_key_short, it) },
-                description = headerKey?.let { textResource(Res.string.songs_key, it) },
+                text = headerKey?.let { key ->
+                    val words = textResource(Res.string.song_details_dock_key_short, key)
+                    // Isolated, or a sentence read from the right would draw "(+2)" as "(2+)".
+                    headerTransposition?.let { "$words ${"($it)".isolatedLeftToRight()}" } ?: words
+                },
+                description = headerKey?.let { key ->
+                    listOfNotNull(
+                        textResource(Res.string.songs_key, key),
+                        headerTransposition?.let { stringResource(Res.string.song_details_dock_transposition, it) },
+                    ).joinToString(", ")
+                },
                 hasPrecedingContent = song?.artist?.isNotBlank() == true,
             )
         }

@@ -131,11 +131,11 @@ internal fun SongDetailsAppBar(
                 openCurrentSongInfo = openCurrentSongInfo,
                 // Read through a lambda, so that a key arriving recomposes the title alone rather than the whole bar.
                 inferredKeyOf = { fileName -> inferredKeys[fileName] },
-                barKeyOf = { fileName ->
+                barKeyChipOf = { fileName ->
                     // The dock's contents are by page, and the pages are the songs in order.
                     dockContents[songs.indexOfFirst { it.fileName == fileName }]
                         ?.takeIf { shouldShowChords }
-                        ?.let { keyChipTextOf(it.playingControls, it.model)?.key }
+                        ?.let { keyChipTextOf(it.playingControls, it.model) }
                 },
             )
         },

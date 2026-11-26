@@ -66,7 +66,9 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
 - Steppers are shorter than Material buttons and lower `LocalMinimumInteractiveComponentSize` to match (touch still
   gets 48dp).
 - **The subtitle names the sounding key** (transposition and capo played applied), whatever the chords are named by,
-  in the key chip's words ("Key of F#m", since it shows only beside a chip naming another key), after a 16dp dot (the cards' 24dp would grow the bar and shrink the lyrics' room). Worked out for the song its
+  in the key chip's words ("Key of F#m", since it shows only beside a chip naming another key), with the semitones the
+  song is moved by after it ("Key of F#m (+1)": they move what sounds, so they follow the sounding key and leave the
+  chip while it names the shapes, `KeyChipText.transpositionInSubtitle`), after a 16dp dot (the cards' 24dp would grow the bar and shrink the lyrics' room). Worked out for the song its
   crossfaded content was composed for, since a page change draws two. Chords off, a song without chords, and a file
   naming no key whose chords make none clear drop the key, as does the key chip naming the same one (never where they
   differ: the chip names the transposition stepper's key, with a capo the shapes', the subtitle the sounding one). No tempo (the dock
@@ -90,7 +92,7 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
   `song_details_dock_shapes_short`: the subtitle then names the sounding key, and two keys both called the key left the
   reader guessing; each word crossfades on its own as a capo comes or goes), then what the transposition stepper names in the chords' colour (the shapes' under `SHAPES`,
   the inferred key for a file naming none), a moved song's semitones muted, smaller, and in parentheses after the words
-  ("Key of G# (+1)": bare, "+1" read as one up from G#; not in read only mode), the label and the semitones centred on the key
+  where it names the key, never the shapes ("Key of G# (+1)": bare, "+1" read as one up from G#; not in read only mode), the label and the semitones centred on the key
   rather than on its baseline (there the small label read as its subscript), and **a capo other than zero always**, on a
   smaller second line under the key in a short form (`song_details_capo_short`, "Kapo 2" where a language's word is
   long); a screen reader hears all of it in full, as one description. Outlined with no fill (`DockControlPill`,

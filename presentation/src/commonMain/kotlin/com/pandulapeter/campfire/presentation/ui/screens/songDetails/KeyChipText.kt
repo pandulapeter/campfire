@@ -20,7 +20,8 @@ import com.pandulapeter.campfire.presentation.ui.songView.model.SongLyricsModel
  * named it, its semitones where the song names no key, null where there is neither) and the capo the song is played at
  * where it is not zero, which is always on screen. [transposition] is the semitones the song is moved by ("+2") beside a
  * named key, so that a moved song says so without the sheet; null where it is not moved, or where [key] already is the
- * semitones. [opensPlaying] where the chip opens the Playing sheet, never in read only mode, whose sheet would write
+ * semitones. They move what sounds, so they follow the key that sounds: the chip's own where it names it
+ * ([transpositionOnChip]), else the subtitle's ([transpositionInSubtitle]). [opensPlaying] where the chip opens the Playing sheet, never in read only mode, whose sheet would write
  * overrides. [namesShapes] where [key] is the shapes fingered above a capo rather than the key that sounds, which the
  * title's subtitle then names beside it: the chip names it as the shapes ("Em shapes") rather than as the key, so that the bar never names
  * two keys for one song.
@@ -33,6 +34,12 @@ internal data class KeyChipText(
     val transposition: String? = null,
     val namesShapes: Boolean = false,
 ) {
+    /** [transposition] beside the chip's key, which names what sounds. */
+    val transpositionOnChip get() = transposition.takeUnless { namesShapes }
+
+    /** [transposition] beside the subtitle's key, where the chip names the shapes and the subtitle what sounds. */
+    val transpositionInSubtitle get() = transposition.takeIf { namesShapes }
+
     /**
      * What the chip's first line is: the words naming [key] (the shapes' where [namesShapes]) around it; the label alone where
      * the chip opens the sheet for a song with no key, so that it still names what it opens, never the label twice; else

@@ -81,6 +81,14 @@ internal class KeyChipTextTest {
         assertEquals(false, keyChipTextOf(controls(key = "Em", capo = 0, namesShapes = true), model("{key: Em}"))?.namesShapes)
 
     @Test
+    fun `the semitones follow the key that sounds on the chip or else in the subtitle`() {
+        val sounding = keyChipTextOf(controls(key = "Bm", capo = 2, transposition = 2), model("{key: Am}"))
+        assertEquals("+2" to null, sounding?.transpositionOnChip to sounding?.transpositionInSubtitle)
+        val shapes = keyChipTextOf(controls(key = "Bm", capo = 2, transposition = 2, namesShapes = true), model("{key: Am}"))
+        assertEquals(null to "+2", shapes?.transpositionOnChip to shapes?.transpositionInSubtitle)
+    }
+
+    @Test
     fun `the chords switched off take the chip`() = assertNull(keyChipTextOf(controls(key = "Am", capo = 2), model("{key: Am}", shouldShowChords = false)))
 
     private fun model(text: String, shapesKey: String? = null, shouldShowChords: Boolean = true) = SongLyricsModel(
