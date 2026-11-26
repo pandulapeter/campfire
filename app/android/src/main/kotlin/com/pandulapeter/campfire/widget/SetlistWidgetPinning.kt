@@ -15,6 +15,7 @@ import android.content.BroadcastReceiver
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.state.updateAppWidgetState
 import kotlinx.coroutines.CoroutineScope
@@ -36,7 +37,11 @@ internal object SetlistWidgetPinning {
         val callback = PendingIntent.getBroadcast(
             context,
             0,
-            Intent(context, SetlistWidgetPinnedReceiver::class.java).putExtra(EXTRA_SETLIST_FILE_NAME, setlistFileName),
+            // The setlist in the data keeps each request's PendingIntent its own: requests are equal by their intents but
+            // for the extras, so a second one would otherwise rewrite the first's setlist under a popup still open.
+            Intent(context, SetlistWidgetPinnedReceiver::class.java)
+                .setData(Uri.fromParts("campfire-setlist", setlistFileName, null))
+                .putExtra(EXTRA_SETLIST_FILE_NAME, setlistFileName),
             // Mutable, since the launcher adds the new widget's id to it.
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE,
         )
