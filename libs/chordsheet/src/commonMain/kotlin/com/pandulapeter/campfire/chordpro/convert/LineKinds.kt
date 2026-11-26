@@ -69,10 +69,10 @@ internal object LineKinds {
     )
 
     fun of(lines: List<Rendered>, features: List<LineFeatures>, candidates: List<List<Token>?>): List<LineKind> {
-        fun isString(index: Int) = lines.getOrNull(index)?.let { tab.matches(it.text.trim()) } == true
+        fun isString(index: Int) = lines.getOrNull(index)?.let { isTabString(it.text.trim()) } == true
         val isStaff = lines.indices.map { index ->
             val text = lines[index].text.trim()
-            (tab.matches(text) || tabMarks.matches(text)) && (isString(index - 1) || isString(index + 1))
+            (isTabString(text) || tabMarks.matches(text)) && (isString(index - 1) || isString(index + 1))
         }
         val context = Context(lines, features, candidates, isStaff, hasStructure(lines, candidates), hasUnambiguousChords(candidates), italicComments(lines, features, candidates))
         val firstPass = lines.indices.map { index -> rules.firstNotNullOfOrNull { rule -> rule.give(context, index) }?.kind ?: LineKind.LYRIC }
@@ -281,11 +281,20 @@ internal object LineKinds {
      * A string may carry a short note of its own, in parentheses inside the staff (`-0(let ring)|`) or in the margin
      * after its last bar line (`|(repeat`, `|  5x)`, `| repeat once`), as a sheet prints a repeat beside the middle
      * strings: read as a lyric, that string would cut the staff in two. The note stays on the line as it stands.
+     *
+     * The notes are swapped for a mark of the staff's own before [tab] reads the line rather than being a second
+     * alternative inside its repetition: `(x)` and `(hp)` are staff letters too, and the two ways of reading each would
+     * be tried against each other on a line that fails, twice the time for every note, which no engine without atomic
+     * groups (JavaScript's, the web build's) cuts short.
      */
+    private fun isTabString(text: String) = tab.matches(staffNote.replace(text, "~"))
+
     private val tab = Regex(
-        "^[eEaAbBdDgGhH](?:[#b])?(?:\\s*\\||-(?=(?:[^-]*-){2}))(?:[-0-9|hpbrsxtv/\\\\~(). :*<>^]|\\([A-Za-z][A-Za-z .]{0,15}\\))+" +
+        "^[eEaAbBdDgGhH](?:[#b])?(?:\\s*\\||-(?=(?:[^-]*-){2}))[-0-9|hpbrsxtv/\\\\~(). :*<>^]+" +
             "(?:\\|\\s*[^|\\s][^|]{0,23})?$",
     )
+
+    private val staffNote = Regex("\\([A-Za-z][A-Za-z .]{0,15}\\)")
 
     /**
      * A row of playing marks printed against a staff's first or last string (`PM---|   PM`, `let ring`, `N.H.`), the

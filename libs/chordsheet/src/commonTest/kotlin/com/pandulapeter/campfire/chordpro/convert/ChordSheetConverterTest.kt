@@ -580,6 +580,16 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `a string with many notes in parentheses is read in linear time`() {
+        val staff = "e|" + "-(x)".repeat(40) + "|\nB|" + "-(hp)".repeat(40) + "|"
+        assertEquals("{start_of_tab}\n$staff\n{end_of_tab}\n", convert(staff))
+        val started = TimeSource.Monotonic.markNow()
+        val margin = "| and a margin note far too long to be one"
+        convert("e|" + "(x)".repeat(40) + margin + "\nB|" + "(b)".repeat(40) + margin)
+        assertTrue(started.elapsedNow() < LINEAR_TIME_BOUND, started.elapsedNow().toString())
+    }
+
+    @Test
     fun `a note in parentheses over a staff is a comment in the section the tab is played in`() {
         val staff = "e|---0---|---3---|\nB|---1---|---1---|"
         val result = convert("[Intro]\n$staff\n\n(let the last note ring)\n   C       G\n$staff\n\n[Verse]\nAm     C\nHello world")
