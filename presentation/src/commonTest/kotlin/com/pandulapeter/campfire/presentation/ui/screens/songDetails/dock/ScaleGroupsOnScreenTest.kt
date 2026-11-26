@@ -24,12 +24,16 @@ internal class ScaleGroupsOnScreenTest {
     @Test
     fun `a group is on the screen while any of its sections is`() {
         assertEquals(setOf(0, 1), scaleGroupsOnScreen(groups, 1..2))
-        assertEquals(setOf(0, 2), scaleGroupsOnScreen(groups, 5..6))
+        assertEquals(setOf(2), scaleGroupsOnScreen(groups, 5..6))
     }
 
     @Test
-    fun `the home group is never faded even with none of its sections on the screen`() =
-        assertEquals(setOf(0, 2), scaleGroupsOnScreen(groups, 3..3))
+    fun `the home group is faded once every section on the screen is another group's`() =
+        assertEquals(setOf(2), scaleGroupsOnScreen(groups, 3..3))
+
+    @Test
+    fun `a screen no group holds a section of fades nothing`() =
+        assertEquals(setOf(0, 1, 2), scaleGroupsOnScreen(groups, 6..7))
 
     @Test
     fun `a group whose sections were not given is never faded`() =

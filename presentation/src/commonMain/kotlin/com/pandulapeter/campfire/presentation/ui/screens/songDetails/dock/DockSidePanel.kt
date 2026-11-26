@@ -65,6 +65,7 @@ internal fun DockSidePanel(
 ) {
     // Kept while the panel leaves, so that it shrinks away as it was rather than as nothing.
     val last = remember { LastDockPanel() }
+    val hold = remember { DockHold() }
     dock.panelLayout?.let {
         last.layout = it
         last.width = dock.panelTarget
@@ -81,6 +82,7 @@ internal fun DockSidePanel(
                 .fillMaxHeight()
                 .clip(RoundedCornerShape(topStart = DOCK_CORNER))
                 .background(MaterialTheme.colorScheme.surfaceContainer)
+                .dockHold(hold)
                 .semantics {
                     isTraversalGroup = true
                     traversalIndex = DOCK_TRAVERSAL_INDEX
@@ -121,6 +123,8 @@ internal fun DockSidePanel(
                         modifier = Modifier.padding(vertical = DOCK_VERTICAL_PADDING),
                         content = dock.contents[page],
                         stepper = dock.steppers[page],
+                        isHeld = { hold.isHeld || scrollState.isScrollInProgress },
+                        scrollState = scrollState,
                         layout = layout,
                     )
                 }

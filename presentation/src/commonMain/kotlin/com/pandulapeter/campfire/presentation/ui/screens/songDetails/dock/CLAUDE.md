@@ -125,7 +125,9 @@ with the tuner, and the click. The first section's key and capo are the app bar'
 - **The scale chips** are the Scales section's groups, the home one untitled, the rest under their titles ("Over E7").
   A song with none (a songbook, a song over `MAX_PLAYED_CHORDS` included) has no scale row. A group none of whose
   sections (`SongScaleGroup.sections`) is on the screen is faded back as the diagrams are, title and chips, still opening
-  their sheets (`rememberScaleGroupsOnScreen`); the home group never, and nothing while no range is known.
+  their sheets (`rememberScaleGroupsOnScreen`). The home group is one like the others: its sections are the ones played
+  over the home scale, so a screen whose every section another group holds (a modulation, an "Over E7" part) fades it
+  too. Nothing fades while no range is known, nor on a screen no group holds a section of (a comment, a picture).
 - **The diagram strip** (`DockDiagramStrip`) is the Chords section's cells (`rememberChordCells`), sized by what the
   row's height leaves (`dockDiagramSize`). The chords played on the screen are drawn as they are and the rest faded
   back to 60 %, well above a disabled control's 38 %, so no colour is spent on the mark and nothing looks unplayable;
@@ -136,8 +138,18 @@ with the tuner, and the click. The first section's key and capo are the app bar'
   marking the chord it is headed by, `firstChordFrom`). A chord chip or diagram opens the chord sheet, not in
   performance mode (it writes the player's pick), yes in an import preview; a scale chip its sheet, read only mode
   included.
-- **The rows never scroll themselves**, only under a finger: a row following the song would fight a hand scroll and
-  a self-scrolling column, which never settles.
+- **What is on the screen comes first** (`rememberDockRowsOrder`, `DockOrder.kt`, tested): the diagrams (the row's, the
+  panel's grid, a short window's chord chips) and the scale groups are a stable partition, the ones on the screen first
+  and the faded ones after, each part in the song's order; a song in several keys keeps each key's chords under its
+  label. The home scale group always stays first, as nothing but its place names it, faded or not. Items glide to their
+  new places (`animatePlacement`), and the row or panel then scrolls back to the first item on the screen
+  (`ScrollWithDockOrder`): its start, or past a faded home group to the first group on the screen. So the chords a page
+  needs are in sight without a reach, which a fixed order left past the row's edge in a long song.
+- **It moves only when the reader is not**: the order follows what is on the screen once it has held for 400 ms (a
+  step's or a fling's resting place, never every range a drag passes), at most every 1.5 s (a self-scrolling column
+  passes sections steadily, and the dock would never stand still), never while a finger, a button, or a mouse is on the
+  dock or one of its rows is scrolling (`DockHold`), the pending order applied once they let go
+  (`rememberSettledForDockOrder`). A song opened again starts in its order; nothing moves before the song is laid out.
 - A chord or scale sheet opened from the dock pauses a self-scrolling column and resumes it on closing
   (`autoScroll/CLAUDE.md`).
 - Breadcrumbs (kinds only): `Dock: …` for every chip, the click, its accents, and the panel's stepper; `Tempo sheet: …`

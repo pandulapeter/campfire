@@ -59,6 +59,7 @@ internal fun SongDock(
     targetPage: Int,
 ) {
     val corner = DOCK_CORNER
+    val hold = remember { DockHold() }
     // Beside the side panel the row meets the panel's own surface, the two making one.
     val endCorner by animateDpAsState(if (dock.isSidePanel) 0.dp else DOCK_CORNER)
     Box(
@@ -66,18 +67,19 @@ internal fun SongDock(
             .fillMaxWidth()
             .clip(RoundedCornerShape(topStart = corner, topEnd = endCorner))
             .background(MaterialTheme.colorScheme.surfaceContainer)
+            .dockHold(hold)
             .semantics {
                 isTraversalGroup = true
                 traversalIndex = DOCK_TRAVERSAL_INDEX
             },
     ) {
-        DockRowsBox(dock = dock, metronome = metronome, contentPadding = contentPadding, targetPage = targetPage)
+        DockRowsBox(dock = dock, metronome = metronome, hold = hold, contentPadding = contentPadding, targetPage = targetPage)
     }
 }
 
 /** The dock's rows, as tall as [dock] says, for the page the pager is on or heading for ([targetPage]). */
 @Composable
-private fun DockRowsBox(dock: SongDockState, metronome: DockMetronome, contentPadding: PaddingValues, targetPage: Int) {
+private fun DockRowsBox(dock: SongDockState, metronome: DockMetronome, hold: DockHold, contentPadding: PaddingValues, targetPage: Int) {
     // Rows the dock loses (the window widened past the side panel's breakpoint, a switch turned off, the dock leaving)
     // are kept, laid out as they were, until the height has shrunk to the new one, so that they shrink away as they were
     // rather than vanishing at once over an emptied surface. Rows it gains, or the same rows laid out anew, are drawn at
@@ -105,6 +107,7 @@ private fun DockRowsBox(dock: SongDockState, metronome: DockMetronome, contentPa
                     content = dock.contents[page],
                     stepper = dock.steppers[page],
                     metronome = metronome,
+                    hold = hold,
                     onTunerClicked = dock.onTunerClicked,
                     rows = rows,
                     layout = layout,
@@ -126,7 +129,8 @@ private fun DockRowsBox(dock: SongDockState, metronome: DockMetronome, contentPa
  * instrument pill and the tall tempo chip, under a row of the scale chips alone where there are scale suggestions,
  * so that the tempo chip always stands in the dock's bottom end corner. Whatever scrolls fades only where it meets what
  * stands still. The click is the screen's ([metronome]), whichever page the rows are drawn for. The diagrams fade back
- * the chords not on the screen the page's [stepper] shows; the rows move only under the reader's finger. Beside the side
+ * the chords not on the screen the page's [stepper] shows, and once it has settled the screen's chords and scales come
+ * first and the rows scroll back to them ([rememberDockRowsOrder]), never while a hand is on the dock ([hold]). Beside the side
  * panel ([isBesidePanel]) the one row is the scale chips alone, fading where they scroll under the panel.
  */
 @Composable
@@ -134,6 +138,7 @@ private fun DockRowsOf(
     content: DockContent?,
     stepper: SongStepper?,
     metronome: DockMetronome,
+    hold: DockHold,
     onTunerClicked: (() -> Unit)?,
     rows: DockRows,
     layout: DockLayout,
@@ -149,9 +154,20 @@ private fun DockRowsOf(
     // The first row's in either layout, so that the scale chips keep their place as the rows switch between one row and
     // two (the side panel coming or going).
     val rowScroll = rememberScrollState()
-    val cells = content?.let { rememberChordCells(it.model, it.chordDiagrams) }.orEmpty()
-    val onChordClicked = content?.chordDiagrams?.onChordClicked
+    val stripScroll = rememberScrollState()
+    val order = rememberDockRowsOrder(
+        content = content,
+        stepper = stepper,
+        cells = content?.let { rememberChordCells(it.model, it.chordDiagrams) }.orEmpty(),
+        isHeld = { hold.isHeld || rowScroll.isScrollInProgress || stripScroll.isScrollInProgress },
+    )
+    val cells = order.cells
     val hasDiagramRow = rows.hasChordRow && layout.tier != DockTier.CHORD_CHIPS
+    // The one row starts with the chord chips, the screen's first; the scale row alone with the first group on the screen.
+    val scaleRowTarget = scaleRowTarget(order, content)
+    ScrollWithDockOrder(order = order.groupOrder to cells, scrollState = rowScroll, target = if (hasDiagramRow || !rows.hasChordRow) scaleRowTarget else ({ 0 }))
+    ScrollWithDockOrder(order = cells, scrollState = stripScroll, target = { 0 })
+    val onChordClicked = content?.chordDiagrams?.onChordClicked
     val tempo = content?.tempo?.takeIf { rows.hasTempo }
     val chordDiagrams = content?.chordDiagrams?.takeIf { rows.hasInstrumentCard }
     val oneLineCard = chordDiagrams?.let {
@@ -174,16 +190,15 @@ private fun DockRowsOf(
         ) {
             if (content != null) {
                 if (rows.hasChordRow) DockChordChips(cells = cells, onChordClicked = onChordClicked)
-                DockScaleChips(content = content, stepper = stepper)
+                DockScaleChips(content = content, order = order)
             }
         }
     } else {
         if (rows.hasScaleRow) {
             DockScrollingRow(height = layout.rowHeight, horizontalPadding = horizontalPadding, scrollState = rowScroll, end = null) {
-                if (content != null) DockScaleChips(content = content, stepper = stepper)
+                if (content != null) DockScaleChips(content = content, order = order)
             }
         }
-        val stripScroll = rememberScrollState()
         DockScrollingRow(
             height = layout.diagramRowHeight,
             horizontalPadding = horizontalPadding,
@@ -206,13 +221,11 @@ private fun DockRowsOf(
             },
         ) {
             if (content != null) {
-                val model = content.model
-                val names = remember(cells) { cells.mapTo(mutableSetOf()) { it.name } }
                 DockDiagramStrip(
                     cells = cells,
                     isSmall = layout.tier == DockTier.SMALL_DIAGRAMS,
                     rowHeight = layout.diagramRowHeight,
-                    markedChords = rememberChordsOnScreen(stepper, model.sections, names),
+                    markedChords = order.chordsOnScreen,
                     onChordClicked = onChordClicked,
                 )
             }

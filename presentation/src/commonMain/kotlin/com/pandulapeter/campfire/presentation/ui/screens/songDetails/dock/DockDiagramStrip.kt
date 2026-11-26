@@ -45,6 +45,7 @@ import com.pandulapeter.campfire.presentation.ui.chords.ChordDiagram
 import com.pandulapeter.campfire.presentation.ui.chords.chordCellDescription
 import com.pandulapeter.campfire.presentation.ui.chords.chordDiagramGeometryOf
 import com.pandulapeter.campfire.presentation.ui.chords.emptyChordDiagramGeometryOf
+import com.pandulapeter.campfire.presentation.ui.components.animatePlacement
 import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 
 /**
@@ -59,7 +60,8 @@ import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
  * The chords played on the screen the reader is headed for ([markedChords], `rememberChordsOnScreen`) are drawn as they
  * are and the rest faded back ([DIMMED_ALPHA]), so that the page's chords are found at a glance with no colour spent on
  * them and the others still read as playable, never as disabled. Nothing is faded while no chord is known to be on the
- * screen. The strip, and the side panel's grid of them, move only under the reader's finger, never by themselves.
+ * screen. [cells] come in the order the dock puts them ([dockCellOrder]: the screen's chords first once it has
+ * settled), each gliding to its new place.
  */
 @Composable
 internal fun DockDiagramStrip(
@@ -76,19 +78,24 @@ internal fun DockDiagramStrip(
     val density = LocalDensity.current
     val glossHeight = if (hasGlosses) with(density) { glossStyle.lineHeight.toDp() } + CELL_LINE_GAP else 0.dp
     val diagramHeight = rowHeight - with(density) { nameStyle.lineHeight.toDp() } - CELL_LINE_GAP - glossHeight
+    // A reorder ([dockCellOrder]) carries every cell to its new place rather than dropping it there.
+    val placement = Modifier.animatePlacement(MaterialTheme.motionScheme.defaultSpatialSpec())
     cells.forEachIndexed { index, cell ->
         val keyName = cell.keyName
         if (keyName != null && (index == 0 || cells[index - 1].keyName != keyName)) {
-            Text(
-                modifier = Modifier.widthIn(max = KEY_LABEL_WIDTH),
-                text = textResource(Res.string.song_details_key_change, keyName),
-                style = typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-            )
+            key("key $keyName") {
+                Text(
+                    modifier = placement.widthIn(max = KEY_LABEL_WIDTH),
+                    text = textResource(Res.string.song_details_key_change, keyName),
+                    style = typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                )
+            }
         }
         key(cell.name) {
             DiagramCell(
+                modifier = placement,
                 cell = cell,
                 isDimmed = markedChords.isNotEmpty() && cell.name !in markedChords,
                 nameStyle = nameStyle,
@@ -103,6 +110,7 @@ internal fun DockDiagramStrip(
 /** One chord of [DockDiagramStrip], faded back where it [isDimmed] as not played on the screen, pressed to open its sheet. */
 @Composable
 private fun DiagramCell(
+    modifier: Modifier = Modifier,
     cell: ChordCell,
     isDimmed: Boolean,
     nameStyle: TextStyle,
@@ -112,7 +120,7 @@ private fun DiagramCell(
 ) {
     val alpha by animateFloatAsState(if (isDimmed) DIMMED_ALPHA else 1f)
     Column(
-        modifier = Modifier
+        modifier = modifier
             .clip(MaterialTheme.shapes.small)
             .graphicsLayer { this.alpha = alpha }
             .then(

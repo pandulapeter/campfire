@@ -34,7 +34,7 @@ import com.pandulapeter.campfire.presentation.ui.components.fadingHorizontalEdge
 /**
  * One row of the dock, [height] tall: [start] and [end] stand still at its ends (null where it has nothing there; the
  * instrument pill and the tempo chip where it has), and the [content] between them scrolls sideways ([scrollState]), by
- * hand only. The content fades out where it meets either, as far as it can still scroll that way, and runs to the
+ * hand, and back to what is on the screen after the dock reorders it (`ScrollWithDockOrder`). The content fades out where it meets either, as far as it can still scroll that way, and runs to the
  * screen's edges, padded in from them by
  * [horizontalPadding], where nothing stands there: a fade belongs only where a scrolling row meets something that does
  * not scroll, which is also what [fadesAtEnd] says stands past its end (the side panel the row under the song runs up

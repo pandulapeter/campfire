@@ -18,26 +18,42 @@ import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.ui.chords.ChordCell
+import com.pandulapeter.campfire.presentation.ui.components.animatePlacement
 import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 
 /**
  * The song's chords as a chip each in the dock's first row, where the room left to it holds no diagrams: named as the
- * page names them, in the colour its chords are written in, in the order they are first played. A chip opens the
- * chord's sheet as its diagram would ([onChordClicked], null where shapes are not picked here, which leaves it a label).
+ * page names them, in the colour its chords are written in, in the order the dock puts them ([dockCellOrder]: the
+ * screen's first once it has settled, each gliding to its place). A chip opens the chord's sheet as its diagram would
+ * ([onChordClicked], null where shapes are not picked here, which leaves it a label).
  */
 @Composable
 internal fun DockChordChips(
     cells: List<ChordCell>,
     onChordClicked: ((chordName: String) -> Unit)?,
-) = cells.forEach { cell ->
+) {
+    val placement = Modifier.animatePlacement(MaterialTheme.motionScheme.defaultSpatialSpec())
+    cells.forEach { cell ->
+        key(cell.name) { DockChordChip(modifier = placement, cell = cell, onChordClicked = onChordClicked) }
+    }
+}
+
+/** One chip of [DockChordChips]. */
+@Composable
+private fun DockChordChip(
+    modifier: Modifier = Modifier,
+    cell: ChordCell,
+    onChordClicked: ((chordName: String) -> Unit)?,
+) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .defaultMinSize(minHeight = DOCK_ROW_HEIGHT)
             .clip(FilterChipDefaults.shape)
             .border(1.dp, MaterialTheme.colorScheme.outlineVariant, FilterChipDefaults.shape)
