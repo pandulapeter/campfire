@@ -88,9 +88,9 @@ internal class DockLayoutTest {
     @Test
     fun `a song with nothing for a row lays the dock out as that row's switch turned off would`() {
         assertEquals(everyRow.copy(hasScaleRow = false), everyRow.forSong(hasChords = true, hasScales = false))
-        assertEquals(everyRow.copy(hasChordRow = false), everyRow.forSong(hasChords = false, hasScales = true))
+        assertEquals(everyRow.copy(hasChordRow = false, hasInstrumentChip = true), everyRow.forSong(hasChords = false, hasScales = true))
         assertTrue(everyRow.forSong(hasChords = false, hasScales = false).isMetronomeOnly)
-        assertNull(dockLayoutOf(everyRow.copy(hasTempo = false).forSong(hasChords = false, hasScales = false), 1000.dp, isOneRow = false))
+        assertNull(dockLayoutOf(everyRow.copy(hasChordRow = false, hasTempo = false).forSong(hasChords = false, hasScales = false), 1000.dp, isOneRow = false))
         assertEquals(everyRow.copy(hasChordRow = false), everyRow.copy(hasChordRow = false).forSong(hasChords = true, hasScales = true))
     }
 
@@ -107,10 +107,14 @@ internal class DockLayoutTest {
     }
 
     @Test
-    fun `an instrument without shapes has no card over a song without chords`() {
-        val rows = NO_ROW.copy(hasInstrumentChip = true).forSong(hasChords = false, hasScales = false)
-        assertFalse(rows.hasInstrumentCard)
-        assertNull(dockLayoutOf(rows, 1000.dp, isOneRow = false))
+    fun `a song without chords keeps the instrument card in one row`() {
+        val withoutShapes = NO_ROW.copy(hasInstrumentChip = true).forSong(hasChords = false, hasScales = false)
+        assertTrue(withoutShapes.hasInstrumentCard)
+        assertEquals(DockTier.CHORD_CHIPS, dockLayoutOf(withoutShapes, 1000.dp, isOneRow = false)?.tier)
+        val withShapes = NO_ROW.copy(hasChordRow = true).forSong(hasChords = false, hasScales = false)
+        assertFalse(withShapes.hasChordRow)
+        assertTrue(withShapes.hasInstrumentCard)
+        assertEquals(DockTier.CHORD_CHIPS, dockLayoutOf(withShapes, 1000.dp, isOneRow = false)?.tier)
     }
 
     @Test

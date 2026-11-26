@@ -56,13 +56,13 @@ internal data class DockRows(
      * the song has nothing for goes as its switch turned off would take it, rather than saying the song has none, so a
      * song without scales falls back to the diagrams alone or the scale strip to the metronome panel, and one with
      * nothing for any row has no dock. Decided per song, never per screen of it, so stepping through a song never
-     * changes the dock. The instrument card of an instrument without shapes goes with a song without chords too, which no
-     * instrument would draw a diagram of.
+     * changes the dock. The instrument card stays with a song without chords, one line as on an instrument without
+     * shapes: the instrument and its tuning are the player's, not the song's, and the card is where the tuner is.
      */
     fun forSong(hasChords: Boolean, hasScales: Boolean) = copy(
         hasChordRow = hasChordRow && hasChords,
         hasScaleRow = hasScaleRow && hasScales,
-        hasInstrumentChip = hasInstrumentChip && hasChords,
+        hasInstrumentChip = hasInstrumentChip || (hasChordRow && !hasChords),
     )
 }
 
