@@ -66,7 +66,7 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
 - Steppers are shorter than Material buttons and lower `LocalMinimumInteractiveComponentSize` to match (touch still
   gets 48dp).
 - **The subtitle names the sounding key** (transposition and capo played applied), whatever the chords are named by,
-  after a 16dp dot (the cards' 24dp would grow the bar and shrink the lyrics' room). Worked out for the song its
+  in the key chip's words ("Key of F#m", since it shows only beside a chip naming another key), after a 16dp dot (the cards' 24dp would grow the bar and shrink the lyrics' room). Worked out for the song its
   crossfaded content was composed for, since a page change draws two. Chords off, a song without chords, and a file
   naming no key whose chords make none clear drop the key, as does the key chip naming the same one (never where they
   differ: the chip names the transposition stepper's key, with a capo the shapes', the subtitle the sounding one). No tempo (the dock

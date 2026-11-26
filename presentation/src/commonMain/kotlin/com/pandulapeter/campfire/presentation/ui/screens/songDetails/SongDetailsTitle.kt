@@ -51,6 +51,7 @@ import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_expand
+import com.pandulapeter.campfire.presentation.resources.song_details_dock_key_short
 import com.pandulapeter.campfire.presentation.resources.song_details_song_info
 import com.pandulapeter.campfire.presentation.resources.songs_key
 import com.pandulapeter.campfire.presentation.ui.components.coverArt.APP_BAR_COVER_GAP
@@ -241,7 +242,9 @@ private fun SongTitleBlock(
                 )
             }
             SongHeaderNote(
-                text = headerKey,
+                // Named as the key in the chip's own words ("Key of F#m"): it is shown only where the chip names
+                // another one (the shapes above a capo), and two bare keys left the reader to guess which sounds.
+                text = headerKey?.let { textResource(Res.string.song_details_dock_key_short, it) },
                 description = headerKey?.let { textResource(Res.string.songs_key, it) },
                 hasPrecedingContent = song?.artist?.isNotBlank() == true,
             )
