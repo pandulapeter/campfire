@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock
 
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.semantics.SemanticsProperties
@@ -20,8 +21,10 @@ import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isDialog
 import androidx.compose.ui.test.isPopup
+import androidx.compose.ui.test.click
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performKeyInput
+import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.pressKey
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -152,7 +155,8 @@ internal class DockTunerTest {
         assertTrue(instrument.height <= tempoChip.height + 1f, "The card at $instrument is not a chip of the tempo chip's row at $tempoChip.")
         assertMenuTuner(isThere = false)
         pressBack()
-        tap(hasText(string(Res.string.instrument_other)) and hasClickAction())
+        // The press runs under the tuner, so its centre may be the tuner's; the name's side is the instrument's.
+        onNode(hasText(string(Res.string.instrument_other)) and hasClickAction()).performTouchInput { click(Offset((tuner.left - instrument.left) / 2f, centerY)) }
         waitUntil { viewModel.dialogHost.visibleDialog.value is DialogType.Instrument }
     }
 
