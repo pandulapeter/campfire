@@ -77,23 +77,45 @@ public object ChordSheetConverter {
             }
         }
         val songs = groups.map { ChordSheetSongCrop.cropped(it, pageScores) }
-        return songs.filterIndexed { index, song -> !isContents(song, songs.filterIndexed { other, _ -> other != index }) }
+        val titles = songs.map { song -> song.firstNotNullOfOrNull { line -> contentsWords(line.text).takeIf { it.isNotEmpty() }?.joinToString(" ") } }
+        val titleCounts = HashMap<String, Int>().apply { titles.forEach { title -> if (title != null) this[title] = (this[title] ?: 0) + 1 } }
+        return songs.filterIndexed { index, song -> songs.size < 3 || !isContents(song, titles[index], titleCounts) }
             .map { normalize(convertSong(expandLabels(withoutInjections(singleSpaced(ChordSheetSiteDetails.withValuesJoined(ChordSheetRomanChords.named(it))))), guessesTitle, profile, knownTitle)) }.filter { it.isNotBlank() }
     }
 
     /**
-     * Whether [song], one of a document's several, is its contents rather than a song: it plays no chord, and its lines
-     * name at least two of the [others] by the titles they open with (`1. Red River Valley ....... 2`). The split already
-     * reads a contents page for where songs start; the page itself is no song to import.
+     * Whether [song], one of a document's three or more, is its contents rather than a song: it plays no chord, at least
+     * half of its lines (two at least) start or end with another part's title (`1. Red River Valley ....... 2`,
+     * `Newton – Amazing Grace 3`), and they name two titles at least. [titleCounts] counts the parts each title (a part's
+     * first line with words, [ownTitle] this one's) opens, so a title the part shares with another song still counts. A
+     * stanza singing titles ("Alleluia, alleluia, amen") is one line among many, which keeps the hymns of a lyrics-only
+     * book. The split already reads a contents page for where songs start; the page itself is no song to import.
      */
-    private fun isContents(song: List<Rendered>, others: List<List<Rendered>>): Boolean {
-        if (others.size < 2 || chordCandidates(song).any { it != null }) return false
-        val entries = song.map { contentsWords(it.text) }.filter { it.isNotEmpty() }
-        val titles = others.mapNotNull { other -> other.firstOrNull { it.text.isNotBlank() }?.let { contentsWords(it.text) } }.filter { it.isNotEmpty() }
-        return titles.count { title -> entries.any { entry -> " $entry ".contains(" $title ") } } >= 2
+    private fun isContents(song: List<Rendered>, ownTitle: String?, titleCounts: Map<String, Int>): Boolean {
+        if (chordCandidates(song).any { it != null }) return false
+        val lines = song.filter { it.text.isNotBlank() }
+        val named = HashSet<String>()
+        val entries = lines.count { line ->
+            entryTitle(contentsWords(line.text)) { title -> (titleCounts[title] ?: 0) > if (title == ownTitle) 1 else 0 }?.also { named += it } != null
+        }
+        return entries >= 2 && entries * 2 >= lines.size && named.size >= 2
     }
 
-    private fun contentsWords(text: String) = text.lowercase().split(Regex("[^\\p{L}]+")).filter { it.isNotEmpty() }.joinToString(" ")
+    /**
+     * The longest title [isTitle] accepts that the [words] of a line start with, else the longest they end with. The
+     * prefixes and suffixes are probed one by one, never a title scanned per line, so a book of thousands of songs is
+     * read in linear time; a line longer than [MAX_ENTRY_WORDS] is a lyric, never an entry.
+     */
+    private fun entryTitle(words: List<String>, isTitle: (String) -> Boolean): String? {
+        if (words.isEmpty() || words.size > MAX_ENTRY_WORDS) return null
+        val prefix = StringBuilder()
+        val prefixes = words.map { word -> prefix.apply { if (isNotEmpty()) append(' ') }.append(word).toString() }
+        prefixes.lastOrNull(isTitle)?.let { return it }
+        val suffix = StringBuilder()
+        return words.asReversed().map { word -> suffix.insert(0, if (suffix.isEmpty()) word else "$word ").toString() }.lastOrNull(isTitle)
+    }
+
+    private fun contentsWords(text: String) = text.lowercase().split(nonLetters).filter { it.isNotEmpty() }
 
     /**
      * The lines a lyrics site puts into a copy of its page, Genius's "You might also like" and the "12Embed" its
@@ -371,4 +393,10 @@ public object ChordSheetConverter {
 
     /** A share count glued to a lyric's last letter or punctuation; a sung "we embed" keeps its space. */
     private val gluedEmbed = Regex("(?<=[^\\s0-9])[0-9]*Embed$")
+
+    /** What separates the words a contents entry is compared by, so numbers, dot leaders, and page numbers drop out. */
+    private val nonLetters = Regex("[^\\p{L}]+")
+
+    /** The most words a contents entry holds; a longer line is a lyric. */
+    private const val MAX_ENTRY_WORDS = 24
 }

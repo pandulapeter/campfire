@@ -61,8 +61,9 @@ heuristics and near misses are pinned in `ChordSheetConverterTest` and its sibli
   sets its rows left to right, so its spaces stay where they were typed. In such character columns a chord hangs
   from its letter's edge to within a quarter of a column, so one over the spaces between two words stays between them.
 - A document is cut into songs by `ChordSheetSongSplit` (by a title type that stands out, else by a contents page,
-  `ChordSheetIndexTitles`), so a cover in a type of its own does not stop the split. Song-counting numbers are left out
-  of the titles, and a part playing no chord whose lines name two of the other songs by title is the contents, no song.
+  `ChordSheetIndexTitles`); a cover in a type of its own does not stop it. Song-counting numbers are left out of titles,
+  and a chordless part, half of whose lines start or end with another song's title, naming two at least, is the
+  contents, no song.
 - **Then each song is cropped** by the page model's scores of the whole document's lines (`pageScores`, read through
   `ChordSheetPageLines`, the one mapping the model was trained on: change it only with a retrain), held to the model's
   crop rule on its own lines (`ChordSheetSongCrop`), so the contents page still splits. Kept besides: every line

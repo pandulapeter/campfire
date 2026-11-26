@@ -514,6 +514,57 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `a lyrics-only song singing two other songs' titles in one line of its stanza is a song not the contents`() {
+        val sheet = ChordSheet(
+            listOf(
+                titledPage("Amen", "Amen, amen\nSo let it be"),
+                titledPage("Alleluia", "Alleluia, sing\nPraise to the Lord"),
+                titledPage("Gloria", "Glory to God on high\nAnd peace to all on earth\nAlleluia, alleluia, amen\nWe sing forever more"),
+            ),
+        )
+        val result = ChordSheetConverter.convert(sheet)
+        assertEquals(listOf("Amen", "Alleluia", "Gloria"), result.map { it.lineSequence().first() }, result.joinToString("{new_song}\n"))
+    }
+
+    @Test
+    fun `an index setting each song's artist before its title is the contents`() {
+        val index = ChordSheet.Page(ChordSheet.ofPlainText("Newton – Amazing Grace 2\nTraditional – Be Thou My Vision 3\nAnonymous – Gloria 4").pages.single().lines)
+        val sheet = ChordSheet(
+            listOf(
+                index,
+                titledPage("Amazing Grace", "How sweet the sound\nThat saved a wretch like me"),
+                titledPage("Be Thou My Vision", "O Lord of my heart\nNaught be all else to me"),
+                titledPage("Gloria", "Glory to God on high\nAnd peace to all on earth"),
+            ),
+        )
+        val result = ChordSheetConverter.convert(sheet)
+        assertEquals(listOf("Amazing Grace", "Be Thou My Vision", "Gloria"), result.map { it.lineSequence().first() }, result.joinToString("{new_song}\n"))
+    }
+
+    @Test
+    fun `a lyrics-only book of thousands of songs takes time in proportion to its length`() {
+        // Compared with a quarter of itself, fastest of three, as the text of tens of thousands of lines is: whether a part
+        // is the contents looks across every part's title, and a step that went quadratic in the number of songs only
+        // outgrows the rest of the conversion at hundreds of them.
+        fun name(index: Int) = generateSequence(index) { (it / 26).takeIf { rest -> rest > 0 } }.map { 'a' + it % 26 }.joinToString("")
+        fun timeOf(songs: Int) = ChordSheet(List(songs) { titledPage("Song ${name(it)}", "Sing along tonight\nUnder the evening light") }).let { sheet ->
+            val started = TimeSource.Monotonic.markNow()
+            val result = ChordSheetConverter.convert(sheet)
+            started.elapsedNow().also { assertEquals(songs, result.size) }
+        }
+        timeOf(SONGBOOK_QUARTER)
+        val runs = List(3) { timeOf(SONGBOOK_QUARTER) to timeOf(SONGBOOK_QUARTER * 4) }
+        val quarter = runs.minOf { it.first }
+        val whole = runs.minOf { it.second }
+        assertTrue(whole < quarter * 7, "$whole for the whole book, $quarter for a quarter of it")
+    }
+
+    /** A page opening with [title] in a type twice the body's, so the split cuts a song there, over the lyrics [words]. */
+    private fun titledPage(title: String, words: String) = ChordSheet.Page(
+        listOf(ChordSheet.Line(listOf(span(title, 0.0, title.length * 2.0, size = 2.0)))) + ChordSheet.ofPlainText(words).pages.single().lines,
+    )
+
+    @Test
     fun `letter spacing does not split words`() {
         val spaced = ChordSheet.Line(listOf(span("T", 0.0, 6.7, 12.0), span("h", 7.7, 14.4, 12.0), span("i", 15.4, 18.4, 12.0), span("s", 19.4, 25.4, 12.0), span("i", 30.0, 33.0, 12.0), span("s", 34.0, 40.0, 12.0)))
         assertEquals("This is\n", ChordSheetConverter.convert(ChordSheet(listOf(ChordSheet.Page(listOf(spaced))))).single())
@@ -2174,5 +2225,8 @@ class ChordSheetConverterTest {
 
         /** Verses in a quarter of the text whose conversion time is compared with the whole's. */
         const val QUARTER_LENGTH = 10_000
+
+        /** Songs in a quarter of the lyrics-only book whose conversion time is compared with the whole's. */
+        const val SONGBOOK_QUARTER = 500
     }
 }
