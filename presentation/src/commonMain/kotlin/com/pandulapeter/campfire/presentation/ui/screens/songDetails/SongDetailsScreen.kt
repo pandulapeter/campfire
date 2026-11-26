@@ -145,8 +145,8 @@ internal fun SongDetailsScreen(
     // caught up with a change to it yet - so that two numberings are never mixed in one bar.
     val setlistSlots = remember(setlist, songs) { setlist?.let { buildSetlistSlots(it.entries, songs.map { song -> song.fileName }) } }
     val shouldShowChords = userPreferences?.areChordsEnabled != false
-    val chordDiagrams = rememberChordDiagrams(userPreferences = userPreferences)
     val tools = songDetailsToolsOf(userPreferences, isImportPreview)
+    val chordDiagrams = rememberChordDiagrams(userPreferences = userPreferences, isTunerInCard = tools.isTunerInCard)
     val areSetlistsEnabled = userPreferences?.areSetlistsEnabled != false
     val isCoverArtEnabled = userPreferences?.isCoverArtEnabled == true
     val openCurrentSongInfo = rememberOpenSongInfo(

@@ -97,7 +97,8 @@ internal fun rememberSongDock(
         hasChordRow = chordDiagrams?.tuning != null,
         hasScaleRow = SongSections.of(userPreferences).areScaleSuggestionsShown,
         hasTempo = isMetronomeShown,
-        // An instrument without shapes keeps its card, the way back to one with diagrams.
+        // An instrument without shapes keeps its card, the way back to one with diagrams, as do the diagrams switched off
+        // while the card holds the tuner (rememberChordDiagrams).
         hasInstrumentChip = chordDiagrams != null && chordDiagrams.tuning == null,
     )
     val contents = remember { mutableStateMapOf<Int, DockContent>() }

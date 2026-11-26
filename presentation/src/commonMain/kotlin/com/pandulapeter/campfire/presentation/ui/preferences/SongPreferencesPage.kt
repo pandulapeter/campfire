@@ -126,7 +126,7 @@ private fun SongPageSection(
  * What song details' dock holds, every switch that adds to it in one place: the diagrams of a song's chords and its scale
  * suggestions (each also in the editor's preview and the PDF), its click, and the tuner in its instrument card. A switch
  * whose Feature is off (the Scales, the Metronome, the Tuner) is hidden with it, fading and folding away
- * (`FeatureRows.kt`); one waiting for another preference (the chords, or for the tuner the diagrams whose card holds it,
+ * (`FeatureRows.kt`); one waiting for another preference (the chords, the tuner's card included,
  * [isDockTunerSwitchEnabled]) is disabled. The diagrams' switch is always there, so the section never empties. The app
  * bar's key chip has no switch: it is the only way to the transposition and the capo.
  */

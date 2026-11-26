@@ -192,8 +192,9 @@ another preference takes what it adds:
 - **Chords** (`areChordsEnabled`): a song's chords, key, transposition, and capo; the chord spelling rows are disabled
   only once neither songs nor the Chords and Scales tabs name a chord (hidden once none of those Features is on).
 - **Chord diagrams** (`areChordDiagramsEnabled`, in the Song page's Dock section with scale suggestions): disabled
-  while chords are off; takes a song's diagrams (the dock's, the preview's and the PDF's Chords section) and with them
-  the dock's instrument card, the song's menu then holding the tuner; chosen shapes kept.
+  while chords are off; takes a song's diagrams (the dock's, the preview's and the PDF's Chords section), the dock's
+  instrument card staying one line where it holds the tuner (the Dock's Tuner switch), else going with them; chosen
+  shapes kept.
 - **Chord degrees** (`areChordDegreesEnabled`): off by default, since numerals a reader never asked for look like the
   notation gone wrong; disabled while no diagram it labels is drawn (a song's in neither numbering, or a scale sheet's,
   which needs the Scales and Chords tabs); takes the degree over each diagram's name, in the PDF too, and the scale

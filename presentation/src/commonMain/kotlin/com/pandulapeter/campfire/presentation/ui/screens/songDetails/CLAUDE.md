@@ -102,8 +102,8 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
   `App bar: key chip` breadcrumb.
 - **The text size stepper is always the menu's**, its last row (the menu staying open while pressed; a pinch and the
   zoom keys reach it too). **The tuner is the dock's instrument card's** with the Dock's Tuner switch on (`dock/`), else
-  a menu entry (`tunerAction`, `Menu: tuner`), the menu's too wherever the card is not shown (diagrams off, a song with
-  no diagram to draw), so it is offered once (`SongDetailsTools.isTunerInMenu`); with the Tuner feature on only, never
+  a menu entry (`tunerAction`, `Menu: tuner`), the menu's too wherever the card is not shown (a song with
+  no chords), so it is offered once (`SongDetailsTools.isTunerInMenu`); with the Tuner feature on only, never
   an import preview's. The Playing and Tempo sheets have no tuner (U still opens it over them). As the bar narrows Choose
   setlists goes into the menu, then the cover, each while the title keeps 140dp. Performance mode: the read only mark
   (`ReadOnlyMark`, a lock opening the Preferences, so a mode switched on by accident is noticed and undone here) always

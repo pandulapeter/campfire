@@ -57,7 +57,8 @@ with the tuner, and the click. The first section's key and capo are the app bar'
   place, play / stop. **An instrument without shapes** (Other, the violin) has no diagrams but keeps the instrument card,
   one line, the way back to an instrument with them (`DockRows.hasInstrumentChip`, with the diagrams on and a song with
   chords): it starts the one row (the scale strip and the tempo chip, else beside the metronome panel, else a row of its
-  own), never a side panel.
+  own), never a side panel. **The diagrams switched off** keep that card the same way while it holds the tuner (the
+  Dock's Tuner switch on, `rememberChordDiagrams`): the switch takes the diagrams, not the tuner and its instrument.
 - **Its tier is the window's** (`dockLayoutOf`). A short window (`SHORT_WINDOW_HEIGHT`) narrower than the panel's gets
   one row with a chip per chord. Any other gets two, diagrams in the second at the Chords section's size where they fit
   `dockBudgetOf` (the share of the window that costs no page turn as `PageCountTest` measured it: 80 dp by page, 60 by
@@ -95,8 +96,8 @@ with the tuner, and the click. The first section's key and capo are the app bar'
 - **The instrument card is the app's pill** (`ui/instrument`'s `InstrumentPill`, which `DockInstrumentPill` only frames,
   never a pill of the dock's own): the instrument the diagrams are drawn for and its tuning ("Standard" too; an
   instrument with one tuning, its name alone), only where the diagrams or the chord chips are, or the one-line card of
-  an instrument without shapes (`DockRows.hasInstrumentCard`, so not with the diagrams off or a song with no diagram to
-  draw). The tempo chip's height, fill, outline, and corners: beside the diagrams stacked (`isStacked`, the tuning under
+  an instrument without shapes or of the diagrams off with the tuner in it (`DockRows.hasInstrumentCard`, so not
+  with the diagrams and the Dock's Tuner both off, nor for a song with no chords). The tempo chip's height, fill, outline, and corners: beside the diagrams stacked (`isStacked`, the tuning under
   the instrument), elsewhere one line. Its halves open the instrument's and the tuning's sheets (`DialogType.Instrument`,
   `DialogType.Tuning`), read only mode included, the instrument being the device's, each half's press and ripple filling
   its part of the card edge to edge, under the tuner too (`InstrumentPillOverTrailing`). Its names shrink to 11 sp

@@ -62,5 +62,6 @@ same setting**: a page is one component wherever it appears (the Metronome page 
   never in the language. Diagrams and degrees are disabled with the chords off. Degrees disabled by the Song page's
   diagrams switch alone say so in place of their description, as that switch is on another page.
 - The Dock section's Tuner (`isDockTunerEnabled`) puts the tuner in the dock's instrument card, else the song's menu;
-  disabled wherever there is no card to hold it (diagrams or chords off, `isDockTunerSwitchEnabled`), the menu then
+  kept on with the diagrams off, the card staying one line for it; disabled with the chords off
+  (`isDockTunerSwitchEnabled`), the menu then
   holding the tuner whatever it says.
