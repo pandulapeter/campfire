@@ -84,12 +84,12 @@ Each item is checked by `wiring` in step 7.
      their Edit Widget texts; copy `en.lproj`'s (keyed by the English text) and translate every value. Its
      `PBXFileReference` goes into the CampfireWidgets target's `Localizable.strings` `PBXVariantGroup` like the share
      extension's. Everything a widget shows comes from the snapshot, which step 3's strings already cover.
-   - `iosApp.xcodeproj/project.pbxproj`, four places; copy each `hu` line and change `hu` to the code:
-     three `PBXFileReference` lines (`path = <code>.lproj/Localizable.strings`, `…/Localizable.stringsdict`, and
-     `path = <code>.lproj/InfoPlist.strings`), their IDs added to the `Localizable.strings`, `Localizable.stringsdict`,
-     and `InfoPlist.strings` `PBXVariantGroup` children, and `<code>,` in
+   - `iosApp.xcodeproj/project.pbxproj`, nine places; copy each `hu` line and change `hu` to the code: four
+     `PBXFileReference` lines (iosApp's `path = <code>.lproj/InfoPlist.strings`, the share extension's
+     `…/Localizable.strings` and `…/Localizable.stringsdict`, and the widgets' `…/Localizable.strings`), their IDs added
+     to the children of their four `PBXVariantGroup`s (`/* <code> */` then appears 8 times), and `<code>,` in
      `knownRegions`. New IDs: the same 24 hex digits as the neighbours with a new ending; `grep -c <ID>` must be 0 first.
-     Afterwards `plutil -lint` the project, both plists, and both new `.strings` files.
+     Afterwards `plutil -lint` the project, the three plists, and the four new `.strings`/`.stringsdict` files.
 7. Web, `app/web/src/wasmJsMain/resources/index.html`: add a `<code>: { … }` block to `TEXTS` with every key the
    `en` block has, translated, and the code to the `navigator.language` alternation (`/^(hu|ro|<code>)\b/i`). A
    language written from the right starts its block with `dir: 'rtl',`, which the page sets on `<html>`.
@@ -120,7 +120,7 @@ Rewrap any line pushed past ~120 columns.
 
 ## 5. Translate the strings
 
-`presentation/src/commonMain/composeResources/values/strings.xml` is ~1,300 lines; translate it in parallel chunks.
+`presentation/src/commonMain/composeResources/values/strings.xml` is ~1,600 lines; translate it in parallel chunks.
 
 1. Split it: `python3 $L split <scratchpad>/<code>`. It prints the chunks (`en_N.xml`) and where each translation goes
    (`xx_N.xml`).
@@ -135,7 +135,10 @@ Rewrap any line pushed past ~120 columns.
 6. The store listings: one subagent (`model: "opus"`) writes `documentation/store-listings/<store>/<code>.md` for each
    of the four stores, translated from `<store>/en.md` the way the other languages' files are (read one first: which
    fields each holds, the English headings and rules note, the locales line, keywords researched rather than
-   translated, the app's own words from the new `strings.xml`), and runs `.github/scripts/check_store_listings.py` and
+   translated, the app's own words from the new `strings.xml`), and `screenshot-texts/<code>.md`, the store
+   screenshots' headline and feature chips for each shot, translated from `screenshot-texts/en.md` within the length
+   each heading states (as `hu.md` does: an English heading per shot, the text in a fenced block, a line break kept
+   where the English headline breaks), and runs `.github/scripts/check_store_listings.py` and
    `.github/scripts/store_listings.py --check` (every field the release writes is there).
    Its Play title and App Store name become the website's title in the language: if the website already has the
    language (`i18n/<code>.json` of the CampfireWebsite repository), set its `Campfire: Songbook &amp; Chords` entry to

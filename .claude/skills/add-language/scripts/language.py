@@ -341,15 +341,21 @@ def check_wiring(code, english_name):
         ("tools/screenshots/src/main/kotlin/com/pandulapeter/campfire/screenshots/Shot.kt", rf"AppLanguage\.{enum} -> {strings_object}\.strings\[key\]"),
         (f"{ios}/iosApp/Info.plist", rf"<key>CFBundleLocalizations</key>\s*<array>(\s*<string>[a-z-]+</string>)*\s*<string>{code}</string>"),
         (f"{ios}/ShareExtension/Info.plist", rf"<key>CFBundleLocalizations</key>\s*<array>(\s*<string>[a-z-]+</string>)*\s*<string>{code}</string>"),
+        (f"{ios}/CampfireWidgets/Info.plist", rf"<key>CFBundleLocalizations</key>\s*<array>(\s*<string>[a-z-]+</string>)*\s*<string>{code}</string>"),
+        (f"{ios}/CampfireWidgets/{code}.lproj/Localizable.strings", r'(?m)^".+" = ".+";'),
         (f"{ios}/iosApp/{code}.lproj/InfoPlist.strings", r'"NSMicrophoneUsageDescription" = ".+";'),
         (f"{ios}/iosApp.xcodeproj/project.pbxproj", rf'name = {code}; path = {code}\.lproj/Localizable\.strings;'),
         (f"{ios}/iosApp.xcodeproj/project.pbxproj", rf'name = {code}; path = {code}\.lproj/InfoPlist\.strings;'),
+        (f"{ios}/iosApp.xcodeproj/project.pbxproj", rf'name = {code}; path = {code}\.lproj/Localizable\.stringsdict;'),
         (f"{ios}/iosApp.xcodeproj/project.pbxproj", rf"knownRegions = \([^)]*\n\t\t\t\t{code},"),
         (f"{ios}/ShareExtension/en.lproj/Localizable.strings", rf"{code}\.lproj"),
         ("app/web/src/wasmJsMain/resources/index.html", rf"\n            {code}: \{{"),
         ("app/web/src/wasmJsMain/resources/index.html", rf"/\^\([a-z|]*\b{code}\b[a-z|]*\)\\b/i"),
         ("CLAUDE.md", rf"values\[[^\]]*-{code}\b[^\]]*\]/strings\.xml"),
     ]
+    # Android's widget gallery texts; Hebrew is read from the retired `iw` on every Android version.
+    android = "iw" if code == "he" else code
+    checks += [(f"app/android/src/main/res/values-{android}/strings.xml", r'<string name="widget_random_picks_name">[^<]+</string>')]
     stores = sorted(p.name for p in (ROOT / "documentation/store-listings").iterdir() if p.is_dir())
     # The screenshots' texts are the one folder that is no store's listing, with no description to name the languages in.
     checks += [(f"documentation/store-listings/{store}/en.md", rf"\b{english_name}\b[^\n]*, switchable inside the app") for store in stores if store != "screenshot-texts"]
@@ -360,7 +366,10 @@ def check_wiring(code, english_name):
     checks += [(APP_LANGUAGE, rf'\b{enum}\("{code}", Direction\.{direction}\),')]
     if direction == "RIGHT_TO_LEFT":
         checks += [("app/web/src/wasmJsMain/resources/index.html", rf"\n            {code}: \{{\n                dir: 'rtl',")]
-    checks += [(str(STORE_LISTINGS.relative_to(ROOT)), rf'"{old}": "{code}"') for old, new in retired_codes().items() if new == code]
+    # A retired code needs an alias only where a store still spells the language by it (Play's `iw-IL`), not Romanian's `mo`.
+    store_codes = STORE_LISTINGS.read_text()
+    checks += [(str(STORE_LISTINGS.relative_to(ROOT)), rf'"{old}": "{code}"') for old, new in retired_codes().items()
+               if new == code and re.search(rf'"{old}-[A-Za-z]+"', store_codes)]
     checks += [(str(p.relative_to(ROOT)), rf'<string name="{key}">[^<]+</string>') for p in sorted(RESOURCES.glob("values*/strings.xml"))]
     errors = []
     for relative, pattern in checks:
@@ -370,9 +379,14 @@ def check_wiring(code, english_name):
         elif not re.search(pattern, path.read_text()):
             errors.append(f"{relative}: nothing matches {pattern}")
     pbxproj = (ROOT / f"{ios}/iosApp.xcodeproj/project.pbxproj").read_text()
-    if pbxproj.count(f"/* {code} */") != 4:
-        errors.append(f"project.pbxproj: expected 4 `/* {code} */` (two file references, two variant group children), "
+    # Four file references (iosApp's InfoPlist.strings, the share extension's Localizable.strings and .stringsdict, the
+    # widgets' Localizable.strings), each also a child of its variant group.
+    if pbxproj.count(f"/* {code} */") != 8:
+        errors.append(f"project.pbxproj: expected 8 `/* {code} */` (four file references, four variant group children), "
                       f"found {pbxproj.count(f'/* {code} */')}")
+    if pbxproj.count(f"path = {code}.lproj/Localizable.strings;") != 2:
+        errors.append(f"project.pbxproj: expected two `{code}.lproj/Localizable.strings` references (the share extension's "
+                      "and the widgets')")
     shares = lambda path: set(re.findall(r'^"(\w+)" =', path.read_text(), re.M))
     english_share = ROOT / f"{ios}/ShareExtension/en.lproj/Localizable.strings"
     new_share = ROOT / f"{ios}/ShareExtension/{code}.lproj/Localizable.strings"
