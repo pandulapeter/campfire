@@ -58,14 +58,17 @@ internal object PdfChordDiagrams {
         val ink = glyphs.filter { it.span.text.isNotBlank() }.sortedBy { it.span.start }
         if (ink.isEmpty()) return glyphs
         val em = ink.map { it.span.size }.sorted()[ink.size / 2]
+        val gaps = mutableListOf<Double>()
         var reach = ink.first().span.end
         for (glyph in ink.drop(1)) {
-            if (glyph.span.start - reach > em * GUTTER) {
-                val (left, right) = glyphs.partition { it.span.start < glyph.span.start }
-                if (isDiagramColumn(right, besides = left)) return left
-                if (isDiagramColumn(left, besides = right)) return right
-            }
+            if (glyph.span.start - reach > em * GUTTER) gaps += glyph.span.start
             reach = maxOf(reach, glyph.span.end)
+        }
+        val tried = if (gaps.size > 2 * EDGE_GAPS) gaps.take(EDGE_GAPS) + gaps.takeLast(EDGE_GAPS) else gaps
+        for (gap in tried) {
+            val (left, right) = glyphs.partition { it.span.start < gap }
+            if (isDiagramColumn(right, besides = left)) return left
+            if (isDiagramColumn(left, besides = right)) return right
         }
         return glyphs
     }
@@ -136,6 +139,14 @@ internal object PdfChordDiagrams {
 
     /** The narrowest band, in ems of the page's type, that sets a column of diagrams apart from the song. */
     private const val GUTTER = 2.0
+
+    /**
+     * How many of the bands nearest each edge are tried as a diagram column's, once a page has more than twice as many.
+     * Each try reads both sides' rows afresh, so trying every band of a page of tiny glyphs set far apart, one band per
+     * glyph, would take time growing with the square of its glyphs. A column hangs off one edge, so its band is among the
+     * nearest; a real page has a handful (one per diagram side by side and per column of the song), never this many.
+     */
+    private const val EDGE_GAPS = 8
 
     /** The largest share of the song's type a diagram's labels are set in. */
     private const val SMALL_TYPE = 0.85

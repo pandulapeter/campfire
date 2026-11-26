@@ -27,6 +27,16 @@ class PdfChordDiagramsTest {
     }
 
     @Test
+    fun `a row of words with a band between every two takes time in proportion to its length`() {
+        assertTakesTimeInProportion(
+            wholeSize = 64_000,
+            inputOf = { size -> List(size) { Positioned(ChordSheet.Span("a", it * 3.0, it * 3.0 + 0.6, 1.0), 0.0) } },
+        ) { words ->
+            assertEquals(words.size, PdfChordDiagrams.withoutDiagrams(words).size)
+        }
+    }
+
+    @Test
     fun `a column of diagrams beside the song is left out of its rows`() {
         val song = listOf(
             text("C", x = 60.0, y = 80.0, size = 11.0),
