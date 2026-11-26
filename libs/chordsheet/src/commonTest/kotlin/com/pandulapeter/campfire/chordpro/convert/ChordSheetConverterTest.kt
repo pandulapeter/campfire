@@ -351,6 +351,14 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `a long line opening a parenthesis it never closes is read in linear time`() {
+        val text = "(" + "a".repeat(300_000) + "\ne|---0---|\nB|---1---|"
+        val started = TimeSource.Monotonic.markNow()
+        convert(text)
+        assertTrue(started.elapsedNow() < LINEAR_TIME_BOUND, started.elapsedNow().toString())
+    }
+
+    @Test
     fun `unclosed brackets are escaped in linear time`() {
         val text = "[".repeat(100_000) + "\nhello world"
         val started = TimeSource.Monotonic.markNow()

@@ -164,7 +164,7 @@ internal object LineKinds {
      * would end. A sung line in parentheses (a backing vocal) stands over a lyric or under a chord row, never over a staff.
      */
     private fun noteOverStaff(context: Context, index: Int) =
-        (context.candidates[index] == null && parenthesizedNote.matches(context.lines[index].text.trim()) &&
+        (context.candidates[index] == null && isParenthesizedNote(context.lines[index].text.trim()) &&
             index < context.lines.lastIndex && staff(context, index + 1) != null)
             .gives(LineKind.COMMENT)
 
@@ -269,7 +269,11 @@ internal object LineKinds {
     private val gridVolta = Regex(":?\\|\\d+>?")
     private const val MAX_TRAILING_WORDS = 2
     private val bracketedLine = Regex("^\\[([^\\[\\]]+)\\]$")
-    private val parenthesizedNote = Regex("^\\([^()]*\\p{L}[^()]*\\)$")
+
+    /** A letter is looked for apart from the pattern, which would otherwise try every place for it on an unclosed line. */
+    private fun isParenthesizedNote(text: String) = parenthesizedLine.matches(text) && text.any { it.isLetter() }
+
+    private val parenthesizedLine = Regex("^\\([^()]*\\)$")
 
     /**
      * A string's name, then its staff: after a bar line (`e|---`), or straight after the name (`e-----`), as many sites
