@@ -41,14 +41,14 @@ internal fun appBarButtons(appBarWidth: Dp, hasCover: Boolean, isReadOnly: Boole
 }
 
 /**
- * The room the bar keeps for its key chip (`AppBarKeyChip`): its note mark and a key with its semitones ("G (+1)"), or
+ * The room the bar keeps for its key chip (`AppBarKeyChip`): its "Key" label and a key with its semitones ("Key G (+1)"), or
  * with a capo under it, at the interface's text size (`KeyChip`), and the gap that parts it from the title. Reserved by
  * a constant rather than measured: what the chip says differs from page to page, and the bar decides for every page at
  * once, so a width that followed the page would send the cover and the star into the menu and back as a setlist's pages
  * turn. It is as much as leaves the smallest phone's bar (360 dp) the title's [MIN_TITLE_WIDTH] beside the star; a
  * wider chip ("F#m (+11)", a long word for the capo) takes the rest from the title, which is cut short.
  */
-private val KEY_CHIP_ROOM = 72.dp + APP_BAR_KEY_CHIP_GAP
+internal val KEY_CHIP_ROOM = 72.dp + APP_BAR_KEY_CHIP_GAP
 
 private val APP_BAR_NAVIGATION_WIDTH = 52.dp // The 48dp button and the 4dp the bar pads its start by.
 private val APP_BAR_END_PADDING = 4.dp

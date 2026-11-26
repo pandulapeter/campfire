@@ -24,28 +24,29 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 
 /**
- * The container of the player's two controls, the tempo chip in the dock and the key chip in the app bar: a tonal pill
- * as the instrument pill is, outlined as well, so that it reads as a control of the player's beside the chord and scale
- * chips, which are the song's, without a chevron spelling it out, and stands out from the dock's surface. [onClick]
- * (null in read only mode, whose chips only read) takes the press over the whole of it but what [content] gives a press
- * of its own (play and stop). One that is not [isFramed] (the key chip where it opens nothing) draws neither its fill nor
- * its outline, fading them, as it then reads like the title beside it rather than inviting a press that does nothing.
+ * The container of the player's controls: the dock's tempo chip and instrument pill, and the app bar's key chip. Drawn
+ * as [frame] says: the dock's filled and outlined, so that they read as controls of the player's beside the chord and
+ * scale chips, which are the song's, without a chevron spelling it out, and stand out from the dock's surface; the key
+ * chip outlined only, a fill making it read as a section header; and a chip that opens nothing with neither, a change
+ * between them fading. [onClick] (null where the chip only reads, or where [content] takes its presses itself, as the
+ * instrument pill's halves do) takes the press over the whole of it but what [content] gives a press of its own (play
+ * and stop).
  */
 @Composable
 internal fun DockControlPill(
     modifier: Modifier = Modifier,
     shape: Shape = CircleShape,
+    frame: ControlPillFrame = ControlPillFrame.TONAL,
     onClickLabel: String,
     onClick: (() -> Unit)?,
-    isFramed: Boolean = true,
     content: @Composable () -> Unit,
 ) = Surface(
     modifier = modifier,
     shape = shape,
-    color = animateColorAsState(if (isFramed) MaterialTheme.colorScheme.surfaceContainerHighest else Color.Transparent).value,
+    color = animateColorAsState(if (frame == ControlPillFrame.TONAL) MaterialTheme.colorScheme.surfaceContainerHighest else Color.Transparent).value,
     contentColor = MaterialTheme.colorScheme.onSurface,
     // The fill alone is a step too close to the dock's own surface to stand out from it.
-    border = BorderStroke(1.dp, animateColorAsState(if (isFramed) MaterialTheme.colorScheme.outlineVariant else Color.Transparent).value),
+    border = BorderStroke(1.dp, animateColorAsState(if (frame == ControlPillFrame.NONE) Color.Transparent else MaterialTheme.colorScheme.outlineVariant).value),
 ) {
     if (onClick == null) {
         content()

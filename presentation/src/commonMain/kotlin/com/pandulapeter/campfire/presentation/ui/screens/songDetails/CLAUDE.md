@@ -82,20 +82,22 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
   breadcrumb naming it.
 - **The key chip is always the bar's** (`AppBarKeyChip`, `KeyChip`, `keyChipTextOf`) wherever the chords are on, an
   import preview's too, first among the actions, before the setlists' star or the read only mark and the overflow
-  button. A note mark leads it in every state (a key alone read as a letter in a box), then what the transposition
-  stepper names (the shapes' under `SHAPES`, the inferred key for a file naming none), a moved song's semitones muted,
-  smaller, and in parentheses after it ("G# (+1)": bare, "+1" read as one up from G#; not in read only mode), and **a
-  capo other than zero always**, on a smaller second line under the key in a short form (`song_details_capo_short`,
-  "Kapo 2" where a language's word is long); a screen reader hears all of it in full, as one description. Outlined and
-  tonal (`DockControlPill`), a rounded rectangle (12 dp corners) so the round ends of a pill never cut its second line,
-  as tall as a stepper. It
-  opens the Playing sheet (nothing in read only mode, whose overrides it would write, so there its fill and outline
-  fade away and it reads as text beside the title), is left out with neither key nor
-  capo, follows the page the pager is on or heading for, crossfading and resizing as the subtitle does (a setlist's
-  songs, a key change), and comes and goes fading and growing with the chords switch. Its room is taken first and by a
-  constant (`KEY_CHIP_ROOM`, 72 dp and a 4 dp gap from the title), since the bar decides for every page at once: as much
-  as leaves a 360 dp bar the title's 140 dp beside the star; a wider chip takes the rest from the title. `App bar: key
-  chip` breadcrumb.
+  button. A small muted "Key" label leads the key (a key alone read as a letter in a box; a word, since a note mark said
+  "sounding" of a key naming the shapes; a song with no key whose chip opens the sheet reads the label alone,
+  `KeyChipText.keyLine`), then what the transposition stepper names in the chords' colour (the shapes' under `SHAPES`,
+  the inferred key for a file naming none), a moved song's semitones muted, smaller, and in parentheses after it ("Key
+  G# (+1)": bare, "+1" read as one up from G#; not in read only mode), and **a capo other than zero always**, on a
+  smaller second line under the key in a short form (`song_details_capo_short`, "Kapo 2" where a language's word is
+  long); a screen reader hears all of it in full, as one description. Outlined with no fill (`DockControlPill`,
+  `ControlPillFrame.OUTLINED`: filled, it read as a section header), a rounded rectangle (12 dp corners) so the round
+  ends of a pill never cut its second line, as tall as a stepper. It opens the Playing sheet (nothing in read only mode,
+  whose overrides it would write, so there its outline fades away and it reads as text beside the title), is left out
+  with neither key nor capo, follows the page the pager is on or heading for, crossfading and resizing as the subtitle
+  does (a setlist's songs, a key change), and comes and goes fading and growing with the chords switch. Its room is
+  taken first and by a constant (`KEY_CHIP_ROOM`, 72 dp and a 4 dp gap from the title), since the bar decides for every
+  page at once: as much as leaves a 360 dp bar the title's 140 dp beside the star, which "Key Am" fits
+  (`AppBarKeyChipTest`); a wider chip (a moved key, a language's long word for "Key") takes the rest from the title.
+  `App bar: key chip` breadcrumb.
 - **The text size stepper and the tuner are always the menu's**: the stepper its last row (the menu staying open while
   pressed; a pinch and the zoom keys reach it too), the tuner an entry (`tunerAction`, `Menu: tuner`; with the Tuner
   feature on, never an import preview's), which the Playing sheet also has beside the tuning. As the bar narrows Choose

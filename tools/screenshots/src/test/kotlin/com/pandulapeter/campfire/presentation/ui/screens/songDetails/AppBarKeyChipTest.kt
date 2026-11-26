@@ -46,6 +46,16 @@ internal class AppBarKeyChipTest {
     }
 
     @Test
+    fun `the key chip with its Key label fits the room the smallest phone's bar keeps for it`() = runAppTest {
+        openSong()
+        waitForIdle()
+        // A pixel is a dp in the tests' window. House of the Rising Sun reads "Key Am".
+        val width = onNode(opensPlayingSheet()).fetchSemanticsNode().boundsInRoot.width
+        val room = (KEY_CHIP_ROOM - APP_BAR_KEY_CHIP_GAP).value
+        assertTrue(width <= room, "The key chip is $width dp wide, more than the $room dp the bar keeps for it.")
+    }
+
+    @Test
     fun `the tuner and the text size are the menu's however wide the bar is`() = runAppTest(window = TestWindow(width = 800.dp, height = 640.dp)) {
         openSong()
         waitForIdle()

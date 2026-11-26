@@ -29,7 +29,18 @@ internal data class KeyChipText(
     val capo: Int?,
     val opensPlaying: Boolean,
     val transposition: String? = null,
-)
+) {
+    /**
+     * What the chip's first line is: the "Key" label before [key]; the label alone where the chip opens the sheet for a
+     * song with no key, so that it still names what it opens, never the label twice; else none, the capo alone.
+     */
+    val keyLine
+        get() = when {
+            key != null -> KeyChipLine.LABELLED_KEY
+            opensPlaying -> KeyChipLine.LABEL_ALONE
+            else -> KeyChipLine.NONE
+        }
+}
 
 /**
  * The key chip of a song drawn as [model], set by [controls] (null in read only mode, which reads the values from the

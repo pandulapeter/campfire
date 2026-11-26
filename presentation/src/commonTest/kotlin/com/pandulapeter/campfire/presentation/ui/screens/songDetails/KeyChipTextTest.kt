@@ -53,6 +53,18 @@ internal class KeyChipTextTest {
     }
 
     @Test
+    fun `a named key is led by the Key label`() =
+        assertEquals(KeyChipLine.LABELLED_KEY, keyChipTextOf(controls(key = "G", capo = 0, transposition = 1), model("{key: F#}"))?.keyLine)
+
+    @Test
+    fun `a song with no key whose chip opens the sheet reads the Key label alone`() =
+        assertEquals(KeyChipLine.LABEL_ALONE, KeyChipText(key = null, capo = 2, opensPlaying = true).keyLine)
+
+    @Test
+    fun `read only a song with a capo and no key has only its capo line`() =
+        assertEquals(KeyChipLine.NONE, keyChipTextOf(null, model("{capo: 3}"))?.keyLine)
+
+    @Test
     fun `the chords switched off take the chip`() = assertNull(keyChipTextOf(controls(key = "Am", capo = 2), model("{key: Am}", shouldShowChords = false)))
 
     private fun model(text: String, shapesKey: String? = null, shouldShowChords: Boolean = true) = SongLyricsModel(
