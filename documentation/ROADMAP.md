@@ -14,7 +14,7 @@ What's planned for Campfire, grouped by area.
 ## Short-term
 
 - **Debug builds apart from release builds** on every platform (their own identity, data, Dropbox sign-in, and deep
-  links, on physical devices too), marked by a "D" in the middle of the app icon in every theme color.
+  links, on physical devices too), marked by the app icon's logo drawn with a dashed line in every theme color.
   Plan: [debug-builds.md](plans/debug-builds.md)
 - Add Slovak, Ukrainian and Dutch translations
 - Add ability to make notes / markups on music

@@ -10,8 +10,8 @@
 # Plan: debug builds apart from release builds, with an icon of their own
 
 **Status:** not started. Part 1 makes a debug build its own app on every platform: its own identity, its own data, its
-own Dropbox sign-in, and deep links that reach it, on physical devices too. Part 2 marks it with a "D" in the middle of
-the logo, in every theme color. Part 2 builds on Part 1 only on iOS (the debug icons need the Debug configuration's own
+own Dropbox sign-in, and deep links that reach it, on physical devices too. Part 2 marks it with the same logo drawn with a
+dashed line, in every theme color. Part 2 builds on Part 1 only on iOS (the debug icons need the Debug configuration's own
 asset catalog), so the two can overlap elsewhere.
 
 ## Where each platform stands
@@ -47,7 +47,8 @@ asset catalog), so the two can overlap elsewhere.
   lets a `run` and an installed build run side by side, each with its own single-instance guard. The library a `run`
   has used so far on macOS and Windows is moved there by hand once; nothing migrates it (a debug-only concern).
 - **Debug icons are generated once, not maintained by a tool in the repo.** The generator lives in the scratchpad while
-  Part 2 is done, as the "no temporary tooling" rule says. The D is redrawn by hand if the logo ever changes.
+  Part 2 is done, as the "no temporary tooling" rule says. The dashed logo is regenerated from the release logo's
+  path if the logo ever changes.
 
 ## Part 1: separate builds
 
@@ -111,23 +112,30 @@ asset catalog), so the two can overlap elsewhere.
 
 ## Part 2: the debug icon
 
-A "D" in the middle of the logo, in every theme color and every icon style the platform has. Settle the D's shape,
-weight, and color on Android first (step 6), where one vector covers every color, and have the owner approve it there
-before generating the bitmaps for the other platforms.
+The same pick logo, drawn with a dashed line instead of a solid one, in every theme color and every icon style the
+platform has. Nothing is added to the logo and nothing about it moves: the solid ring of the pick is broken into dashes
+along its own centerline, with the ring's width, so it reads as the release icon at a glance and as the debug one on a
+second look. Settle the dash length, the gap, and the dash count on Android first (step 6), where one vector covers
+every color, and have the owner approve it there before generating the bitmaps for the other platforms.
+
+- **The dashes are baked into filled paths.** A vector drawable has no stroke dash, and the logo is a filled ring (an
+  outer and an inner contour), not a stroke. The scratchpad generator takes the pick's centerline (midway between the
+  two contours), dashes it, and turns each dash into a filled path with rounded or square ends (whichever the owner
+  picks). An even dash count, spaced so a dash sits centered on the pick's tip and its top, keeps the outline
+  symmetric.
 
 ### Step 6. Android (one file)
 
 - Every launcher alias's adaptive icon (`mipmap-anydpi/ic_launcher*.xml`) shares `drawable/ic_launcher_foreground.xml`
-  as its foreground and its monochrome layer. A debug copy in `app/android/src/debug/res/drawable` with the D drawn into
-  the logo gives the D to all ten colors and the themed (monochrome) icon at once. The D is a path (Inter Bold's glyph,
-  converted), not text.
+  as its foreground and its monochrome layer. A debug copy in `app/android/src/debug/res/drawable` with the dashed
+  paths in place of the ring gives the dashed logo to all ten colors and the themed (monochrome) icon at once.
 - The launcher shortcuts and the notification icons stay as they are.
 
 ### Step 7. iOS
 
 - Ten debug icon sets (the default plus the nine alternates), each with `icon.png`, `icon-dark.png`, and
-  `icon-tinted.png`: the release ones with the D composited in, in the color each style needs (tinted: the grayscale
-  the system tints).
+  `icon-tinted.png`: the release ones' backgrounds with the dashed logo drawn over them in place of the solid one,
+  in the color each style needs (tinted: the grayscale the system tints).
 - They go in a second asset catalog (`DebugAssets.xcassets`) under the **same names** as the release sets. Each
   configuration excludes the other's catalog (`EXCLUDED_SOURCE_FILE_NAMES`), so `ASSETCATALOG_COMPILER_APPICON_NAME`, the
   alternate icon names, and the `setAlternateIconName` code (`CampfireViewController.kt`) don't change.
@@ -136,9 +144,9 @@ before generating the bitmaps for the other platforms.
 
 - Ten `app_icon_debug*.png` beside `app/desktop/src/main/composeResources/drawable/app_icon*.png`. `AppIcon.kt` takes
   them when `campfire.debug` is set.
-- In debug only, the D icon is also set on macOS's Dock and on Windows, where the window icon is the taskbar's for an
+- In debug only, the dashed icon is also set on macOS's Dock and on Windows, where the window icon is the taskbar's for an
   unpackaged process. That the system can't draw a runtime Dock image in its clear, tinted, or dark styles doesn't
-  matter for a debug build, and seeing the D there is the point.
+  matter for a debug build, and seeing the dashed logo there is the point.
 - `appIcon.icns`, `appIcon.ico`, and the Linux entry's PNG are used only for packages, which are always release, so they
   stay as they are.
 
@@ -150,6 +158,5 @@ before generating the bitmaps for the other platforms.
 
 ### Step 10. Credits and docs
 
-- No dependency is added, so `OpenSourceComponents.kt` doesn't change. Inter's license already covers drawing the D
-  from its glyph.
+- No dependency or font is added, so `OpenSourceComponents.kt` doesn't change.
 - Each platform's `CLAUDE.md` names where its debug icons live and that they're made from the release ones.
