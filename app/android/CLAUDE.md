@@ -85,7 +85,9 @@
   the day is read again.
 - **Every refresh and every update the system asks for also draws at once** (`WidgetDrawing.kt`: Glance's `compose`,
   then `updateAppWidget`): Glance's session is a WorkManager job, held back for half a minute in the background, and
-  the launcher icon's switch puts every widget back to its loading layout (a package change) as the app leaves.
+  the launcher icon's switch puts every widget back to its loading layout (a package change) as the app leaves. Not up
+  to Android 12 (API 31), where a list's rows go through Glance's own service, and a second composition's rows leave
+  the launcher holding stale ones for good.
 - Both widgets list songs in one row (`WidgetSongRow`: title, artist, the cover where it has one, 36 dp, rounded from
   Android 12 and square before it, as the widget is, and in a setlist its number, centered on the row), spanning the widget edge to edge so its touch feedback does:
   `widgetBackground` pads only above and below, and every other part pads its own sides. The headers tell the widgets

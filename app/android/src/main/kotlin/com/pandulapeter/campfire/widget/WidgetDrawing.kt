@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.widget
 
 import android.appwidget.AppWidgetManager
 import android.content.Context
+import android.os.Build
 import androidx.glance.GlanceId
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetManager
@@ -28,8 +29,14 @@ import kotlinx.coroutines.launch
  * half a minute; and the app is in the background just when it matters most: a theme picked right before leaving, and
  * the launcher icon's switch, after which Android puts every widget of the app back to its loading layout and asks for
  * an update ([drawNowAsync]). A composition run here once ([compose]) needs no job.
+ *
+ * Not up to Android 12 (API 31), where Glance hands a list its rows through a service of its own rather than inside the
+ * views: the composition run here and the session both put their rows there and tell the launcher to read them again, and
+ * the launcher keeps the rows it read before either was written, so a song deleted stays in the widget for good (an
+ * unchanged snapshot is never written again). The session's update alone brings them.
  */
 internal suspend fun GlanceAppWidget.drawNow(context: Context, glanceId: GlanceId) {
+    if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S) return
     try {
         val remoteViews = compose(context = context, id = glanceId)
         AppWidgetManager.getInstance(context).updateAppWidget(GlanceAppWidgetManager(context).getAppWidgetId(glanceId), remoteViews)
