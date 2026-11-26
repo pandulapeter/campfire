@@ -7,13 +7,22 @@
 # https://mozilla.org/MPL/2.0/.
 
 # Builds the web distribution and copies it over app/ in the website's repository. Called by publish-all.yml for
-# every release; dispatched by hand to publish this branch without one.
+# every release; dispatched by hand to publish a release's tag again, or this branch with no tag given.
 
 name: 'Publish web'
 
 on:
   workflow_call:
+    inputs:
+      release_tag:
+        type: string
+        required: true
   workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Tag of the release to build and publish (leave empty for this branch)'
+        type: string
+        required: false
 
 permissions:
   contents: read
@@ -35,6 +44,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.release_tag }}
       # The tag decides what is built, and the scripts and the shared actions come from the commit this workflow runs
       # from: the tag's on a release, so a re-run of it takes the same ones, and the branch's when it is dispatched by
       # hand with release_tag set, which is how a fix to them reaches a release that is already tagged. A step cannot

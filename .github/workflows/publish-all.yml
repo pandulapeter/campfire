@@ -331,6 +331,8 @@ jobs:
       ${{ !cancelled() && needs.prepare.result == 'success'
       && (needs.test.result == 'success' || needs.test.outputs.passed == 'true') }}
     uses: ./.github/workflows/publish-web.yml
+    with:
+      release_tag: ${{ github.event.release.tag_name }}
     secrets: inherit
 
   linux:
