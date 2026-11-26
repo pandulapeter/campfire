@@ -33,6 +33,7 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.platform.ImpersonatedPlatform
 import com.pandulapeter.campfire.screenshots.AppTestScope
 import com.pandulapeter.campfire.screenshots.TestWindow
+import com.pandulapeter.campfire.screenshots.openPlayingSheet
 import com.pandulapeter.campfire.screenshots.openSong
 import com.pandulapeter.campfire.screenshots.runAppTest
 import kotlin.test.Test
@@ -92,6 +93,16 @@ internal class AppKeyboardShortcutsTest {
         openSong()
         waitForIdle()
         onRoot().performKeyInput { pressKey(Key.U) }
+        waitUntil { viewModel.dialogHost.visibleDialog.value is DialogType.Tuner }
+    }
+
+    @Test
+    fun `U over the Playing sheet opens the tuner as its button does`() = runAppTest {
+        openSong()
+        openPlayingSheet()
+        waitForIdle()
+        // The sheet is a layer of its own, with the focus in it.
+        onAllNodes(isRoot()).onLast().performKeyInput { pressKey(Key.U) }
         waitUntil { viewModel.dialogHost.visibleDialog.value is DialogType.Tuner }
     }
 

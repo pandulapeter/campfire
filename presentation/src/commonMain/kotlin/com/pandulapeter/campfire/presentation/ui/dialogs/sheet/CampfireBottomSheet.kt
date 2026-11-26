@@ -124,6 +124,8 @@ internal fun sheetContainerColor() = MaterialTheme.colorScheme.background.let { 
  *   sheet and has to stay in the part of it the sheet leaves uncovered. Screen coordinates rather than the window's, since
  *   on Android the sheet is a window of its own.
  * @param closeShortcut The key that opened the sheet, which puts it away again ([closeShortcut]), as its close button does.
+ * @param keyShortcut A key that presses a button of the sheet's own and what it does ([keyShortcut]), as the Playing
+ *   sheet's U opens the tuner over it as its tuner button does.
  * @param onDismiss Has to dismiss this sheet's own dialog and nothing else (`DialogHost.dismissSheet`): it is
  *   called from the end of a hide animation, by which time another dialog may have taken the sheet's place.
  * @param content Can close the sheet ([BottomSheetContentScope.close]), for a sheet with a button of its own that is
@@ -140,6 +142,7 @@ internal fun CampfireBottomSheet(
     isDismissibleByTouch: Boolean = true,
     onTopMoved: ((topOnScreen: Float) -> Unit)? = null,
     closeShortcut: KeyShortcut? = null,
+    keyShortcut: Pair<KeyShortcut, () -> Unit>? = null,
     onDismiss: () -> Unit,
     content: @Composable BottomSheetContentScope.(contentPadding: PaddingValues) -> Unit,
 ) {
@@ -203,14 +206,7 @@ internal fun CampfireBottomSheet(
     val saveShortcut = remember { SheetSaveShortcut() }
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        // Material applies sheetMaxWidth after this modifier. First reserve the safe horizontal span, then
-        // center the capped surface inside it. Resolve insets in the modal window's composition, not the
-        // activity behind it, and leave the inset gaps outside the sheet's background and gesture bounds.
-        modifier = Modifier.composed {
-            Modifier.fillMaxWidth()
-                .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal))
-                .wrapContentWidth()
-        },
+        modifier = Modifier.centeredBetweenSafeEdges(),
         sheetState = sheetState,
         sheetMaxWidth = sheetMaxWidth,
         // Off for the slide of a final close, so that the second press of a double tap does not take hold of it.
@@ -235,7 +231,7 @@ internal fun CampfireBottomSheet(
                 modifier = Modifier.fillMaxWidth()
                     .keepSheetFromWheelScrolls().endingValueTypingOnPress()
                     .onGloballyPositioned { onTopMoved?.invoke(it.positionOnScreen().y) }
-                    .saveShortcut { saveShortcut.action?.invoke() }.closeShortcut(closeShortcut, onClose = cancel)
+                    .saveShortcut { saveShortcut.action?.invoke() }.closeShortcut(closeShortcut, onClose = cancel).keyShortcut(keyShortcut)
                     .then(sheetFocusTarget)
                     .then(
                         if (isCompactKeyboard) {
@@ -316,3 +312,14 @@ private fun keyboardBackHandler(): Boolean {
 }
 
 private val SHEET_BOTTOM_PADDING = 16.dp
+
+/**
+ * Material applies `sheetMaxWidth` after this modifier. First reserve the safe horizontal span, then center the capped
+ * surface inside it. Resolve insets in the modal window's composition, not the activity behind it, and leave the inset
+ * gaps outside the sheet's background and gesture bounds.
+ */
+private fun Modifier.centeredBetweenSafeEdges() = composed {
+    Modifier.fillMaxWidth()
+        .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal))
+        .wrapContentWidth()
+}

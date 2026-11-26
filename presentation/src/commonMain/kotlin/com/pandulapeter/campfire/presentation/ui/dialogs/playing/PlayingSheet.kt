@@ -47,6 +47,7 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_insert_capo
 import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
 import com.pandulapeter.campfire.presentation.ui.components.controls.STEPPER_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.CampfireBottomSheet
@@ -68,7 +69,7 @@ import kotlinx.coroutines.flow.StateFlow
 /**
  * How a song is played where it is read, opened from the key chip in song details' app bar: the instrument in the
  * player's hands and its tuning with the tuner after them ([PlayingInstrumentRow], [onTunerClicked], opening over this
- * sheet), then the transposition and the capo ([PlayingStepperRow]), the very steppers the song's first section had,
+ * sheet, U too), then the transposition and the capo ([PlayingStepperRow]), the very steppers the song's first section had,
  * writing the same overrides the same way (held pending, written once they rest, see `PendingWrites`), so the song
  * behind it follows every step. Nothing to save: its close button only closes it. The transposition and the capo leave
  * with the chords; the instrument stays, as the tuner and the keyboard's names read it, and the tuner with the Tuner
@@ -103,9 +104,16 @@ internal fun PlayingSheet(
         inferredKey = inferredKeys[song.fileName],
         onPlayingClicked = null,
     )
+    val isTunerEnabled = userPreferences?.isTunerEnabled != false
+    val openTuner = { source: String ->
+        println("$source: tuner")
+        onTunerClicked()
+    }
     CampfireBottomSheet(
         title = stringResource(Res.string.song_details_dock_playing),
         subtitle = songLabel(song),
+        // U opens the tuner over the sheet as its button does: the app's root does not hear keys while the sheet is up.
+        keyShortcut = (KeyShortcut.TUNER to { openTuner("Keyboard") }).takeIf { isTunerEnabled },
         onDismiss = { dialogHost.dismissSheet(dialog) },
     ) { contentPadding ->
         val scrollState = rememberScrollState()
@@ -124,10 +132,7 @@ internal fun PlayingSheet(
                 userPreferences = userPreferences,
                 onInstrumentClicked = { dialogHost.showDialog(DialogType.Instrument) },
                 onTuningClicked = { dialogHost.showDialog(DialogType.Tuning) },
-                onTunerClicked = {
-                    println("Playing sheet: tuner")
-                    onTunerClicked()
-                }.takeIf { userPreferences?.isTunerEnabled != false },
+                onTunerClicked = { openTuner("Playing sheet") }.takeIf { isTunerEnabled },
             )
             AnimatedPlayingRow(value = controls?.key) { key ->
                 PlayingStepperRow(label = stringResource(Res.string.song_details_transposition)) {
