@@ -235,16 +235,13 @@ internal fun SongDetailsScreen(
         // only keep the padding that is still theirs to apply.
         val pagerBarCover = if (hasPagerControls) contentPadding.calculateBottomPadding() else 0.dp
         val baseBottom = (contentPadding.calculateBottomPadding() - dock.height - pagerBarCover).coerceAtLeast(0.dp)
-        val previewCard = @Composable { preview: ImportPreviewState?, padding: PaddingValues, bottom: Dp ->
-            PreviewCard(viewModel = viewModel, importPreview = preview, currentPage = pagerState.currentPage, contentPadding = padding, baseBottom = bottom)
-        }
         val metronome = rememberDockMetronome(viewModel.metronomeController, viewModel.libraryState, viewModel.songTextStore)
         Row(modifier = Modifier.weight(1f).fillMaxWidth()) {
             Column(modifier = Modifier.weight(1f)) {
                 PagesAbovePreviewBar(
                     modifier = Modifier.weight(1f).fillMaxWidth().readAfterDock(),
                     baseBottom = baseBottom,
-                    bar = { previewCard(importPreview.takeUnless { dock.isSidePanel }, songPadding, baseBottom) },
+                    bar = { PreviewCard(viewModel, importPreview, pagerState.currentPage, songPadding, baseBottom, isBesidePanel = dock.isSidePanel) },
                 ) { bottomPadding ->
                     // A preview's pictures are the ones its review brings, which no shelf keeps before Import.
                     CompositionLocalProvider(LocalSongImageLoader provides (importPreview?.images ?: LocalSongImageLoader.current)) {
@@ -298,7 +295,7 @@ internal fun SongDetailsScreen(
                     metronome = metronome,
                     contentPadding = songPadding,
                     targetPage = pagerState.targetPage,
-                    isUnderCard = importPreview != null && !dock.isSidePanel,
+                    isUnderCard = importPreview != null,
                 )
             }
             DockSidePanel(
@@ -307,7 +304,6 @@ internal fun SongDetailsScreen(
                 contentPadding = contentPadding,
                 targetPage = pagerState.targetPage,
                 hasPagerBar = hasPagerControls,
-                card = { previewCard(importPreview.takeIf { dock.isSidePanel }, PaddingValues(), 0.dp) },
             )
         }
         if (hasPagerControls) {
@@ -324,6 +320,7 @@ private fun PreviewCard(
     currentPage: Int,
     contentPadding: PaddingValues,
     baseBottom: Dp,
+    isBesidePanel: Boolean,
 ) = SongDetailsPreviewBar(
     importController = viewModel.importController,
     importReportState = viewModel.importReportState,
@@ -333,6 +330,7 @@ private fun PreviewCard(
     contentPadding = contentPadding,
     layoutDirection = LocalLayoutDirection.current,
     baseBottom = baseBottom,
+    isBesidePanel = isBesidePanel,
 )
 
 /**

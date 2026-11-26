@@ -12,7 +12,6 @@ package com.pandulapeter.campfire.presentation.ui.instrument
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.MutableTransitionState
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
@@ -21,7 +20,6 @@ import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -47,13 +45,17 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.MeasurePolicy
 import androidx.compose.ui.layout.Placeable
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.constrainHeight
 import androidx.compose.ui.unit.constrainWidth
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.isSpecified
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
@@ -61,6 +63,7 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.instrument_choose
 import com.pandulapeter.campfire.presentation.resources.instrument_tuning_choose
 import com.pandulapeter.campfire.presentation.resources.instrument_tuning_standard
+import com.pandulapeter.campfire.presentation.ui.components.ShrinkToFit
 import com.pandulapeter.campfire.presentation.ui.components.controls.StepperDivider
 import com.pandulapeter.campfire.presentation.ui.components.tabChrome.TOOL_LINE_Z_INDEX
 import com.pandulapeter.campfire.presentation.ui.components.tabChrome.TabChromeElement
@@ -79,7 +82,7 @@ import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
  * the right one. It is as tall as a song's playing controls set in [style] are (`songControlHeight`), so that on a
  * song's page it lines up with the transposition stepper under it, unless a page of pickers gives it theirs ([height]), and keeps to one line: the tuning's name, the longer
  * of the two, is cut short first where the line is too narrow for both, down to a share of the pill, and then the
- * instrument's name (see [InstrumentPillMeasurePolicy]). The tuning half fades in and out with the instrument's
+ * instrument's name (see [instrumentPillMeasurePolicy]). The tuning half fades in and out with the instrument's
  * tunings and the pill resizes with it.
  *
  * @param height How tall the pill is: a song's playing controls' height, that of the picker chips it stands among, or
@@ -94,9 +97,11 @@ import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
  * when a leaving half is no longer laid out; its target is kept by the caller at whether there is a tuning to show.
  * @param stackedHalfPadding How far a stacked pill's names are from its sides, less where a narrow window wants the
  *   pill narrow (song details' dock on a phone).
- * @param trailing What the pill ends in after its halves, in the same container (song details' dock: the tuner, which
- *   tunes the strings the pill names); the halves give up their room to it first. A pill made wider than both centres
- *   them together.
+ * @param minFontSize How far a name too long for its half shrinks before it is cut short (song details' dock, whose
+ *   cards are narrow); unspecified, it is cut at [style]'s size.
+ * @param trailing What the pill ends in, in the same container (song details' dock: the tuner, which tunes the strings
+ *   the pill names), standing over the end of the halves, whose presses and ripples run under it to the pill's end
+ *   while their names keep clear of it (see [InstrumentPillOverTrailing]).
  */
 @Composable
 internal fun InstrumentPill(
@@ -113,6 +118,7 @@ internal fun InstrumentPill(
     isTabChromePart: Boolean = false,
     tuningVisibility: MutableTransitionState<Boolean>? = null,
     stackedHalfPadding: Dp = INSTRUMENT_PILL_HALF_PADDING,
+    minFontSize: TextUnit = TextUnit.Unspecified,
     trailing: (@Composable () -> Unit)? = null,
     onInstrumentClicked: () -> Unit,
     onTuningClicked: () -> Unit,
@@ -135,15 +141,17 @@ internal fun InstrumentPill(
         color = chrome.drawnContainerColor(containerColor),
         border = border,
     ) {
-        val halves = @Composable {
+        val halves = @Composable { endInset: Dp ->
             if (isStacked) {
                 InstrumentPillStackedHalves(
                     instrument = instrument,
                     tuning = tuning,
                     notation = notation,
                     style = style,
+                    minFontSize = minFontSize,
                     height = height,
                     horizontalPadding = stackedHalfPadding,
+                    endInset = endInset,
                     isEnabled = isEnabled,
                     onInstrumentClicked = onInstrumentClicked,
                     onTuningClicked = onTuningClicked,
@@ -154,6 +162,8 @@ internal fun InstrumentPill(
                     tuning = tuning,
                     notation = notation,
                     style = style,
+                    minFontSize = minFontSize,
+                    endInset = endInset,
                     isEnabled = isEnabled,
                     tuningVisibility = tuningVisibility,
                     onInstrumentClicked = onInstrumentClicked,
@@ -162,23 +172,22 @@ internal fun InstrumentPill(
             }
         }
         if (trailing == null) {
-            halves()
+            halves(0.dp)
         } else {
-            Row(horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
-                Box(modifier = Modifier.weight(1f, fill = false).fillMaxHeight()) { halves() }
-                trailing()
-            }
+            InstrumentPillOverTrailing(halves = halves, trailing = trailing)
         }
     }
 }
 
-/** The halves of an [InstrumentPill], laid out by [InstrumentPillMeasurePolicy]. */
+/** The halves of an [InstrumentPill], laid out by [instrumentPillMeasurePolicy]. */
 @Composable
 private fun InstrumentPillHalves(
     instrument: UserPreferences.Instrument,
     tuning: InstrumentTuning?,
     notation: ChordNotation,
     style: TextStyle,
+    minFontSize: TextUnit,
+    endInset: Dp,
     isEnabled: Boolean,
     tuningVisibility: MutableTransitionState<Boolean>?,
     onInstrumentClicked: () -> Unit,
@@ -186,26 +195,29 @@ private fun InstrumentPillHalves(
 ) {
     // Only the tuning half coming and going and a name changing animate the pill's width, each by itself. Animating every
     // change of the row's size instead would have the pill trail behind its text while a pinch scales a song's page.
-    Layout(measurePolicy = InstrumentPillMeasurePolicy, content = {
+    val endInsetPx = with(LocalDensity.current) { endInset.roundToPx() }
+    Layout(measurePolicy = remember(endInsetPx) { instrumentPillMeasurePolicy(endInsetPx) }, content = {
         val shownTuning = shownTuning(instrument, tuning)
         // Kept while it fades out, so that it leaves as it was rather than as nothing. Not a state: nothing is redrawn
         // because of it.
         val lastShownTuning = remember { LastTuning() }
         shownTuning?.let { lastShownTuning.value = it }
         val tuningState = tuningVisibility ?: remember { MutableTransitionState(shownTuning != null) }.apply { targetState = shownTuning != null }
-        // The room between the pill's rounded end and the name is the last half's, so that its press and ripple reach the
-        // end of the pill; the instrument half gives it up as the tuning half comes in, at the pace that half grows.
-        val instrumentEndPadding by animateDpAsState(
-            targetValue = if (tuningState.targetState) INSTRUMENT_PILL_HALF_PADDING else INSTRUMENT_PILL_HALF_PADDING + INSTRUMENT_PILL_EDGE_PADDING,
+        // The room between the pill's rounded end and the name, and the room a trailing control stands over ([endInset]),
+        // is the last half's, so that its press and ripple reach the end of the pill; the instrument half gives it up as
+        // the tuning half comes in, at the pace that half grows.
+        val instrumentIsLast by animateFloatAsState(
+            targetValue = if (tuningState.targetState) 0f else 1f,
             animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
         )
         InstrumentPillHalf(
             text = instrumentLabel(instrument),
             onClickLabel = stringResource(Res.string.instrument_choose),
             style = style,
+            minFontSize = minFontSize,
             isEnabled = isEnabled,
             startPadding = INSTRUMENT_PILL_HALF_PADDING + INSTRUMENT_PILL_EDGE_PADDING,
-            endPadding = instrumentEndPadding,
+            endPadding = INSTRUMENT_PILL_HALF_PADDING + (INSTRUMENT_PILL_EDGE_PADDING + endInset) * instrumentIsLast,
             onClick = onInstrumentClicked,
         )
         AnimatedVisibility(
@@ -224,9 +236,10 @@ private fun InstrumentPillHalves(
                     text = tuningName(lastTuning, notation),
                     onClickLabel = stringResource(Res.string.instrument_tuning_choose),
                     style = style,
+                    minFontSize = minFontSize,
                     isEnabled = isEnabled,
                     startPadding = INSTRUMENT_PILL_HALF_PADDING,
-                    endPadding = INSTRUMENT_PILL_HALF_PADDING + INSTRUMENT_PILL_EDGE_PADDING,
+                    endPadding = INSTRUMENT_PILL_HALF_PADDING + INSTRUMENT_PILL_EDGE_PADDING + endInset,
                     onClick = { if (!isLeaving) onTuningClicked() },
                 )
             }
@@ -241,9 +254,11 @@ private fun InstrumentPillHalves(
  * it expands the instrument gives up only what it actually takes. Both halves are measured from no minimum width, since
  * the `Surface` hands its own minimums on to its content, and at their natural widths where the width is unbounded,
  * which is also how a parent's intrinsic queries are answered (the sum of the halves', as a `Row` gives). A pill made
- * wider than its halves centres them.
+ * wider than its halves gives the rest to the instrument's, so that the halves' presses always fill the pill. The room a
+ * trailing control stands over ([endInset] pixels, inside the tuning half) is no name's, so the shares are taken of the
+ * rest.
  */
-private val InstrumentPillMeasurePolicy = MeasurePolicy { measurables, constraints ->
+private fun instrumentPillMeasurePolicy(endInset: Int) = MeasurePolicy { measurables, constraints ->
     val halfConstraints = constraints.copy(minWidth = 0)
     val instrument = measurables[0]
     // A tuning half that has fully left emits nothing.
@@ -252,20 +267,23 @@ private val InstrumentPillMeasurePolicy = MeasurePolicy { measurables, constrain
     val instrumentPlaceable: Placeable
     if (tuning == null || !constraints.hasBoundedWidth) {
         tuningPlaceable = tuning?.measure(halfConstraints)
-        instrumentPlaceable = instrument.measure(halfConstraints)
+        // A pill made wider than its names (a trailing control standing over its end) leaves the rest to the instrument's
+        // half, so that its press reaches the pill's edges rather than stopping around the name.
+        val instrumentMinWidth = (constraints.minWidth - (tuningPlaceable?.width ?: 0)).coerceIn(0, halfConstraints.maxWidth)
+        instrumentPlaceable = instrument.measure(halfConstraints.copy(minWidth = instrumentMinWidth))
     } else {
         val instrumentWidth = instrument.maxIntrinsicWidth(constraints.maxHeight)
-        tuningPlaceable = tuning.measure(halfConstraints.copy(maxWidth = tuningHalfMaxWidth(constraints.maxWidth, instrumentWidth)))
-        instrumentPlaceable = instrument.measure(halfConstraints.copy(maxWidth = constraints.maxWidth - tuningPlaceable.width))
+        val tuningMaxWidth = tuningHalfMaxWidth(constraints.maxWidth - endInset, instrumentWidth) + endInset
+        tuningPlaceable = tuning.measure(halfConstraints.copy(maxWidth = tuningMaxWidth.coerceAtMost(constraints.maxWidth)))
+        val instrumentMaxWidth = constraints.maxWidth - tuningPlaceable.width
+        val instrumentMinWidth = (constraints.minWidth - tuningPlaceable.width).coerceIn(0, instrumentMaxWidth)
+        instrumentPlaceable = instrument.measure(halfConstraints.copy(minWidth = instrumentMinWidth, maxWidth = instrumentMaxWidth))
     }
-    val contentWidth = instrumentPlaceable.width + (tuningPlaceable?.width ?: 0)
-    val width = constraints.constrainWidth(contentWidth)
+    val width = constraints.constrainWidth(instrumentPlaceable.width + (tuningPlaceable?.width ?: 0))
     val height = constraints.constrainHeight(maxOf(instrumentPlaceable.height, tuningPlaceable?.height ?: 0))
-    // Centred in a pill stretched wider than its halves (the side dock's column of controls).
-    val start = maxOf(0, (width - contentWidth) / 2)
     layout(width, height) {
-        instrumentPlaceable.placeRelative(start, (height - instrumentPlaceable.height) / 2)
-        tuningPlaceable?.placeRelative(start + instrumentPlaceable.width, (height - tuningPlaceable.height) / 2)
+        instrumentPlaceable.placeRelative(0, (height - instrumentPlaceable.height) / 2)
+        tuningPlaceable?.placeRelative(instrumentPlaceable.width, (height - tuningPlaceable.height) / 2)
     }
 }
 
@@ -280,6 +298,7 @@ private fun InstrumentPillHalf(
     text: String,
     onClickLabel: String,
     style: TextStyle,
+    minFontSize: TextUnit,
     isEnabled: Boolean,
     startPadding: Dp,
     endPadding: Dp,
@@ -302,6 +321,12 @@ private fun InstrumentPillHalf(
             color = MaterialTheme.colorScheme.onSurface,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
+            // Shrunk only within the room the half is given, so the pill's height and width stay as they were.
+            autoSize = if (minFontSize.isSpecified && minFontSize < style.fontSize) {
+                ShrinkToFit(minFontSize = minFontSize, maxFontSize = style.fontSize)
+            } else {
+                null
+            },
         )
     }
 }
@@ -318,8 +343,10 @@ private fun InstrumentPillStackedHalves(
     tuning: InstrumentTuning?,
     notation: ChordNotation,
     style: TextStyle,
+    minFontSize: TextUnit,
     height: Dp,
     horizontalPadding: Dp,
+    endInset: Dp,
     isEnabled: Boolean,
     onInstrumentClicked: () -> Unit,
     onTuningClicked: () -> Unit,
@@ -337,9 +364,10 @@ private fun InstrumentPillStackedHalves(
         text = instrumentLabel(instrument),
         onClickLabel = stringResource(Res.string.instrument_choose),
         style = style,
+        minFontSize = minFontSize,
         isEnabled = isEnabled,
         startPadding = horizontalPadding,
-        endPadding = horizontalPadding,
+        endPadding = horizontalPadding + endInset,
         onClick = onInstrumentClicked,
     )
     val lastTuning = lastShownTuning.value
@@ -347,7 +375,7 @@ private fun InstrumentPillStackedHalves(
         val isLeaving = shownTuning == null
         Column(modifier = Modifier.fillMaxWidth().height(height * tuningShare).clipToBounds().alpha(tuningShare * 2)) {
             HorizontalDivider(
-                modifier = Modifier.padding(horizontal = horizontalPadding),
+                modifier = Modifier.padding(start = horizontalPadding, end = horizontalPadding + endInset),
                 color = MaterialTheme.colorScheme.outlineVariant,
             )
             InstrumentPillHalf(
@@ -355,9 +383,10 @@ private fun InstrumentPillStackedHalves(
                 text = tuningName(lastTuning, notation),
                 onClickLabel = stringResource(Res.string.instrument_tuning_choose),
                 style = style,
+                minFontSize = minFontSize,
                 isEnabled = isEnabled,
                 startPadding = horizontalPadding,
-                endPadding = horizontalPadding,
+                endPadding = horizontalPadding + endInset,
                 onClick = { if (!isLeaving) onTuningClicked() },
             )
         }

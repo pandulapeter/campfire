@@ -50,3 +50,10 @@ private val DOCK_COMPACT_CHIP_PADDING = 8.dp
 
 /** How narrow a window is where the dock's tall controls are made smaller: an upright phone's, below a navigation rail's. */
 internal val DOCK_COMPACT_WINDOW_WIDTH = 600.dp
+
+/**
+ * How wide the tall instrument card may grow at [compactness]: on a phone about the 100 dp the owner asked of each card
+ * beside the diagrams, so that a long tuning ("Double drop D") shrinks and is cut short rather than taking the diagrams'
+ * room; at full size (a tablet's rows) room for most tunings whole. The side panel's card is as wide as the panel.
+ */
+internal fun dockTallCardMaxWidth(compactness: Float) = lerp(200.dp, 116.dp, compactness)

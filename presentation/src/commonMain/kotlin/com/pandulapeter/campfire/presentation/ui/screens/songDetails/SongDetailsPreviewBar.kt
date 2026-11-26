@@ -24,7 +24,8 @@ import com.pandulapeter.campfire.presentation.ui.state.importing.ImportReportSta
 /**
  * [ImportPreviewBar] where the song details screen puts it: on the dock's surface over the bottom of the pages, which leave
  * it its room, the card kept off the edges, and the room reaching down over whatever of the bottom inset nothing under
- * it covers ([baseBottom]).
+ * it covers ([baseBottom]). Always under the song, beside the dock's side panel too ([isBesidePanel]), never at the
+ * panel's head, which keeps its column of instrument card, diagrams, and tempo chip whole.
  */
 @Composable
 internal fun SongDetailsPreviewBar(
@@ -36,8 +37,10 @@ internal fun SongDetailsPreviewBar(
     contentPadding: PaddingValues,
     layoutDirection: LayoutDirection,
     baseBottom: Dp,
+    isBesidePanel: Boolean,
 ) = ImportPreviewBar(
     modifier = Modifier.fillMaxWidth(),
+    isBesidePanel = isBesidePanel,
     roomPadding = PaddingValues(
         start = contentPadding.calculateStartPadding(layoutDirection) + PREVIEW_CARD_MARGIN,
         top = PREVIEW_CARD_MARGIN,

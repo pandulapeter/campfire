@@ -14,6 +14,7 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -97,6 +98,7 @@ import com.pandulapeter.campfire.presentation.ui.state.importing.importPreviewPa
 internal fun ImportPreviewBar(
     modifier: Modifier = Modifier,
     roomPadding: PaddingValues,
+    isBesidePanel: Boolean,
     importPreview: ImportPreviewState?,
     currentPage: Int,
     isAddingToReview: Boolean,
@@ -108,6 +110,8 @@ internal fun ImportPreviewBar(
     // A short window leaves the song a slot a few lines tall above the full card, which gives most of it back as one line
     // and its buttons, the page's choices going behind a button of their own.
     val isCompact = LocalWindowInfo.current.containerDpSize.height < SHORT_WINDOW_HEIGHT
+    // Beside the dock's side panel the room meets the panel's surface, the two making one, as the rows under the song do.
+    val endCorner by animateDpAsState(if (isBesidePanel) 0.dp else DOCK_CORNER)
     AnimatedVisibility(
         modifier = modifier,
         visible = importPreview != null,
@@ -118,7 +122,7 @@ internal fun ImportPreviewBar(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.surfaceContainer, RoundedCornerShape(topStart = DOCK_CORNER, topEnd = DOCK_CORNER))
+                .background(MaterialTheme.colorScheme.surfaceContainer, RoundedCornerShape(topStart = DOCK_CORNER, topEnd = endCorner))
                 .padding(roomPadding),
             contentAlignment = Alignment.Center,
         ) {

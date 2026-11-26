@@ -68,6 +68,7 @@ import com.pandulapeter.campfire.presentation.ui.platform.archiveReceiver
 import com.pandulapeter.campfire.presentation.ui.platform.isAppleKeyboard
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
@@ -148,7 +149,7 @@ internal fun runAppTest(
     isFirstRun: Boolean = false,
     isSyncConnected: Boolean = true,
     preferenceFiles: Map<String, String> = emptyMap(),
-    extraPreferences: Map<String, JsonPrimitive> = emptyMap(),
+    extraPreferences: Map<String, JsonElement> = emptyMap(),
     platform: ImpersonatedPlatform = ImpersonatedPlatform.ANDROID,
     libraryFiles: Map<String, ByteArray> = emptyMap(),
     extraFakes: List<Module> = emptyList(),
@@ -401,7 +402,7 @@ private fun writeLibrary(
     pageTurn: PageTurn,
     appearance: TestAppearance,
     isCoverArtEnabled: Boolean,
-    extraPreferences: Map<String, JsonPrimitive>,
+    extraPreferences: Map<String, JsonElement>,
 ) {
     val songsFolder = File(dataDirectory, "library/songs").apply { mkdirs() }
     listOf(HOUSE_OF_THE_RISING_SUN, HOME_ON_THE_RANGE).forEach { File(songsFolder, it).writeText(demoSongText(it)) }

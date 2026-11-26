@@ -46,8 +46,8 @@ import com.pandulapeter.campfire.presentation.ui.songView.model.ChordDiagrams
  * inset of [contentPadding] included. It grows in from the screen's end edge and shrinks back into it as the window
  * switches between the panel and the rows under the song, its content laid out at its full width all the while, so that
  * it slides rather than reflows. Its contents are the song's that the pager is on or heading for ([targetPage]),
- * crossfading as a page turns: under an import preview's [card], the tall instrument pill ([DockInstrumentPill]) as wide
- * as the panel and standing still, then the diagrams in a grid ([DockPanelRows]), scrolling where the window is too short
+ * crossfading as a page turns: the tall instrument pill ([DockInstrumentPill]) as wide as the panel and standing still
+ * (an import preview's card stands under the song beside it, never here), then the diagrams in a grid ([DockPanelRows]), scrolling where the window is too short
  * for them, and at its foot the tall tempo chip, centred and standing still, the same size as at the end of the rows'
  * diagram row. What scrolls fades out where it meets the instrument pill (or the panel's top) and the tempo chip, or without one at the bottom only over the window's
  * bottom inset, which it scrolls on under and is padded by. A setlist's pager bar ([hasPagerBar]) stands under the panel
@@ -62,7 +62,6 @@ internal fun DockSidePanel(
     contentPadding: PaddingValues,
     targetPage: Int,
     hasPagerBar: Boolean,
-    card: @Composable () -> Unit,
 ) {
     // Kept while the panel leaves, so that it shrinks away as it was rather than as nothing.
     val last = remember { LastDockPanel() }
@@ -90,9 +89,6 @@ internal fun DockSidePanel(
             val endInset = contentPadding.calculateEndPadding(LocalLayoutDirection.current)
             val bottomInset = if (hasPagerBar) 0.dp else contentPadding.calculateBottomPadding()
             val hasTempo = dock.rows.hasTempo
-            Column(modifier = Modifier.fillMaxWidth().padding(end = endInset)) {
-                card()
-            }
             PanelInstrumentPill(
                 modifier = Modifier
                     .padding(end = endInset)

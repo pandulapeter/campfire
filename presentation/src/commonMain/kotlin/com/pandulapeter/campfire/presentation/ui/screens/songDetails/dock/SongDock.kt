@@ -171,6 +171,8 @@ private fun DockRowsOf(
             start = oneLineCard,
             end = tempo?.let { @Composable { DockTempoChip(tempo = it, metronome = metronome, height = layout.rowHeight) } },
             fadesAtEnd = isBesidePanel,
+            // A one-line card of long names would take the whole row from the chips it is there for.
+            minScrollingRoom = DOCK_MIN_SCROLLING_ROOM,
         ) {
             if (content != null) {
                 if (rows.hasChordRow) DockChordChips(cells = cells, onChordClicked = onChordClicked)

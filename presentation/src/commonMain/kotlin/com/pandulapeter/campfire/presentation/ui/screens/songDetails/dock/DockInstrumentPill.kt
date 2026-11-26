@@ -18,6 +18,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -27,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.pandulapeter.campfire.presentation.ui.components.controls.StepperDivider
 import com.pandulapeter.campfire.presentation.ui.instrument.InstrumentPill
 import com.pandulapeter.campfire.presentation.ui.songView.model.ChordDiagrams
@@ -58,7 +60,7 @@ internal fun DockInstrumentPill(
     onTunerClicked?.let { lastTunerClick.value = it }
     val typography = MaterialTheme.typography
     InstrumentPill(
-        modifier = modifier,
+        modifier = if (isTall) modifier.widthIn(max = dockTallCardMaxWidth(compactness)) else modifier,
         instrument = chordDiagrams.instrument,
         tuning = chordDiagrams.instrumentTuning,
         notation = chordDiagrams.notation,
@@ -68,6 +70,9 @@ internal fun DockInstrumentPill(
         shape = if (isTall) RoundedCornerShape(DOCK_TALL_CORNER) else CircleShape,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         stackedHalfPadding = dockTallChipPadding(compactness),
+        // A long tuning ("Double drop D") in a narrow card, or in a one-line card the row cuts short so that its chips keep
+        // their room (`DockScrollingRow`), shrinks a little before it is cut short.
+        minFontSize = DOCK_CARD_MIN_FONT_SIZE,
         trailing = {
             AnimatedVisibility(
                 visible = onTunerClicked != null,
@@ -103,3 +108,6 @@ internal fun DockInstrumentPill(
 
 /** The tuner's click [DockInstrumentPill] last had. Not a state: it is written and read in the same composition. */
 private class LastTunerClick(var value: (() -> Unit)? = null)
+
+/** How small a stacked card's names get before they are cut short: about `labelSmall`, still read at a glance. */
+private val DOCK_CARD_MIN_FONT_SIZE = 11.sp

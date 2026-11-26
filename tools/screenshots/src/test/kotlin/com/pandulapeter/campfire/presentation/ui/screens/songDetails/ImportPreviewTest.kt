@@ -41,9 +41,12 @@ import com.pandulapeter.campfire.presentation.resources.import_preview_name_take
 import com.pandulapeter.campfire.presentation.resources.import_preview_title
 import com.pandulapeter.campfire.presentation.resources.import_replace_title
 import com.pandulapeter.campfire.presentation.resources.import_review_confirm
+import com.pandulapeter.campfire.presentation.resources.instrument_guitar
+import com.pandulapeter.campfire.presentation.resources.instrument_tuning_standard
 import com.pandulapeter.campfire.presentation.resources.song_image
 import com.pandulapeter.campfire.presentation.resources.song_image_not_found
 import com.pandulapeter.campfire.presentation.resources.songs_new_song
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.DOCK_PANEL_PADDING
 import com.pandulapeter.campfire.screenshots.AppTestScope
 import com.pandulapeter.campfire.screenshots.HOUSE_OF_THE_RISING_SUN
 import com.pandulapeter.campfire.screenshots.TestWindow
@@ -58,6 +61,7 @@ import java.io.File
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 import javax.imageio.ImageIO
+import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -89,6 +93,25 @@ internal class ImportPreviewTest {
         }
         onAllNodes(chord and SemanticsMatcher.keyIsDefined(SemanticsProperties.ContentDescription)).assertCountEquals(0)
         onNode(opensTempoSheet()).assertDoesNotExist()
+    }
+
+    @Test
+    fun `a wide window's preview card stands under the song beside the side panel, whose instrument card fills its width`() = runAppTest(
+        window = TestWindow.DESKTOP,
+        pickedFiles = listOf(newSong),
+    ) {
+        pickFiles()
+        waitForText(string(Res.string.import_preview_title))
+        waitForIdle()
+        val message = onNode(hasText(string(Res.string.import_preview_title))).fetchSemanticsNode().boundsInRoot
+        val instrument = onNode(hasText(string(Res.string.instrument_guitar)) and hasClickAction()).fetchSemanticsNode().boundsInRoot
+        val tuning = onNode(hasText(string(Res.string.instrument_tuning_standard)) and hasClickAction()).fetchSemanticsNode().boundsInRoot
+        assertTrue(message.right <= instrument.left, "The card's message at $message is not beside the panel's instrument card at $instrument.")
+        assertTrue(message.top > instrument.bottom, "The card's message at $message is not under the song, at the bottom.")
+        // The panel's content runs to 8 dp from the window's end, and the card's halves fill it, a preview having no tuner.
+        val panelContentEnd = TestWindow.DESKTOP.width.value - DOCK_PANEL_PADDING.value
+        assertTrue(abs(instrument.right - panelContentEnd) <= 1.5f && abs(tuning.right - panelContentEnd) <= 1.5f, "The halves at $instrument and $tuning do not reach the card's end at $panelContentEnd.")
+        assertTrue(abs(instrument.left - tuning.left) <= 1.5f, "The halves at $instrument and $tuning are not as wide as each other.")
     }
 
     @Test
