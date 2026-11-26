@@ -18,6 +18,8 @@ package com.pandulapeter.campfire.data.model.preferences
  * @param hasTurnedOnMicrophone Whether the tuner's page has ever been told to use the microphone on this device, which
  * is what the platforms that cannot say whether it is allowed (the desktop, a browser without the Permissions API) go by:
  * there opening the input is the question, so it is only opened without a tap once a tap has asked, in any run since.
+ * Android sets it too as its question is answered, since it says the same of a question never asked and of one refused
+ * for good, which then offers only its settings.
  */
 data class TunerSettings(
     val mode: Mode = Mode.STRINGS,

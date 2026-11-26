@@ -87,7 +87,7 @@ internal fun TunerSheet(
     val userPreferences by userPreferencesFlow.collectAsStateWithLifecycle()
     val hasRequested by tunerController.hasTurnedOnMicrophone.collectAsStateWithLifecycle()
     val notation = (userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default).notation.toChordNotation()
-    val permission = rememberMicrophonePermission()
+    val permission = rememberMicrophonePermission(hasAsked = hasRequested, onAnswered = tunerController::markMicrophoneAsked)
     val status = permission.status
     val notice by remember(status, hasRequested) {
         derivedStateOf { tunerNoticeOf(status = status, listening = state.value.listening, hasRequested = hasRequested) }

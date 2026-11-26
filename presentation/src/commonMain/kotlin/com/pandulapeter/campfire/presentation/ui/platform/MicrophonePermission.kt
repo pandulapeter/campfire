@@ -50,5 +50,11 @@ internal class MicrophonePermission(
     val openSoundSettings: (() -> Unit)? = null,
 )
 
+/**
+ * @param hasAsked Whether a request on this device has been answered, in any run (`TunerSettings.hasTurnedOnMicrophone`):
+ *   Android says the same of a question never asked and of one refused for good, and only this tells them apart. The
+ *   other platforms say which it is themselves.
+ * @param onAnswered Called as a [MicrophonePermission.request] is answered, for [hasAsked] to be remembered.
+ */
 @Composable
-internal expect fun rememberMicrophonePermission(): MicrophonePermission
+internal expect fun rememberMicrophonePermission(hasAsked: Boolean, onAnswered: () -> Unit): MicrophonePermission

@@ -30,7 +30,7 @@ import platform.darwin.dispatch_get_main_queue
  * of the Settings app.
  */
 @Composable
-internal actual fun rememberMicrophonePermission(): MicrophonePermission {
+internal actual fun rememberMicrophonePermission(hasAsked: Boolean, onAnswered: () -> Unit): MicrophonePermission {
     var status by remember { mutableStateOf(currentStatus()) }
     LifecycleResumeEffect(Unit) {
         status = currentStatus()

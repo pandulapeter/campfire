@@ -105,8 +105,13 @@ internal class TunerController(
 
     /** The page's button: what asks, on the platforms where opening the input is what asks. */
     fun requestMicrophone() {
-        if (!tunerSettings.value.hasTurnedOnMicrophone) updateTunerSettings { copy(hasTurnedOnMicrophone = true) }
+        markMicrophoneAsked()
         tuner.listen(config)
+    }
+
+    /** Remembers that this device has asked for the microphone, see [TunerSettings.hasTurnedOnMicrophone]. */
+    fun markMicrophoneAsked() {
+        if (!tunerSettings.value.hasTurnedOnMicrophone) updateTunerSettings { copy(hasTurnedOnMicrophone = true) }
     }
 
     /**

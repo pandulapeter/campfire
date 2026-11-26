@@ -103,7 +103,7 @@ internal fun TunerScreen(
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val hasRequested by viewModel.tunerController.hasTurnedOnMicrophone.collectAsStateWithLifecycle()
     val notation = (userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default).notation.toChordNotation()
-    val permission = rememberMicrophonePermission()
+    val permission = rememberMicrophonePermission(hasAsked = hasRequested, onAnswered = viewModel.tunerController::markMicrophoneAsked)
     val status = permission.status
     val notice by remember(status, hasRequested) {
         derivedStateOf { tunerNoticeOf(status = status, listening = state.value.listening, hasRequested = hasRequested) }

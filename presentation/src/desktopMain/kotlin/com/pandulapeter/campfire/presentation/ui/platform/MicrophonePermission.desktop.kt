@@ -18,7 +18,7 @@ import androidx.compose.runtime.remember
  * microphone privacy page, which Linux has none of.
  */
 @Composable
-internal actual fun rememberMicrophonePermission(): MicrophonePermission = remember {
+internal actual fun rememberMicrophonePermission(hasAsked: Boolean, onAnswered: () -> Unit): MicrophonePermission = remember {
     val operatingSystem = System.getProperty("os.name").orEmpty().lowercase()
     val isMac = "mac" in operatingSystem || "darwin" in operatingSystem
     val isWindows = !isMac && "win" in operatingSystem

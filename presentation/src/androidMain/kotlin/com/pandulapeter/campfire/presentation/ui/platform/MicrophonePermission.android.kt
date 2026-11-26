@@ -30,21 +30,21 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 
 /**
  * `checkSelfPermission`, read again on every resume, the Activity's result launcher, and the app's page of the system
- * settings. No "was asked" flag is kept across launches: a refusal with no rationale owed after it is one the system no
- * longer shows a question for, and that is when Open settings becomes the first button. Within a launch the answer of
- * the last request is what tells a refusal from a question never asked.
+ * settings. A refusal with no rationale owed after it is one the system no longer shows a question for, which Open
+ * settings then answers instead of Ask again; Android says the same of a question never asked, so whether this device
+ * has asked ([hasAsked], kept across launches) is what tells the two apart. A grant taken back in the system's settings
+ * reads as refused for good too, which Open settings still answers.
  */
 @Composable
-internal actual fun rememberMicrophonePermission(): MicrophonePermission {
+internal actual fun rememberMicrophonePermission(hasAsked: Boolean, onAnswered: () -> Unit): MicrophonePermission {
     val context = LocalContext.current
     val activity = remember(context) { context.findActivity() }
     var isGranted by remember { mutableStateOf(context.isMicrophoneGranted()) }
     var wasRefused by rememberSaveable { mutableStateOf(false) }
-    var canAskAgain by remember { mutableStateOf(true) }
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         isGranted = granted
         wasRefused = !granted
-        canAskAgain = activity?.shouldShowRequestPermissionRationale(Manifest.permission.RECORD_AUDIO) == true
+        onAnswered()
     }
     LifecycleResumeEffect(context) {
         isGranted = context.isMicrophoneGranted()
@@ -52,13 +52,14 @@ internal actual fun rememberMicrophonePermission(): MicrophonePermission {
         onPauseOrDispose { }
     }
     val rationale = activity?.shouldShowRequestPermissionRationale(Manifest.permission.RECORD_AUDIO) == true
+    val isRefusedForGood = !isGranted && !rationale && (wasRefused || hasAsked)
     return MicrophonePermission(
         status = when {
             isGranted -> MicrophoneStatus.GRANTED
-            wasRefused || rationale -> MicrophoneStatus.DENIED
+            rationale || isRefusedForGood -> MicrophoneStatus.DENIED
             else -> MicrophoneStatus.NOT_ASKED
         },
-        canAskAgain = rationale || (canAskAgain && !wasRefused),
+        canAskAgain = !isRefusedForGood,
         request = { launcher.launch(Manifest.permission.RECORD_AUDIO) },
         openSettings = {
             context.startActivity(
