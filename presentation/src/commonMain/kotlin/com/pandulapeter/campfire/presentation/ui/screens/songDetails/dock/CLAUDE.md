@@ -96,7 +96,8 @@ are the app bar's key chip (`../CLAUDE.md`), the tuner the menu's and the Playin
 - **The diagram strip** (`DockDiagramStrip`) is the Chords section's cells (`rememberChordCells`), sized by what the
   row's height leaves (`dockDiagramSize`). The chords played on the screen are drawn as they are and the rest faded
   back to 60 %, well above a disabled control's 38 %, so no colour is spent on the mark and nothing looks unplayable;
-  nothing fades before the song is laid out. The screen is the one a step or a fling comes to rest on, else the one
+  nothing fades before the song is laid out, nor in a song the screen holds whole (`sectionsOnScreen`: a scroll at its end
+  shows every section to the song's last). The screen is the one a step or a fling comes to rest on, else the one
   shown now, so the marks follow a hand drag and a self-scrolling column too (`rememberChordsOnScreen`:
   `SongStepper.shownSections`, derived, so only a new range of sections recomposes; `chordsOnScreen`, a screen of none
   marking the chord it is headed by, `firstChordFrom`). A chord chip or diagram opens the chord sheet, not in

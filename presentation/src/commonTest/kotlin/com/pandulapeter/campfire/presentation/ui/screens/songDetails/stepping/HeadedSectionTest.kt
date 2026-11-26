@@ -30,7 +30,7 @@ internal class HeadedSectionTest {
         val rows = SongRows(stepOffsets = listOf(0, 300, 600), stepSections = listOf(0, 3, 5))
         assertEquals(0, sectionAt(100, rows))
         assertEquals(3, sectionAt(300, rows))
-        assertEquals(5, sectionAt(650, rows, maxValue = 650))
+        assertEquals(5, sectionAt(650, rows))
     }
 
     @Test
@@ -55,6 +55,38 @@ internal class HeadedSectionTest {
         val rows = SongRows(stepOffsets = listOf(0, 300, 600), stepSections = listOf(0, 0, 2))
         assertEquals(0..0, sectionsOnScreen(0, 300, rows))
         assertEquals(0..1, sectionsOnScreen(300, 300, rows))
+    }
+
+    @Test
+    fun `a single column that fits the screen shows every section`() {
+        // The scroll's padding puts the first line below the top of the screen, and there is nothing to scroll.
+        val rows = SongRows(
+            stepOffsets = listOf(0, 160, 320),
+            stepSections = listOf(0, 1, 2),
+            lineTops = listOf(120, 200, 280, 360),
+            lineBottoms = listOf(200, 280, 360, 440),
+            lineSections = listOf(0, 1, 1, 2),
+        )
+        assertEquals(0..Int.MAX_VALUE, sectionsOnScreen(0, 600, rows, maxValue = 0))
+    }
+
+    @Test
+    fun `columns of a single row that fits the screen show every section`() {
+        // Every column's first section is stepped to at the top of the song.
+        val rows = SongRows(stepOffsets = listOf(0, 200, 0, 150), stepSections = listOf(0, 1, 2, 3))
+        assertEquals(0..Int.MAX_VALUE, sectionsOnScreen(0, 600, rows, maxValue = 0))
+    }
+
+    @Test
+    fun `a strip that fits the screen shows every section`() {
+        val rows = SongRows(stepOffsets = listOf(0, 300, 600), stepSections = listOf(0, 2, 4), isSteppedByRow = true, isAcross = true)
+        assertEquals(0..Int.MAX_VALUE, sectionsOnScreen(0, 900, rows, maxValue = 0))
+    }
+
+    @Test
+    fun `a strip scrolled to its end shows every column on the screen`() {
+        val rows = SongRows(stepOffsets = listOf(0, 300, 600, 900), stepSections = listOf(0, 2, 4, 6), isSteppedByRow = true, isAcross = true)
+        assertEquals(4..Int.MAX_VALUE, sectionsOnScreen(600, 600, rows, maxValue = 600))
     }
 
     @Test
