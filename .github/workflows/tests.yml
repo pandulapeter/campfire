@@ -12,7 +12,7 @@
 # (test_*.py); the checks the pre-commit hook runs too (license headers, store listings, regular expressions, iOS-tested
 # test names, file and function sizes, presentation layers, and sync seams); and a compilation of every platform's
 # code, the iOS one on a macOS runner, since desktopTest compiles only the desktop target's; and the release builds
-# started as they ship: Android's on an emulator and the desktop's ProGuarded app image.
+# started as they ship: Android's on an emulator, the desktop's ProGuarded app image, and the web's in headless Chrome.
 # Run on every pull request, on every push to main (a merged pull request or a direct push) that changes more than
 # documentation/, and by publish-all.yml before it starts a single store build, so a failing test or a platform that
 # does not compile stops every store's release rather than one of them.
@@ -152,9 +152,9 @@ jobs:
       - name: Set up JDK 21 and Gradle
         uses: ./.github/actions/setup-jdk
       # desktopTest compiles commonMain and desktopMain alone. The Android app compiles every library's androidMain, and
-      # the web one their wasmJsMain; the distribution's Binaryen pass is left to publish-web.yml, since the compilation
-      # is what catches an error. The desktop app goes through ProGuard as its release does, whose task also has every
-      # class it writes verified, since bytecode its optimizer breaks only fails once the class is used.
+      # the web one their wasmJsMain, into the distribution publish-web.yml ships, which is started below. The desktop
+      # app goes through ProGuard as its release does, whose task also has every class it writes verified, since bytecode
+      # its optimizer breaks only fails once the class is used.
       - name: Compile the Android, desktop and web apps, the Baseline Profile generator and the screenshot tool
         run: >-
           bash .github/scripts/gradlew_retrying.sh --continue
@@ -162,12 +162,16 @@ jobs:
           :app:baselineprofile:compileNonMinifiedReleaseKotlin
           :app:desktop:proguardReleaseJars
           :app:desktop:compileWebViewHelper
-          :app:web:compileProductionExecutableKotlinWasmJs
+          :app:web:wasmJsBrowserDistribution
           :tools:screenshots:compileKotlin
       # The web's file storage is the origin private file system, which only a browser has: the contract every
       # platform's storage keeps runs over it in headless Chrome, as it runs on the desktop and the iOS simulator.
       - name: Run the storage tests in headless Chrome
         run: bash .github/scripts/gradlew_retrying.sh :data:source:local:implementation:wasmJsBrowserTest
+      # Binaryen's optimizer and the production build's dead code elimination change what runs, and nothing else here
+      # loads the site publish-web.yml ships: it is opened in headless Chrome at a few addresses.
+      - name: Start the web release build in headless Chrome
+        run: node .github/scripts/start_web_release_build.mjs app/web/build/dist/wasmJs/productionExecutable
       # What ProGuard breaks for reflection passes the verification above and fails only once the app runs, which a
       # publishing leg would otherwise be the first to do, after other stores' builds went out. The app image the .deb
       # ships, its class data sharing archive recorded (which needs a display: Xvfb, with Skiko drawing in software), is
