@@ -13,6 +13,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.lifecycle.SavedStateHandle
 import com.pandulapeter.campfire.chordpro.model.Chord
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
+import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.metronome.api.Metronome
 import com.pandulapeter.campfire.metronome.api.model.BeatLevel
 import com.pandulapeter.campfire.metronome.api.model.MetronomeBeat
@@ -126,15 +127,30 @@ class SoundLifetimeTest {
     }
 
     @Test
-    fun `the tuner sheet goes on listening under its instrument's choice and stops once both are closed`() = runTest {
+    fun `the tuner sheet over the Playing sheet stops listening once it is closed`() = runTest {
         val (_, dialogHost) = soundLifetime(backgroundScope)
+        val playing = DialogType.Playing(
+            song = Song(
+                fileName = "song.cho",
+                title = "Song",
+                artist = "",
+                key = null,
+                transpose = 0,
+                tags = emptyList(),
+                languages = emptyList(),
+                coverArtUrl = null,
+                hasChords = true,
+                canUpdateFileName = false,
+                lastModified = 0,
+                size = 0,
+            ),
+            setlistFileName = null,
+        )
+        dialogHost.showDialog(playing)
         dialogHost.showDialog(DialogType.Tuner)
         val tunerStopsWhileOpen = tunerStops
-        dialogHost.showDialog(DialogType.Instrument)
         dialogHost.dismissDialog()
-        assertEquals(DialogType.Tuner, dialogHost.visibleDialog.value)
-        assertEquals(tunerStopsWhileOpen, tunerStops)
-        dialogHost.dismissDialog()
+        assertEquals(playing, dialogHost.visibleDialog.value)
         assertEquals(true, tunerStops > tunerStopsWhileOpen)
     }
 

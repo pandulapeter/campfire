@@ -17,8 +17,8 @@ hand-typed table first, a search for the rest).
 ### Instruments
 
 - Guitar (and the twelve-string, drawn as a guitar), ukulele, mandolin, banjo, and keyboard draw diagrams; the rest
-  draw none, as if Chord diagrams were off. The instrument pill is in song details' Playing sheet, and starts its dock
-  on an instrument without shapes, so the diagrams can be brought back.
+  draw none, as if Chord diagrams were off. Song details' dock keeps its instrument card on an instrument
+  without shapes, so the diagrams can be brought back from the song.
 - **A chord is drawn as it is fingered** (`ui/playing/CLAUDE.md`): `SongChord.chord` is the sounding chord (notes,
   degree, scales), named as it sounds or, where the reader names shapes, as its shape (key headings too);
   `shapeChord` is the shape played above the capo, by which a shape is looked up, picked, and stored. A `{define}` is

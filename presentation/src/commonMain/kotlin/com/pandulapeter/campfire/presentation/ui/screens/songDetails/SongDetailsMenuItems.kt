@@ -53,3 +53,13 @@ internal fun preferencesAction(onClick: () -> Unit) = ActionsMenuItem(
     isAlwaysInMenu = true,
     onClick = onClick,
 )
+
+/**
+ * The song's own entries at the head of song details' menu, in the one order both menus (read only mode's too) keep:
+ * Choose setlists ([setlistAssignments], where the bar has no room for its star), Preferences, the tuner ([tuner], where
+ * the dock's card or the Tuner feature does not leave it out), then About the song ([aboutSong], never in a preview):
+ * the tuner follows Preferences, both being how the player sets up to play, and About the song, read rather than set,
+ * comes after them.
+ */
+internal fun <T : Any> songMenuItems(setlistAssignments: T?, preferences: T, tuner: T?, aboutSong: T?) =
+    listOfNotNull(setlistAssignments, preferences, tuner, aboutSong)

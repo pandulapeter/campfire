@@ -13,15 +13,19 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isDialog
 import androidx.compose.ui.test.isPopup
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.instrument_guitar
+import com.pandulapeter.campfire.presentation.resources.settings_instrument
 import com.pandulapeter.campfire.presentation.resources.song_details_text_size_decrease
+import com.pandulapeter.campfire.presentation.resources.song_details_transposition
+import com.pandulapeter.campfire.presentation.resources.song_editor_insert_capo
 import com.pandulapeter.campfire.presentation.resources.songs_actions
 import com.pandulapeter.campfire.presentation.resources.songs_choose_setlists
 import com.pandulapeter.campfire.presentation.resources.tuner
-import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.screenshots.TestWindow
 import com.pandulapeter.campfire.screenshots.openPlayingSheet
 import com.pandulapeter.campfire.screenshots.openSong
@@ -31,7 +35,7 @@ import com.pandulapeter.campfire.screenshots.tap
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
-/** Song details' key chip in the app bar, with the text size left to the menu and the tuner to the Playing sheet too. */
+/** Song details' key chip in the app bar and the Playing sheet it opens, with the text size left to the menu. */
 @OptIn(ExperimentalTestApi::class)
 internal class AppBarKeyChipTest {
 
@@ -65,12 +69,16 @@ internal class AppBarKeyChipTest {
     }
 
     @Test
-    fun `the Playing sheet opens the tuner from beside the tuning`() = runAppTest {
+    fun `the Playing sheet holds the transposition and the capo, with no instrument line or tuner`() = runAppTest {
         openSong()
         openPlayingSheet()
-        // The dock's instrument card has a tuner too, under the sheet.
-        tap(hasContentDescription(string(Res.string.tuner)) and hasClickAction() and hasAnyAncestor(isDialog()))
-        waitUntil { viewModel.dialogHost.visibleDialog.value is DialogType.Tuner }
+        waitForIdle()
+        onNode(hasText(string(Res.string.song_details_transposition)) and hasAnyAncestor(isDialog())).assertExists()
+        onNode(hasText(string(Res.string.song_editor_insert_capo)) and hasAnyAncestor(isDialog())).assertExists()
+        // The dock's instrument card, with its tuner, stays under the sheet; the sheet has neither of its own.
+        onNode(hasText(string(Res.string.instrument_guitar)) and hasAnyAncestor(isDialog())).assertDoesNotExist()
+        onNode(hasText(string(Res.string.settings_instrument)) and hasAnyAncestor(isDialog())).assertDoesNotExist()
+        onNode(hasContentDescription(string(Res.string.tuner)) and hasAnyAncestor(isDialog())).assertDoesNotExist()
     }
 }
 

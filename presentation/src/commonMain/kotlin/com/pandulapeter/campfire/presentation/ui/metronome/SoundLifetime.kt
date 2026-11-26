@@ -11,7 +11,6 @@ package com.pandulapeter.campfire.presentation.ui.metronome
 
 import com.pandulapeter.campfire.metronome.api.Metronome
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
-import com.pandulapeter.campfire.presentation.ui.dialogs.stacksOver
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 
 /**
@@ -47,14 +46,9 @@ internal class SoundLifetime(
         // to stop it, so it stops a click the way pushing a destination does (see navigator.updateBackStack). The tuner sheet
         // listens to the room through the audio session the click plays in, and the two never hold the audio together.
         if (dialogType is DialogType.Export || dialogType is DialogType.Tuner) metronome.stop()
-        // The tuner sheet listens for as long as it is up and not a moment longer, as the Tuner tab does. Its instrument's
-        // and tuning's sheets stand over it, so it goes on listening under them for the strings picked there, and stops
-        // once neither it nor they are on top.
-        if (previousDialog.isTunerOnTop() && !dialogType.isTunerOnTop()) stopTuner()
+        // The tuner sheet listens for as long as it is up and not a moment longer, as the Tuner tab does.
+        if (previousDialog is DialogType.Tuner && dialogType !is DialogType.Tuner) stopTuner()
         // A scale plays only under the sheet that shows it: closed, or covered by a chord's sheet, it stops.
         if (previousDialog is DialogType.Scale && dialogType != previousDialog) stopScale()
     }
 }
-
-/** Whether the tuner sheet is on top while this dialog is: it is the sheet, or a choice standing over it. */
-private fun DialogType?.isTunerOnTop() = this is DialogType.Tuner || this?.stacksOver(DialogType.Tuner) == true

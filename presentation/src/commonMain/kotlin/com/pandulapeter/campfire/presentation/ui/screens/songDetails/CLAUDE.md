@@ -44,13 +44,14 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
   addressed as `/import`. Without the review it was opened over the screen closes itself, except while the report is
   `Importing`. Its pages show the pictures the review's songs bring (in memory, or read whole from the staging folder for a
   staged one) ahead of the library's (`ImportPreviewState.images`), and never offer Add image.
-- **Marked plainly**: a card on the dock's surface, above its rows or heading the side panel (at most 720dp wide, `dock/`), says the song is not
+- **Marked plainly**: a card on the dock's surface above its rows under the song, beside the side panel too, never in it (at most 720dp
+  wide, `dock/`), says the song is not
   in the library yet and, for a taken name, that it is. Its buttons sit beside the message where that keeps 140dp, else under it; the pages'
   bottom padding clears a card under them (pedal rule), measured in the same pass as the pages so the lyrics are never flowed
   twice as the screen opens. **Import**, or for a taken name **Import as a copy** and **Replace** (confirmed), Replace
   first for a shared link imported here before; side by side where they fit. Ctrl / Cmd + S presses the primary one
   unless it is Replace.
-- **In a short window** (the panel's too) the card is one line and its buttons; over the review the page's tick and Keep both / Replace go
+- **In a short window** the card is one line and its buttons; over the review the page's tick and Keep both / Replace go
   into a dropdown behind a choices button, and the line names them.
 - **One song** stands in for the import screen. Once written, it waits for the text and the lookup, then is rewritten
   in place into the song's screen (same `id`, page kept), with a message. A failed write puts it back. A batch joining
@@ -86,7 +87,8 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
   a key alone read as a letter in a box; a word, since a note mark said "sounding" of a key naming the shapes; a song with no key whose chip opens the sheet reads the label alone,
   `KeyChipText.keyLine`), then what the transposition stepper names in the chords' colour (the shapes' under `SHAPES`,
   the inferred key for a file naming none), a moved song's semitones muted, smaller, and in parentheses after it ("Key
-  G# (+1)": bare, "+1" read as one up from G#; not in read only mode), and **a capo other than zero always**, on a
+  G# (+1)": bare, "+1" read as one up from G#; not in read only mode), the label and the semitones centred on the key
+  rather than on its baseline (there the small label read as its subscript), and **a capo other than zero always**, on a
   smaller second line under the key in a short form (`song_details_capo_short`, "Kapo 2" where a language's word is
   long); a screen reader hears all of it in full, as one description. Outlined with no fill (`DockControlPill`,
   `ControlPillFrame.OUTLINED`: filled, it read as a section header), a rounded rectangle (12 dp corners) so the round
@@ -102,14 +104,16 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
   zoom keys reach it too). **The tuner is the dock's instrument card's** with the Dock's Tuner switch on (`dock/`), else
   a menu entry (`tunerAction`, `Menu: tuner`), the menu's too wherever the card is not shown (diagrams off, a song with
   no diagram to draw), so it is offered once (`SongDetailsTools.isTunerInMenu`); with the Tuner feature on only, never
-  an import preview's. The Playing sheet has it beside the tuning whatever the switch says. As the bar narrows Choose
+  an import preview's. The Playing sheet has no tuner (U still opens it over the sheet). As the bar narrows Choose
   setlists goes into the menu, then the cover, each while the title keeps 140dp. Performance mode: the read only mark
   (`ReadOnlyMark`, a lock opening the Preferences, so a mode switched on by accident is noticed and undone here) always
   before the overflow button, no Choose setlists. An import preview has read only mode's menu and never the mark, the
   mode or not: only Import makes it editable, and the mark comes with its song's screen. **The overflow button is always
   the bar's last.**
 - Both menus (read only mode's too) hold About the song (never in a preview), and Preferences (the sheet with every page,
-  opening on Song, the read only mark's on General; written at once, so the song changes behind it), never let out as buttons.
+  opening on Song, the read only mark's on General; written at once, so the song changes behind it), never let out as
+  buttons. Their head is in one order (`songMenuItems`): Choose setlists where the bar has no room for its star, then
+  Preferences, the tuner where the menu has it, and About the song.
 
 ## The questions asked once over a song
 
@@ -157,4 +161,4 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
 - U opens the tuner sheet wherever the Tuner feature is on (the card's button or the menu's entry names the key; not an
   import preview), leaving a `Keyboard: tuner` breadcrumb, and U again closes it (`closeShortcut`, after a field or a stepper's typed value has had its letter).
   Over the Playing sheet, which holds the focus so the root hears nothing, the sheet hears U itself (`keyShortcut`) and
-  opens the tuner over it as its tuner button does.
+  opens the tuner over it.

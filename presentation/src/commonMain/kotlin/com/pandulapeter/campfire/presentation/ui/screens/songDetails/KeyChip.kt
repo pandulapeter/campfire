@@ -132,23 +132,26 @@ private fun KeyLine(
     label: String,
     key: String,
     transposition: String?,
-) = Row(horizontalArrangement = Arrangement.spacedBy(KEY_LABEL_GAP)) {
+) = Row(
+    horizontalArrangement = Arrangement.spacedBy(KEY_LABEL_GAP),
+    // The label is centred on the key rather than set on its baseline: on one baseline the small label sat low, reading
+    // as a subscript of the key rather than as its caption.
+    verticalAlignment = Alignment.CenterVertically,
+) {
     Text(
-        modifier = Modifier.alignByBaseline(),
         text = label,
         style = MaterialTheme.typography.labelSmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         maxLines = 1,
     )
     AnimatedContent(
-        modifier = Modifier.alignByBaseline(),
         targetState = key to transposition,
         transitionSpec = { fadeIn() togetherWith fadeOut() },
         contentAlignment = Alignment.Center,
     ) { (shownKey, shownTransposition) ->
-        Row(horizontalArrangement = Arrangement.spacedBy(TRANSPOSITION_GAP)) {
+        // The semitones are centred on the key as the label before it is, so that the two small texts frame it alike.
+        Row(horizontalArrangement = Arrangement.spacedBy(TRANSPOSITION_GAP), verticalAlignment = Alignment.CenterVertically) {
             Text(
-                modifier = Modifier.alignByBaseline(),
                 text = shownKey,
                 style = MaterialTheme.typography.labelLarge,
                 color = LocalSecondAccentColor.current,
@@ -156,7 +159,6 @@ private fun KeyLine(
             )
             if (shownTransposition != null) {
                 Text(
-                    modifier = Modifier.alignByBaseline(),
                     // Isolated, or a sentence read from the right would draw "(+2)" as "(2+)".
                     text = "($shownTransposition)".isolatedLeftToRight(),
                     style = MaterialTheme.typography.labelSmall,

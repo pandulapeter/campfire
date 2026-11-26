@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.click
@@ -46,7 +47,6 @@ import com.pandulapeter.campfire.screenshots.TestWindow
 import com.pandulapeter.campfire.screenshots.openChords
 import com.pandulapeter.campfire.screenshots.runAppTest
 import com.pandulapeter.campfire.screenshots.tap
-import kotlinx.serialization.json.JsonPrimitive
 import kotlin.math.abs
 import kotlin.math.roundToInt
 import kotlin.test.Test
@@ -112,8 +112,6 @@ internal class ChromeUnderCardTest {
     fun `the keyboard never reaches the navigation under an open song`() = runAppTest(
         window = TestWindow.DESKTOP,
         platform = ImpersonatedPlatform.WINDOWS,
-        // The song's own tuner, in its dock's instrument card, is named as the navigation's Tuner is.
-        extraPreferences = mapOf("isDockTunerEnabled" to JsonPrimitive(false)),
     ) {
         val navigationLabels = listOf(
             Res.string.songs,
@@ -130,7 +128,9 @@ internal class ChromeUnderCardTest {
             onRoot().performKeyInput { pressKey(Key.Tab) }
             waitForIdle()
             onAllNodes(isFocused(), useUnmergedTree = true).fetchSemanticsNodes().forEach { node ->
-                assertTrue(node.names().none { it in navigationLabels }, "Tab $press reached ${node.names()} under the song.")
+                // Told apart by the navigation's own role, since the song's dock has a tuner named as its Tuner item is.
+                val isNavigation = node.isNavigationItem() && node.names().any { it in navigationLabels }
+                assertTrue(!isNavigation, "Tab $press reached ${node.names()} under the song.")
             }
         }
     }
@@ -152,6 +152,14 @@ internal class ChromeUnderCardTest {
 
     private fun SemanticsNode.names() =
         config.getOrNull(SemanticsProperties.Text).orEmpty().map { it.text } + config.getOrNull(SemanticsProperties.ContentDescription).orEmpty()
+
+    /**
+     * Whether this node is one of the navigation's items, or inside one: a rail's and a bar's items are tabs, and the
+     * Tools group's buttons radio buttons in a selectable group.
+     */
+    private fun SemanticsNode.isNavigationItem() = generateSequence(this) { it.parent }.any { node ->
+        node.config.getOrNull(SemanticsProperties.Role).let { it == Role.Tab || it == Role.RadioButton }
+    }
 
     /** A tool's button, which shows its name only while selected and is named by its description otherwise. */
     private fun toolButton(name: String) = (hasText(name) or hasContentDescription(name)) and hasClickAction()

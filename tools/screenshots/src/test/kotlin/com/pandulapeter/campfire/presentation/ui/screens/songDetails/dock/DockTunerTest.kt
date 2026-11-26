@@ -11,6 +11,8 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock
 
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
@@ -25,8 +27,11 @@ import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.instrument_guitar
 import com.pandulapeter.campfire.presentation.resources.instrument_other
+import com.pandulapeter.campfire.presentation.resources.settings_preferences
+import com.pandulapeter.campfire.presentation.resources.song_details_song_info
 import com.pandulapeter.campfire.presentation.resources.songs_actions
 import com.pandulapeter.campfire.presentation.resources.tuner
+import org.jetbrains.compose.resources.StringResource
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.screenshots.AppTestScope
 import com.pandulapeter.campfire.screenshots.TestWindow
@@ -42,7 +47,7 @@ import kotlin.test.assertTrue
 /**
  * Where song details offers the tuner, as the Dock section's Tuner switch and the Tuner feature say: in the dock's
  * instrument card with the switch on, and the song's menu then without it; in the menu with the switch off, or wherever
- * the card is not shown; nowhere with the feature off. The Playing sheet keeps its own throughout.
+ * the card is not shown; nowhere with the feature off. Neither the Playing sheet nor the tuner sheet holds the instrument.
  */
 @OptIn(ExperimentalTestApi::class)
 internal class DockTunerTest {
@@ -53,7 +58,8 @@ internal class DockTunerTest {
         waitForIdle()
         val pill = onNode(hasText(string(Res.string.instrument_guitar)) and hasClickAction()).fetchSemanticsNode().boundsInRoot
         val tuner = dockTuner()
-        assertTrue(tuner.left >= pill.right && tuner.right <= diagram().left, "The tuner at $tuner is not between the instrument at $pill and the diagrams.")
+        // The instrument half's press runs under the tuner to the card's end, so the tuner stands at that half's end.
+        assertTrue(tuner.left > pill.left && tuner.right <= pill.right && pill.right <= diagram().left, "The tuner at $tuner does not end the card of the instrument at $pill.")
         assertTrue(tuner.top >= pill.top - 1f && tuner.bottom <= pill.bottom + pill.height, "The tuner at $tuner is not on the card of the instrument at $pill.")
         assertMenuTuner(isThere = false)
         pressBack()
@@ -131,7 +137,8 @@ internal class DockTunerTest {
         val instrument = onNode(hasText(string(Res.string.instrument_other)) and hasClickAction()).fetchSemanticsNode().boundsInRoot
         val tuner = dockTuner()
         val tempoChip = tempoChip()
-        assertTrue(tuner.left >= instrument.right && tuner.right <= tempoChip.left, "The tuner at $tuner does not follow the instrument at $instrument.")
+        // Alone on its card, the instrument half's press runs under the tuner to the card's end.
+        assertTrue(tuner.left > instrument.left && tuner.right <= instrument.right && instrument.right <= tempoChip.left, "The tuner at $tuner does not end the card of the instrument at $instrument.")
         assertTrue(instrument.height <= tempoChip.height + 1f, "The card at $instrument is not a chip of the tempo chip's row at $tempoChip.")
         assertMenuTuner(isThere = false)
         pressBack()
@@ -151,6 +158,58 @@ internal class DockTunerTest {
         waitForIdle()
         onNode(hasText(string(Res.string.instrument_other)) and hasClickAction()).assertExists()
         onNode(dockTunerNode()).assertExists()
+    }
+
+    @Test
+    fun `the tuner sheet over a song has no instrument pill, the dock's card being where the instrument is changed`() = runAppTest {
+        openSong()
+        waitForIdle()
+        tap(dockTunerNode())
+        waitUntil { viewModel.dialogHost.visibleDialog.value is DialogType.Tuner }
+        waitForIdle()
+        onNode(hasText(string(Res.string.instrument_guitar)) and hasAnyAncestor(isDialog())).assertDoesNotExist()
+        onNode(hasText(string(Res.string.instrument_guitar)) and hasClickAction()).assertExists()
+    }
+
+    @Test
+    fun `the song's menu reads Preferences, the tuner, then About the song`() = runAppTest(
+        extraPreferences = mapOf("isDockTunerEnabled" to JsonPrimitive(false)),
+    ) {
+        openSong()
+        waitForIdle()
+        tap(hasContentDescription(string(Res.string.songs_actions)))
+        assertMenuOrder(Res.string.settings_preferences, Res.string.tuner, Res.string.song_details_song_info)
+    }
+
+    @Test
+    fun `without the tuner in it the song's menu reads Preferences, then About the song`() = runAppTest {
+        openSong()
+        waitForIdle()
+        tap(hasContentDescription(string(Res.string.songs_actions)))
+        assertMenuOrder(Res.string.settings_preferences, Res.string.song_details_song_info)
+    }
+
+    @Test
+    fun `read only mode's menu keeps the same order`() = runAppTest(
+        extraPreferences = mapOf("isDockTunerEnabled" to JsonPrimitive(false), "isPerformanceModeEnabled" to JsonPrimitive(true)),
+    ) {
+        openSong()
+        waitForIdle()
+        tap(hasContentDescription(string(Res.string.songs_actions)))
+        assertMenuOrder(Res.string.settings_preferences, Res.string.tuner, Res.string.song_details_song_info)
+    }
+
+    /** Asserts that the open menu lists the entries named by [titles] one right after the other, in that order. */
+    private fun AppTestScope.assertMenuOrder(vararg titles: StringResource) {
+        val entries = onAllNodes(hasClickAction() and hasAnyAncestor(isPopup()))
+            .fetchSemanticsNodes()
+            .sortedBy { it.boundsInRoot.top }
+            .map { node -> node.config.getOrNull(SemanticsProperties.Text).orEmpty().joinToString { it.text } }
+        val expected = titles.map { string(it) }
+        val start = entries.indexOfFirst { expected.first() in it }
+        val shown = if (start < 0) emptyList() else entries.drop(start).take(expected.size)
+        assertEquals(expected.size, shown.size, "The menu is $entries.")
+        shown.zip(expected).forEach { (entry, title) -> assertTrue(title in entry, "The menu is $entries, not ${expected.joinToString(", ")} in a row.") }
     }
 
     /** The dock's tuner: the one said as the tuner outside the menu and any sheet. */

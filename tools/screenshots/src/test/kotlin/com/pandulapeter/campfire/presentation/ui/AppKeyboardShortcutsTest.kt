@@ -97,7 +97,7 @@ internal class AppKeyboardShortcutsTest {
     }
 
     @Test
-    fun `U over the Playing sheet opens the tuner as its button does`() = runAppTest {
+    fun `U over the Playing sheet opens the tuner over it`() = runAppTest {
         openSong()
         openPlayingSheet()
         waitForIdle()

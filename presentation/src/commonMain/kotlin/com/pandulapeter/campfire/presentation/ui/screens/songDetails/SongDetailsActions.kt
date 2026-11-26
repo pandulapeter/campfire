@@ -49,8 +49,9 @@ import kotlinx.coroutines.flow.StateFlow
 
 /**
  * The song details screen's app bar actions: the key chip ([keyChip]), then read only mode's mark and menu, or the
- * song's setlists and the song's menu, which holds what the bar has no room for, the tuner ([tunerAction]), and at its
- * end the text size, which a pinch and the zoom keys reach as well.
+ * song's setlists and the song's menu, which holds what the bar has no room for, the tuner ([tunerAction]) after
+ * Preferences and before About the song ([songMenuItems]), and at its end the text size, which a pinch and the zoom keys
+ * reach as well.
  */
 @Composable
 internal fun RowScope.SongDetailsActions(
@@ -105,7 +106,7 @@ internal fun RowScope.SongDetailsActions(
                 ActionsMenu(
                     isAfterButton = showsReadOnlyMark,
                     menuFooter = fontScaleMenuFooter,
-                    items = { listOfNotNull(aboutSongAction, tunerAction, preferencesAction) },
+                    items = { songMenuItems(setlistAssignments = null, preferences = preferencesAction, tuner = tunerAction, aboutSong = aboutSongAction) },
                 )
             } else {
                 currentSong?.let { song ->
@@ -195,9 +196,8 @@ private fun SongActionsWithSetlists(
         editShortcut = KeyShortcut.EDIT,
         exportShortcut = KeyShortcut.SAVE,
         leadingItems = {
-            listOfNotNull(
-                aboutSongAction,
-                if (isReadOnly || showsSetlistAssignmentsInBar || !areSetlistsEnabled) {
+            songMenuItems(
+                setlistAssignments = if (isReadOnly || showsSetlistAssignmentsInBar || !areSetlistsEnabled) {
                     null
                 } else {
                     setlistAssignmentsAction(
@@ -207,8 +207,9 @@ private fun SongActionsWithSetlists(
                         setlistFileName = setlistFileName,
                     )
                 },
-                tunerAction,
-                preferencesAction,
+                preferences = preferencesAction,
+                tuner = tunerAction,
+                aboutSong = aboutSongAction,
             )
         },
         // The transposition and the capo are set from the key chip and the tempo in the dock under the song; what is
