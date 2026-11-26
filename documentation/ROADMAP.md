@@ -11,11 +11,6 @@
 
 What's planned for Campfire, grouped by area.
 
-## In progress
-
-- **Very large screens**: check how every screen behaves on a very wide or tall window (a 4K or ultrawide monitor, a TV),
-  now that the Chords and Scales tabs fill the whole width and the Metronome and Tuner are centered under a width cap
-
 ## Short-term
 
 - Add Slovak, Ukrainian and Dutch translations

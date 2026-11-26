@@ -96,8 +96,8 @@ exported (Settings' Export library as zip). The code keeps the export names. The
 
 ## Layout
 
-- The content (app bar included) is capped at `EXPORT_SCREEN_MAX_WIDTH` and centered, so a very wide window keeps the
-  options, the preview, and the FAB together.
+- **Never capped and centered**, however wide the window: the app bar and the options stay at the top left and the FAB
+  at the bottom right.
 - Phone: the preview is an item of the options list, under the format choice, and scrolls away; from 520dp wide,
   options sit beside it. The pages take keyboard focus only beside the options: in the list a focused item is scrolled
   into view, which would carry the formats away as PDF is chosen.
