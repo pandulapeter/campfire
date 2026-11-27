@@ -234,8 +234,8 @@ private const val FIVE_HUNDRED_MILES = "the_proclaimers-im_gonna_be_500_miles.ch
 /** The text size at which the iPad's first page of Uptown Girl, its metronome panel open, ends where a section ends. */
 private const val UPTOWN_GIRL_FONT_SCALE = 1f
 
-/** The text size at which the whole of Amazing Grace fills the iPad's first page. */
-private const val AMAZING_GRACE_FONT_SCALE = 1.1f
+/** The largest text size at which Amazing Grace's sheet music and picking pattern share the iPad's first column. */
+private const val AMAZING_GRACE_FONT_SCALE = 1.3f
 
 /** The text size at which the iPad's first page of I'm Gonna Be (500 Miles) ends where a section ends. */
 private const val FIVE_HUNDRED_MILES_FONT_SCALE = 1.1f
