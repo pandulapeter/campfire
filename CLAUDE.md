@@ -359,6 +359,11 @@ same way.
   campfire.android.keystorePassword=...
   campfire.dropbox.appKey=...
   ```
+- **Debug builds are apps of their own**, told apart by their build, never by sniffing: Android's `.debug` ID with the
+  sign-in scheme `campfire-debug`, iOS's `com.pandulapeter.campfire.debug` (`Debug.xcconfig`), the desktop `run`'s
+  `Campfire Debug` data folder, the web dev server's own origin. Owner steps: `campfire-debug://oauth` among the Dropbox
+  app's redirect URIs, the iOS debug App IDs and group (`app/ios/CLAUDE.md`), and the debug App ID in the website's
+  `apple-app-site-association`.
 - **Configuration cache is on**: task actions capture only locals, providers, and file collections, never a script
   `val` or function. An incompatible plugin gets `notCompatibleWithConfigurationCache("<why>")`, never the cache off.
 - `org.gradle.workers.max=4` because the shared Kotlin daemon ran out of memory; lower it rather than turning parallel
