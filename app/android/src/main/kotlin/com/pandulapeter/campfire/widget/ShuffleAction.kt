@@ -17,7 +17,7 @@ import androidx.glance.appwidget.state.updateAppWidgetState
 
 /**
  * The random picks widget's button: draws new picks for that one widget at once. Glance makes it by its class name, with
- * no arguments, which is why it is a public class of its own: Glance's rules keep every public one in a release build.
+ * no arguments, which is why it is a class of its own, and why `proguard-rules.pro` keeps its constructor.
  */
 class ShuffleAction : ActionCallback {
 
