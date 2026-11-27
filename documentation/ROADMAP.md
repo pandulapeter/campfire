@@ -29,6 +29,9 @@ What's planned for Campfire, grouped by area.
   with the app as the controller. Plan: [audience-screen.md](plans/audience-screen.md)
 - **Google Drive sync**, as a second provider beside Dropbox. The groundwork landed for v5.1.0; spikes S1–S5 are next.
   Plan: [google-drive-sync.md](plans/google-drive-sync.md)
+- **`:presentation` split into feature modules**: one module per feature and a few shared ones named by what they hold,
+  for architecture and readability, with the module graph enforcing what the layers script checks today.
+  Plan: [presentation-feature-modules.md](plans/presentation-feature-modules.md)
 
 ## Long-term
 
