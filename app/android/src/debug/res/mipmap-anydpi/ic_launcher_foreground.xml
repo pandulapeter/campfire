@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+ This file is part of Campfire.
+ Copyright (c) Pandula Péter 2017-2026.
+ https://github.com/pandulapeter/campfire
+
+ This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ If a copy of the MPL was not distributed with this file, You can obtain one at
+ https://mozilla.org/MPL/2.0/.
+-->
+<!--
+  The debug build's launcher logo: the release one's ring broken into ten dashes along its centerline, with the ring's
+  width, a dash centered on the tip. Every launcher alias and the themed icon take it as their foreground, and this
+  vector wins over the release build's density bitmaps of the same name. Made from the release logo's path, once; made
+  again only if the logo changes.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:name="vector"
+    android:width="144dp"
+    android:height="144dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <group
+        android:name="group"
+        android:pivotX="12"
+        android:pivotY="12"
+        android:scaleX="0.5"
+        android:scaleY="-0.5">
+
+        <path
+            android:name="path"
+            android:fillColor="@android:color/white"
+            android:pathData="M 12.696 19.561 L 12.481 19.759 L 12.306 19.888 L 12.197 19.949 L 12.145 19.971 L 12.046 19.997 L 12 20 L 11.947 19.997 L 11.836 19.972 L 11.779 19.951 L 11.661 19.894 L 11.477 19.770 L 11.273 19.596 L 9.928 20.999 L 10.089 21.151 L 10.320 21.346 L 10.558 21.520 L 10.680 21.598 L 10.928 21.737 L 11.055 21.796 L 11.315 21.894 L 11.448 21.931 L 11.582 21.961 L 11.719 21.982 L 11.859 21.996 L 12 22 L 12.141 21.996 L 12.281 21.982 L 12.418 21.961 L 12.553 21.931 L 12.686 21.894 L 12.817 21.848 L 13.073 21.737 L 13.322 21.598 L 13.564 21.436 L 13.800 21.251 L 14.088 20.991 Z M 15.568 15.559 L 15.366 15.875 L 15.088 16.291 L 14.800 16.700 L 14.729 16.779 L 14.666 16.866 L 14.422 17.252 L 14.357 17.337 L 14.300 17.400 L 14.032 17.818 L 13.801 18.163 L 15.457 19.338 L 16.109 18.428 L 16.612 17.742 L 16.938 17.264 L 17.327 16.659 Z M 17.828 11.094 L 17.468 11.922 L 17.145 12.628 L 16.821 13.302 L 16.506 13.920 L 18.340 14.884 L 18.662 14.254 L 19 13.551 L 19.327 12.838 L 19.732 11.899 Z M 20.448 9.906 L 20.558 9.389 L 20.615 9.020 L 20.637 8.835 L 20.667 8.466 L 20.675 8.281 L 20.675 7.912 L 20.655 7.545 L 20.637 7.362 L 20.585 7.001 L 20.510 6.644 L 20.464 6.468 L 20.366 6.156 L 18.470 6.820 L 18.536 7.044 L 18.595 7.322 L 18.632 7.601 L 18.643 7.739 L 18.652 8.014 L 18.644 8.284 L 18.608 8.675 L 18.548 9.043 L 18.467 9.401 Z M 15.266 4.392 L 15.736 4.536 L 16.143 4.675 L 16.519 4.823 L 16.808 4.956 L 17.072 5.099 L 17.310 5.255 L 17.482 5.391 L 17.682 5.577 L 19.034 4.132 L 18.994 4.095 L 18.316 4.818 L 18.982 4.084 L 18.653 3.814 L 18.289 3.555 L 17.908 3.321 L 17.513 3.112 L 17.103 2.927 L 16.680 2.764 L 16.245 2.622 L 15.765 2.489 Z M 10.513 4.112 L 10.892 4.062 L 11.271 4.024 L 11.543 4.006 L 11.800 4 L 12.184 4.001 L 12.537 4.013 L 13.008 4.048 L 13.458 4.096 L 13.702 2.109 L 13.197 2.053 L 12.744 2.017 L 12.306 2.001 L 11.800 2 L 11.476 2.006 L 11.137 2.025 L 10.673 2.064 L 10.249 2.112 Z M 6.263 5.537 L 6.459 5.356 L 6.635 5.222 L 6.879 5.069 L 7.148 4.928 L 7.502 4.773 L 7.889 4.628 L 8.235 4.513 L 8.600 4.400 L 8.655 4.398 L 8.228 2.464 L 7.770 2.596 L 7.278 2.764 L 7.034 2.859 L 6.793 2.962 L 6.396 3.152 L 6.010 3.366 L 5.636 3.604 L 5.276 3.869 L 5.068 4.041 L 4.938 4.158 Z M 5.493 9.421 L 5.418 9.043 L 5.364 8.675 L 5.330 8.284 L 5.323 8.014 L 5.330 7.739 L 5.340 7.601 L 5.373 7.322 L 5.427 7.044 L 5.494 6.800 L 3.627 6.187 L 3.541 6.468 L 3.496 6.644 L 3.424 7.001 L 3.375 7.363 L 3.359 7.545 L 3.344 7.912 L 3.350 8.281 L 3.360 8.466 L 3.397 8.835 L 3.423 9.020 L 3.488 9.389 L 3.528 9.572 L 3.611 9.900 Z M 7.449 13.950 L 7.110 13.302 L 6.776 12.628 L 6.444 11.922 L 6.093 11.134 L 4.360 11.876 L 4.694 12.645 L 5.017 13.353 L 5.352 14.048 L 5.762 14.849 Z M 10.154 18.221 L 9.600 17.400 L 9.529 17.321 L 9.466 17.234 L 9.234 16.866 L 9.171 16.779 L 9.100 16.700 L 8.743 16.154 L 8.399 15.605 L 6.764 16.608 L 7.056 17.074 L 7.378 17.570 L 8.573 19.325 Z"
+            android:strokeWidth="1" />
+
+    </group>
+
+</vector>
