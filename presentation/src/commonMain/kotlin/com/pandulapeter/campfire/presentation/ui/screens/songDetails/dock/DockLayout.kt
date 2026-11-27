@@ -26,6 +26,15 @@ import com.pandulapeter.campfire.presentation.ui.songView.MIN_COLUMN_WIDTH
 internal enum class DockTier { FULL_DIAGRAMS, SMALL_DIAGRAMS, CHORD_CHIPS }
 
 /**
+ * Where the dock's controls (the instrument card and the tempo chip) stand: at the ends of its row of chords ([ROW]: the
+ * diagram row, the one row, or the metronome panel); on a row of their own under the scale row ([OWN_ROW]), where the
+ * scale chips are too wide for the room between them, which is then left empty rather than scrolling a few chips through
+ * a gap; or at the ends of the setlist's pager bar ([PAGER_BAR]), around its controls, where nothing else would stand
+ * between them.
+ */
+internal enum class DockControlsPlace { ROW, OWN_ROW, PAGER_BAR }
+
+/**
  * The rows the dock has: the song's chords ([hasChordRow]: chord diagrams on, on an instrument with shapes), its scale
  * suggestions ([hasScaleRow]), the click's tempo chip ([hasTempo]: the metronome on, never in an import preview), and
  * on an instrument without shapes, which has no diagrams, the one-line instrument card alone ([hasInstrumentChip]: the
@@ -70,9 +79,9 @@ internal data class DockRows(
  * How the dock is laid out: its [tier], how tall it is above whatever inset it covers (nothing for the side panel, which
  * is as tall as the song), how tall its row of chips and controls is ([rowHeight]), its row of diagrams
  * ([diagramRowHeight], none in [DockTier.CHORD_CHIPS]), the room under its last row ([bottomPadding],
- * [dockBottomPaddingOf]), and whether its tall controls are made smaller ([areControlsCompact]: in a window narrower than
+ * [dockBottomPaddingOf]), whether its tall controls are made smaller ([areControlsCompact]: in a window narrower than
  * [DOCK_COMPACT_WINDOW_WIDTH], an upright phone's, where the instrument card and the tempo chip at full size took most of
- * the diagrams' row).
+ * the diagrams' row), and where its controls stand ([controls]; on the pager bar, a dock of no rows is 0 tall).
  */
 @Immutable
 internal data class DockLayout(
@@ -82,6 +91,7 @@ internal data class DockLayout(
     val diagramRowHeight: Dp = 0.dp,
     val bottomPadding: Dp = DOCK_VERTICAL_PADDING,
     val areControlsCompact: Boolean = false,
+    val controls: DockControlsPlace = DockControlsPlace.ROW,
 ) {
     /**
      * How tall the tall tempo chip is, beside the diagram row and at the side panel's foot alike: as tall as a row of the
@@ -112,6 +122,11 @@ internal fun dockBudgetOf(windowHeight: Dp, turnsByColumn: Boolean, hasPagerBar:
  * other gets diagrams: at their full size where they fit the budget, else smaller ones however
  * little room there is, a long song taking up to two pages more for them on an upright phone. Null where there is no row
  * at all: no dock. A window that gives the dock a side panel ([isDockSidePanel]) has none of this.
+ *
+ * Without diagrams the controls end the one row, unless the scale chips are wider than the room between them
+ * ([scalesFitBesideControls] false, never in [isOneRow]'s windows, which spare no row), when they take a row of their own
+ * under the scale row ([DockControlsPlace.OWN_ROW]); and with a setlist's pager bar they move onto it where nothing would
+ * stand between them in the dock ([controlsFitPagerBar], which says whether the bar has the room).
  */
 internal fun dockLayoutOf(
     rows: DockRows,
@@ -119,12 +134,27 @@ internal fun dockLayoutOf(
     isOneRow: Boolean,
     rowHeight: Dp = DOCK_ROW_HEIGHT,
     bottomPadding: Dp = DOCK_VERTICAL_PADDING,
+    scalesFitBesideControls: Boolean = true,
+    controlsFitPagerBar: Boolean = false,
 ): DockLayout? {
     if (rows.isEmpty) return null
     val padding = DOCK_VERTICAL_PADDING + bottomPadding
     val oneRow = DockLayout(DockTier.CHORD_CHIPS, height = padding + rowHeight, rowHeight = rowHeight, bottomPadding = bottomPadding)
-    // The scale chips and the tempo chip share the one row, so only the diagrams can ask for a second.
-    if (!rows.hasChordRow || isOneRow) return oneRow
+    if (!rows.hasChordRow) {
+        val hasControls = rows.hasInstrumentCard || rows.hasTempo
+        val isScaleRowApart = rows.hasScaleRow && hasControls && !scalesFitBesideControls && !isOneRow
+        return when {
+            // Only with the card, which a pager bar holding the tempo chip alone would leave lopsided.
+            controlsFitPagerBar && rows.hasInstrumentCard && (!rows.hasScaleRow || isScaleRowApart) -> oneRow.copy(
+                height = if (rows.hasScaleRow) oneRow.height else 0.dp,
+                controls = DockControlsPlace.PAGER_BAR,
+            )
+            isScaleRowApart -> oneRow.copy(height = oneRow.height + DOCK_ROW_GAP + rowHeight, controls = DockControlsPlace.OWN_ROW)
+            else -> oneRow
+        }
+    }
+    // With the chords as chips, they and the scale chips share the one row, so only the diagrams can ask for a second.
+    if (isOneRow) return oneRow
     // Without scale suggestions, the diagram row is the only one, the tempo chip at its end.
     val firstRow = if (rows.hasScaleRow) rowHeight + DOCK_ROW_GAP else 0.dp
     val (full, small) = listOf(DockTier.FULL_DIAGRAMS to FULL_DIAGRAMS_PAST_ROW, DockTier.SMALL_DIAGRAMS to SMALL_DIAGRAMS_PAST_ROW).map { (tier, pastRow) ->

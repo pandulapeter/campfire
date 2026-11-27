@@ -74,6 +74,14 @@ with the tuner, and the click. The first section's key and capo are the app bar'
   `dockBudgetOf` (the share of the window that costs no page turn as `PageCountTest` measured it: 80 dp by page, 60 by
   column, 48 and 40 over a pager bar), else smaller. The owner chose diagrams on an upright phone at the cost of up to
   two pages on a long song, and its 8 dp padding at one more in some cases, which `PageCountTest` holds.
+- **Where the controls stand** (`DockControlsPlace`): without diagrams the instrument card and the tempo chip end the one
+  row, unless the song's scale chips are wider than the room between them (`scalesFitBesideControls`: the controls'
+  widths measured as text, `dockLineCardWidth`, `dockTempoChipWidth`; the chips' one-line width measured by the chip
+  row, kept in `dockFacts`, and drawn unseen until known): the controls then take a row of their own under the scale
+  row, nothing between them (`DockControlsRow`; never in a short window). Over a setlist's pager bar, controls with
+  nothing between them move onto it around its buttons (`DockPagerBarCard`, `DockPagerBarTempo`, staged as a row is):
+  the card alone always, cut short past `SETLIST_CONTROLS_MIN_WIDTH`, the card and the tempo chip in place of the
+  metronome panel where all fit (`controlsFitPagerBar`); never the tempo chip alone, which would leave the bar lopsided.
 - **The tempo chip always stands in the dock's bottom end corner**, and the instrument pill starts the chords' row. **In
   one row** (a short window, an import preview, no diagrams): the chip-high instrument card where there are chord chips
   or an instrument without shapes, the chord chips (with diagrams on; each keeps its diagram's degree or letters, in a

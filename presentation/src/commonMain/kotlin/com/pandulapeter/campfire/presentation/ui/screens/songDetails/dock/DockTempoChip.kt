@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -143,6 +144,22 @@ internal fun dockTallTempoChipWidth(): Dp {
     }
     return DOCK_CHIP_PADDING + maxOf(ICON_SIZE + ICON_GAP + numberWidth, TALL_BEATS_WIDTH) + DOCK_CHIP_PADDING + dockRoundButtonSize(compactness = 0f) +
         dockTallButtonPadding(compactness = 0f)
+}
+
+/**
+ * How wide the chip-high [DockTempoChip] is, whatever the tempo: the metronome mark, the widest tempo at the interface's
+ * text size, the beats, and play and stop after a divider. The dock weighs it against the room its row leaves
+ * (`dockLayoutOf`'s `scalesFitBesideControls` and `controlsFitPagerBar`).
+ */
+@Composable
+internal fun dockTempoChipWidth(): Dp {
+    val style = MaterialTheme.typography.labelLarge
+    val measurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+    val numberWidth = remember(measurer, style, density) {
+        with(density) { measurer.measure(text = MetronomePattern.BPM_RANGE.last.toString(), style = style, maxLines = 1).size.width.toDp() }
+    }
+    return DOCK_CHIP_PADDING + ICON_SIZE + ICON_GAP + numberWidth + BEAT_ROW_GAP + BEATS_WIDTH + BEAT_ROW_GAP + DividerDefaults.Thickness + DOCK_END_BUTTON_WIDTH
 }
 
 /** The metronome mark before the tempo, swinging with the click. */

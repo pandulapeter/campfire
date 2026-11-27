@@ -51,3 +51,6 @@ internal fun DockEndButton(
 internal val DOCK_END_MARK_SIZE = 18.dp
 
 private val END_BUTTON_PADDING = 8.dp
+
+/** How wide a [DockEndButton] is. */
+internal val DOCK_END_BUTTON_WIDTH = DOCK_END_MARK_SIZE + END_BUTTON_PADDING * 2

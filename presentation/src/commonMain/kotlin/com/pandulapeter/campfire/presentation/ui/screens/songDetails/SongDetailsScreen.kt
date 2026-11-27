@@ -16,6 +16,9 @@ import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.DOCK_T
 import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.traversalIndex
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.DockMetronome
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.DockPagerBarCard
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.DockPagerBarTempo
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.DockSidePanel
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.PaddingBesidePanel
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.SongDock
@@ -298,7 +301,7 @@ internal fun SongDetailsScreen(
             )
         }
         if (hasPagerControls) {
-            SetlistPagerBar(setlistTitle = setlist?.title, setlistSlots = setlistSlots, pagerState = pagerState, songs = songs, steps = steps, contentPadding = contentPadding, dock = dock)
+            SetlistPagerBar(setlistTitle = setlist?.title, setlistSlots = setlistSlots, pagerState = pagerState, songs = songs, steps = steps, contentPadding = contentPadding, dock = dock, metronome = metronome)
         }
     }
 }
@@ -324,9 +327,10 @@ private fun PreviewCard(
 
 /**
  * [SongPagerControls] for a setlist read through [songs], stepping with [steps], as wide as the screen under the dock and
- * the side panel alike, on their surface, and read by screen readers with them. Where nothing stands on the surface
- * above it (no rows under the song in [dock]; an import preview's card floats over it) its top corners are rounded as the
- * dock's would be, but the end one under the side panel, which it meets square.
+ * the side panel alike, on their surface, and read by screen readers with them, holding the [dock]'s controls where it
+ * hands them over (`DockControlsPlace.PAGER_BAR`). Where nothing stands on the surface above it (no rows under the song in
+ * [dock]; an import preview's card floats over it) its top corners are rounded as the dock's would be, but the end one
+ * under the side panel, which it meets square.
  */
 @Composable
 private fun SetlistPagerBar(
@@ -337,12 +341,13 @@ private fun SetlistPagerBar(
     steps: SongDetailsSteps,
     contentPadding: PaddingValues,
     dock: SongDockState,
+    metronome: DockMetronome,
 ) = SongPagerControls(
     modifier = Modifier
         .clip(
             RoundedCornerShape(
-                topStart = animateDpAsState(if (dock.layout == null) DOCK_CORNER else 0.dp).value,
-                topEnd = animateDpAsState(if (dock.layout == null && !dock.isSidePanel) DOCK_CORNER else 0.dp).value,
+                topStart = animateDpAsState(if (dock.hasRowsUnder) 0.dp else DOCK_CORNER).value,
+                topEnd = animateDpAsState(if (dock.hasRowsUnder || dock.isSidePanel) 0.dp else DOCK_CORNER).value,
             ),
         )
         // Read with the dock, after it and before the song, as its last row was.
@@ -359,6 +364,8 @@ private fun SetlistPagerBar(
     nextSongTitle = songs.getOrNull(pagerState.targetPage + 1)?.title?.takeIf { steps.nextSongConfirmation.armedPage == pagerState.targetPage },
     onStep = steps.pageStepper::step,
     onConfirmNextSong = { steps.stepForward(null) },
+    start = { DockPagerBarCard(dock = dock, targetPage = pagerState.targetPage) },
+    end = { DockPagerBarTempo(dock = dock, metronome = metronome, targetPage = pagerState.targetPage) },
 )
 
 /**

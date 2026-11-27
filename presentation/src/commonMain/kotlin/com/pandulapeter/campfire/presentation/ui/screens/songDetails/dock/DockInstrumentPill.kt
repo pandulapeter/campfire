@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -30,7 +31,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.pandulapeter.campfire.presentation.ui.components.controls.StepperDivider
+import com.pandulapeter.campfire.presentation.ui.instrument.INSTRUMENT_PILL_EDGE_PADDING
 import com.pandulapeter.campfire.presentation.ui.instrument.InstrumentPill
+import com.pandulapeter.campfire.presentation.ui.instrument.instrumentPillLineWidth
 import com.pandulapeter.campfire.presentation.ui.songView.model.ChordDiagrams
 
 /**
@@ -107,6 +110,21 @@ internal fun DockInstrumentPill(
         },
     )
 }
+
+/**
+ * How wide the one-line [DockInstrumentPill] for [chordDiagrams] is with its names uncut, ending in the tuner where
+ * [hasTuner]. The dock weighs it against the room its row leaves (`dockLayoutOf`'s `scalesFitBesideControls` and
+ * `controlsFitPagerBar`).
+ */
+@Composable
+internal fun dockLineCardWidth(chordDiagrams: ChordDiagrams, hasTuner: Boolean) = instrumentPillLineWidth(
+    instrument = chordDiagrams.instrument,
+    tuning = chordDiagrams.instrumentTuning,
+    notation = chordDiagrams.notation,
+    style = MaterialTheme.typography.labelLarge,
+    halfPadding = DOCK_COMPACT_CHIP_PADDING,
+    controlWidth = if (hasTuner) DividerDefaults.Thickness + DOCK_END_BUTTON_WIDTH else INSTRUMENT_PILL_EDGE_PADDING,
+)
 
 /** The tuner's click [DockInstrumentPill] last had. Not a state: it is written and read in the same composition. */
 private class LastTunerClick(var value: (() -> Unit)? = null)

@@ -404,7 +404,7 @@ private fun InstrumentPillStackedHalves(
  * tunings at all (the keyboard, Other).
  */
 @Composable
-private fun tuningName(tuning: InstrumentTuning, notation: ChordNotation) = if (tuning.isStandard) {
+internal fun tuningName(tuning: InstrumentTuning, notation: ChordNotation) = if (tuning.isStandard) {
     stringResource(Res.string.instrument_tuning_standard)
 } else {
     tuningLabel(tuning, notation)

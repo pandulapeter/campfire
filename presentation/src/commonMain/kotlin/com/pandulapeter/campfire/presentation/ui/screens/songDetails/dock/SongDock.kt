@@ -37,6 +37,7 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.traversalIndex
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.PAGE_HORIZONTAL_PADDING
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.SongStepper
@@ -86,7 +87,7 @@ internal fun SongDock(
 @Composable
 private fun DockRowsBox(dock: SongDockState, metronome: DockMetronome, hold: DockHold, contentPadding: PaddingValues, targetPage: Int) {
     // Gone once it has shrunk away, so that nothing of it is still read or found under the pages.
-    if (dock.layout == null && dock.height == 0.dp) return
+    if (!dock.hasRowsUnder && dock.height == 0.dp) return
     Box(modifier = Modifier.fillMaxWidth().height(dock.height).clipToBounds()) {
         val layout = dock.layout ?: return@Box
         val layoutDirection = LocalLayoutDirection.current
@@ -111,9 +112,12 @@ private fun DockRowsBox(dock: SongDockState, metronome: DockMetronome, hold: Doc
                 onTunerClicked = dock.onTunerClicked,
                 rows = dock.rowsUnder,
                 layout = layout,
+                parts = dock.parts,
                 visible = dock.visibleParts,
                 horizontalPadding = horizontalPadding,
                 isBesidePanel = dock.isSidePanel,
+                areScalesMeasured = dock.areScalesMeasured,
+                onScalesWidth = { width -> if (dock.scalesWidths[page] != width) dock.scalesWidths[page] = width },
             )
         }
     }
@@ -123,9 +127,10 @@ private fun DockRowsBox(dock: SongDockState, metronome: DockMetronome, hold: Doc
  * The dock's rows for one song's [content], at the dock's full height whatever height it is animating through, each
  * standing on the dock's bottom: with the metronome all it holds, one row that is the metronome panel ([DockMetronomePanel]),
  * after the one-line instrument card of an instrument without shapes; otherwise the chip row ([DockChipRow]) and, with
- * the diagrams outside [DockTier.CHORD_CHIPS], the diagram row under it ([DockDiagramRow]), so that the tempo chip always
- * stands in the dock's bottom end corner. Of their parts ([dockPartsOf]) only the [visible] ones are drawn, the rest
- * fading out or waiting to fade in. The click is the screen's ([metronome]), whichever page the rows are drawn for. The
+ * the diagrams outside [DockTier.CHORD_CHIPS], the diagram row under it ([DockDiagramRow]), or the controls' own row
+ * ([DockControlsRow]), so that the tempo chip always stands in the dock's bottom end corner (where the setlist's pager
+ * bar does not hold it). Of their [parts] only the [visible] ones are drawn, the rest fading out or waiting to fade in.
+ * The click is the screen's ([metronome]), whichever page the rows are drawn for. The
  * diagrams fade back the chords not on the screen the page's [stepper] shows, and once it has settled the screen's chords
  * and scales come first and the rows scroll back to them ([rememberDockRowsOrder]), never while a hand is on the dock
  * ([hold]). Beside the side panel ([isBesidePanel]) the one row is the scale chips alone, fading where they scroll under
@@ -140,9 +145,12 @@ private fun DockRowsOf(
     onTunerClicked: (() -> Unit)?,
     rows: DockRows,
     layout: DockLayout,
+    parts: Set<DockPart>,
     visible: Set<DockPart>,
     horizontalPadding: PaddingValues,
     isBesidePanel: Boolean,
+    areScalesMeasured: Boolean,
+    onScalesWidth: (Dp) -> Unit,
 ) = Box(modifier = Modifier.fillMaxSize()) {
     // The chip row's in either layout, so that the scale chips keep their place as the rows switch between one row and
     // two (the side panel coming or going).
@@ -154,7 +162,6 @@ private fun DockRowsOf(
         cells = content?.let { rememberChordCells(it.model, it.chordDiagrams) }.orEmpty(),
         isHeld = { hold.isHeld || rowScroll.isScrollInProgress || stripScroll.isScrollInProgress },
     )
-    val parts = remember(rows, layout) { dockPartsOf(rows, layout) }
     val hasDiagramRow = DockPart.DIAGRAM_ROW in parts
     // The one row starts with the chord chips, the screen's first; the scale row alone with the first group on the screen.
     val scaleRowTarget = scaleRowTarget(order, content)
@@ -195,6 +202,21 @@ private fun DockRowsOf(
             horizontalPadding = horizontalPadding,
             scrollState = rowScroll,
             isBesidePanel = isBesidePanel,
+            areScalesMeasured = areScalesMeasured,
+            onScalesWidth = onScalesWidth,
+        )
+    }
+    if (DockPart.CONTROLS_ROW in parts) {
+        DockControlsRow(
+            modifier = Modifier.align(Alignment.BottomStart),
+            tempo = tempo,
+            chordDiagrams = chordDiagrams,
+            metronome = metronome,
+            onTunerClicked = onTunerClicked,
+            parts = parts,
+            visible = visible,
+            layout = layout,
+            horizontalPadding = horizontalPadding,
         )
     }
     if (hasDiagramRow) {

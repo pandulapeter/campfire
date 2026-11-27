@@ -9,11 +9,6 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandHorizontally
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -29,9 +24,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.ui.components.fadingHorizontalEdges
@@ -45,14 +38,14 @@ import com.pandulapeter.campfire.presentation.ui.components.fadingHorizontalEdge
  * not scroll, which is also what [fadesAtEnd] says stands past its end (the side panel the row under the song runs up
  * to).
  *
- * [end] is measured first and [start] with what it leaves but [minScrollingRoom] (the one row's [DOCK_MIN_SCROLLING_ROOM]),
- * so that a one-line instrument card with long names ("12-string guitar", "Full step down") is cut short rather than
- * taking the whole row from the chips it is there for (see [dockScrollingRowStartMaxWidth]). The diagrams' row keeps
- * none: its cards have their own narrow size on a phone, and what is left between them is the diagrams'.
+ * [start] leaves what scrolls at least [minScrollingRoom] (the one row's [DOCK_MIN_SCROLLING_ROOM], [DockEndsLayout]), so
+ * that a one-line card of long names is cut short rather than taking the row from the chips it is there for. The
+ * diagrams' row keeps none: its cards have their own narrow size on a phone, and what is left between them is the
+ * diagrams'.
  *
  * [start] and [end] fade and grow in and out as [isStartShown] and [isEndShown] say, the gap between them and what scrolls
  * going with them, so that a row gaining or losing one (a switch in the Preferences) gives or takes the room gradually.
- * [contentModifier] is the scrolling part's, after its scrolling.
+ * [contentModifier] is the scrolling part's, after its scrolling and its padding.
  */
 @Composable
 internal fun DockScrollingRow(
@@ -72,72 +65,46 @@ internal fun DockScrollingRow(
     val layoutDirection = LocalLayoutDirection.current
     val startPadding = horizontalPadding.calculateStartPadding(layoutDirection)
     val endPadding = horizontalPadding.calculateEndPadding(layoutDirection)
-    Layout(
+    DockEndsLayout(
         modifier = modifier
             .fillMaxWidth()
             .height(height),
-        contents = listOf(
-            {
-                if (start != null) {
-                    Row(modifier = Modifier.padding(start = startPadding), verticalAlignment = Alignment.CenterVertically) {
-                        DockRowEnd(isShown = isStartShown, expandFrom = Alignment.Start) {
-                            Row(modifier = Modifier.padding(end = DOCK_ITEM_GAP), verticalAlignment = Alignment.CenterVertically) { start() }
-                        }
+        minMiddleRoom = minScrollingRoom,
+        start = {
+            if (start != null) {
+                Row(modifier = Modifier.padding(start = startPadding), verticalAlignment = Alignment.CenterVertically) {
+                    DockRowEnd(isShown = isStartShown, expandFrom = Alignment.Start) {
+                        Row(modifier = Modifier.padding(end = DOCK_ITEM_GAP), verticalAlignment = Alignment.CenterVertically) { start() }
                     }
                 }
-            },
-            {
-                Row(
-                    modifier = Modifier
-                        .fadingHorizontalEdges(
-                            scrolledFromStart = if (start == null) null else { { scrollState.value } },
-                            scrolledFromEnd = if (end == null && !fadesAtEnd) null else { { scrollState.maxValue - scrollState.value } },
-                            backgroundColor = MaterialTheme.colorScheme.surfaceContainer,
-                        )
-                        .horizontalScroll(scrollState)
-                        .then(contentModifier)
-                        .padding(start = if (start == null) startPadding else 0.dp, end = if (end == null) endPadding else 0.dp),
-                    horizontalArrangement = Arrangement.spacedBy(DOCK_ITEM_GAP),
-                    verticalAlignment = Alignment.CenterVertically,
-                    content = content,
-                )
-            },
-            {
-                if (end != null) {
-                    Row(modifier = Modifier.padding(end = endPadding), verticalAlignment = Alignment.CenterVertically) {
-                        DockRowEnd(isShown = isEndShown, expandFrom = Alignment.End) {
-                            Row(modifier = Modifier.padding(start = DOCK_ITEM_GAP), verticalAlignment = Alignment.CenterVertically) { end() }
-                        }
+            }
+        },
+        middle = {
+            Row(
+                modifier = Modifier
+                    .fadingHorizontalEdges(
+                        scrolledFromStart = if (start == null) null else { { scrollState.value } },
+                        scrolledFromEnd = if (end == null && !fadesAtEnd) null else { { scrollState.maxValue - scrollState.value } },
+                        backgroundColor = MaterialTheme.colorScheme.surfaceContainer,
+                    )
+                    .horizontalScroll(scrollState)
+                    .padding(start = if (start == null) startPadding else 0.dp, end = if (end == null) endPadding else 0.dp)
+                    .then(contentModifier),
+                horizontalArrangement = Arrangement.spacedBy(DOCK_ITEM_GAP),
+                verticalAlignment = Alignment.CenterVertically,
+                content = content,
+            )
+        },
+        end = {
+            if (end != null) {
+                Row(modifier = Modifier.padding(end = endPadding), verticalAlignment = Alignment.CenterVertically) {
+                    DockRowEnd(isShown = isEndShown, expandFrom = Alignment.End) {
+                        Row(modifier = Modifier.padding(start = DOCK_ITEM_GAP), verticalAlignment = Alignment.CenterVertically) { end() }
                     }
                 }
-            },
-        ),
-    ) { (startMeasurables, contentMeasurables, endMeasurables), constraints ->
-        val loose = constraints.copy(minWidth = 0, minHeight = 0)
-        val endPlaceables = endMeasurables.map { it.measure(loose) }
-        val endWidth = endPlaceables.sumOf { it.width }
-        val startMaxWidth = dockScrollingRowStartMaxWidth(constraints.maxWidth, endWidth, minScrollingRoom.roundToPx())
-        val startPlaceables = startMeasurables.map { it.measure(loose.copy(maxWidth = startMaxWidth)) }
-        val startWidth = startPlaceables.sumOf { it.width }
-        val contentWidth = (constraints.maxWidth - startWidth - endWidth).coerceAtLeast(0)
-        val contentPlaceables = contentMeasurables.map { it.measure(Constraints(minWidth = contentWidth, maxWidth = contentWidth, maxHeight = constraints.maxHeight)) }
-        layout(constraints.maxWidth, constraints.maxHeight) {
-            val center = { placeableHeight: Int -> (constraints.maxHeight - placeableHeight) / 2 }
-            startPlaceables.forEach { it.placeRelative(0, center(it.height)) }
-            contentPlaceables.forEach { it.placeRelative(startWidth, center(it.height)) }
-            endPlaceables.forEach { it.placeRelative(constraints.maxWidth - endWidth, center(it.height)) }
-        }
-    }
-}
-
-/** What stands at an end of a [DockScrollingRow], fading and growing in from that end ([expandFrom]) and back into it. */
-@Composable
-private fun DockRowEnd(isShown: Boolean, expandFrom: Alignment.Horizontal, content: @Composable () -> Unit) = AnimatedVisibility(
-    visible = isShown,
-    enter = fadeIn(MaterialTheme.motionScheme.defaultEffectsSpec()) + expandHorizontally(MaterialTheme.motionScheme.defaultSpatialSpec(), expandFrom = expandFrom),
-    exit = fadeOut(MaterialTheme.motionScheme.fastEffectsSpec()) + shrinkHorizontally(MaterialTheme.motionScheme.fastSpatialSpec(), shrinkTowards = expandFrom),
-) {
-    content()
+            }
+        },
+    )
 }
 
 /**

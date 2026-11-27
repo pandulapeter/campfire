@@ -24,8 +24,9 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
   never restores its page index onto the wrong song over a partial batch. Once every song it names is gone from a read
   library, the screen closes itself.
 - The pager bar runs as wide as the screen under the dock's rows and its side panel alike (`SetlistPagerBar`), on their
-  surface and read with them, rounding the surface's top where nothing stands above it; it numbers by place in the
-  setlist, missing entries included; pages are only the songs that exist.
+  surface and read with them, rounding the surface's top where nothing stands above it, and holding the dock's controls
+  where the dock hands them over (`dock/CLAUDE.md`); it numbers by place in the setlist, missing entries included; pages
+  are only the songs that exist.
 - **In a setlist a step leaves a song's end only on the next press** (`NextSongConfirmation`): the first turns the pager
   bar to name the next song (selecting it goes on too); going back, scrolling up, or another song forgets it. A press
   while the step reaching the end still moves is not that first one. The bar's buttons, swipes, and Shift + an arrow do

@@ -20,8 +20,9 @@
   never a frame behind the lyrics.
 - **`lyricsModels`** keeps the song pages' last built models by their inputs (`ui/songView/model`); never pruned with the
   texts, since an entry is only ever served for the text and settings it was built of.
-- **`dockFacts`** keeps, by file name, whether a song has a diagram to draw and a scale to suggest, which song details'
-  dock is laid out by (`screens/songDetails/dock`), so a song opened again has its dock right on its first frame.
+- **`dockFacts`** keeps, by file name, whether a song has a diagram to draw and a scale to suggest and how wide its scale
+  chips are (`SongDockFacts`), which song details' dock is laid out by (`screens/songDetails/dock`), so a song opened
+  again has its dock right on its first frame.
 - **Pictures' sizes** are read (`readImageSizes`) before `songTexts` gets a text, as inferred keys are, so a song is laid
   out with its pictures' room from its first frame (`ui/pictures`). `addMissingImage` is a write like the others.
 - **Every write to a song file holds `songWriteMutex`** from the read it is built on until `songTexts` has the result,

@@ -51,6 +51,7 @@ import com.pandulapeter.campfire.presentation.resources.song_details_previous_so
 import com.pandulapeter.campfire.presentation.resources.song_details_song_position
 import com.pandulapeter.campfire.presentation.resources.song_details_step_again
 import com.pandulapeter.campfire.presentation.resources.song_details_up_next
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.DockEndsLayout
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -66,6 +67,9 @@ import org.jetbrains.compose.resources.painterResource
  * @param currentPage The song on screen, which is what the label names.
  * @param targetPage The song the pager is on its way to, which is what decides whether there is anywhere left to step.
  * @param nextSongTitle The title of the next song while a step to it waits for its confirmation, else null.
+ * @param start What stands before the buttons (the dock's instrument card, where it has nothing beside it in the dock),
+ *   cut short where the buttons and the label would otherwise have less than [SETLIST_CONTROLS_MIN_WIDTH].
+ * @param end What stands after them (the dock's tempo chip, where it and the card fit around them).
  */
 @Composable
 internal fun SongPagerControls(
@@ -79,6 +83,8 @@ internal fun SongPagerControls(
     nextSongTitle: String?,
     onStep: (Int) -> Unit,
     onConfirmNextSong: () -> Unit,
+    start: @Composable () -> Unit,
+    end: @Composable () -> Unit,
 ) = Surface(
     modifier = modifier,
     color = animateColorAsState(
@@ -86,20 +92,30 @@ internal fun SongPagerControls(
     ).value,
 ) {
     val layoutDirection = LocalLayoutDirection.current
-    PagerButtonRow(
-        modifier = Modifier.padding(
-            start = contentPadding.calculateStartPadding(layoutDirection) + 4.dp,
-            end = contentPadding.calculateEndPadding(layoutDirection) + 4.dp,
-            bottom = contentPadding.calculateBottomPadding(),
-        ),
-        setlistTitle = setlistTitle,
-        setlistSlots = setlistSlots,
-        currentPage = currentPage,
-        targetPage = targetPage,
-        pageCount = pageCount,
-        nextSongTitle = nextSongTitle,
-        onStep = onStep,
-        onConfirmNextSong = onConfirmNextSong,
+    DockEndsLayout(
+        modifier = Modifier
+            .padding(
+                start = contentPadding.calculateStartPadding(layoutDirection) + 4.dp,
+                end = contentPadding.calculateEndPadding(layoutDirection) + 4.dp,
+                bottom = contentPadding.calculateBottomPadding(),
+            )
+            .fillMaxWidth()
+            .height(PAGER_CONTROLS_HEIGHT),
+        minMiddleRoom = SETLIST_CONTROLS_MIN_WIDTH,
+        start = start,
+        middle = {
+            PagerButtonRow(
+                setlistTitle = setlistTitle,
+                setlistSlots = setlistSlots,
+                currentPage = currentPage,
+                targetPage = targetPage,
+                pageCount = pageCount,
+                nextSongTitle = nextSongTitle,
+                onStep = onStep,
+                onConfirmNextSong = onConfirmNextSong,
+            )
+        },
+        end = end,
     )
 }
 
@@ -253,3 +269,9 @@ private const val LABEL_SEPARATOR = "·"
 private const val HINT_ALPHA = 0.8f
 
 private val PAGER_CONTROLS_HEIGHT = 48.dp
+
+/**
+ * The least room the pager bar's buttons and label keep beside the dock's controls it holds: the two buttons and about
+ * a short setlist name with the song's place in it.
+ */
+internal val SETLIST_CONTROLS_MIN_WIDTH = 200.dp

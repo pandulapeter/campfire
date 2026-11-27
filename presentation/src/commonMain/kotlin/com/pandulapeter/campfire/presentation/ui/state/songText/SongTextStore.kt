@@ -83,10 +83,11 @@ internal class SongTextStore(
 
     /**
      * What each song read gave song details' dock, by file name (or an import preview's page name): whether it has a
-     * chord diagram to draw and a scale to suggest, each null until a page drawing it with that switch on has said, so a
-     * song opened again lays its dock out on its first frame rather than a frame after its page. Main thread only.
+     * chord diagram to draw and a scale to suggest, and how wide its scale chips are, each null until a page drawing it
+     * with that switch on has said, so a song opened again lays its dock out on its first frame rather than a frame after
+     * its page. Main thread only.
      */
-    val dockFacts = mutableMapOf<String, Pair<Boolean?, Boolean?>>()
+    val dockFacts = mutableMapOf<String, SongDockFacts>()
 
     /**
      * The songs whose files are being renamed right now, under the names they had when it started.

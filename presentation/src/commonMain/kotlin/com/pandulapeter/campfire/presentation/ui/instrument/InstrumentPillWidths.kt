@@ -9,8 +9,43 @@
  */
 package com.pandulapeter.campfire.presentation.ui.instrument
 
+import androidx.compose.material3.DividerDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.pandulapeter.campfire.chordpro.chords.ChordNotation
+import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import kotlin.math.roundToInt
+
+/**
+ * How wide a one-line [InstrumentPill] is with its names uncut, before it is laid out: its [instrument]'s name and its
+ * [tuning]'s, set in [style], each [halfPadding] from its sides, and a control [controlWidth] wide at one of its ends (the
+ * room a round end takes on the other), as the pill's halves lay them out.
+ */
+@Composable
+internal fun instrumentPillLineWidth(
+    instrument: UserPreferences.Instrument,
+    tuning: InstrumentTuning?,
+    notation: ChordNotation,
+    style: TextStyle,
+    halfPadding: Dp,
+    controlWidth: Dp,
+): Dp {
+    val instrumentName = instrumentLabel(instrument)
+    val tuningName = shownTuning(instrument, tuning)?.let { tuningName(it, notation) }
+    val measurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+    return remember(measurer, density, style, instrumentName, tuningName, halfPadding, controlWidth) {
+        val widthOf = { text: String -> with(density) { measurer.measure(text = text, style = style, maxLines = 1).size.width.toDp() } }
+        val tuningWidth = tuningName?.let { DividerDefaults.Thickness + halfPadding * 2 + widthOf(it) } ?: 0.dp
+        controlWidth + INSTRUMENT_PILL_EDGE_PADDING + halfPadding * 2 + widthOf(instrumentName) + tuningWidth
+    }
+}
 
 /**
  * The widest the tuning half of an [InstrumentPill] may be, out of [available] for both halves, where the instrument half
