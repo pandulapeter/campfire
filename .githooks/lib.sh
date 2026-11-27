@@ -10,6 +10,23 @@
 # checkout's .githooks, so a worktree branched before a change here still runs this copy). Each function runs at the top
 # of the checkout being committed in, whose own scripts and Gradle wrapper it uses.
 
+# Deletes the folders under .claude/worktrees that are no worktree any more and hold no file, so they never pile up: a
+# watcher of a removed worktree's included build (gradle/build-logic) makes its empty gradle/ again after the removal.
+# Anything holding a file is left alone, whatever it is.
+sweep_dead_worktrees() {
+    common=$(git rev-parse --path-format=absolute --git-common-dir) || return 0
+    folder="$(dirname "$common")/.claude/worktrees"
+    [ -d "$folder" ] || return 0
+    live=$(git worktree list --porcelain | sed -n 's/^worktree //p')
+    for directory in "$folder"/*/; do
+        directory=${directory%/}
+        [ -d "$directory" ] || continue
+        printf '%s\n' "$live" | grep -qxF "$directory" && continue
+        [ -z "$(find "$directory" -type f -print -quit)" ] && rm -rf "$directory"
+    done
+    return 0
+}
+
 # The checks tests.yml runs that take seconds.
 fast_checks() {
     python3 .github/scripts/check_license_headers.py

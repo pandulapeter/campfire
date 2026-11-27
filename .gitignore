@@ -21,6 +21,9 @@ build/
 # Where the Xcode project is, which the shared iOS run configuration in .run/ needs and a fresh clone would otherwise
 # have to be told by hand. It names the project relative to the checkout, and the other IDEs leave it alone.
 !/.idea/xcode.xml
+# The Kotlin Multiplatform plugin's switch for generating run configurations of its own, which is off: the shared ones in
+# .run/ are the project's, a Debug and a Release one per platform.
+!/.idea/kmp-plugin-settings.xml
 *.iml
 /captures
 *.hprof

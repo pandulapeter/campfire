@@ -8,7 +8,6 @@
  * https://mozilla.org/MPL/2.0/.
  */
 plugins {
-    idea
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.android.multiplatformLibrary) apply false
     alias(libs.plugins.android.test) apply false
@@ -20,13 +19,4 @@ plugins {
     alias(libs.plugins.kotlin.jvm) apply false
     alias(libs.plugins.kotlin.multiplatform) apply false
     alias(libs.plugins.kotlin.serialization) apply false
-}
-
-// Every session works in a git worktree under .claude/worktrees, a whole checkout inside this one. The IDE would index
-// each of them, and read each one's .run/ as more run configurations, which it then keeps as local ones after the
-// worktree is gone.
-idea {
-    module {
-        excludeDirs.add(file(".claude"))
-    }
 }

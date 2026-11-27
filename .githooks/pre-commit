@@ -12,6 +12,7 @@
 # `git config core.hooksPath .githooks`.
 set -e
 . "$(dirname "$0")/lib.sh"
+sweep_dead_worktrees
 fast_checks
 # Spotless, the unit tests, and the UI tests of the packages the commit changes (lib.sh's ui_test_args) need Gradle, so
 # they run only when the commit stages more than Markdown. Gradle reruns only the modules a change reaches: a few seconds
