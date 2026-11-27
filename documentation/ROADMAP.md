@@ -14,9 +14,6 @@ What's planned for Campfire, grouped by area.
 ## In progress
 - Update and improve widget descriptions
 - The metronome bottom sheet could include a slider
-- **Debug builds apart from release builds** on every platform (their own identity, data, Dropbox sign-in, and deep
-  links, on physical devices too), marked by the app icon's logo drawn with a dashed line in every theme color.
-  Plan: [debug-builds.md](plans/debug-builds.md)
 - Allow changing menu item order
 
 
