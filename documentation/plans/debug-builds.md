@@ -9,10 +9,11 @@
 -->
 # Plan: debug builds apart from release builds, with an icon of their own
 
-**Status:** not started. Part 1 makes a debug build its own app on every platform: its own identity, its own data, its
-own Dropbox sign-in, and deep links that reach it, on physical devices too. Part 2 marks it with the same logo drawn with a
-dashed line, in every theme color. Part 2 builds on Part 1 only on iOS (the debug icons need the Debug configuration's own
-asset catalog), so the two can overlap elsewhere.
+**Status:** Part 1 done (steps 1–5), except the owner steps: `campfire-debug://oauth` among the Dropbox app's
+redirect URIs, the iOS debug App IDs and group (registered by Xcode's automatic signing on the first device build), and
+pushing the website's `apple-app-site-association` commit. Step 6 done with ten square-ended dashes, waiting for the
+owner's approval before steps 7–10. `runDistributable` turned out to start the image's own launcher, which no system
+property reaches, so only `run` is a debug build on the desktop.
 
 ## Where each platform stands
 
@@ -126,9 +127,9 @@ every color, and have the owner approve it there before generating the bitmaps f
 
 ### Step 6. Android (one file)
 
-- Every launcher alias's adaptive icon (`mipmap-anydpi/ic_launcher*.xml`) shares `drawable/ic_launcher_foreground.xml`
-  as its foreground and its monochrome layer. A debug copy in `app/android/src/debug/res/drawable` with the dashed
-  paths in place of the ring gives the dashed logo to all ten colors and the themed (monochrome) icon at once.
+- Every launcher alias's adaptive icon (`mipmap-anydpi/ic_launcher*.xml`) shares `@mipmap/ic_launcher_foreground` (WebPs
+  per density) as its foreground and its monochrome layer. A debug vector in `app/android/src/debug/res/mipmap-anydpi`
+  with the dashed paths wins over them, giving the dashed logo to all ten colors and the themed icon at once.
 - The launcher shortcuts and the notification icons stay as they are.
 
 ### Step 7. iOS
