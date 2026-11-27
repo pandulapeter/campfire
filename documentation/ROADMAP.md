@@ -12,10 +12,6 @@
 What's planned for Campfire, grouped by area.
 
 ## In progress
-- Update and improve widget descriptions
-- The metronome bottom sheet could include a slider
-- Allow changing menu item order
-
 
 ## Short-term
 
