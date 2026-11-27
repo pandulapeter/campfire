@@ -10,7 +10,6 @@
 package com.pandulapeter.campfire.presentation.ui.platform
 
 import androidx.compose.ui.input.pointer.PointerEvent
-import java.io.File
 
 internal actual val isDesktopPlatform
     get() = when (PlatformImpersonation.platform) {
@@ -65,39 +64,6 @@ private val isMacOs get() = operatingSystem.contains("mac") || operatingSystem.c
 
 // "darwin" has a "win" in it as well, so the two are not independent questions.
 private val isWindows get() = !isMacOs && operatingSystem.contains("win")
-
-/**
- * Where the desktop build keeps everything it owns: the library, the preferences, and the two files
- * `:app:desktop` uses to keep a second process from opening the same library.
- *
- * The Microsoft Store build keeps them in its package's own folder, which it is told the name of by the launcher (see
- * `packageReleaseMsix`): Windows gives a packaged app's writes under `%APPDATA%` to a hidden copy of the folder that
- * Explorer does not show, where nothing outside the app would find the library.
- *
- * Derived the same way the storage derives it; the two have to agree, so keep this in step with
- * `DesktopFileStorage.kt` in `:data:source:local:implementation`.
- */
-fun desktopDataDirectory(): File {
-    val userHome = File(System.getProperty("user.home").orEmpty())
-    val packageFamilyName = System.getProperty(PACKAGE_FAMILY_NAME_PROPERTY).orEmpty()
-    return when {
-        isMacOs -> File(userHome, "Library/Application Support/$APPLICATION_NAME")
-        isWindows && packageFamilyName.isNotEmpty() -> System.getenv("LOCALAPPDATA").orEmpty()
-            .let { if (it.isEmpty()) File(userHome, "AppData/Local") else File(it) }
-            .let { File(it, "Packages/$packageFamilyName/LocalState") }
-
-        isWindows -> System.getenv("APPDATA").orEmpty()
-            .let { if (it.isEmpty()) File(userHome, "AppData/Roaming") else File(it) }
-            .let { File(it, APPLICATION_NAME) }
-
-        else -> System.getenv("XDG_DATA_HOME").orEmpty()
-            .let { if (it.isEmpty()) File(userHome, ".local/share") else File(it) }
-            .let { File(it, APPLICATION_NAME.lowercase()) }
-    }
-}
-
-private const val APPLICATION_NAME = "Campfire"
-private const val PACKAGE_FAMILY_NAME_PROPERTY = "campfire.packageFamilyName"
 
 internal actual val appBuild: AppBuild
     get() = when (PlatformImpersonation.platform) {

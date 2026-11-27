@@ -14,7 +14,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.withFrameNanos
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
-import com.pandulapeter.campfire.presentation.ui.platform.desktopDataDirectory
+import com.pandulapeter.campfire.data.model.library.desktopDataDirectory
 import com.pandulapeter.campfire.presentation.ui.preferences.PreferencesContext
 import com.pandulapeter.campfire.presentation.ui.preferences.PreferencesPage
 import java.io.File

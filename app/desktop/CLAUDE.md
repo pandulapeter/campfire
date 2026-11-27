@@ -86,6 +86,10 @@ only.
   the Store build), `$XDG_DATA_HOME/campfire` or `~/.local/share/campfire` (Linux). In the Mac App Store sandbox the
   JDK takes `user.home` from the container, so nothing in the code changes; `network.server` covers the two loopback
   sockets.
+- **A `run` is a debug build** (`-Dcampfire.debug=true`, set by the `run` task alone): its data is the sibling
+  `Campfire Debug` (`campfire-debug` on Linux), with its own guard and log, so it runs beside an installed build. It
+  registers no `campfire://` scheme, so a link reaches it as `--args` or pasted. `runDistributable` starts the image's
+  launcher, which no property reaches, and shares the installed build's folder.
 
 ## Packaging
 
@@ -151,8 +155,8 @@ only.
 - **MSIX** (`packageReleaseMsix`): identity from `campfire.windows.*` (Partner Center's, verbatim). Unsigned: Partner
   Center signs. It declares every language of the app, and Partner Center wants a listing for each.
 - MSIX AppData writes are virtualized and the Store refuses `unvirtualizedResources`, so the task adds
-  `-Dcampfire.packageFamilyName` to `Campfire.cfg`, and `desktopDataDirectory()` (in both `:presentation` and
-  `:data:source:local:implementation`) then uses `%LOCALAPPDATA%\Packages\<family>\LocalState`.
+  `-Dcampfire.packageFamilyName` to `Campfire.cfg`, and `desktopDataDirectory()` (`:data:model`, which the storage and
+  the app share) then uses `%LOCALAPPDATA%\Packages\<family>\LocalState`.
 
 ### Linux
 

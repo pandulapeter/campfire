@@ -44,7 +44,7 @@ import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.ImpersonatedPlatform
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.PlatformImpersonation
-import com.pandulapeter.campfire.presentation.ui.platform.desktopDataDirectory
+import com.pandulapeter.campfire.data.model.library.desktopDataDirectory
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.Koin
 import org.koin.core.context.stopKoin

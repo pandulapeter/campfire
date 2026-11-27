@@ -36,7 +36,7 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.handleKeyEvent
 import com.pandulapeter.campfire.presentation.ui.handlePreviewKeyEvent
 import com.pandulapeter.campfire.presentation.ui.resetEscapeKey
-import com.pandulapeter.campfire.presentation.ui.platform.desktopDataDirectory
+import com.pandulapeter.campfire.data.model.library.desktopDataDirectory
 import com.pandulapeter.campfire.presentation.ui.platform.installProcessLog
 import com.pandulapeter.campfire.presentation.ui.theme.interfaceScale
 import java.awt.Color

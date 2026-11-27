@@ -31,7 +31,7 @@ import javax.inject.Inject
  * Copies the app image, writes the manifest and the logos next to it, indexes the logos with makepri and packs the
  * whole with makeappx. The logos are scaled from the app icon on every run rather than committed, so they cannot fall
  * out of step with it. The launcher of the copy is also told the package family name, which is what makes the app keep
- * its library in the package's own folder rather than in AppData (`desktopDataDirectory()` in `:presentation`).
+ * its library in the package's own folder rather than in AppData (`desktopDataDirectory()` in `:data:model`).
  */
 abstract class PackageMsix : DefaultTask() {
 

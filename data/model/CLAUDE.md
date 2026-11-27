@@ -10,7 +10,8 @@
 # :data:model
 
 Pure Kotlin domain models, depending on kotlinx datetime and coroutines alone; stored documents and bytes never leak past their own module. The one
-platform difference is `normalizedToNfc` (expect/actual).
+platform difference is `normalizedToNfc` (expect/actual); the desktop alone has `desktopDataDirectory()`, the folder the
+storage and `:app:desktop` must agree on (a debug `run`'s is a sibling, `app/desktop/CLAUDE.md`).
 
 ## Songs and setlists
 

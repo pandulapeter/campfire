@@ -9,39 +9,9 @@
  */
 package com.pandulapeter.campfire.data.source.local.implementation.storage.file
 
+import com.pandulapeter.campfire.data.model.library.desktopDataDirectory
 import org.koin.core.annotation.Single
-import java.io.File
 
-/**
- * The place each desktop operating system expects an application to keep the data it owns. The Microsoft Store build,
- * which the launcher tells its package family name, uses its package's own folder instead of `%APPDATA%`, where Windows
- * would put what it writes in a hidden copy of the folder that Explorer does not show.
- *
- * The desktop app keeps its single-instance lock and its log beside the library, and cannot see this module, so
- * `:presentation` derives the same path; keep the two in step (`presentation/src/desktopMain/.../ui/platform/Platform.desktop.kt`).
- */
+/** The library and preferences in the folder [desktopDataDirectory] names, which the desktop app keeps its guard and log beside. */
 @Single
 internal class DesktopFileStorage : FileStorage by JvmFileStorage(desktopDataDirectory())
-
-private fun desktopDataDirectory(): File {
-    val userHome = File(System.getProperty("user.home").orEmpty())
-    val operatingSystem = System.getProperty("os.name").orEmpty().lowercase()
-    val packageFamilyName = System.getProperty(PACKAGE_FAMILY_NAME_PROPERTY).orEmpty()
-    return when {
-        operatingSystem.contains("mac") || operatingSystem.contains("darwin") -> File(userHome, "Library/Application Support/$APPLICATION_NAME")
-        operatingSystem.contains("win") && packageFamilyName.isNotEmpty() -> System.getenv("LOCALAPPDATA").orEmpty()
-            .let { if (it.isEmpty()) File(userHome, "AppData/Local") else File(it) }
-            .let { File(it, "Packages/$packageFamilyName/LocalState") }
-
-        operatingSystem.contains("win") -> System.getenv("APPDATA").orEmpty()
-            .let { if (it.isEmpty()) File(userHome, "AppData/Roaming") else File(it) }
-            .let { File(it, APPLICATION_NAME) }
-
-        else -> System.getenv("XDG_DATA_HOME").orEmpty()
-            .let { if (it.isEmpty()) File(userHome, ".local/share") else File(it) }
-            .let { File(it, APPLICATION_NAME.lowercase()) }
-    }
-}
-
-private const val APPLICATION_NAME = "Campfire"
-private const val PACKAGE_FAMILY_NAME_PROPERTY = "campfire.packageFamilyName"

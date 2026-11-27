@@ -100,6 +100,15 @@ val toolchainLauncher: Provider<JavaLauncher> = if (isJetBrainsRuntimeMissing) {
 }
 
 /**
+ * A `run` is a debug build, apart from an installed one: `desktopDataDirectory()` (`:data:model`) gives it a sibling data
+ * folder, so it keeps a library and a single-instance guard of its own. `runDistributable` starts the image's own launcher,
+ * which no property reaches, so it shares the installed build's folder.
+ */
+tasks.withType<JavaExec>().matching { it.name == "run" }.configureEach {
+    systemProperty("campfire.debug", "true")
+}
+
+/**
  * Every build that leaves the machine is a release one - the `.deb`, the `.msix` and the Mac App Store `.pkg` are all
  * made of `createReleaseDistributable` - so a stand-in runtime stops each of them before it starts, rather than
  * shipping a window that keeps the system's title bar and draws its buttons for the wrong theme.
