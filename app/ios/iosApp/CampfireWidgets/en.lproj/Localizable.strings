@@ -14,9 +14,9 @@
    language. Keep hu.lproj, ro.lproj, de.lproj, es.lproj, fr.lproj, it.lproj, he.lproj, pt.lproj, pl.lproj, and
    cs.lproj in step. */
 "Random picks" = "Random picks";
-"A few random songs from your library, new ones every hour." = "A few random songs from your library, new ones every hour.";
+"A few random songs from your library, or from the tags and languages you choose, new every hour or whenever you ask for new ones." = "A few random songs from your library, or from the tags and languages you choose, new every hour or whenever you ask for new ones.";
 "Setlist" = "Setlist";
-"Your next gig, or a setlist you choose, and how many days are left." = "Your next gig, or a setlist you choose, and how many days are left.";
+"Your next gig, or any setlist you choose, with its date, the days left, and its songs, ready to open." = "Your next gig, or any setlist you choose, with its date, the days left, and its songs, ready to open.";
 "Next gig" = "Next gig";
 "Choose which setlist the widget shows." = "Choose which setlist the widget shows.";
 "Draw new picks" = "Draw new picks";

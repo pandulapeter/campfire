@@ -9,9 +9,9 @@
  */
 
 "Random picks" = "Alegeri aleatorii";
-"A few random songs from your library, new ones every hour." = "Câteva cântece aleatorii din biblioteca ta, altele în fiecare oră.";
+"A few random songs from your library, or from the tags and languages you choose, new every hour or whenever you ask for new ones." = "Câteva cântece aleatorii din biblioteca ta, sau din etichetele și limbile alese de tine, altele în fiecare oră sau oricând ceri altele.";
 "Setlist" = "Listă";
-"Your next gig, or a setlist you choose, and how many days are left." = "Următorul tău concert sau o listă aleasă de tine și câte zile au mai rămas.";
+"Your next gig, or any setlist you choose, with its date, the days left, and its songs, ready to open." = "Următorul tău concert sau orice listă aleasă de tine, cu data, zilele rămase și cântecele, gata de deschis.";
 "Next gig" = "Următorul concert";
 "Choose which setlist the widget shows." = "Alege ce listă arată widgetul.";
 "Draw new picks" = "Alege altele";

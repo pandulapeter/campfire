@@ -12,9 +12,9 @@
     <!-- Home screen widgets: the gallery's names and descriptions, shown before the app has ever run, and the sentence a
          widget shows until it has (every other text of theirs is the app's, in its own language) -->
     <string name="widget_random_picks_name">בחירות אקראיות</string>
-    <string name="widget_random_picks_description">שירים אקראיים מהספרייה שלך, שנבחרים מחדש בכל שעה או כשמבקשים אחרים</string>
+    <string name="widget_random_picks_description">כמה שירים אקראיים מהספרייה שלך, או מהתגיות והשפות שבחרת, חדשים בכל שעה או כשמבקשים אחרים</string>
     <string name="widget_setlist_name">סט־ליסט</string>
-    <string name="widget_setlist_description">ההופעה הבאה שלך או סט־ליסט לבחירתך, עם התאריך, כמה זמן נשאר והשירים הראשונים</string>
+    <string name="widget_setlist_description">ההופעה הבאה שלך, או כל סט־ליסט שבחרת, עם התאריך, הימים שנותרו והשירים, מוכנים לפתיחה</string>
     <string name="widget_open_app">יש לפתוח את Campfire כדי למלא את הווידג׳ט הזה</string>
 
 </resources>

@@ -9,9 +9,9 @@
  */
 
 "Random picks" = "Scelte a caso";
-"A few random songs from your library, new ones every hour." = "Alcune canzoni a caso della tua libreria, nuove ogni ora.";
+"A few random songs from your library, or from the tags and languages you choose, new every hour or whenever you ask for new ones." = "Alcune canzoni a caso della tua libreria, o dei tag e delle lingue che scegli, nuove ogni ora o quando ne chiedi altre.";
 "Setlist" = "Scaletta";
-"Your next gig, or a setlist you choose, and how many days are left." = "Il tuo prossimo concerto, o una scaletta a tua scelta, e quanti giorni mancano.";
+"Your next gig, or any setlist you choose, with its date, the days left, and its songs, ready to open." = "Il tuo prossimo concerto, o qualsiasi scaletta tu scelga, con la data, i giorni che mancano e le canzoni, pronte da aprire.";
 "Next gig" = "Prossimo concerto";
 "Choose which setlist the widget shows." = "Scegli quale scaletta mostra il widget.";
 "Draw new picks" = "Nuove scelte";

@@ -9,9 +9,9 @@
  */
 
 "Random picks" = "Náhodný výběr";
-"A few random songs from your library, new ones every hour." = "Pár náhodných písní z tvé knihovny, každou hodinu nové.";
+"A few random songs from your library, or from the tags and languages you choose, new every hour or whenever you ask for new ones." = "Pár náhodných písní z tvé knihovny nebo ze štítků a jazyků, které vybereš, každou hodinu nové, nebo kdykoli si o ně řekneš.";
 "Setlist" = "Setlist";
-"Your next gig, or a setlist you choose, and how many days are left." = "Tvůj příští koncert nebo setlist podle tvého výběru a kolik dní zbývá.";
+"Your next gig, or any setlist you choose, with its date, the days left, and its songs, ready to open." = "Tvůj příští koncert nebo jakýkoli setlist, který vybereš, s datem, počtem zbývajících dní a písněmi připravenými k otevření.";
 "Next gig" = "Příští koncert";
 "Choose which setlist the widget shows." = "Vyber, který setlist widget zobrazí.";
 "Draw new picks" = "Vylosovat nový výběr";

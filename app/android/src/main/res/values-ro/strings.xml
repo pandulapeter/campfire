@@ -12,9 +12,9 @@
     <!-- Home screen widgets: the gallery's names and descriptions, shown before the app has ever run, and the sentence a
          widget shows until it has (every other text of theirs is the app's, in its own language) -->
     <string name="widget_random_picks_name">Alegeri aleatorii</string>
-    <string name="widget_random_picks_description">Cântece alese la întâmplare din biblioteca ta, din nou în fiecare oră sau oricând ceri altele</string>
+    <string name="widget_random_picks_description">Câteva cântece aleatorii din biblioteca ta, sau din etichetele și limbile alese de tine, altele în fiecare oră sau oricând ceri altele</string>
     <string name="widget_setlist_name">Listă</string>
-    <string name="widget_setlist_description">Următorul tău concert sau o listă aleasă de tine, cu data, cât mai e până la ea și primele cântece</string>
+    <string name="widget_setlist_description">Următorul tău concert sau orice listă aleasă de tine, cu data, zilele rămase și cântecele, gata de deschis</string>
     <string name="widget_open_app">Deschide Campfire ca să umpli acest widget</string>
 
 </resources>

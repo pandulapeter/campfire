@@ -21,7 +21,7 @@ struct RandomPicksWidget: Widget {
             RandomPicksView(entry: entry)
         }
         .configurationDisplayName("Random picks")
-        .description("A few random songs from your library, new ones every hour.")
+        .description("A few random songs from your library, or from the tags and languages you choose, new every hour or whenever you ask for new ones.")
         .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
         .contentMarginsDisabled()
     }

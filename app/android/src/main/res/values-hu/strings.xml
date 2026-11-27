@@ -12,9 +12,9 @@
     <!-- Home screen widgets: the gallery's names and descriptions, shown before the app has ever run, and the sentence a
          widget shows until it has (every other text of theirs is the app's, in its own language) -->
     <string name="widget_random_picks_name">Véletlen válogatás</string>
-    <string name="widget_random_picks_description">Véletlenszerű dalok a könyvtáradból, óránként vagy amikor újat kérsz, újra kisorsolva</string>
+    <string name="widget_random_picks_description">Néhány véletlen dal a könyvtáradból, vagy csak a választott címkékből és nyelvekből, óránként újak, vagy amikor csak kérsz</string>
     <string name="widget_setlist_name">Lista</string>
-    <string name="widget_setlist_description">A következő fellépésed vagy egy általad választott lista, a dátumával, a hátralévő idővel és az első dalaival</string>
+    <string name="widget_setlist_description">A következő fellépésed vagy bármelyik választott lista, a dátumával, a hátralévő napokkal és a dalaival, egyből megnyithatóan</string>
     <string name="widget_open_app">Nyisd meg a Campfire-t, hogy megteljen ez a widget</string>
 
 </resources>

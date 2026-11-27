@@ -9,9 +9,9 @@
  */
 
 "Random picks" = "Véletlen válogatás";
-"A few random songs from your library, new ones every hour." = "Néhány véletlen dal a könyvtáradból, óránként újak.";
+"A few random songs from your library, or from the tags and languages you choose, new every hour or whenever you ask for new ones." = "Néhány véletlen dal a könyvtáradból, vagy csak a választott címkékből és nyelvekből, óránként újak, vagy amikor csak kérsz.";
 "Setlist" = "Lista";
-"Your next gig, or a setlist you choose, and how many days are left." = "A következő fellépésed vagy egy általad választott lista, és hogy hány nap van még hátra.";
+"Your next gig, or any setlist you choose, with its date, the days left, and its songs, ready to open." = "A következő fellépésed vagy bármelyik választott lista, a dátumával, a hátralévő napokkal és a dalaival, egyből megnyithatóan.";
 "Next gig" = "Következő fellépés";
 "Choose which setlist the widget shows." = "Válaszd ki, melyik listát mutassa a widget.";
 "Draw new picks" = "Új válogatás";

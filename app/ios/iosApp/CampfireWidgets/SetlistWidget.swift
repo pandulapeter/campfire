@@ -22,7 +22,7 @@ struct SetlistWidget: Widget {
             SetlistWidgetView(entry: entry)
         }
         .configurationDisplayName("Setlist")
-        .description("Your next gig, or a setlist you choose, and how many days are left.")
+        .description("Your next gig, or any setlist you choose, with its date, the days left, and its songs, ready to open.")
         .supportedFamilies([.systemSmall, .systemMedium, .systemLarge, .accessoryRectangular])
         .contentMarginsDisabled()
     }

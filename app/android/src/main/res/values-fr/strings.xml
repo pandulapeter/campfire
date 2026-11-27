@@ -12,9 +12,9 @@
     <!-- Home screen widgets: the gallery's names and descriptions, shown before the app has ever run, and the sentence a
          widget shows until it has (every other text of theirs is the app's, in its own language) -->
     <string name="widget_random_picks_name">Sélection au hasard</string>
-    <string name="widget_random_picks_description">Des chansons de ta bibliothèque tirées au hasard, à nouveau chaque heure ou dès que tu en demandes d\'autres</string>
+    <string name="widget_random_picks_description">Quelques chansons de ta bibliothèque tirées au hasard, ou des étiquettes et langues de ton choix, de nouvelles chaque heure ou dès que tu en demandes</string>
     <string name="widget_setlist_name">Setlist</string>
-    <string name="widget_setlist_description">Ton prochain concert ou une setlist de ton choix, avec sa date, le temps qu\'il reste et ses premières chansons</string>
+    <string name="widget_setlist_description">Ton prochain concert, ou n\'importe quelle setlist de ton choix, avec sa date, les jours restants et ses chansons, prêtes à ouvrir</string>
     <string name="widget_open_app">Ouvre Campfire pour remplir ce widget</string>
 
 </resources>
