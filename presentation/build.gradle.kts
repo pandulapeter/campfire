@@ -115,6 +115,13 @@ compose.resources {
     generateResClass = always
 }
 
+// Several hundred test classes, run one after another in a single JVM, made this the longest step of the pre-commit
+// hook after any change here. Three JVMs share them out; the tests touch no file outside a temporary folder of their own
+// beyond reading the module's sources, and Gradle's four workers still bound the whole build.
+tasks.named<Test>("desktopTest") {
+    maxParallelForks = 3
+}
+
 localization {
     outputPackage.set("com.pandulapeter.campfire.presentation.localization")
 }
