@@ -18,6 +18,8 @@
 		C4F2000A2E80000000000011 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C4F2000A2E80000000000010 /* Assets.xcassets */; };
 		C4F2000A2E80000000000014 /* ShareExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = C4F2000A2E80000000000001 /* ShareExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		058557BB273AAA24004C7B11 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 058557BA273AAA24004C7B11 /* Assets.xcassets */; };
+		058557BB273AAA24004C7B12 /* AppIcons.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 058557BA273AAA24004C7B12 /* AppIcons.xcassets */; };
+		058557BB273AAA24004C7B13 /* DebugAppIcons.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 058557BA273AAA24004C7B13 /* DebugAppIcons.xcassets */; };
 		058557D9273AAEEB004C7B11 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 058557D8273AAEEB004C7B11 /* Preview Assets.xcassets */; };
 		2152FB042600AC8F00CF470E /* iOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2152FB032600AC8F00CF470E /* iOSApp.swift */; };
 		6B5BC2822D29658700759926 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 6B5BC2812D29658700759926 /* LaunchScreen.storyboard */; };
@@ -111,6 +113,8 @@
 		C4F2000A2E80000000000012 /* iosApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = iosApp.entitlements; sourceTree = "<group>"; };
 		C4F2000A2E80000000000013 /* set-version.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "set-version.sh"; sourceTree = "<group>"; };
 		058557BA273AAA24004C7B11 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		058557BA273AAA24004C7B12 /* AppIcons.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = AppIcons.xcassets; sourceTree = "<group>"; };
+		058557BA273AAA24004C7B13 /* DebugAppIcons.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = DebugAppIcons.xcassets; sourceTree = "<group>"; };
 		058557D8273AAEEB004C7B11 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		2152FB032600AC8F00CF470E /* iOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSApp.swift; sourceTree = "<group>"; };
 		6B5BC2812D29658700759926 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
@@ -228,6 +232,8 @@
 			isa = PBXGroup;
 			children = (
 				058557BA273AAA24004C7B11 /* Assets.xcassets */,
+				058557BA273AAA24004C7B12 /* AppIcons.xcassets */,
+				058557BA273AAA24004C7B13 /* DebugAppIcons.xcassets */,
 				7555FF82242A565900829871 /* ContentView.swift */,
 				A1C0FFEE2F00000100000002 /* ContinuedImportTasks.swift */,
 				A1C0FFEE2F00000100000004 /* QuickActions.swift */,
@@ -423,6 +429,8 @@
 				6B5BC2822D29658700759926 /* LaunchScreen.storyboard in Resources */,
 				058557D9273AAEEB004C7B11 /* Preview Assets.xcassets in Resources */,
 				058557BB273AAA24004C7B11 /* Assets.xcassets in Resources */,
+				058557BB273AAA24004C7B12 /* AppIcons.xcassets in Resources */,
+				058557BB273AAA24004C7B13 /* DebugAppIcons.xcassets in Resources */,
 				C4F1000A2E80000000000001 /* PrivacyInfo.xcprivacy in Resources */,
 				C4F1000A2E80000000000003 /* InfoPlist.strings in Resources */,
 			);
@@ -914,6 +922,7 @@
 				DEVELOPMENT_ASSET_PATHS = "\"iosApp/Preview Content\"";
 				DEVELOPMENT_TEAM = "$(TEAM_ID)";
 				ENABLE_PREVIEWS = YES;
+				EXCLUDED_SOURCE_FILE_NAMES = AppIcons.xcassets;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(SRCROOT)/../build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
@@ -948,6 +957,7 @@
 				DEVELOPMENT_ASSET_PATHS = "\"iosApp/Preview Content\"";
 				DEVELOPMENT_TEAM = "$(TEAM_ID)";
 				ENABLE_PREVIEWS = YES;
+				EXCLUDED_SOURCE_FILE_NAMES = DebugAppIcons.xcassets;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(SRCROOT)/../build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",

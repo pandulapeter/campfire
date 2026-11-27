@@ -24,6 +24,9 @@ extension (`iosApp/ShareExtension/`) and the widget extension (`iosApp/CampfireW
 - **App icon**: iOS shows an unsuppressible alert per `setAlternateIconName` and refuses it while the app is not
   active, so `CampfireIosApp` asks only after the color has been stable for a second while resumed, and again at every
   resume (no-op if matching; applies a restored backup's preference).
+- The icon sets live in `AppIcons.xcassets`, and the debug build's (the logo drawn with a dashed line, made once from
+  them; made again only if they change) under the same names in `DebugAppIcons.xcassets`; each configuration excludes
+  the other's catalog (`EXCLUDED_SOURCE_FILE_NAMES`), so the icon names and `setAlternateIconName` never change.
 
 ## Files in and out
 
