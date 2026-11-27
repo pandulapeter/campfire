@@ -9,19 +9,20 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.settings
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
-import androidx.compose.material3.Icon
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.presentation.localization.joinIsolated
 import com.pandulapeter.campfire.presentation.localization.stringResource
@@ -52,6 +53,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_library_storage
 import com.pandulapeter.campfire.presentation.resources.settings_library_summary
 import com.pandulapeter.campfire.presentation.ui.components.formattedSize
 import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
+import com.pandulapeter.campfire.presentation.ui.components.CampfireIconButton
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.firstRun.DemoLibraryOffer
 import com.pandulapeter.campfire.presentation.ui.firstRun.FirstRunController
@@ -225,10 +227,15 @@ private val LibraryPart.label
     }
 
 /**
- * A row that says how much of something is on the device and deletes it when tapped, which the icon at its end says
- * before anybody taps it. The dialog it opens is the confirmation, so the row itself asks nothing.
+ * A row that says how much of something is on the device, with a button at its end that deletes it. Only the button is
+ * pressable: the row is read far more often than acted on, and a press anywhere on it opening a deletion is one nobody
+ * meant. The dialog it opens is the confirmation, so the button itself asks nothing.
  *
- * @param deleteLabel What the icon is called to a screen reader, since the icon is the only thing that names the action.
+ * The button sits beside the [ListItem] rather than in its trailing slot, which tops itself on a three-line item, so
+ * that it stays centered on a row whose description grows a second line.
+ *
+ * @param deleteLabel What the button is called to a screen reader and in its tooltip, since the icon is the only thing
+ * that names the action.
  */
 @Composable
 private fun DeletableSettingsRow(
@@ -237,10 +244,19 @@ private fun DeletableSettingsRow(
     deleteLabel: String,
     isEnabled: Boolean,
     onClick: () -> Unit,
-) = ListItem(
-    modifier = Modifier.clickable(enabled = isEnabled, onClickLabel = deleteLabel, onClick = onClick).alpha(if (isEnabled) 1f else 0.5f),
-    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-    headlineContent = { Text(title) },
-    supportingContent = description,
-    trailingContent = { Icon(painter = painterResource(Res.drawable.ic_delete), contentDescription = deleteLabel) },
-)
+) = Row(verticalAlignment = Alignment.CenterVertically) {
+    ListItem(
+        modifier = Modifier.weight(1f).alpha(if (isEnabled) 1f else 0.5f),
+        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+        headlineContent = { Text(title) },
+        supportingContent = description,
+    )
+    // The list item's end padding less the button's own around its icon, so the icon stays where a trailing icon is.
+    CampfireIconButton(
+        modifier = Modifier.padding(end = 4.dp),
+        icon = painterResource(Res.drawable.ic_delete),
+        label = deleteLabel,
+        enabled = isEnabled,
+        onClick = onClick,
+    )
+}

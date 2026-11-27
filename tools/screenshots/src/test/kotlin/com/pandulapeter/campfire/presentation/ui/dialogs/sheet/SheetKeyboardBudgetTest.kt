@@ -145,9 +145,9 @@ internal class SheetKeyboardBudgetTest {
         // Nothing is typed into it and its Delete is never pressed: the check only reads where they are.
         SheetCase(name = "Delete library", action = Res.string.delete) {
             openSettingsTab(string(Res.string.settings_library))
-            // The row's own text is the library's size, and its click is announced as what it does.
-            onNode(hasClickLabel(string(Res.string.settings_library_delete))).performScrollTo()
-            tap(hasClickLabel(string(Res.string.settings_library_delete)))
+            // The row's own text is the library's size; its delete button is named for what it does.
+            onNode(hasContentDescription(string(Res.string.settings_library_delete))).performScrollTo()
+            tap(hasContentDescription(string(Res.string.settings_library_delete)))
         },
     )
 }
