@@ -374,7 +374,7 @@ same way.
   defers them to one `verify --branch` before landing). Sessions work in a worktree each and land on `main` by
   fast-forward (the `commit-messages` skill).
 - `.run/` holds the IDE-written run configurations (no license header, the IDE would drop it): a Debug and a Release one
-  per platform, in a folder each. Android Debug deploys the variant selected in Build Variants (Release is
+  per platform, named after it. Android Debug deploys the variant selected in Build Variants (Release is
   `installRelease`, opened from the launcher), Desktop's are `run` / `runRelease`, iOS's the KMP plugin's (a simulator or a device), and
   Web's `wasmJsBrowserDevelopmentRun` / `wasmJsBrowserProductionRun`.
 
