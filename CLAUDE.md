@@ -369,7 +369,7 @@ same way.
 - `org.gradle.workers.max=4` because the shared Kotlin daemon ran out of memory; lower it rather than turning parallel
   off.
 - **Run `git config core.hooksPath .githooks` once per clone**: the pre-commit hook runs the `.github/scripts` checks
-  (`.githooks/lib.sh`), refuses deleting `.run/iOS.run.xml`, and, when more than Markdown (or a version bump alone) is
+  (`.githooks/lib.sh`), refuses deleting `.run/iOS.run.xml` or `.run/iOS Debug.run.xml`, and, when more than Markdown (or a version bump alone) is
   staged, `spotlessCheck`, `desktopTest`, and the UI tests of the packages it changes, unless `.githooks/verify` checked that staged tree first (or the commit
   defers them to one `verify --branch` before landing). Sessions work in a worktree each and land on `main` by
   fast-forward (the `commit-messages` skill).

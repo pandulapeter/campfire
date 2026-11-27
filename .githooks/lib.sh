@@ -21,12 +21,14 @@ fast_checks() {
     python3 .github/scripts/check_doc_names.py --staged
     python3 .github/scripts/check_regexes.py
     python3 .github/scripts/check_test_names.py
-    # The IDE drops the shared iOS run configuration now and then, and a commit staging everything has carried that
+    # The IDE drops the shared iOS run configurations now and then, and a commit staging everything has carried that
     # deletion along several times.
-    if git diff --cached --name-only --diff-filter=D | grep -qx '.run/iOS.run.xml'; then
-        echo "The commit deletes .run/iOS.run.xml; restore it with git restore --staged --worktree .run/iOS.run.xml." >&2
-        return 1
-    fi
+    for configuration in '.run/iOS.run.xml' '.run/iOS Debug.run.xml'; do
+        if git diff --cached --name-only --diff-filter=D | grep -qxF "$configuration"; then
+            echo "The commit deletes $configuration; restore it with git restore --staged --worktree '$configuration'." >&2
+            return 1
+        fi
+    done
 }
 
 # The staged files Gradle has to check: anything but Markdown, and nothing for a version bump alone, which changes no
