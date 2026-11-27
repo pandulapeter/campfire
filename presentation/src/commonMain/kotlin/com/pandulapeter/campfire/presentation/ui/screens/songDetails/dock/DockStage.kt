@@ -55,13 +55,13 @@ internal enum class DockPart {
  */
 internal fun dockPartsOf(rows: DockRows, layout: DockLayout?): Set<DockPart> {
     if (layout == null) return emptySet()
-    val scaleRow = listOfNotNull(DockPart.CHIP_ROW, DockPart.CHIP_ROW_SCALES).takeIf { rows.hasScaleRow }.orEmpty()
+    val scaleRow = if (rows.hasScaleRow) setOf(DockPart.CHIP_ROW, DockPart.CHIP_ROW_SCALES) else emptySet()
     when (layout.controls) {
-        DockControlsPlace.PAGER_BAR -> return scaleRow.toSet() + setOfNotNull(
+        DockControlsPlace.PAGER_BAR -> return scaleRow + setOfNotNull(
             DockPart.PAGER_BAR_CARD.takeIf { rows.hasInstrumentCard },
             DockPart.PAGER_BAR_TEMPO.takeIf { rows.hasTempo },
         )
-        DockControlsPlace.OWN_ROW -> return scaleRow.toSet() + setOfNotNull(
+        DockControlsPlace.OWN_ROW -> return scaleRow + setOfNotNull(
             DockPart.CONTROLS_ROW,
             DockPart.CONTROLS_ROW_CARD.takeIf { rows.hasInstrumentCard },
             DockPart.CONTROLS_ROW_TEMPO.takeIf { rows.hasTempo },
@@ -71,7 +71,7 @@ internal fun dockPartsOf(rows: DockRows, layout: DockLayout?): Set<DockPart> {
     if (rows.isMetronomeOnly) return setOf(if (rows.hasInstrumentCard) DockPart.METRONOME_PANEL_WITH_CARD else DockPart.METRONOME_PANEL)
     val hasDiagramRow = rows.hasChordRow && layout.tier != DockTier.CHORD_CHIPS
     return if (hasDiagramRow) {
-        scaleRow.toSet() + setOfNotNull(
+        scaleRow + setOfNotNull(
             DockPart.DIAGRAM_ROW,
             DockPart.DIAGRAM_ROW_CARD.takeIf { rows.hasInstrumentCard },
             if (layout.tier == DockTier.SMALL_DIAGRAMS) DockPart.SMALL_DIAGRAMS else DockPart.FULL_DIAGRAMS,
@@ -95,9 +95,9 @@ internal fun dockPartsOf(rows: DockRows, layout: DockLayout?): Set<DockPart> {
 /**
  * The dock's rows under the song as a change is staged ([rememberDockStage]): the [rows] and [layout] drawn, their
  * [parts], and the [visible] ones among them; the rest are drawn faded out, and an end of a row that is not visible takes
- * no room.
+ * no room. [snaps] where the change is data arriving, drawn at once.
  */
-internal class DockStaged(val rows: DockRows, val layout: DockLayout?, val parts: Set<DockPart>, val visible: Set<DockPart>)
+internal class DockStaged(val rows: DockRows, val layout: DockLayout?, val parts: Set<DockPart>, val visible: Set<DockPart>, val snaps: Boolean)
 
 /**
  * [rows] laid out as [layout], with every change of their parts ([dockPartsOf]) staged as a change of the song's look is
@@ -132,9 +132,9 @@ internal fun rememberDockStage(rows: DockRows, layout: DockLayout?, snaps: Boole
     stage.targetLayout = layout
     val visible = stage.arrived intersect parts
     return if (isLeaving) {
-        DockStaged(rows = stage.heldRows, layout = stage.heldLayout, parts = stage.laidOut, visible = visible)
+        DockStaged(rows = stage.heldRows, layout = stage.heldLayout, parts = stage.laidOut, visible = visible, snaps = snaps)
     } else {
-        DockStaged(rows = rows, layout = layout, parts = parts, visible = visible)
+        DockStaged(rows = rows, layout = layout, parts = parts, visible = visible, snaps = snaps)
     }
 }
 

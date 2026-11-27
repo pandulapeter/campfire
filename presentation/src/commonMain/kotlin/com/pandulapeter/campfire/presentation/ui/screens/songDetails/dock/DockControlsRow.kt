@@ -10,18 +10,20 @@
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.ui.songView.model.ChordDiagrams
 
 /**
  * The dock's controls on a row of their own under the scale row, which was too wide for the room between them: the
  * one-line instrument card at its start and the chip-high tempo chip at its end, as they stand in the one row, with
- * nothing between them. It stands on the dock's bottom. Of its [parts] only the [visible] ones are drawn.
+ * nothing between them. It stands on the dock's bottom. Of its [parts] only the [visible] ones are drawn, each fading
+ * and growing in from its end ([DockRowEnd]); the row itself is no more than a place for them.
  */
 @Composable
 internal fun DockControlsRow(
@@ -34,22 +36,26 @@ internal fun DockControlsRow(
     visible: Set<DockPart>,
     layout: DockLayout,
     horizontalPadding: PaddingValues,
-) {
-    val alpha by dockPartAlpha(DockPart.CONTROLS_ROW in visible)
-    DockScrollingRow(
-        modifier = modifier
-            .padding(bottom = layout.bottomPadding)
-            .graphicsLayer { this.alpha = alpha },
-        height = layout.rowHeight,
-        horizontalPadding = horizontalPadding,
-        scrollState = rememberScrollState(),
-        start = chordDiagrams?.takeIf { DockPart.CONTROLS_ROW_CARD in parts }?.let {
-            @Composable { DockLineCard(chordDiagrams = it, height = layout.rowHeight, onTunerClicked = onTunerClicked) }
-        },
-        end = tempo?.takeIf { DockPart.CONTROLS_ROW_TEMPO in parts }?.let {
-            @Composable { DockTempoChip(tempo = it, metronome = metronome, height = layout.rowHeight) }
-        },
-        isStartShown = DockPart.CONTROLS_ROW_CARD in visible,
-        isEndShown = DockPart.CONTROLS_ROW_TEMPO in visible,
-    ) {}
-}
+) = DockEndsLayout(
+    modifier = modifier
+        .padding(bottom = layout.bottomPadding)
+        .padding(horizontalPadding)
+        .fillMaxWidth()
+        .height(layout.rowHeight),
+    minMiddleRoom = 0.dp,
+    start = {
+        if (chordDiagrams != null && DockPart.CONTROLS_ROW_CARD in parts) {
+            DockRowEnd(isShown = DockPart.CONTROLS_ROW_CARD in visible, expandFrom = Alignment.Start) {
+                DockLineCard(chordDiagrams = chordDiagrams, height = layout.rowHeight, onTunerClicked = onTunerClicked)
+            }
+        }
+    },
+    middle = {},
+    end = {
+        if (tempo != null && DockPart.CONTROLS_ROW_TEMPO in parts) {
+            DockRowEnd(isShown = DockPart.CONTROLS_ROW_TEMPO in visible, expandFrom = Alignment.End) {
+                DockTempoChip(tempo = tempo, metronome = metronome, height = layout.rowHeight)
+            }
+        }
+    },
+)

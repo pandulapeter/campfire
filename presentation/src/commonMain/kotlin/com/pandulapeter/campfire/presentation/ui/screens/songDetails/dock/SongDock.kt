@@ -11,7 +11,6 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock
 
 import com.pandulapeter.campfire.presentation.ui.songView.rememberChordCells
 import androidx.compose.animation.Crossfade
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -60,8 +59,9 @@ internal fun SongDock(
 ) {
     val corner = DOCK_CORNER
     val hold = remember { DockHold() }
-    // Beside the side panel the row meets the panel's own surface, the two making one.
-    val endCorner by animateDpAsState(if (dock.isSidePanel) 0.dp else DOCK_CORNER)
+    // Beside the side panel the row meets the panel's own surface, the two making one, squared as far as the panel has
+    // come in, so that no notch opens while it slides.
+    val endCorner = dockCornerBeside(dock.panelWidth)
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -116,8 +116,10 @@ private fun DockRowsBox(dock: SongDockState, metronome: DockMetronome, hold: Doc
                 visible = dock.visibleParts,
                 horizontalPadding = horizontalPadding,
                 isBesidePanel = dock.isSidePanel,
-                areScalesMeasured = dock.areScalesMeasured,
-                onScalesWidth = { width -> if (dock.scalesWidths[page] != width) dock.scalesWidths[page] = width },
+                // The page turned away from keeps its chips: only the song's own page waits for their width.
+                areScalesMeasured = page != targetPage || !dock.isScalesWidthPending,
+                snaps = dock.snaps,
+                onScalesWidth = { width -> dock.pages.recordScalesWidth(page, width) },
             )
         }
     }
@@ -150,6 +152,7 @@ private fun DockRowsOf(
     horizontalPadding: PaddingValues,
     isBesidePanel: Boolean,
     areScalesMeasured: Boolean,
+    snaps: Boolean,
     onScalesWidth: (Dp) -> Unit,
 ) = Box(modifier = Modifier.fillMaxSize()) {
     // The chip row's in either layout, so that the scale chips keep their place as the rows switch between one row and
@@ -203,6 +206,7 @@ private fun DockRowsOf(
             scrollState = rowScroll,
             isBesidePanel = isBesidePanel,
             areScalesMeasured = areScalesMeasured,
+            snaps = snaps,
             onScalesWidth = onScalesWidth,
         )
     }
@@ -247,6 +251,12 @@ internal fun Modifier.readAfterDock() = semantics {
 }
 
 internal val DOCK_CORNER = 16.dp
+
+/**
+ * The corner of a surface where another one, [beside] tall or wide, meets it: square once that one has come as far as a
+ * corner's size, round where it has gone, and in between as far as it has, so that the corner follows the other's glide.
+ */
+internal fun dockCornerBeside(beside: Dp) = DOCK_CORNER * (1f - (beside / DOCK_CORNER).coerceIn(0f, 1f))
 
 /** After the app bar's, which is the screen's first, and before the song's pages, which come after it. */
 internal const val DOCK_TRAVERSAL_INDEX = 1f

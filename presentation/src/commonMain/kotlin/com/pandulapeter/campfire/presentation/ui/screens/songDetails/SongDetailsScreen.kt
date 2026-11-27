@@ -11,7 +11,6 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.autoScroll.autoScrollCoverOf
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.readAfterDock
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.DOCK_CORNER
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.DOCK_TRAVERSAL_INDEX
 import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
@@ -20,6 +19,7 @@ import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.DockMe
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.DockPagerBarCard
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.DockPagerBarTempo
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.DockSidePanel
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.dockCornerBeside
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.PaddingBesidePanel
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.SongDock
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.SongDockState
@@ -28,7 +28,6 @@ import com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock.rememb
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongPlayingControls
 import com.pandulapeter.campfire.presentation.ui.songView.model.ChordDiagrams
 import com.pandulapeter.campfire.presentation.ui.songView.grid.pageCount
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.PaddingValues
@@ -45,9 +44,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshots.SnapshotStateMap
@@ -157,7 +156,7 @@ internal fun SongDetailsScreen(
     )
     val chordSpelling = userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default
     val layoutDirection = LocalLayoutDirection.current
-    val dock = rememberSongDock(userPreferences, chordDiagrams, hasPagerBar = hasPagerControls, isImportPreview = isImportPreview, contentPadding = contentPadding, targetPage = pagerState.targetPage, songKey = songs.getOrNull(pagerState.targetPage)?.fileName, songText = songs.getOrNull(pagerState.targetPage)?.let { songTexts[it.fileName] }, dockFacts = viewModel.songTextStore.dockFacts, onTunerClicked = viewModel::openTunerSheet.takeIf { tools.isTunerInCard })
+    val dock = rememberSongDock(userPreferences, chordDiagrams, hasPagerBar = hasPagerControls, isImportPreview = isImportPreview, contentPadding = contentPadding, targetPage = pagerState.targetPage, songKeyOf = { page -> songs.getOrNull(page)?.fileName }, songText = songs.getOrNull(pagerState.targetPage)?.let { songTexts[it.fileName] }, dockFacts = viewModel.songTextStore.dockFacts, onTunerClicked = viewModel::openTunerSheet.takeIf { tools.isTunerInCard })
     // The side panel covers the end inset for what stands beside it, which keeps only what of it is still its own.
     val songPadding = remember(contentPadding, dock) { PaddingBesidePanel(contentPadding) { dock.panelWidth } }
     val isUncovered = isSongDetailsUncovered(visibleDialog, viewModel.navigator.backStack.lastOrNull())
@@ -346,8 +345,9 @@ private fun SetlistPagerBar(
     modifier = Modifier
         .clip(
             RoundedCornerShape(
-                topStart = animateDpAsState(if (dock.hasRowsUnder) 0.dp else DOCK_CORNER).value,
-                topEnd = animateDpAsState(if (dock.hasRowsUnder || dock.isSidePanel) 0.dp else DOCK_CORNER).value,
+                // Following the dock's height and the panel's width as they glide, so that no notch opens at the seam.
+                topStart = dockCornerBeside(dock.height),
+                topEnd = dockCornerBeside(maxOf(dock.height, dock.panelWidth)),
             ),
         )
         // Read with the dock, after it and before the song, as its last row was.

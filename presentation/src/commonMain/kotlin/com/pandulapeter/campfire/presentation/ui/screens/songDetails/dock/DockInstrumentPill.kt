@@ -9,11 +9,6 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandHorizontally
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
@@ -24,7 +19,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
@@ -62,8 +56,7 @@ internal fun DockInstrumentPill(
     val compactness = if (isTall) dockCompactness(isCompact) else 0f
     // Kept while the tuner leaves (the Dock's Tuner switch turned off with the song behind the Preferences), so that it
     // shrinks away as it was.
-    val lastTunerClick = remember { LastTunerClick() }
-    onTunerClicked?.let { lastTunerClick.value = it }
+    val lastTunerClick = rememberLastOf(onTunerClicked)
     val typography = MaterialTheme.typography
     InstrumentPill(
         modifier = if (isTall) modifier.widthIn(max = dockTallCardMaxWidth(compactness)) else modifier,
@@ -83,12 +76,8 @@ internal fun DockInstrumentPill(
         minFontSize = DOCK_CARD_MIN_FONT_SIZE,
         isControlAtStart = isTunerAtStart,
         control = {
-            AnimatedVisibility(
-                visible = onTunerClicked != null,
-                enter = fadeIn() + expandHorizontally(),
-                exit = fadeOut() + shrinkHorizontally(),
-            ) {
-                val onClick = { lastTunerClick.value?.invoke() ?: Unit }
+            DockRowEnd(isShown = onTunerClicked != null, expandFrom = if (isTunerAtStart) Alignment.Start else Alignment.End) {
+                val onClick = { lastTunerClick?.invoke() ?: Unit }
                 if (isTall) {
                     // As far from the card's edge as the tempo chip's play and stop is from its own.
                     val buttonPadding = dockTallButtonPadding(compactness)
@@ -139,9 +128,6 @@ internal fun dockLineCardWidth(chordDiagrams: ChordDiagrams, hasTuner: Boolean) 
     halfPadding = DOCK_COMPACT_CHIP_PADDING,
     controlWidth = if (hasTuner) DividerDefaults.Thickness + DOCK_END_BUTTON_WIDTH else INSTRUMENT_PILL_EDGE_PADDING,
 )
-
-/** The tuner's click [DockInstrumentPill] last had. Not a state: it is written and read in the same composition. */
-private class LastTunerClick(var value: (() -> Unit)? = null)
 
 /** How small a stacked card's names get before they are cut short: about `labelSmall`, still read at a glance. */
 private val DOCK_CARD_MIN_FONT_SIZE = 11.sp

@@ -77,7 +77,8 @@ with the tuner, and the click. The first section's key and capo are the app bar'
 - **Where the controls stand** (`DockControlsPlace`): without diagrams the instrument card and the tempo chip end the one
   row, unless the song's scale chips are wider than the room between them (`scalesFitBesideControls`: the controls'
   widths measured as text, `dockLineCardWidth`, `dockTempoChipWidth`; the chips' one-line width measured by the chip
-  row, kept in `dockFacts`, and drawn unseen until known): the controls then take a row of their own under the scale
+  row by song, kept in `dockFacts`, drawn unseen until known where it decides, and data arriving only when first known,
+  a later change being the reader's, which glides): the controls then take a row of their own under the scale
   row, nothing between them (`DockControlsRow`; never in a short window). Over a setlist's pager bar, controls with
   nothing between them move onto it around its buttons (`DockPagerBarCard`, `DockPagerBarTempo`, staged as a row is):
   the card alone always, cut short past `SETLIST_CONTROLS_MIN_WIDTH`, the card and the tempo chip in place of the

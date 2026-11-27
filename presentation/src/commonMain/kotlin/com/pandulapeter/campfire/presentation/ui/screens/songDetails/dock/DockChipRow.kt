@@ -9,7 +9,6 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails.dock
 
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.offset
@@ -32,7 +31,7 @@ import com.pandulapeter.campfire.presentation.ui.songView.model.ChordDiagrams
  *
  * Its scale chips alone say how wide they are in one line ([onScalesWidth]), by which the dock decides whether they fit
  * between the controls; until the song's width is known ([areScalesMeasured]) they are drawn unseen, as they may yet
- * move to a row of their own, which then snaps as the dock does for any data arriving.
+ * move to a row of their own, which then snaps as the dock does for any data arriving ([snaps]), its glide too.
  */
 @Composable
 internal fun DockChipRow(
@@ -50,6 +49,7 @@ internal fun DockChipRow(
     scrollState: ScrollState,
     isBesidePanel: Boolean,
     areScalesMeasured: Boolean,
+    snaps: Boolean,
     onScalesWidth: (Dp) -> Unit,
 ) {
     val hasDiagramRow = DockPart.DIAGRAM_ROW in parts
@@ -58,7 +58,9 @@ internal fun DockChipRow(
         DockPart.CONTROLS_ROW in parts -> layout.rowHeight + DOCK_ROW_GAP
         else -> 0.dp
     }
-    val bottom by animateDpAsState(layout.bottomPadding + rowUnder)
+    // Snapped with the dock's height where the change is data arriving, so that the row never slides over the one that
+    // has appeared under it at once.
+    val bottom by animateDockDp(layout.bottomPadding + rowUnder, snaps = snaps)
     val alpha by dockPartAlpha(DockPart.CHIP_ROW in visible)
     val contentPart = parts.firstOrNull { it in CHIP_ROW_CONTENTS }
     val contentAlpha by dockPartAlpha(contentPart in visible)

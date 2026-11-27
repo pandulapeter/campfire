@@ -135,16 +135,8 @@ internal fun DockTempoChip(
  * panel is at least as wide as this (`dockPanelWidthOf`), the chip standing at its foot.
  */
 @Composable
-internal fun dockTallTempoChipWidth(): Dp {
-    val style = MaterialTheme.typography.titleMedium
-    val measurer = rememberTextMeasurer()
-    val density = LocalDensity.current
-    val numberWidth = remember(measurer, style, density) {
-        with(density) { measurer.measure(text = MetronomePattern.BPM_RANGE.last.toString(), style = style, maxLines = 1).size.width.toDp() }
-    }
-    return DOCK_CHIP_PADDING + maxOf(ICON_SIZE + ICON_GAP + numberWidth, TALL_BEATS_WIDTH) + DOCK_CHIP_PADDING + dockRoundButtonSize(compactness = 0f) +
+internal fun dockTallTempoChipWidth(): Dp = DOCK_CHIP_PADDING + maxOf(ICON_SIZE + ICON_GAP + widestTempoWidth(MaterialTheme.typography.titleMedium), TALL_BEATS_WIDTH) + DOCK_CHIP_PADDING + dockRoundButtonSize(compactness = 0f) +
         dockTallButtonPadding(compactness = 0f)
-}
 
 /**
  * How wide the chip-high [DockTempoChip] is, whatever the tempo: the metronome mark, the widest tempo at the interface's
@@ -152,14 +144,16 @@ internal fun dockTallTempoChipWidth(): Dp {
  * (`dockLayoutOf`'s `scalesFitBesideControls` and `controlsFitPagerBar`).
  */
 @Composable
-internal fun dockTempoChipWidth(): Dp {
-    val style = MaterialTheme.typography.labelLarge
+internal fun dockTempoChipWidth(): Dp = DOCK_CHIP_PADDING + ICON_SIZE + ICON_GAP + widestTempoWidth(MaterialTheme.typography.labelLarge) + BEAT_ROW_GAP + BEATS_WIDTH + BEAT_ROW_GAP + DividerDefaults.Thickness + DOCK_END_BUTTON_WIDTH
+
+/** How wide the widest tempo is set in [style], the room [TempoNumber] holds whatever the tempo. */
+@Composable
+private fun widestTempoWidth(style: TextStyle): Dp {
     val measurer = rememberTextMeasurer()
     val density = LocalDensity.current
-    val numberWidth = remember(measurer, style, density) {
+    return remember(measurer, style, density) {
         with(density) { measurer.measure(text = MetronomePattern.BPM_RANGE.last.toString(), style = style, maxLines = 1).size.width.toDp() }
     }
-    return DOCK_CHIP_PADDING + ICON_SIZE + ICON_GAP + numberWidth + BEAT_ROW_GAP + BEATS_WIDTH + BEAT_ROW_GAP + DividerDefaults.Thickness + DOCK_END_BUTTON_WIDTH
 }
 
 /** The metronome mark before the tempo, swinging with the click. */

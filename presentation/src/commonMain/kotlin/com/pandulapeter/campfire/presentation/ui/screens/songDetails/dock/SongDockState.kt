@@ -18,11 +18,9 @@ import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.State
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.Dp
@@ -37,7 +35,6 @@ import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.preferences.SongSections
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.PAGE_HORIZONTAL_PADDING
 import com.pandulapeter.campfire.presentation.ui.state.songText.SongDockFacts
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.SongStepper
 import com.pandulapeter.campfire.presentation.ui.songView.model.ChordDiagrams
 
 /**
@@ -47,10 +44,9 @@ import com.pandulapeter.campfire.presentation.ui.songView.model.ChordDiagrams
  * [visibleParts] of them faded in, [rememberDockStage]: [staged]), the [height] the rows take from the bottom of the screen (the bottom
  * inset included where they cover it) and the [panelWidth] the panel takes from its end (the end inset included), each
  * followed as it animates to a new one, which the pages' grid waits for ([isSettled]). Each
- * page composed puts what the dock draws for it in [contents], its stepper, which says where its reader is headed,
- * in [steppers], and how wide its scale chips are in one line in [scalesWidths], by its index; until the song's is
- * known ([areScalesMeasured]) its scale chips are drawn unseen, as they may yet move to a row of their own. The
- * instrument card ends in the tuner where [onTunerClicked] is given (the Dock's Tuner switch and the Tuner feature on).
+ * page composed puts what the dock draws for it in [pages]; until the width of the song's scale chips is known where it
+ * decides the layout ([isScalesWidthPending]) its scale chips are drawn unseen, as they may yet move to a row of their
+ * own. The instrument card ends in the tuner where [onTunerClicked] is given (the Dock's Tuner switch and the Tuner feature on).
  */
 internal class SongDockState(
     val rows: DockRows,
@@ -60,13 +56,16 @@ internal class SongDockState(
     animatedHeight: State<Dp>,
     val panelTarget: Dp,
     animatedPanelWidth: State<Dp>,
-    val contents: SnapshotStateMap<Int, DockContent>,
-    val steppers: SnapshotStateMap<Int, SongStepper>,
-    val scalesWidths: SnapshotStateMap<Int, Dp>,
-    val areScalesMeasured: Boolean,
+    val pages: DockPages,
+    val isScalesWidthPending: Boolean,
     val onTunerClicked: (() -> Unit)?,
 ) {
+    val contents get() = pages.contents
+    val steppers get() = pages.steppers
     val rowsUnder get() = staged.rows
+
+    /** Whether the change being drawn is data arriving, which the rows' own motion snaps to as the dock's height does. */
+    val snaps get() = staged.snaps
     val layout get() = staged.layout
     val visibleParts get() = staged.visible
 
@@ -86,7 +85,8 @@ internal class SongDockState(
 }
 
 /**
- * The dock as the switches in [userPreferences], the song the pager is on or heading for ([targetPage], [songKey], its
+ * The dock as the switches in [userPreferences], the song the pager is on or heading for ([targetPage], its key by
+ * [songKeyOf], its
  * [songText] read ahead of its page, then what its page handed up in [SongDockState.contents], kept in [dockFacts] for
  * the next time), and the window decide it: its rows (the chords with [chordDiagrams] drawn on an
  * instrument with shapes, on one without its instrument card alone, the scale suggestions, the tempo chip with the metronome on, each only where the song has
@@ -103,7 +103,7 @@ internal fun rememberSongDock(
     isImportPreview: Boolean,
     contentPadding: PaddingValues,
     targetPage: Int,
-    songKey: String?,
+    songKeyOf: (Int) -> String?,
     songText: String?,
     dockFacts: MutableMap<String, SongDockFacts>,
     onTunerClicked: (() -> Unit)?,
@@ -118,9 +118,10 @@ internal fun rememberSongDock(
         // while the card holds the tuner (rememberChordDiagrams).
         hasInstrumentChip = chordDiagrams != null && chordDiagrams.tuning == null,
     )
-    val contents = remember { mutableStateMapOf<Int, DockContent>() }
-    val scalesWidths = remember { mutableStateMapOf<Int, Dp>() }
-    val songRows = rememberSongRows(switchedRows, contents[targetPage], scalesWidths[targetPage], songKey, songText, dockFacts)
+    val pages = remember { DockPages(songKeyOf) }
+    pages.songKeyOf = songKeyOf
+    val songKey = songKeyOf(targetPage)
+    val songRows = rememberSongRows(switchedRows, pages.contents[targetPage], songKey?.let { pages.scalesWidths[it] }, songKey, songText, dockFacts)
     val rows = songRows.rows
     val turnsByColumn = userPreferences?.songLayout != SongLayout.CONTINUOUS && userPreferences?.pageTurn == PageTurn.COLUMN
     val windowSize = LocalWindowInfo.current.containerDpSize
@@ -147,21 +148,22 @@ internal fun rememberSongDock(
     val rowWidth = windowSize.width - contentPadding.calculateStartPadding(layoutDirection) - endInset - PAGE_HORIZONTAL_PADDING * 2
     val scalesFit = scalesFitBesideControls(controlWidths, rowWidth, songRows.scalesWidth)
     val fitsPagerBar = hasPagerBar && controlsFitPagerBar(controlWidths, rowWidth)
-    val layout = remember(rows, windowSize.height, turnsByColumn, hasPagerBar, isImportPreview, rowHeight, isSidePanel, bottomPadding, areControlsCompact, scalesFit, fitsPagerBar) {
-        if (isSidePanel) {
-            dockLayoutOf(rows = rowsUnder, budget = 0.dp, isOneRow = true, rowHeight = rowHeight, bottomPadding = bottomPadding)
-        } else {
-            dockLayoutOf(
-                rows = rows,
-                budget = dockBudgetOf(windowHeight = windowSize.height, turnsByColumn = turnsByColumn, hasPagerBar = hasPagerBar),
-                isOneRow = windowSize.height < SHORT_WINDOW_HEIGHT || isImportPreview,
-                rowHeight = rowHeight,
-                bottomPadding = bottomPadding,
-                scalesFitBesideControls = scalesFit,
-                controlsFitPagerBar = fitsPagerBar,
-            )?.copy(areControlsCompact = areControlsCompact)
-        }
+    val isOneRow = windowSize.height < SHORT_WINDOW_HEIGHT || isImportPreview
+    val layout = if (isSidePanel) {
+        dockLayoutOf(rows = rowsUnder, budget = 0.dp, isOneRow = true, rowHeight = rowHeight, bottomPadding = bottomPadding)
+    } else {
+        dockLayoutOf(
+            rows = rows,
+            budget = dockBudgetOf(windowHeight = windowSize.height, turnsByColumn = turnsByColumn, hasPagerBar = hasPagerBar),
+            isOneRow = isOneRow,
+            rowHeight = rowHeight,
+            bottomPadding = bottomPadding,
+            scalesFitBesideControls = scalesFit,
+            controlsFitPagerBar = fitsPagerBar,
+        )?.copy(areControlsCompact = areControlsCompact)
     }
+    // Only where the scale chips' width can move the controls, so that nowhere else are they drawn a frame late.
+    val isScalesWidthDeciding = !isSidePanel && !isOneRow && !rows.hasChordRow && rows.hasScaleRow && (rows.hasInstrumentCard || rows.hasTempo)
     val panelLayout = remember(rows, rowHeight, isSidePanel) { if (isSidePanel) dockPanelLayoutOf(rows, rowHeight) else null }
     val staged = rememberDockStage(rows = rowsUnder, layout = layout, snaps = songRows.isDataArriving)
     // A setlist's pager bar, under both the rows and the side panel, covers the bottom inset for them.
@@ -175,10 +177,8 @@ internal fun rememberSongDock(
         animatedHeight = animateDockDp(target, snaps = songRows.isDataArriving),
         panelTarget = panelTarget,
         animatedPanelWidth = animateDockDp(panelTarget, snaps = songRows.isDataArriving),
-        contents = contents,
-        steppers = remember { mutableStateMapOf() },
-        scalesWidths = scalesWidths,
-        areScalesMeasured = songRows.scalesWidth != null,
+        pages = pages,
+        isScalesWidthPending = isScalesWidthDeciding && songRows.scalesWidth == null,
         onTunerClicked = onTunerClicked,
     )
 }
@@ -189,9 +189,9 @@ internal fun rememberSongDock(
  * that, what its [songText] says at a glance (whether it has chords, which a song of chords has scales for too), so that
  * the dock is right on the song's first frame and its page laid out once; else the last song's while its text has not
  * been read, or the switches' alone before any song is known. The width of its scale chips its page measured
- * ([scalesWidth]) is kept the same way. [SongRows.isDataArriving] where the rows or that width changed while neither the
- * song nor the switches did: the song's page saying what it has, data arriving rather than a change the reader made,
- * which is then not animated.
+ * ([scalesWidth]) is kept the same way. [SongRows.isDataArriving] where the rows changed, or that width became known,
+ * while neither the song nor the switches did: the song's page saying what it has, data arriving rather than a change
+ * the reader made, which is then not animated. A known width changing (a transposition, a text size) is the reader's.
  */
 @Composable
 private fun rememberSongRows(
@@ -211,17 +211,19 @@ private fun rememberSongRows(
     }
     if (songKey != null && (content != null || scalesWidth != null)) {
         val stored = facts[songKey] ?: SongDockFacts()
-        facts[songKey] = SongDockFacts(
+        val updated = SongDockFacts(
             hasChords = content?.hasChordCells ?: stored.hasChords,
             hasScales = content?.hasScaleSuggestions ?: stored.hasScales,
             scalesWidth = scalesWidth ?: stored.scalesWidth,
         )
+        if (updated != stored) facts[songKey] = updated
     }
     val songFacts = songKey?.let { facts[it] } ?: known.facts
     val rows = remember(switchedRows, songFacts?.hasChords, songFacts?.hasScales) {
         switchedRows.forSong(hasChords = songFacts?.hasChords ?: true, hasScales = songFacts?.hasScales ?: true)
     }
-    val isDataArriving = (rows != known.rows || songFacts?.scalesWidth != known.facts?.scalesWidth) &&
+    val isScalesWidthArriving = known.facts?.scalesWidth == null && songFacts?.scalesWidth != null
+    val isDataArriving = (rows != known.rows || isScalesWidthArriving) &&
         songKey == known.songKey && switchedRows == known.switchedRows
     known.facts = songFacts
     known.rows = rows
@@ -247,9 +249,11 @@ private class KnownSongRows(
  * and snapped in the very composition that learns of it rather than a frame later, so that the page is laid out once.
  */
 @Composable
-private fun animateDockDp(target: Dp, snaps: Boolean): State<Dp> {
+internal fun animateDockDp(target: Dp, snaps: Boolean): State<Dp> {
     val dp = remember { DockDp(Animatable(target, Dp.VectorConverter)) }
-    if (snaps) dp.snapped = target
+    // Only a new target: the same one launches no effect that would clear the snap, which would then hold the value
+    // still through every later animation.
+    if (snaps && target != dp.animatable.targetValue) dp.snapped = target
     LaunchedEffect(target) {
         if (snaps) dp.animatable.snapTo(target) else dp.animatable.animateTo(target)
         dp.snapped = null
