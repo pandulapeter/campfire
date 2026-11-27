@@ -185,6 +185,7 @@ private fun PanelInstrumentPill(
             height = height,
             isTall = true,
             isCompact = false,
+            isTunerAtStart = false,
             onTunerClicked = onTunerClicked,
         )
     }

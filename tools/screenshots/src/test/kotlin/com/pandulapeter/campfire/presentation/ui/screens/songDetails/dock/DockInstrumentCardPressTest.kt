@@ -107,14 +107,14 @@ internal class DockInstrumentCardPressTest {
     }
 
     @Test
-    fun `in a short window's one-line card the tuning half runs to the card's end under the tuner`() = runAppTest(window = TestWindow.PHONE_ON_ITS_SIDE) {
+    fun `in a short window's one-line card the instrument half runs to the card's start under the tuner`() = runAppTest(window = TestWindow.PHONE_ON_ITS_SIDE) {
         openSong()
         waitForIdle()
         val instrument = instrumentHalf()
         val tuning = tuningHalf()
         val tuner = tuner()
         val tempoChip = tempoChip()
-        assertTrue(abs(tuning.right - tuner.right) <= SLACK, "The tuning half at $tuning does not reach the card's end at $tuner.")
+        assertTrue(abs(instrument.left - tuner.left) <= SLACK, "The instrument half at $instrument does not reach the card's start at $tuner.")
         assertTrue(abs(instrument.top - tempoChip.top) <= SLACK && abs(instrument.bottom - tempoChip.bottom) <= SLACK, "The half at $instrument is not the card's height, $tempoChip.")
         assertTrue(abs(tuning.left - instrument.right) <= SLACK, "The halves at $instrument and $tuning leave a gap between them.")
     }
@@ -130,7 +130,9 @@ internal class DockInstrumentCardPressTest {
         openSong()
         waitForIdle()
         val instrument = onNode(hasText(string(Res.string.instrument_guitar_strings, 12)) and hasClickAction()).fetchSemanticsNode().boundsInRoot
-        val cardEnd = tuner().right
+        // The tuning half, a press of its own, starts where the instrument's ends and ends the card.
+        val cardEnd = onAllNodes(hasClickAction()).fetchSemanticsNodes().map { it.boundsInRoot }
+            .single { abs(it.left - instrument.right) <= SLACK && abs(it.top - instrument.top) <= SLACK }.right
         val tempoChip = tempoChip()
         assertTrue(instrument.left < cardEnd, "The card at $instrument is not where it should be.")
         val chips = onAllNodes(hasClickAction() and hasAnyAncestor(hasScrollAction()) and SemanticsMatcher.keyIsDefined(SemanticsProperties.Text))

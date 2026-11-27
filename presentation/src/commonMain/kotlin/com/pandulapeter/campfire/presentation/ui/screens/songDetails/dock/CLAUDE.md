@@ -121,14 +121,16 @@ with the tuner, and the click. The first section's key and capo are the app bar'
   with the diagrams and the Dock's Tuner both off; a song with no chords keeps it, one line). The tempo chip's height, fill, outline, and corners: beside the diagrams stacked (`isStacked`, the tuning under
   the instrument), elsewhere one line. Its halves open the instrument's and the tuning's sheets (`DialogType.Instrument`,
   `DialogType.Tuning`), read only mode included, the instrument being the device's, each half's press and ripple filling
-  its part of the card edge to edge, under the tuner too (`InstrumentPillOverTrailing`). One line, its names keep 8 dp
+  its part of the card edge to edge, under the tuner too (`InstrumentPillOverControl`). One line, its names keep 8 dp
   from the dividers and 12 dp from its start, the tempo chip's own, so its room goes to them; they shrink to 11 sp
   before they are cut short (a long tuning in the side panel), the card's size unchanged. The one place in song details
   the instrument is changed: the Playing and tuner sheets have no pill. `Dock: instrument pill` and `Dock: instrument
   pill tuning` breadcrumbs.
-- **It ends in the tuner**, built as the tempo chip is (its `trailing`), so the row reads tune, the diagrams, play: a
-  round button (`DockTunerButton` over `DockRoundButton`, the play / stop's too) beside the stacked names, the tuner's
-  mark after a divider on one line (`DockEndButton`, the chip-high play / stop's too). Only with the Dock's Tuner switch
+- **It holds the tuner**, built as the tempo chip is (its `control`), so the row reads tune, the diagrams, play: in a row
+  the tuner starts the card, at the row's edge, mirroring play and stop at the tempo chip's (`isTunerAtStart`); in the
+  side panel's column it ends the card, as play and stop end the chip under it. A round button (`DockTunerButton` over
+  `DockRoundButton`, the play / stop's too) beside the stacked names, the tuner's mark parted by a divider on one line
+  (`DockEndButton`, the chip-high play / stop's too). Only with the Dock's Tuner switch
   on (`SongDetailsTools.isTunerInCard`, the Tuner feature on, never an import preview); it fades and grows in and out
   with the switch. The song's menu holds the tuner wherever the card does not (`isTunerInMenu`). `Dock: tuner`.
 - **On a narrow window** (under 600 dp, `DockLayout.areControlsCompact`) the tall instrument card and tempo chip are

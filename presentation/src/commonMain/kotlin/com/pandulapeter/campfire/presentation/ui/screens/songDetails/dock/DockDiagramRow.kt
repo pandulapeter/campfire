@@ -56,6 +56,7 @@ internal fun DockDiagramRow(
                     height = layout.tallTempoChipHeight,
                     isTall = true,
                     isCompact = layout.areControlsCompact,
+                    isTunerAtStart = true,
                     onTunerClicked = onTunerClicked,
                 )
             }

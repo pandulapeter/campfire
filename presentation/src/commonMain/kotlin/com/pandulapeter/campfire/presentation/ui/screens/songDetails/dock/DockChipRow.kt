@@ -70,7 +70,7 @@ internal fun DockChipRow(
         horizontalPadding = horizontalPadding,
         scrollState = scrollState,
         start = chordDiagrams?.takeIf { DockPart.CHIP_ROW_CARD in parts }?.let {
-            @Composable { DockInstrumentPill(chordDiagrams = it, height = layout.rowHeight, isTall = false, isCompact = false, onTunerClicked = onTunerClicked) }
+            @Composable { DockLineCard(chordDiagrams = it, height = layout.rowHeight, onTunerClicked = onTunerClicked) }
         },
         end = tempo?.takeIf { DockPart.CHIP_ROW_TEMPO in parts }?.let {
             @Composable { DockTempoChip(tempo = it, metronome = metronome, height = layout.rowHeight) }

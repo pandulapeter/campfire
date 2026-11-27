@@ -38,9 +38,11 @@ import com.pandulapeter.campfire.presentation.ui.songView.model.ChordDiagrams
 
 /**
  * The instrument card at the start of the dock's chords: the app's [InstrumentPill], naming the instrument and tuning the
- * diagrams are drawn for, framed as the dock's other controls are (the tempo chip's fill, outline, and [height]), and
- * ending in the tuner ([onTunerClicked], null where the Dock's Tuner switch or the Tuner feature leaves it to the song's
- * menu), built as the tempo chip is so that the row reads tune, the diagrams, play. Stacked, the tuning under the
+ * diagrams are drawn for, framed as the dock's other controls are (the tempo chip's fill, outline, and [height]), with
+ * the tuner ([onTunerClicked], null where the Dock's Tuner switch or the Tuner feature leaves it to the song's menu),
+ * built as the tempo chip is so that the row reads tune, the diagrams, play. In a row ([isTunerAtStart]) the tuner starts
+ * the card, at the row's edge as play and stop end the tempo chip at the other, the two mirroring each other; in the
+ * side panel's column, where the two stand over each other, it ends the card as play and stop end the chip. Stacked, the tuning under the
  * instrument and the tuner a round button beside them ([DockTunerButton]), beside the diagrams ([isTall]: their row, the
  * side panel's head), smaller in a narrow window ([isCompact]) as the tempo chip is; else one line, the tuner after a
  * divider (a short window's one row, and an instrument without shapes, whose card has no diagrams beside it). Read only
@@ -53,6 +55,7 @@ internal fun DockInstrumentPill(
     height: Dp,
     isTall: Boolean,
     isCompact: Boolean,
+    isTunerAtStart: Boolean,
     onTunerClicked: (() -> Unit)?,
 ) {
     val onInstrumentClicked = chordDiagrams.onInstrumentClicked ?: return
@@ -78,7 +81,8 @@ internal fun DockInstrumentPill(
         // A long tuning ("Double drop D") in a narrow card, or in a one-line card the row cuts short so that its chips keep
         // their room (`DockScrollingRow`), shrinks a little before it is cut short.
         minFontSize = DOCK_CARD_MIN_FONT_SIZE,
-        trailing = {
+        isControlAtStart = isTunerAtStart,
+        control = {
             AnimatedVisibility(
                 visible = onTunerClicked != null,
                 enter = fadeIn() + expandHorizontally(),
@@ -86,16 +90,18 @@ internal fun DockInstrumentPill(
             ) {
                 val onClick = { lastTunerClick.value?.invoke() ?: Unit }
                 if (isTall) {
-                    // As far from the card's end as the tempo chip's play and stop is from its own.
+                    // As far from the card's edge as the tempo chip's play and stop is from its own.
+                    val buttonPadding = dockTallButtonPadding(compactness)
                     DockTunerButton(
-                        modifier = Modifier.padding(end = dockTallButtonPadding(compactness)),
+                        modifier = if (isTunerAtStart) Modifier.padding(start = buttonPadding) else Modifier.padding(end = buttonPadding),
                         roundSize = dockRoundButtonSize(compactness),
                         onClick = onClick,
                     )
                 } else {
                     Row(modifier = Modifier.height(height), verticalAlignment = Alignment.CenterVertically) {
-                        StepperDivider()
+                        if (!isTunerAtStart) StepperDivider()
                         DockTunerButton(roundSize = null, onClick = onClick)
+                        if (isTunerAtStart) StepperDivider()
                     }
                 }
             }
@@ -110,6 +116,14 @@ internal fun DockInstrumentPill(
         },
     )
 }
+
+/**
+ * The one-line [DockInstrumentPill] of a row of chips [height] tall (the one row, the controls' own row, the metronome
+ * panel, the setlist's pager bar), its tuner at its start.
+ */
+@Composable
+internal fun DockLineCard(chordDiagrams: ChordDiagrams, height: Dp, onTunerClicked: (() -> Unit)?) =
+    DockInstrumentPill(chordDiagrams = chordDiagrams, height = height, isTall = false, isCompact = false, isTunerAtStart = true, onTunerClicked = onTunerClicked)
 
 /**
  * How wide the one-line [DockInstrumentPill] for [chordDiagrams] is with its names uncut, ending in the tuner where

@@ -150,13 +150,13 @@ internal class DockTunerTest {
         val instrument = onNode(hasText(string(Res.string.instrument_other)) and hasClickAction()).fetchSemanticsNode().boundsInRoot
         val tuner = dockTuner()
         val tempoChip = tempoChip()
-        // Alone on its card, the instrument half's press runs under the tuner to the card's end.
-        assertTrue(tuner.left > instrument.left && tuner.right <= instrument.right && instrument.right <= tempoChip.left, "The tuner at $tuner does not end the card of the instrument at $instrument.")
+        // Alone on its card, the instrument half's press runs under the tuner, which starts the card at the row's edge.
+        assertTrue(tuner.left >= instrument.left && tuner.right < instrument.right && instrument.right <= tempoChip.left, "The tuner at $tuner does not start the card of the instrument at $instrument.")
         assertTrue(instrument.height <= tempoChip.height + 1f, "The card at $instrument is not a chip of the tempo chip's row at $tempoChip.")
         assertMenuTuner(isThere = false)
         pressBack()
         // The press runs under the tuner, so its centre may be the tuner's; the name's side is the instrument's.
-        onNode(hasText(string(Res.string.instrument_other)) and hasClickAction()).performTouchInput { click(Offset((tuner.left - instrument.left) / 2f, centerY)) }
+        onNode(hasText(string(Res.string.instrument_other)) and hasClickAction()).performTouchInput { click(Offset((tuner.right - instrument.left + width) / 2f, centerY)) }
         waitUntil { viewModel.dialogHost.visibleDialog.value is DialogType.Instrument }
     }
 

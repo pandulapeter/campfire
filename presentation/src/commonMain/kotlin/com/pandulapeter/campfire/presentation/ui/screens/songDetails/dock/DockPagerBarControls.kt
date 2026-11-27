@@ -29,7 +29,7 @@ internal fun DockPagerBarCard(dock: SongDockState, targetPage: Int) {
     if (DockPart.PAGER_BAR_CARD !in dock.parts || chordDiagrams == null || layout == null) return
     DockRowEnd(isShown = DockPart.PAGER_BAR_CARD in dock.visibleParts, expandFrom = Alignment.Start) {
         Box(modifier = Modifier.padding(start = PAGER_BAR_END_PADDING)) {
-            DockInstrumentPill(chordDiagrams = chordDiagrams, height = layout.rowHeight, isTall = false, isCompact = false, onTunerClicked = dock.onTunerClicked)
+            DockLineCard(chordDiagrams = chordDiagrams, height = layout.rowHeight, onTunerClicked = dock.onTunerClicked)
         }
     }
 }

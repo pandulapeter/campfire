@@ -182,7 +182,7 @@ private fun DockRowsOf(
                 metronome = metronome,
                 height = layout.rowHeight,
                 horizontalPadding = horizontalPadding,
-                start = chordDiagrams?.let { @Composable { DockInstrumentPill(chordDiagrams = it, height = layout.rowHeight, isTall = false, isCompact = false, onTunerClicked = onTunerClicked) } },
+                start = chordDiagrams?.let { @Composable { DockLineCard(chordDiagrams = it, height = layout.rowHeight, onTunerClicked = onTunerClicked) } },
             )
         }
         return@Box

@@ -21,12 +21,12 @@ tuning's strings directly (every stringed instrument, not only the five with sha
   `songControlHeight`, matching the transposition stepper, touched 48 dp tall, except on the Preferences' Chords page,
   where it takes the picker chips' height (`PICKER_CHIP_HEIGHT`) among them, and in song details' dock, where it takes
   the dock's controls' height, outline, and corners, stacked (`isStacked`: the tuning under the instrument, a line
-  between them) beside the diagrams, and ends in the tuner (`trailing`, in the same container,
-  `InstrumentPillOverTrailing`: the halves fill the whole pill, their presses and ripples running under the tuner to
-  its end, the names kept clear of it, the tuner standing over them and taking its own presses, read after them). A
+  between them) beside the diagrams, and starts or ends in the tuner (`control`, `isControlAtStart`, in the same
+  container, `InstrumentPillOverControl`: the halves fill the whole pill, their presses and ripples running under the
+  tuner to its edge, the names kept clear of it, the tuner standing over them and taking its own presses, read after them). A
   pill stretched wider than its names gives the rest to its halves, never empty room. Its names shrink to
   `minFontSize` (the dock's 11 sp) before they are cut short, and keep `halfPadding` from the halves' sides (less in the
-  dock), and no rounded end's room from a `trailing`. In song details' dock, Tuner, Chords, Scales, onboarding,
+  dock), and no rounded end's room from a `control`. In song details' dock, Tuner, Chords, Scales, onboarding,
   and the Preferences' Chords page; never in song details' Playing sheet or tuner sheet.
   A swap between two tools carries the pill (and between Chords and Scales the capo) over as one (`ui/chrome`).
 - The Chords and Scales tabs end the line with the Preferences button (`endAction`), outside the line's own layout, so
