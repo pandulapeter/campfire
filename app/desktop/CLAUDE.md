@@ -170,4 +170,5 @@ only.
   `libfuse2` needed), its desktop entry carrying the same keys. The scheme and menu entry exist only once an
   integration tool copies the entry out. The runtime's libraries are credited for `AppBuild.LINUX`.
 - Only on Linux does the running window icon follow the theme color: Windows' Store taskbar uses the package logos,
-  and a `Taskbar` Dock image misses macOS's tinted/dark styles.
+  and a `Taskbar` Dock image misses macOS's tinted/dark styles. A debug `run` shows `app_icon_debug*.png` (the logo
+  drawn with a dashed line, its long shadow cast again by the dashes, made once from `app_icon*.png`), the Dock's too.

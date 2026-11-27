@@ -10,8 +10,14 @@
 package com.pandulapeter.campfire
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.toAwtImage
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.LayoutDirection
+import com.pandulapeter.campfire.data.model.library.isDesktopDebugRun
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.theme.appIconColor
@@ -19,6 +25,16 @@ import com.pandulapeter.campfire.presentation.ui.theme.appIconThemeColor
 import com.pandulapeter.campfire.resources.Res
 import com.pandulapeter.campfire.resources.app_icon
 import com.pandulapeter.campfire.resources.app_icon_blue
+import com.pandulapeter.campfire.resources.app_icon_debug
+import com.pandulapeter.campfire.resources.app_icon_debug_blue
+import com.pandulapeter.campfire.resources.app_icon_debug_gray
+import com.pandulapeter.campfire.resources.app_icon_debug_green
+import com.pandulapeter.campfire.resources.app_icon_debug_orange
+import com.pandulapeter.campfire.resources.app_icon_debug_pink
+import com.pandulapeter.campfire.resources.app_icon_debug_purple
+import com.pandulapeter.campfire.resources.app_icon_debug_red
+import com.pandulapeter.campfire.resources.app_icon_debug_teal
+import com.pandulapeter.campfire.resources.app_icon_debug_yellow
 import com.pandulapeter.campfire.resources.app_icon_gray
 import com.pandulapeter.campfire.resources.app_icon_green
 import com.pandulapeter.campfire.resources.app_icon_orange
@@ -29,6 +45,7 @@ import com.pandulapeter.campfire.resources.app_icon_teal
 import com.pandulapeter.campfire.resources.app_icon_yellow
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
+import java.awt.Taskbar
 
 /**
  * The app icon in the theme the user chose, for as long as the app runs: the icons of the packages (`appIcon.icns`,
@@ -40,6 +57,10 @@ import org.jetbrains.compose.resources.painterResource
  * the package, and on macOS a window has no icon, while an image given to the Dock at runtime is a flat picture the
  * system cannot draw in its clear, tinted or dark icon styles, so it would stand out from every other icon there.
  *
+ * A debug `run` shows the debug build's icons, the logo drawn with a dashed line, made once from these: on Windows the
+ * window icon is the taskbar's for a process no package started, and on macOS it is given to the Dock as well, where
+ * standing out from the installed build is the point.
+ *
  * @param viewModel Null until the window has created it, which is also a moment the preferences have not been read.
  */
 @Composable
@@ -47,8 +68,29 @@ internal fun appIcon(viewModel: CampfireViewModel?): Painter {
     val userPreferences = viewModel?.userPreferences?.collectAsState()?.value
     // Neither platform offers a switch for it, and the preference may still be on from a build that did.
     val appIconColor = (if (isWindows || isMacOs) null else userPreferences).appIconThemeColor.appIconColor
-    return painterResource(WINDOW_ICONS.getValue(appIconColor))
+    val painter = painterResource((if (isDesktopDebugRun) DEBUG_WINDOW_ICONS else WINDOW_ICONS).getValue(appIconColor))
+    if (isDesktopDebugRun && isMacOs) {
+        LaunchedEffect(painter) {
+            if (Taskbar.isTaskbarSupported() && Taskbar.getTaskbar().isSupported(Taskbar.Feature.ICON_IMAGE)) {
+                Taskbar.getTaskbar().iconImage = painter.toAwtImage(Density(1f), LayoutDirection.Ltr, Size(512f, 512f))
+            }
+        }
+    }
+    return painter
 }
+
+private val DEBUG_WINDOW_ICONS: Map<UserPreferences.ThemeColor, DrawableResource> = mapOf(
+    UserPreferences.ThemeColor.CAMPFIRE to Res.drawable.app_icon_debug,
+    UserPreferences.ThemeColor.GRAY to Res.drawable.app_icon_debug_gray,
+    UserPreferences.ThemeColor.RED to Res.drawable.app_icon_debug_red,
+    UserPreferences.ThemeColor.ORANGE to Res.drawable.app_icon_debug_orange,
+    UserPreferences.ThemeColor.YELLOW to Res.drawable.app_icon_debug_yellow,
+    UserPreferences.ThemeColor.GREEN to Res.drawable.app_icon_debug_green,
+    UserPreferences.ThemeColor.TEAL to Res.drawable.app_icon_debug_teal,
+    UserPreferences.ThemeColor.BLUE to Res.drawable.app_icon_debug_blue,
+    UserPreferences.ThemeColor.PURPLE to Res.drawable.app_icon_debug_purple,
+    UserPreferences.ThemeColor.PINK to Res.drawable.app_icon_debug_pink,
+)
 
 private val WINDOW_ICONS: Map<UserPreferences.ThemeColor, DrawableResource> = mapOf(
     UserPreferences.ThemeColor.CAMPFIRE to Res.drawable.app_icon,

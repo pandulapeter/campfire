@@ -29,8 +29,11 @@ fun desktopDataDirectory() = desktopDataDirectory(
     userHome = System.getProperty("user.home").orEmpty(),
     environment = System::getenv,
     packageFamilyName = System.getProperty(PACKAGE_FAMILY_NAME_PROPERTY).orEmpty(),
-    isDebug = System.getProperty(DEBUG_PROPERTY) == "true",
+    isDebug = isDesktopDebugRun,
 )
+
+/** Whether this process is a debug `run`, which keeps a data folder of its own and shows the debug build's icon. */
+val isDesktopDebugRun get() = System.getProperty(DEBUG_PROPERTY) == "true"
 
 internal fun desktopDataDirectory(
     operatingSystem: String,
