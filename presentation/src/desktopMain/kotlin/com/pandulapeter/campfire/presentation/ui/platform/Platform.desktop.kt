@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.platform
 
 import androidx.compose.ui.input.pointer.PointerEvent
+import com.pandulapeter.campfire.data.model.library.isDesktopDebugRun
 
 internal actual val isDesktopPlatform
     get() = when (PlatformImpersonation.platform) {
@@ -77,3 +78,5 @@ internal actual val appBuild: AppBuild
             else -> AppBuild.LINUX
         }
     }
+
+internal actual val isDebugBuild get() = isDesktopDebugRun

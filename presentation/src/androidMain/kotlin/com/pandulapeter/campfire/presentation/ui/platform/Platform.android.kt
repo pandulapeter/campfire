@@ -9,7 +9,10 @@
  */
 package com.pandulapeter.campfire.presentation.ui.platform
 
+import android.content.Context
+import android.content.pm.ApplicationInfo
 import androidx.compose.ui.input.pointer.PointerEvent
+import org.koin.mp.KoinPlatform
 
 internal actual val isDesktopPlatform = false
 
@@ -33,3 +36,8 @@ internal actual val platformStore: Distribution? = Distribution.PLAY_STORE
 internal actual fun PointerEvent.verticalWheelNotches() = changes.fold(0f) { total, change -> total + change.scrollDelta.y }
 
 internal actual val appBuild = AppBuild.ANDROID
+
+/** The debug build type's `isDebuggable`, which the release build never has. */
+internal actual val isDebugBuild by lazy {
+    KoinPlatform.getKoin().get<Context>().applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
+}

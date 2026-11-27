@@ -10,6 +10,8 @@
 package com.pandulapeter.campfire.presentation.ui.platform
 
 import androidx.compose.ui.input.pointer.PointerEvent
+import kotlin.experimental.ExperimentalNativeApi
+import kotlin.native.Platform
 
 internal actual val isDesktopPlatform = false
 
@@ -34,3 +36,7 @@ internal actual val platformStore: Distribution? = Distribution.APP_STORE
 internal actual fun PointerEvent.verticalWheelNotches() = changes.fold(0f) { total, change -> total + change.scrollDelta.y }
 
 internal actual val appBuild = AppBuild.IOS
+
+/** Xcode's Debug configuration links the debug framework, Release (and so the App Store) the release one. */
+@OptIn(ExperimentalNativeApi::class)
+internal actual val isDebugBuild = Platform.isDebugBinary

@@ -54,6 +54,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_support_descrip
 import com.pandulapeter.campfire.presentation.resources.settings_version
 import com.pandulapeter.campfire.presentation.resources.settings_website
 import com.pandulapeter.campfire.presentation.ui.screens.settings.LinkListItem
+import com.pandulapeter.campfire.presentation.ui.platform.isDebugBuild
 import com.pandulapeter.campfire.presentation.ui.components.shortcuts.LocalShowsShortcutHints
 import com.pandulapeter.campfire.presentation.ui.components.shortcuts.ShortcutPlatforms
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
@@ -160,7 +161,7 @@ private fun AppSection(
     }
     LinkListItem(
         title = stringResource(Res.string.settings_created_by),
-        description = stringResource(Res.string.settings_version, CAMPFIRE_VERSION_NAME),
+        description = stringResource(Res.string.settings_version, if (isDebugBuild) "$CAMPFIRE_VERSION_NAME-debug" else CAMPFIRE_VERSION_NAME),
         icon = painterResource(Res.drawable.ic_campfire),
         onClick = { urlOpener("https://pandulapeter.com/") },
     )

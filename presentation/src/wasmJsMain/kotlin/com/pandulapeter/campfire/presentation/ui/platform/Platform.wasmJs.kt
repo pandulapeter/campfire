@@ -59,3 +59,8 @@ private const val PIXELS_PER_WHEEL_NOTCH = 100f // What Chrome, Edge and Safari 
 private const val LINES_PER_WHEEL_NOTCH = 3f // What Firefox reports for one notch in line mode.
 
 internal actual val appBuild = AppBuild.WEB
+
+/** Only a distribution's page carries the build manifest (`FinishWebDistribution`); the dev server's leaves it null. */
+internal actual val isDebugBuild by lazy { hasNoBuildManifest() }
+
+private fun hasNoBuildManifest(): Boolean = js("window.campfireBuild == null")

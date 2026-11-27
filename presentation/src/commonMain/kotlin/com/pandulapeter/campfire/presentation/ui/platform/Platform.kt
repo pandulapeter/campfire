@@ -125,3 +125,10 @@ internal enum class AppBuild { ANDROID, IOS, MACOS, WINDOWS, LINUX, WEB }
 
 /** The build this is, which decides what the Open-source licenses sheet lists: only what it actually ships. */
 internal expect val appBuild: AppBuild
+
+/**
+ * Whether this is a debug build, told by the build itself, never by its name or address: Android's debug build type,
+ * the Debug configuration's Kotlin framework on iOS, a desktop `run` (`campfire.debug`), and the web's dev server (whose
+ * page carries no build manifest). Settings names its version with a `-debug` suffix.
+ */
+internal expect val isDebugBuild: Boolean
