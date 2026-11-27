@@ -23,7 +23,7 @@ fast_checks() {
     python3 .github/scripts/check_test_names.py
     # The IDE drops the shared iOS run configurations now and then, and a commit staging everything has carried that
     # deletion along several times.
-    for configuration in '.run/iOS.run.xml' '.run/iOS Debug.run.xml'; do
+    for configuration in '.run/iOS Debug.run.xml' '.run/iOS Release.run.xml'; do
         if git diff --cached --name-only --diff-filter=D | grep -qxF "$configuration"; then
             echo "The commit deletes $configuration; restore it with git restore --staged --worktree '$configuration'." >&2
             return 1

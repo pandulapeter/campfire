@@ -60,7 +60,7 @@ private const val LINES_PER_WHEEL_NOTCH = 3f // What Firefox reports for one not
 
 internal actual val appBuild = AppBuild.WEB
 
-/** Only a distribution's page carries the build manifest (`FinishWebDistribution`); the dev server's leaves it null. */
-internal actual val isDebugBuild by lazy { hasNoBuildManifest() }
+/** The development build's page says so (`app/web/webpack.config.d/development-build.js`); a production one never does. */
+internal actual val isDebugBuild by lazy { isDevelopmentBuild() }
 
-private fun hasNoBuildManifest(): Boolean = js("window.campfireBuild == null")
+private fun isDevelopmentBuild(): Boolean = js("window.campfireDevelopmentBuild === true")

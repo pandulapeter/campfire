@@ -128,7 +128,7 @@ internal expect val appBuild: AppBuild
 
 /**
  * Whether this is a debug build, told by the build itself, never by its name or address: Android's debug build type,
- * the Debug configuration's Kotlin framework on iOS, a desktop `run` (`campfire.debug`), and the web's dev server (whose
- * page carries no build manifest). Settings names its version with a `-debug` suffix.
+ * the Debug configuration's Kotlin framework on iOS, a desktop `run` (`campfire.debug`), and the web's development build
+ * (`wasmJsBrowserDevelopmentRun`, whose server marks the page). Settings names its version with a `-debug` suffix.
  */
 internal expect val isDebugBuild: Boolean

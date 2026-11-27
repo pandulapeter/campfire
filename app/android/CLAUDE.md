@@ -177,7 +177,7 @@ Play Store app only, read on a first launch (`presentation/src/androidMain/CLAUD
   component explicitly disabled but not of one set back to its disabled default, so the user's place is lost only at
   the first switch.
 - A switch refused by device policy is logged, not recorded, and retried at the next change or stop.
-- Android Studio's "Default Activity" is `.CampfireActivity`, disabled after a switch, so use `.run/Android.run.xml`.
+- Android Studio's "Default Activity" is `.CampfireActivity`, disabled after a switch, so use "Android Debug" (`.run/Android Debug.run.xml`).
   From the command line, `adb shell monkey -p com.pandulapeter.campfire.debug -c android.intent.category.LAUNCHER 1`.
 - The debug build's logo is the ring drawn dashed: `src/debug/res/mipmap-anydpi/ic_launcher_foreground.xml`, a vector
   made once from the release logo's path, which wins over the release WebPs of that name for every alias's foreground

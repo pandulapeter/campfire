@@ -226,7 +226,7 @@ and the Kotlin runtime's calls are the app's to declare. After updating any of t
   target (`iosApp/Configuration/set-version.sh`; App Store Connect refuses an extension whose version differs from its
   app's); MARKETING_VERSION and CURRENT_PROJECT_VERSION are deliberately unset in `project.pbxproj`. The "Compile
   Kotlin Framework" phase is the app target's alone.
-- `.run/iOS.run.xml` (the Release configuration, over the store app's ID) and `.run/iOS Debug.run.xml` (Debug, the app
+- `.run/iOS Release.run.xml` (the Release configuration, over the store app's ID) and `.run/iOS Debug.run.xml` (Debug, the app
   of its own; the one for a physical iPhone, picked in the IDE's device list, whose first run lets automatic signing
   register the debug App IDs) make the KMP plugin write shared schemes, which are gitignored: a shared scheme removes the
   automatic `iosApp` scheme that `publish-ios.yml` archives with, and makes `xcodebuild -scheme iosApp` fail locally —

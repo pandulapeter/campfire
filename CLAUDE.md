@@ -369,15 +369,18 @@ same way.
 - `org.gradle.workers.max=4` because the shared Kotlin daemon ran out of memory; lower it rather than turning parallel
   off.
 - **Run `git config core.hooksPath .githooks` once per clone**: the pre-commit hook runs the `.github/scripts` checks
-  (`.githooks/lib.sh`), refuses deleting `.run/iOS.run.xml` or `.run/iOS Debug.run.xml`, and, when more than Markdown (or a version bump alone) is
+  (`.githooks/lib.sh`), refuses deleting `.run/iOS Debug.run.xml` or `.run/iOS Release.run.xml`, and, when more than Markdown (or a version bump alone) is
   staged, `spotlessCheck`, `desktopTest`, and the UI tests of the packages it changes, unless `.githooks/verify` checked that staged tree first (or the commit
   defers them to one `verify --branch` before landing). Sessions work in a worktree each and land on `main` by
   fast-forward (the `commit-messages` skill).
-- `.run/` holds the IDE-written run configurations (no license header, the IDE would drop it).
+- `.run/` holds the IDE-written run configurations (no license header, the IDE would drop it): a Debug and a Release one
+  per platform, in a folder each. Android Debug deploys the variant selected in Build Variants (Release is
+  `installRelease`, opened from the launcher), Desktop's are `run` / `runRelease`, iOS's the KMP plugin's (a simulator or a device), and
+  Web's `wasmJsBrowserDevelopmentRun` / `wasmJsBrowserProductionRun`.
 
 Commands:
 
-- `./gradlew :app:android:assembleDebug` (from the IDE, the shared "Android" configuration, never "Default Activity")
+- `./gradlew :app:android:assembleDebug` (from the IDE, "Android Debug", never "Default Activity")
 - `./gradlew :app:android:generateBaselineProfile` on an emulator; the output is committed (`app/baselineprofile`).
 - `./gradlew :app:desktop:run`; `:app:desktop:packageDistributionForCurrentOS` for installers
 - `./gradlew :app:ios:linkDebugFrameworkIosSimulatorArm64`; run from Xcode (`app/ios/iosApp/iosApp.xcodeproj`) or the

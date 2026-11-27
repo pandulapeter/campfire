@@ -68,8 +68,9 @@ Kotlin/Wasm entry point (`wasmJs` browser target only); the webpack output is na
   screen is set in Inter through `FontFace`s at the same versioned addresses, so the page and the app hand over in one
   font.
 - `favicon-<color>.png`: every icon, the default too, is named by color, because browsers cache favicons by address —
-  a redrawn set needs new names. The dev server answers them (the splash's included) from `debug-favicons/`, the logo
-  drawn with a dashed line under the same names (`webpack.config.d/debug-favicons.js`), which no distribution holds.
+  a redrawn set needs new names. The development build's server (`wasmJsBrowserDevelopmentRun`, not
+  `ProductionRun`) answers them (the splash's included) from `debug-favicons/`, the logo drawn with a dashed line under
+  the same names, and marks its page as a debug build (`webpack.config.d/development-build.js`).
 - **No web app manifest, deliberately**: the web build is a page; installable platforms get native builds.
 
 ## Offline copy
