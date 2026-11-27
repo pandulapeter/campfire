@@ -13,6 +13,13 @@ plugins {
     id("campfire-koin")
 }
 
+// The tests start Koin over the app's data and domain graph (ImportApp and the like), which the plugin would otherwise take
+// for an app's entry point and recompile on every build, uncached, to check that graph again. The tests build the same
+// graph when they run, so a broken one fails them anyway; :app:di keeps the check for the graph the app ships.
+koinCompiler {
+    strictSafety.set(false)
+}
+
 kotlin {
     wasmJs {
         browser {
