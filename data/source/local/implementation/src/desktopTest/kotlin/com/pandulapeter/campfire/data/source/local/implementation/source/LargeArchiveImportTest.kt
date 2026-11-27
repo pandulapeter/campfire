@@ -175,7 +175,7 @@ class LargeArchiveImportTest {
             println("Peak staged: ${app.storage.peakStagedBytes shr 20} MiB for an export of ${export.length() shr 20} MiB")
 
             assertEquals(false, result.isFailed)
-            assertSameLibrary(LargeImportApp.libraryOf(source.root), app.library())
+            assertSameLibraryFiles(File(source.root, "library"), File(app.storage.root, "library"))
             app.assertSettled()
         }
     }
@@ -378,6 +378,46 @@ class LargeArchiveImportTest {
             fun List<String>.sample() = "$size: ${sorted().take(SAMPLE_SIZE)}"
             fail("The library $context differs: missing ${missing.toList().sample()}, extra ${extra.toList().sample()}, changed ${changed.sample()}")
         }
+    }
+
+    /**
+     * [actual] holds every file of [expected] with the same bytes and nothing else, told by the first few differences.
+     * Compared a file at a time rather than as two [LargeImportApp.libraryOf] maps: tens of thousands of paths and hashes
+     * twice over, beside what the import still holds, are more than a 128 MiB heap has room for.
+     */
+    private fun assertSameLibraryFiles(expected: File, actual: File) {
+        val missing = Differences()
+        val changed = Differences()
+        val extra = Differences()
+        expected.walkTopDown().filter { it.isFile }.forEach { file ->
+            val path = file.relativeTo(expected).invariantSeparatorsPath
+            val copy = File(actual, path)
+            when {
+                !copy.isFile -> missing.add(path)
+                LargeImportApp.sha256Of(copy) != LargeImportApp.sha256Of(file) -> changed.add(path)
+            }
+        }
+        actual.walkTopDown().filter { it.isFile }.forEach { file ->
+            val path = file.relativeTo(actual).invariantSeparatorsPath
+            if (!File(expected, path).isFile) extra.add(path)
+        }
+        if (missing.count + extra.count + changed.count > 0) {
+            fail("The library differs: missing $missing, extra $extra, changed $changed")
+        }
+    }
+
+    /** How many paths differ in one way, with the first few of them. */
+    private class Differences {
+        var count = 0
+            private set
+        private val sample = mutableListOf<String>()
+
+        fun add(path: String) {
+            count++
+            if (sample.size < SAMPLE_SIZE) sample += path
+        }
+
+        override fun toString() = "$count: $sample"
     }
 
     private fun assertLibrary(archive: LargeArchive, library: Map<String, String>) {
