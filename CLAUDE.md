@@ -373,15 +373,15 @@ same way.
   staged, `spotlessCheck`, `desktopTest`, and the UI tests of the packages it changes, unless `.githooks/verify` checked that staged tree first (or the commit
   defers them to one `verify --branch` before landing). Sessions work in a worktree each and land on `main` by
   fast-forward (the `commit-messages` skill).
-- `.run/` holds the IDE-written run configurations (no license header, the IDE would drop it): a Debug and a Release one
-  per platform, named after it. Android Debug deploys the variant selected in Build Variants (Release is
-  `installRelease`, opened from the launcher), Desktop's are `run` / `runRelease`, iOS's the KMP plugin's (a simulator or a device), and
+- `.run/` holds the IDE-written run configurations (no license header, the IDE would drop it): Android,
+  which deploys the variant selected in Build Variants (a run configuration cannot name one), and a Debug and a Release
+  one for each other platform: Desktop's are `run` / `runRelease`, iOS's the KMP plugin's (a simulator or a device), and
   Web's `wasmJsBrowserDevelopmentRun` / `wasmJsBrowserProductionRun`. The Kotlin Multiplatform plugin's own generated
   ones are switched off in the committed `.idea/kmp-plugin-settings.xml`.
 
 Commands:
 
-- `./gradlew :app:android:assembleDebug` (from the IDE, "Android Debug", never "Default Activity")
+- `./gradlew :app:android:assembleDebug` (from the IDE, "Android", never "Default Activity")
 - `./gradlew :app:android:generateBaselineProfile` on an emulator; the output is committed (`app/baselineprofile`).
 - `./gradlew :app:desktop:run`; `:app:desktop:packageDistributionForCurrentOS` for installers
 - `./gradlew :app:ios:linkDebugFrameworkIosSimulatorArm64`; run from Xcode (`app/ios/iosApp/iosApp.xcodeproj`) or the
