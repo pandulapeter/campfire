@@ -12,7 +12,6 @@
 What's planned for Campfire, grouped by area.
 
 ## In progress
-- The Random picks widget's shuffle button doesn't work
 - Update and improve widget descriptions
 - The metronome bottom sheet could include a slider
 - **Debug builds apart from release builds** on every platform (their own identity, data, Dropbox sign-in, and deep

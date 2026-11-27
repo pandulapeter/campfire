@@ -209,6 +209,9 @@ jobs:
         uses: ./.github/actions/setup-jdk
       - name: Build the Android release
         run: bash .github/scripts/gradlew_retrying.sh :app:android:assembleRelease
+      # A widget button's callback is made by reflection, and the emulator below cannot press one.
+      - name: Check the constructors made by reflection
+        run: python3 .github/scripts/check_reflected_constructors.py app/android/build/outputs/mapping/release/seeds.txt app/android/src
       # The emulator needs hardware acceleration, which a Linux runner has but does not grant its user.
       - name: Enable KVM
         run: |
