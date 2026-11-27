@@ -14,7 +14,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Campfire</string>
+	<string>$(APP_DISPLAY_NAME)</string>
 	<!-- The gallery's names and descriptions and Edit Widget's words are the extension's own Localizable.strings, in
 	     the system's language: the system shows them before the app has ever run. What a widget shows is in the app's
 	     language, from the snapshot. -->

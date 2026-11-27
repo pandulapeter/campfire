@@ -120,8 +120,16 @@ struct ShareInboxWriter {
     /// The one way an extension can reach an app that is running: an iPad's other half of Split View, where Campfire stays
     /// active and so would not look at the inbox until it next comes to the front. Said after the share's notification is
     /// added, so the drain it starts finds that notification to take down.
-    static func announce() {
-        CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), CFNotificationName(notificationName as CFString), nil, nil, true)
+    static func announce(bundle: Bundle = .main) {
+        guard let name = notificationName(bundle: bundle) else { return }
+        CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), CFNotificationName(name as CFString), nil, nil, true)
+    }
+
+    /// Named after the App Group the app and the extension share, so that a share into one install (the store app, or a
+    /// debug build beside it, each with a group of its own) never wakes the other. The app listens under the same name,
+    /// read from its own `Info.plist` (`iOSApp.swift`). Nil in a build signed without the group.
+    static func notificationName(bundle: Bundle = .main) -> String? {
+        (bundle.object(forInfoDictionaryKey: "CampfireAppGroup") as? String).map { "\($0).share-inbox" }
     }
 
     private func writeShare(files: [(NSItemProvider, String)], texts: [String], marks: [Any]?, subject: String?, id: String, into folder: URL, waitingBytes: Int64) async -> ShareOutcome {
@@ -394,7 +402,6 @@ struct ShareInboxWriter {
     private static let inboxName = "ShareInbox"
     private static let partialSuffix = ".partial"
     private static let manifestVersion = 1
-    private static let notificationName = "com.pandulapeter.campfire.share-inbox"
     private static let maxWaitingShares = 20
     private static let maxFileNameBytes = 200
 

@@ -14,7 +14,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Campfire</string>
+	<string>$(APP_DISPLAY_NAME)</string>
 	<!-- The extension's strings are its own Localizable.strings, in the system's language. -->
 	<key>CFBundleLocalizations</key>
 	<array>

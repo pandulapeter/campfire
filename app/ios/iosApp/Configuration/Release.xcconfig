@@ -1,0 +1,4 @@
+#include "Config.xcconfig"
+
+BUNDLE_ID=com.pandulapeter.campfire
+APP_DISPLAY_NAME=Campfire

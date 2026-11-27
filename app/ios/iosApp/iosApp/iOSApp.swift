@@ -18,18 +18,22 @@ struct iOSApp: App {
     init() {
         // The share extension's word that a share is waiting, for an app that stays active while it is made: the other
         // half of an iPad's Split View. Everywhere else the app comes to the front afterwards, which drains it anyway.
-        CFNotificationCenterAddObserver(
-            CFNotificationCenterGetDarwinNotifyCenter(),
-            nil,
-            { _, _, _, _, _ in
-                // An app left a moment ago hears it too, before it is suspended; there the share's notification stays.
-                if UIApplication.shared.applicationState == .active { IosShareInboxKt.removeShareNotifications() }
-                IosShareInboxKt.drainShareInbox()
-            },
-            "com.pandulapeter.campfire.share-inbox" as CFString,
-            nil,
-            .deliverImmediately
-        )
+        // Named after the App Group, as the extension names it (ShareInboxWriter.notificationName), so a debug build and
+        // the store app never hear each other's shares.
+        if let name = (Bundle.main.object(forInfoDictionaryKey: "CampfireAppGroup") as? String).map({ "\($0).share-inbox" }) {
+            CFNotificationCenterAddObserver(
+                CFNotificationCenterGetDarwinNotifyCenter(),
+                nil,
+                { _, _, _, _, _ in
+                    // An app left a moment ago hears it too, before it is suspended; there the share's notification stays.
+                    if UIApplication.shared.applicationState == .active { IosShareInboxKt.removeShareNotifications() }
+                    IosShareInboxKt.drainShareInbox()
+                },
+                name as CFString,
+                nil,
+                .deliverImmediately
+            )
+        }
     }
 
     var body: some Scene {

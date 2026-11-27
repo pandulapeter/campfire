@@ -1,0 +1,5 @@
+#include "Config.xcconfig"
+
+// An app of its own beside the App Store one: its own library, preferences, Keychain item, App Group, and widgets.
+BUNDLE_ID=com.pandulapeter.campfire.debug
+APP_DISPLAY_NAME=Campfire Debug

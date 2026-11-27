@@ -1,4 +1,3 @@
 TEAM_ID=N45A6ZHDGY
-BUNDLE_ID=com.pandulapeter.campfire
 APP_NAME=Campfire
 APP_GROUP_ID=group.$(BUNDLE_ID)

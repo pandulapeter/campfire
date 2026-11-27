@@ -80,7 +80,8 @@ extension (`iosApp/ShareExtension/`) and the widget extension (`iosApp/CampfireW
   `Info.plist`s), says so, and is done.
 - **It never opens the app**: only a Today widget may, and the responder-chain way round is not API and is refused by
   review. The app drains the inbox on every `.active` scene phase and on the Darwin notification
-  `com.pandulapeter.campfire.share-inbox`, for an iPad's Split View where it stays active.
+  `<App Group>.share-inbox` (named by the group, so the debug build and the store app never hear each other's), for an
+  iPad's Split View where it stays active.
 - **A notification hands over instead** (`ShareNotification.swift`): where Campfire's notifications are already allowed
   (authorized or provisional; the app asks only when a sync run starts, the extension never asks), it posts one naming
   what waits (a title, a file's name, or "N files"), identified by the share's folder, threaded `share-inbox`, before
@@ -207,8 +208,17 @@ and the Kotlin runtime's calls are the app's to declare. After updating any of t
 
 ## Xcode project and building
 
-- Team id, bundle id, and app name are in `iosApp/Configuration/Config.xcconfig`; **change the team there, not in
-  Xcode's Signing tab**, which writes a literal over `$(TEAM_ID)`.
+- Team id and app name are in `iosApp/Configuration/Config.xcconfig`; **change the team there, not in Xcode's Signing
+  tab**, which writes a literal over `$(TEAM_ID)`. The project's Debug and Release configurations are based on
+  `Debug.xcconfig` and `Release.xcconfig`, which include it and set the bundle id and the name shown under the icon
+  (`APP_DISPLAY_NAME`, all three targets'): Debug is `com.pandulapeter.campfire.debug`, "Campfire Debug", an app of its
+  own beside the App Store one (its own library, preferences, Keychain item, App Group, and widgets). The App Group,
+  the extensions' IDs, and the Kotlin side's group lookup follow from `BUNDLE_ID`.
+- **Debug signing on a device** needs the App IDs `…campfire.debug`, `…debug.widgets`, and `…debug.ShareExtension`
+  with the App Groups and Associated Domains capabilities, and the group `group.com.pandulapeter.campfire.debug`
+  (Debug signs automatically, so Xcode registers them on the owner's Mac). The website's `apple-app-site-association`
+  lists `N45A6ZHDGY.com.pandulapeter.campfire.debug` beside the store app for `/s/*`, so a link reaches a debug build
+  installed alone.
 - Version and build number come from `campfire.versionName` / `campfire.buildNumber` via the last build phase of every
   target (`iosApp/Configuration/set-version.sh`; App Store Connect refuses an extension whose version differs from its
   app's); MARKETING_VERSION and CURRENT_PROJECT_VERSION are deliberately unset in `project.pbxproj`. The "Compile
