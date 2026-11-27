@@ -24,8 +24,9 @@
 - `adjustResize` is required: unspecified means adjustPan for a Compose window, stacking on the app's own IME padding.
 - **Meta + /** lists the app's shortcuts under the system's from `onProvideKeyboardShortcuts`, answered with what the
   composition last handed over (`onKeyboardShortcutsChanged`), since the strings are the composition's language.
-- `handle` tells the `campfire://oauth` redirect from a file before `setContent`, so a redirect that started a killed
-  process is waiting for the view model (the rest of sign-in: `data/source/remote/implementation/CLAUDE.md`).
+- `handle` tells the sign-in redirect (`campfire://oauth`, `campfire-debug://oauth` in debug: `syncRedirectScheme` in
+  `build.gradle.kts`) from a file before `setContent`, so a redirect that started a killed process is waiting for the
+  view model (the rest of sign-in: `data/source/remote/implementation/CLAUDE.md`).
 
 ## Manifest intent filters
 

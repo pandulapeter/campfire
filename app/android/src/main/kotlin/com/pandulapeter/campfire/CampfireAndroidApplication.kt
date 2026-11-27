@@ -23,7 +23,9 @@ class CampfireAndroidApplication : Application() {
         // Never backed up, unlike filesDir, and before anything else of the app's, so that the log has the start of the
         // process too.
         installProcessLog(noBackupFilesDir)
-        startCampfireDependencyGraph { androidContext(this@CampfireAndroidApplication) }
+        startCampfireDependencyGraph(syncRedirectScheme = BuildConfig.SYNC_REDIRECT_SCHEME) {
+            androidContext(this@CampfireAndroidApplication)
+        }
         // A run or an import whose process never came back left its notification behind, and this is the first moment anything
         // of Campfire's is running again to take it down. See CampfireSyncService.clearStaleNotification.
         CampfireSyncService.clearStaleNotification(this)

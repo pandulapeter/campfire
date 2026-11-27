@@ -26,6 +26,7 @@ import androidx.lifecycle.lifecycleScope
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.data.model.share.ShareLinks
 import com.pandulapeter.campfire.data.source.remote.implementation.auth.onSyncRedirectReceived
+import com.pandulapeter.campfire.data.source.remote.implementation.SyncRedirectScheme
 import com.pandulapeter.campfire.data.source.remote.implementation.isSyncRedirect
 import com.pandulapeter.campfire.importing.ImportServiceStarter
 import com.pandulapeter.campfire.presentation.ui.CampfireAndroidApp
@@ -192,7 +193,7 @@ class CampfireMainActivity : ComponentActivity() {
         val address = intent?.data?.takeIf { intent.action == Intent.ACTION_VIEW }
         when {
             address == null -> importFrom(intent)
-            isSyncRedirect(address.toString()) -> onSyncRedirectReceived(address.toString())
+            isSyncRedirect(address.toString(), SyncRedirectScheme(BuildConfig.SYNC_REDIRECT_SCHEME)) -> onSyncRedirectReceived(address.toString())
             ShareLinks.isLinkAddress(address.toString()) -> ShareLinks.parse(address.toString())?.let(::importShareLink)
             isAppLink(address) -> intent.openAppLink(address) { id -> LauncherShortcutPublisher.reportUsed(context = this, id = id) }
             else -> importFrom(intent)

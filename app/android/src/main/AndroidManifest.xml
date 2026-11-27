@@ -244,8 +244,9 @@
             </intent-filter>
 
             <!--
-              Coming back from the sync service's consent page. The scheme is the one every platform registers,
-              see REDIRECT_SCHEME in :data:source:remote:implementation. The activity is singleTask, so this lands
+              Coming back from the sync service's consent page, on the scheme of this build (syncRedirectScheme in
+              build.gradle.kts: campfire, or the debug build's campfire-debug, so that the two installs never compete
+              for the browser's return). The activity is singleTask, so this lands
               in onNewIntent of the running app rather than in a second instance - or, when the process was killed
               while the browser was in front, in the onCreate or onNewIntent of a new one, which is what
               AndroidSyncAuthenticator.consumePendingRedirect is for.
@@ -258,7 +259,7 @@
 
                 <data
                     android:host="oauth"
-                    android:scheme="campfire" />
+                    android:scheme="${syncRedirectScheme}" />
             </intent-filter>
 
             <!--

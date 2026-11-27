@@ -15,6 +15,7 @@ import com.pandulapeter.campfire.data.repository.implementation.DataRepositoryMo
 import com.pandulapeter.campfire.data.source.local.implementation.DataLocalSourceModule
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.FileStorage
 import com.pandulapeter.campfire.data.source.remote.implementation.DataRemoteSourceModule
+import com.pandulapeter.campfire.data.source.remote.implementation.SyncRedirectScheme
 import com.pandulapeter.campfire.data.sync.implementation.DataSyncModule
 import com.pandulapeter.campfire.domain.implementation.DomainModule
 import org.koin.core.module.Module
@@ -40,6 +41,7 @@ internal fun importGraph(storage: FileStorage, downloads: ImportDownloadReposito
         module {
             single<FileStorage> { storage }
             single<ImportDownloadRepository> { downloads }
+            single { SyncRedirectScheme.Default }
             // Every unpack prints what it leaves out; a few thousand imports would bury the test's own report.
             single<Logger> { Logger { } }
             overrides()

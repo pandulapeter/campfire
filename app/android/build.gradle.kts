@@ -52,7 +52,10 @@ android {
         versionCode = project.property("campfire.buildNumber").toString().toInt()
         versionName = project.property("campfire.versionName").toString()
     }
-    buildFeatures.compose = true
+    buildFeatures {
+        compose = true
+        buildConfig = true
+    }
     val internalSigningConfig = "internal"
     val releaseSigningConfig = "release"
     signingConfigs {
@@ -81,6 +84,7 @@ android {
             isShrinkResources = false
             versionNameSuffix = "-debug"
             applicationIdSuffix = ".debug"
+            syncRedirectScheme("campfire-debug")
             signingConfig = signingConfigs.getByName(internalSigningConfig)
         }
         release {
@@ -88,6 +92,7 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            syncRedirectScheme("campfire")
             signingConfig = signingConfigs.getByName(releaseSigningConfig)
         }
     }
@@ -140,6 +145,16 @@ tasks.matching { it.name == "generateBaselineProfile" }.configureEach {
             },
         )
     }
+}
+
+/**
+ * The scheme the Dropbox sign-in comes back on, declared by the manifest's sign-in filter and handed to the graph
+ * (`SyncRedirectScheme`). The debug build's is its own, so that with the store app installed beside it the browser's
+ * return reaches the app that asked instead of a chooser. Each is a redirect URI registered in the Dropbox App Console.
+ */
+fun com.android.build.api.dsl.VariantDimension.syncRedirectScheme(scheme: String) {
+    manifestPlaceholders["syncRedirectScheme"] = scheme
+    buildConfigField("String", "SYNC_REDIRECT_SCHEME", "\"$scheme\"")
 }
 
 kotlin {

@@ -33,7 +33,8 @@
   `DropboxConfiguration`: `campfire.dropbox.appKey`, the collections, and the folder document cap.
 - Dropbox app setup: *scoped access*, **App folder**; scopes files.content.read, files.content.write, account_info.read,
   sharing.read, and sharing.write. The authorization URL names no scopes, so a token granted before a scope was ticked
-  lacks it (`missing_scope`, below). Redirect URIs `campfire://oauth` (Android, iOS), `http://127.0.0.1:53682`
+  lacks it (`missing_scope`, below). Redirect URIs `campfire://oauth` (Android, iOS), `campfire-debug://oauth` (Android's debug build, whose
+  shell hands its scheme in as `SyncRedirectScheme`), `http://127.0.0.1:53682`
   (desktop), and the exact page URL per web deployment, matched character for character, hence the fixed port.
 - `MusicBrainzRemoteSource` and `ITunesRemoteSource` are built once each and shared by the cover search and details
   lists, so both share one `MusicBrainzRateLimiter`.

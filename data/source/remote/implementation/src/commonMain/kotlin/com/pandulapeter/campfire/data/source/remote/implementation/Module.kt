@@ -26,6 +26,7 @@ import com.pandulapeter.campfire.data.source.remote.implementation.network.creat
 import kotlinx.coroutines.Dispatchers
 import org.koin.core.annotation.ComponentScan
 import org.koin.core.annotation.Module
+import org.koin.core.annotation.Provided
 import org.koin.core.annotation.Single
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.TimeSource
@@ -40,9 +41,12 @@ object DataRemoteSourceModule {
         create = { createHttpClient(userAgent = USER_AGENT) },
     )
 
-    /** Campfire's redirect, which the platforms' authenticators are built with (see [CAMPFIRE_OAUTH_REDIRECT]). */
+    /**
+     * Campfire's redirect, which the platforms' authenticators are built with (see [CAMPFIRE_OAUTH_REDIRECT]), on the
+     * scheme of the build the shell says it is.
+     */
     @Single
-    internal fun oAuthRedirectConfiguration(): OAuthRedirectConfiguration = CAMPFIRE_OAUTH_REDIRECT
+    internal fun oAuthRedirectConfiguration(@Provided scheme: SyncRedirectScheme): OAuthRedirectConfiguration = scheme.redirect
 
     /**
      * A list rather than a single binding: adding a provider is adding one line here, and nothing above this module

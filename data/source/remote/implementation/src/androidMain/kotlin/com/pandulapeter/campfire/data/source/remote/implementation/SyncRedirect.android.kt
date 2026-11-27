@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.data.source.remote.implementation
 
 /**
  * Whether [uri] is a redirect meant for sync rather than, say, a file someone opened with Campfire. Public because the
- * activity that receives it lives in `:app:android`.
+ * activity that receives it lives in `:app:android`. Only a redirect on this build's [scheme] is one: the other build's
+ * is never the answer to a sign-in this one started.
  */
-fun isSyncRedirect(uri: String) = CAMPFIRE_OAUTH_REDIRECT.isRedirect(uri)
+fun isSyncRedirect(uri: String, scheme: SyncRedirectScheme) = scheme.redirect.isRedirect(uri)

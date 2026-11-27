@@ -15,7 +15,7 @@ shared module allowed to depend on `implementation` modules, so their list is wr
 - Adding a Koin module means naming it in `CampfireDependencyGraph`; the compiler plugin validates the whole graph
   here (so this module recompiles every build).
 - `startCampfireDependencyGraph` starts Koin globally (not the `KoinApplication` composable: the graph belongs to the
-  process, and `koinViewModel()` finds the global instance). Android passes `androidContext`, the one `@Provided`
-  dependency.
+  process, and `koinViewModel()` finds the global instance). It declares the `SyncRedirectScheme` it is given (Android's
+  build type picks it; null is `campfire`), and Android passes `androidContext`, the other `@Provided` dependency.
 - It also starts the first `LoadScreenDataUseCase` read, overlapping the platform's window setup; the view model's
   read joins it (repositories hold their lock for the whole read) and re-reads only what failed.
