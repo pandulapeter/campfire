@@ -9,11 +9,11 @@
 -->
 # Plan: debug builds apart from release builds, with an icon of their own
 
-**Status:** Part 1 done (steps 1–5), except the owner steps: `campfire-debug://oauth` among the Dropbox app's
-redirect URIs, the iOS debug App IDs and group (registered by Xcode's automatic signing on the first device build), and
-pushing the website's `apple-app-site-association` commit. Step 6 done with ten square-ended dashes, waiting for the
-owner's approval before steps 7–10. `runDistributable` turned out to start the image's own launcher, which no system
-property reaches, so only `run` is a debug build on the desktop.
+**Status:** done, but for one check on a device: building the iOS debug app to a physical iPhone, which registers its
+App IDs and group through Xcode's automatic signing. Debug icons: eight round-ended dashes on every platform.
+`runDistributable` turned out to start the image's own launcher, which no system property reaches, so only `run` is a
+debug build on the desktop. iOS's icons moved into `AppIcons.xcassets` beside `DebugAppIcons.xcassets`, since excluding
+`Assets.xcassets` would also drop its colors.
 
 ## Where each platform stands
 
