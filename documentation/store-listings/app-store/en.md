@@ -138,9 +138,4 @@ Network use is limited to features the user starts: optional sync with the user'
 The "audio" background mode keeps the metronome clicking while the screen is locked; it plays only after the user starts it, and stops when they leave the screen it was started on.
 
 On iOS 26 and later, an import the user started keeps working for a while after they leave the app, as a continued processing task shown in the system's own progress; it exists only while that import runs and ends with it.
-
-New since the last approved version, and where to find it:
-- Redesigned song screen: open any song on the Songs screen. Its chord diagrams, scale suggestions, and tempo are in a dock under the song (beside it on a wide iPad screen) that follows the page being read; tap the key chip in the top bar for the transposition and the capo, the tempo chip for the tempo sheet, and its play button to start the click.
-- Home Screen widgets: touch and hold the Home Screen, tap Edit, then Add Widget, and choose Campfire's Random picks (songs drawn at random; Edit Widget sets its title, tags, languages, and number of songs) or Setlist (the next gig, or a setlist chosen in Edit Widget). Tapping a song opens it in the app.
-- Quick actions: touch and hold the Campfire icon for Paste a song, Metronome, Tuner, Setlists, and New song.
 ```

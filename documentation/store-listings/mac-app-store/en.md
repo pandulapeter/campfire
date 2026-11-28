@@ -106,9 +106,6 @@ Files are only read and written where the user picks them in the system's open a
 The microphone is used only by the Tuner tab (and the tuner sheet opened from a song), and is asked for only when the user clicks the button on that page. It is listened to only while that page is on screen; nothing it hears is recorded, kept, or sent anywhere.
 
 Network use is limited to features the user starts: optional sync with the user's own Dropbox account (Settings → Sync, not needed to review anything else); sharing a song or setlist as a public link in that same Dropbox; opening a shared link, which downloads it from dl.dropboxusercontent.com with no account; cover art for songs, an image downloaded from the address a song names and a search of MusicBrainz and the iTunes Search API, opened by clicking the cover in the "About the song" sheet; the song details lookup, which searches the same two services; pictures named by an https address, downloaded once into the library when the user enters one with From a link in the editor's Image menu, clicks Download on a missing picture, or opens the review of an import whose songs name one (Settings → Features → Pictures from links turns that off); and a web page pasted as its address alone, read once on the device, offscreen in the system's own WebKit web view, keeping only its text for the import (public https hosts only, never the local network; Settings → Features → Pages from links turns that off). Everything else works offline.
-
-New since the last approved version, and where to find it:
-- Redesigned song screen: open any song on the Songs screen. Its chord diagrams, scale suggestions, and tempo are in a dock under the song (beside it in a wide window) that follows the page being read; click the key chip in the toolbar for the transposition and the capo, the tempo chip for the tempo sheet, and its play button to start the click.
 ```
 
 ## App Sandbox Information
